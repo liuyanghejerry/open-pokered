@@ -26,3 +26,5 @@ The raw snapshots retain their original RNG states. Replays are diagnostic unit-
 This change lives in the `#[cfg(all(test, feature = "debug-server"))]` test module. It cannot change a production frame, so before/after player screenshots are not applicable. GBA runtime source, performance limits and baselines are unchanged; no new local hardware-timer measurement is claimed. Remote CI remains a separate exact-head gate.
 
 `evidence.zip` is content-deduplicated; `archive.json` records its SHA-256 and path manifest. It includes only explicit 922 diagnostic/replay paths and their directly used metadata, including the failed diagnostic build. Executables and unrelated PR evidence are excluded. Use `extract_evidence.py` to verify/extract it.
+
+Integrated current master `4c364111` (#258, poison-before-door/warp ordering). Exact integrated-source validation: core 2,889 passed; app debug-server 296 passed / 39 ignored; app default 285 passed / 37 ignored; zero failures. `master-4c364-integration.json` and its log archive identify this build separately from the original frozen failure/replay evidence. Remote CI is still required for this new head.
