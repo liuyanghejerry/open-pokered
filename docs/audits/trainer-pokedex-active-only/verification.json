@@ -1,0 +1,271 @@
+{
+  "scope": "W906 trainer-only seen registration. Six original ordinary battle/Pokedex/SAVE controls, six historical native controls, twelve authoritative current before/after controls. No live battle/state writes. Source/native complete campaign templates are construction, not asserted fully reachable.",
+  "source": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "primary_code": "engine/battle/core.asm:5992 LoadEnemyMonData link early jump; 6130 IndexToPokedex and seen flag only for wEnemyMonSpecies2.",
+    "loss": "Route3 actualYoungster#1 Rattata11/Ekans11. LegalBulbasaur12HP1 losesbeforeEkansappears; savedseen[1,19].",
+    "win": "Sameactualtrainer, legalBulbasaur30; actualRattata/Ekansbothappear; savedseen[1,19,23].",
+    "switch": "FuchsiaGym actualJuggler#4 Drowzee34/Hypno34, legalBulbasaur100 usesGrowl; naturalAI switchbeforeanyenemyfaints. Sourceultimatelyloses, nativeultimatelywins; seenonlycomparison, nooutcome/HP/RNGparityclaim."
+  },
+  "frozen_builds": {
+    "before": {
+      "compiled_commit": "dfeefa3411634e187119862288ad78d5a3e933fe",
+      "git_status": "",
+      "binary_sha256": "3d51184837e775a5ad10fa9a96f6a64bc8e0414d274432f3595efb7631c32209",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "b87e8b9790cc4eb76bca76ed579b26b862895d5fed31ca164e3fc9422a57c955"
+    },
+    "current-before": {
+      "compiled_commit": "7310d2989501c3a0d793c794244b51693ed692c2",
+      "git_status": "",
+      "binary_sha256": "d01ba5bb1a4659b225c0281901029ab2c3370bbcc2182462fc86471418315bf2",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "6f61741e2919c320c9f2a10d8748869a4f57b35abda369be2e93c699093595b5"
+    },
+    "after": {
+      "compiled_commit": "bfe83d2665671b529068970212b606059ce298bb",
+      "git_status": "",
+      "binary_sha256": "3418b1f28c0ba673ee153567233c0e904fbc2aec014f1594f485c6d584bfdcc4",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "aa41ed32f69a046a767aec6bcad4625928184d10566146287f8b641b683ded1c"
+    }
+  },
+  "implementation": "Register original party identity of BattleState.enemy.active_pokemon_index at trainer entry and after battle update. Skip wild/link/absenttrainerclass. No party scan/copy, no new secondowner, no runtime savedfield or protocol change.",
+  "cases": [
+    {
+      "case": "loss",
+      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-loss-gguigzbv",
+      "native_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-loss-6uelwgak",
+        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-loss-yv3d7x0k",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-loss-x5n0c6iu"
+      },
+      "source_saved_seen": [
+        1,
+        19
+      ],
+      "before_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "after_saved_seen": [
+        1,
+        19
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_native_seen_counts": {
+        "before": 3,
+        "after": 2
+      },
+      "source_normal_save_checksum_valid_both": true,
+      "native_normal_save_checksum_valid_all_six": true,
+      "source_sram_sha256": [
+        "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a",
+        "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a"
+      ],
+      "current_native_sram_sha256": {
+        "current-before": [
+          "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e",
+          "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e"
+        ],
+        "after": [
+          "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f",
+          "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f"
+        ]
+      },
+      "paired_current_before_after": [
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 1416,
+          "whole_sram_changed_offsets": [
+            9656,
+            13603
+          ],
+          "all_other_sram_bytes_unchanged": true
+        },
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 1416,
+          "whole_sram_changed_offsets": [
+            9656,
+            13603
+          ],
+          "all_other_sram_bytes_unchanged": true
+        }
+      ]
+    },
+    {
+      "case": "win",
+      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-win-v43za4fg",
+      "native_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-win-0eu_14qo",
+        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-win-95mudbdn",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-win-u1t6ukpz"
+      },
+      "source_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "before_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "after_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_native_seen_counts": {
+        "before": 3,
+        "after": 2
+      },
+      "source_normal_save_checksum_valid_both": true,
+      "native_normal_save_checksum_valid_all_six": true,
+      "source_sram_sha256": [
+        "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7",
+        "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7"
+      ],
+      "current_native_sram_sha256": {
+        "current-before": [
+          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+        ],
+        "after": [
+          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+        ]
+      },
+      "paired_current_before_after": [
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 2800,
+          "whole_sram_changed_offsets": [],
+          "all_other_sram_bytes_unchanged": true
+        },
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 2800,
+          "whole_sram_changed_offsets": [],
+          "all_other_sram_bytes_unchanged": true
+        }
+      ]
+    },
+    {
+      "case": "switch",
+      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-switch-_cnqal9_",
+      "native_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-switch-2heb11dc",
+        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-switch-zyvi0gtt",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-switch-wkse2or0"
+      },
+      "source_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "before_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "after_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_native_seen_counts": {
+        "before": 3,
+        "after": 2
+      },
+      "source_normal_save_checksum_valid_both": true,
+      "native_normal_save_checksum_valid_all_six": true,
+      "source_sram_sha256": [
+        "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88",
+        "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88"
+      ],
+      "current_native_sram_sha256": {
+        "current-before": [
+          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+        ],
+        "after": [
+          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+        ]
+      },
+      "paired_current_before_after": [
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 4912,
+          "whole_sram_changed_offsets": [],
+          "all_other_sram_bytes_unchanged": true
+        },
+        {
+          "identical_actual_inputs": true,
+          "same_pokedex_screen_frame": 4912,
+          "whole_sram_changed_offsets": [],
+          "all_other_sram_bytes_unchanged": true
+        }
+      ]
+    }
+  ],
+  "repeat_checks": "Native actions, allnamedcheckpointstates/PNGs and finalSRAM repeatidentically withineach of3stages\u00d73cases. Currentbefore/afterfixturesandcompleteordinaryinputsidentical.",
+  "tests": {
+    "historical_debug_scoped": {
+      "passed": 4,
+      "log": "audit-906-app-scoped.log"
+    },
+    "historical_debug_full": {
+      "passed": 273,
+      "ignored": 39,
+      "failed": 0,
+      "log": "audit-906-app-full.log"
+    },
+    "latest_debug_scoped": {
+      "passed": 4,
+      "log": "audit-906-current-app-scoped.log"
+    },
+    "latest_debug_full": {
+      "passed": 282,
+      "ignored": 39,
+      "failed": 0,
+      "log": "audit-906-current-app-full.log"
+    },
+    "latest_default_scoped": {
+      "passed": 4,
+      "log": "audit-906-default-app-scoped.log"
+    },
+    "ordinary_save_full_comparison": {
+      "passed": "source6/native18 checksum/seen/owned and fullnativeSRAMdiff",
+      "log": "audit-906-check-evidence.log"
+    }
+  },
+  "limitations": [
+    "Actual source/native coverage is Red Route3firstloss/fullwin andFuchsiaGym AI-switch, eachrepeat2; no wholecampaign or alltrainers claim.",
+    "Link exclusion and original identity through Transform are unit/static checks; no new actuallink/Transformmatrix. Existingwild registration is deliberately untouched and doesnot claim unresolvedGhostseenfix.",
+    "Source/native inputcadence, battleRNG andsourceAIcontrolfinaloutcome differ. Only statedseenflags/active-switch/ordinarySAVE assertions compare acrossproviders; noallparty/fullSRAM crossprovider orframe/audioequivalence claim.",
+    "Currentbefore7310/afterbfe frozen hashes remain exact; dfee captures are historical, never relabeled current.",
+    "FailedsourceAIv1 requestedvictory although actualendedloss. Retainedasfailed, excluded fromfinal6sourcecontrols; v2 acceptsactualend andnormalSAVE."
+  ]
+}

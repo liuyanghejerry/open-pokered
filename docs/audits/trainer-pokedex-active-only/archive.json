@@ -1,0 +1,19 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "4d9fd6a3c018f3d2391a6b696a04750cf853d9154e8533896f8863b39dd73f8e",
+  "bytes": 596217,
+  "entries": 176,
+  "original_path_records": 392,
+  "uncompressed_evidence_bytes": 14209045,
+  "entry_manifest": "entry-manifest.json",
+  "entry_manifest_sha256": "ff894ae7141879b2983726fce6e1c45eb4e900bc622e4018dda15a1387d3674f",
+  "storage": "Exact-content SHA256 deduplication only; entry-manifest retains all original paths, original unmodified byte lengths/hashes and blob addresses. No dropped frames or invented timing labels.",
+  "all_blob_readback_sha_verified": true,
+  "passing_controls_by_scope": {
+    "source": 6,
+    "native_historical_before": 6,
+    "native_current_before": 6,
+    "native_after": 6
+  },
+  "scope": "All W906 original/native raw trial directories, including historical dfee baselines and the failed original AI driver. Those older runs are not counted as final passing controls. Canonical ROM/executables excluded; exact SHA/build manifests retained. Redundant per-trial identical ROM/executable copies were removed only after termination and point to retained canonical copies."
+}
