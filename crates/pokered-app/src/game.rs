@@ -850,14 +850,46 @@ struct QuerySeedSnapshot {
 }
 
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+#[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+// Thumb-1 has native 32-bit multiplication but lowers a u64 product to
+// __aeabi_lmul. Keep the exact FNV prime: 2^40 + 435. The 16-bit partial
+// products below fit in u32, including their carry.
+#[cfg(any(
+    test,
+    all(target_arch = "arm", target_pointer_width = "32", target_os = "none")
+))]
+#[inline]
+fn fnv_multiply_arm32(value: u64) -> u64 {
+    let lo = value as u32;
+    let hi = (value >> 32) as u32;
+    let low_product = (lo & 0xffff) * 435;
+    let high_product = (lo >> 16) * 435 + (low_product >> 16);
+    let result_lo = (low_product & 0xffff) | (high_product << 16);
+    let result_hi = hi
+        .wrapping_mul(435)
+        .wrapping_add(high_product >> 16)
+        .wrapping_add(lo << 8);
+    (u64::from(result_hi) << 32) | u64::from(result_lo)
+}
 
 fn fnv_mix(h: &mut u64, bytes: &[u8]) {
     for &b in bytes {
-        *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
+        {
+            *h = fnv_multiply_arm32(*h ^ u64::from(b));
+        }
+        #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
+        {
+            *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        }
     }
 }
 
+#[cfg(test)]
+#[path = "context_update_tests.rs"]
+mod context_update_tests;
 impl QuerySeedSnapshot {
     fn hash_u8(h: &mut u64, v: u8) {
         fnv_mix(h, &[v]);
@@ -4689,7 +4721,9 @@ impl PokemonGame {
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
                             screen.battle_style = self.state.config.battle_style;
-                            screen.player_name = Some(self.player_name.clone());
+                            if screen.player_name.as_deref() != Some(self.player_name.as_str()) {
+                                screen.player_name = Some(self.player_name.clone());
+                            }
                         }
                         // 4. Mirror the canonical screen into `self.battle`
                         //    for the render/vfx/audio blocks below and the
@@ -4731,7 +4765,9 @@ impl PokemonGame {
                 // battle_animation below. (For link battles `self.battle` is
                 // the mirror; the canonical screen gets the same pushes above.)
                 self.battle.battle_style = self.state.config.battle_style;
-                self.battle.player_name = Some(self.player_name.clone());
+                if self.battle.player_name.as_deref() != Some(self.player_name.as_str()) {
+                    self.battle.player_name = Some(self.player_name.clone());
+                }
                 let action = if self.battle.link_mode && battle_over {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
