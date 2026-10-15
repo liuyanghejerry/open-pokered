@@ -1,3 +1,15 @@
+# 场外招式与生蛋确认后回到队伍
+
+缺少徽章、地点拒绝和生蛋结果确认后，恢复原作队伍调用方与使用者光标；由已有 Party notice 持有提示。取消、普通载入、快照恢复、重置清除放弃的生蛋选择。成功地图效果沿用已有调用。
+
+## 当前集成身份
+
+#266 实际合入 `f9b0f326d333d93cdd4b846a238f617d8ccbc625` 后整合实时 master `f9b0f326d333d93cdd4b846a238f617d8ccbc625`。相对该master仅7个本PR源码/测试路径，4个带生产逻辑、3个仅测试。与受测 `87f8ff3aaedfebb54dcf4065d70fa9f8a95f4b4d` 的原2172项编译映射完全相同；另独立补证原manifest漏记的run-wasm/src/main.rs，扩展2173项及docs外2691个Git blob/模式均相等。旧日志仍称2172项freeze，没有伪称重跑2173。v3的912组 core2924/appdebug323+39忽略/determinism10通过；整批在随后905/appdebug失败。仅整理身份和本PR日志，没有构建或重录。
+
+`publication-988.json` 与 `publication-988-logs.zip` 给出精确证明。下面所有录制/GBA/旧集成段落是历史身份：截图仍literal216/cd33，FLY544/生蛋608，同fixture与完整输入前缀各重复2；不是87f8或当前master录制。原作16/before16/after16次普通SAVE及旧吉利蛋样本更正原样保留。原37+23固定恢复时钟仍近似/open，不声称完成原作VRAM/OAM恢复、全部动画、HP条或PCM一致。新head三个远程工作流需全部通过后才能合入。
+
+## 历史实际证据与既有集成（原身份）
+
 # 场外招式提示后返回队伍列表
 
 缺少徽章、当前地点不能使用招式等情况下，原作在玩家确认提示后回到宝可梦列表，保留使用者的位置。复刻把成功和拒绝都作为 `Done` 处理，直接退出到地图。生蛋完成或选中无效目标后也走了相同的退出路径。
@@ -79,4 +91,4 @@ python3 docs/audits/field-move-party-return/extract_evidence.py \
 
 此前整合 master `05f6e76c`（#265，宝可梦之笛保留非睡眠状态）：完整核心 **2889 通过**、debug-server 应用 **296 通过/39 忽略/0 失败**；determinism 8 通过。精确源码与日志见 `master-05f6-integration.json` 及日志包；此前的实际原作/原生截图和普通 SAVE 继续保留各自冻结身份。
 
-已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2889 通过/0 忽略；app 303 通过/39 忽略；determinism 8 通过/0 忽略，全部 0 失败。当前受测源码 `b88b6afcc076028e1f4ee7fcab1e4d5cbabd05f4`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
+此前整合 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2889 通过/0 忽略；app 303 通过/39 忽略；determinism 8 通过/0 忽略，全部 0 失败。当时受测源码 `b88b6afcc076028e1f4ee7fcab1e4d5cbabd05f4`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
