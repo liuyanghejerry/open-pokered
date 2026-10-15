@@ -1,0 +1,455 @@
+{
+  "schema": "audit993-PR261-tested-source-identical-publication-v1",
+  "actual_master": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+  "parent264": {
+    "baseRefName": "master",
+    "headRefName": "fix/field-move-continuation-912",
+    "headRefOid": "5774a2bb06eee0f6af7d83dc8544d6c9c12c6f4c",
+    "mergeCommit": {
+      "oid": "44f2234823eb5bd0d793ef966871f6028426aaa2"
+    },
+    "mergedAt": "2026-10-15T12:30:53Z",
+    "number": 264,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/264"
+  },
+  "old_local_docs_head": "534f06c52a892d5b1c03b6ced0236c99b1695fd7",
+  "tested_v5_runtime": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+  "integrated_source_before_doc_commit": "8bcb5893168cd4b4189caca9b3d7516101413889",
+  "identity": {
+    "legacy_test_count": 2172,
+    "expanded_count": 2173,
+    "retrospective_added_paths": [
+      "run-wasm/src/main.rs"
+    ],
+    "expanded_manifest_sha256": "ea4e1b28177a6639551612d378e9fe5afcc6e8bab55174a119db120ea4d7f24b",
+    "compiler_mapping_equal": true,
+    "non_doc_count": 2691,
+    "non_doc_blobs_modes_literal_symlinks_equal": true,
+    "non_doc_tree_sha256": "55fc992f37cd528312d8af6dba40554db1233f9c9c3e9c82c7e7e6926b0ef23a",
+    "attribution": "Original v5 tests/freezes remain2172. Independently supplement omitted run-wasm main from tested Git blob; no relabelled test run."
+  },
+  "own_source_paths": [
+    "crates/pokered-app/src/battle_medicine_tests.rs",
+    "crates/pokered-app/src/game.rs",
+    "crates/pokered-app/src/post_capture.rs",
+    "crates/pokered-app/src/post_capture_tests.rs",
+    "crates/pokered-app/src/render/battle.rs",
+    "crates/pokered-core/src/battle/mod.rs",
+    "crates/pokered-core/src/battle/presentation.rs",
+    "crates/pokered-core/src/snapshot.rs"
+  ],
+  "source_boundary": "6production-bearing +2test-only paths; no parent264 own delta",
+  "validation": {
+    "core": {
+      "passed": 2930,
+      "failed": 0,
+      "ignored": 0
+    },
+    "appdebug": {
+      "passed": 329,
+      "failed": 0,
+      "ignored": 39
+    },
+    "appdefault": {
+      "passed": 318,
+      "failed": 0,
+      "ignored": 37
+    },
+    "determinism": {
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "root_reviews": {
+    "940_sha256": "d35a4a6883d489192abffbcca75c87a8054aa8af95ced8fd4126295a2bfa8707",
+    "947_sha256": "ffa9ab6a327d6eb80d8ffa1ba4730d36ec02314c3de228afa9aa84b2820a49ad"
+  },
+  "historical6images": [
+    {
+      "surface": "capture return caption",
+      "stage": "before",
+      "frame": 2717,
+      "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+      "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "source_path": "audit-905-matched-prefix-before-n0ve6_oz/return-caption.png",
+      "path": "docs/screenshots/capture-presentation/return-before.png",
+      "sha256": "54993e734b5b34a8f8f6a1ca7076a76c76d3e1d73303c8adc7b6e5547f839621"
+    },
+    {
+      "surface": "Safari used-ball prefix",
+      "stage": "before",
+      "frame": 2233,
+      "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+      "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "source_path": "audit-905-safari-matched-prefix-before-f8gezzh6/frames/frame-002232.png",
+      "path": "docs/screenshots/capture-presentation/safari-used-before.png",
+      "sha256": "768adfe3909af5ad776521190988a99df5b104c28f47880ae842b8b66403cf9e"
+    },
+    {
+      "surface": "Safari caught name",
+      "stage": "before",
+      "frame": 2633,
+      "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+      "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "source_path": "audit-905-safari-matched-prefix-before-f8gezzh6/frames/frame-002632.png",
+      "path": "docs/screenshots/capture-presentation/safari-name-before.png",
+      "sha256": "b250c5574a6cb1885dd8935094e6144592eb51457fd50149c8b058c7f1d8c250"
+    },
+    {
+      "surface": "capture return caption",
+      "stage": "after",
+      "frame": 2717,
+      "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+      "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "source_path": "audit-905-matched-prefix-after-aw0k8bn4/return-caption.png",
+      "path": "docs/screenshots/capture-presentation/return-after.png",
+      "sha256": "2d2729a560960e7f7b4bb9c34bbe857bca668c4834d082bd81a3187c4d50c8ad"
+    },
+    {
+      "surface": "Safari used-ball prefix",
+      "stage": "after",
+      "frame": 2233,
+      "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+      "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "source_path": "audit-905-safari-matched-prefix-after-_lo67rsm/frames/frame-002232.png",
+      "path": "docs/screenshots/capture-presentation/safari-used-after.png",
+      "sha256": "3ee2090cc9e1f25cc7b095f455d6436df5be1dccdca4bcf9ea057ad17ea67aff"
+    },
+    {
+      "surface": "Safari caught name",
+      "stage": "after",
+      "frame": 2633,
+      "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+      "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "source_path": "audit-905-safari-matched-prefix-after-_lo67rsm/frames/frame-002632.png",
+      "path": "docs/screenshots/capture-presentation/safari-name-after.png",
+      "sha256": "4d4901b2e5b29e0b29e467ebdf4a04557cc7ac6fb6dad627d01810f8a634de31"
+    }
+  ],
+  "ACK_addendum": {
+    "scope": "Current integration addendum only. Older905 captures remain at their original source/binary identities.",
+    "original_reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c: ItemUseBallText05 text_far/sound_caught_mon/text_promptbutton; source text sound command waits for sound before prompt.",
+    "builds": {
+      "before": {
+        "source": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558"
+      },
+      "after": {
+        "source_head": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+        "source_sha256": "ef9d02418835a9c8b0927bbf2abe7a79660ef851e5c719ef4fc40d18703cdc33",
+        "args": [
+          "bash",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-937-905-stack-host.sh",
+          "build",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "debug-server",
+          "--locked"
+        ],
+        "start_utc": "2026-10-15T09:39:15.774006+00:00",
+        "status": "terminal",
+        "pid": 995146,
+        "exit": 0,
+        "duration_seconds": 27.669,
+        "build_log_sha256": "548dfbff013df3e69d1df2bc10eae42884418cb235d8541744a78d08c3a33321",
+        "source_exact_after": true,
+        "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-after-0fb1-debug",
+        "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+        "binary_bytes": 77828704,
+        "maps_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-905-capture-presentation/crates/pokered-data/maps"
+      }
+    },
+    "strict_pair": {
+      "raw_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-strict-oldman-pair-1tr8f4e2",
+      "report_sha256": "c414b063a826eba0fc7fb090240a655e7e35fb455d2bbc0311b098528f227769",
+      "driver_sha256": "ded1234451281705c9673367b10da851a56229f4b4658d59660308c04b1ed343",
+      "fixture_sha256": "d045e3b692e0164bf578a40b5f96da597a453a1ffee7a57104ddb6ea85c1b7a6",
+      "physical_buttons": 1177,
+      "physical_buttons_sha256": "d0e157cddcfe19b1e89f8b35f361340cfaaef56503a5cd272c92e3047a3dc112",
+      "same_complete_prefix": true,
+      "actual_frames": [
+        588,
+        856,
+        1145,
+        1146,
+        1177
+      ],
+      "before_reproduces_adaptive_frame1177_png_exactly": true,
+      "ordinary_SAVE_runs": 0,
+      "selected": {
+        "literal-before": {
+          "actual_frame": 1177,
+          "screen": "overworld",
+          "phase": "BattleOver { won: true, escaped: false, wait_frames: 0 }",
+          "caption": "All right!\nWEEDLE was caught!",
+          "audio_sfx": {
+            "id": 101,
+            "playing": true
+          },
+          "image": "master-before-frame1177.png",
+          "image_sha256": "fbc9cae6281583ee79ffbaee192654a57cf06a1fed55bc791d580cd5570fb6fb"
+        },
+        "after": {
+          "actual_frame": 1177,
+          "screen": "battle",
+          "phase": "ShowingText { messages: [\"OLD MAN used\\nPOKé BALL!\", \"All right!\\nWEEDLE was caught!\"], current: 1, wait_frames: 0, next_phase: BattleOver { won: true, escaped: false, wait_frames: 30 }, backdrop: Battle }",
+          "caption": "All right!\nWEEDLE was caught!",
+          "audio_sfx": {
+            "id": 101,
+            "playing": true
+          },
+          "image": "combined-after-frame1177.png",
+          "image_sha256": "0f476137f0180fa3003b1877c3fc6776dace92b742f2b9b82767bf73b66e37b2"
+        }
+      }
+    },
+    "ordinary_NO_and_SAVE": {
+      "count": 8,
+      "trials": [
+        {
+          "stage": "literal-before",
+          "hp_mode": "healthy",
+          "repeat": 1,
+          "source": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+          "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+          "fixture_sha256": "d045e3b692e0164bf578a40b5f96da597a453a1ffee7a57104ddb6ea85c1b7a6",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-literal-before-healthy-gn9mjg9n/1/verification.json",
+          "report_sha256": "732625204467ce5be80d6815449fb709ad26f4b0cc6327766abbde71282ae89f",
+          "first_publication_A_frame": 1145,
+          "first_success_frame": 1146,
+          "first_field_frame": 1177,
+          "field_return_while_sfx_playing": true,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "618dfa69cba9cf01afc3860151f1a86cb116f3e1550200e040580e608d4f77ca"
+        },
+        {
+          "stage": "literal-before",
+          "hp_mode": "healthy",
+          "repeat": 2,
+          "source": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+          "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+          "fixture_sha256": "d045e3b692e0164bf578a40b5f96da597a453a1ffee7a57104ddb6ea85c1b7a6",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-literal-before-healthy-gn9mjg9n/2/verification.json",
+          "report_sha256": "732625204467ce5be80d6815449fb709ad26f4b0cc6327766abbde71282ae89f",
+          "first_publication_A_frame": 1145,
+          "first_success_frame": 1146,
+          "first_field_frame": 1177,
+          "field_return_while_sfx_playing": true,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "618dfa69cba9cf01afc3860151f1a86cb116f3e1550200e040580e608d4f77ca"
+        },
+        {
+          "stage": "literal-before",
+          "hp_mode": "hp1",
+          "repeat": 1,
+          "source": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+          "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+          "fixture_sha256": "44e4851c2f4783e4a4673b9958ebc95f4e996cbcd67666a75da971c6ecf4a4de",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-literal-before-hp1-4tis6uta/1/verification.json",
+          "report_sha256": "79b894ef98dcc422a743394d98333e8599b75471b6c9175a375bd12da54ac2ef",
+          "first_publication_A_frame": 1145,
+          "first_success_frame": 1146,
+          "first_field_frame": 1177,
+          "field_return_while_sfx_playing": true,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "99c74746851705fbc4153e2c96440197bb2271f7103b6280fea1da000d3ee37a"
+        },
+        {
+          "stage": "literal-before",
+          "hp_mode": "hp1",
+          "repeat": 2,
+          "source": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+          "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+          "fixture_sha256": "44e4851c2f4783e4a4673b9958ebc95f4e996cbcd67666a75da971c6ecf4a4de",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-literal-before-hp1-4tis6uta/2/verification.json",
+          "report_sha256": "79b894ef98dcc422a743394d98333e8599b75471b6c9175a375bd12da54ac2ef",
+          "first_publication_A_frame": 1145,
+          "first_success_frame": 1146,
+          "first_field_frame": 1177,
+          "field_return_while_sfx_playing": true,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "99c74746851705fbc4153e2c96440197bb2271f7103b6280fea1da000d3ee37a"
+        },
+        {
+          "stage": "after",
+          "hp_mode": "healthy",
+          "repeat": 1,
+          "source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+          "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+          "fixture_sha256": "d045e3b692e0164bf578a40b5f96da597a453a1ffee7a57104ddb6ea85c1b7a6",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-after-healthy-hrvs0q0b/1/verification.json",
+          "report_sha256": "98c1e4934bc76b71f02880f39a53b0d46b5af903b40e55c3306b43b368e5d7c4",
+          "first_publication_A_frame": 1142,
+          "first_success_frame": 1143,
+          "first_field_frame": 1303,
+          "field_return_while_sfx_playing": false,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "dfbaf6dc97ac148865703217786cb52344a7316073796c3c576dbae644b3a57e"
+        },
+        {
+          "stage": "after",
+          "hp_mode": "healthy",
+          "repeat": 2,
+          "source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+          "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+          "fixture_sha256": "d045e3b692e0164bf578a40b5f96da597a453a1ffee7a57104ddb6ea85c1b7a6",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-after-healthy-hrvs0q0b/2/verification.json",
+          "report_sha256": "98c1e4934bc76b71f02880f39a53b0d46b5af903b40e55c3306b43b368e5d7c4",
+          "first_publication_A_frame": 1142,
+          "first_success_frame": 1143,
+          "first_field_frame": 1303,
+          "field_return_while_sfx_playing": false,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "dfbaf6dc97ac148865703217786cb52344a7316073796c3c576dbae644b3a57e"
+        },
+        {
+          "stage": "after",
+          "hp_mode": "hp1",
+          "repeat": 1,
+          "source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+          "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+          "fixture_sha256": "44e4851c2f4783e4a4673b9958ebc95f4e996cbcd67666a75da971c6ecf4a4de",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-after-hp1-zo0ju226/1/verification.json",
+          "report_sha256": "6719f40c8b5367a5d580999a26f8be2b309a55d9f7f120b7cc322630d20cbe9e",
+          "first_publication_A_frame": 1142,
+          "first_success_frame": 1143,
+          "first_field_frame": 1303,
+          "field_return_while_sfx_playing": false,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "5d2b83c6fb2a755bb07c918433de8207b765cbd02593fc1a5489b4b161e690d1"
+        },
+        {
+          "stage": "after",
+          "hp_mode": "hp1",
+          "repeat": 2,
+          "source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+          "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+          "fixture_sha256": "44e4851c2f4783e4a4673b9958ebc95f4e996cbcd67666a75da971c6ecf4a4de",
+          "report": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-943-oldman-after-hp1-zo0ju226/2/verification.json",
+          "report_sha256": "6719f40c8b5367a5d580999a26f8be2b309a55d9f7f120b7cc322630d20cbe9e",
+          "first_publication_A_frame": 1142,
+          "first_success_frame": 1143,
+          "first_field_frame": 1303,
+          "field_return_while_sfx_playing": false,
+          "ordinary_save": true,
+          "protected_data_exact": true,
+          "sram_sha256": "5d2b83c6fb2a755bb07c918433de8207b765cbd02593fc1a5489b4b161e690d1"
+        }
+      ]
+    },
+    "limits": [
+      "CLI controls observe logical SFX only; all3voice/actual PCM nonzero completion is asserted separately by the real app test.",
+      "Adaptive first-success frames1146 before/1143 after are separate observations, not the strict same-frame screenshot alignment.",
+      "Only existing presentation enabled/page is captured by the new snapshot DTO; queued moves/VFX restart, audio playback/PCM state is not restored by this DTO.",
+      "Legacy missing metadata preserves prior current-page ACK behavior only; it does not reconstruct unknown publication or sound receipts.",
+      "No public CI, push, merge, or overall original-frame/PCM parity is claimed by these local checks."
+    ],
+    "tests": {
+      "905": {
+        "tested_head": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+        "source_count": 2172,
+        "source_sha256": "ef9d02418835a9c8b0927bbf2abe7a79660ef851e5c719ef4fc40d18703cdc33",
+        "checks": {
+          "core": {
+            "counts": [
+              {
+                "outcome": "ok",
+                "passed": 2930,
+                "failed": 0,
+                "ignored": 0
+              }
+            ],
+            "log_sha256": "5aa054b605d0a3f9959908d2fa4e42777dc4d222b798571dc16a291ca470f0eb"
+          },
+          "appdebug": {
+            "counts": [
+              {
+                "outcome": "ok",
+                "passed": 329,
+                "failed": 0,
+                "ignored": 39
+              }
+            ],
+            "log_sha256": "926608e87ee62d07d2476be902883585cb9a3d883f67588b0a3ebdc8bd102d4f"
+          },
+          "appdefault": {
+            "counts": [
+              {
+                "outcome": "ok",
+                "passed": 318,
+                "failed": 0,
+                "ignored": 37
+              }
+            ],
+            "log_sha256": "e0eb79d788cb8e8159e9e32b08ed7f92b472f234247122454fff52521441620c"
+          },
+          "determinism": {
+            "counts": [
+              {
+                "outcome": "ok",
+                "passed": 10,
+                "failed": 0,
+                "ignored": 0
+              }
+            ],
+            "log_sha256": "cf86c0b4a92ddf459701878ce681430b6780f2b51c9f8e67262732ba9ca8d149"
+          }
+        }
+      }
+    },
+    "projection": {
+      "source_sha256": "7df383a49d2232a42e4720fda55556ec5a0ba7afb35b2901f985225a28deb5ce",
+      "scope": "PR905 fields only; omit unrelated920 test metadata; original verification stays unchanged"
+    }
+  },
+  "historical_capture_matrix_preserved": true,
+  "no_builds_replays_or_old_evidence_relabelling": true,
+  "remote_gate": "New exacthead CI/Build GBA ROM/GBA performance mustallSUCCESS beforemerge. Publisher onlychecks triggered; nevermerges.",
+  "log_archive": {
+    "path": "publication-993-logs.zip",
+    "bytes": 406069,
+    "sha256": "abd792e3847c81f5d5b9713db544680d3d2d39fd7c527482278d08e9898b7e79",
+    "entries": [
+      "identity-proof.json",
+      "tested-v5-905-only.json",
+      "tested-legacy2172-source.json",
+      "retrospective-expanded2173-source.json",
+      "source-annex-993.json",
+      "tested-wrapper-905.sh",
+      "root-review-940-905.json",
+      "root-review-947-905-only.json",
+      "ACK943-905-only.json",
+      "old-pr261-workflows.json",
+      "tested-core.log",
+      "tested-appdebug.log",
+      "tested-appdefault.log",
+      "tested-determinism.log",
+      "entries.json"
+    ],
+    "scope": "PR905 only, no whole937 batch/otherPR logs/ROM/executable/state"
+  }
+}
