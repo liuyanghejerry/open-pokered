@@ -1,0 +1,358 @@
+{
+  "schema": "audit919-capture-performance-regression-v1",
+  "master_base": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+  "final_compiled_source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+  "final_binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+  "CI_failure": {
+    "run": 38686960107,
+    "job": 116263910821,
+    "head": "50ece821b7e4fd2794c049d7de59ff50b0254efc",
+    "trainer_update_ticks": 233,
+    "unchanged_limit": 232.3,
+    "artifact_id": 11950702494,
+    "artifact_contains_ROM": false,
+    "CI_checkout_merge": "4526acc450e06cdf29d0ff17ca1329cc51683f5e",
+    "CI_checkout_vs_failed_head_changed_files": 0,
+    "local_reproduction": "Compiled the exact failed head with unchanged fixed compiler/profile and reproduced all seven metrics. This is a local source build, not the unavailable CI ROM."
+  },
+  "production_change": "Only reuse the existing String capacity at both per-frame player_name synchronization points. Some/None/name edits/restores remain synchronized each frame; ball continuation, VFX, caption, audio and save production code remain unchanged from failed head50ec.",
+  "rejected_prototype": "The single VFX caller-state gate still measured233 and was reverted; its exact source commits, failing measurement and the first test-only Default-constructor compile error are retained.",
+  "tests": {
+    "core": {
+      "passed": 2889,
+      "ignored": 0,
+      "log": "audit-919-master8eb-after-core-full.log"
+    },
+    "app": {
+      "passed": 293,
+      "ignored": 39,
+      "log": "audit-919-master8eb-after-app-full.log"
+    },
+    "agent_determinism": {
+      "passed": 8,
+      "ignored": 0,
+      "log": "audit-919-master8eb-after-agent-determinism.log"
+    }
+  },
+  "explicit_app_build": "audit-919-master8eb-after-app-build.log",
+  "performance": {
+    "exact_failed_head": [
+      {
+        "candidate": "audit-919-ci-exact-before-perf.json",
+        "compare_log": "audit-919-ci-exact-before-perf-compare.log",
+        "gate_passed": false,
+        "update_ticks": {
+          "battle-entry-v1": 216,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 233
+        },
+        "oak_draw_ticks": 2994
+      }
+    ],
+    "single_state_gate_rejected": [
+      {
+        "candidate": "audit-919-state-gate-perf-1.json",
+        "compare_log": "audit-919-state-gate-perf-1-compare.log",
+        "gate_passed": false,
+        "update_ticks": {
+          "battle-entry-v1": 216,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 233
+        },
+        "oak_draw_ticks": 2994
+      }
+    ],
+    "name_reuse_isolated": [
+      {
+        "candidate": "audit-919-name-reuse-perf-1.json",
+        "compare_log": "audit-919-name-reuse-perf-1-compare.log",
+        "gate_passed": true,
+        "update_ticks": {
+          "battle-entry-v1": 206,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 224
+        },
+        "oak_draw_ticks": 2994
+      }
+    ],
+    "c3_final": [
+      {
+        "candidate": "audit-919-final-perf-1.json",
+        "compare_log": "audit-919-final-perf-1-compare.log",
+        "gate_passed": true,
+        "update_ticks": {
+          "battle-entry-v1": 206,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 224
+        },
+        "oak_draw_ticks": 2994
+      },
+      {
+        "candidate": "audit-919-final-perf-2.json",
+        "compare_log": "audit-919-final-perf-2-compare.log",
+        "gate_passed": true,
+        "update_ticks": {
+          "battle-entry-v1": 206,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 224
+        },
+        "oak_draw_ticks": 2994
+      }
+    ],
+    "master8eb_final": [
+      {
+        "candidate": "audit-919-master8eb-after-perf-1.json",
+        "compare_log": "audit-919-master8eb-after-perf-1-compare.log",
+        "gate_passed": true,
+        "update_ticks": {
+          "battle-entry-v1": 206,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 224
+        },
+        "oak_draw_ticks": 2994
+      },
+      {
+        "candidate": "audit-919-master8eb-after-perf-2.json",
+        "compare_log": "audit-919-master8eb-after-perf-2-compare.log",
+        "gate_passed": true,
+        "update_ticks": {
+          "battle-entry-v1": 206,
+          "intro-title-v1": 118,
+          "oak-dialogue-v1": 188,
+          "overworld-idle-v1": 382,
+          "overworld-movement-v1": 387,
+          "pokedex-entry-v1": 116,
+          "trainer-battle-entry-v1": 224
+        },
+        "oak_draw_ticks": 2994
+      }
+    ]
+  },
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "baseline_and_thresholds_unchanged": true,
+  "physical_input_replay": {
+    "compiled_source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+    "identity": "audit-919-final-identity.json",
+    "controls": [
+      {
+        "case": "party5-healthy-1",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+        "buttons_sha256": "b20cdfdf4d2b08722e2e5896ec0cdb2358f280c21839ca60e0c4d16eed6b3a02",
+        "final_frame": 3982,
+        "SRAM_sha256": "27c209015fe48f0920105514ecd8b38fe260210ada77394d16f06b6f6071b7ab",
+        "postball_PNGs_exact": 598,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party5-healthy-2",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+        "buttons_sha256": "b20cdfdf4d2b08722e2e5896ec0cdb2358f280c21839ca60e0c4d16eed6b3a02",
+        "final_frame": 3982,
+        "SRAM_sha256": "27c209015fe48f0920105514ecd8b38fe260210ada77394d16f06b6f6071b7ab",
+        "postball_PNGs_exact": 598,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party5-hp1-1",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "f7b89522a2a9d2beaf40c84aab3ca616ae542e275586750b715a9fa263048993",
+        "buttons_sha256": "0bf75a213527713cdefccd682c31ccd0b4dedb087607b32a01701b8879e49ff0",
+        "final_frame": 3854,
+        "SRAM_sha256": "fffbb93a9c871c1608654007be2cb56a68a7ed331313e2643454cc58acb22e16",
+        "postball_PNGs_exact": 470,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party5-hp1-2",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "f7b89522a2a9d2beaf40c84aab3ca616ae542e275586750b715a9fa263048993",
+        "buttons_sha256": "0bf75a213527713cdefccd682c31ccd0b4dedb087607b32a01701b8879e49ff0",
+        "final_frame": 3854,
+        "SRAM_sha256": "fffbb93a9c871c1608654007be2cb56a68a7ed331313e2643454cc58acb22e16",
+        "postball_PNGs_exact": 470,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party6-healthy-1",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "c8492cc8c7f058c54926ceb601ba35a7735e0242de93a3330c3770dc52c5451e",
+        "buttons_sha256": "f444170c25b1dddb8c1dc9dbe3287c2652a360805562b0dfb45c9a953a2046a4",
+        "final_frame": 4117,
+        "SRAM_sha256": "d063c52807f95011f6de76067e4f365f8d08a857e71e68a549478cd32bb9a0d6",
+        "postball_PNGs_exact": 733,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party6-healthy-2",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "c8492cc8c7f058c54926ceb601ba35a7735e0242de93a3330c3770dc52c5451e",
+        "buttons_sha256": "f444170c25b1dddb8c1dc9dbe3287c2652a360805562b0dfb45c9a953a2046a4",
+        "final_frame": 4117,
+        "SRAM_sha256": "d063c52807f95011f6de76067e4f365f8d08a857e71e68a549478cd32bb9a0d6",
+        "postball_PNGs_exact": 733,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party6-hp1-1",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "d3b64c71c2a864b300e253180c520a7a7f8f45c8168b97f6a43ae5ac1bbc078f",
+        "buttons_sha256": "67450b0a8d01717639f7d95bf747edccd49836d99a88db51e14d12ba91b9e187",
+        "final_frame": 3989,
+        "SRAM_sha256": "b1b3ccb3e00558738cbc1914a0069fcc1659026b6db55d59d050058e981c4fde",
+        "postball_PNGs_exact": 605,
+        "ordinary_SAVE_all32768bytes_equal": true
+      },
+      {
+        "case": "party6-hp1-2",
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "fixture_sha256": "d3b64c71c2a864b300e253180c520a7a7f8f45c8168b97f6a43ae5ac1bbc078f",
+        "buttons_sha256": "67450b0a8d01717639f7d95bf747edccd49836d99a88db51e14d12ba91b9e187",
+        "final_frame": 3989,
+        "SRAM_sha256": "b1b3ccb3e00558738cbc1914a0069fcc1659026b6db55d59d050058e981c4fde",
+        "postball_PNGs_exact": 605,
+        "ordinary_SAVE_all32768bytes_equal": true
+      }
+    ],
+    "scope": "Eight complete native controls including ordinary pre/post SAVE, exact original physical inputs, and every preserved postball screenshot. Equivalence to their archived native fbed controls; not a new original-ROM whole-SRAM parity claim. These are accurately retained c3 captures, not relabelled as the later master8eb integration."
+  },
+  "latest_same_screen_frame_pair": {
+    "master8eb-before": {
+      "stage": "master8eb-before",
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+      "binary_sha256": "66e94f06b6648c6a1c32061e38c65e372bc9c46685cbffdf8b52adc7d7563a93",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "seed": 12,
+      "frame": 2717,
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "PNG_sha256": "54993e734b5b34a8f8f6a1ca7076a76c76d3e1d73303c8adc7b6e5547f839621",
+      "scope": "Matched immutable fixture+seed12+same physical button prefix to2717. Initial2105 frames reconstructed from synchronous BEFORE commands; omitted step_frames gaps are explicit neutral. Then neutral400/A/neutral200/A/neutral10. Every frame recorded by CLI; GetState sampled only at declared batch boundaries. This is a focused paired image replay, not an extra complete post-capture/ordinarySAVE control."
+    },
+    "master8eb-after": {
+      "stage": "master8eb-after",
+      "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+      "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "seed": 12,
+      "frame": 2717,
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "PNG_sha256": "2d2729a560960e7f7b4bb9c34bbe857bca668c4834d082bd81a3187c4d50c8ad",
+      "scope": "Matched immutable fixture+seed12+same physical button prefix to2717. Initial2105 frames reconstructed from synchronous BEFORE commands; omitted step_frames gaps are explicit neutral. Then neutral400/A/neutral200/A/neutral10. Every frame recorded by CLI; GetState sampled only at declared batch boundaries. This is a focused paired image replay, not an extra complete post-capture/ordinarySAVE control."
+    }
+  },
+  "safari_bounded_replays": {
+    "c3": {
+      "0": {
+        "attempts": 1,
+        "actual_failed_attempts": 0,
+        "success_path": "audit-919-final-safari-prefix-hp0-4ckr_w_n",
+        "frame": 2633,
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "binary_sha256": "c244045bdebda94ac22e1c819277d4c3938b835a62179a88524b04f5babecf5b",
+        "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+        "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+        "caption": "All right!\nVENONAT was caught!",
+        "audio_sfx": {
+          "id": 101,
+          "playing": true
+        }
+      },
+      "1": {
+        "attempts": 1,
+        "actual_failed_attempts": 0,
+        "success_path": "audit-919-final-safari-prefix-hp1-fianp4wo",
+        "frame": 2633,
+        "source": "c3c38f71cf8cb017db8f6c5c25135ee173bc2da6",
+        "binary_sha256": "c244045bdebda94ac22e1c819277d4c3938b835a62179a88524b04f5babecf5b",
+        "fixture_sha256": "cca11b1639b5ff09fc20adfc30541cc0bd424f8d1d015cc46e07e9f55e97bc1e",
+        "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+        "caption": "All right!\nVENONAT was caught!",
+        "audio_sfx": {
+          "id": 101,
+          "playing": true
+        }
+      }
+    },
+    "master8eb": {
+      "0": {
+        "attempts": 1,
+        "actual_failed_attempts": 0,
+        "success_path": "audit-919-master8eb-after-safari-prefix-hp0-10s9tbfy",
+        "frame": 2633,
+        "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+        "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+        "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+        "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+        "caption": "All right!\nVENONAT was caught!",
+        "audio_sfx": {
+          "id": 101,
+          "playing": true
+        }
+      },
+      "1": {
+        "attempts": 2,
+        "actual_failed_attempts": 1,
+        "success_path": "audit-919-master8eb-after-safari-prefix-hp1-1piobyqm",
+        "frame": 2633,
+        "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+        "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+        "fixture_sha256": "cca11b1639b5ff09fc20adfc30541cc0bd424f8d1d015cc46e07e9f55e97bc1e",
+        "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+        "caption": "All right!\nVENONAT was caught!",
+        "audio_sfx": {
+          "id": 101,
+          "playing": true
+        }
+      }
+    }
+  },
+  "latest_safari_before_success": {
+    "attempts": [
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-5tkys7vi",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-1n08ikbc",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-gajp11zl",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-y075g__4",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-dld_16ex"
+    ],
+    "actual_success": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-919-safari-matched-prefix-master8eb-before-dld_16ex"
+  },
+  "old_archives_byte_exact": {
+    "master6085-integration-logs.zip": "50539e5b87fb8888817ca1b5465fc2b26eba9ecedb4a4f255df064dd261c1d80",
+    "master-216cb-integration-logs.zip": "1cb65c59b17bbf820a15de251230f20f2bc49e8f2cc0e35a6de44624bdeeefc2",
+    "master-6d30-integration-logs.zip": "ef878ac462b17e1d4d374586642ef65c6c67389ddd09d68be2bc6dc142a9b3cf",
+    "integration-evidence.zip": "e0222da9b750d8f634e1443ebccbf1692032b43acae6379cfc3892ef1422b096",
+    "evidence.zip": "498d2a03ab0f66fbb32f48b7c6acc058dc8c89b6d2558105249cef5abb254932"
+  },
+  "limits": [
+    "CI artifact contains baseline/candidate JSON and logs but no ROM; local source-built reproduction is labelled as such.",
+    "Safari remains natural entropy: all failed attempts retained; success-conditioned prefixes do not assert RNG, DV or outcome equality.",
+    "Safari bounded prefixes stop after caption/sound, with no new final ordinarySAVE. Full ordinarySAVE Safari/source controls remain the existing preserved broad matrix.",
+    "No remote CI success or full campaign completion is claimed by these local checks.",
+    "The source-ROM evidence and old 40e/50ec/c3 binaries/recordings retain their original identities."
+  ]
+}
