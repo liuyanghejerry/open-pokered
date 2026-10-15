@@ -1,0 +1,44 @@
+{
+  "archive": "current-master-evidence.zip",
+  "sha256": "5aa0dfe7608cf618c4e9930c96b0b0e92b895954fadcd17d49cafecb52a2f2f0",
+  "bytes": 999601,
+  "original_path_records": 462,
+  "exact_content_blobs": 187,
+  "entries": 188,
+  "entry_manifest_sha256": "83eb43c39a6ab36edc312374c79c27c6229083c23570979ce4734f07e41c929c",
+  "all_readback_verified": true,
+  "scope": {
+    "current_master_before": "6d30ba5abfb40e0873b6b4bea962f0ae29989bfe",
+    "integrated_after": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+    "current_before_ordinary_save": 6,
+    "current_after_ordinary_save": 6,
+    "matched_frame1080_visual_replays": 4,
+    "GBA_unchanged_gates": 7
+  },
+  "historical_preserved_byte_exact": {
+    "archive_sha256": "9c50be1b4c3291d4539eb4171c910059ad6a16d1bca8cec12db7efa4e37fbe6d",
+    "verification_sha256": "2b2c60f32a1dae22be7ad70327e5aea0920a7cad0f769a58a52a4c87bc1b8106",
+    "commit_for_comparison": "6092d7939c9958622c86aad041c88e68adb816b8",
+    "source_ordinary_save": 6,
+    "historical_b7_before_ordinary_save": 6,
+    "historical_ed6_after_ordinary_save": 6
+  },
+  "excluded_binaries": [
+    {
+      "path": "audit-909-current-after-debug",
+      "bytes": 78572032,
+      "sha256": "57a277a04a442324cc76c5fa6dfb794004ca9e09b29b24c119429724b9011629"
+    },
+    {
+      "path": "audit-909-current-before-debug",
+      "bytes": 78531456,
+      "sha256": "5e7c8caf53d7825330a828cf54d987ff6c0da0861401ec4850e9ffe0b776d70e"
+    },
+    {
+      "path": "audit-909-current-perf.gba",
+      "bytes": 5655132,
+      "sha256": "f8589e1eae80e9d60a5e897b403d182c4a5297bfa71a95990a7d61a271e75246"
+    }
+  ],
+  "preservation": "New current-master controls, exactbuild/config identities, commoninput screenshots, all test/build/GBA logs kept asoriginalbytes. Original evidence.zip+verification.json remain byte-exact history, not relabelled current. No ROM/executables bundled."
+}
