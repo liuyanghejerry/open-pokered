@@ -1,0 +1,181 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "05ce6a881e5a618f5b3af6fce77bded36fba785b598940d655fb0dc595d97a6a",
+  "bytes": 1496983,
+  "original_path_records": 1183,
+  "exact_content_blobs": 430,
+  "entries": 431,
+  "entry_manifest_sha256": "5aa8620adc85efab588f418457c5dcbcd807c018eb619746e2fb1f5270604fc2",
+  "all_readback_verified": true,
+  "final_passing_scope": {
+    "source_ordinary_save": 16,
+    "current216_native_before_ordinary_save": 16,
+    "privatecd33_native_after_ordinary_save": 16,
+    "matched_common_prefix_images": {
+      "pairs": 2,
+      "repeats_per_build": 2,
+      "frames": [
+        544,
+        608
+      ]
+    }
+  },
+  "preservation": "All audit912 trials, immutable generic Chansey12/Growl controls, Surf controller failure and its state, initial before6085 captures, raw scripts/input/state/SRAM/readbacks, tests/build identities and logs preserved as original bytes. Final natural-moveset controls alone form the48 passing set. No ROM/executables bundled; excluded binary metadata retains exact source identity andSHA. A derived erratum does not relabel or rewrite old raw records.",
+  "excluded_binaries": [
+    {
+      "path": "audit-912-after-debug",
+      "bytes": 78617832,
+      "sha256": "cfaee98b60ded8bce547f1a4f4df93ce2dd8634a8ae8101a7c996190cdd8b77a"
+    },
+    {
+      "path": "audit-912-before-debug",
+      "bytes": 77665936,
+      "sha256": "a6c380c64b6e0cf241117e1d745a87cdb75175bf06ae47d7e359f02777f37c79"
+    },
+    {
+      "path": "audit-912-current-before-debug",
+      "bytes": 78528064,
+      "sha256": "f966f7e2de570b0d94291ca5d7ecd1a8ce45083caeed9f7d7c54e24bc8190c1b"
+    },
+    {
+      "path": "audit-912-original-cut-menu-dsylodda/no-badge-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-cut-menu-dsylodda/no-badge-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-cut-menu-dsylodda/nothing-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-cut-menu-dsylodda/nothing-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-cut-menu-dsylodda/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-572mo4m3/fly-indoor-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-572mo4m3/fly-indoor-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-572mo4m3/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-572mo4m3/surf-fail-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/dig-fail-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/dig-fail-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/fly-indoor-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/fly-indoor-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/softboiled-denial-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/softboiled-denial-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/softboiled-success-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/softboiled-success-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/surf-fail-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/surf-fail-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/teleport-indoor-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ex0npoz6/teleport-indoor-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ra677if6/preparation/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ra677if6/softboiled-denial-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ra677if6/softboiled-denial-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ra677if6/softboiled-success-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-original-other-menu-ra677if6/softboiled-success-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-912-perf.gba",
+      "bytes": 5653020,
+      "sha256": "9f836b7a61c969adb6cd7d0d1a7ce1d5834cc786c199bfb21cde369dfbf0dcdc"
+    }
+  ]
+}

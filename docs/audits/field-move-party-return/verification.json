@@ -1,0 +1,276 @@
+{
+  "scope": "Return to StartMenu_Pokemon.loop after field-move refusals and completed/cancelled Softboiled. Successful field effects and Fly cancellation retain existing caller behavior.",
+  "before": {
+    "source_commit": "216cb0343ca4871663a1a45bde9c90a60b32fe75",
+    "binary_sha256": "f966f7e2de570b0d94291ca5d7ecd1a8ce45083caeed9f7d7c54e24bc8190c1b",
+    "fresh_independent_target": "fidelity-912-before-native-target"
+  },
+  "after": {
+    "source_commit": "cd33b24e54bb572ff7b8b1d76a2f44f38c63203f",
+    "binary_sha256": "cfaee98b60ded8bce547f1a4f4df93ce2dd8634a8ae8101a7c996190cdd8b77a",
+    "fresh_independent_target": "fidelity-912-native-target"
+  },
+  "original": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+  },
+  "ordinary_save_controls": {
+    "source": 16,
+    "current_master_before": 16,
+    "after": 16
+  },
+  "cases": [
+    {
+      "case": "no-badge",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        35,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "cc07728f36e17d773d9a583676a370c1e104736c7eec9fc541d3c49bf10ecb17",
+      "source_directory": "audit-912-original-cut-menu-dsylodda",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "nothing",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        35,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "cc07728f36e17d773d9a583676a370c1e104736c7eec9fc541d3c49bf10ecb17",
+      "source_directory": "audit-912-original-cut-menu-dsylodda",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "fly-indoor",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        34,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "c92764292bde7d30f102dd1dcf581a2e6c61503d3ffbf4187e45d254579ee433",
+      "source_directory": "audit-912-original-other-menu-ex0npoz6",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "surf-fail",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        34,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "d3b117ff61cf2b3734487595d0676706c74211758c0e87cfc462d27ecd7b2499",
+      "source_directory": "audit-912-original-other-menu-ex0npoz6",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "dig-fail",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        33,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "059bfb7fff15658a423548717ec62f788a80d33a0fd863248f262897096c768c",
+      "source_directory": "audit-912-original-other-menu-ex0npoz6",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "teleport-indoor",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        30,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "c367c08ad9d1a80c2a0b6bcffdeb0f719966a9e62400be7f615c987226f0ba3a",
+      "source_directory": "audit-912-original-other-menu-ex0npoz6",
+      "before_directory": "audit-912-native-final-before-kb242hj1",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "softboiled-denial",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        30,
+        35
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "dc7aed20f9f4b852129c1e5e85fd1fcde245cf6c0e44184f0da2e1d982b87370",
+      "source_directory": "audit-912-original-other-menu-ra677if6",
+      "before_directory": "audit-912-native-final-before-0xz81zqv",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 544
+    },
+    {
+      "case": "softboiled-success",
+      "repeats_source_before_after": [
+        2,
+        2,
+        2
+      ],
+      "final_hp": [
+        122,
+        31
+      ],
+      "party88_equal_all_providers": true,
+      "repeat_entire_sram_equal_per_provider": true,
+      "all_main_checksums_valid": true,
+      "money": 3000,
+      "party88_sha256": "99f533877597c48b94676b2a451962237e4a59c4db3198d37831b1d507a226bc",
+      "source_directory": "audit-912-original-other-menu-ra677if6",
+      "before_directory": "audit-912-native-final-before-0xz81zqv",
+      "after_directory": "audit-912-native-final-after-0tniimht",
+      "same_input_and_fixture_before_after": true,
+      "matched_frame": 608
+    }
+  ],
+  "protected_native_fields": [
+    "current_box",
+    "pc_storage",
+    "hall_of_fame",
+    "pokedex",
+    "bag",
+    "player_money",
+    "player_id"
+  ],
+  "tests": {
+    "core-field-moves-v1": {
+      "passed": 51,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-912-core-field-moves-v1.log",
+      "sha256": "d2f91e2c7f73250bfbd62befa35f99a8c8785a00d4c91caa5332d161b40f51c4"
+    },
+    "core-forced-bike-v1": {
+      "passed": 24,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-912-core-forced-bike-v1.log",
+      "sha256": "aee077000ca38e56897db8c5de8aefa928215a7f772122b64767878c7d5d6e5c"
+    },
+    "app-scoped-v2": {
+      "passed": 7,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-912-app-scoped-v2.log",
+      "sha256": "d05c753688434597987537d797d0a50ed458455b996acf0f0130b8337fccd5aa"
+    },
+    "core-full": {
+      "passed": 2888,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-912-core-full.log",
+      "sha256": "735a935152c907b0fea032e6291d1849303dac9dec15ed3b438c02e7aa83555a"
+    },
+    "app-full": {
+      "passed": 287,
+      "failed": 0,
+      "ignored": 39,
+      "log": "audit-912-app-full.log",
+      "sha256": "9687a4525601213fb496f9a500aa110a72bd8cb56ebb9c8c8bff4e937148ba0b"
+    },
+    "agent-determinism": {
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-912-agent-determinism.log",
+      "sha256": "45da6d945807ee6e2b4e0a2add75c9bccdf8497a33ae286a8764f10a89d9f8b4"
+    }
+  },
+  "gba": {
+    "all_seven_unchanged_gates_passed": true,
+    "measurements": 1,
+    "rom_sha256": "9f836b7a61c969adb6cd7d0d1a7ce1d5834cc786c199bfb21cde369dfbf0dcdc",
+    "compiled_source_commit": "cd33b24e54bb572ff7b8b1d76a2f44f38c63203f",
+    "trainer_update_ticks": 232,
+    "idle_update_ticks": 382,
+    "oak_draw_ticks": 2994,
+    "build_log": "audit-912-gba-build.log",
+    "comparison_log": "audit-912-perf-compare.log"
+  },
+  "limitations": [
+    "Only the eight actual scenarios are claimed; other environmental Surf refusals and badge moves use core/app coverage.",
+    "Successful Softboiled transfer/result/ACK are covered, not donor/recipient HP-bar animation or audio/frame parity. Existing animation timing remains a separate audit surface.",
+    "Fly destination cancel was withdrawn as a missing feature: existing app returns to party already; static and app regression preserved. No new source/native Fly-cancel matrix claimed.",
+    "Snapshot/ordinary-load/soft-reset abandoned-picker behavior has application tests, not added ROM/native save-replay matrices.",
+    "No full mainline completion or remote CI green claim.",
+    "Final actual Softboiled fixture is naturally obtainable Chansey23 with Pound/Doubleslap/TM41; historical Chansey12/Growl controls retained as generic only with a separate erratum. Application lifecycle tests use isolated engine models, not extra source campaigns.",
+    "Mainline completion and remote CI are not claimed.",
+    "All source/native party/stat/item inputs are preinput constructed. No in-validation RAM writes or debug effect setters. Full unrelated source save fields and whole source/native SRAM are not required equal."
+  ],
+  "full_raw_summary": "audit-912-final-verification.json inside evidence.zip",
+  "raw_summary_sha256": "15067729cf97f0a48229f3f9b992d7b11f76948d0c3652783f065d7ebf8c8713"
+}
