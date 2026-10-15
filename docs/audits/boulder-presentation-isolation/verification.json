@@ -1,0 +1,78 @@
+{
+  "schema": "audit922-boulder-fixture-v1",
+  "base_commit": "05f6e76c2e8fc6c0a64dbf6486316a073fa20347",
+  "source_commit": "99e2f2f4d40c9d6eec062791f200b4ce18b80eba",
+  "change": "Only this debug-server presentation test sets encounter_cooldown=1; all prior budgets and presentation assertions retained. Production turn/encounter logic unchanged.",
+  "confirmed_failure": {
+    "unseeded_batch_execution": 32,
+    "zero_based_repeat": 31,
+    "log": "raw/isolated-diagnostic/031.log",
+    "snapshot": "raw/isolated-diagnostic/883041-1792045709353026844.json",
+    "snapshot_sha256": "f46d0c165f4f77faabe95340fef4ee6233b8ef26e9aa5ef552a41341f6082c66",
+    "player": [
+      18,
+      9
+    ],
+    "boulder": [
+      18,
+      10
+    ],
+    "initial_overworld_frame": 120,
+    "first_Down_overworld_frame": 121,
+    "screen_after_first_Down": "Battle",
+    "remaining_nine_Down_updates": "Overworld frame remains121; battle owns updates.",
+    "initial_check_player_turn": true,
+    "initial_last_stop_direction": 0
+  },
+  "captured_prestate_replays": [
+    {
+      "label": "before",
+      "repeat": 0,
+      "exit": 101
+    },
+    {
+      "label": "before",
+      "repeat": 1,
+      "exit": 101
+    },
+    {
+      "label": "after",
+      "repeat": 0,
+      "exit": 0
+    },
+    {
+      "label": "after",
+      "repeat": 1,
+      "exit": 0
+    }
+  ],
+  "unchanged_910_isolated_repeats": 40,
+  "clean_master_full_passes_before_fix": 1,
+  "diagnostic_full_passes_before_fix": 3,
+  "final_tests": {
+    "core-boulder": {
+      "passed": 31,
+      "failed": 0,
+      "ignored": 0
+    },
+    "app-debug": {
+      "passed": 289,
+      "failed": 0,
+      "ignored": 39
+    },
+    "app-default": {
+      "passed": 278,
+      "failed": 0,
+      "ignored": 37
+    }
+  },
+  "final_isolated_entropy_seeded_repeats": 64,
+  "excluded_or_unproven": [
+    "Three earlier public-branch full-suite failures are retained in root audit921 logs; this package does not relabel or replace them.",
+    "No default SAVE or companion sidecar file existed beside the nine inspected libtest binaries.",
+    "No map/block/wild override setter calls were found in app-lib/renderer tests; a shared-override race was not established.",
+    "This is a test fixture replay, not ordinary player-input/SAVE validation, and does not claim original/native frame/audio parity.",
+    "No local GBA timing sample is claimed. The change is compiled only under cfg(test, feature=debug-server); remote CI still gates the eventual exact head."
+  ],
+  "preserved_diagnostic_failure": "audit-922-diagnostic-build.log: first diagnostic build failed E0616 because active_script_effect is private; v2 used the public OverworldSnapshot data instead. No production visibility/API changed."
+}
