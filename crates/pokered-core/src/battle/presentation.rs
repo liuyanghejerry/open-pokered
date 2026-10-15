@@ -181,7 +181,7 @@ impl BattlePresentation {
         }
         self.queued.clear();
         for event in &log.events {
-            if let Some(announcement) = runtime::presentation_hp_message(event, state, log) {
+            if let Some(announcement) = runtime::presentation_hp_message(event, state, effects) {
                 self.queued.push(MoveStep {
                     announcement,
                     hits: Vec::new(),
