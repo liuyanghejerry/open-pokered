@@ -24,7 +24,7 @@ pub enum CannotMoveReason {
 ///            Confusion → (Disabled move check) → Paralysis
 ///
 /// `opponent` needed for trapped check (enemy using trapping move on us).
-/// `random_confusion` used for confusion 50% self-hit check (< 128 = hit self).
+/// `random_confusion` used for confusion 50% self-hit check (>= 128 = hit self).
 /// `random_paralysis` used for paralysis 25% full-para check (< 63 = fully paralyzed).
 pub fn check_status_conditions(
     battler: &mut BattlerState,
@@ -93,8 +93,8 @@ pub fn check_status_conditions(
         if battler.confused_turns_left == 0 {
             battler.clear_status1(status1::CONFUSED);
         } else {
-            // 50% chance to hit self: random < 128
-            if random_confusion < 128 {
+            // CP $80 / JR C continues normally: bytes >= 128 hit self.
+            if random_confusion >= 128 {
                 return StatusCheckResult::CannotMove(CannotMoveReason::ConfusedSelfHit);
             }
         }
@@ -257,7 +257,7 @@ mod tests {
         battler.confused_turns_left = 3;
         let opponent = make_battler();
 
-        let result = check_status_conditions(&mut battler, &opponent, 0, 255);
+        let result = check_status_conditions(&mut battler, &opponent, 128, 255);
         assert_eq!(
             result,
             StatusCheckResult::CannotMove(CannotMoveReason::ConfusedSelfHit)
@@ -283,7 +283,7 @@ mod tests {
         battler.confused_turns_left = 3;
         let opponent = make_battler();
 
-        let result = check_status_conditions(&mut battler, &opponent, 200, 255);
+        let result = check_status_conditions(&mut battler, &opponent, 127, 255);
         assert_eq!(result, StatusCheckResult::CanMove);
     }
 

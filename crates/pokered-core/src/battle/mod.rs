@@ -52,6 +52,8 @@ mod link_battle_driver_tests;
 mod catch_tests;
 #[cfg(test)]
 mod capture_outcome_tests;
+#[cfg(test)]
+mod confusion_polarity_tests;
 
 /// Reusable effect-stack **parity harness** (strangler slice 1) — additive,
 /// test-only, does NOT touch the production turn loop. The byte-stream shim,

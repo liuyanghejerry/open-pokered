@@ -788,8 +788,9 @@ pub fn flinch_gate(
 
 /// Confusion gate (order 70): confusion is the `Confused` VOLATILE. Decrement
 /// `turns`; on reaching 0 snap out (remove the volatile, NO byte, the mon acts);
-/// else draw ONE byte — `< 128` ⇒ 50% self-hit (typeless 40-power, `Fail`), `>= 128`
-/// ⇒ the mon acts. The byte is drawn ONLY while still-confused-and-not-snapping, so
+/// else draw ONE raw BattleRandom byte: `>= 128` ⇒ 50% self-hit (typeless
+/// 40-power, `Fail`), `< 128` ⇒ the mon acts (core.asm:3427–3434, 5768–5775).
+/// The byte is drawn ONLY while still-confused-and-not-snapping, so
 /// `consumed()` matches the legacy meaningful read.
 pub fn confusion_gate(
     ctx: &mut BattleCtx<'_, PokeredRules>,
@@ -819,7 +820,7 @@ pub fn confusion_gate(
         return HandlerResult::Unchanged;
     }
     let roll = ctx.rng.next_u8();
-    if roll < 128 {
+    if roll >= 128 {
         let self_damage = confusion_self_hit_damage(ctx, source);
         super::set_shared_damage(ctx, self_damage.min(ctx.battler(source).hp));
         ctx.battler_mut(source).take_damage(self_damage);
