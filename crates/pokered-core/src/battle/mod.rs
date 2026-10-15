@@ -189,7 +189,7 @@ use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
 use crate::items::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use crate::main_menu::MenuInput;
 use effects::EffectRandoms;
-use escape::{try_run_from_battle, RunResult};
+use escape::{try_run_from_battle_with_rng, RunResult};
 use menu::{
     BagMenuResult, BagMenuState, BattleMenuAction, BattleMenuInput, BattleMenuState, ItemCategory,
     MoveMenuResult, MoveMenuState, MoveSlot, PartySubMenuAction, PartySubMenuState,
@@ -3632,7 +3632,7 @@ learn {learn_name}!")];
             return;
         }
         if let Some(ref mut bs) = self.battle_state {
-            let result = try_run_from_battle(bs, crate::rng::random());
+            let result = try_run_from_battle_with_rng(bs, || self.rng.next_u8());
             match result {
                 RunResult::Escaped => {
                     self.show_text_then(
@@ -7671,3 +7671,6 @@ mod fidelity_blackout_tests {
 
 #[cfg(test)]
 mod nickname_narration_tests;
+
+#[cfg(test)]
+mod run_rng_tests;
