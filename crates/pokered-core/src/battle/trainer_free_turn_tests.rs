@@ -83,13 +83,34 @@ fn trainer_free_turn_successful_potion_has_the_same_ai_continuation() {
     open_first_item(&mut s, ItemId::Potion);
     assert_eq!(s.phase, BattlePhase::ItemTargetSelect { item_id: ItemId::Potion });
     press(&mut s, true, false, false);
-    // The real HP changes first; the existing item notice animates its bar.
+    // The live party heals once, then its result waits for Delay50 and ACK.
     assert_eq!(s.battle_state.as_ref().unwrap().player.active_mon().hp, before + 20);
+    assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 50 });
+    let healed = serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap();
+    for remaining in (0..50).rev() {
+        s.update_frame(BattleInput { a: true, b: true, ..BattleInput::none() });
+        assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: remaining });
+    }
+    for _ in 0..2 { s.update_frame(BattleInput::none()); }
+    assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 0 });
+    assert_eq!(s.enemy_ai_count, 5, "TrainerAI cannot run before the result ACK");
+    assert_eq!(serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap(), healed,
+        "delay and neutral waiting cannot spend PP, heal again or run either side");
+    assert_eq!(s.player_bag.items(), &[(ItemId::Potion, 1)]);
+    press(&mut s, true, false, false);
+    assert_eq!(s.phase, BattlePhase::EnemyFreeTurnAfterItem);
+    assert_eq!(s.enemy_ai_count, 5, "ACK hands off; its update does not also run AI");
+    assert_eq!(serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap(), healed);
     finish_item_notice(&mut s);
     assert_eq!(s.battle_state.as_ref().unwrap().player.active_mon().hp, before + 20);
     assert!(s.battle_state.as_ref().unwrap().enemy.active_mon().status.is_none());
     assert_eq!(s.player_bag.items(), &[(ItemId::Potion, 1)]);
     assert_eq!(s.enemy_ai_count, 4);
+    assert_eq!(s.battle_state.as_ref().unwrap().enemy.last_move_used, MoveId::None);
+    assert!(messages(&s).contains("FULL HEAL"));
+    for _ in 0..10 { s.update_frame(BattleInput::none()); }
+    assert_eq!(s.enemy_ai_count, 4, "the AI result notice cannot repeat its action");
+    assert_eq!(s.player_bag.items(), &[(ItemId::Potion, 1)]);
 }
 
 #[test]
