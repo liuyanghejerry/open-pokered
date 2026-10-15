@@ -74,3 +74,23 @@ measured metrics and artifact hashes. No performance budget was changed.
 This is a pure performance change with identical frame output; it has no
 visual difference requiring comparison screenshots. Silph departure timing and
 the generic audio snapshot change remain separate work.
+
+## Current master integration
+
+After the original f078 controls and commit `ca71a45a` were complete, this
+branch merged master `32f74146eff45ec883e706d119ad56f90c2be8f0` (Old Man
+capture fix). The original measurements above retain their original identity.
+A separate 6762-file source freeze and two 2165-file GBA mirrors were used for
+new integration checks: focused tests 5+5, core 2890, parallel debug app 303
+(39 ignored), locked app build and normal GBA release all pass.
+
+All 31 performance limits pass again on both pins. Current pin76 update ticks:
+idle349, movement354, trainer223, battle205. Isolated pin99c: idle350,
+movement355, trainer225, battle206. The complete current metrics and ROM hashes
+are recorded separately in verification.json. No threshold was changed.
+
+The newly compiled integration runner also completes the same ordinary 9749
+frames and SAVE. Its complete ledger, WAV, SRAM, flags and screenshot match the
+untouched f078 BEFORE bytes; this is an additional integration check, not a
+relabeling of the original matched f078 before/after controls. Both integrated
+GBA query functions still contain zero static wide-multiply call sites.
