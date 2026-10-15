@@ -58,3 +58,7 @@
 此前整合 master `05f6e76c`（#265，宝可梦之笛保留非睡眠状态）：完整核心 **2890 通过**、debug-server 应用 **293 通过/39 忽略/0 失败**。精确源码与日志见 `master-05f6-integration.json` 及日志包；此前的实际原作/原生截图和普通 SAVE 继续保留各自冻结身份。
 
 已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2890 通过/0 忽略；app 300 通过/39 忽略，全部 0 失败。当前受测源码 `cc965570de6640feece13c4aa1a83971d6a77850`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。 此次同时保留中毒后取消排队遇敌与门的黑屏处理；已有野生战和进门回归在同一源码中通过。
+
+## Integration after capture RNG and performance fixes
+
+Actual master `3d67d6ae20bb5054629538303cf295d7faec6bb0` includes merged PR271 and PR272. Prepared source `8260946962b06c4a6fbe6524d216309ba1d13a9f` passed core **2913**, full debug app **315** (39 ignored), and determinism **10**. After merging actual master, all 2170 compiler-source paths and every non-documentation file are byte-identical to that tested source. `parent271-master-integration.json` and its log archive preserve source manifests and terminal logs. Poison handling for both a queued wild encounter and a doorway passes together; this PR changes only five poison-related source/test files relative to actual master. Historical original/native input, ordinary SAVE, screenshot and default/GBA records retain their measured source identities. Prior run 38699566135 failed the unchanged idle 382.9-tick limit; the independent performance fix PR272 is now merged. The exact current public head must pass all three latest remote workflows before merge.
