@@ -6112,7 +6112,8 @@ mod fidelity_flow_regressions {
                 for phase in [BattlePhase::PlayerMenu,
                     BattlePhase::Intro { phase: IntroPhase::SafariMenuPreparation, wait_frames: 17 },
                     BattlePhase::ShowingText { messages: vec!["A Safari action.".into()], current: 0,
-                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu) },
+                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),
+                        backdrop: pokered_core::battle::BattleTextBackdrop::Battle },
                     BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 0 }] {
                     s.phase = phase;
                     let mut fb = FrameBuffer::new(config, Rgba::BLACK);
