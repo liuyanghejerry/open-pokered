@@ -34,3 +34,5 @@ Baseline regression:1 FAIL. AFTER full app270 PASS/39 ignored, core2884 PASS and
 This is a seen-registration/save/UI audit. It does not claim original/native Doll text or consumption timing equivalence, complete animation/audio/RNG parity, all campaign reachability or full mainline completion. Those presentation and timing concerns remain separate from this small registration change.
 
 进一步整合 master `dfeefa34` 后，`5672f312` 完整 debug app 271 通过，39 个已有忽略项，0 失败。核心源码未再改变，沿用完整 core 2884 通过结果；日志见 `integration.json` / `integration-logs.zip`。截图仍标记真实的 `f44` / `046` 录制身份。
+
+已整合中毒流程 master `7310d298`。生产整合提交 `9c1220f5` 完整 debug app 280 通过、39 个已有忽略项、0 失败；核心源码与该 master 完全相同。完整日志见 `master-7310-integration.json` / `master-7310-integration-logs.zip`，原截图与录制身份未重新标记。
