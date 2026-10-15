@@ -1,0 +1,10 @@
+{
+  "source": "5672f312ab12459a741bcec78d458f9a25114f86",
+  "master": "dfeefa3411634e187119862288ad78d5a3e933fe",
+  "debug_app_passed": 271,
+  "ignored": 39,
+  "failed": 0,
+  "core_source_unchanged_from_previous_full_2884_pass": true,
+  "log_sha256": "9cfa32e81794477a5f03da97910ffdcddca52b025b8b28798b4a7e3d9eadd619",
+  "scope": "Fresh f44 before/046 after recording identities retained. New master only adds readonly diagnostic export tooling."
+}

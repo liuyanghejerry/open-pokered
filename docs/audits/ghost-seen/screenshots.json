@@ -1,0 +1,24 @@
+[
+  {
+    "stage": "before",
+    "frame": 1536,
+    "path": "docs/screenshots/ghost-seen/pokedex-before.png",
+    "source_png": "audit-904-saved-dex-before-xm4u1mup/1/pokedex.png",
+    "sha256": "704ce9dedf7c191f743c88621f8f5d67d73f87ec27a72b09803a68b642de9b91",
+    "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+    "visible_max_species": 19,
+    "seen_count": 6
+  },
+  {
+    "stage": "after",
+    "frame": 1536,
+    "path": "docs/screenshots/ghost-seen/pokedex-after.png",
+    "source_png": "audit-904-saved-dex-after-871319ed/1/pokedex.png",
+    "sha256": "31ffad41406e2e342dd09f05a7e74dba594e6861dace35c9555c5efd0cb9ac0f",
+    "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+    "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+    "visible_max_species": 105,
+    "seen_count": 7
+  }
+]
