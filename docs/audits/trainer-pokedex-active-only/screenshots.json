@@ -1,0 +1,22 @@
+[
+  {
+    "stage": "b7c81-before",
+    "frame": 1416,
+    "screen": "Pokedex",
+    "compiled_commit": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+    "binary_sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9",
+    "source_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-b7c81-before-loss-sc5ynftm/actual-1/pokedex.png",
+    "path": "docs/screenshots/trainer-pokedex-active-only/loss-before.png",
+    "sha256": "7aeb35b4bf474fed0807c4917bfee46c0bf3d0a06e7dcb2e29dd39ce49992649"
+  },
+  {
+    "stage": "events-after",
+    "frame": 1416,
+    "screen": "Pokedex",
+    "compiled_commit": "669ab74a230b014fdec61976e4d40fa918046b2a",
+    "binary_sha256": "ad953cc62c455853e019d300d9799789e25c056614169b0729b1d9b30aabcde6",
+    "source_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-events-after-loss-l7hqou4y/actual-1/pokedex.png",
+    "path": "docs/screenshots/trainer-pokedex-active-only/loss-after.png",
+    "sha256": "b96e2f565e1a3203d7a425c21af7553cac6fdf35337016432ae39f61e49f8735"
+  }
+]
