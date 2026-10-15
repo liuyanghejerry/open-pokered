@@ -1,40 +1,19 @@
 # Safari 最后一球失败的广播
 
-原作 `engine/battle/core.asm:172–180,209–211` 在最后一球未捕获后、诱饵/愤怒维持与逃跑判定前，调用 `_OutOfSafariBallsText`。`data/text/text_2.asm:824–829` 的内容为先显示 `PA: Ding-dong!`，再换段显示 `You are out of / SAFARI BALLs!` 并等待确认。复刻原来合成了一句 `PA: You're out of / SAFARI BALLs! Game over!`。
+最后一颗 SAFARI BALL 未捕获时，恢复原作 `PA: Ding-dong!` 和随后 `You are out of / SAFARI BALLs!` 两段广播。生产改动只有英文及其翻译键各一行。原作依据为 `engine/battle/core.asm:172–180,209–211` 与 `data/text/text_2.asm:824–829`。
 
-本修复恢复原词和换段，沿用现有分页与确认流程，并同步该英文键对应的翻译。生产差异只有两处字符串；球数、捕获判定、维持、逃跑和回入口流程沿用既有逻辑。
+## 当前集成验证
 
-## 身份与验证
+#256 实际合入后整合 master `2429092a8c487d366bdf8aec44e3b631d70bef2f`，父合入为 `2429092a8c487d366bdf8aec44e3b631d70bef2f`。相对于该实际 master，生产差异仅 battle/mod.rs 与 data/battle_text.rs 各一行。全部 2170 项编译输入及 docs 外 2689 项跟踪文件内容、类型与模式均与受测源码 `f42408ebf4a28c313c05a60e6c0a75aaf762bf50` 一致。沿用该相同源码的 core 2913 通过、debug-server app 315 通过/39 忽略、determinism 10 通过。没有重新构建或重录；本地证据不代表新远程 CI 已通过。
 
-- 修复前为干净 master `b7c81d82d7d94a06555f631c3c70d114f299d9d8`，二进制 SHA256 `bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9`。
-- 修复后生产提交 `aff8dcf1589babfabdcd8d049b5776cd0a0962f7`，独立 dev opt0/debug0、debug-server 构建，二进制 SHA256 `f62161db6167811888026a743fab78f1b4cdeda0416eb0fb26e4f21a1581f78e`。完整源码与构建身份在归档中。
-- 原作复用 #905 审计期间已经完成的两次真实 Safari 最后一球失败控制，版本 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`。原始脚本、普通存档、逐帧PNG、按键与只读事件保持原字节，未改称新录制。
-- 当前 master 进行了两次自然失败与一次自然成功；修复后进行了两次自然失败。全部最终普通 SAVE 有效，原生同时保存初始普通存档。成功病例保留为基线控制，不计作修复后成功验证。
+精确身份、比较范围、测试总数和日志白名单见 `publication-953.json` 与 `publication-953-logs.zip`。旧测试/CI/录制均保留历史身份，旧 `master-*-integration` 文件不是本次新执行结果。新 head 需 CI、Build GBA ROM、GBA performance 三个新工作流全部通过后才可合入。
 
-验证前使用明确的 Safari 活动状态、剩余一球和合法六只队员存档。开始后只正常走路遇敌、投 SAFARI BALL、确认文字并 START → SAVE；没有验证期间写状态或保证捕获结果。Safari 捕获随机数没有全部被 CLI seed 固定，因此这里只对实际发生的失败与保存结果负责，没有宣称重复的随机结果必然一致。原作自然遇到尼多朗，原生遇到毛球，不宣称跨提供者物种、RNG或逐帧相同。
+## 历史实际证据
 
-所有失败存档的404字节队伍、1122字节当前箱、背包与金钱、拥有图鉴、玩家名及ID在原作/复刻最终保存中逐字节一致。原生两个版本第一个失败控制的整个32KiB最终存档仅 `0x2CF0`、`0x2CF1`（游戏时间）及 `0x3523`（校验和）不同；恢复的一页广播令确认流程多64个模拟帧。没有将自然遇敌的 seen 位当作初末必须不变的字段。
+截图前版本为 clean master `b7c81d82d7d94a06555f631c3c70d114f299d9d8`，二进制 SHA256 `bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9`；后版本生产源码 `aff8dcf1589babfabdcd8d049b5776cd0a0962f7`，二进制 SHA256 `f62161db6167811888026a743fab78f1b4cdeda0416eb0fb26e4f21a1581f78e`。同 fixture、初始 SRAM、相同完整物理按键前缀至帧2359，前缀 SHA256 `9ad4788c57d9cdc49d95e2d53c6140c9bfc2a52a5d6fa1474adb08ce8626e66f`。图片没有改称当前集成 head 的录制。
 
-配对截图为同一 fixture、相同初始 SRAM、同帧 **2359**；从启动至该帧的完整物理按键前缀相同，SHA256 `9ad4788c57d9cdc49d95e2d53c6140c9bfc2a52a5d6fa1474adb08ce8626e66f`。截图直接取自实际帧。后版本继续显示第二页 `You are out of / SAFARI BALLs!`，确认后同样返回入口并保存。
+原作两次自然最后一球失败；原生前版本两次失败、一次成功，后版本两次失败，全部普通 SAVE 有效。验证前构造 Safari 活动/剩一球及合法队伍，之后只正常走路、自然遇敌、投球、确认和保存。原作/原生物种与 RNG 不同，捕获 entropy 没有全部被 CLI seed 固定；不宣称完整随机重放、跨提供者全部 SRAM 相等或整个 Safari/主线一致。
 
-完整 core **2887通过**，既有 battle_text 测试 **12通过**，主程序明确重新构建成功。此次属于可逆的文案修复，验证采用现有测试和实际流程，没有新增只复述字符串的单元测试。
+失败控制保护 party404、box1122、背包/现金、owned、玩家姓名/ID；自然遇敌改变的 seen 位不纳入初末不变断言。首个原生失败对照最终 SRAM 只在游戏时间0x2CF0/0x2CF1及校验和0x3523不同。原始版本/输入/SAVE/帧保护详见不变的 `verification.json`、`archive.json` 和 `evidence.zip`。
 
-`verification.json` 与 `archive.json` 给出版本、原始路径和哈希；`evidence.zip` 按 SHA 去重，`extract_evidence.py` 可验证或重建原始路径。归档包含全部七次控制、输入、普通存档、逐帧记录、原作相关源码和构建身份；不包含ROM、可执行文件或模拟器 state，后者仍保留在原始本地目录中。
-
-```bash
-python3 extract_evidence.py evidence.zip --verify-only
-```
-
-Safari 的玩家出场/背影/HP栏与球动画、捕获音效另有独立修复项。这份证据只证明本段广播与保存边界，没有宣称整个 Safari 或完整主线已一致。
-
-最新集成验证：已整合 master `6085c987`（#253）；完整 core **2888 通过、0 失败**，debug-server app **280 通过、39 忽略、0 失败**。日志、源文件 SHA 清单见 `master-6085-integration.json` 与日志归档。实际按键重放和截图保留原冻结提交身份。
-
-此前整合 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2888 通过**、debug-server 应用 **280 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
-
-此前整合 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2888 通过**、debug-server 应用 **289 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
-
-此前整合 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2888 通过**、debug-server 应用 **289 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
-
-此前整合 master `05f6e76c`（#265，宝可梦之笛保留非睡眠状态）：完整核心 **2889 通过**、debug-server 应用 **289 通过/39 忽略/0 失败**。精确源码与日志见 `master-05f6-integration.json` 及日志包；此前的实际原作/原生截图和普通 SAVE 继续保留各自冻结身份。
-
-已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2889 通过/0 忽略；app 296 通过/39 忽略，全部 0 失败。当前受测源码 `9552a471d4e9d3d1dd18b75f8dc37951c4d0d972`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
+原始 archive 4128路径/366blob，排除 ROM、可执行文件和模拟器state；原始本地资料继续保留。可运行 `python3 extract_evidence.py evidence.zip --verify-only` 检查旧归档；本次发布脚本没有执行游戏、构建或旧脚本。
