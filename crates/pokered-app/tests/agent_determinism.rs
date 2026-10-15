@@ -328,3 +328,60 @@ fn script_engine_snapshot_round_trips_mid_cutscene() {
         assert_eq!(h1, h2, "script-engine state must round-trip through fork/restore");
     });
 }
+
+#[test]
+fn capture_rng_owned_full_game_snapshot_replays_seeded_and_entropy_streams() {
+    on_game_stack(|| {
+        use pokered_core::battle::{BattlePhase, BattleScreen};
+        use pokered_data::items::ItemId;
+        for seeded in [true, false] {
+            let mut game = PokemonGame::new_with_options(
+                GameVersion::Red,
+                None,
+                None,
+                None,
+                false,
+                None,
+                false,
+                true,
+                #[cfg(feature = "debug-server")]
+                None,
+            );
+            game.save_data = SaveData::new();
+            let player = create_pokemon(Species::Rattata, 12, [0x9a, 0x78]).unwrap();
+            let enemy = create_pokemon(Species::Rattata, 3, [0x9a, 0x78]).unwrap();
+            game.save_data.party.add(player).unwrap();
+            game.battle = BattleScreen::from_parties(true, &[player], &[enemy], None);
+            game.battle
+                .player_bag
+                .add_item(ItemId::PokeBall, 2)
+                .unwrap();
+            if seeded {
+                game.set_seed(19);
+            }
+            game.state.screen = GameScreen::Battle;
+            game.battle.phase = BattlePhase::PlayerMenu;
+            drive(
+                &mut game,
+                &[Some(GbButton::Down), None, Some(GbButton::A), None],
+            );
+            assert_eq!(game.battle.phase, BattlePhase::BagSelect);
+            let initial = game.agent_save_state_slot(0).unwrap();
+            let mut expected = None;
+            for _ in 0..12 {
+                assert_eq!(game.agent_restore_state_slot(0).unwrap(), initial);
+                assert_eq!(game.agent_save_state_slot(2).unwrap(), initial);
+                let mut inputs = vec![Some(GbButton::A)];
+                inputs.extend(std::iter::repeat_n(None, 119));
+                drive(&mut game, &inputs);
+                assert_eq!(game.battle.player_bag.items(), &[(ItemId::PokeBall, 1)]);
+                let result = game.agent_save_state_slot(1).unwrap();
+                if let Some(ref hash) = expected {
+                    assert_eq!(&result, hash, "seeded={seeded}");
+                } else {
+                    expected = Some(result);
+                }
+            }
+        }
+    });
+}
