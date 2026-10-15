@@ -1,0 +1,156 @@
+{
+  "path": "evidence.zip",
+  "bytes": 1119194,
+  "sha256": "e55d08738decff6bb6abb849e4973c43064c837f98da5d217dcd655fa800e55a",
+  "entry_manifest_sha256": "956e01fa2cc1f167cdcd2c07ff76a56c4e88ef199cf28606bde4c73c511d3fa2",
+  "original_paths": 5570,
+  "unique_blobs": 177,
+  "all_path_hashes_readback_verified": true,
+  "excluded_rom_executable_emulator_state": [
+    {
+      "path": "audit-911-after-debug",
+      "bytes": 78506792,
+      "sha256": "9aaded888b2f547ca16a0266929937d09aa296e9eefcf570515613eeecce0aa7"
+    },
+    {
+      "path": "audit-911-before-debug",
+      "bytes": 77665936,
+      "sha256": "a6c380c64b6e0cf241117e1d745a87cdb75175bf06ae47d7e359f02777f37c79"
+    },
+    {
+      "path": "audit-911-original-flash-v5fk391g/outside-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "3a00b6e85f39e93f407d341ac3e8a4c3e4b94f2faeb043ff52cd4913ea52d8ec"
+    },
+    {
+      "path": "audit-911-original-flash-v5fk391g/outside-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/cave-twice-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "f927298081eb0a6d13c5e5fdf687731176d13d23b6e45cb137281ab217a55805"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/cave-twice-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/cave-twice-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "f927298081eb0a6d13c5e5fdf687731176d13d23b6e45cb137281ab217a55805"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/cave-twice-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "3a00b6e85f39e93f407d341ac3e8a4c3e4b94f2faeb043ff52cd4913ea52d8ec"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "3a00b6e85f39e93f407d341ac3e8a4c3e4b94f2faeb043ff52cd4913ea52d8ec"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-fainted-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "5296dbb4403514a3ff40a9ac3e5150183c5cd9ee4bc30ce318d70c9ea1f8e1f7"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-fainted-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-fainted-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "5296dbb4403514a3ff40a9ac3e5150183c5cd9ee4bc30ce318d70c9ea1f8e1f7"
+    },
+    {
+      "path": "audit-911-original-flash-vr7x06qa/outside-fainted-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/cave-twice-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "588ffac234a1eea67d85fc34b9d1aab7ef3e8365dc7144c59277051b4aa9d192"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/cave-twice-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/cave-twice-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "588ffac234a1eea67d85fc34b9d1aab7ef3e8365dc7144c59277051b4aa9d192"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/cave-twice-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "3a00b6e85f39e93f407d341ac3e8a4c3e4b94f2faeb043ff52cd4913ea52d8ec"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "3a00b6e85f39e93f407d341ac3e8a4c3e4b94f2faeb043ff52cd4913ea52d8ec"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-fainted-1/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "5296dbb4403514a3ff40a9ac3e5150183c5cd9ee4bc30ce318d70c9ea1f8e1f7"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-fainted-1/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-fainted-2/constructed-start.state",
+      "bytes": 178100,
+      "sha256": "5296dbb4403514a3ff40a9ac3e5150183c5cd9ee4bc30ce318d70c9ea1f8e1f7"
+    },
+    {
+      "path": "audit-911-original-flash-zgyj42zn/outside-fainted-2/original.gbc",
+      "bytes": 1048576,
+      "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    },
+    {
+      "path": "audit-911-performance.gba",
+      "bytes": 5651740,
+      "sha256": "c87d888a0dc4eb7b86752ab8a7194a9cdde5efb703732cc46ae3a0cc6fae0aff"
+    }
+  ]
+}
