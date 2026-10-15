@@ -2314,6 +2314,7 @@ impl PokemonGame {
         let save = import_sram(&data)
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
+        self.overworld.clear_field_poison();
         self.save_data = save;
         Ok(())
     }
@@ -2894,6 +2895,7 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        self.overworld.clear_field_poison();
         self.clear_rare_candy_continuation();
         #[cfg(not(target_os = "none"))]
         {
@@ -4347,6 +4349,12 @@ impl PokemonGame {
                         }
                     }
 
+                    // Resume the existing source caller before entering a
+                    // newly queued poison tick: its first render must keep all
+                    // four flash frames, without advancing twice on creation.
+                    pokered_core::overworld::poison::resume_out_of_battle_poison_damage(
+                        &mut self.save_data, &mut self.overworld,
+                    );
                     self.apply_overworld_game_data_requests();
                     // The money box follows the committed balance, including
                     // mutations queued just before the next script query.
@@ -6884,6 +6892,8 @@ impl PokemonGame {
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
         });
         // Keep this separate from the large snapshot macro's recursion budget.
+        snapshot["field_poison"] =
+            serde_json::to_value(self.overworld.poison_flow).unwrap_or(serde_json::Value::Null);
         let live = self.battle.battle_state.as_ref()
             .filter(|_| matches!(self.state.screen, GameScreen::Battle));
         let party: Vec<_> = if let Some(bs) = live {
@@ -8204,6 +8214,10 @@ mod pp_up_maxed_retry_tests;
 #[cfg(test)]
 #[path = "rare_candy_tests.rs"]
 mod rare_candy_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "field_poison_tests.rs"]
+mod field_poison_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 
