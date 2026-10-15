@@ -1,3 +1,21 @@
+# 战斗中恢复 PP：发布准备与证据索引
+
+## 2026-10-15 本地发布准备（尚未发布）
+
+本次唯一受测发布源码为 `cb8e6b7da2abd7e8b4442ce545c827136f3f71d5`：旧整合 `016a606c` 合入已验证的 `744ebbb9`，仅增加两个渲染文件中的单帧地图指纹复用；相邻 PP 缓存测试与地图像素测试发生追加冲突，保留两者，原冲突与解决记录一并归档。原 PP 最终确认、一次消费和捕获强确认保护不变。`publication-1013.json` 当前明确为 `PREPARED_PENDING_ACTUAL269_MERGE`；只有 #269 实际合入后，独占发布树整合实时 master 并证明源码一致才可发布。
+
+新执行 1011：debug app **334 通过／39 忽略**、默认 app **323 通过／37 忽略**、determinism **10 通过**，独立 GBA build/fix/record/compare 的 **31 项原门禁全部通过**。movement peak3103、trainer224、idle349、Oak2994；七个场景的采样和渲染次数与1008相同。全部2175编译输入（含run-wasm两文件）、2693项docs外NUL路径的Git blob／模式／literal symlink及702GFX在七阶段前后和当前逐项一致。core **2944** 仅保留原 `016a` 运行，依据core/data/vendor/Cargo组件字节与模式同一性；没有重新运行core库，也不把旧整份源码冒称与新renderer相同。
+
+`016a` 的旧整合证据独立保留：1584个实际单帧公开状态及952／1584两图与原`af3f`相同，另400帧真实确认续接只扣一次，原Transform PP10、工作PP[10,0]；**没有新增SAVE**。旧2173 compiler／2692 regular non-doc范围未覆盖两项run-wasm和目录symlink，1001与979提供回溯2175／2693完整范围补证，不修改原manifest或重跑测试。970独立审查、旧四组host日志、合并强ACK冲突解决均在新ZIP。
+
+独立 [949 Mimic 实际验证](mimic-949-report.md) 完成原作／literal`a2fa`前／冻结`af3f`后各一次普通SAVE（共3次）：Ether恢复原Mimic至10，工作招式保持PoisonSting；第二次满PP Ether无效果；再使用复制招式、切换和保存后原Mimic为PP9。旧版本保存PP7。覆盖仅这一Ether路径，不扩为全部PP道具／MimicPPUp／link／嵌套变身或音频结论。[949原始验证](mimic-949-verification.json)、[独立归档](mimic-949-archive.json)与116路径／90blob的`mimic-949-evidence.zip`保持真实身份。
+
+[当前发布准备](publication-1013.json)与`publication-1013-logs.zip`只收有限显式白名单：965／970／979的965投影／1001范围补证以及1011新七阶段日志与源码身份。无全audit目录glob、ROM、exe或模拟器state。旧1378路径主ZIP和69路径literal-master补充ZIP完全不变；历史42次SAVE与949新增3次分组计数，严格截图和965重播不重复计SAVE。
+
+下方各章节是当时 `c6e`／`af3f`／`a2fa` 阶段的原始历史说明。旧“待267合入”、旧测试与GBA总数不表示当前发布状态。四对图片仍为实际`a2fa` BEFORE／`af3f` AFTER，相同fixture、seed42、完整输入前缀及实际帧688／1328／1288／952；没有改标为016a、cb8或未来发布head。正式PR使用绝对raw URL。
+
+## 历史原始说明（身份保留）
+
 # 战斗中恢复 PP：调用方、确认和变身身份
 
 Ether／Max Ether 的招式选择现在显示原作的 “Restore PP of which technique?”，选择和结果页保留队伍与招式列表；Elixir／Max Elixir 的结果页保留队伍。PP 当即恢复并发出 HealAilment 事件，最后一页真实 A/B 确认才扣一次道具，再接原有敌方免费回合。没有增加 Delay50。取消或无效果不扣道具，也不让敌方行动。
@@ -39,7 +57,7 @@ Ether／Max Ether 的招式选择现在显示原作的 “Restore PP of which te
 - 实际 soft_reset→Title→Continue→新战斗验证旧消费不再继续。Title 可以保留不再更新的旧 BattleScreen；没有声称 bare `load_from_path` 会立即清空战斗或新增加载特判。
 - GBA 使用未修改的提交门槛，全部通过：trainer224、idle349、Oak2993。旧 ce29 在旧基线上 trainer233 超门槛的真实失败保留；后续整合已经合入的主干 FNV／同名比较优化后重测，没有调整门槛。
 
-原作和原生的战斗 RNG、HP／经验以及全场时钟不强行匹配。原生实机控制使用 `--no-audio`；HealAilment 事件由单测检查，不声称 PCM／三声道波形一致。实际变身控制覆盖百变怪；共享原身份入口还服务 Mimic，没有新增 Mimic 实机结论。字体、中文、拼音输入法、对话框布局以及 IRQ 时钟不在本项审计范围。
+原作和原生的战斗 RNG、HP／经验以及全场时钟不强行匹配。原生实机控制使用 `--no-audio`；HealAilment 事件由单测检查，不声称 PCM／三声道波形一致。实际变身控制覆盖百变怪；共享原身份入口还服务 Mimic，没有新增 Mimic 实机结论。（这是 af3f 阶段的历史范围；2026-10-15 独立 949 补证见上方，不改原始记录。）字体、中文、拼音输入法、对话框布局以及 IRQ 时钟不在本项审计范围。
 
 ## 证据
 

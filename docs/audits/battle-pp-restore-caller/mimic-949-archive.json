@@ -1,0 +1,22 @@
+{
+  "archive": "mimic-949-evidence.zip",
+  "sha256": "598477d18bd949f4711ad3b47b9c992abf18be7ce1beb46b211e1c7c689cb7c5",
+  "bytes": 513427,
+  "original_paths": 116,
+  "unique_blobs": 90,
+  "ordinary_SAVE": {
+    "original": 1,
+    "literal_a2fa_before": 1,
+    "frozen_af3_after": 1
+  },
+  "all_readback_bytes_equal_originals": true,
+  "original_metadata_unchanged": {
+    "archive": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-949-evidence.zip",
+    "sha256": "598477d18bd949f4711ad3b47b9c992abf18be7ce1beb46b211e1c7c689cb7c5",
+    "bytes": 513427,
+    "original_paths": 116,
+    "unique_blobs": 90,
+    "all_readback_bytes_equal_originals": true
+  },
+  "scope": "One Ether success plus fullEther no-effect, copiedmoveuse/switch/SAVE perprovider; no new1011SAVE or fullPPitem/Mimic matrix."
+}
