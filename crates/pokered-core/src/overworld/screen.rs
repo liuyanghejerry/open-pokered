@@ -935,6 +935,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub poison_step_counter: u32,
     /// Suspended field poison loop; the party remains in SaveData.
     pub poison_flow: Option<super::poison::FieldPoisonFlow>,
+    pub poison_step_warp_sound: Option<super::poison::PoisonStepWarpSound>,
     /// Level of the lead (first) party Pokémon, kept in sync by the app layer.
     /// Used for the Gen-1 repel check, which blocks wild encounters whose level
     /// is below the lead party member's level. The OverworldScreen does not own
@@ -1343,6 +1344,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_coin_box: None,
             poison_step_counter: 0,
             poison_flow: None,
+            poison_step_warp_sound: None,
             party_lead_level: 0,
             unified_flags: event_flags::EventFlags::new(),
             toggleable_object_flags: [0u8;
@@ -1555,6 +1557,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub fn clear_field_poison(&mut self) {
         if self.poison_flow.take().is_some() {
             self.pending_dialogue = None;
+        }
+        if self.poison_step_warp_sound.take().is_some() {
+            self.pending_warp = None;
+            self.warp_fade_state = WarpFadeState::Idle;
         }
     }
 
