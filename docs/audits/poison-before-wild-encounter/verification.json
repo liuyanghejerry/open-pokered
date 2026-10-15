@@ -1,0 +1,268 @@
+{
+  "scope": "Independent W903 fourth completed grass-step natural wild encounter / field poison caller ordering. Source6 and native12 authoritative ordinary-input and ordinary-SAVE controls. Built before exact clean masterf44; after private child of PR252. No live setters/forced encounters/RNG writes after validation boundary.",
+  "base": {
+    "master_before": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+    "private_parent_252": "890b0ff24cffea3415b4726d4347c7fdf5dd725f",
+    "after_production": "574d989a4a90dc16618a4513016a1b027c2ad9a7"
+  },
+  "frozen_builds": {
+    "before": {
+      "compiled_commit": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "git_status": "",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "profile": "dev opt0/debug0",
+      "features": [
+        "debug-server"
+      ],
+      "build_log_sha256": "523ecb179c9bec3207562d24002c300d7d9fe02c6a64109d5a8dd4beaddb1062"
+    },
+    "after": {
+      "compiled_commit": "574d989a4a90dc16618a4513016a1b027c2ad9a7",
+      "git_status": "",
+      "binary_sha256": "cd0675f01e389a3e16de14ad66712dc56ed206d0f0c045ef567942774c6db5a9",
+      "profile": "dev opt0/debug0",
+      "features": [
+        "debug-server"
+      ],
+      "build_log_sha256": "e0b24a197a7d231313a7023270fcb33229c0f18f3468792766e36bb2c528afa2"
+    }
+  },
+  "source": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "source_order": "home/overworld.asm:314-325 calls ApplyOutOfBattlePoisonDamage, checks wOutOfBattleBlackout, then NewBattle. NewBattle/InitBattle call TryDoWildEncounter.",
+    "actual_flash_first_repeat_frames": {
+      "poison_entry": 159,
+      "try_wild_and_init_battle": 163,
+      "hp_before_battle": 9
+    },
+    "actual_faint_first_repeat_frames": {
+      "poison_entry": 166,
+      "try_wild_and_init_battle_after_ack": 384,
+      "party_hp_before_battle": [
+        0,
+        31
+      ]
+    },
+    "actual_wipe_first_repeat_frames": {
+      "blackout_entry": 1159,
+      "try_wild_on_step252": false
+    },
+    "preinput_seed_scouts": {
+      "flash": "hRandomAdd63/Sub(63 xor A5), no idle",
+      "faint": "hRandomAdd7/Sub(7 xor A5), seven preinput idle frames",
+      "wipe": "hRandomAdd0/SubA5; no idle"
+    },
+    "construction": "Original EnterMap bootstrap to real Route1(10,8), then legal non-Poison-type RattataLv12 DV9A78 maxHP31/movesTackle,TailWhip,QuickAttack; stepcounter0/cash3000. Source/native complete campaign templates are constructed, not claimed wholly reachable."
+  },
+  "native_input": {
+    "seed": 19,
+    "position": "Route1(10,8)\u2192(14,8), four right steps through real grass0B",
+    "fourth_step_observation": "40 contiguous exact render frames217..256; movement completes at233. Right held first4 then neutral, same before/after timeline.",
+    "flash_after_actual_frames": [
+      233,
+      234,
+      235,
+      236
+    ],
+    "first_battle_frame_before": 233,
+    "first_battle_frame_after": 237,
+    "screenshots": {
+      "flash_before_after": "PlayerMenu frame728, HP10 versusHP9",
+      "faint_before_after": "frame408, battle transition versus faint text"
+    },
+    "post_step_controls": "For flash, actual battle RUN on both builds. For faint, AFTER real faint A/release then healthy sendout and RUN, BEFORE immediate RUN. For wipe, AFTER real individual faint/blackout A/release then heal/halve/warp, BEFORE immediate RUN. All end with ordinary START/SAVE/YES."
+  },
+  "cases": [
+    {
+      "case": "flash",
+      "source_raw_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-original-poison-wild-2siw0cfd",
+      "native_raw_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-before-flash-1mf88zkt",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-after-flash-sdc_4gn7"
+      },
+      "source_saved_hp": [
+        9,
+        31
+      ],
+      "native_before_saved_hp": [
+        10,
+        31
+      ],
+      "native_after_saved_hp": [
+        9,
+        31
+      ],
+      "source_saved_status_raw": [
+        8,
+        0
+      ],
+      "after_all_88_party_bytes_match_source_in_both_repeats": true,
+      "before_party_byte_differences_vs_source": [
+        2
+      ],
+      "source_saved_cash_bcd": "003000",
+      "native_after_saved_cash": 3000,
+      "ordinary_save_sha256": {
+        "source": [
+          "5c4787cedb0be22c3918fdcf13a7f46fd86450a69fc0bbe8b29c3d6b46632679",
+          "5c4787cedb0be22c3918fdcf13a7f46fd86450a69fc0bbe8b29c3d6b46632679"
+        ],
+        "before": [
+          "02cbe0ea6f1b11160a52f309ec55dea541ed05b1bf316d78465c1f7ef6f037ef",
+          "02cbe0ea6f1b11160a52f309ec55dea541ed05b1bf316d78465c1f7ef6f037ef"
+        ],
+        "after": [
+          "a09419fac055819f3e059b8b03ad184f42f3fbcf8e244e974d286c03e65cb2f5",
+          "a09419fac055819f3e059b8b03ad184f42f3fbcf8e244e974d286c03e65cb2f5"
+        ]
+      },
+      "main_checksum_valid_all_six": true,
+      "source_initial_ram_bag_dex_current_box_equal_saved_sram_both_repeats": true,
+      "native_before_after_bag_dex_current_box_identical_both_repeats": true,
+      "native_repeat_actions_all_40_states_pngs_and_sram_identical": true
+    },
+    {
+      "case": "faint",
+      "source_raw_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-original-poison-wild-faint-grjmb66a",
+      "native_raw_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-before-faint-6fov9dhd",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-after-faint-rzqtx5l1"
+      },
+      "source_saved_hp": [
+        0,
+        31
+      ],
+      "native_before_saved_hp": [
+        1,
+        31
+      ],
+      "native_after_saved_hp": [
+        0,
+        31
+      ],
+      "source_saved_status_raw": [
+        0,
+        0
+      ],
+      "after_all_88_party_bytes_match_source_in_both_repeats": true,
+      "before_party_byte_differences_vs_source": [
+        2,
+        4
+      ],
+      "source_saved_cash_bcd": "003000",
+      "native_after_saved_cash": 3000,
+      "ordinary_save_sha256": {
+        "source": [
+          "1771977db62a641d7dc20b2fca583ac395f57a737a31469a7a51a7f758ccc5ed",
+          "1771977db62a641d7dc20b2fca583ac395f57a737a31469a7a51a7f758ccc5ed"
+        ],
+        "before": [
+          "8c646784f1f0c79f6409f8821719e86d10faccacbd552473a040845a9e68305a",
+          "8c646784f1f0c79f6409f8821719e86d10faccacbd552473a040845a9e68305a"
+        ],
+        "after": [
+          "2fdbf25b014c6220b4b07f3f51bb935fb4b3d6d1486a576f0a3ae1bf5741fdc9",
+          "2fdbf25b014c6220b4b07f3f51bb935fb4b3d6d1486a576f0a3ae1bf5741fdc9"
+        ]
+      },
+      "main_checksum_valid_all_six": true,
+      "source_initial_ram_bag_dex_current_box_equal_saved_sram_both_repeats": true,
+      "native_before_after_bag_dex_current_box_identical_both_repeats": true,
+      "native_repeat_actions_all_40_states_pngs_and_sram_identical": true
+    },
+    {
+      "case": "wipe",
+      "source_raw_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-original-poison-wild-wipe-lkduucja",
+      "native_raw_directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-before-wipe-sl_9qg3k",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-903-native-poison-wild-after-wipe-cela5ki_"
+      },
+      "source_saved_hp": [
+        31,
+        31
+      ],
+      "native_before_saved_hp": [
+        1,
+        1
+      ],
+      "native_after_saved_hp": [
+        31,
+        31
+      ],
+      "source_saved_status_raw": [
+        0,
+        0
+      ],
+      "after_all_88_party_bytes_match_source_in_both_repeats": true,
+      "before_party_byte_differences_vs_source": [
+        2,
+        4,
+        46,
+        48
+      ],
+      "source_saved_cash_bcd": "001500",
+      "native_after_saved_cash": 1500,
+      "ordinary_save_sha256": {
+        "source": [
+          "406d31517bb0124fc4802105200ea86c089ebc11122d8aa63533958fdf00afa2",
+          "406d31517bb0124fc4802105200ea86c089ebc11122d8aa63533958fdf00afa2"
+        ],
+        "before": [
+          "3ee2799d38c7d8aced2948321fbb5d3521f9e39f4a6f611bc15dc29eae89301d",
+          "3ee2799d38c7d8aced2948321fbb5d3521f9e39f4a6f611bc15dc29eae89301d"
+        ],
+        "after": [
+          "7d9a01a5224ee842098229e1cbac4c4e7a404a83cf3e27da0eb6c829319daf32",
+          "7d9a01a5224ee842098229e1cbac4c4e7a404a83cf3e27da0eb6c829319daf32"
+        ]
+      },
+      "main_checksum_valid_all_six": true,
+      "source_initial_ram_bag_dex_current_box_equal_saved_sram_both_repeats": true,
+      "native_before_after_bag_dex_current_box_identical_both_repeats": true,
+      "native_repeat_actions_all_40_states_pngs_and_sram_identical": true
+    }
+  ],
+  "tests": {
+    "core_scoped": {
+      "passed": 1,
+      "log": "audit-903-core-scoped.log"
+    },
+    "core_library": {
+      "passed": 2888,
+      "failed": 0,
+      "log": "audit-903-core-full.log"
+    },
+    "app_scoped_debug_server": {
+      "passed": 3,
+      "log": "audit-903-app-scoped.log"
+    },
+    "app_all_debug_server": {
+      "passed": 280,
+      "ignored": 39,
+      "failed": 0,
+      "log": "audit-903-app-full.log"
+    },
+    "after_debug_app_build": {
+      "terminal": 0,
+      "log": "audit-903-after-build.log"
+    },
+    "ordinary_save_readback": {
+      "source": 6,
+      "native": 12,
+      "log": "audit-903-check-ordinary-saves.log"
+    }
+  },
+  "errata_and_retained_history": [
+    "Original first flash/faint helper selected FIGHT because DOWN/RIGHT arrived during sendout; those saved EXP/statEXP/PP changed, invalid as RUN/SAVE controls. Initial poison-before-battle HP observations remain evidence; final-source/final-boundaries helpers wait for sendout/menu and assert only field HP/status party changes. Old raw trials/logs retained, excluded from final six source controls.",
+    "Early native v1 expected MainMenu instead of actual PlayerMenu and sent unintended A; driver failure retained, excluded. Final helper uses PlayerMenu and normal RUN.",
+    "Boundary source v2 faint scouts and v3/v4 wipe helpers did not reach required encounter/ACK criteria; all rejected source seed/input scouts retained. Final faint uses preinput idle-phase scout; final wipe records actual ACKs until map return.",
+    "Earlier parent message asserted 88-byte source match before checking all fields; retracted immediately on byte audit. Corrected final controls now prove all88."
+  ],
+  "limits": [
+    "Native/source input cadence, clock, RNG and enemy DVs are different. Only declared per-provider poison/ACK/battle/blackout ordering and saved player party/cash are compared; no cross-provider enemy/raw full SRAM equality claim.",
+    "Only Route1 Red walking and these three legal Rattata party cases were exercised. No global frame/audio/animation parity, every map, or full campaign pass claim.",
+    "PR252 status/flow implementation is a private prerequisite until merged. Existing script/dialogue/warp poison guards are preserved; no general encounter/warp/script refactor.",
+    "Known unrelated blackout white fade/healing audio differences remain outside this scope."
+  ]
+}
