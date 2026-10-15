@@ -5064,6 +5064,12 @@ impl PokemonGame {
                                     },
                                 };
                                 match outcome {
+                                    ItemApplyOutcome::Used { .. }
+                                        if bag_use::machine_of(item).is_some() => {
+                                        let move_id = bag_use::machine_of(item).unwrap().move_id().unwrap();
+                                        self.begin_machine_learning(party_index, item, move_id, true);
+                                        ScreenAction::Continue
+                                    }
                                     ItemApplyOutcome::Used { message, consume } => {
                                         if consume {
                                             let _ =
@@ -5131,10 +5137,8 @@ impl PokemonGame {
                                         );
                                         ScreenAction::Continue
                                     }
-                                    ItemApplyOutcome::NeedsMoveReplace { .. } => {
-                                        // TM/HM on a full moveset: ask which
-                                        // move to forget (stays on this screen).
-                                        self.party_screen.enter_move_choice();
+                                    ItemApplyOutcome::NeedsMoveReplace { move_id } => {
+                                        self.begin_machine_learning(party_index, item, move_id, false);
                                         ScreenAction::Continue
                                     }
                                     ItemApplyOutcome::RareCandyLevelUp { new_level, moves } => {
@@ -6826,6 +6830,7 @@ impl PokemonGame {
                     "phase": format!("{:?}", self.party_screen.phase()),
                     "mode": format!("{:?}", self.party_screen.mode()),
                     "rare_candy_phase": self.rare_candy_phase().map(|phase| format!("{phase:?}")),
+                    "machine_learning_phase": self.machine_learning_phase().map(|phase| format!("{phase:?}")),
                     "field_moves": self.party_screen.selected_field_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
                     "known_moves": self.party_screen.selected_known_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
                 })),
@@ -8209,6 +8214,10 @@ mod pp_up_maxed_retry_tests;
 #[cfg(test)]
 #[path = "rare_candy_tests.rs"]
 mod rare_candy_tests;
+
+#[cfg(test)]
+#[path = "tmhm_learning_tests.rs"]
+mod tmhm_learning_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 
