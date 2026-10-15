@@ -458,9 +458,9 @@ class SaveBuilder:
 
     def dex(self, species, seen=True, owned=True):
         """Flip the species' bits in the Pokédex seen/owned bitsets
-        (19 bytes; bit n of the flat bitstream = dex id n)."""
-        sid = species_id(species)
-        byte, mask = sid >> 3, 1 << (sid & 7)
+        (19 bytes; bit n of the flat bitstream = dex id n + 1)."""
+        index = species_id(species) - 1
+        byte, mask = index >> 3, 1 << (index & 7)
         dex = self.data["game_data"]["pokedex"]
         for key, want in (("seen", seen), ("owned", owned)):
             bits = bytearray(dex[key])
@@ -476,10 +476,7 @@ class SaveBuilder:
         the 19-byte bitsets beyond dex 151 stay zero)."""
         dex = self.data["game_data"]["pokedex"]
         for key in ("seen", "owned"):
-            bits = bytearray(dex[key])
-            for sid in range(1, 152):
-                bits[sid >> 3] |= 1 << (sid & 7)
-            dex[key] = list(bits)
+            dex[key] = [0xFF] * 18 + [0x7F]
         return self
 
     # ── presets ──
