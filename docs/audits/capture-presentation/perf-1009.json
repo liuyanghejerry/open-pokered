@@ -1,0 +1,576 @@
+{
+  "schema": "capture-presentation-perf1009-v1",
+  "utc": "2026-10-15T13:23:25.186203+00:00",
+  "runtime_source": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+  "previous_failed_public_head": "d8d4d2a9473b308e545dc22c30dcc68f3f2e86bf",
+  "literal_master_before": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+  "source_complete_non_doc_bytes_modes_verified": 2691,
+  "compiler_including_both_run_wasm_files": 2173,
+  "gfx_scope": 702,
+  "production_delta_from_failed_head": [
+    "crates/pokered-app/src/render/overworld.rs",
+    "crates/pokered-app/src/render/session.rs"
+  ],
+  "cause_boundary": "ExactCIROM replay reproduced all7scenario fields and failed3114. New capture polling exists only inBattle update arm; overworld/session renderer unchanged in d8d vs44f. This patch removes pre-existing hotpath duplication; it does not prove why link/codegen made the original peak exceed budget. No padding/layout hunting/rerun/threshold change.",
+  "validation": {
+    "all_5_stages_exit0": true,
+    "appdebug": {
+      "passed": 330,
+      "failed": 0,
+      "ignored": 39
+    },
+    "GBA_original_gate_rows": 31,
+    "movement_draw_max_ticks": {
+      "failed_CI": 3114,
+      "exact_CI_ROM_local_replay": 3114,
+      "candidate": 3107,
+      "unchanged_limit": 3113.1
+    },
+    "movement_draw_per_frame_ticks": {
+      "before": 225,
+      "after": 224
+    },
+    "movement_renders_before_after": 24,
+    "all7scenario_sample_and_render_counts_equal": true,
+    "local_candidate_record_count": 1,
+    "official_new_head_CI": "required, not yet triggered/passed"
+  },
+  "actual": {
+    "status": "PASS_FROZEN",
+    "scope": "Independent1005 static review + literalmaster/optimization-before/after3-provider fixedprefix walking visible-output control. No source edits/push; no original replay needed for this output-preserving optimization.",
+    "runtime_source_after": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+    "literal_master": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+    "historical_943_source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+    "historical_943_all2691_non_docs_equal_public": "d8d4d2a9473b308e545dc22c30dcc68f3f2e86bf",
+    "review": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-cross-review-1005.json",
+      "bytes": 2611,
+      "sha256": "1aeaca410ca52adbc7433c08f7d053108116db72105481a29e80dc047dae326e"
+    },
+    "equivalence": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-historical-before-equivalence.json",
+      "bytes": 1316,
+      "sha256": "c1c3d4d17aed702cd08cedea7f1921ba1e00b00a6784c2903b8389f4c397eb4f"
+    },
+    "baseline_build": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-before-cli-identity.json",
+      "bytes": 1379,
+      "sha256": "8418df8a155caa6bfe85da646625eeed8a8ae624e3f8f8d974a7efbc56a40dcc"
+    },
+    "baseline_source": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-literal-master-source-before.json",
+      "bytes": 1198076,
+      "sha256": "4a6deb08c6a7d764e0969f20575b168d8c60b173690577bfe65462cb89911093"
+    },
+    "baseline_disk_kinds_modes_literal_links_and_bytes_equal_after_actual": true,
+    "baseline_counts": {
+      "compiler": 2173,
+      "non_doc": 2691,
+      "gfx": 702
+    },
+    "controller": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking.py",
+      "bytes": 9534,
+      "sha256": "9f749f7228f8506cf6072c0c4570e66727b64da05f9121ea48be73963c7db6b0"
+    },
+    "actual_summary": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/summary.json",
+      "bytes": 74573,
+      "sha256": "8909aaf76bfa12d27cfaeff7c37bd1e7822485390112c14decd7df93cb953178"
+    },
+    "rows": [
+      {
+        "label": "literal-master-before",
+        "source": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+        "binary_sha256": "f4796dc40ec9ab46cb769ed264f7c119300415b42f74080b3da4ad3879e05da6",
+        "record": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/literal-master-before/record.json",
+          "bytes": 20564,
+          "sha256": "fdcff54253beca8f7d54ace866d048eb5311f941ad9abac9d5f3a4da793e0cfc"
+        },
+        "commands": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/literal-master-before/commands.jsonl",
+          "bytes": 2538751,
+          "sha256": "49a5f0c0d9b582ac5cab1178c876bc6564940084bb212a9a8bdb985ccee34ba2"
+        },
+        "buttons": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/literal-master-before/full-buttons.json",
+          "bytes": 6504,
+          "sha256": "ce7fb08821c54979c18d7d09c13ccf786d5df3a3429335bca3237fe0e947c4b3"
+        },
+        "PNG": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/literal-master-before/final.png",
+          "bytes": 22277,
+          "sha256": "d32e85c0758a72adef3298e86ab23828494b85b937212f369833a516b3ef9e55"
+        },
+        "RGBA_sha256": "3ac58e77ec11c654d1aa04ba42df356288566fe3576b45e914bab8695f616782",
+        "actual_frame": 799,
+        "final_position": {
+          "map": "RedsHouse2F",
+          "x": 4,
+          "y": 6
+        },
+        "party_HP": [
+          0,
+          31
+        ],
+        "ordinary_input_SAVE_unchanged": true,
+        "controlled_process_exit": -15
+      },
+      {
+        "label": "optimization-before",
+        "source": "0fb1b57fd3096ba0332cd814319305fee1dc754b",
+        "binary_sha256": "fd8cc0e06c5566945e1947e5cdef4db2e45d4a178be6c628f02d380151eabc25",
+        "record": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-before/record.json",
+          "bytes": 20591,
+          "sha256": "abac3e2dc175245e1a1790f98d1ac6df268d1e0dc41e223585f1d356aa976ac7"
+        },
+        "commands": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-before/commands.jsonl",
+          "bytes": 2538747,
+          "sha256": "001dd8824350b21149599c8c4562b86008e46e9ba9db4e5f59f358a66e8fd2d0"
+        },
+        "buttons": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-before/full-buttons.json",
+          "bytes": 6504,
+          "sha256": "ce7fb08821c54979c18d7d09c13ccf786d5df3a3429335bca3237fe0e947c4b3"
+        },
+        "PNG": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-before/final.png",
+          "bytes": 22277,
+          "sha256": "d32e85c0758a72adef3298e86ab23828494b85b937212f369833a516b3ef9e55"
+        },
+        "RGBA_sha256": "3ac58e77ec11c654d1aa04ba42df356288566fe3576b45e914bab8695f616782",
+        "actual_frame": 799,
+        "final_position": {
+          "map": "RedsHouse2F",
+          "x": 4,
+          "y": 6
+        },
+        "party_HP": [
+          0,
+          31
+        ],
+        "ordinary_input_SAVE_unchanged": true,
+        "controlled_process_exit": -15
+      },
+      {
+        "label": "optimization-after",
+        "source": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+        "binary_sha256": "d9cdd8f3a6994a69c7f8c321dc1ea1c97f7df1c1252ef4d758c709e21eec6b60",
+        "record": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-after/record.json",
+          "bytes": 20539,
+          "sha256": "983728da8d99c2df639163fe3c3ca4cfb28b8eda8363ea4b9ab813e98f70f8db"
+        },
+        "commands": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-after/commands.jsonl",
+          "bytes": 2538745,
+          "sha256": "bcba1c9512165c71bb8cd0b80e4e27058090ed05cb4e41d91a9cd98f62fdf9e1"
+        },
+        "buttons": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-after/full-buttons.json",
+          "bytes": 6504,
+          "sha256": "ce7fb08821c54979c18d7d09c13ccf786d5df3a3429335bca3237fe0e947c4b3"
+        },
+        "PNG": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1006-matched-walking-y4ocq2w4/optimization-after/final.png",
+          "bytes": 22277,
+          "sha256": "d32e85c0758a72adef3298e86ab23828494b85b937212f369833a516b3ef9e55"
+        },
+        "RGBA_sha256": "3ac58e77ec11c654d1aa04ba42df356288566fe3576b45e914bab8695f616782",
+        "actual_frame": 799,
+        "final_position": {
+          "map": "RedsHouse2F",
+          "x": 4,
+          "y": 6
+        },
+        "party_HP": [
+          0,
+          31
+        ],
+        "ordinary_input_SAVE_unchanged": true,
+        "controlled_process_exit": -15
+      }
+    ],
+    "same_complete_prefix": true,
+    "same_actual799frame": true,
+    "same_PNG_bytes_and_decoded_RGBA": true,
+    "same_common_gameplay_projection": true,
+    "no_new_SAVE_scope": "Existing ordinarySAVE main checksum180 valid, exact copy perprovider and unchanged after input. No new ordinarySAVE claimed.",
+    "explicit_cache_boundary": {
+      "headless_render_session_exercised": false,
+      "literal44f_source_calls": [
+        "crates/pokered-app/src/main.rs:261-299 headless update without rendering",
+        "crates/pokered-app/src/game.rs:7551-7563 CaptureFrame allocates framebuffer then self.draw"
+      ],
+      "cache_path_evidence": "Owner/root1005 appdebug330PASS/39ignored inclrealRenderSession fullpixels livegrid mutation; GBA31PASS draw_max3114→3107 vsunchanged3113.1, rendercount24 unchanged. These are separate from this headless PNG control."
+    },
+    "jobs": {
+      "baseline50057": "terminal0 exactlyone fresh-j1 CLI build",
+      "actual86389": "terminal0;3ownedchildprocesses each terminated after readonlyfinalcapture; no unrelated processes touched"
+    },
+    "ownership": "W1005/W905/rootmaster not edited. W1006literal44f and its binary/target remain frozen; no Cargo running."
+  },
+  "root_raw_readback": {
+    "all799_advancing_requests_equal_button_files": true,
+    "all_optimization_get_state_sequences_equal": true,
+    "get_state_count_each": 803,
+    "all3_RGBA_sha256": "3ac58e77ec11c654d1aa04ba42df356288566fe3576b45e914bab8695f616782",
+    "all3_inputSAVE_checksum": 180,
+    "root_visually_inspected_literal_master_PNG": true,
+    "no_new_SAVE": true
+  },
+  "after_CLI": {
+    "source_head": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+    "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-before.json",
+    "command": [
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1005-host.sh",
+      "build",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked"
+    ],
+    "start_utc": "2026-10-15T13:04:23.417933+00:00",
+    "exit": 0,
+    "source_bytes_modes_and_gfx_equal_after": true,
+    "build_log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1007-after-cli-build.log",
+    "build_log_sha256": "4bd1de1a5c944fd5f62dfc1348ebdbe93d1b0e0934d02701c568276de94756ff",
+    "status": "terminal",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1007-after-9bce-debug",
+    "binary_sha256": "d9cdd8f3a6994a69c7f8c321dc1ea1c97f7df1c1252ef4d758c709e21eec6b60",
+    "binary_bytes": 77790296,
+    "maps": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1005-pr261-draw-cost/crates/pokered-data/maps"
+  },
+  "local_perf_handoff": {
+    "audit": 1005,
+    "result": "LOCAL_SINGLE_CANDIDATE_CHECKS_PASS_READY_FOR_ROOT_REVIEW",
+    "worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1005-pr261-draw-cost",
+    "branch": "fix/pr261-draw-cost-1005",
+    "head": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+    "parent_public_pr261": "d8d4d2a9473b308e545dc22c30dcc68f3f2e86bf",
+    "initial_ci_checkout": "29d46d6548c6fc29bd9406db59f9349ab46c5171",
+    "CI_source_tree_equal_public": "67a719e0a3379322410e1e52a212627627471af8",
+    "actual_master_before": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+    "changed_files": [
+      "crates/pokered-app/src/render/overworld.rs",
+      "crates/pokered-app/src/render/session.rs"
+    ],
+    "production_change": "One same-frame live map fingerprint passes from whole-frame key through cached background draw. Removes second full-gridFNV pass when eligible; fallbackstillcomputesfromlivegrid. No persistent revision/cache owner/state/filter/render loss.",
+    "cause_limits": "ExactCIROM replay reproduced all7scenario fields and failed3114. New capture polling exists only inBattle update arm; overworld/session renderer unchanged in d8d vs44f. This patch removes pre-existing hotpath duplication; it does not prove why link/codegen made the original peak exceed budget. No padding/layout hunting/rerun/threshold change.",
+    "validation": {
+      "runner_root_invoked_once": true,
+      "all5_stages_exit0": true,
+      "host_appdebug": {
+        "passed": 330,
+        "failed": 0,
+        "ignored": 39,
+        "includes_new_live_block_mutation_and_existing_walk_water_dark_cache_capture_tests": true
+      },
+      "GBA": {
+        "gated_metrics_passed": 31,
+        "gate_thresholds_unchanged": true,
+        "movement_max_before": 3114,
+        "movement_max_after": 3107,
+        "movement_max_limit": 3113.1,
+        "movement_draw_per_frame_before": 225,
+        "movement_draw_per_frame_after": 224,
+        "movement_renders": 24,
+        "all7_scenario_samples_and_renders_unchanged": {
+          "battle-entry-v1": {
+            "samples": 500,
+            "renders": 369,
+            "before_draw_max": 8863,
+            "after_draw_max": 8864
+          },
+          "intro-title-v1": {
+            "samples": 250,
+            "renders": 115,
+            "before_draw_max": 10018,
+            "after_draw_max": 10018
+          },
+          "oak-dialogue-v1": {
+            "samples": 600,
+            "renders": 307,
+            "before_draw_max": 9313,
+            "after_draw_max": 9314
+          },
+          "overworld-idle-v1": {
+            "samples": 1400,
+            "renders": 0,
+            "before_draw_max": 0,
+            "after_draw_max": 0
+          },
+          "overworld-movement-v1": {
+            "samples": 240,
+            "renders": 24,
+            "before_draw_max": 3114,
+            "after_draw_max": 3107
+          },
+          "pokedex-entry-v1": {
+            "samples": 400,
+            "renders": 1,
+            "before_draw_max": 16323,
+            "after_draw_max": 16323
+          },
+          "trainer-battle-entry-v1": {
+            "samples": 500,
+            "renders": 224,
+            "before_draw_max": 10186,
+            "after_draw_max": 10187
+          }
+        },
+        "candidate_ROM_SHA256": "ef8da68a6839bf2a5b355a9444d46f6a462d920505d35f88e785d1e1e308de05",
+        "candidate_ELF_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1005-gba-target/thumbv4t-none-eabi/release/pokered-gba"
+      },
+      "source_2173compiler_2691non_doc702gfx_equal_before_after": true,
+      "all_commands_terminal": true
+    },
+    "retained_failures": {
+      "original_CI_run": 38735394658,
+      "original_failed_metric": "overworld-movement-v1/draw_max_ticks3114>3113.1",
+      "root_exactCIlocal_replay_compare_exit": 1,
+      "root_first_local_missing_libmgba_no_benchmark": "audit-1005-ci-rom-local-record.log",
+      "no_candidate_failure": true
+    },
+    "actual_native_boundary": "No new ordinaryinput/SAVE/screenshot claim by1005. 1006 independently owns literal44f vs9bce currentprefix controls;1007 nativeCLIbuild is separatelyrootrecorded. Earlier9430fb is historical, nevermaster44f.",
+    "source_worktree_clean": true,
+    "no_push_no_PR_no_W905_or_W998_edit": true,
+    "scope_not_claimed": [
+      "RemoteCI green afterpublication",
+      "New core/default suite; unchangedcore/data remain originaltestedPR261 scope",
+      "Full original animation/audio/clock parity",
+      "Actual native screenshots/SAVE pending separate1006 review"
+    ],
+    "explicit_publication_input_files": [
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-failure-source-identity.json",
+        "sha256": "7072239a5e869475809e098206730cbb74ccb8514cd1431bd71a09e42c4a7c2a",
+        "bytes": 532
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-artifact-files.json",
+        "sha256": "1778aceb5ad947913a866ac22088b2264087fcd81f393aa51546aede53f08288",
+        "bytes": 1083
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-pr261-gba-failed.log",
+        "sha256": "6c1356da8b284ddb2c181b5b4176f13af7b031e962fc512dd2fd9568007d0891",
+        "bytes": 51130
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-pr261-gba-all.log",
+        "sha256": "a80ab2246f24e5ac1c1e50c45b37d61296761405ab6788a79e5439b786193216",
+        "bytes": 486674
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-exact-ci-local-reproduction.json",
+        "sha256": "3ce2982878de106af83c0e32e83b49241957b4bb554beef1f8f5ec872167bba3",
+        "bytes": 1901
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-rom-local-record.log",
+        "sha256": "a79077d378f5820d1cb84642b540e34ab90b927fcb13051cf7741d23c749f62e",
+        "bytes": 535
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-rom-local-record-v2.json",
+        "sha256": "c94bdb74318618383046f64b53e8785e6b233d9cecedd9a5d7a1082b53cd044d",
+        "bytes": 2584
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-rom-local-record-v2.log",
+        "sha256": "e054f4d243019b393a31b05e56beddd52197ee10833982bcf781a6773a878d33",
+        "bytes": 19314
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-rom-local-record-v2-raw.log",
+        "sha256": "fd25ebc5713b2a299c2de56308835caef636745010aec7b15087983e3be4da1f",
+        "bytes": 16400
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-rom-local-compare-v2.log",
+        "sha256": "3c1e3064fae9d3f4a6fa1503bce902a608aacc93312cab693d0cf09ccd0e297d",
+        "bytes": 2556
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-worktree-baseline.json",
+        "sha256": "f9159b659f6497f0b0019971f7069affe0983e9a6bd212dd54f4ddb6dd98b69c",
+        "bytes": 856
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source.patch",
+        "sha256": "1647c012bbaab14112b836151fb62cba908419581282036c199e5c0834055e43",
+        "bytes": 8526
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-before.json",
+        "sha256": "b10c8eb543f84725ac7c4818012aa1c4a669b5b12f89b80c12d632b673cd7156",
+        "bytes": 1197987
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-mirror.json",
+        "sha256": "9656ec81e75ecb7dc16ac627a44a20746c7a7fddef4d6a88ab3cae3e2e1e1922",
+        "bytes": 504375
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-check-plan.json",
+        "sha256": "7fa63d48e768df96ffb52f9594855a5100d414753d799c4bd0b4f2b4cb151d04",
+        "bytes": 4977
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-run-own-checks.py",
+        "sha256": "6e8350dc0831bc8d00ca24facb224bd7b50eae2f64dc3692da2e57b4e123fe7e",
+        "bytes": 5531
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-prepare-own-checks.py",
+        "sha256": "57cab13b39c31d590728ffd2cc0f8a64d5175c3e618aee29d85adbe83b425d43",
+        "bytes": 5844
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-runner-preflight.json",
+        "sha256": "b61c526c4a003ae02eb41f54727e9f96ce463b29b2c2124716c9f2ad491705d4",
+        "bytes": 4050
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-root-prereview.json",
+        "sha256": "48777d8cda6be76f1e146945bba128252cded93c98c22e33a881737cb51fa600",
+        "bytes": 1575
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1005-host.sh",
+        "sha256": "ba19127589e62b5afbc0b82d3ceddc474829ccd67f8b8f67045b388cf1c15c2c",
+        "bytes": 778
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1005-gba.sh",
+        "sha256": "cb5badc5ff4b31a08b8585dcfb47a6be1c4991f1f733ec3dfe66ddae594daf76",
+        "bytes": 566
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-check-results.json",
+        "sha256": "a4b64136bf28a93085065c515950983ec3fe863e9e63d74ee923fc38f4bdc6c1",
+        "bytes": 7632
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-checks-console.log",
+        "sha256": "40b6ff55ba7ddb84317d56a043fe367940b2615afa634486559db23aa6daf227",
+        "bytes": 185
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-perf.json",
+        "sha256": "58033a85b5be5b1f6cd11589ff9846dece1477fdd31467be089927df80a2ffe1",
+        "bytes": 2584
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-perf-raw.log",
+        "sha256": "ae17d8b873a116ec4ea39a4d26b29e381247b4198777c72b03afb3a6828b77e4",
+        "bytes": 16401
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-appdebug.log",
+        "sha256": "e8153d34323a8eb9ceb3d8530bb53a26ba72d94d926adf01d31f81b57ee36483",
+        "bytes": 95114
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-after-appdebug.json",
+        "sha256": "8cd16c4e844c697a2dd847ba347ae36f94227314ea5ede184c4715b03a1f07fd",
+        "bytes": 1198273
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-build.log",
+        "sha256": "7b9a9e14022cba3545f444dd2983cd6d1611a698b0dd03fc6eea4727edf1a265",
+        "bytes": 68426
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-after-gba-build.json",
+        "sha256": "56393b05b31c47737d0c1a9c133c41be43167222bb1df652cec58eb798e31ae1",
+        "bytes": 1198274
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-fix.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-after-gba-fix.json",
+        "sha256": "e0034ab8a35e1edcfc96b7b89661581a57bd82005f3097e7e94b8aad0052f41e",
+        "bytes": 1198272
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-record.log",
+        "sha256": "48ba2e9c74cdea52a153d3585b54527a195aad3639164f23bb20f4147247bf02",
+        "bytes": 19218
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-after-gba-record.json",
+        "sha256": "3ce25ce77f5ce78807f0e0932bf9f055526ddcfff341ee4296feefed98ed436c",
+        "bytes": 1198275
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-gba-compare.log",
+        "sha256": "45bc7e7ec455f9b5075d667d15b0d748ff7153cdcba4cffd3c884dbe7451e646",
+        "bytes": 2464
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-own-source-after-gba-compare.json",
+        "sha256": "5cfb3af92791d660276e71c3ca34540116ae4793d676caeb83f5cb72ee2402f3",
+        "bytes": 1198276
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1005-ci-gba-artifact/_temp/gba-performance-candidate.json",
+        "sha256": "ee3345b24e1c79170322d562c11b7dd08b024dcb60e71083a5b507ca8e772cce",
+        "bytes": 2568
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1005-pr261-draw-cost/crates/pokered-gba/perf-baseline.json",
+        "sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "bytes": 2580
+      }
+    ],
+    "missing_explicit_paths_not_claimed": [],
+    "archive_exclusions": [
+      "CIartifactZIP contains GBA ROM: retain locally, exclude from publicevidence ZIP",
+      "candidateROM/ELF andnativeexecutables excluded",
+      "no unrelated batch/group/log globs"
+    ],
+    "publication_suggestion": "Append precise1005source/perf/lifecycle evidence to existingcapturepresentation docs, preserve historicalcapture/alloldfailures/ZIPs. Root owns W905 release integration/push and fresh exacthead CI."
+  },
+  "archive": {
+    "path": "perf-1009-evidence.zip",
+    "sha256": "82bb16effc3e5faacf2df816d46b3f6f2d768d9fbfd4dd8a00cf507469de167f",
+    "bytes": 3102236,
+    "file_count": 77,
+    "all_entries_readback_verified": true,
+    "format": "Standard ZIP index.json + files/<original-r-relative-path>, with source-files/ namespace for explicit outside-r perf-baseline.json; not old content-addressed extraction schema."
+  },
+  "screenshots": [
+    {
+      "label": "literal-master-before",
+      "source": "44f2234823eb5bd0d793ef966871f6028426aaa2",
+      "path": "docs/screenshots/capture-presentation/perf-1009-before.png",
+      "sha256": "d32e85c0758a72adef3298e86ab23828494b85b937212f369833a516b3ef9e55",
+      "frame": 799
+    },
+    {
+      "label": "optimization-after",
+      "source": "9bce1d6382bd350721551f5e249e6b7cebd6cd2e",
+      "path": "docs/screenshots/capture-presentation/perf-1009-after.png",
+      "sha256": "d32e85c0758a72adef3298e86ab23828494b85b937212f369833a516b3ef9e55",
+      "frame": 799
+    }
+  ],
+  "historical_identity": "All old capture images/archives/failures and993 tests retained. No relabelled core/default/determinism. Headless Game.draw visible comparison and RenderSession tests/GBA measurement are distinct.",
+  "limits": [
+    "One bounded indoor ordinary-input control, not all-scene visual equivalence.",
+    "No new original-ROM gameplay or ordinarySAVE run.",
+    "No CPU/scanline/PCM/full-animation parity claim."
+  ],
+  "packaging_preflight_failure": "Initial archive preflight refused explicit perf-baseline.json outside r; stopped before outputs. Fixed path namespace, retained same input SHA; no missing evidence dropped."
+}

@@ -1,3 +1,27 @@
+# 捕球提示、音效与首次确认继续点
+
+用球结果由真实球动画完成事件继续；捕获音效结束后才接受成功页确认。Safari 成功/失败投球补用球文字与实际捕获名；没有额外用球页A或新计时器。首次发布成功页不能把同一A同时当作确认，提前启动BattleOver倒数。快照只镜像既有 enabled/page，保留新/旧快照边界；没有新 live owner 或完整VFX/PCM快照。
+
+## GBA 检查修复后的发布身份（2026-10-15）
+
+受测源码 `9bce1d6382bd350721551f5e249e6b7cebd6cd2e` 在 `d8d4d2a9` 上只增加两个 renderer 文件的改动与地图缓存回归。将本帧已算的 live 地图指纹交给背景缓存，省去重复扫描；每帧仍验证实时方块，没有跨帧 revision、删帧或放宽基线。原 CI ROM 七场景已在本地逐项复现，其中移动最慢绘制 3114 超过 3113.1；新 ROM 为 **3107**，31 项原门禁全部通过，24 次绘制保持。新完整 app debug-server **330 通过／39 忽略**。旧核心、默认 app、determinism 和捕获录制仍保留各自身份。
+
+从 literal master `44f22348` 构建基线，与 source-equivalent `0fb/d8d` 及修复 `9bce` 使用同一普通存档和完整按钮序列，均至实际第 **799** 帧。三张 PNG／RGBA 相同，优化前后完整公开状态序列相同，队伍、金额和输入存档未改；无新的 SAVE。Headless 图只验证 Game.draw 可见输出；RenderSession 实时地图修改和完整像素／调色板由 app 测试验证，GBA ROM 给出实际硬件计时。
+
+精确身份、原 CI 失败与本地环境失败、新源码冻结、五阶段日志和三份实际输入见 `perf-1009.json`／`perf-1009-evidence.zip`。ZIP 是普通 `index.json` + `files/`，不使用旧 `extract_evidence.py`；逐文件 SHA 已解包回读验证。ROM、ELF、可执行文件仅留本地。新发布头的三个官方工作流仍须全部通过后合入。
+
+## 此前 publication-993 的发布身份（保留历史）
+
+#264 实际合入 `44f2234823eb5bd0d793ef966871f6028426aaa2` 后整合实时 master `44f2234823eb5bd0d793ef966871f6028426aaa2`，相对该master仅8个本PR源码/测试路径（6带生产逻辑、2仅测试）。原受测 runtime 为 `0fb1b57fd3096ba0332cd814319305fee1dc754b`，旧本地 docs head `534f06c52a892d5b1c03b6ced0236c99b1695fd7` 不是另一份runtime身份。原2172项编译映射不变；另从受测Git blob补证漏记的run-wasm/src/main.rs为2173项，docs外2691项NUL Git blob/模式与literal symlink也完全相等。原日志仍标2172项；没有伪称重新执行2173项。
+
+v5的905组：core2930、debug-server app329/39忽略、default app318/37忽略、determinism10全部通过。`publication-993.json`/`publication-993-logs.zip` 仅整理本PR日志和身份，没有其他937组数据、构建或游戏重录。新head三个远程工作流还须全部通过后才能合入。
+
+旧六图继续是dfee/fbed、帧2717/2233/2633的历史匹配前缀。新增ACK两图是a2fa/0fb在相同1177物理按键、实际帧1177：前返回野外，后停留捕获页，两者逻辑音效仍playing；该严格对照没有SAVE。另8次健康/HP1、前后各2普通NO教学/SAVE控制均保护原party/PC/bag/dex/cash，属于单独自适应控制。见 `docs/screenshots/capture-presentation/ack-publication-943/verification.json`；不得把自适应成功帧1146/1143当同帧对照。
+
+下列矩阵、GBA结果、候选限制和旧失败均保留当时版本，不是本次新录制。普通HP1报警例外保留；原作/原生随机数不强匹配，不声称全部动画/原作时钟/PCM波形一致。CLI是逻辑SFX；真实三声道/PCM非静音由独立Game测试给出。snapshot DTO不恢复完整音频或VFX；legacy缺元数据仅保留已有当前页ACK兼容。
+
+## 历史捕球矩阵、音频与集成（原身份）
+
 # 捕球提示与音效顺序
 
 普通战和 Safari 用球后应先完成整段球动画，再显示捕获或失败结果。成功提示中的捕获音效结束后才接受确认；离开战斗前保留成功文字。复刻曾在动画中途播放捕获音效，随后被球的 Tink 覆盖，并在 BattleOver 短暂显示 `You won!`。
@@ -31,10 +55,10 @@
 
 合入训练家图鉴修复后的精确失败源 `50ece821b7e4fd2794c049d7de59ff50b0254efc`，在 CI 和本地均测得训练家更新 233 ticks，超过未改动的 232.3 门限。CI checkout merge `4526acc4` 与该源文件差异为零；下载的 CI artifact 只有 JSON/日志，没有 ROM，因此本地复现明确使用相同失败源重新构建的 ROM。单次球 caller 状态查询的候选仍为 233，已撤回，失败日志与首次新增测试构造器编译错误保留。最终仅在普通及 Link 战斗的逐帧玩家名称同步处用 `clone_from` 复用已有 String 容量，捕获续流程、VFX、字幕、音效和存档生产逻辑不变。
 
-最新 master `8eb08f56945bf7db3650896295e8048cf97d14c8` 已整合，最终生产冻结源为 `f0f528666afbaf4458d1bc6e911e6ef43e7e8053`。完整 core 2889、app 293（39 个既有 ignored）、determinism 8 与 debug-server app 构建通过；最新独立 GBA 七场景两重复通过，训练家 224、野生战 206、野外静止 382 ticks。没有放宽门限，也不将本地通过称为远程 CI 全绿。
+历史整合 master `8eb08f56945bf7db3650896295e8048cf97d14c8`，最终生产冻结源为 `f0f528666afbaf4458d1bc6e911e6ef43e7e8053`。完整 core 2889、app 293（39 个既有 ignored）、determinism 8 与 debug-server app 构建通过；最新独立 GBA 七场景两重复通过，训练家 224、野生战 206、野外静止 382 ticks。没有放宽门限，也不将本地通过称为远程 CI 全绿。
 
 八个完整固定输入控制仍保留真实 `c3c38f71` 冻结身份：31884 帧、4812 张采样图逐字节一致，八份普通 SAVE 分别与已有对应成功控制的全部 32768 字节一致。最新 master 与最终整合版本另录普通返回 frame2717、Safari 投球 frame2233/成功字幕 frame2633，六张图与既有公开 PNG 完全相同，具体新身份见 `performance-919-screenshots.json`；旧 `screenshots.json` 未重标。Safari 保持自然捕获，所有失败尝试保留；短字幕重放不额外声称完成最终 SAVE，完整原作/Safari SAVE 范围仍为历史矩阵。
 
 本轮 audit919 的可读汇总与限制见 `performance-919-verification.json`。`performance-919-evidence.zip` 包含新输入、逐帧截图、普通存档、完整哈希清单、失败候选及日志；可用既有 `extract_evidence.py` 独立验证。旧证据 ZIP 均逐字节保留，ROM 与可执行文件没有打包。
 
-已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2890 通过/0 忽略；app 300 通过/39 忽略；determinism 8 通过/0 忽略，全部 0 失败。当前受测源码 `3bd1b4ea17d59b406060a3caa3e79335fc033c44`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
+此前整合 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2890 通过/0 忽略；app 300 通过/39 忽略；determinism 8 通过/0 忽略，全部 0 失败。当时受测源码 `3bd1b4ea17d59b406060a3caa3e79335fc033c44`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
