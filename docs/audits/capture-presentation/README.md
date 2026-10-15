@@ -24,4 +24,6 @@
 
 随后整合主分支 `6085c98704a9b0cb25cbcd34afcc028184ce9217`，整合源为 `490146cac1046afd0a15a9c8c9468cb79b578ab5`。捕获 app/渲染/续接/测试文件与 `40e` 字节完全相同；新增 core 差异只有 POKé DOLL 的使用提示与确认后移除，完整 app 283 通过（39 忽略）、core 2889 通过，GBA 七场景再次通过（训练家 232、野生战 214 ticks）。本次仅更新整合测试与 GBA 构建身份，没有把旧调试二进制或普通输入重放重标为新源。逐项记录见 `master6085-integration.json`，日志见可用同一解包工具核验的 `master6085-integration-logs.zip`。
 
-已整合最新 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2889 通过**、debug-server 应用 **283 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
+此前整合 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2889 通过**、debug-server 应用 **283 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
+
+已整合最新 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **292 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
