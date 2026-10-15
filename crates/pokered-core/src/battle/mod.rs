@@ -1019,6 +1019,9 @@ pub struct BattleScreen {
     /// drained by the frontend every frame via [`Self::take_anim_event`]
     /// (same polling pattern as [`Self::poke_flute_sfx_pending`]).
     pub pending_anim_events: alloc::collections::VecDeque<BattleAnimEvent>,
+    /// Enemy party slots actually loaded since the frontend last consumed
+    /// LoadEnemyMonData's seen notification. Bits are requests, not Pokemon.
+    pub loaded_enemy_slots: u8,
     /// HP-bar drain/refill animation (original `UpdateHPBar`,
     /// engine/gfx/hp_bar.asm): [`Self::player_hp`]/[`Self::enemy_hp`] are the
     /// *displayed* values; this tracks the real-HP targets and steps the
@@ -1243,6 +1246,7 @@ impl BattleScreen {
             poke_flute_sfx_pending: false,
             pending_item_sfx: None,
             pending_anim_events: alloc::collections::VecDeque::new(),
+            loaded_enemy_slots: 0,
             hp_bar_anim: HpBarAnim::default(),
             presentation: presentation::BattlePresentation::default(),
             battle_style: BattleStyle::Shift,
@@ -1288,6 +1292,7 @@ impl BattleScreen {
         bs.mark_player_participant(bs.player.active_pokemon_index);
 
         let transition = BattleTransition::select(!is_wild, enemy.level, player.level, 0);
+        let loaded_enemy_slots = 1 << bs.enemy.active_pokemon_index;
 
         Self {
             phase: intro_start_phase(transition),
@@ -1345,6 +1350,7 @@ impl BattleScreen {
             poke_flute_sfx_pending: false,
             pending_item_sfx: None,
             pending_anim_events: alloc::collections::VecDeque::new(),
+            loaded_enemy_slots,
             hp_bar_anim: HpBarAnim::default(),
             presentation: presentation::BattlePresentation::default(),
             battle_style: BattleStyle::Shift,
@@ -3843,6 +3849,7 @@ learn {learn_name}!")];
                 ai_count_seed,
                 &mut self.enemy_ai_count,
                 msgs,
+                &mut self.loaded_enemy_slots,
             );
         }
     }
@@ -3854,6 +3861,7 @@ learn {learn_name}!")];
         ai_count_seed: u8,
         enemy_ai_count: &mut u8,
         msgs: &mut Vec<String>,
+        loaded_enemy_slots: &mut u8,
     ) {
         use crate::battle::stat_stages::StatIndex;
         use crate::battle::state::status2;
@@ -3923,6 +3931,7 @@ learn {learn_name}!")];
                         };
                         let old = name(bs);
                         bs.enemy.active_pokemon_index = idx;
+                        *loaded_enemy_slots |= 1 << idx;
                         bs.enemy.reset_volatile_status();
                         bs.enemy.refresh_unmodified_stats();
                         bs.reset_player_participants();
@@ -4333,6 +4342,7 @@ learn {learn_name}!")];
                                 ai_count_seed,
                                 &mut self.enemy_ai_count,
                                 &mut ai_msgs,
+                                &mut self.loaded_enemy_slots,
                             );
                             battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
                             let (next_state, mut next_effects) =
@@ -4786,6 +4796,7 @@ learn {learn_name}!")];
         if let Some(idx) = next_idx {
             if let Some(ref mut bs) = self.battle_state {
                 bs.enemy.active_pokemon_index = idx;
+                self.loaded_enemy_slots |= 1 << idx;
                 bs.enemy.reset_volatile_status();
                 bs.enemy.refresh_unmodified_stats();
                 bs.reset_player_participants();
