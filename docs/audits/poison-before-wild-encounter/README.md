@@ -42,3 +42,5 @@
 早期原作脚本在出场动画完成前按方向，实际选中了 FIGHT，导致保存的 EXP/StatExp/PP 改变；另有 native 菜单阶段名错误、原作 ACK 预算不足的失败。它们保留在归档，但没有计入上述最终原作6次 / 复刻12次。最终原作脚本等待出场完成并断言队员原始数据只改变中毒 HP/状态。早期“88字节相同”的过早汇报已撤回，以完整字节复核后的结果为准。
 
 `evidence.zip` 使用按 SHA256 去除相同内容的存储方式；`entry-manifest.json` 保留全部原始路径与内容哈希。用 `python3 extract_evidence.py evidence.zip --verify-only` 校验，或把第二参数换为目录以重建证据。ROM 与可执行文件不在归档内，其精确哈希和源码构建清单保留；终结后仅清理了冗余副本，原始存档、截图、输入、失败记录没有删除。
+
+已整合中毒流程 master `7310d298`。生产整合提交 `8b6460af` 完整 debug app 283 通过、39 个已有忽略项、0 失败；完整 core 2888 通过。完整日志见 `master-7310-integration.json` / `master-7310-integration-logs.zip`，原截图与录制身份未重新标记。
