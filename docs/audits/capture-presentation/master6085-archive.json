@@ -1,0 +1,10 @@
+{
+  "path": "master6085-integration-logs.zip",
+  "bytes": 278429,
+  "sha256": "50539e5b87fb8888817ca1b5465fc2b26eba9ecedb4a4f255df064dd261c1d80",
+  "manifest_sha256": "e6a99f27018bd96b49ddb5caac30238fd06225bb9576dae7322f51069dac1258",
+  "original_paths": 14,
+  "unique_blobs": 14,
+  "all_readback_verified": true,
+  "ROM_executable_emulator_state_excluded": true
+}
