@@ -150,3 +150,29 @@ fn medicine_no_effect_soft_reset_continue_newbattle_cannot_reuse_party_text() {
         assert_eq!(g.battle.battle_state.as_ref().unwrap().player.party[0].species,Species::Charmander);
     });
 }
+
+#[test]
+fn legacy_no_effect_snapshot_keeps_one_ack_without_publication_metadata() {
+    on_stack(|| {
+        let mut g = game();
+        let mon = &mut g.battle.battle_state.as_mut().unwrap().player.party[1];
+        mon.hp = mon.max_hp;
+        let field_party = serde_json::to_value(&g.save_data.party).unwrap();
+        let mut a = InputState::new(); a.press(GbButton::A); g.update(&a);
+        assert!(g.battle.phase.uses_medicine_party_backdrop());
+        let before = serde_json::to_value(&g.battle.battle_state).unwrap();
+        let mut json = serde_json::to_value(g.agent_save_state().unwrap()).unwrap();
+        assert!(json["battle"].as_object_mut().unwrap().remove("text_publication").is_some());
+        let saved: crate::agent_state::GameSnapshot = serde_json::from_value(json).unwrap();
+        assert!(saved.battle.text_publication.is_none());
+        for _ in 0..100 { g.update(&InputState::new()); }
+        g.agent_restore_state(&saved).unwrap();
+        for _ in 0..10 { g.update(&InputState::new()); }
+        let mut b = InputState::new(); b.press(GbButton::B); g.update(&b);
+        assert_eq!(g.battle.phase, BattlePhase::BagSelect);
+        assert!(!g.battle.phase.uses_medicine_party_backdrop());
+        assert_eq!(g.battle.player_bag.items(), &[(ItemId::Potion, 2)]);
+        assert_eq!(serde_json::to_value(&g.battle.battle_state).unwrap(), before);
+        assert_eq!(serde_json::to_value(&g.save_data.party).unwrap(), field_party);
+    });
+}
