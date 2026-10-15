@@ -1,0 +1,123 @@
+{
+  "schema": "audit988-PR264-tested-source-identical-publication-v1",
+  "actual_master": "f9b0f326d333d93cdd4b846a238f617d8ccbc625",
+  "parent266": {
+    "baseRefName": "master",
+    "headRefName": "fix/trainer-ai-free-turn-909",
+    "headRefOid": "be134c4b6496a9c1bf91c0f67f605e4ca1c9dbf2",
+    "mergeCommit": {
+      "oid": "f9b0f326d333d93cdd4b846a238f617d8ccbc625"
+    },
+    "mergedAt": "2026-10-15T11:55:45Z",
+    "number": 266,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/266"
+  },
+  "tested_v3_912_head": "87f8ff3aaedfebb54dcf4065d70fa9f8a95f4b4d",
+  "integrated_source_before_doc_commit": "92ea3505aea24c1c721312f9831ae70c8d907f76",
+  "identity": {
+    "legacy_test_manifest_count": 2172,
+    "expanded_compiler_count": 2173,
+    "retrospective_added_paths": [
+      "run-wasm/src/main.rs"
+    ],
+    "compiler_mapping_equal": true,
+    "expanded_manifest_sha256": "13832ef3671b12e09dd5360ec145cc76843e3b6e75088d03fa7d7df8551727a3",
+    "non_doc_count": 2691,
+    "non_doc_blobs_and_modes_equal": true,
+    "non_doc_tree_sha256": "b14d58f0c00d1735ad7904accf643e5e1dfee27247c1b98a84bfc80a800991c9",
+    "method": "git ls-tree -rz + git ls-files -z; exact non-doc blob IDs/modes, disk compiler byte/kind mapping and clean worktree",
+    "attribution": "Original v3 test logs/freezes remain2172; retrospective run-wasm main.rs Git-blob supplement makes2173. No relabelled test run."
+  },
+  "own_source_paths": [
+    "crates/pokered-app/src/agent_state.rs",
+    "crates/pokered-app/src/field_move_continuation_tests.rs",
+    "crates/pokered-app/src/game.rs",
+    "crates/pokered-core/src/overworld/field_moves.rs",
+    "crates/pokered-core/src/overworld/tests_field_moves.rs",
+    "crates/pokered-core/src/overworld/tests_forced_bike.rs",
+    "crates/pokered-core/src/party_screen.rs"
+  ],
+  "source_boundary": "4 production-bearing files (game.rs/party_screen.rs also contain tests);3 test-only files; no266 own delta",
+  "validation": {
+    "core": {
+      "passed": 2924,
+      "failed": 0,
+      "ignored": 0
+    },
+    "appdebug": {
+      "passed": 323,
+      "failed": 0,
+      "ignored": 39
+    },
+    "determinism": {
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "historical_whole_v3_status": "FAIL_STOPPED at later905/appdebug; group912 onlyPASS",
+  "review987": {
+    "report_sha256": "01e8650b7675e1ff1613c1a0f76c7ba69f77537368bbc383748cdc82224c73a5",
+    "post266_annex_sha256": "b4c953592915f52314b4a029ac99892170ee33de403030f5373d935c87ee92d6"
+  },
+  "historical_screenshots": {
+    "before_source_commit": "216cb0343ca4871663a1a45bde9c90a60b32fe75",
+    "before_binary_sha256": "f966f7e2de570b0d94291ca5d7ecd1a8ce45083caeed9f7d7c54e24bc8190c1b",
+    "after_source_commit": "cd33b24e54bb572ff7b8b1d76a2f44f38c63203f",
+    "after_binary_sha256": "cfaee98b60ded8bce547f1a4f4df93ce2dd8634a8ae8101a7c996190cdd8b77a",
+    "pairs": [
+      {
+        "case": "fly-indoor",
+        "frame": 544,
+        "repeats_per_build": 2,
+        "fixture_sha256": "c6498dc052744ed048c5df883bf0c1bebaddc00003a09896b3c79be6dc9f1e4b",
+        "ordinary_input_prefix_sha256": "3ba7efdec003235f58386e204c2b018575d305cb9b15b340c0a79a5056f2ab2c",
+        "before_png_path": "audit-912-native-final-before-kb242hj1/fly-indoor-1/matched-after-first-ack.png",
+        "before_png_sha256": "efb5a675d2bae4847a6d0feb46fc06643f890d5716577bbb4cccfda8febf8f65",
+        "after_png_path": "audit-912-native-final-after-0tniimht/fly-indoor-1/matched-after-first-ack.png",
+        "after_png_sha256": "e7c2435ed64dcaf0329e2876dbc5f31740ba08e9f1f15d3117606862f7c53946"
+      },
+      {
+        "case": "softboiled-success",
+        "frame": 608,
+        "repeats_per_build": 2,
+        "fixture_sha256": "8145d17ef9bcd930a4bb6a96a165e225f97887d36910c613815d9dfeaba025d3",
+        "ordinary_input_prefix_sha256": "31429c3730421be881b55077930cd1b84f27ccf4afc6e1009f53e010a7b92b86",
+        "before_png_path": "audit-912-native-final-before-0xz81zqv/softboiled-success-1/matched-after-first-ack.png",
+        "before_png_sha256": "efb5a675d2bae4847a6d0feb46fc06643f890d5716577bbb4cccfda8febf8f65",
+        "after_png_path": "audit-912-native-final-after-0tniimht/softboiled-success-1/matched-after-first-ack.png",
+        "after_png_sha256": "098723d622a6007bb7c4611de9d00e5fd5111accaeaf6c982e4f07ce4299eeed"
+      }
+    ],
+    "scope": "Same fixture and full ordinary-input prefix through actual first ACK, matching frame544/608, repeated2 per build; no state setters. Subsequent ordinarySAVE controls retained separately. Original screenshots are additional source references, not substituted for native BEFORE/AFTER."
+  },
+  "historical_actual_SAVE_counts": {
+    "original": 16,
+    "literal216_before": 16,
+    "focusedcd33_after": 16,
+    "excluded_old_Chansey12_Growl_not_counted": true
+  },
+  "clock_boundary": "Inherited fixed60frames=37white+23map-only remains approximate/open; no VRAM/OAM/animation/PCM/fullrestore parity claim.",
+  "historical_GBA": "7 localgates/232trainer/382idle/2994Oak belong tocd33, not thissourceintegration",
+  "rebuilds_or_actual_replays": false,
+  "remote_gate": "New exacthead CI / Build GBA ROM / GBA performance mustallSUCCESS beforemerge; thispublisher onlychecks3triggered andnevermerges",
+  "log_archive": {
+    "path": "publication-988-logs.zip",
+    "bytes": 294420,
+    "sha256": "caeb1ae312007846984813f75bd896f850a68a2f8a8a1ab628baa1d56bf467f5",
+    "entries": [
+      "identity-proof.json",
+      "tested-v3-912-only.json",
+      "tested-legacy2172-source.json",
+      "retrospective-expanded2173-source.json",
+      "tested-wrapper-912.sh",
+      "old-pr264-workflows.json",
+      "tested-core.log",
+      "tested-appdebug.log",
+      "tested-determinism.log",
+      "entries.json"
+    ],
+    "scope": "912 only; no whole937 batch/othergroups/ROM/exe/hardware-state"
+  }
+}

@@ -41,6 +41,14 @@ fn dialogue_text(screen: &OverworldScreen<PokemonRedData>) -> Option<String> {
     Some(format!("{}\n{}", page.line1, page.line2))
 }
 
+fn refusal_text(screen: &OverworldScreen<PokemonRedData>, outcome: FieldMoveOutcome) -> String {
+    assert!(screen.pending_dialogue.is_none(), "the party caller is the sole notice owner");
+    let FieldMoveOutcome::ReturnToParty { message } = outcome else {
+        panic!("expected the original party-menu loop, got {outcome:?}");
+    };
+    message
+}
+
 fn no_input() -> OverworldInput {
     OverworldInput::new(false, false, false, false, false, false, false, false)
 }
@@ -164,10 +172,10 @@ fn cut_without_badge_shows_badge_message() {
     let mut screen = screen_on(MapId::PalletTown);
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Cut, &mon, NO_BADGES, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
+    let text = refusal_text(&screen, outcome);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("No! A new BADGE\nis required.")
+        text,
+        "No! A new BADGE\nis required."
     );
 }
 
@@ -302,7 +310,7 @@ fn cut_grass_without_cascade_keeps_the_route6_grass_block() {
     screen.state.player.y = 22;
     screen.state.player.facing = Direction::Down;
     let blocks = screen.map_data.as_ref().unwrap().blocks.clone();
-    assert_eq!(screen.use_field_move(MoveId::Cut, &test_mon(), NO_BADGES, MapId::VermilionCity), FieldMoveOutcome::Done);
+    assert!(matches!(screen.use_field_move(MoveId::Cut, &test_mon(), NO_BADGES, MapId::VermilionCity), FieldMoveOutcome::ReturnToParty { .. }));
     assert!(screen.pending_cut.is_none());
     assert!(screen.cut_anim.is_none());
     assert_eq!(screen.map_data.as_ref().unwrap().blocks, blocks);
@@ -317,10 +325,10 @@ fn cut_with_nothing_in_front() {
     screen.state.player.facing = Direction::Up;
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Cut, &mon, CASCADE, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
+    let text = refusal_text(&screen, outcome);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("There isn't\nanything to CUT!")
+        text,
+        "There isn't\nanything to CUT!"
     );
 }
 
@@ -333,10 +341,10 @@ fn surf_without_badge_shows_badge_message() {
     let mut screen = screen_on(MapId::PalletTown);
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Surf, &mon, NO_BADGES, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
+    let text = refusal_text(&screen, outcome);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("No! A new BADGE\nis required.")
+        text,
+        "No! A new BADGE\nis required."
     );
 }
 
@@ -348,10 +356,8 @@ fn surf_not_facing_water() {
     screen.state.player.facing = Direction::Up;
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
-    assert!(dialogue_text(&screen)
-        .unwrap_or_default()
-        .starts_with("No SURFing on"));
+    let text = refusal_text(&screen, outcome);
+    assert!(text.starts_with("No SURFing on"));
 }
 
 #[test]
@@ -451,12 +457,13 @@ fn surf_stop_facing_water_is_refused() {
     place_block_in_front(&mut screen, water_block, sub_x, sub_y, Direction::Up);
     screen.state.player.transport = TransportMode::Surfing;
     let mon = test_mon();
-    screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::PalletTown);
+    let text = refusal_text(&screen, outcome);
 
     assert_eq!(screen.state.player.transport, TransportMode::Surfing);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("There's no place\nto get off!")
+        text,
+        "There's no place\nto get off!"
     );
 }
 
@@ -468,11 +475,12 @@ fn surf_stop_facing_water_is_refused() {
 fn strength_without_badge_shows_badge_message() {
     let mut screen = screen_on(MapId::PalletTown);
     let mon = test_mon();
-    screen.use_field_move(MoveId::Strength, &mon, NO_BADGES, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Strength, &mon, NO_BADGES, MapId::PalletTown);
+    let text = refusal_text(&screen, outcome);
     assert!(!screen.strength_active);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("No! A new BADGE\nis required.")
+        text,
+        "No! A new BADGE\nis required."
     );
 }
 
@@ -766,11 +774,12 @@ fn flash_lights_dark_cave() {
 fn flash_without_badge_shows_badge_message() {
     let mut screen = screen_on(MapId::RockTunnel1F);
     let mon = test_mon();
-    screen.use_field_move(MoveId::Flash, &mon, NO_BADGES, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Flash, &mon, NO_BADGES, MapId::PalletTown);
+    let text = refusal_text(&screen, outcome);
     assert!(screen.dark_cave.is_dark(), "still dark without the badge");
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("No! A new BADGE\nis required.")
+        text,
+        "No! A new BADGE\nis required."
     );
 }
 
@@ -783,10 +792,10 @@ fn fly_without_badge_shows_badge_message() {
     let mut screen = screen_on(MapId::Route1);
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Fly, &mon, NO_BADGES, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
+    let text = refusal_text(&screen, outcome);
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("No! A new BADGE\nis required.")
+        text,
+        "No! A new BADGE\nis required."
     );
 }
 
@@ -795,10 +804,8 @@ fn fly_indoors_is_refused() {
     let mut screen = screen_on(MapId::RedsHouse1F);
     let mon = test_mon();
     let outcome = screen.use_field_move(MoveId::Fly, &mon, THUNDER, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
-    assert!(dialogue_text(&screen)
-        .unwrap_or_default()
-        .contains("can't\nFLY here."));
+    let text = refusal_text(&screen, outcome);
+    assert!(text.contains("can't\nFLY here."));
 }
 
 #[test]
@@ -884,9 +891,9 @@ fn dig_refused_outside() {
     screen.last_map = Some(MapId::Route2);
     screen.last_map_entry = Some((5, 5));
     let mon = test_mon();
-    screen.use_field_move(MoveId::Dig, &mon, NO_BADGES, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Dig, &mon, NO_BADGES, MapId::PalletTown);
     assert!(screen.pending_warp.is_none());
-    assert!(dialogue_text(&screen).is_some(), "refusal message shown");
+    assert!(refusal_text(&screen, outcome).contains("This isn't the"));
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -897,11 +904,10 @@ fn dig_refused_outside() {
 fn teleport_indoors_is_refused() {
     let mut screen = screen_on(MapId::MtMoon1F);
     let mon = test_mon();
-    screen.use_field_move(MoveId::Teleport, &mon, NO_BADGES, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Teleport, &mon, NO_BADGES, MapId::PalletTown);
+    let text = refusal_text(&screen, outcome);
     // "<MON> can't / use TELEPORT / now." paginates over two boxes.
-    assert!(dialogue_text(&screen)
-        .unwrap_or_default()
-        .contains("can't\nuse TELEPORT"));
+    assert!(text.contains("can't\nuse TELEPORT"));
 }
 
 #[test]
@@ -1011,11 +1017,7 @@ fn softboiled_user_not_healthy_enough_refused() {
     let mut mon = softboiled_mon();
     mon.hp = mon.max_hp / 5; // current HP <= max/5 → "Not healthy enough."
     let outcome = screen.use_field_move(MoveId::Softboiled, &mon, 0, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
-    // _NotHealthyEnoughText (data/text/text_5.asm:55-58).
-    let dlg = screen.pending_dialogue.as_ref().expect("refusal text");
-    let page = dlg.current().unwrap();
-    assert_eq!(format!("{}\n{}", page.line1, page.line2), "Not healthy\nenough.");
+    assert_eq!(refusal_text(&screen, outcome), "Not healthy\nenough.");
 }
 
 #[test]
@@ -1024,16 +1026,8 @@ fn softboiled_fainted_user_refused() {
     let mut mon = softboiled_mon();
     mon.hp = 0;
     let outcome = screen.use_field_move(MoveId::Softboiled, &mon, 0, MapId::PalletTown);
-    assert_eq!(outcome, FieldMoveOutcome::Done);
-    assert!(
-        screen
-            .pending_dialogue
-            .as_ref()
-            .and_then(|d| d.current())
-            .map(|p| p.line1.as_ref() == "Not healthy")
-            .unwrap_or(false),
-        "a fainted user has 0 HP, which is never > max/5"
-    );
+    let text = refusal_text(&screen, outcome);
+    assert_eq!(text, "Not healthy\nenough.", "fainted user cannot donate HP");
 }
 
 #[test]
