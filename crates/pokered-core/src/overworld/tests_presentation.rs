@@ -58,16 +58,23 @@ fn flash_white_out_starts_when_message_dismissed() {
     screen.update_frame(input);
     screen.update_frame(input);
     assert_eq!(screen.flash_lit_frames, 0);
+
+    // The menu's FLASH branch still whites out after a second use, although
+    // wMapPalOffset was already cleared by the first use.
+    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
+    screen.pending_dialogue = None;
+    screen.update_frame(input);
+    assert_eq!(screen.flash_lit_frames, 3);
 }
 
 #[test]
-fn flash_outside_cave_has_no_white_out() {
+fn flash_outside_cave_still_whites_out_after_its_notice() {
     let mut screen = screen_on(MapId::PalletTown);
     let mon = test_mon();
     screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
     screen.pending_dialogue = None;
     screen.update_frame(idle_input());
-    assert_eq!(screen.flash_lit_frames, 0);
+    assert_eq!(screen.flash_lit_frames, 3);
 }
 
 // ── Naming screen white flash (GBPalWhiteOutWithDelay3) ───────────
