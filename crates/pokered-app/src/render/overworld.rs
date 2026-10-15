@@ -388,6 +388,7 @@ struct OverworldBackgroundKey {
     tile_anim_kind: u8,
     water_shift: i8,
     flower_frame: Option<u8>,
+    poison_bg_flash: bool,
     map_hash: u32,
 }
 
@@ -398,6 +399,7 @@ impl OverworldBackgroundKey {
             && self.water_shift == other.water_shift
             && self.flower_frame == other.flower_frame
             && self.map_hash == other.map_hash
+            && self.poison_bg_flash == other.poison_bg_flash
     }
 
     /// Everything except the water/flower animation phase.
@@ -405,6 +407,7 @@ impl OverworldBackgroundKey {
         self.map == other.map
             && self.tile_anim_kind == other.tile_anim_kind
             && self.map_hash == other.map_hash
+            && self.poison_bg_flash == other.poison_bg_flash
     }
 }
 
@@ -805,11 +808,18 @@ fn draw_background_tiles(
     border_block: u8,
     blockset: &[u8],
     shake_offset_y: i32,
+    poison_bg_flash: bool,
     anim_out: Option<&mut AnimRows>,
 ) {
     if matches!(damage, BackgroundDamage::None) {
         return;
     }
+    // ChangeBGPalColor0_4Frames changes only BGP color 0; OBP palettes
+    // remain untouched when the actor pass draws over these BG pixels.
+    let poison_palette = Palette::new(&[
+        GRAYSCALE_PALETTE.colors[2], GRAYSCALE_PALETTE.colors[1],
+        GRAYSCALE_PALETTE.colors[2], GRAYSCALE_PALETTE.colors[3],
+    ]);
     let width = fb.width() as i32;
     let height = fb.height() as i32;
     let tile_span = |start: i32, end: i32, camera: i32, count: i32| {
@@ -955,7 +965,11 @@ fn draw_background_tiles(
             } else {
                 ts.get(tile_idx)
             };
-            fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
+            if poison_bg_flash {
+                fb.blit_gb_tile(screen_x, screen_y, tile, &poison_palette, false, false, false);
+            } else {
+                fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
+            }
         }
     }
 
@@ -1062,6 +1076,10 @@ fn draw_overworld_impl(
         return;
     }
 
+    // Dark-cave BGP=$FE already maps color 0 to dark gray. The source
+    // poison write therefore changes no visible color there.
+    let poison_bg_flash = !screen.dark_cave.is_dark()
+        && screen.poison_flow.is_some_and(|flow| flow.bg_flash_active());
     let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
 
     let player_tx = screen.state.player.x as i32 * 2;
@@ -1191,6 +1209,7 @@ fn draw_overworld_impl(
                         tile_anim_kind: tile_anim_kind as u8,
                         water_shift: screen.tile_anim.water_shift(),
                         flower_frame: screen.tile_anim.flower_frame(),
+                        poison_bg_flash,
                         map_hash: background_map_hash(screen),
                     };
                     let damage = cache.prepare(fb, key, scroll_background.as_deref_mut());
@@ -1216,6 +1235,7 @@ fn draw_overworld_impl(
                         border_block,
                         blockset,
                         shake_offset_y,
+                        poison_bg_flash,
                         if is_animated {
                             Some(&mut anim_out)
                         } else {
@@ -1263,6 +1283,7 @@ fn draw_overworld_impl(
                         border_block,
                         blockset,
                         shake_offset_y,
+                        poison_bg_flash,
                         None,
                     );
                 }
@@ -1291,7 +1312,8 @@ fn draw_overworld_impl(
                     border_block,
                     blockset,
                     shake_offset_y,
-                        None,
+                    poison_bg_flash,
+                    None,
                 );
             }
         } else {

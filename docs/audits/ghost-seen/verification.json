@@ -1,0 +1,375 @@
+{
+  "scope": "Underlying Tower GHOST species is seen before identification; ordinary Marowak encounter/Doll escape/SAVE and saved BOOT/Continue Pokedex controls. No PokeDoll caption/consumption or animation-parity fix claimed.",
+  "reference_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_controls": [
+    {
+      "ack": "a",
+      "repeat": 1,
+      "saved_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f",
+      "dex_only_change": {
+        "SRAM": "0x25c3",
+        "seen_index": 13,
+        "before": 0,
+        "after": 1,
+        "national_species": 105
+      },
+      "owned19bytes_unchanged": true,
+      "ordinary_SAVE_before_after": true
+    },
+    {
+      "ack": "a",
+      "repeat": 2,
+      "saved_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f",
+      "dex_only_change": {
+        "SRAM": "0x25c3",
+        "seen_index": 13,
+        "before": 0,
+        "after": 1,
+        "national_species": 105
+      },
+      "owned19bytes_unchanged": true,
+      "ordinary_SAVE_before_after": true
+    },
+    {
+      "ack": "b",
+      "repeat": 1,
+      "saved_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f",
+      "dex_only_change": {
+        "SRAM": "0x25c3",
+        "seen_index": 13,
+        "before": 0,
+        "after": 1,
+        "national_species": 105
+      },
+      "owned19bytes_unchanged": true,
+      "ordinary_SAVE_before_after": true
+    },
+    {
+      "ack": "b",
+      "repeat": 2,
+      "saved_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f",
+      "dex_only_change": {
+        "SRAM": "0x25c3",
+        "seen_index": 13,
+        "before": 0,
+        "after": 1,
+        "national_species": 105
+      },
+      "owned19bytes_unchanged": true,
+      "ordinary_SAVE_before_after": true
+    }
+  ],
+  "source_legal_setup": {
+    "scope": "Corrected legal pre-validation(11,16), source event_displacement camera formula +7+map_width10; LEFT enters ghost trigger(10,16). Prior(10,17) wall prep and +4 camera failed attempt retained/excluded. Map/camera and three beaten Channeler / unbeaten ghost flags; genuine EnterMap loads source map/tiles/NPCs. No tutorial, battle or validation inputs. Matched fixture raw party/dex/bag/cash/event records will be supplied before validation.",
+    "state": {
+      "wCurMap": 147,
+      "wXCoord": 11,
+      "wYCoord": 16,
+      "wCurMapWidth": 10,
+      "wCurMapHeight": 9,
+      "wIsInBattle": 0,
+      "wWalkCounter": 0,
+      "wNumSprites": 5,
+      "wPokemonTower6FCurScript": 0
+    },
+    "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "base_sha256": "24c7be7572ebd6ad1b2960e9ff9bdd9384119f3f8c7548b766c9472a772e0ade",
+    "prepared_sha256": "86bb6a90cc843730ab85fa3e1b8c48f8053744f404dd70ffaf4c60e60e3d6f4d",
+    "script_sha256": "31b6e0fbcfa4241e4a49397830d450ddbd25ec2211ff8287478bcf618941f683"
+  },
+  "native_controls": [
+    {
+      "stage": "before",
+      "ack": "a",
+      "repeat": 1,
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "seen105": false,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "before",
+      "ack": "a",
+      "repeat": 2,
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "seen105": false,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "before",
+      "ack": "b",
+      "repeat": 1,
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "seen105": false,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "before",
+      "ack": "b",
+      "repeat": 2,
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "seen105": false,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "after",
+      "ack": "a",
+      "repeat": 1,
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "seen105": true,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "after",
+      "ack": "a",
+      "repeat": 2,
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "seen105": true,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "after",
+      "ack": "b",
+      "repeat": 1,
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "seen105": true,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    },
+    {
+      "stage": "after",
+      "ack": "b",
+      "repeat": 2,
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "fixture_sha256": "c3dff18737d09b8729f716dfdbf1678feab3e1d7e5336eae1f72a44bfc758767",
+      "initial_sram_sha256": "3e76b26ed54f49229f54f8961791f01adb683b2e818fac92f2a3134662497fe8",
+      "final_sram_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "seen105": true,
+      "ordinary_initial_and_final_SAVE": true,
+      "party404_box1122_cash3_name11_unchanged": true,
+      "doll_final_quantity": 1,
+      "ghost_departed": true
+    }
+  ],
+  "all_per_ack_repeats_exact_states_actions_initial_and_final_SRAM": true,
+  "paired_checks": [
+    {
+      "case": "a-1",
+      "inputs_and_initial_SRAM_exact": true,
+      "final_entire_SRAM_differences": [
+        {
+          "offset": "0x25c3",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "offset": "0x3523",
+          "before": 34,
+          "after": 33
+        }
+      ],
+      "playtime_equal": true
+    },
+    {
+      "case": "a-2",
+      "inputs_and_initial_SRAM_exact": true,
+      "final_entire_SRAM_differences": [
+        {
+          "offset": "0x25c3",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "offset": "0x3523",
+          "before": 34,
+          "after": 33
+        }
+      ],
+      "playtime_equal": true
+    },
+    {
+      "case": "b-1",
+      "inputs_and_initial_SRAM_exact": true,
+      "final_entire_SRAM_differences": [
+        {
+          "offset": "0x25c3",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "offset": "0x3523",
+          "before": 34,
+          "after": 33
+        }
+      ],
+      "playtime_equal": true
+    },
+    {
+      "case": "b-2",
+      "inputs_and_initial_SRAM_exact": true,
+      "final_entire_SRAM_differences": [
+        {
+          "offset": "0x25c3",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "offset": "0x3523",
+          "before": 34,
+          "after": 33
+        }
+      ],
+      "playtime_equal": true
+    }
+  ],
+  "ordinary_saved_dex_controls": [
+    {
+      "stage": "before",
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "saved_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "script_sha256": "d41911e79acedc705fd87415533b4051e4994b38f14045ea64a1c1a77a411aa8",
+      "ordinary_boot_continue": true,
+      "only_normal_menu_inputs": true,
+      "frame": 1536,
+      "screenshot_sha256": "704ce9dedf7c191f743c88621f8f5d67d73f87ec27a72b09803a68b642de9b91",
+      "scope": "Independent normal BOOT/Continue of the actual final SAVE; START/POKEDEX, identical page and row inputs, no state setters."
+    },
+    {
+      "stage": "before",
+      "source": "f44e3ef500ea92b24e625bb82687a449a2ee532d",
+      "binary_sha256": "c1d22a1da550ae611bee78d831c188cec684abe15bc3649193da022577ece7d0",
+      "saved_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "script_sha256": "d41911e79acedc705fd87415533b4051e4994b38f14045ea64a1c1a77a411aa8",
+      "ordinary_boot_continue": true,
+      "only_normal_menu_inputs": true,
+      "frame": 1536,
+      "screenshot_sha256": "704ce9dedf7c191f743c88621f8f5d67d73f87ec27a72b09803a68b642de9b91",
+      "scope": "Independent normal BOOT/Continue of the actual final SAVE; START/POKEDEX, identical page and row inputs, no state setters."
+    },
+    {
+      "stage": "after",
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "saved_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "script_sha256": "d41911e79acedc705fd87415533b4051e4994b38f14045ea64a1c1a77a411aa8",
+      "ordinary_boot_continue": true,
+      "only_normal_menu_inputs": true,
+      "frame": 1536,
+      "screenshot_sha256": "31ffad41406e2e342dd09f05a7e74dba594e6861dace35c9555c5efd0cb9ac0f",
+      "scope": "Independent normal BOOT/Continue of the actual final SAVE; START/POKEDEX, identical page and row inputs, no state setters."
+    },
+    {
+      "stage": "after",
+      "source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+      "binary_sha256": "9267a1a4cce1971a758000c44998fc69203df803ec7cdf463adb28a9446ec77c",
+      "saved_sha256": "d13247c626d64a99c31e6e35534d7a56835e2b61afc2a1ffa784412481d01a8f",
+      "script_sha256": "d41911e79acedc705fd87415533b4051e4994b38f14045ea64a1c1a77a411aa8",
+      "ordinary_boot_continue": true,
+      "only_normal_menu_inputs": true,
+      "frame": 1536,
+      "screenshot_sha256": "31ffad41406e2e342dd09f05a7e74dba594e6861dace35c9555c5efd0cb9ac0f",
+      "scope": "Independent normal BOOT/Continue of the actual final SAVE; START/POKEDEX, identical page and row inputs, no state setters."
+    }
+  ],
+  "all_dex_repeats_exact_states_actions_PNG_and_before_after_inputs_equal": true,
+  "all_dex_shots_frame": 1536,
+  "authoritative_parent_terminal_reports": {
+    "before4": 0,
+    "correct_after4": 0,
+    "saved_dex_before2": 0,
+    "saved_dex_after2": 0
+  },
+  "excluded_entire_attempt": {
+    "wrong_source": "0463f568a081698d95fc4e6e7cf27dbbca111111",
+    "correct_source": "0463f568a1edb7874c7c4dae530b7e86129e640f",
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-904-native-ghost-seen-after-dtmnzh_2",
+    "termination": "SIGINT requested to own controller; excluded entire attempt; no actual source identity mismatch in frozenbinary but argument invalid",
+    "pids": [
+      "3938424"
+    ]
+  },
+  "excluded_attempt_exit": 130,
+  "identity_policy": "Wrong CLI source argument remains in rejected original records and is not corrected/relabelled. Only automatically identity-sourced0463 controls enter the validafter4.",
+  "test_logs": {
+    "audit-904-baseline-test.log": {
+      "sha256": "325a24d083f1bac504073ff0d7f48d84f4a0d4c2a00a5e1fbc4e9d96092e7c71",
+      "results": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 308 filtered out; finished in 0.04s"
+      ]
+    },
+    "audit-904-after-app.log": {
+      "sha256": "7ffa587e3d125f78a08d58dfa5742744c5e8e008988404c0b8b29ca323e3b64f",
+      "results": [
+        "test result: ok. 270 passed; 0 failed; 39 ignored; 0 measured; 0 filtered out; finished in 45.81s"
+      ]
+    },
+    "audit-904-after-core.log": {
+      "sha256": "cb14582fa2ccf225772ae8fe6006267b8c721cc5e588086fb59ae9ad93513505",
+      "results": [
+        "test result: ok. 2884 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.17s"
+      ]
+    },
+    "audit-904-after-build.log": {
+      "sha256": "09349152703006e8346fb63a81758ce2b7d80990717f60db03adef6f3dfff5a6",
+      "results": []
+    }
+  },
+  "review": "No blockers. Production only removes !is_ghost around existing set_seen; GHOST presentation, Scope reveal, ball dodge and owned flags remain unchanged. Source LoadEnemyMonData always marks wEnemyMonSpecies2 after IndexToPokedex, before ghost display. Unit covers Marowak/Gastly hidden, identifiedMarowak andordinaryPidgey.",
+  "limits": [
+    "Actual source/native encounter controls cover scripted Tower6F Marowak only; otherrandomTower species have source/static andunit coverage, no actual runtime matrix claim.",
+    "Source/native escape text/item-consumption timing differs on these captures and is a separate900 fix, not repaired or counted equivalent here.",
+    "Native state observations are sampled around normal bulk taps; no continuous animation/audio/clock parity or wholemainline claim.",
+    "Frozenbeforef44/after0463 identities remain; rootowns latestmaster246 integration andfreshCI."
+  ]
+}

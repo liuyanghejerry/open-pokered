@@ -1,0 +1,11 @@
+{
+  "path": "evidence.zip",
+  "bytes": 1028186,
+  "sha256": "930d8d68bc6cc2a0f7c5f1247c68cffa5477f89ce9344a314823b0ea29946a80",
+  "manifest_sha256": "c812ed3e6a69042bfead51389312f5fd9b490ee72e44b7ec8e48178d5895306c",
+  "original_paths": 12507,
+  "unique_blobs": 331,
+  "all_paths_readback_verified": true,
+  "ROM_executable_emulator_state_excluded": true,
+  "storage": "Exact content SHA deduplication only. Source4, validnativebefore4/after4, savedContinueDex2+2 and entire rejectedwrong-argument attempt preserveoriginalfiles/identities."
+}
