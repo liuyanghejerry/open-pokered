@@ -1,0 +1,9 @@
+{
+  "schema": "deduplicated-evidence-v1",
+  "bytes": 293019,
+  "sha256": "cac21901ff9f49ddfe1a5fedf2577b176466f43fd69603111b1ab568eb08d072",
+  "manifest_sha256": "cc6bfd191726e718179f2c3b753b28daccbee77b603486c4d9359d431ae15770",
+  "original_paths": 206,
+  "unique_blobs": 73,
+  "metadata_policy": "Explicit 922 metadata whitelist and five exact 922 diagnostic/replay directories only. The frozen910 repeated-test identity is directly relevant to this diagnosis, retained under its original c489a663 source identity. No prefix glob; no executables, ROM, unrelated PR metadata or other actual captures."
+}
