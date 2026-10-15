@@ -3707,12 +3707,13 @@ learn {learn_name}!")];
                     if actor != BattlerRef::OPPONENT {
                         return;
                     }
+                    let Some(cfg) = ai_cfg.filter(|_| self.enemy_ai_count != 0) else {
+                        return;
+                    };
                     pokered_rules::runtime::apply_engine_to_legacy(bs, state, effects);
-                    let ai_action = ai_cfg.filter(|_| self.enemy_ai_count != 0).and_then(|cfg| {
-                        Self::decide_enemy_ai_action_to_state(
-                            bs, cfg, &mut self.enemy_ai_count, rng.next_u8(),
-                        )
-                    });
+                    let ai_action = Self::decide_enemy_ai_action_to_state(
+                        bs, cfg, &mut self.enemy_ai_count, rng.next_u8(),
+                    );
                     if let Some(ai_action) = ai_action {
                         enemy_ai_fired = true;
                         Self::apply_enemy_ai_action_to_state(

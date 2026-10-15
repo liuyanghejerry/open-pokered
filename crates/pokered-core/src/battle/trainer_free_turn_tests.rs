@@ -83,7 +83,8 @@ fn trainer_free_turn_successful_potion_has_the_same_ai_continuation() {
     open_first_item(&mut s, ItemId::Potion);
     assert_eq!(s.phase, BattlePhase::ItemTargetSelect { item_id: ItemId::Potion });
     press(&mut s, true, false, false);
-    assert_eq!(s.player_hp, before + 20);
+    // The real HP changes first; the existing item notice animates its bar.
+    assert_eq!(s.battle_state.as_ref().unwrap().player.active_mon().hp, before + 20);
     finish_item_notice(&mut s);
     assert_eq!(s.battle_state.as_ref().unwrap().player.active_mon().hp, before + 20);
     assert!(s.battle_state.as_ref().unwrap().enemy.active_mon().status.is_none());
