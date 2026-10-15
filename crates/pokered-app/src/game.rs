@@ -4692,6 +4692,12 @@ impl PokemonGame {
             }
             GameScreen::Battle => {
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
+                // Native entry flags still require the original checkpoint.
+                // None does not invent a live NO_TEXT_DELAY value. Pending
+                // source calls nevertheless resume their phase-owned settings
+                // using the real physical held sample, including Link mirrors.
+                let text_frame = crate::battle_text_input::frame(input, None);
+                let mut text_receipt = pokered_core::battle::FightTextReceipt::default();
                 // Keep deterministic turn resolution separate from presentation:
                 // finish this move's visuals, then drain its HP, then allow the
                 // next narration/action. Core-only consumers remain unblocked.
@@ -4743,7 +4749,8 @@ impl PokemonGame {
                         // 2. Forward input; the driver swallows the
                         //    end-of-battle transition — link battles return
                         //    to the lobby.
-                        let _ = driver.update(battle_input);
+                        let (_, receipt) = driver.update_with_text_input(battle_input, text_frame);
+                        text_receipt.press_ab |= receipt.press_ab;
                         // 3. Push per-frame config onto the canonical
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
@@ -4799,13 +4806,17 @@ impl PokemonGame {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
                     // swallow the transition anyway).
-                    self.battle.update_frame(battle_input)
+                    let (action, receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
+                    text_receipt.press_ab |= receipt.press_ab;
+                    action
                 } else if self.battle.link_mode {
                     // The driver owns the canonical screen; the mirror is
                     // only ever cloned, never updated.
                     ScreenAction::Continue
                 } else {
-                    self.battle.update_frame(battle_input)
+                    let (action, receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
+                    text_receipt.press_ab |= receipt.press_ab;
+                    action
                 };
                 // Only actual loads notify the frontend: stable frames do not
                 // re-read a party slot or re-register an already seen enemy.
@@ -4924,9 +4935,9 @@ impl PokemonGame {
                             | BattlePhase::PartySelect
                             | BattlePhase::PlayerFaintSwitch
                     );
-                    if fight_notice_sound.after(&self.battle.phase, in_menu)
+                    if text_receipt.press_ab || (fight_notice_sound.after(&self.battle.phase, in_menu)
                         && (input.is_just_pressed(GbButton::A)
-                            || input.is_just_pressed(GbButton::B))
+                            || input.is_just_pressed(GbButton::B)))
                     {
                         audio.play_sfx(SfxId::PressAB);
                     }

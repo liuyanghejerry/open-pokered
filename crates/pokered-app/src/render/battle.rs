@@ -4107,7 +4107,7 @@ pub fn draw_battle(
             BattlePhase::PartySelect
                 | BattlePhase::ShiftSwitchSelect
                 | BattlePhase::PlayerFaintSwitch
-        ) {
+        ) || screen.fight_text_work().is_some_and(|work| work.returning_menu()) {
             (None, false)
         } else {
             let trainer_name = screen
@@ -4167,9 +4167,13 @@ pub fn draw_battle(
                         Some("You lost...".to_string())
                     }
                 }
-                _ => screen.current_message.clone(),
+                _ => if screen.fight_text_work().is_some() {
+                    screen.fight_text_visible_message()
+                } else { screen.current_message.clone() },
             };
-            let arrow = match &screen.phase {
+            let arrow = if let Some(work) = screen.fight_text_work() {
+                work.arrow_visible()
+            } else { match &screen.phase {
                 BattlePhase::Intro {
                     phase: ref intro_p,
                     wait_frames,
@@ -4194,7 +4198,7 @@ pub fn draw_battle(
                     || matches!(backdrop, pokered_core::battle::BattleTextBackdrop::FightMoveNotice {
                         wait: pokered_core::battle::FightNoticeWait::Ack })) && *wait_frames == 0,
                 _ => false,
-            };
+            }};
             // PrintBeginningBattleText does not expose the complete sentence
             // on the first WildReveal frame.  The reference keeps the empty
             // battle text box while the cry/setup path runs, then writes one

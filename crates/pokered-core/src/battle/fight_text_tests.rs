@@ -1,0 +1,389 @@
+//! Explicit source-order model checks, not an original-ROM wall-frame oracle.
+use super::*;
+use crate::pokemon::stats::create_pokemon_with_moves;
+
+const FAST: BattleTextSettings = BattleTextSettings {
+    options_delay: 1,
+    letter_flags_before_processor: 1,
+    no_text_delay: false,
+};
+
+fn a() -> BattleInput {
+    BattleInput {
+        a: true,
+        ..BattleInput::none()
+    }
+}
+fn step(
+    s: &mut BattleScreen,
+    edge: BattleInput,
+    held: u8,
+    settings: Option<BattleTextSettings>,
+) -> FightTextReceipt {
+    s.update_frame_with_text_input(
+        edge,
+        BattleTextFrame {
+            held_buttons: held,
+            settings,
+        },
+    )
+    .1
+}
+fn scene(no_moves: bool) -> BattleScreen {
+    let mut player = create_pokemon_with_moves(
+        Species::Snorlax,
+        50,
+        [0x9a, 0x78],
+        [
+            MoveId::Headbutt,
+            MoveId::Amnesia,
+            MoveId::Rest,
+            MoveId::BodySlam,
+        ],
+    )
+    .unwrap();
+    if no_moves {
+        player.pp = [0; 4];
+    } else {
+        player.pp[0] = 0;
+    }
+    let enemy = create_pokemon_with_moves(
+        Species::Magikarp,
+        50,
+        [0x9a, 0x78],
+        [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None],
+    )
+    .unwrap();
+    let mut s = BattleScreen::from_parties(true, &[player], &[enemy], None);
+    s.phase = BattlePhase::PlayerMenu;
+    s.rng = pokered_rules::runtime::StdBattleRng::from_seed(73);
+    s
+}
+fn notice(settings: BattleTextSettings, link: bool) -> BattleScreen {
+    let mut s = scene(false);
+    s.link_mode = link;
+    step(&mut s, a(), 1, Some(settings));
+    assert!(matches!(s.phase, BattlePhase::MoveSelect));
+    assert!(step(&mut s, a(), 1, Some(settings)).press_ab);
+    assert_eq!(s.fight_text_work().unwrap().stage, FightTextStage::BoxSync);
+    s
+}
+fn wait(s: &BattleScreen) -> u16 {
+    match s.phase {
+        BattlePhase::ShowingText { wait_frames, .. } => wait_frames,
+        _ => panic!("{:?}", s.phase),
+    }
+}
+
+#[test]
+fn fight_processor_reenables_letters_and_retains_the_final_glyph_wait() {
+    for delay in [1, 3, 5] {
+        let mut s = notice(
+            BattleTextSettings {
+                options_delay: delay,
+                ..FAST
+            },
+            false,
+        );
+        for frame in 1..=2 {
+            step(&mut s, a(), 1, None);
+            assert_eq!(s.fight_text_visible_message().as_deref(), Some(""));
+            assert_eq!(wait(&s), 3 - frame);
+        }
+        // Release before PrintLetterDelay starts: first letter follows box3.
+        step(&mut s, BattleInput::none(), 0, None);
+        assert_eq!(s.fight_text_visible_message().as_deref(), Some("N"));
+        assert_eq!(wait(&s), u16::from(delay));
+        for frame in 1..=24 * u16::from(delay) {
+            step(&mut s, BattleInput::none(), 0, None);
+            if frame < 24 * u16::from(delay) {
+                assert_eq!(s.fight_text_work().unwrap().stage, FightTextStage::Printing);
+            }
+        }
+        assert_eq!(
+            s.fight_text_work().unwrap().stage,
+            FightTextStage::PromptSync
+        );
+        assert_eq!(wait(&s), 3);
+        assert!(s.fight_text_work().unwrap().arrow_visible());
+    }
+    let flags = BattleTextSettings {
+        letter_flags_before_processor: 0,
+        options_delay: 5,
+        ..FAST
+    };
+    assert_eq!(
+        flags.effective_letter_flags(),
+        2,
+        "InitBattleCommon's clear is not a permanent bypass"
+    );
+    let mut s = notice(flags, false);
+    for _ in 0..3 {
+        step(&mut s, BattleInput::none(), 0, None);
+    }
+    assert_eq!(
+        wait(&s),
+        1,
+        "without FAST flag, PrintLetterDelay uses one frame"
+    );
+}
+
+#[test]
+fn fight_no_delay_still_has_box_and_prompt_sync_and_never_reuses_entry_a() {
+    let mut s = notice(
+        BattleTextSettings {
+            no_text_delay: true,
+            ..FAST
+        },
+        false,
+    );
+    for frame in 1..=5 {
+        let receipt = step(&mut s, a(), 1, None);
+        assert!(!receipt.press_ab);
+        if frame < 3 {
+            assert_eq!(s.fight_text_visible_message().as_deref(), Some(""));
+        } else {
+            assert_eq!(
+                s.fight_text_visible_message().as_deref(),
+                Some("No PP left for\nthis move!")
+            );
+        }
+    }
+    step(&mut s, a(), 1, None);
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::ManualScroll
+    );
+    assert_eq!(wait(&s), 0);
+    // NO_TEXT_DELAY skipped Joypad while printing. Held entry A is not a new
+    // sample, even if a host kept sending an A edge during the protected waits.
+    assert!(!step(&mut s, a(), 1, None).press_ab);
+    step(&mut s, BattleInput::none(), 0, None);
+    assert!(step(&mut s, a(), 1, None).press_ab);
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::MenuInfoSync
+    );
+}
+
+#[test]
+fn fight_final_glyph_expiry_a_schedules_one_real_frame_and_is_not_an_ack() {
+    let mut s = notice(FAST, false);
+    for _ in 0..26 {
+        step(&mut s, BattleInput::none(), 0, None);
+    }
+    assert_eq!(s.fight_text_work().unwrap().visible_chars, 24);
+    assert_eq!(wait(&s), 1);
+    assert!(!step(&mut s, a(), 1, None).press_ab);
+    let work = s.fight_text_work().unwrap();
+    assert_eq!(work.stage, FightTextStage::Printing);
+    assert!(work.short_exit_scheduled);
+    assert_eq!(wait(&s), 1);
+    assert!(!step(&mut s, BattleInput::none(), 1, None).press_ab);
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::PromptSync
+    );
+    assert_eq!(wait(&s), 3);
+}
+
+#[test]
+fn fight_disabled_prompt_returns_to_its_original_row_after_the_two_menu_syncs() {
+    let settings = BattleTextSettings {
+        no_text_delay: true,
+        ..FAST
+    };
+    let mut s = scene(false);
+    s.battle_state.as_mut().unwrap().player.disabled_move = 3;
+    step(&mut s, a(), 1, Some(settings));
+    for _ in 0..2 {
+        step(
+            &mut s,
+            BattleInput {
+                down: true,
+                ..BattleInput::none()
+            },
+            128,
+            Some(settings),
+        );
+    }
+    let before = serde_json::to_value(&s.battle_state).unwrap();
+    let rng = serde_json::to_value(&s.rng).unwrap();
+    assert!(step(&mut s, a(), 1, Some(settings)).press_ab);
+    assert_eq!(s.move_menu.as_ref().unwrap().cursor(), 2);
+    for _ in 0..6 {
+        step(&mut s, BattleInput::none(), 0, None);
+    }
+    assert_eq!(
+        s.fight_text_visible_message().as_deref(),
+        Some("The move is\ndisabled!")
+    );
+    assert!(
+        step(
+            &mut s,
+            BattleInput {
+                b: true,
+                ..BattleInput::none()
+            },
+            2,
+            None
+        )
+        .press_ab
+    );
+    for frame in 1..=6 {
+        step(&mut s, BattleInput::none(), 0, None);
+        assert_eq!(s.move_menu.as_ref().unwrap().cursor(), 2);
+        if frame < 6 {
+            assert!(s.fight_text_work().unwrap().returning_menu());
+        }
+    }
+    assert!(matches!(s.phase, BattlePhase::MoveSelect));
+    assert_eq!(s.current_message, None);
+    assert_eq!(serde_json::to_value(&s.battle_state).unwrap(), before);
+    assert_eq!(serde_json::to_value(&s.rng).unwrap(), rng);
+}
+
+#[test]
+fn fight_ack_and_return_menu_use_program_samples_across_both_delay3_calls() {
+    let mut s = notice(FAST, false);
+    let state = serde_json::to_value(&s.battle_state).unwrap();
+    let rng = serde_json::to_value(&s.rng).unwrap();
+    for frame in 1..=29 {
+        // A starts in the final protected prompt frame, not at the poll.
+        let held = if frame == 29 { 1 } else { 0 };
+        assert!(!step(&mut s, BattleInput::none(), held, None).press_ab);
+    }
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::PromptSync
+    );
+    assert!(
+        step(&mut s, BattleInput::none(), 1, None).press_ab,
+        "actual Joypad sees new held A although the host has no fresh edge now"
+    );
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::MenuInfoSync
+    );
+    for frame in 1..=5 {
+        let held = if frame == 5 { 2 } else { 0 };
+        assert!(!step(&mut s, BattleInput::none(), held, None).press_ab);
+        assert!(s.fight_text_work().unwrap().returning_menu());
+    }
+    assert!(step(&mut s, BattleInput::none(), 2, None).press_ab);
+    assert!(
+        matches!(s.phase, BattlePhase::PlayerMenu),
+        "first resumed menu poll accepts B, not earlier"
+    );
+    assert_eq!(serde_json::to_value(&s.battle_state).unwrap(), state);
+    assert_eq!(serde_json::to_value(&s.rng).unwrap(), rng);
+}
+
+#[test]
+fn fight_link_65_starts_after_print_and_prompt_and_has_no_manual_ack_sound() {
+    let mut s = notice(
+        BattleTextSettings {
+            no_text_delay: true,
+            ..FAST
+        },
+        true,
+    );
+    let rng = serde_json::to_value(&s.rng).unwrap();
+    for frame in 1..=6 {
+        assert!(!step(&mut s, a(), 1, None).press_ab);
+        if frame == 6 {
+            assert_eq!(wait(&s), 65);
+        }
+    }
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::LinkScroll
+    );
+    assert!(!s.fight_text_work().unwrap().arrow_visible());
+    for frame in 1..=64 {
+        assert!(!step(&mut s, a(), if frame % 2 == 0 { 1 } else { 2 }, None).press_ab);
+        assert_eq!(wait(&s), 65 - frame);
+    }
+    assert!(!step(&mut s, a(), 1, None).press_ab);
+    assert_eq!(
+        s.fight_text_work().unwrap().stage,
+        FightTextStage::MenuInfoSync
+    );
+    for _ in 0..6 {
+        assert!(!step(&mut s, BattleInput::none(), 0, None).press_ab);
+    }
+    assert!(matches!(s.phase, BattlePhase::MoveSelect));
+    assert!(s.link_pending_local_action.is_none());
+    assert_eq!(serde_json::to_value(&s.rng).unwrap(), rng);
+}
+
+#[test]
+fn fight_no_moves_done_starts_caller60_after_printing_without_a_prompt() {
+    let mut s = scene(true);
+    assert!(
+        step(
+            &mut s,
+            a(),
+            1,
+            Some(BattleTextSettings {
+                no_text_delay: true,
+                ..FAST
+            })
+        )
+        .press_ab
+    );
+    let rng = serde_json::to_value(&s.rng).unwrap();
+    for _ in 0..2 {
+        step(&mut s, a(), 1, None);
+        assert_eq!(s.fight_text_work().unwrap().stage, FightTextStage::BoxSync);
+    }
+    step(&mut s, a(), 1, None);
+    assert!(matches!(
+        s.phase,
+        BattlePhase::ForcedStruggle { wait_frames: 60 }
+    ));
+    assert_eq!(
+        s.current_message.as_deref(),
+        Some("SNORLAX has no\nmoves left!")
+    );
+    for _ in 0..59 {
+        assert!(!step(&mut s, a(), 1, None).press_ab);
+    }
+    assert_eq!(serde_json::to_value(&s.rng).unwrap(), rng);
+    step(&mut s, a(), 1, None);
+    assert_ne!(serde_json::to_value(&s.rng).unwrap(), rng);
+    assert_eq!(
+        s.battle_state.as_ref().unwrap().player.active_mon().pp,
+        [0; 4]
+    );
+}
+
+#[test]
+fn fight_phase_json_restores_glyph_wait_settings_and_actual_joypad_history() {
+    use crate::snapshot::BattleSnapshot;
+    for checkpoint in [2, 5, 26, 28, 31, 34] {
+        let mut original = notice(FAST, false);
+        for frame in 1..=checkpoint {
+            step(
+                &mut original,
+                BattleInput::none(),
+                if frame >= 30 { 1 } else { 0 },
+                None,
+            );
+        }
+        let json = serde_json::to_string(&BattleSnapshot::capture(&original)).unwrap();
+        let snap: BattleSnapshot = serde_json::from_str(&json).unwrap();
+        let mut restored = BattleScreen::new(true);
+        snap.restore_into(&mut restored);
+        for frame in 0..12 {
+            let held = if frame % 4 < 2 { 2 } else { 0 };
+            let r1 = step(&mut original, BattleInput::none(), held, None);
+            let r2 = step(&mut restored, BattleInput::none(), held, None);
+            assert_eq!(r1, r2);
+            assert_eq!(
+                serde_json::to_value(BattleSnapshot::capture(&original)).unwrap(),
+                serde_json::to_value(BattleSnapshot::capture(&restored)).unwrap()
+            );
+        }
+    }
+}

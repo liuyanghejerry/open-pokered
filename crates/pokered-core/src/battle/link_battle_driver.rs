@@ -337,21 +337,29 @@ impl LinkBattleDriver {
     /// `Transition` to the overworld is swallowed once the battle ended —
     /// link battles return to the lobby instead.
     pub fn update(&mut self, input: BattleInput) -> ScreenAction {
+        self.update_with_text_input(input, super::BattleTextFrame::from_edges(input)).0
+    }
+
+    /// Forward the same physical text input to the canonical screen, not its
+    /// frontend mirror. The receipt belongs only to this one frame.
+    pub fn update_with_text_input(
+        &mut self,
+        input: BattleInput,
+        text: super::BattleTextFrame,
+    ) -> (ScreenAction, super::FightTextReceipt) {
         if self.phase != LinkDriverPhase::Battling {
-            return ScreenAction::Continue;
+            return (ScreenAction::Continue, super::FightTextReceipt::default());
         }
-        let action = match self.screen.as_mut() {
-            Some(screen) => screen.update_frame(input),
-            None => return ScreenAction::Continue,
+        let (action, receipt) = match self.screen.as_mut() {
+            Some(screen) => screen.update_frame_with_text_input(input, text),
+            None => return (ScreenAction::Continue, super::FightTextReceipt::default()),
         };
         self.maybe_send_pending_action();
         self.check_battle_end();
         if self.result.is_some() {
-            // The battle is over: never let the screen's end-of-battle
-            // transition move the app to the overworld.
-            return ScreenAction::Continue;
+            return (ScreenAction::Continue, receipt);
         }
-        action
+        (action, receipt)
     }
 
     /// Process incoming network messages and advance the state machine. Call

@@ -47,6 +47,7 @@ impl FightNoticeSound {
         use pokered_core::battle::{BattlePhase, BattleTextBackdrop, FightNoticeWait};
         match self.notice {
             Some(FightNoticeWait::LinkDelay) => false,
+            Some(FightNoticeWait::Source(_)) => false,
             Some(FightNoticeWait::Ack) => !matches!(phase, BattlePhase::ShowingText {
                 backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. }),
             None => other_menu

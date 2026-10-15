@@ -21,6 +21,7 @@ mod agent_nav;
 mod agent_state;
 mod agent_travel;
 mod battle_config;
+mod battle_text_input;
 mod cli;
 mod demo;
 mod direct_battle;

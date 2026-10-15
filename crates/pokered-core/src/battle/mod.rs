@@ -1,6 +1,10 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod presentation;
+mod fight_text;
+pub use fight_text::{
+    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
+};
 mod switch_dialogue;
 #[cfg(test)]
 mod switch_dialogue_tests;
@@ -38,6 +42,8 @@ mod max_pp_menu_tests;
 mod item_fidelity_tests;
 #[cfg(test)]
 mod fight_notice_tests;
+#[cfg(test)]
+mod fight_text_tests;
 #[cfg(test)]
 mod trainer_free_turn_tests;
 #[cfg(test)]
@@ -415,6 +421,8 @@ pub enum VictoryPhase {
 pub enum FightNoticeWait {
     Ack,
     LinkDelay,
+    /// Explicit source-call continuation; old serialized Ack/LinkDelay remain readable.
+    Source(FightTextWork),
 }
 
 /// The caller's screen retained behind a blocking text sequence.
@@ -1896,6 +1904,27 @@ impl BattleScreen {
     }
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
+        self.update_frame_with_text_input(input, BattleTextFrame::from_edges(input)).0
+    }
+
+    /// Physical held input and explicit text settings share this single frame
+    /// update. No frontend may call both entry points for the same frame.
+    pub fn update_frame_with_text_input(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+    ) -> (ScreenAction, FightTextReceipt) {
+        let mut receipt = FightTextReceipt::default();
+        let action = self.update_frame_inner(input, text, &mut receipt);
+        (action, receipt)
+    }
+
+    fn update_frame_inner(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
         if self.presentation.enabled && self.presentation.waiting { return ScreenAction::Continue; }
         // HP-bar drain/refill animation (engine/gfx/hp_bar.asm): steps the
         // displayed HP toward the real HP at 1 bar pixel per 2 frames.
@@ -1903,6 +1932,13 @@ impl BattleScreen {
             .tick(&mut self.player_hp, &mut self.enemy_hp);
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
+        }
+        if let BattlePhase::ShowingText {
+            messages, current, wait_frames, next_phase,
+            backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(work) },
+        } = self.phase.clone() {
+            return self.update_fight_text(messages, current, wait_frames, next_phase, work,
+                text.held_buttons, receipt);
         }
         match self.phase.clone() {
             BattlePhase::Intro {
@@ -2070,7 +2106,7 @@ impl BattleScreen {
                 } else if let Some(action) = self.battle_menu.update_frame(menu_input) {
                     match action {
                         BattleMenuAction::Fight => {
-                            self.enter_fight_move_menu(None);
+                            self.enter_fight_move_menu_with_text(None, text, receipt);
                         }
                         BattleMenuAction::Run => {
                             self.handle_run();
@@ -2116,61 +2152,7 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
-            BattlePhase::MoveSelect => {
-                let menu_input = MenuInput {
-                    up: input.up,
-                    down: input.down,
-                    a: input.a,
-                    b: input.b,
-                };
-                if let Some(ref mut mm) = self.move_menu {
-                    if let Some(result) = mm.update_frame(menu_input) {
-                        match result {
-                            MoveMenuResult::Selected(idx) => {
-                                if let Some((action, None)) = self.mimic_choice {
-                                    self.mimic_choice = Some((action, Some(idx)));
-                                    self.execute_turn_with_move(action);
-                                    return ScreenAction::Continue;
-                                }
-                                if self.link_mode {
-                                    // Link battle: defer execution until the
-                                    // remote action arrives (the original
-                                    // exchanges actions in SelectEnemyMove
-                                    // before anything resolves — a locked
-                                    // mon's forced move is what actually goes
-                                    // over the wire, the menu choice ignored).
-                                    let locked_idx = self.battle_state.as_ref().and_then(|bs| {
-                                        if move_is_locked(&bs.player) {
-                                            Some(bs.player.selected_move_index)
-                                        } else {
-                                            None
-                                        }
-                                    });
-                                    self.link_pending_local_action =
-                                        Some(crate::link::protocol::LinkAction::UseMove(
-                                            locked_idx.unwrap_or(idx as u8),
-                                        ));
-                                    self.phase = BattlePhase::LinkWaiting;
-                                } else {
-                                    self.execute_turn_with_move(idx);
-                                }
-                            }
-                            MoveMenuResult::Cancelled => {
-                                self.move_menu = None;
-                                self.battle_menu = BattleMenuState::new();
-                                self.phase = BattlePhase::PlayerMenu;
-                            }
-                            MoveMenuResult::NoPP(_) => {
-                                self.show_fight_move_notice("No PP left for\nthis move!");
-                            }
-                            MoveMenuResult::Disabled(_) => {
-                                self.show_fight_move_notice("The move is\ndisabled!");
-                            }
-                        }
-                    }
-                }
-                ScreenAction::Continue
-            }
+            BattlePhase::MoveSelect => self.update_move_select(input, text, receipt),
             BattlePhase::BagSelect => {
                 let menu_input = BattleMenuInput {
                     up: input.up,
@@ -2913,6 +2895,67 @@ learn {learn_name}!")];
         }
     }
 
+    fn update_move_select(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
+        let menu_input = MenuInput {
+            up: input.up,
+            down: input.down,
+            a: input.a,
+            b: input.b,
+        };
+        if let Some(ref mut mm) = self.move_menu {
+            if let Some(result) = mm.update_frame(menu_input) {
+                match result {
+                    MoveMenuResult::Selected(idx) => {
+                        if let Some((action, None)) = self.mimic_choice {
+                            self.mimic_choice = Some((action, Some(idx)));
+                            self.execute_turn_with_move(action);
+                            return ScreenAction::Continue;
+                        }
+                        if self.link_mode {
+                            // Link battle: defer execution until the
+                            // remote action arrives (the original
+                            // exchanges actions in SelectEnemyMove
+                            // before anything resolves — a locked
+                            // mon's forced move is what actually goes
+                            // over the wire, the menu choice ignored).
+                            let locked_idx = self.battle_state.as_ref().and_then(|bs| {
+                                if move_is_locked(&bs.player) {
+                                    Some(bs.player.selected_move_index)
+                                } else {
+                                    None
+                                }
+                            });
+                            self.link_pending_local_action =
+                                Some(crate::link::protocol::LinkAction::UseMove(
+                                    locked_idx.unwrap_or(idx as u8),
+                                ));
+                            self.phase = BattlePhase::LinkWaiting;
+                        } else {
+                            self.execute_turn_with_move(idx);
+                        }
+                    }
+                    MoveMenuResult::Cancelled => {
+                        self.move_menu = None;
+                        self.battle_menu = BattleMenuState::new();
+                        self.phase = BattlePhase::PlayerMenu;
+                    }
+                    MoveMenuResult::NoPP(_) => {
+                        self.show_fight_move_notice_with_text("No PP left for\nthis move!", text, receipt);
+                    }
+                    MoveMenuResult::Disabled(_) => {
+                        self.show_fight_move_notice_with_text("The move is\ndisabled!", text, receipt);
+                    }
+                }
+            }
+        }
+        ScreenAction::Continue
+    }
+
     fn show_text_then(&mut self, messages: Vec<String>, next: BattlePhase) {
         if messages.is_empty() {
             self.phase = next;
@@ -2964,12 +3007,16 @@ learn {learn_name}!")];
             self.move_menu = None;
             self.phase = BattlePhase::ForcedStruggle { wait_frames: 60 };
         } else {
-            if let Some(bs) = self.battle_state.as_ref() {
-                let mut menu = Self::build_move_menu_from_state(bs);
-                if let Some(row) = saved_row { menu.set_cursor(row); }
-                self.move_menu = Some(menu);
-            }
+            self.rebuild_fight_move_menu(saved_row);
             self.phase = BattlePhase::MoveSelect;
+        }
+    }
+
+    fn rebuild_fight_move_menu(&mut self, saved_row: Option<usize>) {
+        if let Some(bs) = self.battle_state.as_ref() {
+            let mut menu = Self::build_move_menu_from_state(bs);
+            if let Some(row) = saved_row { menu.set_cursor(row); }
+            self.move_menu = Some(menu);
         }
     }
 
