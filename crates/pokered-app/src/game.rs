@@ -2322,6 +2322,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.overworld.clear_field_poison();
+        self.battle.loaded_enemy_slots = 0;
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
             // newly imported save after its capture modal is abandoned.
@@ -2896,6 +2897,7 @@ impl PokemonGame {
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
         self.overworld.clear_field_poison();
+        self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
         #[cfg(not(target_os = "none"))]
@@ -3321,11 +3323,6 @@ impl PokemonGame {
             vec![]
         };
 
-        // A trainer's Pokémon are registered as seen in the Pokédex.
-        for m in &enemy_party {
-            self.save_data.game_data.pokedex.set_seen(m.species);
-        }
-
         if !player_party.is_empty() && !enemy_party.is_empty() {
             let tc = parsed.map(|(c, _)| c);
             self.battle = pokered_core::battle::BattleScreen::from_parties(
@@ -3352,6 +3349,7 @@ impl PokemonGame {
         // BoxFullCannotThrowBall guard context (app-side snapshot).
         self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
+        self.register_loaded_trainer_species_seen();
         // Copy of the bag so items are usable in-battle (synced back afterwards).
         self.battle.player_bag = self.save_data.game_data.bag.clone();
         self.battle_vfx = BattleVisualEffects::default();
@@ -3361,6 +3359,24 @@ impl PokemonGame {
         if let Some(ref audio) = self.audio {
             if let Some(id) = MusicId::from_u8(self.battle.battle_music_id()) {
                 audio.play_music(id);
+            }
+        }
+    }
+
+    /// LoadEnemyMonData marks the enemy actually loaded, not ReadTrainer's
+    /// complete party. Link's LoadEnemyMonFromParty bypasses that flag write.
+    fn register_loaded_trainer_species_seen(&mut self) {
+        let slots = core::mem::take(&mut self.battle.loaded_enemy_slots);
+        if self.battle.is_wild || self.battle.link_mode || self.battle.trainer_class.is_none() {
+            return;
+        }
+        if let Some(bs) = &self.battle.battle_state {
+            for slot in 0..bs.enemy.party.len().min(6) {
+                if slots & (1 << slot) != 0 {
+                    // Transform changes the battle copy, not the species loaded.
+                    let species = bs.enemy.party_mon(slot).species;
+                    self.save_data.game_data.pokedex.set_seen(species);
+                }
             }
         }
     }
@@ -4723,6 +4739,11 @@ impl PokemonGame {
                 } else {
                     self.battle.update_frame(battle_input)
                 };
+                // Only actual loads notify the frontend: stable frames do not
+                // re-read a party slot or re-register an already seen enemy.
+                if self.battle.loaded_enemy_slots != 0 {
+                    self.register_loaded_trainer_species_seen();
+                }
                 // Non-move battle animation requests (ball throws, X-stat
                 // items) queued by the core this frame.
                 while let Some(event) = self.battle.take_anim_event() {
@@ -8240,6 +8261,10 @@ impl PokemonGame {
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
+
+#[cfg(test)]
+#[path = "trainer_seen_tests.rs"]
+mod trainer_seen_tests;
 
 #[cfg(test)]
 #[path = "rare_candy_tests.rs"]
