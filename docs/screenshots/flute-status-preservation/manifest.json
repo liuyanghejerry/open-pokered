@@ -1,0 +1,11 @@
+{
+  "case": "poison",
+  "repeat": 1,
+  "frame": 1020,
+  "fixture_sha256": "c2c43b45cb0432269f1e47e4bbba497e8764601c4ff73af047116bdc71c1ba7b",
+  "input_prefix_sha256": "7b460cf477392caad10903040292d6accd8dda964c6f62186e639f5e5356b2f9",
+  "before": "audit-916-native-flute-before-z93o_abz/poison-1/flute-notice.png",
+  "after": "audit-916-native-flute-after-87mkif1p/poison-1/flute-notice.png",
+  "before_png_sha256": "244fa6cd9b331279b184c9dd453d9b1eaf4ba21199b1b0cebade29c95a51fdef",
+  "after_png_sha256": "02f649cb3a41f9dd72649eb6eb15d91057ff86327b382b9774a45b8f2bd54d6e"
+}
