@@ -1,0 +1,866 @@
+{
+  "base": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+  "committed_engine_pin": "76da597b1604305121c866831b5542e70c2b82c8",
+  "isolated_experiment_pin": "99c7200e9049972383235f54a993aea7a27651d1",
+  "source_sha256": {
+    "crates/pokered-app/src/game.rs": "b8c230ca75cd7e9b3abdedb4f2c73b855ee1f299701a58a74222d9f5ff1f9d28",
+    "crates/pokered-app/src/context_update_tests.rs": "da032d143ce5c3bd6d5ea32347ce7deb4a2b526fa891bd930cd0b4f6056dc670"
+  },
+  "checks": {
+    "app_context_debug": "5 passed",
+    "app_context_default": "5 passed",
+    "core_full": "2889 passed",
+    "app_full_debug_parallel": "301 passed; 39 ignored",
+    "app_debug_build": "PASS --locked",
+    "gba_release_normal": "PASS --locked",
+    "arm32_independent_wide_products": 3293760,
+    "before_name_allocation_negative_controls": "2 failed as expected against unchanged base; both pass after",
+    "actual_gba_query_reference": "7 scenarios complete; each actual fnv_mix chunk asserted against original wide multiply; diagnostic build only"
+  },
+  "ordinary_equivalence": {
+    "result": "PASS",
+    "base": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+    "after_source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-after-source-freeze-3.json",
+    "source_files_exact": 6728,
+    "total_frames": 9749,
+    "all_frame_rows_equal": true,
+    "files": [
+      {
+        "name": "ordinary-from-BOOT.wav",
+        "bytes": 31196844,
+        "sha256": "109d6251c1415b08978f169721708d62ff16176c29c486fa98e30f86072c1e62",
+        "byte_equal": true
+      },
+      {
+        "name": "private.script_flags.json",
+        "bytes": 3984,
+        "sha256": "691a86efc2cb3f11a9d591597b21c902a861b1cc1631457852879e74523cc837",
+        "byte_equal": true
+      },
+      {
+        "name": "all-frame-prefix.json",
+        "bytes": 2426447,
+        "sha256": "b3a71fccab44caea8fb6a5a63c173af990c291280b80e4b1ea159dadf86f1018",
+        "byte_equal": true
+      },
+      {
+        "name": "private.sav",
+        "bytes": 32768,
+        "sha256": "742b53492d5267c5ee4e4c97d3115f2b4d5d96802942d9f1179fabe44ace5b6d",
+        "byte_equal": true
+      },
+      {
+        "name": "saved-prompt.png",
+        "bytes": 25053,
+        "sha256": "2df23221b55535ba2cb378154d18edd6d3cd3b7f527c1b506d8aed89812f237e",
+        "byte_equal": true
+      }
+    ],
+    "sram_checksum_valid": true,
+    "scope": "Full ordinary BOOT/CONTINUE, movement, Giovanni battle, departure and START/SAVE prefix. Fixed declared preBOOT SRAM; no snapshot restore or warp. Native audio rendered continuously 800 stereo samples after each update. Exact equality within engine76 before/after, not original-game parity."
+  },
+  "performance": {
+    "before76": {
+      "raw_name": "audit-929-before-perf-1.json",
+      "raw_sha256": "01373d91a36e5e250906b7562f20d92bf52d302e6b2719125d6970b67a21af16",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 216,
+          "update_core_avg_ticks": 205,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9312,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 179,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 382,
+          "update_core_avg_ticks": 373,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3112,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 388,
+          "update_core_avg_ticks": 378,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 222,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    },
+    "fnv_only76": {
+      "raw_name": "audit-929-after-fnv-perf-1.json",
+      "raw_sha256": "323f41c2c58e7bd5a1b26fd08e18946c4b22e3162aa7cfc20e4114c6af2abee3",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 216,
+          "update_core_avg_ticks": 205,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9312,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 179,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 349,
+          "update_core_avg_ticks": 339,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 354,
+          "update_core_avg_ticks": 344,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 222,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    },
+    "fnv_only99c": {
+      "raw_name": "audit-929-fnv-pin99c-perf-1.json",
+      "raw_sha256": "9b42733bc5e26e653e71382bd8553f84eb2caa27e83adf75d466ca664fe1b84d",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 217,
+          "update_core_avg_ticks": 206,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 354,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 108,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9311,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 186,
+          "update_core_avg_ticks": 177,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 350,
+          "update_core_avg_ticks": 340,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 355,
+          "update_core_avg_ticks": 345,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 343,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 234,
+          "update_core_avg_ticks": 223,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    },
+    "final76": {
+      "raw_name": "audit-929-final76-perf-3.json",
+      "raw_sha256": "a24386aee6159fe63b5aad3adb74b5629a41b08040842a343a821b4e5e488907",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8860,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 566,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 204,
+          "update_core_avg_ticks": 193,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9312,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 179,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 349,
+          "update_core_avg_ticks": 339,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 354,
+          "update_core_avg_ticks": 344,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 223,
+          "update_core_avg_ticks": 212,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    },
+    "final99c": {
+      "raw_name": "audit-929-final99c-perf-3.json",
+      "raw_sha256": "c152093d80d636ec862a5afaca3753e40b06471af49c207e373afe13b77c354a",
+      "scenarios": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 566,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 206,
+          "update_core_avg_ticks": 195,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 354,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 108,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9311,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 186,
+          "update_core_avg_ticks": 177,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 350,
+          "update_core_avg_ticks": 340,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 355,
+          "update_core_avg_ticks": 345,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10161,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 224,
+          "update_core_avg_ticks": 214,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    }
+  },
+  "performance_results": {
+    "before76": "31/31 PASS",
+    "fnv_only76": "31/31 PASS",
+    "fnv_only99c": "30/31 PASS; trainer update234 >232.3",
+    "final76": "31/31 PASS",
+    "final99c": "31/31 PASS"
+  },
+  "query_machine_code": [
+    {
+      "variant": "before-perf-1",
+      "elf_sha256": "2c912cbb623965bed1327f038f50603e5209997c0268ebeac9cfcbb501e843eb",
+      "address": "0x807f498",
+      "size": 2224,
+      "static_lmul_calls": 33,
+      "limits": "Static Thumb BL sites in query_seed_snapshot only; not a dynamic instruction/cycle count."
+    },
+    {
+      "variant": "final76-perf-3",
+      "elf_sha256": "4828fdf707262119ac388b454c8ae6145e68482bf7f2ff35275631d771370882",
+      "address": "0x807f250",
+      "size": 2924,
+      "static_lmul_calls": 0,
+      "limits": "Static Thumb BL sites in query_seed_snapshot only; not a dynamic instruction/cycle count."
+    },
+    {
+      "variant": "final99c-perf-3",
+      "elf_sha256": "6dacada731dde3ec934ca4d06d328b89e1e62c3e00f82701f6adf646ae4bb0bf",
+      "address": "0x807f034",
+      "size": 2924,
+      "static_lmul_calls": 0,
+      "limits": "Static Thumb BL sites in query_seed_snapshot only; not a dynamic instruction/cycle count."
+    }
+  ],
+  "frozen_perf_builds": {
+    "records": [
+      {
+        "pin": "76",
+        "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final76-gba-source-3.json",
+        "source_files_exact_after_locked_build": 2164,
+        "rom_sha256": "976cd2f3081ce8e74064391d2bcec1c602a0a78b403e0e0b8b1f269a65f9dd03",
+        "elf_sha256": "4828fdf707262119ac388b454c8ae6145e68482bf7f2ff35275631d771370882",
+        "compare_exit": 0,
+        "final_locked_test_import_recheck_terminal_matches_measured_ELF_exact": true
+      },
+      {
+        "pin": "99c",
+        "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final99c-gba-source-3.json",
+        "source_files_exact_after_locked_build": 2164,
+        "rom_sha256": "93e1b187e4faa3d0c53664fd0ecf0be0c8bdea2c3d5ec1ce1143f836f1c99eb7",
+        "elf_sha256": "6dacada731dde3ec934ca4d06d328b89e1e62c3e00f82701f6adf646ae4bb0bf",
+        "compare_exit": 0,
+        "final_locked_test_import_recheck_terminal_matches_measured_ELF_exact": true
+      }
+    ],
+    "sample_source_note": "Samples use the earlier successfullockedbuild frozenELF; the later recheck changed only excluded cfg(test) import and its terminalELF is byte-identical. Both finalsource3 manifests exact2164."
+  },
+  "normal_gba": {
+    "elf": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final76-normal-3.elf",
+    "elf_sha256": "c56b791423c2244fcb6ead3fc581496e1b8bcc88fd0b6f36dc12c457183143f9",
+    "rom": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final76-normal-3.gba",
+    "rom_sha256": "8869de6d47b6603578ac20f351bdd4b63d18a62e4fb989bbcff3355f5ea8dc67",
+    "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final76-gba-source-3.json",
+    "build_log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-final76-normal-gba-build-3.log"
+  },
+  "limitations": [
+    "All performance limits and baseline files unchanged.",
+    "The 99c720 experiment is an isolated mechanical manifest/lock change; it is absent from this production branch.",
+    "Ordinary equivalence compares current native engine76 builds with a declared preBOOT save, not retail-game parity or all-world reachability.",
+    "Static BL counts are instruction locations, not dynamic counts or cycle measurements.",
+    "No visible output change: 9749 complete frame rows and the saved screenshot are equal. No new before/after visual-difference screenshot is required."
+  ],
+  "current_master_integration": {
+    "master": "32f74146eff45ec883e706d119ad56f90c2be8f0",
+    "compiled_head": "a4ee5db524216642c38a87cc1d75bc5a29c576e3",
+    "source_manifest": "audit-929-integration-source-freeze-4.json",
+    "source_files_exact_after_terminal_builds": 6762,
+    "production_sha256": {
+      "crates/pokered-app/src/game.rs": "2c318c8db8d7e1dc01799a92c2be2801bd9cc98015b94c3d26ec252a9a7e2bea",
+      "crates/pokered-app/src/context_update_tests.rs": "da032d143ce5c3bd6d5ea32347ce7deb4a2b526fa891bd930cd0b4f6056dc670"
+    },
+    "checks": {
+      "app_context_debug": "5 passed",
+      "app_context_default": "5 passed",
+      "core_full": "2890 passed",
+      "app_full_debug_parallel": "303 passed; 39 ignored",
+      "app_debug_build": "PASS --locked",
+      "normal_gba_release": "PASS --locked"
+    },
+    "gba_performance_results": [
+      {
+        "pin": "76",
+        "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-integration76-gba-source-4.json",
+        "source_files_exact_after_locked_build": 2165,
+        "rom_sha256": "c3e80997f521e4bf986e42f7356f4cd6a21788642eac6d0ff51d88da78b58a23",
+        "elf_sha256": "387a90940f15c857694a4ed0768b910c61d85d1b19e0208ef7b5d4b03ffd4a4d",
+        "compare_exit": 0
+      },
+      {
+        "pin": "99c",
+        "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-929-integration99c-gba-source-4.json",
+        "source_files_exact_after_locked_build": 2165,
+        "rom_sha256": "7a8e904c55a1445b1dd501dbeae675898fcb7d32d1d0318b69ed41f63d117d35",
+        "elf_sha256": "4e3e21fcdcc6a4b04e7c78d9d0916873edfbbca2dc07fd1baa1fe718e811523c",
+        "compare_exit": 0
+      }
+    ],
+    "normal_gba": {
+      "source_manifest": "audit-929-integration76-gba-source-4.json",
+      "elf_sha256": "4c671192b4ddc55e826d7d9bff145c650297a6f76512cbcb5e7e19ae833622d6",
+      "rom_sha256": "ced6ebe814c7cd38489b84130483f4f0796006e929c71b44f116967b978a88a2",
+      "build_log": "audit-929-integration76-normal-gba-build-4.log",
+      "result": "PASS --locked normal release"
+    },
+    "ordinary_equivalence": {
+      "result": "PASS",
+      "integrated_master": "32f74146eff45ec883e706d119ad56f90c2be8f0",
+      "source_freeze": "audit-929-integration-source-freeze-4.json",
+      "comparison": "New32f integrated runner vs untouchedf078 original BEFORE; all ordinary Game states on this path still equal; original before/after controls retainf078 identity.",
+      "frames": 9749,
+      "all_frame_rows_equal": true,
+      "files": [
+        {
+          "name": "ordinary-from-BOOT.wav",
+          "bytes": 31196844,
+          "sha256": "109d6251c1415b08978f169721708d62ff16176c29c486fa98e30f86072c1e62",
+          "byte_equal": true
+        },
+        {
+          "name": "private.script_flags.json",
+          "bytes": 3984,
+          "sha256": "691a86efc2cb3f11a9d591597b21c902a861b1cc1631457852879e74523cc837",
+          "byte_equal": true
+        },
+        {
+          "name": "all-frame-prefix.json",
+          "bytes": 2426447,
+          "sha256": "b3a71fccab44caea8fb6a5a63c173af990c291280b80e4b1ea159dadf86f1018",
+          "byte_equal": true
+        },
+        {
+          "name": "private.sav",
+          "bytes": 32768,
+          "sha256": "742b53492d5267c5ee4e4c97d3115f2b4d5d96802942d9f1179fabe44ace5b6d",
+          "byte_equal": true
+        },
+        {
+          "name": "saved-prompt.png",
+          "bytes": 25053,
+          "sha256": "2df23221b55535ba2cb378154d18edd6d3cd3b7f527c1b506d8aed89812f237e",
+          "byte_equal": true
+        }
+      ],
+      "sram_checksum_valid": true
+    },
+    "performance": {
+      "76": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 566,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 205,
+          "update_core_avg_ticks": 194,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9312,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 179,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 349,
+          "update_core_avg_ticks": 339,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 354,
+          "update_core_avg_ticks": 344,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 223,
+          "update_core_avg_ticks": 213,
+          "update_flush_avg_ticks": 1
+        }
+      },
+      "99c": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 566,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 206,
+          "update_core_avg_ticks": 195,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 354,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 108,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9311,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 186,
+          "update_core_avg_ticks": 177,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 350,
+          "update_core_avg_ticks": 340,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 355,
+          "update_core_avg_ticks": 345,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16319,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 117,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 343,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 225,
+          "update_core_avg_ticks": 214,
+          "update_flush_avg_ticks": 1
+        }
+      }
+    },
+    "machine_code": [
+      {
+        "variant": "before-perf-1",
+        "elf_sha256": "2c912cbb623965bed1327f038f50603e5209997c0268ebeac9cfcbb501e843eb",
+        "address": "0x807f498",
+        "size": 2224,
+        "static_lmul_calls": 33
+      },
+      {
+        "variant": "integration76-perf-4",
+        "elf_sha256": "387a90940f15c857694a4ed0768b910c61d85d1b19e0208ef7b5d4b03ffd4a4d",
+        "address": "0x807f4bc",
+        "size": 2924,
+        "static_lmul_calls": 0
+      },
+      {
+        "variant": "integration99c-perf-4",
+        "elf_sha256": "4e3e21fcdcc6a4b04e7c78d9d0916873edfbbca2dc07fd1baa1fe718e811523c",
+        "address": "0x807f140",
+        "size": 2924,
+        "static_lmul_calls": 0
+      }
+    ]
+  }
+}

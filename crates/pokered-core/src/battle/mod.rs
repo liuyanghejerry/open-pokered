@@ -35,6 +35,8 @@ mod menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
+mod medicine_result_tests;
+#[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
 mod exp_award_notice_tests;
@@ -396,6 +398,14 @@ pub enum VictoryPhase {
     EndBattleText,
 }
 
+/// The caller's screen retained behind a blocking text sequence.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum BattleTextBackdrop {
+    #[default]
+    Battle,
+    MedicineParty,
+}
+
 /// High-level battle phase (frame-loop granularity).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattlePhase {
@@ -413,6 +423,9 @@ pub enum BattlePhase {
     BagSelect,
     /// Player selects a party member to use item on (for healing/status items).
     ItemTargetSelect { item_id: ItemId },
+    /// ItemUseMedicine keeps the redrawn party visible for Delay50 and ACK.
+    /// Party data, selection and text remain owned by the battle.
+    ItemMedicineResult { wait_frames: u8 },
     /// `ItemUsePPRestore`'s MoveSelectionMenu (wMoveMenuType $02): picking
     /// WHICH move of the chosen party member receives the (Max) Ether.
     /// B returns to the party pick (the original's `.chooseMon` loop).
@@ -427,6 +440,10 @@ pub enum BattlePhase {
         wait_frames: u16,
         /// Phase to transition to after all messages are shown.
         next_phase: Box<BattlePhase>,
+        /// Medicine failure prints over its existing party caller. Older
+        /// snapshots and every other text caller retain the battle screen.
+        #[serde(default)]
+        backdrop: BattleTextBackdrop,
     },
     /// A successfully used battle item costs the player's action. This
     /// one-frame handoff runs the opponent's free move only after the item's
@@ -502,6 +519,13 @@ pub enum BattlePhase {
         escaped: bool,
         wait_frames: u16,
     },
+}
+
+impl BattlePhase {
+    pub fn uses_medicine_party_backdrop(&self) -> bool {
+        matches!(self, Self::ItemTargetSelect { .. } | Self::ItemMedicineResult { .. }
+            | Self::ShowingText { backdrop: BattleTextBackdrop::MedicineParty, .. })
+    }
 }
 
 /// Input forwarded to the battle screen each frame.
@@ -1511,7 +1535,7 @@ impl BattleScreen {
         // (engine/battle/end_of_battle.asm:48). Gen-1 wins always come
         // from wiping the enemy party (wild: core.asm:793; trainer:
         // core.asm:916); the battle-over phases cover escape/loss/catch.
-        if self.enemy_party_wiped()
+        if self.is_old_man || self.enemy_party_wiped()
             || matches!(
                 self.phase,
                 BattlePhase::TrainerVictory { .. } | BattlePhase::BattleOver { .. }
@@ -1883,6 +1907,10 @@ impl BattleScreen {
                                 phase: IntroPhase::GhostCantID,
                                 wait_frames: 30,
                             }
+                        } else if self.is_old_man {
+                            // The demonstration goes straight to its scripted
+                            // throw; it never sends out the player's first mon.
+                            BattlePhase::PlayerMenu
                         } else {
                             BattlePhase::Intro {
                                 phase: IntroPhase::PlayerSendOut,
@@ -2137,6 +2165,15 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
+            BattlePhase::ItemMedicineResult { wait_frames } => {
+                if wait_frames > 0 {
+                    self.phase = BattlePhase::ItemMedicineResult { wait_frames: wait_frames - 1 };
+                } else if input.a || input.b {
+                    self.current_message = None;
+                    self.phase = BattlePhase::EnemyFreeTurnAfterItem;
+                }
+                ScreenAction::Continue
+            }
             // MoveSelectionMenu for (Max) Ether: A applies to the highlighted
             // move, B loops back to the party pick (`.chooseMon`). Selecting a
             // 0-PP (or "disabled"-flagged) row is NOT vetoed here — the item
@@ -2177,6 +2214,7 @@ impl BattleScreen {
                 current,
                 wait_frames,
                 next_phase,
+                backdrop,
             } => {
                 if wait_frames > 0 {
                     self.phase = BattlePhase::ShowingText {
@@ -2184,6 +2222,7 @@ impl BattleScreen {
                         current,
                         wait_frames: wait_frames - 1,
                         next_phase,
+                        backdrop,
                     };
                     return ScreenAction::Continue;
                 }
@@ -2197,7 +2236,12 @@ impl BattleScreen {
                 if (input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
-                        self.current_message = None;
+                        // Keep the demonstration's success caption while its
+                        // return-to-field caller finishes. There is no trainer
+                        // victory narration in the old man's wild battle.
+                        if !self.is_old_man {
+                            self.current_message = None;
+                        }
                         self.presentation.finish_pages();
                         self.sync_display_from_state();
                         self.phase = *next_phase;
@@ -2208,6 +2252,7 @@ impl BattleScreen {
                             current: next_idx,
                             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
                             next_phase,
+                            backdrop,
                         };
                     }
                 }
@@ -2832,7 +2877,15 @@ learn {learn_name}!")];
             current: 0,
             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
             next_phase: Box::new(next),
+            backdrop: BattleTextBackdrop::Battle,
         };
+    }
+
+    fn show_medicine_no_effect(&mut self, message: String) {
+        self.show_text_then(vec![message], BattlePhase::BagSelect);
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut self.phase {
+            *backdrop = BattleTextBackdrop::MedicineParty;
+        }
     }
 
     fn handle_item_use(&mut self, item_id: ItemId) {
@@ -2925,7 +2978,7 @@ learn {learn_name}!")];
         {
             let active_hp = self.player_hp;
             if active_hp == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
-                self.show_text_then(vec!["It won't have any effect.".to_string()], BattlePhase::BagSelect);
+                self.show_medicine_no_effect("It won't have any effect.".to_string());
                 return;
             }
         }
@@ -2954,6 +3007,12 @@ learn {learn_name}!")];
         }
 
         let category = ItemCategory::from_item(item_id);
+        // GetPartyMonName reads the persistent party nickname, including
+        // the original identity while the active battle mon is transformed.
+        let medicine_name = self.battle_state.as_ref().map(|bs| {
+            let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+            bs.player.party_mon(pokemon_index).display_name(&mut name_buf).to_string()
+        }).unwrap_or_default();
         self.sync_player_context();
         let reset_working_on_cure = self.battle_state.as_ref().is_some_and(|bs|
             pokemon_index == bs.player.active_pokemon_index &&
@@ -2967,11 +3026,15 @@ learn {learn_name}!")];
                     match use_healing_item(mon, item_id) {
                         HealResult::Healed { hp_restored } => {
                             self.consume_selected_item();
-                            (format!("HP restored by {}!", hp_restored), true)
+                            (if item_id == ItemId::FullRestore && hp_restored == 0 {
+                                format!("{}'s\nhealth returned!", medicine_name)
+                            } else {
+                                format!("{}\nrecovered by {}!", medicine_name, hp_restored)
+                            }, true)
                         }
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
                         HealResult::AlreadyFullHp => ("It won't have any effect.".to_string(), false),
                         HealResult::NotFainted => ("It won't have any effect.".to_string(), false),
@@ -2983,7 +3046,15 @@ learn {learn_name}!")];
                     match use_status_cure(mon, item_id) {
                         StatusCureResult::Cured => {
                             self.consume_selected_item();
-                            ("Status cured!".to_string(), true)
+                            let message = match item_id {
+                                ItemId::Antidote => format!("{} was\ncured of poison!", medicine_name),
+                                ItemId::BurnHeal => format!("{}'s\nburn was healed!", medicine_name),
+                                ItemId::IceHeal => format!("{} was\ndefrosted!", medicine_name),
+                                ItemId::Awakening => format!("{}\nwoke up!", medicine_name),
+                                ItemId::ParlyzHeal => format!("{}'s\nrid of paralysis!", medicine_name),
+                                _ => format!("{}'s\nhealth returned!", medicine_name),
+                            };
+                            (message, true)
                         }
                         StatusCureResult::NoEffect => ("It won't have any effect.".to_string(), false),
                         StatusCureResult::NotApplicable => ("It won't have any effect.".to_string(), false),
@@ -2992,7 +3063,7 @@ learn {learn_name}!")];
                 ItemCategory::Revive => {
                     use crate::items::healing::{use_healing_item, HealResult};
                     match use_healing_item(mon, item_id) {
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             // ItemUseMedicine.updateInBattleFaintedData:
                             // reviving a bench mon restores its share only if
                             // it participated against this same enemy.
@@ -3000,9 +3071,9 @@ learn {learn_name}!")];
                                 bs.party_gain_exp_flags[pokemon_index] = true;
                             }
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
-                        _ => ("Can't revive that!".to_string(), false),
+                        _ => ("It won't have any effect.".to_string(), false),
                     }
                 }
                 _ => ("It won't have any effect.".to_string(), false),
@@ -3024,14 +3095,16 @@ learn {learn_name}!")];
                 _ => BattleItemSfx::HealHp,
             });
         }
-        self.show_text_then(
-            vec![result_msg],
-            if item_used {
-                BattlePhase::EnemyFreeTurnAfterItem
-            } else {
-                BattlePhase::BagSelect
-            },
-        );
+        if item_used {
+            // RedrawPartyMenu owns this result, not the battle HUD. Keep only
+            // the existing battle message/selection and a scalar Delay50;
+            // rendering reads the live (persistent-identity) party each time.
+            self.presentation.finish_pages();
+            self.current_message = Some(pokered_data::battle_text::localize(&result_msg, self.is_zh));
+            self.phase = BattlePhase::ItemMedicineResult { wait_frames: 50 };
+        } else {
+            self.show_medicine_no_effect(result_msg);
+        }
     }
 
     /// Apply a PP-restore item chosen in battle (ItemUsePPRestore's
@@ -6481,6 +6554,28 @@ mod old_man_tests {
     }
 
     #[test]
+    fn old_man_intro_skips_player_send_out_and_retains_success_caption() {
+        let mut s = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        s.is_old_man = true;
+        s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(s.phase, BattlePhase::PlayerMenu);
+        s.update_frame(BattleInput::none());
+        for _ in 0..200 {
+            s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            if matches!(s.phase, BattlePhase::BattleOver { .. }) { break; }
+        }
+        assert!(matches!(s.phase, BattlePhase::BattleOver { .. }));
+        assert_eq!(s.current_message.as_deref(), Some("All right!\nWEEDLE was caught!"));
+        assert!(s.captured_mon.is_none());
+
+        let mut ordinary = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        ordinary.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        ordinary.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(ordinary.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
+    }
+
+    #[test]
     fn transformed_capture_caption_names_the_received_ditto() {
         let mut s = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
         s.battle_state.as_mut().unwrap().enemy.set_status3(state::status3::TRANSFORMED);
@@ -7324,6 +7419,7 @@ mod hp_bar_anim_tests {
             current: 0,
             wait_frames: 0,
             next_phase: Box::new(BattlePhase::PlayerMenu),
+            backdrop: Default::default(),
         };
         // Frame 1: message shows, input pressed but drain still active.
         s.update_frame(BattleInput {

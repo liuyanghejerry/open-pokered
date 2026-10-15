@@ -16,6 +16,9 @@ macro_rules! dbg_eprintln {
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
 pub(crate) mod post_capture;
+#[cfg(all(test, not(target_os = "none")))]
+#[path = "old_man_capture_tests.rs"]
+mod old_man_capture_tests;
 
 use crate::alloc_prelude::*;
 
@@ -850,14 +853,46 @@ struct QuerySeedSnapshot {
 }
 
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+#[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+// Thumb-1 has native 32-bit multiplication but lowers a u64 product to
+// __aeabi_lmul. Keep the exact FNV prime: 2^40 + 435. The 16-bit partial
+// products below fit in u32, including their carry.
+#[cfg(any(
+    test,
+    all(target_arch = "arm", target_pointer_width = "32", target_os = "none")
+))]
+#[inline]
+fn fnv_multiply_arm32(value: u64) -> u64 {
+    let lo = value as u32;
+    let hi = (value >> 32) as u32;
+    let low_product = (lo & 0xffff) * 435;
+    let high_product = (lo >> 16) * 435 + (low_product >> 16);
+    let result_lo = (low_product & 0xffff) | (high_product << 16);
+    let result_hi = hi
+        .wrapping_mul(435)
+        .wrapping_add(high_product >> 16)
+        .wrapping_add(lo << 8);
+    (u64::from(result_hi) << 32) | u64::from(result_lo)
+}
 
 fn fnv_mix(h: &mut u64, bytes: &[u8]) {
     for &b in bytes {
-        *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
+        {
+            *h = fnv_multiply_arm32(*h ^ u64::from(b));
+        }
+        #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
+        {
+            *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        }
     }
 }
 
+#[cfg(test)]
+#[path = "context_update_tests.rs"]
+mod context_update_tests;
 impl QuerySeedSnapshot {
     fn hash_u8(h: &mut u64, v: u8) {
         fnv_mix(h, &[v]);
@@ -4654,16 +4689,24 @@ impl PokemonGame {
                 if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
                     self.battle.complete_move_presentation();
                 }
-                let caught_sound_holds_input = self.battle.captured_mon.is_some()
+                // ItemUseBallText05 also plays for the old man's demonstration,
+                // which deliberately does not put a captured mon in the save.
+                let caught_sound_holds_input = (self.battle.captured_mon.is_some() || self.battle.is_old_man)
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
+                // ItemUseBall completes every toss/poof/shake before printing
+                // the success text and starting its three-channel jingle.
+                // Advancing the demo early lets a queued Tink replace CHAN5.
+                let demo_animation_holds_input = self.battle.is_old_man
+                    && matches!(self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. })
+                    && !self.battle_vfx.item_animation_capture_finished();
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
@@ -4689,7 +4732,9 @@ impl PokemonGame {
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
                             screen.battle_style = self.state.config.battle_style;
-                            screen.player_name = Some(self.player_name.clone());
+                            if screen.player_name.as_deref() != Some(self.player_name.as_str()) {
+                                screen.player_name = Some(self.player_name.clone());
+                            }
                         }
                         // 4. Mirror the canonical screen into `self.battle`
                         //    for the render/vfx/audio blocks below and the
@@ -4731,7 +4776,9 @@ impl PokemonGame {
                 // battle_animation below. (For link battles `self.battle` is
                 // the mirror; the canonical screen gets the same pushes above.)
                 self.battle.battle_style = self.state.config.battle_style;
-                self.battle.player_name = Some(self.player_name.clone());
+                if self.battle.player_name.as_deref() != Some(self.player_name.as_str()) {
+                    self.battle.player_name = Some(self.player_name.clone());
+                }
                 let action = if self.battle.link_mode && battle_over {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
@@ -4882,7 +4929,7 @@ impl PokemonGame {
                     if cur_message != self.battle_prev_message {
                         if let Some(ref msg) = cur_message {
                             let msg_lower = msg.to_lowercase();
-                            if self.battle.captured_mon.is_some() && msg_lower.starts_with("all right!") {
+                            if (self.battle.captured_mon.is_some() || self.battle.is_old_man) && msg_lower.starts_with("all right!") {
                                 audio.play_sfx(SfxId::CaughtMon);
                             } else if msg_lower.contains("super effective") {
                                 audio.play_sfx(SfxId::SuperEffective);
@@ -8266,6 +8313,10 @@ impl PokemonGame {
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "battle_medicine_tests.rs"]
+mod battle_medicine_tests;
 
 #[cfg(test)]
 #[path = "trainer_seen_tests.rs"]
