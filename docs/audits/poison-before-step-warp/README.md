@@ -51,3 +51,5 @@ python3 extract_evidence.py evidence.zip --verify-only
 性能跟进：远程旧提交 `79308f00` 的 GBA 空闲更新384超过382.9门限。生产 `92d5abe9` 将恢复函数限制到确有暂停传送时；完整应用287通过/39忽略，本地同工具、原门限七场景全通过（空闲382、训练家232）。新构建重新完成6次实际进门/SAVE，完整输入、全部检查点PNG与最终32KiB存档均和先前冻结AFTER逐项相同。因此前后截图仍保留原身份，未重标。新增精确身份、失败CI日志、硬件指标和原始重播见 `idle-fix-verification.json` / `idle-fix-evidence.zip`；远程最新提交仍须重新CI。
 
 最新集成验证：已整合 master `6085c987`（#253）；完整 core **2888 通过、0 失败**，debug-server app **287 通过、39 忽略、0 失败**。日志、源文件 SHA 清单见 `master-6085-integration.json` 与日志归档。实际按键重放和截图保留原冻结提交身份。
+
+已整合最新 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2888 通过**、debug-server 应用 **287 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
