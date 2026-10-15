@@ -2253,8 +2253,8 @@ impl BattleScreen {
                     return ScreenAction::Continue;
                 }
                 self.current_message = Some(messages[current].clone());
-                self.presentation.activate(current);
-                if self.presentation.waiting { return ScreenAction::Continue; }
+                let first_publication = self.presentation.activate(current);
+                if self.presentation.waiting || first_publication { return ScreenAction::Continue; }
                 // The original animates the HP bar *synchronously* before
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the

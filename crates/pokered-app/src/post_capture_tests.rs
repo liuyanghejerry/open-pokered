@@ -660,13 +660,22 @@ fn capture_ball_finishes_before_success_sound_and_caption_survives_return() {
     for boxed in [false, true] {
         for low_hp in [false, true] {
             for safari in [false, true] {
-                verify_capture_presentation(boxed, low_hp, safari);
+                verify_capture_presentation(boxed, low_hp, safari, false);
             }
         }
     }
 }
 
-fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
+#[test]
+fn capture_first_success_publication_cannot_ack_before_its_three_voice_jingle() {
+    for boxed in [false, true] {
+        for safari in [false, true] {
+            verify_capture_presentation(boxed, false, safari, true);
+        }
+    }
+}
+
+fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool, aggressive_input: bool) {
     use pokered_core::battle::{BattlePhase, menu::BagMenuState};
     use pokered_data::items::ItemId;
     let mut g = PokemonGame::new_with_options(
@@ -703,16 +712,30 @@ fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
     let mut active_frames = [0usize; 3];
     let mut pcm = vec![0.0f32; 1470];
     let mut audible = false;
+    let mut pressed_at_first_publication = false;
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     for frame in 0..2400 {
         let mut input = InputState::new();
-        // Throw once, then send no A while the unprompted used-ball page
-        // owns the animation. Aggressive later A tests the sound wait.
-        if frame == 0 || (frame % 8 == 0 && g.battle.current_message.as_deref()
-            .is_some_and(|text| text.starts_with("All right!"))) {
+        // Also exercise A on the exact update which first publishes page1:
+        // the pre-update caption still names the used ball on that update.
+        let first_publication_a = aggressive_input && matches!(
+            &g.battle.phase,
+            BattlePhase::ShowingText { messages, current: 1, wait_frames: 0, .. }
+                if messages.get(1) != g.battle.current_message.as_ref()
+        );
+        if frame == 0 || first_publication_a || (frame % 8 == 0
+            && (aggressive_input || g.battle.current_message.as_deref()
+                .is_some_and(|text| text.starts_with("All right!")))) {
             input.press(GbButton::A);
         }
         g.update(&input);
+        if first_publication_a {
+            assert!(!pressed_at_first_publication);
+            pressed_at_first_publication = true;
+            assert!(matches!(g.battle.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }),
+                "first publication must not ACK into BattleOver");
+            assert_eq!(g.battle.current_message.as_deref(), Some("All right!\nWEEDLE was caught!"));
+        }
         g.draw(&mut fb);
         let channels = {
             let manager = g.audio.as_ref().unwrap().manager.lock().unwrap();
@@ -722,6 +745,10 @@ fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
             })
         };
         g.audio.as_ref().unwrap().render_pcm(&mut pcm);
+        if first_publication_a {
+            assert_eq!(channels, [(true, SfxId::CaughtMon as u8); 3],
+                "the first success publication starts every real jingle voice");
+        }
         if channels.iter().any(|&(active, id)| active && id == SfxId::CaughtMon as u8) {
             assert!(!low_hp || safari, "the ordinary low-health alarm rejects this SFX");
             assert!(g.battle_vfx.item_animation_capture_finished(), "a later Tink must not replace the jingle");
@@ -764,6 +791,7 @@ fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
         if g.post_capture_active() { break; }
     }
     assert!(saw_battle_over && g.post_capture_active());
+    assert_eq!(pressed_at_first_publication, aggressive_input);
     if low_hp && !safari { assert!(!seen); }
     else { assert!(seen && finished && audible); assert!(active_frames.iter().all(|&n| n > 4)); }
     for (index, player) in protected.iter().enumerate() {
