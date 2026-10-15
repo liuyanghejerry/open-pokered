@@ -681,7 +681,7 @@ pub struct PokemonGame {
     /// field move for it; the party screen reopens in target-pick mode
     /// (Gen-1 `.softboiled` → `GoBackToPartyMenu`), cleared when the heal is
     /// applied or the pick is cancelled.
-    pending_softboiled_user: Option<usize>,
+    pub(crate) pending_softboiled_user: Option<usize>,
     /// A move the party screen must offer to forget: a level-up/evolution
     /// move that could not be learned because the moveset is full (Gen-1
     /// `LearnMove`'s forget-a-move prompt, learn_move.asm:98-184). Holds
@@ -2188,6 +2188,7 @@ impl PokemonGame {
     #[cfg(target_os = "none")]
     #[inline(never)]
     pub fn try_load_sram_save(&mut self) {
+        self.pending_softboiled_user = None;
         self.clear_post_capture_continuation();
         // Loading starts a new session. Release the previous sequencer,
         // resume caches and decoded graphics before parsing the new save.
@@ -2321,6 +2322,7 @@ impl PokemonGame {
         let save = import_sram(&data)
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
+        self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
@@ -2334,6 +2336,7 @@ impl PokemonGame {
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
+            self.pending_softboiled_user = None;
             self.clear_post_capture_continuation();
         }
         #[cfg(feature = "repro-markers")]
@@ -2895,6 +2898,7 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();

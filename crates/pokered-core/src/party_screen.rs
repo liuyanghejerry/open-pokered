@@ -1280,6 +1280,7 @@ pub(crate) mod tests {
             make_test_pokemon(Species::Charmander),
         ];
         let mut screen = PartyScreenState::new_for_softboiled_target(party, 0);
+        screen.set_cursor(1);
         let result = screen.update_frame(PartyScreenInput {
             b: true,
             ..PartyScreenInput::none()
@@ -1287,6 +1288,7 @@ pub(crate) mod tests {
         // B cancels the heal; the party menu stays open in normal mode
         // (StartMenu_Pokemon loop in the original).
         assert_eq!(result, PartyScreenAction::Active);
+        assert_eq!(screen.cursor(), 0, "restore the SOFTBOILED user, not its target");
         assert_eq!(screen.mode(), PartyScreenMode::Normal);
         assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
     }
