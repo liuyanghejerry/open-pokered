@@ -35,6 +35,9 @@ pub fn apply_out_of_battle_poison_damage(save: &mut SaveData, overworld: &mut Ov
         }
         mon.hp -= 1;
         if mon.hp == 0 {
+            // poison.asm clears the complete status byte before displaying
+            // TEXT_MON_FAINTED; an already-fainted mon above is untouched.
+            mon.status = StatusCondition::None;
             let mut buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
             faint_texts.push(format!("{} fainted!", mon.display_name(&mut buf)));
         }
@@ -176,6 +179,34 @@ mod tests {
 
         assert_eq!(save.party.get(0).unwrap().hp, 0);
         assert!(ow.pending_dialogue.is_some(), "shows '<MON> fainted!'");
+    }
+
+    #[test]
+    fn field_poison_clears_status_only_when_this_tick_causes_fainting() {
+        let mut newly_fainted = poisoned(mon(Species::Rattata, 10));
+        newly_fainted.hp = 1;
+        let mut already_fainted = poisoned(mon(Species::Pidgey, 10));
+        already_fainted.hp = 0;
+        let mut surviving_poison = poisoned(mon(Species::Bulbasaur, 10));
+        surviving_poison.hp = 3;
+        let healthy = mon(Species::Charmander, 10);
+        let mut save = save_with(vec![newly_fainted, already_fainted, surviving_poison, healthy]);
+        let before = save.party.to_vec();
+        save.game_data.player_money = 3001;
+        let mut ow = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
+        apply_out_of_battle_poison_damage(&mut save, &mut ow);
+
+        let mut expected = before.clone();
+        expected[0].hp = 0;
+        expected[0].status = StatusCondition::None;
+        expected[2].hp = 2;
+        assert_eq!(save.party.to_vec(), expected, "PP and all other party fields stay intact");
+        assert_eq!(save.game_data.player_money, 3001);
+        assert!(!ow.heal_requested);
+        assert!(ow.pending_warp.is_none());
+        assert!(ow.pending_dialogue.is_some());
+        assert!(ow.audio_requests.iter().any(|request| matches!(request,
+            OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_POISONED")));
     }
 
     /// Any still-poisoned living mon → the SFX_POISONED jingle plays
