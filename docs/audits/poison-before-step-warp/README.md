@@ -52,4 +52,6 @@ python3 extract_evidence.py evidence.zip --verify-only
 
 最新集成验证：已整合 master `6085c987`（#253）；完整 core **2888 通过、0 失败**，debug-server app **287 通过、39 忽略、0 失败**。日志、源文件 SHA 清单见 `master-6085-integration.json` 与日志归档。实际按键重放和截图保留原冻结提交身份。
 
-已整合最新 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2888 通过**、debug-server 应用 **287 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
+此前整合 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2888 通过**、debug-server 应用 **287 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
+
+已整合最新 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2888 通过**、debug-server 应用 **296 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
