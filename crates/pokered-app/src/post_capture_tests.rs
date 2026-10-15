@@ -753,6 +753,7 @@ fn verify_capture_presentation(boxed: bool, low_hp: bool, safari: bool) {
             g.battle.phase = BattlePhase::ShowingText {
                 messages: vec!["All right!\nWEEDLE was caught!".to_string()], current: 0,
                 wait_frames: 0, next_phase: Box::new(phase.clone()),
+                backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
             };
             g.draw(&mut fb);
             for y in 96..144 { for x in 0..160 {
@@ -789,6 +790,7 @@ fn failed_ball_result_waits_for_the_complete_throw() {
     g.battle.phase = BattlePhase::ShowingText {
         messages: vec!["RED used\nSAFARI BALL!".to_string(), "Aww! It appeared\nto be caught!".to_string()],
         current: 0, wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),
+        backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
     };
     g.battle_vfx.on_anim_event(BattleAnimEvent::Ball {
         ball: ItemId::SafariBall, shakes: 2, outcome: BallAnimOutcome::BrokeFree,
@@ -835,6 +837,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         g.battle.phase = BattlePhase::ShowingText {
             messages: vec!["Used ball".to_string(), "Result".to_string()],
             current: 0, wait_frames: 1, next_phase: Box::new(BattlePhase::PlayerMenu),
+            backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
         };
         g.battle_vfx.on_anim_event(BattleAnimEvent::Ball {
             ball: ItemId::PokeBall, shakes: 1, outcome,
@@ -903,6 +906,7 @@ fn completed_ball_event_does_not_cross_load_snapshot_or_title_reset() {
         g.battle.phase = BattlePhase::ShowingText {
             messages: vec!["First prompt".to_string(), "Second prompt".to_string()],
             current: 0, wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu),
+            backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
         };
         g.update(&InputState::new());
         assert!(matches!(g.battle.phase, BattlePhase::ShowingText { current: 0, .. }));
