@@ -81,7 +81,7 @@ const EXACT: &[(&str, &str)] = &[
     ("Shoot! It was so\nclose, too!", "可恶！真的\n就差一点！"),
     ("Threw some BAIT!", "扔了诱饵！"),
     ("Threw a ROCK!", "扔了岩石！"),
-    ("PA: You're out of\nSAFARI BALLs! Game over!", "广播：狩猎球\n用完了！游戏结束！"),
+    ("PA: Ding-dong!\n\nYou are out of\nSAFARI BALLs!", "广播：叮咚！\n\n你的狩猎球\n用完了！"),
 ];
 
 /// Species EN (uppercase) → ZH, built once from `lang_data`.
