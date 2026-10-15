@@ -186,6 +186,9 @@ impl PokemonGame {
         self.save_data = snapshot.save_data.clone();
         snapshot.overworld.restore_into(&mut self.overworld);
         snapshot.battle.restore_into(&mut self.battle);
+        // The cache belongs to the abandoned timeline. Re-register the
+        // restored canonical enemy on the next battle frame, including slot 0.
+        self.trainer_seen_active_slot = None;
         self.seed = snapshot.seed;
         self.battle_count = snapshot.battle_count;
         self.player_name = snapshot.overworld.player_name.clone();
