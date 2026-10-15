@@ -200,18 +200,18 @@ fn opp_ref(who: BattlerRef) -> BattlerRef {
     BattlerRef::new(if who.side == 0 { 1 } else { 0 }, who.slot)
 }
 
-fn blocked_reason(state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>, who: BattlerRef) -> &'static str {
+fn blocked_reason(state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], who: BattlerRef) -> &'static str {
+    if let Some(reason) = effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::BlockedAction { reason } if entry.host == who => Some(reason),
+        _ => None,
+    }) {
+        return crate::battle::format_cannot_move(&reason);
+    }
     match battler_at(state, who).status {
         Some(LegacyStatus::Sleep(_)) => "is fast asleep!",
         Some(LegacyStatus::Freeze) => "is frozen solid!",
         Some(LegacyStatus::Paralysis) => "is fully paralyzed!",
-        _ => {
-            if log.events.iter().any(|e| matches!(e, TurnEvent::Damaged { target, .. } if *target == who)) {
-                "hurt itself in confusion!"
-            } else {
-                "can't move!"
-            }
-        }
+        _ => "can't move!",
     }
 }
 
@@ -314,7 +314,7 @@ pub fn translate_turn_named(
                 }
             }
             TurnEvent::Blocked { actor } => {
-                msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, log, *actor)));
+                msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
             }
             TurnEvent::Fainted { who } => msgs.push(format!("{} fainted!", display_name_named(state, *who, names))),
             TurnEvent::StatusInflicted { target, status } => {
@@ -365,7 +365,7 @@ pub fn translate_turn_named(
                 }
             }
             TurnEvent::Damaged { .. } => {
-                if let Some(line) = presentation_hp_message_named(e, state, log, names) { msgs.push(line); }
+                if let Some(line) = presentation_hp_message_named(e, state, effects, names) { msgs.push(line); }
             }
             _ => {}
         }
@@ -374,13 +374,13 @@ pub fn translate_turn_named(
 }
 
 /// Narration boundaries for HP changes outside an executed move.
-pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>) -> Option<String> {
-    presentation_hp_message_named(event, state, log, None)
+pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>]) -> Option<String> {
+    presentation_hp_message_named(event, state, effects, None)
 }
 
-fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, log: &TurnLog<PokeredRules>, names: Option<&BattleNameContext>) -> Option<String> {
+fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], names: Option<&BattleNameContext>) -> Option<String> {
     match event {
-        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,log,*actor))),
+        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,effects,*actor))),
         TurnEvent::Damaged { target, cause: Some(cause), .. } => {
             let name=display_name_named(state,*target,names);
             match cause {
