@@ -1,0 +1,11 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "cd6b182e2c3031b255dc83d0cc7e8dccaf7c50351f9f2c1764c46e8abd9a1a5d",
+  "bytes": 2493517,
+  "original_path_count": 1771,
+  "unique_blob_count": 288,
+  "raw_records_modified": false,
+  "source_identity": "dd04edf2cc54466b05eb069954dc903826aab5f8",
+  "all_jobs_terminal": true,
+  "controls": "Final source8/current8ebBEFORE8/dd04AFTER8 ordinarySAVE +2x1288 final one-frameprefix; older216/6d30/318b candidate/failed controls are explicitly historical."
+}

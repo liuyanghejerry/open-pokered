@@ -945,7 +945,7 @@ impl BattleVisualEffects {
             // Ether's per-move pick reuses the FIGHT move-menu layout.
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
-            BattlePhase::ItemTargetSelect { .. } => BattlePhaseKind::ItemTargetSelect,
+            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
                 BattlePhaseKind::ShowingText
             }
@@ -3812,6 +3812,23 @@ pub fn draw_battle(
     language: pokered_core::game_state::Lang,
 ) {
     fb.clear(Rgba::WHITE);
+    if screen.phase.uses_medicine_party_backdrop() {
+        if let Some(bs) = screen.battle_state.as_ref() {
+            // A draw-only adapter: input and item effects always operate on
+            // BattleState, never on the field PartyScreen/save-data copy.
+            let mut party = pokered_core::party_screen::PartyScreenState::new(bs.player.persistent_party());
+            party.set_cursor(screen.party_cursor);
+            super::menu::draw_party_screen_base(&party, res.as_mut(), 0, fb, language);
+            let message = match screen.phase {
+                BattlePhase::ItemTargetSelect { .. } if language == Lang::Zh => "对哪只宝可梦使用道具？",
+                BattlePhase::ItemTargetSelect { .. } => "Use item on which\nPOKéMON?",
+                _ => screen.current_message.as_deref().unwrap_or(""),
+            };
+            let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+            menus::party::draw_notice(&mut Ui::new(&mut painter), message);
+        }
+        return;
+    }
     let pal = &GRAYSCALE_PALETTE;
     let sprite_pal = &GRAYSCALE_SPRITE_PALETTE;
     // `GRAYSCALE_SPRITE_PALETTE` makes color 0 transparent for ordinary
@@ -6140,6 +6157,10 @@ mod zh_render_tests {
 }
 
 #[cfg(test)]
+#[path = "battle_medicine_tests.rs"]
+mod battle_medicine_tests;
+
+#[cfg(test)]
 mod old_man_render_tests {
     use super::*;
     use pokered_renderer::resource::AssetRoot;
@@ -6172,6 +6193,7 @@ mod old_man_render_tests {
         for phase in [BattlePhase::PlayerMenu,
             BattlePhase::ShowingText { messages: vec![screen.current_message.clone().unwrap()],
                 current: 0, wait_frames: 0,
+                 backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
                 next_phase: Box::new(BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }) },
             BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }]
         {

@@ -157,6 +157,7 @@ pub fn capture_move_animation(
         current: 0,
         wait_frames: 0,
         next_phase: Box::new(BattlePhase::PlayerMenu),
+        backdrop: Default::default(),
     };
     screen.current_message = Some(message);
 
@@ -308,6 +309,7 @@ pub fn capture_item_animation(
         current: 0,
         wait_frames: 0,
         next_phase: Box::new(BattlePhase::PlayerMenu),
+        backdrop: Default::default(),
     };
     screen.current_message = Some(message);
 

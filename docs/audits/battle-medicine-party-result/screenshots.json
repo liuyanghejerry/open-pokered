@@ -1,0 +1,96 @@
+{
+  "native_pairs": "Same fixture/seed42/full physical input prefix and actual same frame for each native before/after pair. Original references are separate provider controls; font/layout and original/native whole timing parity are not claimed.",
+  "screenshots": [
+    {
+      "label": "target-before",
+      "path": "docs/screenshots/battle-medicine-party-result/target-before.png",
+      "raw_path": "audit-915-final-text-matched-prefix-kq0jr9l2/before/frame-0648.png",
+      "frame": 648,
+      "sha256": "4944d5390a1c7dec936df4a55e9b4bb4e8c87b847d68dec60a4ac3d267e17100",
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8"
+    },
+    {
+      "label": "target-after",
+      "path": "docs/screenshots/battle-medicine-party-result/target-after.png",
+      "raw_path": "audit-915-final-text-matched-prefix-kq0jr9l2/after/frame-0648.png",
+      "frame": 648,
+      "sha256": "f418e97e71589803edf05d3936a281664efd0912aa3fd66c7fe89d5f1f61350a",
+      "source": "dd04edf2cc54466b05eb069954dc903826aab5f8"
+    },
+    {
+      "label": "bench-result-before",
+      "path": "docs/screenshots/battle-medicine-party-result/bench-result-before.png",
+      "raw_path": "audit-915-final-text-matched-prefix-kq0jr9l2/before/frame-1288.png",
+      "frame": 1288,
+      "sha256": "30d879ee1c8ec5933cc1cad5a1ed762398e623bcffbf6ce431e684bb2cc9081e",
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8"
+    },
+    {
+      "label": "bench-result-after",
+      "path": "docs/screenshots/battle-medicine-party-result/bench-result-after.png",
+      "raw_path": "audit-915-final-text-matched-prefix-kq0jr9l2/after/frame-1288.png",
+      "frame": 1288,
+      "sha256": "9c366b63d11f767889136a50c80f6743f0343938a033cf43f438556eb2ed5e7d",
+      "source": "dd04edf2cc54466b05eb069954dc903826aab5f8"
+    },
+    {
+      "label": "status-bench-before",
+      "path": "docs/screenshots/battle-medicine-party-result/status-bench-before.png",
+      "raw_path": "audit-915-current8eb-native-before-jefydwsc/status-bench-1/paused-result.png",
+      "frame": 1288,
+      "sha256": "8178898a13cb5030c056f0d9c6987052424b3f532fbe38a3f4be15c05c9f2351",
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8"
+    },
+    {
+      "label": "status-bench-after",
+      "path": "docs/screenshots/battle-medicine-party-result/status-bench-after.png",
+      "raw_path": "audit-915-final-text-native-after-00vbze26/status-bench-1/paused-result.png",
+      "frame": 1288,
+      "sha256": "afeedbc14e05d635a32bbaa62aebedac713ac1ce2017326f820f4b7aee2617ec",
+      "source": "dd04edf2cc54466b05eb069954dc903826aab5f8"
+    },
+    {
+      "label": "revive-bench-before",
+      "path": "docs/screenshots/battle-medicine-party-result/revive-bench-before.png",
+      "raw_path": "audit-915-current8eb-native-before-jefydwsc/revive-bench-1/paused-result.png",
+      "frame": 1288,
+      "sha256": "24b787b4f2ea77c9eae2b663abf1a5112ae5b71c93693bade011765f94ea5179",
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8"
+    },
+    {
+      "label": "revive-bench-after",
+      "path": "docs/screenshots/battle-medicine-party-result/revive-bench-after.png",
+      "raw_path": "audit-915-final-text-native-after-00vbze26/revive-bench-1/paused-result.png",
+      "frame": 1288,
+      "sha256": "11c7c3b115f8eb7569c7ecceb78e322b41d574710970dbd190a8bd9bc708d953",
+      "source": "dd04edf2cc54466b05eb069954dc903826aab5f8"
+    },
+    {
+      "label": "source-potion-reference",
+      "path": "docs/screenshots/battle-medicine-party-result/source-potion-reference.png",
+      "raw_path": "audit-915-original-medicine-0z6n3lsk/bench-1/paused-result.png",
+      "frame": 1866,
+      "sha256": "13aa81762376d42d69c523820c82f084ae8c2ac52d878a7bed89ee204abd6349",
+      "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "scope": "Separate original reference, not a source/native matched absolute-frame pair."
+    },
+    {
+      "label": "source-status-reference",
+      "path": "docs/screenshots/battle-medicine-party-result/source-status-reference.png",
+      "raw_path": "audit-915-current-original-medicine-m9scqsew/status-bench-1/paused-result.png",
+      "frame": 1866,
+      "sha256": "67ce6544d8b032eed26cd13e6edf7fb742d1d819779ac0de3a51b372534877e9",
+      "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "scope": "Separate original reference, not a source/native matched absolute-frame pair."
+    },
+    {
+      "label": "source-revive-reference",
+      "path": "docs/screenshots/battle-medicine-party-result/source-revive-reference.png",
+      "raw_path": "audit-915-current-original-medicine-m9scqsew/revive-bench-1/paused-result.png",
+      "frame": 1866,
+      "sha256": "b3d6a6865746d927dfc0188b267742a6a511a711029c5dd0ed0f8c0b0bd50dff",
+      "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "scope": "Separate original reference, not a source/native matched absolute-frame pair."
+    }
+  ]
+}

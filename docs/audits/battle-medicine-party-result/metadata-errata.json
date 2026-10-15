@@ -1,0 +1,252 @@
+{
+  "audit": 915,
+  "raw_records_modified": false,
+  "scope_template_corrections": [
+    {
+      "record": "audit-915-current-native-before-t2uautwc/revive-bench-1/record.json",
+      "record_sha256_unchanged": "55833d854cfa2704ed43b8cdca976a87729df56381f368dd3c2861f6fac01a5b",
+      "original_scope": "Clean6d30ba5a independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-native-before-t2uautwc/revive-bench-2/record.json",
+      "record_sha256_unchanged": "09ab9300b1c23c8979ace419acd29dd212650781bef5b1c2f79879e9eeae7a52",
+      "original_scope": "Clean6d30ba5a independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-native-before-t2uautwc/status-bench-1/record.json",
+      "record_sha256_unchanged": "a07db672645102c5dfc22f6decf6219b0fac7a3006fdd4acf254cb8fd3502760",
+      "original_scope": "Clean6d30ba5a independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-native-before-t2uautwc/status-bench-2/record.json",
+      "record_sha256_unchanged": "f2406a3391abc8267fa499c21d32c4ffa46efb30cb220677c84540974fb2acb1",
+      "original_scope": "Clean6d30ba5a independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-original-medicine-m9scqsew/revive-bench-1/record.json",
+      "record_sha256_unchanged": "55e81be82b332e73cbf437d99055a5106709b30b8c06e47666010ffed7f80984",
+      "original_scope": "Preinput legal Bulbasaur20 Tackle/Growl/LeechSeed/VineWhip + Bulbasaur12 Tackle/Growl/LeechSeed, DVs9A78 zeroStatExp, HP1 target, Potion2, ID0/NINTEN, unfought Forest trainer at28,32. Real Down trigger/talk/battle ITEM/Potion/party target; 600 idle frames without ACK, real ACK then Tackle victory/ordinarySAVE. No post-construction RAM writes or direct battle calls; RNG not matched to native.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-original-medicine-m9scqsew/revive-bench-2/record.json",
+      "record_sha256_unchanged": "48645e246f66a1ba0043c6e75498e1409f5b40c0b624ae6626e9a71728a0e077",
+      "original_scope": "Preinput legal Bulbasaur20 Tackle/Growl/LeechSeed/VineWhip + Bulbasaur12 Tackle/Growl/LeechSeed, DVs9A78 zeroStatExp, HP1 target, Potion2, ID0/NINTEN, unfought Forest trainer at28,32. Real Down trigger/talk/battle ITEM/Potion/party target; 600 idle frames without ACK, real ACK then Tackle victory/ordinarySAVE. No post-construction RAM writes or direct battle calls; RNG not matched to native.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-original-medicine-m9scqsew/status-bench-1/record.json",
+      "record_sha256_unchanged": "f175b78a42ff775d5170030a225b39ba8ff390f8a80b9de6779135151c610085",
+      "original_scope": "Preinput legal Bulbasaur20 Tackle/Growl/LeechSeed/VineWhip + Bulbasaur12 Tackle/Growl/LeechSeed, DVs9A78 zeroStatExp, HP1 target, Potion2, ID0/NINTEN, unfought Forest trainer at28,32. Real Down trigger/talk/battle ITEM/Potion/party target; 600 idle frames without ACK, real ACK then Tackle victory/ordinarySAVE. No post-construction RAM writes or direct battle calls; RNG not matched to native.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current-original-medicine-m9scqsew/status-bench-2/record.json",
+      "record_sha256_unchanged": "8e58b2d2474a2343d3fd9304394d1c7d00b7649473af5eaa3a3dc744e287182d",
+      "original_scope": "Preinput legal Bulbasaur20 Tackle/Growl/LeechSeed/VineWhip + Bulbasaur12 Tackle/Growl/LeechSeed, DVs9A78 zeroStatExp, HP1 target, Potion2, ID0/NINTEN, unfought Forest trainer at28,32. Real Down trigger/talk/battle ITEM/Potion/party target; 600 idle frames without ACK, real ACK then Tackle victory/ordinarySAVE. No post-construction RAM writes or direct battle calls; RNG not matched to native.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current8eb-native-before-jefydwsc/revive-bench-1/record.json",
+      "record_sha256_unchanged": "a9d3ffba6332b575567fffd7317003d96570f7e070dd8ea2051055bfa650eb5d",
+      "original_scope": "Clean8eb08f56 independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current8eb-native-before-jefydwsc/revive-bench-2/record.json",
+      "record_sha256_unchanged": "7507b7d967b1fc0a28b0732c27b077c6a12bc8d490d65e4b7955e2fb44674e3e",
+      "original_scope": "Clean8eb08f56 independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current8eb-native-before-jefydwsc/status-bench-1/record.json",
+      "record_sha256_unchanged": "baa748238a1f2f664ed9490543a4e7ac945f31b0f8011e412f214d129f8e0508",
+      "original_scope": "Clean8eb08f56 independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-current8eb-native-before-jefydwsc/status-bench-2/record.json",
+      "record_sha256_unchanged": "fb0206732b5aca3d7638e86c5f4394a93385eb22e991594a022f2268f74a1a8b",
+      "original_scope": "Clean8eb08f56 independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-final-native-after-vduims5p/revive-bench-1/record.json",
+      "record_sha256_unchanged": "bcb0b70fa32a247a268a6ae95dc63540a53cd4ad5c57eeea9599fbd36bbc96bd",
+      "original_scope": "Focused medicine result candidate independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-final-native-after-vduims5p/revive-bench-2/record.json",
+      "record_sha256_unchanged": "d38d2df61d886eff125968606082a581aefb1f13c9a5f60dc510528ed65fd338",
+      "original_scope": "Focused medicine result candidate independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP0/35 statusNone, Revive2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 0,
+        "max_hp": 35,
+        "status": "None",
+        "item": "Revive",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-final-native-after-vduims5p/status-bench-1/record.json",
+      "record_sha256_unchanged": "fd62162f589561d7750504103c2106f6ec905d7b82984f5fc3b4d1c119f3bdf2",
+      "original_scope": "Focused medicine result candidate independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    },
+    {
+      "record": "audit-915-final-native-after-vduims5p/status-bench-2/record.json",
+      "record_sha256_unchanged": "80b8c44929ea1c8170cbfddbc24645e2671102e88a46ec260fd46f72d4d04d4d",
+      "original_scope": "Focused medicine result candidate independently built frozen binary; explicit preboot legal Bulba20/12, normal moves and DVs9A78/zeroStatExp, HP1 target, Potion2, ID0/NINTEN and unfoughtForest28,32 fixture. Ordinary Down trainer trigger, dialogue/battle ITEM/Potion/target,600no-inputframes,actualACK,Tackle victory/ordinarySAVE. No runtime setters or forced battle. RNG/wholeSRAM not matched to original.",
+      "corrected_scope": "Preinput target index1, BulbasaurLv12 HP35/35 statusParalysis, ParlyzHeal2; legal unchanged DVs/stats/moves. Normal Forest trainer input, medicine selection,600no-ACKframes, ACK, victory and ordinarySAVE. No runtime gameplay setters.",
+      "typed_preinput": {
+        "target": 1,
+        "hp": 35,
+        "max_hp": 35,
+        "status": "Paralysis",
+        "item": "ParlyzHeal",
+        "quantity": 2
+      },
+      "reason": "Shared human-readable driver scope template retained HP1/Potion2 from Potion controls. Typed fixtures, constructed raw party, actual inventory/result and SRAM remain authoritative; raw scripts/records are not rewritten."
+    }
+  ],
+  "failed_controls": [
+    "Current6d30 native v1: battle_live.player_party has no status key; corrected driver verifies status in ordinarySRAM/readback.",
+    "Initial bare-load unit test assumed load_from_path switches scenes; production caller is soft_reset. Final test uses actual16-frame reset combo, Continue and new battle; no load specialcase.",
+    "Localization draft was initially inserted at the similarly named const-table comment; compiler rejected it. Corrected before any new executable/capture."
+  ],
+  "historical_identity": "216/6d30/318b party-only recordings and first same-prefix replay retain original source/binary hashes; final current-master BEFORE8eb/final AFTERdd04 are separate fresh controls."
+}

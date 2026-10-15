@@ -8314,6 +8314,10 @@ impl PokemonGame {
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
 
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "battle_medicine_tests.rs"]
+mod battle_medicine_tests;
+
 #[cfg(test)]
 #[path = "trainer_seen_tests.rs"]
 mod trainer_seen_tests;
