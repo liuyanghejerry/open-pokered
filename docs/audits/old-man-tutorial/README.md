@@ -46,3 +46,5 @@ The animation differential verdict is **PARTIAL**: this verifies the tutorial's 
 最新整合 master `dfeefa34`：`3c7b43e4` 的完整 core 2885、debug app 272 通过，39 个已有忽略项，0 失败。证据与完整日志见 `integration.json` / `integration-logs.zip`。原始录制及截图仍固定到实际 `f44` / `64f` 构建，不重贴为整合构建。
 
 已整合中毒流程 master `7310d298`。生产整合提交 `ad48d4d7` 完整 debug app 281 通过、39 个已有忽略项、0 失败；完整 core 2888 通过。完整日志见 `master-7310-integration.json` / `master-7310-integration-logs.zip`，原截图与录制身份未重新标记。
+
+当前集成验证：已整合 master `b7c81d82`（#255）；完整 debug-server app **282通过、39忽略、0失败**。核心源码与上次完整通过时相同，没有重复执行核心测试。实际重播和截图保留各自冻结提交身份，未改称本次构建。
