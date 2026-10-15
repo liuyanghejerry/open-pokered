@@ -3838,20 +3838,37 @@ pub fn draw_battle(
     language: pokered_core::game_state::Lang,
 ) {
     fb.clear(Rgba::WHITE);
-    if screen.phase.uses_medicine_party_backdrop() {
+    if screen.phase.uses_item_party_backdrop() {
         if let Some(bs) = screen.battle_state.as_ref() {
+            let pp_choice = match &screen.phase {
+                BattlePhase::ItemMoveSelect { party_index, .. } =>
+                    Some((*party_index, Some(screen.move_menu.as_ref().map_or(0, |m| m.cursor())))),
+                BattlePhase::ShowingText { backdrop: pokered_core::battle::BattleTextBackdrop::PpRestoreParty {
+                    party_index, move_row, .. }, .. } =>
+                    Some((*party_index as usize, move_row.map(|row| row as usize))),
+                _ => None,
+            };
             // A draw-only adapter: input and item effects always operate on
             // BattleState, never on the field PartyScreen/save-data copy.
             let mut party = pokered_core::party_screen::PartyScreenState::new(bs.player.persistent_party());
-            party.set_cursor(screen.party_cursor);
+            party.set_cursor(pp_choice.map_or(screen.party_cursor, |(index, _)| index));
             super::menu::draw_party_screen_base(&party, res.as_mut(), 0, fb, language);
             let message = match screen.phase {
                 BattlePhase::ItemTargetSelect { .. } if language == Lang::Zh => "对哪只宝可梦使用道具？",
                 BattlePhase::ItemTargetSelect { .. } => "Use item on which\nPOKéMON?",
+                BattlePhase::ItemMoveSelect { .. } if language == Lang::Zh => "恢复哪个招式的PP？",
+                BattlePhase::ItemMoveSelect { .. } => "Restore PP of\nwhich technique?",
                 _ => screen.current_message.as_deref().unwrap_or(""),
             };
             let mut painter = FrameBufferPainter::new(fb).with_lang(language);
-            menus::party::draw_notice(&mut Ui::new(&mut painter), message);
+            let mut ui = Ui::new(&mut painter);
+            menus::party::draw_notice(&mut ui, message);
+            if let Some((index, Some(row))) = pp_choice {
+                if index < bs.player.party.len() {
+                    menus::battle_move::draw_pp_restore(&bs.player.party_mon(index).moves, row,
+                        &mut ui, &PokemonRenderData::new(language == Lang::Zh));
+                }
+            }
         }
         return;
     }
@@ -6270,8 +6287,8 @@ mod old_man_render_tests {
         for phase in [BattlePhase::PlayerMenu,
             BattlePhase::ShowingText { messages: vec![screen.current_message.clone().unwrap()],
                 current: 0, wait_frames: 0,
-                 backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
-                next_phase: Box::new(BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }) },
+                next_phase: Box::new(BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }),
+                backdrop: pokered_core::battle::BattleTextBackdrop::Battle },
             BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }]
         {
             screen.phase = phase;

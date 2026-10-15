@@ -98,3 +98,41 @@ fn medicine_no_effect_draws_canonical_full_party_and_only_typed_context_changes_
         assert_ne!(actual.packed(), unrelated.packed(), "same message cannot choose the party by string");
     }
 }
+
+#[test]
+fn pp_move_choice_and_results_borrow_full_party_and_keep_selected_original_moves() {
+    use pokered_core::battle::{BattleInput, BattleTextBackdrop};
+    for item in [ItemId::Ether, ItemId::Elixer] {
+        let mut screen = battle();
+        screen.player_bag.add_item(item, 2).unwrap();
+        screen.phase = BattlePhase::ItemTargetSelect { item_id: item };
+        screen.party_cursor = 1;
+        screen.battle_state.as_mut().unwrap().player.party[1].pp[0] = 0;
+        screen.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        if item == ItemId::Ether {
+            assert!(matches!(screen.phase, BattlePhase::ItemMoveSelect { .. }));
+            screen.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        }
+        let canonical = serde_json::to_value(&screen.battle_state).unwrap();
+        let config = dotzuki_engine::render_config::RenderConfig::new(160,144);
+        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+        draw_battle(&screen, &mut None, &mut actual, &mut BattleVisualEffects::default(), Lang::En);
+        // Both paths retain the first party row and its HP/name, which the
+        // ordinary battle HUD could never draw in this location.
+        let mut party = PartyScreenState::new(player_view(&screen));
+        party.set_cursor(1);
+        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+        crate::render::menu::draw_party_screen_base(&party, None, 0, &mut expected, Lang::En);
+        for y in 0..40 { for x in 0..160 {
+            assert_eq!(actual.get_pixel(x,y),expected.get_pixel(x,y));
+        }}
+        assert_eq!(serde_json::to_value(&screen.battle_state).unwrap(),canonical);
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut screen.phase {
+            assert!(matches!(backdrop,BattleTextBackdrop::PpRestoreParty { .. }));
+            *backdrop=BattleTextBackdrop::Battle;
+        }
+        let mut hud = actual.clone();
+        draw_battle(&screen,&mut None,&mut hud,&mut BattleVisualEffects::default(),Lang::En);
+        assert_ne!(actual.packed(),hud.packed(),"the same result string cannot select the party caller");
+    }
+}

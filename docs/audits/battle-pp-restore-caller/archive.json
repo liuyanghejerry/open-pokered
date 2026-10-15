@@ -1,0 +1,20 @@
+{
+  "archive": "evidence.zip",
+  "archive_sha256": "00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966",
+  "archive_bytes": 4455780,
+  "original_paths": 1378,
+  "unique_blobs": 346,
+  "original_bytes": 323120321,
+  "readback_all_paths_equal_originals": true,
+  "explicit_roots": [
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-930-original-pp-restore-485zvbr7",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-original-max-pp-rdx7nwdy",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-original-transform-pp-ozycw_qx",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-native-pp-before-iqxktg0w",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-native-pp-after-i5714my4",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-native-transform-before-pugpgnq8",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-native-transform-after-mn5klhev",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-native-transform-before-__k5c4nr",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do"
+  ]
+}

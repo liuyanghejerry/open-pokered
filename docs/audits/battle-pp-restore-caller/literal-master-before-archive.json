@@ -1,0 +1,9 @@
+{
+  "archive": "literal-master-before-evidence.zip",
+  "archive_sha256": "7e1a710812e4d131be6d5a39b178f61e0f6ed93ee5c47432a67c243e031f76bc",
+  "archive_bytes": 2048995,
+  "original_paths": 69,
+  "unique_blobs": 66,
+  "readback_all_paths_equal_originals": true,
+  "historical_archive_sha256": "00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966"
+}
