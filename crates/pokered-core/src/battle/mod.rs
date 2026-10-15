@@ -1933,12 +1933,14 @@ impl BattleScreen {
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
         }
-        if let BattlePhase::ShowingText {
-            messages, current, wait_frames, next_phase,
-            backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(work) },
-        } = self.phase.clone() {
-            return self.update_fight_text(messages, current, wait_frames, next_phase, work,
-                text.held_buttons, receipt);
+        if self.fight_text_work().is_some() {
+            if let BattlePhase::ShowingText {
+                messages, current, wait_frames, next_phase,
+                backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(work) },
+            } = self.phase.clone() {
+                return self.update_fight_text(messages, current, wait_frames, next_phase, work,
+                    text.held_buttons, receipt);
+            }
         }
         match self.phase.clone() {
             BattlePhase::Intro {
