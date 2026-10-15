@@ -1161,3 +1161,35 @@ fn route1_mart_clerk_uses_the_original_vertical_wander_axis() {
     assert_eq!(screen.npc_states[0].wander_axis, dotzuki_engine::overworld::NpcWanderAxis::Vertical);
     assert_eq!(screen.npc_states[1].wander_axis, dotzuki_engine::overworld::NpcWanderAxis::Horizontal);
 }
+
+#[test]
+fn fourth_completed_grass_step_requests_poison_even_when_it_rolls_an_encounter() {
+    use super::{OverworldInput, OverworldScreen};
+    use super::screen::OverworldGameDataRequest;
+    use pokered_data::impl_traits::PokemonRedData;
+    use dotzuki_engine::overworld::types::Direction;
+    // Select a deterministic natural roll by seed, never inject a pending
+    // encounter. The actual Route1 grass step drives both request producers.
+    for seed in 0..256 {
+        let mut ow = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
+        ow.state.player.x = 10;
+        ow.state.player.y = 8;
+        ow.state.player.facing = Direction::Right;
+        ow.run_on_load();
+        let idle = OverworldInput::new(false,false,false,false,false,false,false,false);
+        for _ in 0..120 { ow.update_frame(idle); }
+        ow.set_rng_seed(seed);
+        ow.poison_step_counter = 3;
+        ow.game_data_requests.clear();
+        for frame in 0..80 {
+            ow.update_frame(OverworldInput::new(false,false,false,frame < 4,false,false,false,false));
+            if ow.poison_step_counter == 4 { break; }
+        }
+        assert_eq!(ow.poison_step_counter, 4);
+        if ow.pending_wild_encounter.is_some() {
+            assert!(ow.game_data_requests.iter().any(|r| matches!(r, OverworldGameDataRequest::PoisonStep)));
+            return;
+        }
+    }
+    panic!("no natural encounter in deterministic seed coverage");
+}

@@ -1,0 +1,18 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "1c35d00b3032b4fd3fc45919ca49b93e3e938be1ee1390ce98cbd5d14aaa133a",
+  "bytes": 8085720,
+  "entries": 2218,
+  "original_path_records": 9063,
+  "uncompressed_evidence_bytes": 316476973,
+  "entry_manifest": "entry-manifest.json",
+  "entry_manifest_sha256": "3bed6776f8046398d11e949fa946240ef04d51b5fc794242d36e4548ba611bf9",
+  "storage": "Exact-content SHA256 deduplication only; entry-manifest retains all original paths, original unmodified byte lengths/hashes and blob addresses. No dropped frames or invented timing labels.",
+  "all_blob_readback_sha_verified": true,
+  "passing_authoritative_controls": {
+    "source": 6,
+    "native_before": 6,
+    "native_after": 6
+  },
+  "scope": "All W903 original/native raw trial directories, including rejected seed scouts and superseded/failed drivers. Those older runs are not counted as final passing controls. Canonical ROM/executables excluded; exact SHA/build manifests retained. Redundant per-trial identical ROM/executable copies were removed only after termination and point to retained canonical copies."
+}
