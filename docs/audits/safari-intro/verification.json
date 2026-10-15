@@ -215,5 +215,27 @@
     "Exactly40sourceexplicitdelaymodeled; sourcecallerhasadditional8observedframes beforeStartBattle. No hardcoded48 or wholeintroclock/trajectory/audio-waveform parity claim.",
     "Actualnativecontrols usehealthyBulbasaur; renderer regression also coversHP1/fullHP andtwo player species, ordinarybattleHUD andtransientWildRevealballs.",
     "No changes to905capturecontinuation/audioor908lastballtailtext. NoSilph34-frame runtimefixclaim."
-  ]
+  ],
+  "latest_master_integration": {
+    "source_head": "3bd9ed300a4ea8f49900f9f94f56a6d881f81778",
+    "integrated_master": "216cb0343ca4871663a1a45bde9c90a60b32fe75",
+    "scope": "Routine master integration only. Historical BEFORE6085/AFTER6abff actual controls retain their true build identities; no actual captures relabelled as this integration.",
+    "production_paths": 2162,
+    "two_changed_Rust_files_byte_identical_to_frozen_after": true,
+    "core_passed": 2889,
+    "app_passed": 281,
+    "app_ignored": 39,
+    "full_host_session53750_exit": 0,
+    "GBA_build_session16609_exit": 0,
+    "GBA_record_compare_session4080_exit": 0,
+    "GBA_seven_scenarios_pass": true,
+    "GBA_trainer_update_ticks": 232,
+    "GBA_wild_update_ticks": 215,
+    "GBA_ROM_sha256": "73a81e09e12d5a6b23e1894803b317c81e356802452aed643d6cc7be4d509107",
+    "GBA_baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "GBA_candidate_sha256": "ec6f943233c98123a4a2db9e9f0416d06de4bb40262cd8d43d545a44e855d706",
+    "GBA_source_mirror_manifest_sha256": "f3439643ba48ca1de017030953364a4e923bf79731e850041482d66748e1ff5c",
+    "all_910_jobs_terminal": true,
+    "full_source_manifest_sha256": "99180dd8fb301cd0b435c6cbf5aafae329a6d79609631279b0df76e1c6e397a8"
+  }
 }

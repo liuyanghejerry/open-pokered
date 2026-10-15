@@ -1,10 +1,10 @@
 {
   "path": "evidence.zip",
-  "bytes": 3066656,
-  "sha256": "66a3976dc26bd56ab14cce8176d56fd67f15978e373b8998a381a301c6773895",
-  "manifest_sha256": "f06284987cacbd0e7a48f10faf1f11ccd0b5286e9147ccc10bcbe2701701a558",
-  "original_paths": 26525,
-  "unique_content_blobs": 535,
+  "bytes": 3342370,
+  "sha256": "a28edf73d1557234b33dd1da70073d54bdb9f5f367ab77fe87d6613fb17884ae",
+  "manifest_sha256": "70a646b59ca0e41ba91131bb3116059171f4a722b4bbd9a57d80ddf148b77b7d",
+  "original_paths": 26538,
+  "unique_content_blobs": 547,
   "every_path_content_hash_length_and_PNG_readback_verified": true,
   "ROM_executable_emulator_states_excluded": true
 }
