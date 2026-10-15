@@ -37,6 +37,8 @@ mod item_fidelity_tests;
 #[cfg(test)]
 mod medicine_result_tests;
 #[cfg(test)]
+mod pp_restore_caller_tests;
+#[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
 mod exp_award_notice_tests;
@@ -404,6 +406,13 @@ pub enum BattleTextBackdrop {
     #[default]
     Battle,
     MedicineParty,
+    /// ItemUsePPRestore retains its party and, for Ethers, move chooser
+    /// through PrintText. RemoveUsedItem runs only after its final ACK.
+    PpRestoreParty {
+        party_index: u8,
+        move_row: Option<u8>,
+        consume_on_ack: Option<ItemId>,
+    },
 }
 
 /// High-level battle phase (frame-loop granularity).
@@ -525,6 +534,13 @@ impl BattlePhase {
     pub fn uses_medicine_party_backdrop(&self) -> bool {
         matches!(self, Self::ItemTargetSelect { .. } | Self::ItemMedicineResult { .. }
             | Self::ShowingText { backdrop: BattleTextBackdrop::MedicineParty, .. })
+    }
+
+    pub fn uses_item_party_backdrop(&self) -> bool {
+        matches!(self, Self::ItemTargetSelect { .. } | Self::ItemMedicineResult { .. }
+            | Self::ItemMoveSelect { .. }
+            | Self::ShowingText { backdrop: BattleTextBackdrop::MedicineParty
+                | BattleTextBackdrop::PpRestoreParty { .. }, .. })
     }
 }
 
@@ -2236,6 +2252,12 @@ impl BattleScreen {
                 if (input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
+                        if let BattleTextBackdrop::PpRestoreParty { consume_on_ack: Some(item), .. } = backdrop {
+                            // The phase owns this continuation. Leaving it
+                            // makes a second ACK unable to remove another item.
+                            let _ = self.player_bag.remove_item(item, 1);
+                            self.bag_menu = None;
+                        }
                         // Keep the demonstration's success caption while its
                         // return-to-field caller finishes. There is no trainer
                         // victory narration in the old man's wild battle.
@@ -2994,7 +3016,7 @@ learn {learn_name}!")];
                 }
                 _ => {
                     if let Some(ref bs) = self.battle_state {
-                        let mon = &bs.player.party[pokemon_index];
+                        let mon = bs.player.party_mon(pokemon_index);
                         self.move_menu = Some(Self::build_move_menu_for_mon(mon));
                         self.phase = BattlePhase::ItemMoveSelect {
                             item_id,
@@ -3111,15 +3133,16 @@ learn {learn_name}!")];
     /// `.useEther` / `.useElixir` tails, item_effects.asm:2025-2117):
     /// `move_index = None` for Elixirs (all moves), `Some(row)` for
     /// (Max) Ether after the move menu. Success prints "PP was restored."
-    /// and consumes the item; a zero-restore prints "It won't have any
-    /// effect." and keeps it (`.noEffect`). Restoring the ACTIVE mon's PP
-    /// is live immediately — `bs.player.party` is the battle's source of
-    /// truth (the original copies party PP into wBattleMonPP instead).
+    /// with its party/move caller retained. PP changes immediately, but the
+    /// item is removed only when the final text is acknowledged (`.done`).
     fn apply_pp_restore(&mut self, item_id: ItemId, pokemon_index: usize, move_row: Option<usize>) {
         use crate::items::pp_restore::{use_pp_restore, PpRestoreResult};
 
         let result = if let Some(ref mut bs) = self.battle_state {
-            let mon = &mut bs.player.party[pokemon_index];
+            // Both MoveSelectionMenu and GetMaxPP use PLAYER_PARTY_DATA,
+            // including the original identity while the active mon is
+            // transformed. Do not restore its copied battle moves instead.
+            let mon = bs.player.party_mon_mut(pokemon_index);
             let slot = match move_row {
                 Some(row) => Self::move_menu_row_to_slot(mon, row).unwrap_or(0),
                 None => 0, // Elixirs ignore the index
@@ -3131,7 +3154,6 @@ learn {learn_name}!")];
 
         let (msg, item_used) = match result {
             PpRestoreResult::Restored { .. } | PpRestoreResult::AllRestored { .. } => {
-                self.consume_selected_item();
                 // _PPRestoredText (data/text/text_6.asm:152).
                 ("PP was restored.".to_string(), true)
             }
@@ -3141,7 +3163,16 @@ learn {learn_name}!")];
         self.move_menu = None;
         self.sync_display_from_state();
         if item_used {
-            self.bag_menu = None;
+            if let Some(bs) = self.battle_state.as_mut() {
+                if pokemon_index == bs.player.active_pokemon_index {
+                    // .afterRestoringPP copies all four packed PP bytes,
+                    // retaining the transformed species/moves/stats/HP.
+                    let pp = bs.player.party_mon(pokemon_index).pp;
+                    let pp_ups = bs.player.party_mon(pokemon_index).pp_ups;
+                    bs.player.active_mon_mut().pp = pp;
+                    bs.player.active_mon_mut().pp_ups = pp_ups;
+                }
+            }
             self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
         }
         self.show_text_then(
@@ -3152,6 +3183,13 @@ learn {learn_name}!")];
                 BattlePhase::BagSelect
             },
         );
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut self.phase {
+            *backdrop = BattleTextBackdrop::PpRestoreParty {
+                party_index: pokemon_index as u8,
+                move_row: move_row.map(|row| row as u8),
+                consume_on_ack: item_used.then_some(item_id),
+            };
+        }
     }
 
     fn consume_selected_item(&mut self) {

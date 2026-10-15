@@ -6,6 +6,43 @@ use pokered_data::ui_layout::schema::BattleMoveDefaultLayout;
 
 use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
+/// ItemUsePPRestore's party move chooser. Borrow the canonical moves for both
+/// selection and the result page; there is no FIGHT PP/type panel or CANCEL row.
+pub fn draw_pp_restore<P: Painter>(
+    moves: &[MoveId; 4],
+    cursor: usize,
+    ui: &mut Ui<P>,
+    render_data: &dyn RenderData<
+        Move = MoveId,
+        Item = pokered_data::items::ItemId,
+        Species = pokered_data::species::Species,
+    >,
+) {
+    let proportional = ui.painter().supports_proportional();
+    let top = if proportional { 5 } else { 7 };
+    ui.text_box(
+        TileRect::new(4, top, 16, if proportional { 8 } else { 6 }),
+        InkColor::Black,
+        true,
+        |frame| {
+            if !proportional {
+                for (row, id) in moves.iter().filter(|m| **m != MoveId::None).enumerate() {
+                    let name: String = render_data.move_name(*id).chars().take(12).collect();
+                    frame.label(1, row as u32, &name, InkColor::Black);
+                }
+                frame.cursor_glyph_at(0, cursor as u32, '▶', InkColor::Black);
+            }
+        },
+    );
+    if proportional {
+        for (row, id) in moves.iter().filter(|m| **m != MoveId::None).enumerate() {
+            let name: String = render_data.move_name(*id).chars().take(12).collect();
+            ui.painter().draw_text_px(48, (top + 1) * 8 + row as u32 * 12, &name, Rgba::INK_BLACK);
+        }
+        ui.painter().draw_text_px(40, (top + 1) * 8 + cursor as u32 * 12, "▶", Rgba::INK_BLACK);
+    }
+}
+
 pub fn draw<P: Painter>(
     state: &MoveMenuState,
     layout: &BattleMoveDefaultLayout,

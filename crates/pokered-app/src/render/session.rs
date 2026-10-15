@@ -133,7 +133,6 @@ enum ReusableBattlePhase {
     PlayerMenu { row: usize, col: usize },
     SafariMenu { row: usize, col: usize },
     MoveSelect { cursor: usize },
-    ItemMoveSelect { cursor: usize },
     BagSelect { cursor: usize },
     ShowingText { current: usize },
     PartySelect { cursor: usize },
@@ -213,9 +212,8 @@ impl BattleVisualKey {
             BattlePhase::MoveSelect => ReusableBattlePhase::MoveSelect {
                 cursor: battle.move_menu.as_ref()?.cursor(),
             },
-            BattlePhase::ItemMoveSelect { .. } => ReusableBattlePhase::ItemMoveSelect {
-                cursor: battle.move_menu.as_ref()?.cursor(),
-            },
+            // The PP chooser retains the full party, not the FIGHT HUD.
+            BattlePhase::ItemMoveSelect { .. } => return None,
             BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
                 cursor: battle.bag_menu.as_ref()?.cursor(),
             },
@@ -384,16 +382,6 @@ impl BattleVisualKey {
                 cursor,
                 previous_cursor,
                 ReusableBattlePhase::MoveSelect { cursor: 0 },
-            ),
-            (
-                ReusableBattlePhase::ItemMoveSelect { cursor },
-                ReusableBattlePhase::ItemMoveSelect {
-                    cursor: previous_cursor,
-                },
-            ) => (
-                cursor,
-                previous_cursor,
-                ReusableBattlePhase::ItemMoveSelect { cursor: 0 },
             ),
             (
                 ReusableBattlePhase::LearnMoveChoose { cursor },
@@ -2702,6 +2690,29 @@ mod session_tests {
             *backdrop = pokered_core::battle::BattleTextBackdrop::Battle;
         }
         assert!(BattleVisualKey::new(&game).is_some(), "ordinary battle text keeps its previous cache route");
+    }
+
+    #[test]
+    fn pp_party_chooser_and_result_decline_ordinary_move_and_text_cache_paths() {
+        use pokered_core::battle::BattleTextBackdrop;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::Battle;
+        game.battle.phase = BattlePhase::ItemMoveSelect {
+            item_id: pokered_data::items::ItemId::Ether, party_index: 0,
+        };
+        assert!(BattleVisualKey::new(&game).is_none());
+        for move_row in [None, Some(1)] {
+            game.battle.phase = BattlePhase::ShowingText {
+                messages: vec!["PP was restored.".into()], current: 0, wait_frames: 0,
+                next_phase: Box::new(BattlePhase::EnemyFreeTurnAfterItem),
+                backdrop: BattleTextBackdrop::PpRestoreParty {
+                    party_index: 0, move_row,
+                    consume_on_ack: Some(pokered_data::items::ItemId::Ether),
+                },
+            };
+            assert!(BattleVisualKey::new(&game).is_none());
+        }
     }
 
     #[test]
