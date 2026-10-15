@@ -5021,6 +5021,13 @@ impl PokemonGame {
                 };
                 let prior_menu = party_input.a.then(|| self.party_screen.clone());
                 let action = self.party_screen.update_frame(party_input);
+                // Cancelling the SOFTBOILED target picker resumes the normal
+                // party list. Do not reopen the abandoned picker after STATS.
+                if self.pending_softboiled_user.is_some()
+                    && self.party_screen.mode() == pokered_core::party_screen::PartyScreenMode::Normal
+                {
+                    self.pending_softboiled_user = None;
+                }
 
                 // Mirror any in-screen swap back into the canonical save data.
                 if let Some((a, b)) = self.party_screen.take_pending_swap() {
@@ -5349,6 +5356,10 @@ impl PokemonGame {
                             pokered_core::overworld::field_moves::FieldMoveOutcome::Done => {
                                 ScreenAction::Transition(GameScreen::Overworld)
                             }
+                            pokered_core::overworld::field_moves::FieldMoveOutcome::ReturnToParty { message } => {
+                                self.party_screen.show_item_use_notice(message, 0, PartyNoticeReturn::Party);
+                                ScreenAction::Continue
+                            }
                             pokered_core::overworld::field_moves::FieldMoveOutcome::OpenFlyMap => {
                                 self.pending_fly_map = true;
                                 ScreenAction::Transition(GameScreen::TownMap)
@@ -5388,22 +5399,25 @@ impl PokemonGame {
                                     .to_string(),
                             },
                         };
-                        let message = match outcome {
-                            pokered_core::items::bag_use::ItemApplyOutcome::Used {
-                                message,
-                                ..
-                            } => message,
-                            pokered_core::items::bag_use::ItemApplyOutcome::NoEffect {
-                                message,
-                            } => message,
-                            // apply_softboiled never asks for a move replace or
-                            // an evolution.
-                            _ => pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(),
+                        let (message, wait) = match outcome {
+                            pokered_core::items::bag_use::ItemApplyOutcome::Used { message, .. } => {
+                                if let Some(audio) = &self.audio {
+                                    audio.play_sfx(SfxId::HealHP);
+                                }
+                                (message, 50)
+                            }
+                            pokered_core::items::bag_use::ItemApplyOutcome::NoEffect { message } => (message, 0),
+                            _ => (pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(), 0),
                         };
-                        let message = self.localize_dialogue(&message);
-                        self.overworld.pending_dialogue =
-                            Some(BedroomDialogue::from_message(&message));
-                        ScreenAction::Transition(GameScreen::Overworld)
+                        // The pseudo-medicine result is acknowledged on the
+                        // party screen. StartMenu_Pokemon then restores the
+                        // SOFTBOILED user's cursor and its normal `.loop`.
+                        self.party_screen = PartyScreenState::new(self.save_data.party.to_vec());
+                        self.party_screen.set_cursor(user_index.unwrap_or(0));
+                        self.party_screen.show_item_use_notice(
+                            self.localize_dialogue(&message), wait, PartyNoticeReturn::Party,
+                        );
+                        ScreenAction::Continue
                     }
                     PartyScreenAction::Active => ScreenAction::Continue,
                 }
@@ -8236,6 +8250,10 @@ impl PokemonGame {
         self.exit_requested
     }
 }
+
+#[cfg(test)]
+#[path = "field_move_continuation_tests.rs"]
+mod field_move_continuation_tests;
 
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]

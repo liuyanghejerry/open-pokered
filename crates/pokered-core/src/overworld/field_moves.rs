@@ -42,13 +42,15 @@ const SHORE_TILE_SAFARI: u8 = 0x48;
 const NEW_BADGE_REQUIRED_TEXT: &str = "No! A new BADGE\nis required.";
 
 /// What happened after the player chose a field move in the party menu.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FieldMoveOutcome {
-    /// The flow completed on the spot: a message was queued in
-    /// `pending_dialogue` when there was something to say (CUT/SURF/
-    /// STRENGTH/FLASH/TELEPORT and all refusals), or the escape warp was
-    /// queued directly (DIG, successful SURF dismount).
+    /// The successful effect continues on the field (including its result
+    /// dialogue, animation or warp).
     Done,
+    /// StartMenu_Pokemon's `.loop`: acknowledge this notice on the party
+    /// screen, then browse the party again with the selected member retained.
+    /// The caller owns the notice; no overworld dialogue is also queued.
+    ReturnToParty { message: String },
     /// FLY: badge + outdoor checks passed; the caller should open the town
     /// map in fly-destination mode so the player can pick a target.
     OpenFlyMap,
@@ -84,7 +86,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             MoveId::Teleport => self.field_teleport(mon_name, last_blackout_map),
             MoveId::Softboiled => self.field_softboiled(mon),
             // Not a field move — the party menu never offers it.
-            _ => self.field_message("This isn't the\ntime to use that!"),
+            _ => self.field_refusal("This isn't the\ntime to use that!"),
         }
     }
 
@@ -92,6 +94,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.pending_dialogue =
             Some(BedroomDialogue::from_message(&self.localize_message(text)));
         FieldMoveOutcome::Done
+    }
+
+    fn field_refusal(&self, text: &str) -> FieldMoveOutcome {
+        FieldMoveOutcome::ReturnToParty { message: self.localize_message(text) }
     }
 
     /// Tile the player is standing on, the tile directly ahead, and the
@@ -120,13 +126,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // cuttable tree ($3D overworld / $50 gym) or grass ($52) in front.
     fn field_cut(&mut self, obtained_badges: u8, mon_name: &str) -> FieldMoveOutcome {
         let Some((_, tile_in_front, fx, fy)) = self.tiles_in_front() else {
-            return self.field_message("There isn't\nanything to CUT!");
+            return self.field_refusal("There isn't\nanything to CUT!");
         };
         let map = self.map_data.as_ref().expect("map_data present");
         let current_block = collision::get_block_at(fx, fy, map.width, &map.blocks).unwrap_or(0);
         match hm_effects::use_cut(obtained_badges, map.tileset, tile_in_front, current_block) {
-            CutResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
-            CutResult::NothingToCut => self.field_message("There isn't\nanything to CUT!"),
+            CutResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
+            CutResult::NothingToCut => self.field_refusal("There isn't\nanything to CUT!"),
             CutResult::CutTree { replacement_block } => {
                 self.pending_cut = Some(PendingCut {
                     block_x: (fx / 2) as u8,
@@ -157,12 +163,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // screen; this only performs the gating and hands off.
     fn field_fly(&mut self, obtained_badges: u8, mon_name: &str) -> FieldMoveOutcome {
         let Some(map) = self.map_data.as_ref() else {
-            return self.field_message(&format!("{} can't\nFLY here.", mon_name));
+            return self.field_refusal(&format!("{} can't\nFLY here.", mon_name));
         };
         match hm_effects::use_fly(obtained_badges, map.tileset, None) {
-            FlyResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
+            FlyResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
             FlyResult::CannotFlyHere => {
-                self.field_message(&format!("{} can't\nFLY here.", mon_name))
+                self.field_refusal(&format!("{} can't\nFLY here.", mon_name))
             }
             // No destination chosen yet (we passed None): open the fly map.
             FlyResult::Cancelled | FlyResult::ChoseDestination { .. } => {
@@ -177,7 +183,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // ItemUseSurfboard (engine/items/item_effects.asm).
     fn field_surf(&mut self, obtained_badges: u8, mon_name: &str) -> FieldMoveOutcome {
         let Some((standing_tile, tile_in_front, _, _)) = self.tiles_in_front() else {
-            return self.field_message(&format!("No SURFing on\n{}\nhere!", mon_name));
+            return self.field_refusal(&format!("No SURFing on\n{}\nhere!", mon_name));
         };
         let map = self.map_data.as_ref().expect("map_data present");
         let tileset = map.tileset;
@@ -209,16 +215,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.state.player.x as u8,
             self.state.player.y as u8,
         ) {
-            SurfResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
+            SurfResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
             SurfResult::AlreadySurfing => self.try_stop_surfing(standing_tile, tile_in_front),
             SurfResult::NotFacingWater => {
-                self.field_message(&format!("No SURFing on\n{}\nhere!", mon_name))
+                self.field_refusal(&format!("No SURFing on\n{}\nhere!", mon_name))
             }
             SurfResult::ForcedToRideBike => {
-                self.field_message("Cycling is fun!\nForget SURFing!")
+                self.field_refusal("Cycling is fun!\nForget SURFing!")
             }
             SurfResult::CurrentTooFast => {
-                self.field_message("The current is\nmuch too fast!")
+                self.field_refusal("The current is\nmuch too fast!")
             }
             SurfResult::StartedSurfing => {
                 // ItemUseSurfboard: TilePairCollisionsWater may still veto.
@@ -229,7 +235,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     true,
                 );
                 if blocked {
-                    return self.field_message(&format!("No SURFing on\n{}\nhere!", mon_name));
+                    return self.field_refusal(&format!("No SURFing on\n{}\nhere!", mon_name));
                 }
                 self.state.player.transport = TransportMode::Surfing;
                 self.defer_field_move_step();
@@ -252,7 +258,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pokered_data::collision::check_tile_pair_collision(tileset, standing_tile, tile_in_front, true);
         let land_passable = pokered_data::collision::is_tile_passable(tileset, tile_in_front);
         if sprite_ahead || pair_blocked || !land_passable {
-            return self.field_message("There's no place\nto get off!");
+            return self.field_refusal("There's no place\nto get off!");
         }
         self.state.player.transport = TransportMode::Walking;
         self.defer_field_move_step();
@@ -289,7 +295,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // BIT_STRENGTH_ACTIVE and prints both texts; the mon's cry plays.
     fn field_strength(&mut self, obtained_badges: u8, mon: &Pokemon) -> FieldMoveOutcome {
         match hm_effects::use_strength(obtained_badges, self.strength_active) {
-            StrengthResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
+            StrengthResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
             // AlreadyActive re-prints the same texts in the original
             // (PrintStrengthText is unconditional).
             StrengthResult::Activated | StrengthResult::AlreadyActive => {
@@ -313,7 +319,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // the "blinding FLASH" text (printed even outside dark caves).
     fn field_flash(&mut self, obtained_badges: u8) -> FieldMoveOutcome {
         match hm_effects::use_flash(obtained_badges, self.dark_cave.is_dark()) {
-            FlashResult::NoBadge => self.field_message(NEW_BADGE_REQUIRED_TEXT),
+            FlashResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
             FlashResult::LitUpCave => {
                 self.dark_cave.use_flash();
                 // GBPalWhiteOutWithDelay3: the screen whites out for 3 frames
@@ -337,6 +343,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // (wLastBlackoutMap → FlyWarpDataPtr, special_warps.asm:76-80) — NOT the
     // dungeon entrance.
     fn field_dig(&mut self, last_blackout_map: MapId) -> FieldMoveOutcome {
+        // A refused pseudo-item returns to StartMenu_Pokemon.loop, rather
+        // than Escape Rope's bag caller. Keep the same eligibility checks.
+        let can_escape = self.map_data.as_ref()
+            .is_some_and(|map| hm_effects::is_escape_rope_tileset(map.tileset))
+            && self.state.current_map != MapId::AgathasRoom;
+        if !can_escape {
+            return self.field_refusal(&self.item_use_not_time_message());
+        }
         // Reuse the escape-rope flow; the `consumed` flag only tells bag-item
         // callers to remove the item, so it is ignored for the move.
         let _ = self.use_field_item(ItemId::EscapeRope, last_blackout_map);
@@ -359,7 +373,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             .map(|m| special_terrain::is_outside_map(m.tileset))
             .unwrap_or(false);
         if !outside {
-            return self.field_message(&format!("{} can't\nuse TELEPORT\nnow.", mon_name));
+            return self.field_refusal(&format!("{} can't\nuse TELEPORT\nnow.", mon_name));
         }
         let dest = hm_effects::fly_destination_for_map(last_blackout_map)
             .or_else(|| hm_effects::fly_destination_for_map(MapId::PalletTown))
@@ -389,7 +403,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let cost = mon.max_hp / 5;
         if mon.hp <= cost {
             // _NotHealthyEnoughText (data/text/text_5.asm:55-58).
-            return self.field_message("Not healthy\nenough.");
+            return self.field_refusal("Not healthy\nenough.");
         }
         FieldMoveOutcome::ChooseSoftboiledTarget
     }
