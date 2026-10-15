@@ -26,7 +26,7 @@
 
 此前整合 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2889 通过**、debug-server 应用 **283 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
 
-已整合最新 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **292 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+此前整合 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **292 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
 
 
 合入训练家图鉴修复后的精确失败源 `50ece821b7e4fd2794c049d7de59ff50b0254efc`，在 CI 和本地均测得训练家更新 233 ticks，超过未改动的 232.3 门限。CI checkout merge `4526acc4` 与该源文件差异为零；下载的 CI artifact 只有 JSON/日志，没有 ROM，因此本地复现明确使用相同失败源重新构建的 ROM。单次球 caller 状态查询的候选仍为 233，已撤回，失败日志与首次新增测试构造器编译错误保留。最终仅在普通及 Link 战斗的逐帧玩家名称同步处用 `clone_from` 复用已有 String 容量，捕获续流程、VFX、字幕、音效和存档生产逻辑不变。
@@ -36,3 +36,5 @@
 八个完整固定输入控制仍保留真实 `c3c38f71` 冻结身份：31884 帧、4812 张采样图逐字节一致，八份普通 SAVE 分别与已有对应成功控制的全部 32768 字节一致。最新 master 与最终整合版本另录普通返回 frame2717、Safari 投球 frame2233/成功字幕 frame2633，六张图与既有公开 PNG 完全相同，具体新身份见 `performance-919-screenshots.json`；旧 `screenshots.json` 未重标。Safari 保持自然捕获，所有失败尝试保留；短字幕重放不额外声称完成最终 SAVE，完整原作/Safari SAVE 范围仍为历史矩阵。
 
 本轮 audit919 的可读汇总与限制见 `performance-919-verification.json`。`performance-919-evidence.zip` 包含新输入、逐帧截图、普通存档、完整哈希清单、失败候选及日志；可用既有 `extract_evidence.py` 独立验证。旧证据 ZIP 均逐字节保留，ROM 与可执行文件没有打包。
+
+已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2890 通过/0 忽略；app 300 通过/39 忽略；determinism 8 通过/0 忽略，全部 0 失败。当前受测源码 `3bd1b4ea17d59b406060a3caa3e79335fc033c44`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
