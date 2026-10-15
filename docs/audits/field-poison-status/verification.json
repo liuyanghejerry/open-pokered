@@ -1,0 +1,268 @@
+{
+  "time": "2026-10-15T00:38:32.151062+00:00",
+  "scope": "Clear status only when this field poison tick causes fainting. Other poison sequencing/blackout-confirmation/palette gaps remain independently tracked896; FNT party marker is separatependingPR242.",
+  "reference_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scenario": "Constructed preinput RattataLv12 standardDVs/stats, legal learnedmoves Tackle/TailWhip/QuickAttack, firstHP1PSN and healthybenchHP31; ordinary4singlewalkingsteps/ACK/SAVE. No naturalcapture/poisoninfliction/wholetemplatequestreachability or crossengineclock/fullSRAM parity claim.",
+  "tests": {
+    "baseline_new_test": {
+      "passed": 0,
+      "failed": 1,
+      "fresh_owner_target": "892",
+      "setup_rejections": "wronggfx and wrapperlibtestoptions failed before regression ran; those are preservedlocal, not gamefailures"
+    },
+    "after_source_commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+    "library_passed": 2882,
+    "integration_passed": 412,
+    "total_passed": 3294,
+    "failed": 0,
+    "doc_ignored": 1,
+    "debug_app_build": "PASS"
+  },
+  "trials": [
+    {
+      "repeat": 1,
+      "source": {
+        "hp": [
+          0,
+          31
+        ],
+        "status": [
+          0,
+          0
+        ],
+        "main_checksum": 215,
+        "normal_SAVE": true
+      },
+      "native": {
+        "before": {
+          "source_commit": "fcbcd10c553f3f2999c5c50400e3fe090c814584",
+          "binary_sha256": "6e505fec368c7ae8169ecc9727427b28c5e6c75c881d4619ca0b745d1d640155",
+          "saved_hp_status": [
+            [
+              0,
+              "Poison"
+            ],
+            [
+              31,
+              "None"
+            ]
+          ],
+          "normal_SAVE": true,
+          "main_checksum": 172,
+          "party_differing_offsets_vs_source": [
+            4
+          ],
+          "party_other_fields_PP_unchanged": true,
+          "box_PC_bag_dex_cash_unchanged": true,
+          "sram_sha256": "4c81fb67bfe245cc6ecae8dff996d839052909f29c7109ac15b088b8ac9931ee"
+        },
+        "after": {
+          "source_commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+          "binary_sha256": "2a2deabd3b4e907248e48d70af5c4893607738992a9280bbb679a61bfb8c0c6b",
+          "saved_hp_status": [
+            [
+              0,
+              "None"
+            ],
+            [
+              31,
+              "None"
+            ]
+          ],
+          "normal_SAVE": true,
+          "main_checksum": 180,
+          "party_differing_offsets_vs_source": [],
+          "party_other_fields_PP_unchanged": true,
+          "box_PC_bag_dex_cash_unchanged": true,
+          "sram_sha256": "f152133f0b7f90a0ab2191aa73e3273e99a6d25bffe4d5d2cf1aaee851703493"
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "source": {
+        "hp": [
+          0,
+          31
+        ],
+        "status": [
+          0,
+          0
+        ],
+        "main_checksum": 215,
+        "normal_SAVE": true
+      },
+      "native": {
+        "before": {
+          "source_commit": "fcbcd10c553f3f2999c5c50400e3fe090c814584",
+          "binary_sha256": "6e505fec368c7ae8169ecc9727427b28c5e6c75c881d4619ca0b745d1d640155",
+          "saved_hp_status": [
+            [
+              0,
+              "Poison"
+            ],
+            [
+              31,
+              "None"
+            ]
+          ],
+          "normal_SAVE": true,
+          "main_checksum": 172,
+          "party_differing_offsets_vs_source": [
+            4
+          ],
+          "party_other_fields_PP_unchanged": true,
+          "box_PC_bag_dex_cash_unchanged": true,
+          "sram_sha256": "4c81fb67bfe245cc6ecae8dff996d839052909f29c7109ac15b088b8ac9931ee"
+        },
+        "after": {
+          "source_commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+          "binary_sha256": "2a2deabd3b4e907248e48d70af5c4893607738992a9280bbb679a61bfb8c0c6b",
+          "saved_hp_status": [
+            [
+              0,
+              "None"
+            ],
+            [
+              31,
+              "None"
+            ]
+          ],
+          "normal_SAVE": true,
+          "main_checksum": 180,
+          "party_differing_offsets_vs_source": [],
+          "party_other_fields_PP_unchanged": true,
+          "box_PC_bag_dex_cash_unchanged": true,
+          "sram_sha256": "f152133f0b7f90a0ab2191aa73e3273e99a6d25bffe4d5d2cf1aaee851703493"
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    {
+      "stage": "before",
+      "repeat": 1,
+      "source_commit": "fcbcd10c553f3f2999c5c50400e3fe090c814584",
+      "binary_sha256": "6e505fec368c7ae8169ecc9727427b28c5e6c75c881d4619ca0b745d1d640155",
+      "fixture_sha256": "0be0e1d586d3a1f735db2e733f6a87d27e0974e7ad545266010483dcb7a8a5d2",
+      "frame": 244,
+      "png_sha256": "ca24958120866275a742c62457d257cb22905471eac035c9f1553a77e7bc835e",
+      "actions": [
+        {
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "button": "down",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "a",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "b",
+          "held": 4,
+          "frames": 60
+        }
+      ]
+    },
+    {
+      "stage": "before",
+      "repeat": 2,
+      "source_commit": "fcbcd10c553f3f2999c5c50400e3fe090c814584",
+      "binary_sha256": "6e505fec368c7ae8169ecc9727427b28c5e6c75c881d4619ca0b745d1d640155",
+      "fixture_sha256": "0be0e1d586d3a1f735db2e733f6a87d27e0974e7ad545266010483dcb7a8a5d2",
+      "frame": 244,
+      "png_sha256": "ca24958120866275a742c62457d257cb22905471eac035c9f1553a77e7bc835e",
+      "actions": [
+        {
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "button": "down",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "a",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "b",
+          "held": 4,
+          "frames": 60
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "repeat": 1,
+      "source_commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+      "binary_sha256": "2a2deabd3b4e907248e48d70af5c4893607738992a9280bbb679a61bfb8c0c6b",
+      "fixture_sha256": "35919ef2a96f8039be45783c2373f99ba125f2164d1576fa326898adaf0f76b9",
+      "frame": 244,
+      "png_sha256": "0385403d37bb38736f652c41027ab7c3c0b313c9a00a487c6818434b85137cd0",
+      "actions": [
+        {
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "button": "down",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "a",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "b",
+          "held": 4,
+          "frames": 60
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "repeat": 2,
+      "source_commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+      "binary_sha256": "2a2deabd3b4e907248e48d70af5c4893607738992a9280bbb679a61bfb8c0c6b",
+      "fixture_sha256": "35919ef2a96f8039be45783c2373f99ba125f2164d1576fa326898adaf0f76b9",
+      "frame": 244,
+      "png_sha256": "0385403d37bb38736f652c41027ab7c3c0b313c9a00a487c6818434b85137cd0",
+      "actions": [
+        {
+          "button": "start",
+          "held": 4,
+          "frames": 60
+        },
+        {
+          "button": "down",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "a",
+          "held": 4,
+          "frames": 32
+        },
+        {
+          "button": "b",
+          "held": 4,
+          "frames": 60
+        }
+      ]
+    }
+  ],
+  "earlier_controls": "Earlier729/BulbasaurPSN controls are retainedprivate with reachabilityerratum. Those are generic artificial-status loop evidence and are not substituted for these currentmaster/Normal-type Rattata trials."
+}
