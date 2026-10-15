@@ -65,10 +65,10 @@ fn awakened_snorlax(map: MapId, boxed: bool) -> (OverworldScreen, SaveData, Batt
     }
 
     let mut overworld = OverworldScreen::new(map, None, PokemonRedData);
-    let (x, y) = if map == MapId::Route12 {
-        (10, 63)
+    let (x, y, facing) = if map == MapId::Route12 {
+        (10, 63, Direction::Up)
     } else {
-        (26, 11)
+        (27, 10, Direction::Left)
     };
     overworld.state.player.x = x;
     overworld.state.player.y = y;
@@ -78,7 +78,7 @@ fn awakened_snorlax(map: MapId, boxed: bool) -> (OverworldScreen, SaveData, Batt
     }
     overworld.seed_script_query_state(0, &["POKE_FLUTE".to_string()], 0, 0, 0, 0, &[], 0, 0, 0);
     overworld.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
-    overworld.state.player.facing = Direction::Up;
+    overworld.state.player.facing = facing;
     overworld.update_frame(field_input(true));
     for frame in 0..300 {
         if overworld.pending_wild_encounter.is_some() {
@@ -173,8 +173,8 @@ fn real_snorlax_capture_settles_and_resumes_without_mountains_text() {
         overworld.warp_to_map(MapId::PalletTown, 5, 6);
         overworld.warp_to_map(
             map,
-            if boxed { 26 } else { 10 },
-            if boxed { 11 } else { 63 },
+            if boxed { 27 } else { 10 },
+            if boxed { 10 } else { 63 },
         );
         assert!(
             !overworld.npc_states[slot].visible,
