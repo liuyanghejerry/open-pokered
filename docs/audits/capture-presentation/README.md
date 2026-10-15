@@ -23,3 +23,5 @@
 独立 GBA 构建使用固定 nightly-2025-12-07、`perf-benchmark` 与 mGBA 0.10.5 的硬件定时器。干净 `b7` 和最终版本训练家更新均为 232 ticks；最终野生战为 214，干净 `b7` 为 213，七场景全部通过既有门禁，没有修改 baseline 或阈值。中间失败的 233/234 ticks 记录完整保留。身份、普通重放、最终同帧图和性能逐项结果见 `integration.json`；`integration-evidence.zip` 可用同一个 `extract_evidence.py` 验证与解包。该补充档不包含 ROM、可执行文件或模拟器 state。
 
 随后整合主分支 `6085c98704a9b0cb25cbcd34afcc028184ce9217`，整合源为 `490146cac1046afd0a15a9c8c9468cb79b578ab5`。捕获 app/渲染/续接/测试文件与 `40e` 字节完全相同；新增 core 差异只有 POKé DOLL 的使用提示与确认后移除，完整 app 283 通过（39 忽略）、core 2889 通过，GBA 七场景再次通过（训练家 232、野生战 214 ticks）。本次仅更新整合测试与 GBA 构建身份，没有把旧调试二进制或普通输入重放重标为新源。逐项记录见 `master6085-integration.json`，日志见可用同一解包工具核验的 `master6085-integration-logs.zip`。
+
+已整合最新 master `216cb034`（#260，统一引擎 pin `76da597b`）：完整核心 **2889 通过**、debug-server 应用 **283 通过/39 忽略/0 失败**。精确源码 SHA 与日志见 `master-216cb-integration.json`、日志归档。实际重播和图片仍保留其原冻结身份。
