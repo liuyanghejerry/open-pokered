@@ -42,3 +42,5 @@ python3 extract_evidence.py evidence.zip /tmp/old-man-evidence
 ```
 
 The animation differential verdict is **PARTIAL**: this verifies the tutorial's ordering, modal return, portrait/HUD, native full-channel completion and declared save boundaries. It does not establish original/native animation geometry, input-clock or waveform parity, all starting dex configurations, whole-campaign reachability, full mainline completion or the separate Silph timing prototype. Every source setup modification precedes validation; failed hook/approach/setup attempts are retained and excluded from passing controls.
+
+最新整合 master `dfeefa34`：`3c7b43e4` 的完整 core 2885、debug app 272 通过，39 个已有忽略项，0 失败。证据与完整日志见 `integration.json` / `integration-logs.zip`。原始录制及截图仍固定到实际 `f44` / `64f` 构建，不重贴为整合构建。
