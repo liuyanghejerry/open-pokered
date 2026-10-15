@@ -51,6 +51,8 @@ mod link_battle_driver_tests;
 #[cfg(test)]
 mod catch_tests;
 #[cfg(test)]
+mod transform_capture_tests;
+#[cfg(test)]
 mod capture_outcome_tests;
 #[cfg(test)]
 mod flinch_lifecycle_tests;
@@ -3517,7 +3519,11 @@ learn {learn_name}!")];
         }
         if let Some(ref mut bs) = self.battle_state {
             let enemy = bs.enemy.active_mon();
-            let catch_rate = bs.enemy.transform_catch_rate.unwrap_or_else(|| enemy.effective_catch_rate());
+            // ItemUseBall reads wEnemyMonActualCatchRate, loaded from the
+            // encounter header separately from the battle struct. Transform
+            // copies that struct's catch byte, not the actual capture rate.
+            let original_species = bs.enemy.party_mon(bs.enemy.active_pokemon_index).species;
+            let catch_rate = get_base_stats(original_species).map_or(255, |base| base.catch_rate);
             // Snapshot the wild mon in its current (weakened) state before the
             // borrow of `bs` ends, so it can be handed to the party on a catch.
             // A freshly caught mon is the player's own: stamp it with the
