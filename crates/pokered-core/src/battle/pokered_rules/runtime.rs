@@ -435,7 +435,7 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     let catch_rate = party.transform_catch_rate.unwrap_or_else(|| mon.effective_catch_rate());
     b.resources.set(super::RES_CATCH_RATE, catch_rate as u16, 255);
     super::bind_types(&mut b, (party.conversion_type1.unwrap_or(mon.type1), party.conversion_type2.unwrap_or(mon.type2)));
-    for (slot, pp) in mon.pp.iter().enumerate() { b.resources.set(super::RES_PP_BASE + slot as u16, *pp as u16, 255); }
+    bind_working_pp(&mut b, mon);
     let ss = &party.stat_stages;
     b.stat_stages.set(StatIndex::Attack, ss.attack);
     b.stat_stages.set(StatIndex::Defense, ss.defense);
@@ -444,6 +444,15 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     b.stat_stages.set(StatIndex::Accuracy, ss.accuracy);
     b.stat_stages.set(StatIndex::Evasion, ss.evasion);
     b
+}
+
+/// Refresh Disable's packed working view from the canonical active Pokemon.
+/// These bytes never replace the engine's ordinary PP quantities or its costs.
+pub(in crate::battle) fn bind_working_pp(b: &mut EngineBattler<PokeredRules>, mon: &Pokemon) {
+    for slot in 0..4 {
+        let packed = (mon.pp[slot] & 0x3f) | ((mon.pp_ups[slot] & 3) << 6);
+        b.resources.set(super::RES_PP_BASE + slot as u16, packed as u16, 255);
+    }
 }
 
 /// Legacy status1/2/3 flags + counters → `PokeVolatile` arena entries on `host`.
@@ -624,7 +633,10 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
         mon.type1 = t1;
         mon.type2 = t2;
         mon.moves = moves4;
-        mon.pp = core::array::from_fn(|i| if moves4[i] == MoveId::None { 0 } else { 5 });
+        // Use the same copy that in-turn Disable already observed.
+        mon.pp = core::array::from_fn(|i| {
+            (b.resources.current(super::RES_PP_BASE + i as u16).unwrap_or(0) as u8) & 0x3f
+        });
         // Transform writes packed PP byte 5: the copied working slots have no PP Ups.
         mon.pp_ups = [0; 4];
         let raw = crate::battle::badge_boosts::unmodified_stats(b);
@@ -854,32 +866,36 @@ mod tests {
     /// them alone (PP depletes normally — the PP-reset trap is avoided).
     #[test]
     fn transform_persists_identity_once() {
+        use super::super::{clear_current_moves, install_canonical, set_current_move};
         use crate::battle::state::{new_battle_state, status3, BattleType};
+        use dotzuki_engine::battle::{rng::ScriptedRng, stack::StackDriver, BattleAction};
         use pokered_data::species::Species;
-        let mk = |sp| {
+        let mk = |sp, move_| {
             crate::pokemon::stats::create_pokemon_with_moves(
                 sp, 30, [0xFF, 0xFF],
-                [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+                [move_, MoveId::None, MoveId::None, MoveId::None],
             ).unwrap()
         };
-        let mut ls = new_battle_state(BattleType::Wild, vec![mk(Species::Ditto)], vec![mk(Species::Tauros)]);
+        let mut ls = new_battle_state(
+            BattleType::Wild,
+            vec![mk(Species::Ditto, MoveId::Transform)],
+            vec![mk(Species::Tauros, MoveId::Tackle)],
+        );
 
-        // Simulate a post-Transform engine state: the player battler copied the foe's
-        // identity (what transform_install does) and carries the marker.
-        let mut state = EngineState::new(vec![engine_active(&ls.player)], vec![engine_active(&ls.enemy)]);
-        let (sp, stats, moves) = {
-            let d = &state.opponent_battlers[0];
-            (d.species, d.stats.clone(), d.moves.clone())
-        };
-        state.player_battlers[0].species = sp;
-        state.player_battlers[0].stats = stats;
-        state.player_battlers[0].moves = moves;
-        let effects = vec![EffectState {
-            id: EffectId(1),
-            host: BattlerRef::PLAYER,
-            effect_order: 0,
-            kind: PokeVolatile::Transformed,
-        }];
+        // Obtain the complete poststate, including packed PP, from the actual
+        // Transform handler rather than fabricating only its identity/marker.
+        let (mut state, mut effects) = engine_state_from_legacy(&ls);
+        install_canonical();
+        clear_current_moves();
+        set_current_move(BattlerRef::PLAYER, *MoveData::get(MoveId::Transform).unwrap());
+        let mut rng = ScriptedRng::new(vec![0]);
+        StackDriver::execute_turn_logged(
+            &PokeredRules,
+            &mut state,
+            &mut effects,
+            [BattleAction::Fight { move_: MoveId::Transform }, BattleAction::Nothing],
+            &mut rng,
+        );
         apply_engine_to_legacy(&mut ls, &state, &effects);
         assert_eq!(ls.player.active_mon().species, Species::Tauros, "species copied");
         assert_eq!(ls.player.active_mon().pp, [5, 0, 0, 0], "only copied known slots get 5 PP");
