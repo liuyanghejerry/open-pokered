@@ -1,3 +1,15 @@
+# Trainer AI after a consumed turn
+
+玩家逃跑失败、切换或成功使用物品消耗回合后，统一进入同一次 TrainerAI，再由其特殊行动或普通招式结束敌方回合。成功药品仍保留真实 Delay50、结果确认与仅一次消耗；取消、无效物品不调用AI。
+
+## 当前集成
+
+#263 实际合入后整合 master `091fdd8d6f86fa59a02f917280d984ff6e9e590c`，相对该master仅两个核心源码/测试文件。全部2171项编译输入及 docs 外 2690 项Git blob/模式与受测 `e912884c35d5c44d2a05bcf2d40a72528c54abca` 一致；原v3的909组 core2924、app316/39忽略、determinism10通过。v3整批在后续905失败，不写作整批通过。仅整理身份及本PR日志，没有重建/重录。
+
+`publication-973.json` / `publication-973-logs.zip` 保留精确证明。截图仍为 literal6d30 / focused4dcb，同fixture/完整1080按钮前缀/帧1080，两次重复；不是e912或本次master重录。原作、before、after各6次普通SAVE和保护控制保留各自历史身份；不声称跨provider随机数/HP/AI次数相等。新head需三个远程工作流全部通过。
+
+## 旧证据及集成记录（历史）
+
 # 玩家用道具、主动换人后仍执行训练家 AI
 
 原作在玩家成功使用道具或主动换人后，仍会咨询训练家自己的换人、道具 AI。复刻的 `EnemyFreeTurnAfterItem` 和主动换人均进入 `run_enemy_free_turn_stack`，该路径直接执行敌方招式，没有普通 FIGHT 回合已有的 TrainerAI 回调。因此 Juggler 不能在这些回合换人，Misty 也不能使用 X DEFEND。
