@@ -1,0 +1,231 @@
+{
+  "scope": "Trainer-only actual-load seen registration. Source6 ordinary battle/Pokedex/SAVE controls plus authoritative b7c81-before6/events-after6. Historical native18 remains archived with its exact prior identities. No validation battle/state writes; construction is local-mechanic setup, not a whole reachable campaign.",
+  "source": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "primary_code": "engine/battle/core.asm:5992 LoadEnemyMonData link early jump; 6130 IndexToPokedex and seen flag only for wEnemyMonSpecies2.",
+    "loss": "Route3 actualYoungster#1 Rattata11/Ekans11. LegalBulbasaur12HP1 losesbeforeEkansappears; savedseen[1,19].",
+    "win": "Sameactualtrainer, legalBulbasaur30; actualRattata/Ekansbothappear; savedseen[1,19,23].",
+    "switch": "FuchsiaGym actualJuggler#4 Drowzee34/Hypno34, legalBulbasaur100 usesGrowl; naturalAI switchbeforeanyenemyfaints. Sourceultimatelyloses, nativeultimatelywins; seenonlycomparison, nooutcome/HP/RNGparityclaim."
+  },
+  "frozen_builds": {
+    "current-before": {
+      "compiled_commit": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+      "binary_sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9",
+      "git_status": "",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt-level=0 debug=0 incremental0"
+    },
+    "current-after": {
+      "compiled_commit": "669ab74a230b014fdec61976e4d40fa918046b2a",
+      "binary_sha256": "ad953cc62c455853e019d300d9799789e25c056614169b0729b1d9b30aabcde6",
+      "git_status": "",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt-level=0 debug=0 incremental0"
+    }
+  },
+  "historical_frozen_builds": {
+    "before": {
+      "compiled_commit": "dfeefa3411634e187119862288ad78d5a3e933fe",
+      "git_status": "",
+      "binary_sha256": "3d51184837e775a5ad10fa9a96f6a64bc8e0414d274432f3595efb7631c32209",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "b87e8b9790cc4eb76bca76ed579b26b862895d5fed31ca164e3fc9422a57c955"
+    },
+    "current-before": {
+      "compiled_commit": "7310d2989501c3a0d793c794244b51693ed692c2",
+      "git_status": "",
+      "binary_sha256": "d01ba5bb1a4659b225c0281901029ab2c3370bbcc2182462fc86471418315bf2",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "6f61741e2919c320c9f2a10d8748869a4f57b35abda369be2e93c699093595b5"
+    },
+    "after": {
+      "compiled_commit": "bfe83d2665671b529068970212b606059ce298bb",
+      "git_status": "",
+      "binary_sha256": "3418b1f28c0ba673ee153567233c0e904fbc2aec014f1594f485c6d584bfdcc4",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0",
+      "build_log_sha256": "aa41ed32f69a046a767aec6bcad4625928184d10566146287f8b641b683ded1c"
+    }
+  },
+  "implementation": "BattleState remains the sole party owner. BattleScreen loaded_enemy_slots is a six-slot request bitmask populated only at real initial load, faint replacement and TrainerAI SwitchPokemon. App consumes original party identities once; stable frames read no party slot. Link/wild/absent trainer class consume without new seen flags. Current snapshots preserve pending masks; missing legacy field reconstructs only current canonical slot. Ordinary SRAM load/soft reset clear abandoned notifications.",
+  "cases": [
+    {
+      "case": "loss",
+      "source_saved_seen": [
+        1,
+        19
+      ],
+      "before_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "after_saved_seen": [
+        1,
+        19
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
+      "source_sram_sha256": [
+        "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a",
+        "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a"
+      ],
+      "current_before_sram_sha256": [
+        "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e",
+        "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e"
+      ],
+      "current_after_sram_sha256": [
+        "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f",
+        "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 1416,
+      "paired_whole_sram_changed_offsets": [
+        9656,
+        13603
+      ],
+      "all_other_sram_bytes_unchanged": true
+    },
+    {
+      "case": "win",
+      "source_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "before_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "after_saved_seen": [
+        1,
+        19,
+        23
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
+      "source_sram_sha256": [
+        "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7",
+        "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7"
+      ],
+      "current_before_sram_sha256": [
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+      ],
+      "current_after_sram_sha256": [
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 2800,
+      "paired_whole_sram_changed_offsets": [],
+      "all_other_sram_bytes_unchanged": true
+    },
+    {
+      "case": "switch",
+      "source_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "before_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "after_saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "saved_owned_all": [
+        1
+      ],
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
+      "source_sram_sha256": [
+        "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88",
+        "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88"
+      ],
+      "current_before_sram_sha256": [
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+      ],
+      "current_after_sram_sha256": [
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 4912,
+      "paired_whole_sram_changed_offsets": [],
+      "all_other_sram_bytes_unchanged": true
+    }
+  ],
+  "repeat_checks": "Both repeats have identical ordinary inputs, all named checkpoint states/PNG hashes and final SRAM within each current provider/build. Current before/after fixtures and complete ordinary inputs match.",
+  "tests": {
+    "debug_scoped": {
+      "passed": 9,
+      "log": "audit-906-ci-fix-events-debug-scoped-v2.log"
+    },
+    "default_scoped": {
+      "passed": 9,
+      "log": "audit-906-ci-fix-events-default-scoped.log"
+    },
+    "core_full": {
+      "passed": 2887,
+      "failed": 0,
+      "log": "audit-906-ci-fix-events-core-full-v2.log"
+    },
+    "app_full": {
+      "passed": 289,
+      "ignored": 39,
+      "failed": 0,
+      "log": "audit-906-ci-fix-events-app-full.log"
+    },
+    "agent_determinism": {
+      "passed": 8,
+      "failed": 0,
+      "log": "audit-906-ci-fix-events-agent-determinism.log"
+    },
+    "explicit_debug_app_build": {
+      "passed": true,
+      "log": "audit-906-ci-fix-events-app-build.log"
+    },
+    "actual_ordinary_save_comparison": {
+      "source": 6,
+      "current_native": 12,
+      "passed": true,
+      "log": "audit-906-check-current-events.log"
+    }
+  },
+  "performance": "See ci-performance.json: exact old remote failure retained235>232.3; final actual-load notifications232 pass all seven unchanged gates twice. This does not assert latest remote CI completion.",
+  "limitations": [
+    "Actual Red source/native coverage remains Route3 first loss/full win and FuchsiaGym natural AI switch, each repeat2. No all-trainer/full-campaign claim.",
+    "AI source control ultimately loses while native uses Tackle to win after observing the switch. No final outcome/HP/RNG/whole-SRAM/frame/audio parity claim across providers.",
+    "Link/Transform/legacy snapshot/multiple queued loads are unit/static coverage, not new actual two-endpoint link or Ditto capture controls.",
+    "Initial per-frame implementation and failed caching iterations retain exact hashes/logs. Earlier dfee/7310/bfe actual captures are historical; final image metadata now points to freshly captured b7c81/669ab builds.",
+    "Failed original AI v1 required victory despite an actual loss, remains excluded and archived. Local GBA setup/compile failures and235/233 failed metrics also remain archived; no failed attempt relabelled PASS."
+  ],
+  "derived_source_cursor_erratum": "source-move-cursor-erratum.json; source driver actually kept selecting one-based first slot Growl and ultimately lost. The old thenTackle/victory record.scope suffix is intended behavior, not observed behavior. Original raw records and archives unchanged.",
+  "later_integration": "master-6085-integration.json: additive Poke Doll confirmation/snapshot integration. Original actual captures and local GBA measurements retain exact b7c81/669ab identities and are not relabelled as rebuilt integration-head evidence."
+}
