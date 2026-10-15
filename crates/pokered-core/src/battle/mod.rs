@@ -1505,9 +1505,7 @@ impl BattleScreen {
         // (engine/battle/end_of_battle.asm:48). Gen-1 wins always come
         // from wiping the enemy party (wild: core.asm:793; trainer:
         // core.asm:916); the battle-over phases cover escape/loss/catch.
-        // Safari never draws the player's HP HUD, so it cannot enable the
-        // alarm. This also lets its successful catch play CaughtMon normally.
-        if self.is_safari || self.enemy_party_wiped()
+        if self.enemy_party_wiped()
             || matches!(
                 self.phase,
                 BattlePhase::TrainerVictory { .. } | BattlePhase::BattleOver { .. }
@@ -1519,7 +1517,9 @@ impl BattleScreen {
             return false;
         }
         let pixels = (self.player_hp as u32 * 48 / self.player_max_hp as u32).max(1);
-        pixels < 10
+        // Safari never draws the player's HP HUD, so it cannot enable the
+        // alarm. Check its mode only when HP could actually enable an alarm.
+        pixels < 10 && !self.is_safari
     }
 
     /// All enemy party members fainted — the point where the original
