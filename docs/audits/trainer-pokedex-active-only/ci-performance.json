@@ -128,5 +128,6 @@
     }
   },
   "remaining_gate": "Full remote platform, GBA memory and frame-pacing checks remain a separate required merge gate; these local results do not assert any remote check conclusion.",
-  "retained_failures": "Initial old remote failure and all cached235/233 measurements kept. Local setup127/workspace101 and the first core-test private-callee E0061 are kept with corrected subsequent logs; none count as PASS."
+  "retained_failures": "Initial old remote failure and all cached235/233 measurements kept. Local setup127/workspace101 and the first core-test private-callee E0061 are kept with corrected subsequent logs; none count as PASS.",
+  "later_master6085_integration": "See master-6085-integration.json and its separate logs ZIP. Production merge222605b2 built with the same nightly; all seven unchanged gates passed once with exactly the same metrics as669ab. Remote exact-head CI remains required."
 }

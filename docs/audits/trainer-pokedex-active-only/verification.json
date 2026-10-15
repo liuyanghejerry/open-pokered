@@ -225,5 +225,7 @@
     "Link/Transform/legacy snapshot/multiple queued loads are unit/static coverage, not new actual two-endpoint link or Ditto capture controls.",
     "Initial per-frame implementation and failed caching iterations retain exact hashes/logs. Earlier dfee/7310/bfe actual captures are historical; final image metadata now points to freshly captured b7c81/669ab builds.",
     "Failed original AI v1 required victory despite an actual loss, remains excluded and archived. Local GBA setup/compile failures and235/233 failed metrics also remain archived; no failed attempt relabelled PASS."
-  ]
+  ],
+  "derived_source_cursor_erratum": "source-move-cursor-erratum.json; source driver actually kept selecting one-based first slot Growl and ultimately lost. The old thenTackle/victory record.scope suffix is intended behavior, not observed behavior. Original raw records and archives unchanged.",
+  "later_integration": "master-6085-integration.json: additive Poke Doll confirmation/snapshot integration. Original actual captures and local GBA measurements retain exact b7c81/669ab identities and are not relabelled as rebuilt integration-head evidence."
 }
