@@ -3477,14 +3477,12 @@ learn {learn_name}!")];
     }
 
     fn use_poke_doll(&mut self) {
-        self.consume_selected_item();
         self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
         // ItemUsePokeDoll sets wEscapedFromBattle but never wBattleResult —
         // recorded so escape outcomes can be told apart from a menu run.
         self.escaped_via_poke_doll = true;
-        self.bag_menu = None;
         self.show_text_then(
-            vec!["Got away safely!".to_string()],
+            vec![format!("{} used\nPOKé DOLL!", self.player_name.as_deref().unwrap_or("RED"))],
             BattlePhase::BattleOver {
                 won: false,
                 escaped: true,
@@ -4710,6 +4708,13 @@ learn {learn_name}!")];
 
     pub fn post_text_transition(&mut self) {
         match &self.phase {
+            BattlePhase::BattleOver { escaped: true, .. } if self.escaped_via_poke_doll => {
+                // PrintItemUseTextAndRemoveItem removes the doll only after
+                // its A/B confirmation. Clearing the retained menu makes
+                // this continuation idempotent without another item owner.
+                self.consume_selected_item();
+                self.bag_menu = None;
+            }
             BattlePhase::PlayerMenu => {
                 self.battle_menu = BattleMenuState::new();
             }
