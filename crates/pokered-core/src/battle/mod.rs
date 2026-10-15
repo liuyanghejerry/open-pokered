@@ -33,6 +33,8 @@ use dotzuki_engine::battle::rng::BattleRng as _;
 #[cfg(test)]
 mod menu_tests;
 #[cfg(test)]
+mod max_pp_menu_tests;
+#[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
 mod trainer_free_turn_tests;
@@ -1686,7 +1688,7 @@ impl BattleScreen {
             .enumerate()
             .filter(|(_, m)| **m != MoveId::None)
             .map(|(i, m)| {
-                let max_pp = MoveData::get(*m).map_or(0, |d| d.pp);
+                let max_pp = crate::items::pp_restore::get_max_pp_with_ups(*m, mon.pp_ups[i] & 3);
                 MoveSlot {
                     move_id: *m,
                     current_pp: mon.pp[i],
@@ -1709,7 +1711,7 @@ impl BattleScreen {
             .enumerate()
             .filter(|(_, m)| **m != MoveId::None)
             .map(|(i, m)| {
-                let max_pp = MoveData::get(*m).map_or(0, |d| d.pp);
+                let max_pp = crate::items::pp_restore::get_max_pp_with_ups(*m, mon.pp_ups[i] & 3);
                 MoveSlot {
                     move_id: *m,
                     current_pp: mon.pp[i],

@@ -625,6 +625,8 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
         mon.type2 = t2;
         mon.moves = moves4;
         mon.pp = core::array::from_fn(|i| if moves4[i] == MoveId::None { 0 } else { 5 });
+        // Transform writes packed PP byte 5: the copied working slots have no PP Ups.
+        mon.pp_ups = [0; 4];
         let raw = crate::battle::badge_boosts::unmodified_stats(b);
         party.unmodified_attack = raw[0]; party.unmodified_defense = raw[1];
         party.unmodified_speed = raw[2]; party.unmodified_special = raw[3];
