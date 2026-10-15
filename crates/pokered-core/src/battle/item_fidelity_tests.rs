@@ -346,12 +346,15 @@ fn ether_in_battle_restores_selected_move() {
         11,
         "Ether restores +10 PP (1 → 11)"
     );
-    assert_eq!(bag_quantity(&battle, ItemId::Ether), 0, "the Ether is consumed");
+    assert_eq!(bag_quantity(&battle, ItemId::Ether), 1, "PrintText has not been acknowledged");
     assert!(
         current_message(&battle).contains("PP was restored"),
         "expected _PPRestoredText, got {:?}",
         current_message(&battle)
     );
+    for _ in 0..20 { battle.update_frame(BattleInput::none()); }
+    battle.update_frame(input(false, true));
+    assert_eq!(bag_quantity(&battle, ItemId::Ether), 0, "final ACK consumes the Ether");
 }
 
 /// A 0-PP move row is selectable in the item menu (no FIGHT-menu NoPP veto) —
@@ -425,6 +428,9 @@ fn elixir_in_battle_restores_all_moves_without_move_menu() {
     let mon = &battle.battle_state.as_ref().unwrap().player.party[0];
     assert_eq!(mon.pp[0], 11, "move 0 restored +10");
     assert_eq!(mon.pp[1], 12, "move 1 restored +10");
+    assert_eq!(bag_quantity(&battle, ItemId::Elixer), 1);
+    for _ in 0..20 { battle.update_frame(BattleInput::none()); }
+    battle.update_frame(input(false, true));
     assert_eq!(bag_quantity(&battle, ItemId::Elixer), 0);
 }
 

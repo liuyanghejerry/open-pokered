@@ -1,0 +1,563 @@
+{
+  "schema": "pp-restore-release-1013-local-preparation-v1",
+  "status": "INTEGRATED_SOURCE_IDENTICAL_AWAITING_REMOTE_CI",
+  "prepared_from_tested1011": "cb8e6b7da2abd7e8b4442ce545c827136f3f71d5",
+  "release_branch": "fix/battle-pp-restore-caller-1013",
+  "future_parent": {
+    "PR": 269,
+    "required": "ActualMERGED at the head recorded by root-reviewed1010publisher; validmerge ancestor freshlyfetchedmaster. Unknown until publication; no historicalhead relabel."
+  },
+  "source_identity": {
+    "complete_compiler": 2175,
+    "NUL_non_docs_including_literal_symlink_and_modes": 2693,
+    "gfx": 702,
+    "all_7_before_after_full_records_and_current_bytes_modes_blobs_equal": true,
+    "clean_HEAD": true
+  },
+  "source_changes": {
+    "relative965": "Only render/overworld.rs and render/session.rs including both preserved adjacenttests; sourceconflict original and unionresolution inZIP.",
+    "relative1008_own_paths": [
+      "crates/pokered-app/src/battle_pp_restore_tests.rs",
+      "crates/pokered-app/src/game.rs",
+      "crates/pokered-app/src/render/battle.rs",
+      "crates/pokered-app/src/render/battle_medicine_tests.rs",
+      "crates/pokered-app/src/render/session.rs",
+      "crates/pokered-core/src/battle/item_fidelity_tests.rs",
+      "crates/pokered-core/src/battle/mod.rs",
+      "crates/pokered-core/src/battle/pp_restore_caller_tests.rs",
+      "crates/pokered-core/src/battle/state.rs",
+      "crates/pokered-ui/src/menus/battle_move.rs"
+    ]
+  },
+  "new1011_validation": {
+    "head": "cb8e6b7da2abd7e8b4442ce545c827136f3f71d5",
+    "counts": {
+      "appdebug": {
+        "passed": 334,
+        "ignored": 39
+      },
+      "appdefault": {
+        "passed": 323,
+        "ignored": 37
+      },
+      "determinism": {
+        "passed": 10,
+        "ignored": 0
+      }
+    },
+    "GBA_gate_count": 31,
+    "all_seven_checks_terminal0": true,
+    "movement_max": 3103,
+    "trainer_update": 224,
+    "idle_update": 349,
+    "Oak_draw": 2994,
+    "current_GBA_ROM_sha256": "b24ea88c6081492a900a60870a01c803d2bbc3f6af23ee7db3615f7c36d8f2d7",
+    "no_new_actual_SAVE": true
+  },
+  "retained_core": {
+    "tested_head": "016a606c46e3ccec39df8d61865a2454ba38fe8d",
+    "passed": 2944,
+    "not_new1011core_test": true,
+    "all_core_data_Cargo_vendor_bytes_modes_blobs_equal": true,
+    "proof_file": "audit-1011-retained-core-proof.json"
+  },
+  "historical965": {
+    "source_head": "016a606c46e3ccec39df8d61865a2454ba38fe8d",
+    "binary_identity": {
+      "head": "016a606c46e3ccec39df8d61865a2454ba38fe8d",
+      "source_freeze": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-965-source-freeze.json",
+      "compiler_source_count": 2173,
+      "all_non_doc_count": 2692,
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-965-integration-debug",
+      "binary_sha256": "14a481ea081fe8bcbfd9ef7216b3ca37fd6238af9e8c7eebfa12442dab09a5bf",
+      "source_bytes_unchanged_after_4_suites": true,
+      "build_via": "cargo test -p pokered-app --test agent_determinism --features debug-server --locked; final integration binary built by Cargo"
+    },
+    "script_sha256": "6e4491fa2e6b002a3d26790122faa7cc43645829d91f9bbd1eb24ff369b957bd",
+    "fixture_sha256": "6ae674c92d65cbb07661dcb723346d9b1a3033dc2fabe0158bbffb09fb24c34a",
+    "frozen_af3_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ditto-transform-ether/after/record.json",
+    "af3_source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+    "full_prefix_frames": 1584,
+    "prefix_buttons_sha256": "9cf2e351bf88130e47c949c893dea222cee35b3067423e94e9e316c0e3125f8c",
+    "all1584_public_states_exact_equal": true,
+    "images": [
+      {
+        "frame": 952,
+        "tag": "move-menu",
+        "sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+        "af3_sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+        "byte_equal": true
+      },
+      {
+        "frame": 1584,
+        "tag": "paused-result",
+        "sha256": "51da623d45b9dff07a61f5d20115061b6c6f6aad86a42d3787ec933167825bfb",
+        "af3_sha256": "51da623d45b9dff07a61f5d20115061b6c6f6aad86a42d3787ec933167825bfb",
+        "byte_equal": true
+      }
+    ],
+    "result_single_ACK_consumes_once": true,
+    "persistentDittoTransformPP10_via_readonly_export": true,
+    "working_moves_PP_after_ACK": [
+      10,
+      0
+    ],
+    "separately_labeled_continuation_frames": 400,
+    "ordinary_SAVE": false,
+    "scope": "One preserved935af3 prefix, no retiming; then separately recorded singleACK/normalreturn/FIGHT/readonlyexport. No original/BEFORE/SAVE rerun; CLI logicalSFX only."
+  },
+  "historical965_old_scope": {
+    "compiler_original_manifest": 2173,
+    "complete_compiler_annex": 2175,
+    "non_doc_regular_original": 2692,
+    "complete_NUL_modes_literal_symlink_annex": 2693,
+    "no_test_rerun_for_scope_annex": true
+  },
+  "historical_primary935": {
+    "source_original": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "primary935ordinary_SAVE": {
+      "original": 14,
+      "native_before": 14,
+      "native_after": 14
+    },
+    "primary935before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+    "primary935after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+    "primary_strict_states_both_providers": 11056,
+    "literal_master_before": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+    "literal_supplement_states": 5528,
+    "literal_supplement_sameframe_surfaces": 7,
+    "literal_supplement_new_SAVE": 0,
+    "mimic949": {
+      "original": 1,
+      "literal_a2fa_before": 1,
+      "af3_after": 1,
+      "ordinary_SAVE": 3,
+      "scope": "one run/provider Ether+fullEthernegative only; existing935fix corroborated; not newlyexecuted965"
+    }
+  },
+  "historical_screenshot_pairs": [
+    {
+      "surface": "ether-choice",
+      "case": "ether-second-success",
+      "frame": 688,
+      "fixture_sha256": "42433a87c40e31f0407d0456e82763dcf031f104635dad4dd3872b7471d48b32",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-ether-choice-before.png",
+        "sha256": "47bd77017eac379d7bdb10bfc01573c199eae3f0e800939e11d1935d4616bfd2",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ether-second-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-ether-choice-after.png",
+        "sha256": "013a48bda37312c9989b6f1181a52fd8130959284eb9901ed8845b0a8d66ec3d",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ether-second-success/after/record.json"
+      }
+    },
+    {
+      "surface": "ether-result",
+      "case": "ether-second-success",
+      "frame": 1328,
+      "fixture_sha256": "42433a87c40e31f0407d0456e82763dcf031f104635dad4dd3872b7471d48b32",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-ether-result-before.png",
+        "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ether-second-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-ether-result-after.png",
+        "sha256": "0a2a7ec56469049ea95e65ae8b96f0720bfd9f2c118a26f089ad1ae5280e4c55",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ether-second-success/after/record.json"
+      }
+    },
+    {
+      "surface": "elixir-result",
+      "case": "elixer-all-success",
+      "frame": 1288,
+      "fixture_sha256": "4a2c2253f49367b61450ccc6e2349b5bbf21a05fdc87287cd624790d692872f0",
+      "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-elixir-result-before.png",
+        "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/elixer-all-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-elixir-result-after.png",
+        "sha256": "888e2cf6f25112f6f60269f4a1341bbeed258273c4b458a178c2bf58fd21e66f",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/elixer-all-success/after/record.json"
+      }
+    },
+    {
+      "surface": "transform-choice",
+      "case": "ditto-transform-ether",
+      "frame": 952,
+      "fixture_sha256": "6ae674c92d65cbb07661dcb723346d9b1a3033dc2fabe0158bbffb09fb24c34a",
+      "buttons_sha256": "9cf2e351bf88130e47c949c893dea222cee35b3067423e94e9e316c0e3125f8c",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-transform-choice-before.png",
+        "sha256": "93401836362f70fbea557e173838725c836219dbf5ecee29989759a13efe3b7c",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ditto-transform-ether/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-transform-choice-after.png",
+        "sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ditto-transform-ether/after/record.json"
+      }
+    }
+  ],
+  "independent949": {
+    "verification": "mimic-949-verification.json",
+    "archive": "mimic-949-archive.json",
+    "report": "mimic-949-report.md",
+    "evidence": "mimic-949-evidence.zip",
+    "ordinary_SAVE": 3,
+    "providers": [
+      "original",
+      "literal_a2fa_before",
+      "frozen_af3_after"
+    ],
+    "limits": "Single Ether restored originalMimic; secondfullEther no-effect; copieduse then switch/SAVE. No newMaxitem/MimicPPUp/link/Transformnested/IRQ/audio conclusions."
+  },
+  "explicit_archive": {
+    "path": "publication-1013-logs.zip",
+    "bytes": 4592936,
+    "sha256": "9b708c642af651c1997edb30fbb250c1bbe50f9b70847e5bb3166c383a5b77d0",
+    "paths": 68,
+    "unique_blobs": 68,
+    "all_readback_equal_originals": true,
+    "input_paths": {
+      "audit-965-final-handoff.json": {
+        "sha256": "a1006290212200476d1aa0e93aeb562dd53683d116900ef6b3c3b1438974e8a5",
+        "bytes": 3976
+      },
+      "audit-965-results.json": {
+        "sha256": "76070de99a1eeb121d877ae7e48d7db5bcf6a0ef34c4409fa16d6e59b105bb57",
+        "bytes": 3089
+      },
+      "audit-965-source-freeze.json": {
+        "sha256": "c72f738c53bd29955fabe2a34ca91e93f7d2099c9da26a490f4e5ae25878b32b",
+        "bytes": 662913
+      },
+      "audit-965-integration-identity.json": {
+        "sha256": "9b977b32b6d00a56d3354db6bd1a7900c74009f86571af9c82fcf30104e00c2c",
+        "bytes": 611
+      },
+      "audit-965-plan.json": {
+        "sha256": "fe79d22fe51a0634af6eda65c649823cde496b1c8f2505b3190d57285649951c",
+        "bytes": 1825
+      },
+      "audit-965-prepare.py": {
+        "sha256": "2c79c0423990306f2e13206a49f22aaa97a654c7fd891568dec3ba13f3a8f2c3",
+        "bytes": 2672
+      },
+      "audit-965-run-checks.py": {
+        "sha256": "158b5b98c708c01adfd403388a271baea7a8e7582123b63c498735623c51353d",
+        "bytes": 1885
+      },
+      "cargo-965-host.sh": {
+        "sha256": "1ac83150be03940d26d5ea8bf06ef910dbbb36da00da96113de335c72c5c1696",
+        "bytes": 814
+      },
+      "audit-965-935-merge-conflict.patch": {
+        "sha256": "b54f45d32778af66d119e99f63eac56637b1fe81dd1907c2fc34ad4be76629a3",
+        "bytes": 1890
+      },
+      "audit-965-replay-transform-prefix.py": {
+        "sha256": "6e4491fa2e6b002a3d26790122faa7cc43645829d91f9bbd1eb24ff369b957bd",
+        "bytes": 5739
+      },
+      "audit-965-transform-prefix.log": {
+        "sha256": "ecbffdcca9b78adad7f081a911c89d61e59d21cc4ee156d2d55bdb72604fcf99",
+        "bytes": 126
+      },
+      "audit-970-root-review-965.json": {
+        "sha256": "7b5e60f211e22c416c8d851ba472ff37e20f6098ab07a5329342c71424eee2c8",
+        "bytes": 860
+      },
+      "audit-970-root-review-965.py": {
+        "sha256": "ec1b97105a6d9127db94d63e22df67968000fca6979aef3d5ac1e15afe6e85da",
+        "bytes": 3581
+      },
+      "audit-979-complete-nondoc-965.json": {
+        "sha256": "bfdaa95f1554e0421603dbe51f20344bf26b47342adfb5aefd142f4021687f67",
+        "bytes": 623870
+      },
+      "fixture.json": {
+        "sha256": "6ae674c92d65cbb07661dcb723346d9b1a3033dc2fabe0158bbffb09fb24c34a",
+        "bytes": 18015
+      },
+      "states.json": {
+        "sha256": "b9d97f34af2bea3c9c0757853d0a631916f61a2ca7fc0efe062716864217df08",
+        "bytes": 18053292
+      },
+      "continuation-buttons.json": {
+        "sha256": "988111bb3d347eae79d66cacf3c76537432d02938b603a533385672f9c720019",
+        "bytes": 2396
+      },
+      "continuation.json": {
+        "sha256": "c022884ee582f3ad67f5596e915eddc901a89678cf3d9c39d27a2e8015f4aaaf",
+        "bytes": 149550
+      },
+      "readonly-exports.json": {
+        "sha256": "07a6de8d29b9edf49cac2e3a6d4fcef45456411a3088ef34f4a43199e1983528",
+        "bytes": 42668
+      },
+      "verification.json": {
+        "sha256": "782570209d605832db62299f93ee004a3cc8300657d7e4e9096bd9108d8ec662",
+        "bytes": 2230
+      },
+      "move-menu.png": {
+        "sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+        "bytes": 3835
+      },
+      "paused-result.png": {
+        "sha256": "51da623d45b9dff07a61f5d20115061b6c6f6aad86a42d3787ec933167825bfb",
+        "bytes": 3550
+      },
+      "game.log": {
+        "sha256": "dc13d3ea5f670bbfbd0a29c7271e7006ad5d5f0808b765376d46d77b432a213c",
+        "bytes": 566
+      },
+      "audit-965-core.log": {
+        "sha256": "c54ac0614e7c624b4b787e3939ca99013e72a6ba2773755ba1956f3be6a9f4e4",
+        "bytes": 250669
+      },
+      "audit-965-appdebug.log": {
+        "sha256": "733a78bbc791c51d2e268f3ed6e1f5760ef093e1daa3e1232f57bd4cbd1ba91d",
+        "bytes": 93732
+      },
+      "audit-965-appdefault.log": {
+        "sha256": "e896c9fb1975f53dbbe99828e0d20cada4fe7e39cb2622085a90a20a9f05c9b0",
+        "bytes": 85360
+      },
+      "audit-965-determinism.log": {
+        "sha256": "d9cee28bb37313c130cf6f26378ad4c107fc96831ff6a531e3dda65e558759a3",
+        "bytes": 80222
+      },
+      "audit-1001-965-compiler-nondoc-annex.json": {
+        "sha256": "bcd50ce0b33b9677b094c8dd05c6c66663477769cee4db6bfe590fa917edb877",
+        "bytes": 1132863
+      },
+      "audit-1011-finalize.py": {
+        "sha256": "f811dd46613e3fea09c89ea8566b1aacc5749090514bb54cad0876b194ee2aee",
+        "bytes": 9041
+      },
+      "audit-1011-own-check-results.json": {
+        "sha256": "fdc291954b91fdb22e9e51a1bab101fe02c9700b62f1694a67545801b56c1b49",
+        "bytes": 10417
+      },
+      "audit-1011-own-check-plan.json": {
+        "sha256": "8a46c533fe0c9ebae3e3a9d257f3009bd97800c80636b545a4368f51df5a7d90",
+        "bytes": 6136
+      },
+      "audit-1011-own-source-before.json": {
+        "sha256": "da2f384fde2526c0112bf7260283d0d873e9b3e6ecf33587cf77758efa26c935",
+        "bytes": 1199014
+      },
+      "audit-1011-own-gba-mirror.json": {
+        "sha256": "04f7b4ae1f77a1ac7c5bb5743732e9a54ca5d172407f5547d39e1886cb2ea599",
+        "bytes": 504853
+      },
+      "audit-1011-own-source.patch": {
+        "sha256": "e43d5643226b6328a398345c4dfd8226150f6dcfe9e74e2a4aef6ebea8978259",
+        "bytes": 8425
+      },
+      "audit-1011-private-source-mapping.json": {
+        "sha256": "60170d1399266fa5f190e0262340b5cbf8ebf0a85dafae7d07b61aa0b0cef4e1",
+        "bytes": 240000
+      },
+      "audit-1011-retained-core-proof.json": {
+        "sha256": "6c504b872973cca806db4d6bdfa188c38450ccd6d96cea95be734abee4a2b745",
+        "bytes": 1162
+      },
+      "audit-1011-run-own-checks.py": {
+        "sha256": "dc351761b72172b1e704ed4ae42874e8f3b410359fd928aeb8ce7b9769ef4d56",
+        "bytes": 5531
+      },
+      "audit-1011-own-runner-preflight.json": {
+        "sha256": "d2e14a90f3a5a7a88c903c1d3cff96ad53076c4918dc1b509bae92bea965ec86",
+        "bytes": 5209
+      },
+      "audit-1011-root-prereview.json": {
+        "sha256": "1bc7aba5b288720923966bc39f5913e367629f36539fe2e27416716cac1ced27",
+        "bytes": 1408
+      },
+      "cargo-1011-host.sh": {
+        "sha256": "a07a43f8c99fd212fca8d9b1672a35ce4663d4604e357585ed74b5ea2c7078a0",
+        "bytes": 778
+      },
+      "cargo-1011-gba.sh": {
+        "sha256": "0c78b0f63f5bfe244917fcb64ba42e88c8c67bc37c20b5b08e3a7d80f3f3c4ad",
+        "bytes": 566
+      },
+      "audit-1011-merge-1008.log": {
+        "sha256": "1dcb884c950e44bbd8212a88e0d8da350d61dcaee34a930c9cd7ea129d0505f6",
+        "bytes": 199
+      },
+      "audit-1011-merge-result.json": {
+        "sha256": "000236ec553b021fc732757c66d8774bce5e502263bbefa0dbe4a75feeb19241",
+        "bytes": 1354
+      },
+      "audit-1011-merge-resolution.json": {
+        "sha256": "ae35c2959d3f9ff849586d2539a3cb20a91fb6296b56b0999e1e55f36a3d9608",
+        "bytes": 1307
+      },
+      "audit-1011-merge-resolution.log": {
+        "sha256": "07af08056dbc92eaf7a504ce0456b9acf4e69f18a0ddc9f2cd56962599910828",
+        "bytes": 124
+      },
+      "audit-1011-session-conflict-original.rs.txt": {
+        "sha256": "ca89a745cf92bf713a4ab1782bfdc92210cd6213fd61995bfa19f975a6c91b14",
+        "bytes": 147004
+      },
+      "audit-1011-prepare-own-checks.py": {
+        "sha256": "41e1095c3720f7cc6b4578815bc2b2b6d2c9fd61d1305bcf6448e96b2e4264ad",
+        "bytes": 9034
+      },
+      "audit-1011-own-checks-console.log": {
+        "sha256": "4756abc7839d331c0ffcb3a14864693f89f523b096e682554fe490632c7a9d69",
+        "bytes": 265
+      },
+      "audit-1011-own-gba-perf.json": {
+        "sha256": "b1359c3bb561dbf814c2a61169e81bc51730ba05645acbb75a7d79870271233a",
+        "bytes": 2584
+      },
+      "audit-1011-own-gba-perf-raw.log": {
+        "sha256": "b7f82eb792562694155eb09f717378036f5b92369c5e930c8f4be76fbae2bfd8",
+        "bytes": 16400
+      },
+      "audit-1011-own-appdebug.log": {
+        "sha256": "bdc479ae486df00e42215d4e0e76b6c867aa8bae93e531aa86fc6dd7de3f20c1",
+        "bytes": 95589
+      },
+      "audit-1011-own-source-after-appdebug.json": {
+        "sha256": "3c58b582c2c9247d25fe255cf380957f750cfb68a6d0b27def6eb6c82091d70d",
+        "bytes": 1199300
+      },
+      "audit-1011-own-appdefault.log": {
+        "sha256": "3b9c448639e8371f44bdd3f4cfae90039d9c44112687faca0abdc21272460a14",
+        "bytes": 85432
+      },
+      "audit-1011-own-source-after-appdefault.json": {
+        "sha256": "49bd658fac33fb34f6f16a5ad99bb91825dd6c70b05c004c31c403602504fc7e",
+        "bytes": 1199302
+      },
+      "audit-1011-own-determinism.log": {
+        "sha256": "5453d3087afd841c39757371fd6dcc0bf735b94940a6ef0db515d3f244a9d4ad",
+        "bytes": 80180
+      },
+      "audit-1011-own-source-after-determinism.json": {
+        "sha256": "70f83440293d910a0b2f89aa07ae4061be0dc7bb216100207f865844f696d7ab",
+        "bytes": 1199303
+      },
+      "audit-1011-own-gba-build.log": {
+        "sha256": "f37b8d9c2e05421efee6323cbc4159def5b14131d04aa8497ec98fc4127c7879",
+        "bytes": 68426
+      },
+      "audit-1011-own-source-after-gba-build.json": {
+        "sha256": "c6fc02bb409998a826b3347214afc6a0c3148997dcedfad9f2ff4100095402b4",
+        "bytes": 1199301
+      },
+      "audit-1011-own-gba-fix.log": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "audit-1011-own-source-after-gba-fix.json": {
+        "sha256": "0bf5e29129551432c5d336f84521e4deafa261f3f8485ffd9561b2f75ff38bf9",
+        "bytes": 1199299
+      },
+      "audit-1011-own-gba-record.log": {
+        "sha256": "9720835761f8e5eec4f66e6f42cf94615a5453b240e3a5740a2a418a71b3462a",
+        "bytes": 19217
+      },
+      "audit-1011-own-source-after-gba-record.json": {
+        "sha256": "60e2b47620ba86e7cdf378300d905a405704c3a3350a43a098e73d03d80b6dd4",
+        "bytes": 1199302
+      },
+      "audit-1011-own-gba-compare.log": {
+        "sha256": "8308345beb6bdad235e212d78082406450f6055b7973f8617dc834d213a32994",
+        "bytes": 2464
+      },
+      "audit-1011-own-source-after-gba-compare.json": {
+        "sha256": "6c714fb70ff29d2ce944065ff5864f0325384b9fef152d03f65f85af993215fb",
+        "bytes": 1199303
+      },
+      "audit-1011-final-handoff.json": {
+        "sha256": "632157bc2542f6531456e007756e36034d76f9fb00b9c3922831029e7eeb046a",
+        "bytes": 270626
+      },
+      "audit-1011-final-handoff.md": {
+        "sha256": "35b3b3efa6ca0f17199248a88f298d3a243dbb39d1b1431d2db25f96a6cf4be2",
+        "bytes": 2180
+      },
+      "audit-1013-979-965-only.json": {
+        "sha256": "09ab2d0f3269d4fd7842a1c049c0051d713fab07ba3db89f7a65ade62243d494",
+        "bytes": 1001
+      },
+      "audit-1013-prepare-docs.py": {
+        "sha256": "7772ad43ffe2868975117efec16abce4b8fd1c1190c22ebcc6d417cf56753885",
+        "bytes": 12176
+      }
+    }
+  },
+  "old_ZIPs_unchanged": {
+    "evidence.zip": "00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966",
+    "literal-master-before-evidence.zip": "7e1a710812e4d131be6d5a39b178f61e0f6ed93ee5c47432a67c243e031f76bc"
+  },
+  "README_before_sha256": "0131f5aee4137b50d8d41859ceb3320b81e62d432a38622fe65df13023c67b0d",
+  "publication_policy": "No builds/actual/remoteactions in1013 preparation. Publisher can run onlyafter rootreview+actual269MERGED; mergefreshmaster then all2175compiler/2693NUL/GFX702 identicaltested1011, otherwiseSTOP. Onlydocs may change. Onepush/newPRcreate, fullrawHTTP8images+publicdocs, three exacthead workflowtriggers; no rerun/no merge/no claimremoteCIgreen.",
+  "actual_master": "26bd605039be996a9cedbf02ed25e6114ac930ae",
+  "parent269": {
+    "baseRefName": "master",
+    "headRefName": "fix/field-medicine-success-text-920",
+    "headRefOid": "5f4f3ac907463c9f917ddeba6bf6814c6c3deacb",
+    "mergeCommit": {
+      "oid": "26bd605039be996a9cedbf02ed25e6114ac930ae"
+    },
+    "mergedAt": "2026-10-15T14:19:46Z",
+    "number": 269,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/269"
+  },
+  "parent1010_publication_sha256": "49d575d62c567b7c63749ff172c44373088c0144b3ba546b3e47d6afd2724551",
+  "integrated_source_before_doc_commit": "68e8189961b24029487628a9ee3ca0ba187076b9",
+  "final_identity": {
+    "tested_source": "cb8e6b7da2abd7e8b4442ce545c827136f3f71d5",
+    "compiler_count": 2175,
+    "all_compiler_bytes_modes_equal": true,
+    "all_NUL_non_doc_count": 2693,
+    "all_NUL_non_doc_blobs_modes_literal_symlinks_equal": true,
+    "gfx_count": 702,
+    "all_gfx_equal": true
+  },
+  "own_source_paths": [
+    "crates/pokered-app/src/battle_pp_restore_tests.rs",
+    "crates/pokered-app/src/game.rs",
+    "crates/pokered-app/src/render/battle.rs",
+    "crates/pokered-app/src/render/battle_medicine_tests.rs",
+    "crates/pokered-app/src/render/session.rs",
+    "crates/pokered-core/src/battle/item_fidelity_tests.rs",
+    "crates/pokered-core/src/battle/mod.rs",
+    "crates/pokered-core/src/battle/pp_restore_caller_tests.rs",
+    "crates/pokered-core/src/battle/state.rs",
+    "crates/pokered-ui/src/menus/battle_move.rs"
+  ],
+  "publisher_sha256": "e3effa7fd98d1da67a673073267ae910938aa801b981578d311673fed8b54074",
+  "no_rebuild_replay_relabelling": true
+}

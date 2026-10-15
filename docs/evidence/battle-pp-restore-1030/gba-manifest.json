@@ -1,0 +1,515 @@
+{
+  "schema": "1030-portable-host-GBA-evidence-v1",
+  "status": "PRIVATE_FROZEN_PACKAGE_NOT_RELEASE_OR_OFFICIAL_CI",
+  "created_utc": "2026-10-15T17:19:57.430666+00:00",
+  "game_head": "9624c7f8e4f793a57abd4c940b9a8d2a8b99fdee",
+  "engine_head": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+  "authoritative_session": 5173,
+  "actual_game_checks": 28,
+  "actual_engine_host_groups": 3,
+  "handoff_65records_sha256": "c4279436819064a9fa97e92feb3efa2a46a2ddf79027cc8b3417aec6903887aa",
+  "handoff_public_included": 53,
+  "handoff_artifact_binaries_excluded": 12,
+  "original_file_count": 59,
+  "new_packaging_file_count": 2,
+  "payload_file_count": 61,
+  "payload_bytes": 8488743,
+  "log_counts": {
+    "game_command_logs": 28,
+    "separate_mGBA_raw_logs": 6,
+    "console_log": 1,
+    "engine_host_logs": 3
+  },
+  "original_source_file_pinning_and_postcopy_SHA_verified": true,
+  "credential_shaped_literal_scan": "No token/private-key/credential-URL match in explicitly included payloads; no credential/config files selected.",
+  "entries": [
+    {
+      "path": "validation/audit-1030-candidate-check-result.json",
+      "category": "actual plan/result/source custody metadata",
+      "bytes": 52320,
+      "sha256": "d07706495eeeca1ecb138ff91a88ce675008aa8df76e91290a4944eb9f119c00",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-check-result.json",
+      "original_sha256": "d07706495eeeca1ecb138ff91a88ce675008aa8df76e91290a4944eb9f119c00"
+    },
+    {
+      "path": "tools/audit-1030-run-candidate-checks.py",
+      "category": "actual runner source, not executed while packaging",
+      "bytes": 11607,
+      "sha256": "d7e41ce2a3bd7d38df36ee1f0963d829f1596928201dce258dd9df06a4baf2c4",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-run-candidate-checks.py",
+      "original_sha256": "d7e41ce2a3bd7d38df36ee1f0963d829f1596928201dce258dd9df06a4baf2c4"
+    },
+    {
+      "path": "validation/audit-1030-candidate-check-plan.json",
+      "category": "actual plan/result/source custody metadata",
+      "bytes": 24731,
+      "sha256": "9733bd27c8236c8e841da60c7e72346c76899ec007bc0bd1915b9d37709071a7",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-check-plan.json",
+      "original_sha256": "9733bd27c8236c8e841da60c7e72346c76899ec007bc0bd1915b9d37709071a7"
+    },
+    {
+      "path": "identities/audit-1030-candidate-source-before.json",
+      "category": "frozen source or executable identity metadata only",
+      "bytes": 1201645,
+      "sha256": "ed1fd82e73c292541892ef2423eb703e1a917e2d728d3ea439c003ae46621dad",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-source-before.json",
+      "original_sha256": "ed1fd82e73c292541892ef2423eb703e1a917e2d728d3ea439c003ae46621dad"
+    },
+    {
+      "path": "validation/audit-1030-candidate-preparation-result.json",
+      "category": "actual plan/result/source custody metadata",
+      "bytes": 20782,
+      "sha256": "90eafe5d8362aca3292dae13943acc1c4ca2a1b3a4f7c26afd8d30f3dd79d5dd",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-preparation-result.json",
+      "original_sha256": "90eafe5d8362aca3292dae13943acc1c4ca2a1b3a4f7c26afd8d30f3dd79d5dd"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-console.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 1326,
+      "sha256": "423666d8fdc438915c2fb9a5db1b58ff4809687d6913c200c7e8f8b9020e19f1",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-console.log",
+      "original_sha256": "423666d8fdc438915c2fb9a5db1b58ff4809687d6913c200c7e8f8b9020e19f1"
+    },
+    {
+      "path": "validation/audit-1030-command-equivalence.json",
+      "category": "actual plan/result/source custody metadata",
+      "bytes": 5476,
+      "sha256": "16150782b66be14a3a70e2c547e3ba0fba9a4f824f53655c6a1e84c53f83e9cf",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-command-equivalence.json",
+      "original_sha256": "16150782b66be14a3a70e2c547e3ba0fba9a4f824f53655c6a1e84c53f83e9cf"
+    },
+    {
+      "path": "identities/audit-1030-candidate-debug-identity.json",
+      "category": "frozen source or executable identity metadata only",
+      "bytes": 856,
+      "sha256": "b4b620c2997b37e26b3bff56c401d24ad98d1823d8d90ff294dcd8a94add2507",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-debug-identity.json",
+      "original_sha256": "b4b620c2997b37e26b3bff56c401d24ad98d1823d8d90ff294dcd8a94add2507"
+    },
+    {
+      "path": "identities/audit-1028-engine-source-before.json",
+      "category": "frozen source or executable identity metadata only",
+      "bytes": 242381,
+      "sha256": "5fca111031f6ddc91d8ba22301e5e01fe01f2e8dcb5899dc7eb99a242b84f05f",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1028-engine-source-before.json",
+      "original_sha256": "5fca111031f6ddc91d8ba22301e5e01fe01f2e8dcb5899dc7eb99a242b84f05f"
+    },
+    {
+      "path": "engine/audit-1028-engine-host-result.json",
+      "category": "separate engine actual host result",
+      "bytes": 5924,
+      "sha256": "8cb9d6be80793e0c0c9161e711927e9b8c667aba6b95b716ed53d57a2ce94150",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1028-engine-host-result.json",
+      "original_sha256": "8cb9d6be80793e0c0c9161e711927e9b8c667aba6b95b716ed53d57a2ce94150"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-host-metadata.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-host-metadata.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "metadata/audit-1030-candidate-host-metadata.json",
+      "category": "canonical Cargo metadata stdout",
+      "bytes": 2692415,
+      "sha256": "8f9d3ae4bd4bcc4ae214b1ef8903ba6d75b0f2843aca2b549f67ec074e91a0fe",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-host-metadata.json",
+      "original_sha256": "8f9d3ae4bd4bcc4ae214b1ef8903ba6d75b0f2843aca2b549f67ec074e91a0fe"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-gba-metadata.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-gba-metadata.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "metadata/audit-1030-candidate-gba-metadata.json",
+      "category": "canonical Cargo metadata stdout",
+      "bytes": 2027953,
+      "sha256": "04bd104ef8205dedd53a936d8336a3216f699cdc6600edbbd71cc703f496168c",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-gba-metadata.json",
+      "original_sha256": "04bd104ef8205dedd53a936d8336a3216f699cdc6600edbbd71cc703f496168c"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-core-lib.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 250667,
+      "sha256": "b892f233cf310c8d3e33a47e269dc067896d316703de8e3481d01823ab377205",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-core-lib.log",
+      "original_sha256": "b892f233cf310c8d3e33a47e269dc067896d316703de8e3481d01823ab377205"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-renderer-framebuffer-resource.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 49563,
+      "sha256": "b85c16229a3826357ddde71a2b3a9e68ae3e589eca121227e0c50b38c293efbb",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-renderer-framebuffer-resource.log",
+      "original_sha256": "b85c16229a3826357ddde71a2b3a9e68ae3e589eca121227e0c50b38c293efbb"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-app-debug-lib.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 90313,
+      "sha256": "a7bccd4e48986b99359e8758332e6970b1c2043bbc4a7135698f571d7dba343d",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-app-debug-lib.log",
+      "original_sha256": "a7bccd4e48986b99359e8758332e6970b1c2043bbc4a7135698f571d7dba343d"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-app-default-lib.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 85472,
+      "sha256": "96aa382b440def755dd2d48e470745e4ae69b6ddb0626bf0a7b88cd5147ecb15",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-app-default-lib.log",
+      "original_sha256": "96aa382b440def755dd2d48e470745e4ae69b6ddb0626bf0a7b88cd5147ecb15"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-agent-determinism.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 80220,
+      "sha256": "cf2093ebfce164ed601f44523281ac4506f734580e582600c2279c1c8be64c29",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-agent-determinism.log",
+      "original_sha256": "cf2093ebfce164ed601f44523281ac4506f734580e582600c2279c1c8be64c29"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-debug-cli.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 82706,
+      "sha256": "6406e6f4f5658c30e5e4aa3a797810aab114927b0e48d2fac0c811b744c34af5",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-debug-cli.log",
+      "original_sha256": "6406e6f4f5658c30e5e4aa3a797810aab114927b0e48d2fac0c811b744c34af5"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-gba-gate-tools.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 7799,
+      "sha256": "2d0dffa2237e13f7d31a995a91c6eeefe42854db811ec457904dead37d3e4d0d",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-gba-gate-tools.log",
+      "original_sha256": "2d0dffa2237e13f7d31a995a91c6eeefe42854db811ec457904dead37d3e4d0d"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-performance-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 70886,
+      "sha256": "d622c845b5dc435d4e68932851bb28e734462f03325cfd45cf18cdf0fdfaf119",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance-build.log",
+      "original_sha256": "d622c845b5dc435d4e68932851bb28e734462f03325cfd45cf18cdf0fdfaf119"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-performance-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-performance-record.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 19222,
+      "sha256": "cb504d6fc221c99cecc42d6c3bf1b0b1a1922154dc6ea9a5d07573bd29d0ac63",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance-record.log",
+      "original_sha256": "cb504d6fc221c99cecc42d6c3bf1b0b1a1922154dc6ea9a5d07573bd29d0ac63"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-performance-compare.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 2462,
+      "sha256": "c52d206e28bdf8f84f3b6f0dbf1f02f09e8192e67d8c6f22813a82c2b731cf0e",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance-compare.log",
+      "original_sha256": "c52d206e28bdf8f84f3b6f0dbf1f02f09e8192e67d8c6f22813a82c2b731cf0e"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-route22-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 63364,
+      "sha256": "ac7689f322ccf7a19d976ebd57f2b8e49ccc60e886099637e60bd302b0e8e230",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-route22-build.log",
+      "original_sha256": "ac7689f322ccf7a19d976ebd57f2b8e49ccc60e886099637e60bd302b0e8e230"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-route22-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-route22-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-route22-runtime.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 24846,
+      "sha256": "67d4195032b2fba32bd35bba394cfe98b910e433a838cdbf3fa7736fc5c6addb",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-route22-runtime.log",
+      "original_sha256": "67d4195032b2fba32bd35bba394cfe98b910e433a838cdbf3fa7736fc5c6addb"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-scenarios-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 63364,
+      "sha256": "0a3acd7fca1da5570c9093317a73f1fbcc017685057f33d73c7ed9a7f6e216af",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-scenarios-build.log",
+      "original_sha256": "0a3acd7fca1da5570c9093317a73f1fbcc017685057f33d73c7ed9a7f6e216af"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-scenarios-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-scenarios-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-scenarios-runtime.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 43154,
+      "sha256": "4643e6e93e673fb4d6cf98e3a48244964dce3e96da731ec5c54c29dd022d1e71",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-scenarios-runtime.log",
+      "original_sha256": "4643e6e93e673fb4d6cf98e3a48244964dce3e96da731ec5c54c29dd022d1e71"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-frame-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 62971,
+      "sha256": "bf20398539edc566e90fce075c67a1287f5ab3b5d3d65fd2c68de824c260b724",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-frame-build.log",
+      "original_sha256": "bf20398539edc566e90fce075c67a1287f5ab3b5d3d65fd2c68de824c260b724"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-frame-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-frame-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-frame-runtime.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 129,
+      "sha256": "994c49abfc515111d69e5c6f98a16b7b8f421aa435693fbcdc96e9382fa95633",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-frame-runtime.log",
+      "original_sha256": "994c49abfc515111d69e5c6f98a16b7b8f421aa435693fbcdc96e9382fa95633"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-hardware-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 62971,
+      "sha256": "c563a31ee43f87822597f8c88dc277896d524648d292379850a2d96be4db3a27",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-hardware-build.log",
+      "original_sha256": "c563a31ee43f87822597f8c88dc277896d524648d292379850a2d96be4db3a27"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-hardware-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-hardware-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-hardware-runtime.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 131,
+      "sha256": "8d6e4f83bb9e0b147e653d0f6c01fad564cc164c9a9cb4cca1b2dd4ad778282a",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-hardware-runtime.log",
+      "original_sha256": "8d6e4f83bb9e0b147e653d0f6c01fad564cc164c9a9cb4cca1b2dd4ad778282a"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-opening-build.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 62971,
+      "sha256": "02861cd982903e308ef578a29645f1215df5ab540209e100ace03ba212f9c7d2",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-opening-build.log",
+      "original_sha256": "02861cd982903e308ef578a29645f1215df5ab540209e100ace03ba212f9c7d2"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-opening-fix.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-opening-fix.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-opening-runtime.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 130,
+      "sha256": "e655d7f0a7c516251c19761f007070256ca1361382f8f6ac0721659193442670",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-opening-runtime.log",
+      "original_sha256": "e655d7f0a7c516251c19761f007070256ca1361382f8f6ac0721659193442670"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-performance-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 16393,
+      "sha256": "cca6cce7b3a9fce4534e195c6dfd67a94947d401534dc5ea21143d715e8682aa",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance-raw.log",
+      "original_sha256": "cca6cce7b3a9fce4534e195c6dfd67a94947d401534dc5ea21143d715e8682aa"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-route22-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 152714,
+      "sha256": "0d86199db722dd967f7278281384baf6da2ea1f84b7be17e2dce31d45fa293a1",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-route22-raw.log",
+      "original_sha256": "0d86199db722dd967f7278281384baf6da2ea1f84b7be17e2dce31d45fa293a1"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-scenarios-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 222549,
+      "sha256": "c7a092f7c17038699f5d5a329183bdfb47ab3e74910fd6c20497c75b5518cd4b",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-scenarios-raw.log",
+      "original_sha256": "c7a092f7c17038699f5d5a329183bdfb47ab3e74910fd6c20497c75b5518cd4b"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-frame-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 297744,
+      "sha256": "3d6344593ad3d94b8dc768a9fa945b00d63beb11cd875358df96802e0531abb6",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-frame-raw.log",
+      "original_sha256": "3d6344593ad3d94b8dc768a9fa945b00d63beb11cd875358df96802e0531abb6"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-hardware-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 150697,
+      "sha256": "56aa0d763a8b2560fbad22cd53c568ed443e2d77446cb441ac258f806a6e1b63",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-hardware-raw.log",
+      "original_sha256": "56aa0d763a8b2560fbad22cd53c568ed443e2d77446cb441ac258f806a6e1b63"
+    },
+    {
+      "path": "logs/game/audit-1030-candidate-opening-raw.log",
+      "category": "unaltered game validation raw log",
+      "bytes": 85201,
+      "sha256": "4df3c67e2f52d9a86ba48b1a78bac4e0d9c25a215aa2ae25e372df9ed8dabff7",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-opening-raw.log",
+      "original_sha256": "4df3c67e2f52d9a86ba48b1a78bac4e0d9c25a215aa2ae25e372df9ed8dabff7"
+    },
+    {
+      "path": "metrics/audit-1030-candidate-performance.json",
+      "category": "actual local GBA metrics",
+      "bytes": 2584,
+      "sha256": "7e28ac9db8aa86902a83d0da6aa788e3f2132e35c09a9815cc718ca5d493dabf",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-performance.json",
+      "original_sha256": "7e28ac9db8aa86902a83d0da6aa788e3f2132e35c09a9815cc718ca5d493dabf"
+    },
+    {
+      "path": "metrics/audit-1030-candidate-frame.json",
+      "category": "actual local GBA metrics",
+      "bytes": 6229,
+      "sha256": "3eac46cba1a5350e0a072a1b51edb9eb4aa9e0a0461b2e29105a3d0bd47bca7a",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-frame.json",
+      "original_sha256": "3eac46cba1a5350e0a072a1b51edb9eb4aa9e0a0461b2e29105a3d0bd47bca7a"
+    },
+    {
+      "path": "metrics/audit-1030-candidate-hardware.json",
+      "category": "actual local GBA metrics",
+      "bytes": 1680,
+      "sha256": "d8248f1cc9368b5dcb1a0062b1b555db758b83305efd91149e33a616efc55e95",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-hardware.json",
+      "original_sha256": "d8248f1cc9368b5dcb1a0062b1b555db758b83305efd91149e33a616efc55e95"
+    },
+    {
+      "path": "metrics/audit-1030-candidate-opening.json",
+      "category": "actual local GBA metrics",
+      "bytes": 866,
+      "sha256": "966953299e6b1dda56585943816ab311a59ad73b945604f97cd5627f7da9d7d2",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-candidate-opening.json",
+      "original_sha256": "966953299e6b1dda56585943816ab311a59ad73b945604f97cd5627f7da9d7d2"
+    },
+    {
+      "path": "tools/cargo-1030-candidate-host.sh",
+      "category": "actual wrapper source, not executed while packaging",
+      "bytes": 796,
+      "sha256": "774dc8684a92909f75f42d56f805ef4737daf4eaf3c6d6741d5a7556083b696c",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1030-candidate-host.sh",
+      "original_sha256": "774dc8684a92909f75f42d56f805ef4737daf4eaf3c6d6741d5a7556083b696c"
+    },
+    {
+      "path": "tools/cargo-1030-candidate-gba.sh",
+      "category": "actual wrapper source, not executed while packaging",
+      "bytes": 702,
+      "sha256": "915ca3f390a4826cf9f04db3490fde100a9c679ceba21f2870aabce70d04135b",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1030-candidate-gba.sh",
+      "original_sha256": "915ca3f390a4826cf9f04db3490fde100a9c679ceba21f2870aabce70d04135b"
+    },
+    {
+      "path": "tools/cargo-1030-candidate-metadata.sh",
+      "category": "actual wrapper source, not executed while packaging",
+      "bytes": 555,
+      "sha256": "59adb6e24e662a28c34a36207872f45ef1e7098e8a990000381f0458d6a91ba3",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1030-candidate-metadata.sh",
+      "original_sha256": "59adb6e24e662a28c34a36207872f45ef1e7098e8a990000381f0458d6a91ba3"
+    },
+    {
+      "path": "validation/audit-1030-final-validation-handoff.json",
+      "category": "authoritative final handoff and exact65 input whitelist",
+      "bytes": 26873,
+      "sha256": "c4279436819064a9fa97e92feb3efa2a46a2ddf79027cc8b3417aec6903887aa",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-final-validation-handoff.json",
+      "original_sha256": "c4279436819064a9fa97e92feb3efa2a46a2ddf79027cc8b3417aec6903887aa"
+    },
+    {
+      "path": "engine/logs/audit-1028-engine-host-indexed-scoped.log",
+      "category": "original engine e533 actual host log",
+      "bytes": 7921,
+      "sha256": "3b23aee8f987f0354a4f0bdfcf1f3fac9d25b0c67b8a0ac20007e9004300431e",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1028-engine-host-indexed-scoped.log",
+      "original_sha256": "3b23aee8f987f0354a4f0bdfcf1f3fac9d25b0c67b8a0ac20007e9004300431e"
+    },
+    {
+      "path": "engine/logs/audit-1028-engine-host-renderer-framebuffer.log",
+      "category": "original engine e533 actual host log",
+      "bytes": 33206,
+      "sha256": "175a739222a9d2f2cb77a1d5f0ed7a5663614a78886dd4f0eca9fa2fbe98711e",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1028-engine-host-renderer-framebuffer.log",
+      "original_sha256": "175a739222a9d2f2cb77a1d5f0ed7a5663614a78886dd4f0eca9fa2fbe98711e"
+    },
+    {
+      "path": "engine/logs/audit-1028-engine-host-renderer-default.log",
+      "category": "original engine e533 actual host log",
+      "bytes": 39847,
+      "sha256": "9d92b15837c4a108398e516a36202bb1688170642fc8aa78b8afcdb043b6580f",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1028-engine-host-renderer-default.log",
+      "original_sha256": "9d92b15837c4a108398e516a36202bb1688170642fc8aa78b8afcdb043b6580f"
+    },
+    {
+      "path": "reviews/audit-1030-root-final-validation.json",
+      "category": "independent read-only full28/source/ELF audit",
+      "bytes": 5413,
+      "sha256": "874dd8b67828cc5d35bdf7b5108c29f668e99b32bd066177714e12edc42e02ca",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-root-final-validation.json",
+      "original_sha256": "874dd8b67828cc5d35bdf7b5108c29f668e99b32bd066177714e12edc42e02ca"
+    },
+    {
+      "path": "reviews/audit-1030-final-readonly-review.json",
+      "category": "independent read-only full28/source/ELF audit",
+      "bytes": 18126,
+      "sha256": "d863710c6bf0999c5c0412234f6fa89aec2ee5e22346026e0334e346c22baf9a",
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1030-final-readonly-review.json",
+      "original_sha256": "d863710c6bf0999c5c0412234f6fa89aec2ee5e22346026e0334e346c22baf9a"
+    },
+    {
+      "path": "README.md",
+      "category": "new packaging explanation/identity projection only",
+      "bytes": 2536,
+      "sha256": "fffb3a9adc03ca8ec02d41da2e180dcbb657da2c9cb0f3c086c5a379992f4d46",
+      "original_path": null,
+      "original_sha256": null
+    },
+    {
+      "path": "identities/excluded-artifact-identities.json",
+      "category": "new packaging explanation/identity projection only",
+      "bytes": 5354,
+      "sha256": "a8311d14c977066ee0857478cc7d2befa3764d91047d33f325dd2a25dcb9b758",
+      "original_path": null,
+      "original_sha256": null
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "source_before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+  "source_after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+  "pending_dependency267": "35fe8b6127340aaab24177c0b39b62b0ace171f1",
+  "master_in_after": "1dff02a2749117dac39a8c8c145d0f91b23fcfb2",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "before_binary_sha256": "d6cd45bb7983accf0fdad84db35d574fbd4ce842ea61b1ceee326d876594477b",
+  "after_binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+  "ordinary_SAVE_primary": {
+    "original": 14,
+    "native_before": 14,
+    "native_after": 14,
+    "all_valid_checksums": true,
+    "identical_native_fixture_actions_initial_PNG": true,
+    "standard_12_pairs_entire_32768_SRAM_equal": true,
+    "transform_2_pairs_changed_offsets": [
+      "0x2f51",
+      "0x3523"
+    ]
+  },
+  "strict_prefix_pairs": [
+    {
+      "case": "ditto-transform-ether",
+      "physical_frames_per_build": 1584,
+      "fixture_sha256": "6ae674c92d65cbb07661dcb723346d9b1a3033dc2fabe0158bbffb09fb24c34a",
+      "buttons_sha256": "9cf2e351bf88130e47c949c893dea222cee35b3067423e94e9e316c0e3125f8c",
+      "images": {
+        "before": [
+          {
+            "frame": 952,
+            "path": "move-menu.png",
+            "sha256": "93401836362f70fbea557e173838725c836219dbf5ecee29989759a13efe3b7c",
+            "phase": "ItemMoveSelect { item_id: Ether, party_index: 0 }"
+          },
+          {
+            "frame": 1584,
+            "path": "paused-result.png",
+            "sha256": "bef5afa75cac7258c6844405b45f8f1f856ead30c38de097b8cbf77b36da42f2",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: Battle }"
+          }
+        ],
+        "after": [
+          {
+            "frame": 952,
+            "path": "move-menu.png",
+            "sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+            "phase": "ItemMoveSelect { item_id: Ether, party_index: 0 }"
+          },
+          {
+            "frame": 1584,
+            "path": "paused-result.png",
+            "sha256": "51da623d45b9dff07a61f5d20115061b6c6f6aad86a42d3787ec933167825bfb",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: PpRestoreParty { party_index: 0, move_row: Some(0), consume_on_ack: Some(Ether) } }"
+          }
+        ]
+      },
+      "source_before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+      "source_after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+      "one_frame_count_and_button_proof_all_rows": true
+    },
+    {
+      "case": "elixer-all-success",
+      "physical_frames_per_build": 1288,
+      "fixture_sha256": "4a2c2253f49367b61450ccc6e2349b5bbf21a05fdc87287cd624790d692872f0",
+      "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+      "images": {
+        "before": [
+          {
+            "frame": 1288,
+            "path": "paused-result.png",
+            "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: Battle }"
+          }
+        ],
+        "after": [
+          {
+            "frame": 1288,
+            "path": "paused-result.png",
+            "sha256": "888e2cf6f25112f6f60269f4a1341bbeed258273c4b458a178c2bf58fd21e66f",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: PpRestoreParty { party_index: 1, move_row: None, consume_on_ack: Some(Elixer) } }"
+          }
+        ]
+      },
+      "source_before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+      "source_after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+      "one_frame_count_and_button_proof_all_rows": true
+    },
+    {
+      "case": "ether-second-success",
+      "physical_frames_per_build": 1328,
+      "fixture_sha256": "42433a87c40e31f0407d0456e82763dcf031f104635dad4dd3872b7471d48b32",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "images": {
+        "before": [
+          {
+            "frame": 688,
+            "path": "move-menu.png",
+            "sha256": "47bd77017eac379d7bdb10bfc01573c199eae3f0e800939e11d1935d4616bfd2",
+            "phase": "ItemMoveSelect { item_id: Ether, party_index: 1 }"
+          },
+          {
+            "frame": 1328,
+            "path": "paused-result.png",
+            "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: Battle }"
+          }
+        ],
+        "after": [
+          {
+            "frame": 688,
+            "path": "move-menu.png",
+            "sha256": "013a48bda37312c9989b6f1181a52fd8130959284eb9901ed8845b0a8d66ec3d",
+            "phase": "ItemMoveSelect { item_id: Ether, party_index: 1 }"
+          },
+          {
+            "frame": 1328,
+            "path": "paused-result.png",
+            "sha256": "0a2a7ec56469049ea95e65ae8b96f0720bfd9f2c118a26f089ad1ae5280e4c55",
+            "phase": "ShowingText { messages: [\"PP was restored.\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: PpRestoreParty { party_index: 1, move_row: Some(1), consume_on_ack: Some(Ether) } }"
+          }
+        ]
+      },
+      "source_before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+      "source_after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+      "one_frame_count_and_button_proof_all_rows": true
+    },
+    {
+      "case": "maxether-full-negative",
+      "physical_frames_per_build": 1328,
+      "fixture_sha256": "7e6b56a8e857e0256badbb0706275270ae5bbcd24f54b98de7bf6e9008533bff",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "images": {
+        "before": [
+          {
+            "frame": 688,
+            "path": "move-menu.png",
+            "sha256": "d6556f9f52c2de32dd86442e8320a71366f90e22acc05334acc260f70b28bd7a",
+            "phase": "ItemMoveSelect { item_id: MaxEther, party_index: 1 }"
+          },
+          {
+            "frame": 1328,
+            "path": "paused-result.png",
+            "sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+            "phase": "ShowingText { messages: [\"It won't have any effect.\"], current: 0, wait_frames: 0, next_phase: BagSelect, backdrop: Battle }"
+          }
+        ],
+        "after": [
+          {
+            "frame": 688,
+            "path": "move-menu.png",
+            "sha256": "013a48bda37312c9989b6f1181a52fd8130959284eb9901ed8845b0a8d66ec3d",
+            "phase": "ItemMoveSelect { item_id: MaxEther, party_index: 1 }"
+          },
+          {
+            "frame": 1328,
+            "path": "paused-result.png",
+            "sha256": "ddb9ec7e4588042444f958e53229ca5281b5f45dde31378ae13cd505db6511b6",
+            "phase": "ShowingText { messages: [\"It won't have any effect.\"], current: 0, wait_frames: 0, next_phase: BagSelect, backdrop: PpRestoreParty { party_index: 1, move_row: Some(1), consume_on_ack: None } }"
+          }
+        ]
+      },
+      "source_before": "c6e5762f55d449cbba1c4fb896e63b3634585e25",
+      "source_after": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+      "one_frame_count_and_button_proof_all_rows": true
+    }
+  ],
+  "host": {
+    "audit-935-final-core-full.log": {
+      "sha256": "6fa7eb5e24794d5ad12c411e9ec80e9b2e0dcbb3662f34a0edbb24aa0b11bdf4",
+      "results": [
+        "test result: ok. 2909 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.13s"
+      ]
+    },
+    "audit-935-final-app-debug-full.log": {
+      "sha256": "4850e2214e6740b16ad8f25081cc869249fd7f54abfef6d4c184c64502d357ca",
+      "results": [
+        "test result: ok. 315 passed; 0 failed; 39 ignored; 0 measured; 0 filtered out; finished in 54.11s"
+      ]
+    },
+    "audit-935-final-app-default-full.log": {
+      "sha256": "d672b4544c8bd858c1465da4a25cf6e32d936224712442a9f501ef33d80defbf",
+      "results": [
+        "test result: ok. 304 passed; 0 failed; 37 ignored; 0 measured; 0 filtered out; finished in 50.27s"
+      ]
+    }
+  },
+  "GBA": {
+    "all_committed_gates_pass": true,
+    "trainer_update_avg_ticks": 224,
+    "idle_update_avg_ticks": 349,
+    "oak_draw_per_frame_ticks": 2993,
+    "identity_sha256": "31a2e0325ede7dacacf69e9cdec857c2a5158f6b441272f62fd9383ba14323ce",
+    "perf_json_sha256": "98a6101485ca625d157f16cd72e7ec154a6d9046a2d7ba793550eb9e9c7461cd",
+    "compare_log_sha256": "605a6220bb7c8c9d1c173ff8ed0884d737ee708e86164be1b5fc4e704c1cbab2",
+    "historical_ce29_trainer233_fail_preserved": true
+  },
+  "historical_controls": "Two earlier nativeTransformBEFOREv1 ordinarySAVE records retained separately; primary matched controls include actual post-Ether FIGHT PP readback. No old source/raw identity relabeled.",
+  "metadata_erratum": "Frozen generic driver human scope mentions master32f for AFTER as inherited ancestor; authoritative source_commit/identity is af3f with master1dff. Generic driver human wording Ether secondmove is inapplicable to explicit Ditto row0; actions/menu/raw controls identify actualrow. No source/native RNG/fullSRAM parity or native PCM claim.",
+  "lifecycle_scope": "Current snapshot retains pending PP context and final-ACK ownership. Tested real soft_reset\u2192Title\u2192Continue\u2192newbattle does not resume old consumption. Title can retain inert oldBattleScreen; bareload_from_path is not claimed to clear its phase.",
+  "limitations": [
+    "BEFORE is combined pending267+master32f, not literal master; literal master supplement waits for267 merge.",
+    "Different source/native battle RNG means no crossprovider fullSRAM/HP/XP/frame-clock parity claim.",
+    "Native controls use --no-audio; pending HealAilment event is unit-checked, not PCM or all-channel waveform parity.",
+    "Actual Transform control covers legal Ditto; shared original_identity accessor also serves Mimic, without new actual Mimic claim.",
+    "No font/Chinese/pinyin/textbox-layout audit and no IRQ/runtime clock repair."
+  ]
+}

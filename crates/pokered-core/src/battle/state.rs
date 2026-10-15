@@ -461,6 +461,15 @@ impl BattlerState {
         &self.party[index]
     }
 
+    /// Mutate the same persistent identity returned by `party_mon`, without
+    /// replacing the active Transform/Mimic working copy.
+    pub fn party_mon_mut(&mut self, index: usize) -> &mut Pokemon {
+        if let Some((original_index, original)) = &mut self.original_identity {
+            if *original_index == index { return original; }
+        }
+        &mut self.party[index]
+    }
+
     pub fn persistent_party(&self) -> Vec<Pokemon> {
         let mut party = self.party.clone();
         if let Some((idx, original)) = &self.original_identity {

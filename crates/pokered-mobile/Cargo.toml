@@ -7,7 +7,7 @@ edition.workspace = true
 crate-type = ["staticlib", "rlib"]
 
 [dependencies]
-dotzuki-mobile = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "76da597b1604305121c866831b5542e70c2b82c8" }
+dotzuki-mobile = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
 pokered-app = { path = "../pokered-app", default-features = false, features = ["mobile"] }
 pokered-core = { path = "../pokered-core" }
 pokered-renderer = { path = "../pokered-renderer", default-features = false, features = ["resource", "embedded-assets"] }
