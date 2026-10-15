@@ -721,6 +721,10 @@ impl BattleVisualEffects {
         self.ball_choreo.is_some()
     }
 
+    pub(crate) fn ball_result_ready(&self) -> bool {
+        self.ball_result_pending
+    }
+
     pub(crate) fn take_ball_result_ready(&mut self) -> bool {
         core::mem::take(&mut self.ball_result_pending)
     }

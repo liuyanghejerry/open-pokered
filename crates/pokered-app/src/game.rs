@@ -4638,13 +4638,14 @@ impl PokemonGame {
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                 // ItemUseBall finishes the toss/poof/shakes before its next
                 // text page. A later ball Tink would replace CaughtMon CHAN5.
-                let capture_animation_holds_input = matches!(
+                let capture_animation_holds_input = self.battle_vfx.ball_animation_active() && matches!(
                     self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. }
-                ) && self.battle_vfx.ball_animation_active();
+                );
                 // ItemUseText00 is text_end, not text_promptbutton. Return
                 // automatically from the actual animation to its result page;
                 // later catch, failure and nickname prompts still need input.
-                let automatic_ball_result = match &self.battle.phase {
+                // Ordinary battle frames have no ball caller to resume.
+                let automatic_ball_result = self.battle_vfx.ball_result_ready() && match &self.battle.phase {
                     pokered_core::battle::BattlePhase::ShowingText {
                         current: 0, wait_frames: 0, messages, ..
                     } if messages.len() > 1 => self.battle_vfx.take_ball_result_ready(),
