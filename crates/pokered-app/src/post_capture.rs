@@ -21,6 +21,13 @@ pub(super) enum CapturePhase {
     Transfer,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CaptureBackdrop {
+    Blank,
+    PlayerHud,
+    Battle,
+}
+
 pub(super) struct PostCaptureFlow {
     pub(super) receipt: CapturedMonReceipt,
     pub(super) phase: CapturePhase,
@@ -29,6 +36,7 @@ pub(super) struct PostCaptureFlow {
     pub(super) naming: Option<NamingScreenState>,
     flash_frames: u8,
     met_bill: bool,
+    backdrop: CaptureBackdrop,
 }
 
 impl PostCaptureFlow {
@@ -45,6 +53,13 @@ impl PostCaptureFlow {
             naming: None,
             flash_frames: 0,
             met_bill,
+            // ShowPokedexData leaves a blank tilemap. Without DATA, AskName
+            // clears the enemy HUD and sprites but retains the player's HUD.
+            backdrop: if receipt.new_pokedex_entry {
+                CaptureBackdrop::Blank
+            } else {
+                CaptureBackdrop::PlayerHud
+            },
         };
         if receipt.new_pokedex_entry {
             flow.phase = CapturePhase::NewDexMessage;
@@ -261,7 +276,13 @@ impl PokemonGame {
                         flow.dialogue = None;
                         flow.naming = Some(naming);
                         flow.flash_frames = NAMING_FLASH_FRAMES;
-                        self.prepare_gba_screen_resources(&GameScreen::Overworld);
+                        // DisplayNamingScreen restores the saved battle tiles
+                        // when it returns, including the enemy HUD/back picture.
+                        if !flow.receipt.new_pokedex_entry {
+                            flow.backdrop = CaptureBackdrop::Battle;
+                        } else {
+                            self.prepare_gba_screen_resources(&GameScreen::Overworld);
+                        }
                     }
                 }
             }
@@ -332,10 +353,16 @@ impl PokemonGame {
         use pokered_ui::{menus, Ui};
         let flow = self.post_capture_flow.as_ref().unwrap();
         let language = self.state.config.language;
-        if matches!(
+        let announcement = matches!(
             flow.phase,
             CapturePhase::NewDexMessage | CapturePhase::NewDexSound | CapturePhase::NewDexConfirm
-        ) {
+        );
+        let backdrop = if announcement {
+            CaptureBackdrop::Battle
+        } else {
+            flow.backdrop
+        };
+        if backdrop != CaptureBackdrop::Blank && flow.naming.is_none() {
             crate::render::draw_battle(
                 &self.battle,
                 &mut self.resources,
@@ -343,6 +370,13 @@ impl PokemonGame {
                 &mut self.battle_vfx,
                 language,
             );
+            if backdrop == CaptureBackdrop::PlayerHud {
+                // Keep the existing renderer's player HUD (name begins at
+                // 72,56); ClearSprites/AskName remove the other scene regions.
+                // No framebuffer snapshot is retained on the small-memory host.
+                fb.fill_rect(0, 0, 160, 56, Rgba::WHITE);
+                fb.fill_rect(0, 56, 72, 56, Rgba::WHITE);
+            }
         } else {
             fb.clear(Rgba::WHITE);
         }
@@ -391,6 +425,7 @@ mod tests {
     use super::*;
     use pokered_core::battle::settlement::{BattleOutcome, BattleSettlement};
     use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_core::start_menu::StartMenuItem;
     use pokered_data::species::Species;
 
     fn mon(species: Species, level: u8) -> pokered_core::battle::state::Pokemon {
@@ -506,6 +541,14 @@ mod tests {
                     );
                     choice(&mut g);
                     assert_eq!(
+                        g.post_capture_flow.as_ref().unwrap().backdrop,
+                        if owned {
+                            CaptureBackdrop::PlayerHud
+                        } else {
+                            CaptureBackdrop::Blank
+                        }
+                    );
+                    assert_eq!(
                         g.post_capture_choice().unwrap().selected,
                         0,
                         "opening A does not choose YES"
@@ -519,6 +562,18 @@ mod tests {
                     } else {
                         tap(&mut g, GbButton::Down);
                         tap(&mut g, GbButton::A);
+                    }
+                    if boxed {
+                        assert_eq!(
+                            g.post_capture_flow.as_ref().unwrap().backdrop,
+                            if !owned {
+                                CaptureBackdrop::Blank
+                            } else if yes {
+                                CaptureBackdrop::Battle
+                            } else {
+                                CaptureBackdrop::PlayerHud
+                            }
+                        );
                     }
                     finish(&mut g);
                     let new = if boxed {
@@ -612,6 +667,327 @@ mod tests {
         assert_eq!(g.overworld.frame_counter, frame);
         assert!(g.overworld.pending_dialogue.is_none());
         assert!(g.post_capture_choice().is_some());
+    }
+
+    #[test]
+    fn new_dex_sound_finishes_before_fresh_confirmation_opens_data() {
+        let mut g = game(false, false, false);
+        g.audio = Some(AudioOutput::new_pcm());
+        for frame in 0..1000 {
+            if g.post_capture_flow.as_ref().unwrap().phase == CapturePhase::NewDexSound {
+                break;
+            }
+            if frame % 30 == 0 {
+                tap(&mut g, GbButton::A);
+            } else {
+                idle(&mut g, 1);
+            }
+        }
+        assert_eq!(
+            g.post_capture_flow.as_ref().unwrap().phase,
+            CapturePhase::NewDexSound
+        );
+        assert!(g.audio.as_ref().unwrap().is_sfx_playing());
+        tap(&mut g, GbButton::A);
+        assert_eq!(
+            g.state.screen,
+            GameScreen::Battle,
+            "the sound's text_promptbutton has not returned"
+        );
+        for _ in 0..1000 {
+            if g.post_capture_flow.as_ref().unwrap().phase == CapturePhase::NewDexConfirm {
+                break;
+            }
+            idle(&mut g, 1);
+        }
+        assert_eq!(
+            g.post_capture_flow.as_ref().unwrap().phase,
+            CapturePhase::NewDexConfirm
+        );
+        assert_eq!(g.state.screen, GameScreen::Battle);
+        tap(&mut g, GbButton::A);
+        assert_eq!(g.state.screen, GameScreen::Pokedex);
+    }
+
+    #[test]
+    fn unsaved_oak_name_input_supplies_the_raw_captured_ot() {
+        let mut g = game(true, false, false);
+        g.handle_transition(GameScreen::OakSpeech);
+        assert!(g.save_data.player_name.is_empty());
+        // Drive the complete ordinary speech to its name menu. This tests
+        // the real PlayerNameSet consumer, rather than a Game-name setter.
+        for frame in 0..4000 {
+            if matches!(g.oak_speech.phase, OakSpeechPhase::PlayerNameChoice { .. }) {
+                break;
+            }
+            if frame % 30 == 0 {
+                tap(&mut g, GbButton::A);
+            } else {
+                idle(&mut g, 1);
+            }
+        }
+        assert!(matches!(
+            g.oak_speech.phase,
+            OakSpeechPhase::PlayerNameChoice { .. }
+        ));
+        tap(&mut g, GbButton::Down);
+        tap(&mut g, GbButton::A);
+        assert_eq!(g.player_name, "ASH");
+        let mut expected = [0x50; 11];
+        let raw = pokered_data::charmap::encode_string("ASH").unwrap();
+        expected[..raw.len()].copy_from_slice(&raw);
+        assert_eq!(
+            g.save_data.player_name, raw,
+            "no SAVE has synchronized the name"
+        );
+        for frame in 0..4000 {
+            if g.state.screen == GameScreen::Overworld {
+                break;
+            }
+            if frame % 30 == 0 {
+                tap(&mut g, GbButton::A);
+            } else {
+                idle(&mut g, 1);
+            }
+        }
+        assert_eq!(g.state.screen, GameScreen::Overworld);
+        // Unit-level catch settlement, separate from the actual natural-
+        // encounter input controls recorded by the external audit driver.
+        g.battle = BattleScreen::from_parties(
+            true,
+            &[mon(Species::Bulbasaur, 5)],
+            &[mon(Species::Weedle, 4)],
+            None,
+        );
+        g.battle.captured_mon = Some(mon(Species::Weedle, 4));
+        g.battle.settlement = Some(BattleSettlement {
+            outcome: BattleOutcome::Captured,
+            money_gained: 0,
+            money_lost: 0,
+            payday_bonus: 0,
+            exp_entries: vec![],
+            level_ups: vec![],
+            evolutions: vec![],
+        });
+        g.state.screen = GameScreen::Battle;
+        g.handle_transition(GameScreen::Overworld);
+        assert_eq!(g.save_data.party.get(1).unwrap().ot_name, expected);
+    }
+
+    #[cfg(feature = "debug-server")]
+    #[test]
+    #[ignore]
+    fn record_unsaved_oak_natural_capture() {
+        let root = std::path::PathBuf::from(std::env::var("FIDELITY_UNSAVED_OAK_CAPTURE").unwrap());
+        std::fs::create_dir_all(&root).unwrap();
+        for repeat in [1, 2] {
+            let trial = root.join(format!("repeat{repeat}"));
+            std::fs::create_dir(&trial).unwrap();
+            let mut g = PokemonGame::new_with_options(
+                GameVersion::Red,
+                Some(trial.join("ordinary.sav")),
+                None,
+                None,
+                false,
+                Some("Route1:8,9".to_string()),
+                false,
+                true,
+                None,
+            );
+            g.handle_transition(GameScreen::OakSpeech);
+            g.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::NewGame);
+            g.state.config.language = pokered_core::game_state::Lang::En;
+            g.state.config.text_speed = pokered_core::game_state::TextSpeed::Fast;
+            g.seed = Some(12);
+            g.overworld.set_rng_seed(12);
+            // Accelerated pre-input fixture only: supply a starting party and
+            // Master Ball, then use the configured startup Route1 location.
+            // No validation-time battle/map/party writes follow this boundary.
+            g.save_data.party.add(mon(Species::Bulbasaur, 12)).unwrap();
+            g.save_data
+                .game_data
+                .bag
+                .add_item(pokered_data::items::ItemId::MasterBall, 2)
+                .unwrap();
+            g.save_data.game_data.pokedex.set_owned(Species::Bulbasaur);
+            g.save_data.game_data.pokedex.set_seen(Species::Bulbasaur);
+            std::fs::write(
+                trial.join("construction.json"),
+                serde_json::to_vec_pretty(&g.save_data).unwrap(),
+            )
+            .unwrap();
+            assert!(g.save_data.player_name.is_empty());
+            let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            let mut records = Vec::new();
+            let frame = |g: &mut PokemonGame,
+                         key: Option<GbButton>,
+                         records: &mut Vec<serde_json::Value>,
+                         fb: &mut FrameBuffer| {
+                let mut input = InputState::new();
+                if let Some(key) = key {
+                    input.press(key);
+                }
+                g.update(&input);
+                g.draw(fb);
+                let state = g.debug_state_snapshot();
+                records.push(
+                    serde_json::json!({"input": key.map(|k| format!("{k:?}")), "state": state}),
+                );
+            };
+            for count in 0..4000 {
+                if matches!(g.oak_speech.phase, OakSpeechPhase::PlayerNameChoice { .. }) {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 30 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            assert!(matches!(
+                g.oak_speech.phase,
+                OakSpeechPhase::PlayerNameChoice { .. }
+            ));
+            frame(&mut g, Some(GbButton::Down), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            frame(&mut g, Some(GbButton::A), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            assert_eq!(g.player_name, "ASH");
+            fb.save_png(&trial.join("oak-ASH-unsaved.png")).unwrap();
+            for count in 0..4000 {
+                if g.state.screen == GameScreen::Overworld {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 30 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert_eq!(g.overworld.state.current_map, MapId::Route1);
+            assert!(!trial.join("ordinary.sav").exists());
+            fb.save_png(&trial.join("field-unsaved.png")).unwrap();
+            'walk: for count in 0..1000 {
+                let key = if count % 2 == 0 {
+                    GbButton::Right
+                } else {
+                    GbButton::Left
+                };
+                for _ in 0..16 {
+                    frame(&mut g, Some(key), &mut records, &mut fb);
+                    if g.state.screen == GameScreen::Battle {
+                        break 'walk;
+                    }
+                }
+                for _ in 0..16 {
+                    frame(&mut g, None, &mut records, &mut fb);
+                }
+            }
+            assert_eq!(
+                g.state.screen,
+                GameScreen::Battle,
+                "ordinary grass encounter required"
+            );
+            assert!(g.battle.is_wild);
+            for count in 0..4000 {
+                if g.battle.phase == BattlePhase::PlayerMenu {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 64 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            assert_eq!(g.battle.phase, BattlePhase::PlayerMenu);
+            for key in [GbButton::Up, GbButton::Left, GbButton::Down, GbButton::A] {
+                frame(&mut g, Some(key), &mut records, &mut fb);
+                frame(&mut g, None, &mut records, &mut fb);
+            }
+            assert_eq!(g.battle.phase, BattlePhase::BagSelect);
+            frame(&mut g, Some(GbButton::A), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            for count in 0..4000 {
+                if g.post_capture_choice().is_some() {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 64 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            assert!(g.post_capture_choice().is_some());
+            fb.save_png(&trial.join("capture-name-choice.png")).unwrap();
+            frame(&mut g, Some(GbButton::Down), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            frame(&mut g, Some(GbButton::A), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            for count in 0..4000 {
+                if g.state.screen == GameScreen::Overworld
+                    && !g.post_capture_active()
+                    && matches!(
+                        g.overworld.warp_fade_state,
+                        pokered_core::overworld::WarpFadeState::Idle
+                    )
+                {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 64 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            assert_eq!(g.save_data.party.count(), 2);
+            let mut expected = [0x50; 11];
+            let raw = pokered_data::charmap::encode_string("ASH").unwrap();
+            expected[..raw.len()].copy_from_slice(&raw);
+            assert_eq!(g.save_data.party.get(1).unwrap().ot_name, expected);
+            assert_eq!(
+                g.save_data.party.get(1).unwrap().ot_id,
+                g.save_data.game_data.player_id
+            );
+            assert!(!trial.join("ordinary.sav").exists());
+            frame(&mut g, Some(GbButton::Start), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            for _ in 0..8 {
+                if g.start_menu.current_item() == StartMenuItem::Save {
+                    break;
+                }
+                frame(&mut g, Some(GbButton::Down), &mut records, &mut fb);
+                frame(&mut g, None, &mut records, &mut fb);
+            }
+            assert_eq!(g.start_menu.current_item(), StartMenuItem::Save);
+            frame(&mut g, Some(GbButton::A), &mut records, &mut fb);
+            frame(&mut g, None, &mut records, &mut fb);
+            for count in 0..2000 {
+                if trial.join("ordinary.sav").exists() {
+                    break;
+                }
+                frame(
+                    &mut g,
+                    (count % 64 == 0).then_some(GbButton::A),
+                    &mut records,
+                    &mut fb,
+                );
+            }
+            let saved = import_sram(&std::fs::read(trial.join("ordinary.sav")).unwrap()).unwrap();
+            assert_eq!(saved.party.get(1).unwrap().ot_name, expected);
+            assert_eq!(saved.party.get(1).unwrap().ot_id, saved.game_data.player_id);
+            fb.save_png(&trial.join("first-ordinary-save.png")).unwrap();
+            std::fs::write(
+                trial.join("frames.json"),
+                serde_json::to_vec(&records).unwrap(),
+            )
+            .unwrap();
+        }
     }
 
     #[test]

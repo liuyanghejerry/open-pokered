@@ -3951,6 +3951,11 @@ impl PokemonGame {
 
                 match result {
                     OakSpeechResult::PlayerNameSet(name) => {
+                        // This is the canonical live player-name boundary,
+                        // before the first SAVE (captures copy its raw OT).
+                        if let Some(encoded) = pokered_data::charmap::encode_string(&name) {
+                            self.save_data.player_name = encoded;
+                        }
                         self.player_name = name;
                         ScreenAction::Continue
                     }
