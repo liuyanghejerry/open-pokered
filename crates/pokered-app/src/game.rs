@@ -7304,6 +7304,11 @@ impl PokemonGame {
                 self.set_seed(seed);
                 DebugResponse::ok_with_data(serde_json::json!({ "seed": seed }))
             }
+            DebugCommand::Game(GameDebugCommand::ExportFixture) => {
+                // Use the same live-state clone as SAVE, without committing
+                // it to the session or touching the owned save file.
+                DebugResponse::ok_with_data(serde_json::to_value(self.build_save_data()).unwrap())
+            }
             DebugCommand::Game(GameDebugCommand::SaveState { slot }) => {
                 match self.agent_save_state_slot(slot) {
                     Ok(hash) => DebugResponse::ok_with_data(serde_json::json!({
@@ -13165,5 +13170,64 @@ mod pokedex_data_cry_input_tests {
                 }
             }
         }
+    }
+}
+
+#[cfg(all(test, feature = "debug-server"))]
+mod failure_fixture_tests {
+    use super::*;
+    use pokered_core::pokemon::stats::create_pokemon;
+    use pokered_core::snapshot::{BattleSnapshot, OverworldSnapshot};
+
+    #[test]
+    fn tcp_export_fixture_keeps_live_session_inputs_and_sram_untouched() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true, None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.frame_count = 12345;
+        let mut mon = create_pokemon(pokered_data::species::Species::Ivysaur, 29, [0x29, 0x98]).unwrap();
+        mon.hp = 43;
+        mon.pp[0] = 5;
+        game.save_data.party = pokered_core::pokemon::party::Party::from(vec![mon]);
+        game.save_data.game_data.player_money = 2081;
+        game.save_data.game_data.position.map_id = MapId::PalletTown as u8;
+        game.overworld = OverworldScreen::new(MapId::VermilionPokecenter, None, PokemonRedData);
+        game.overworld.state.player.x = 3;
+        game.overworld.state.player.y = 3;
+        game.overworld.last_map = Some(MapId::VermilionCity);
+        game.overworld.set_flag_live("EVENT_BEAT_BROCK", true);
+        game.pending_debug_inputs = vec![Some(GbButton::A), None];
+        game.pending_debug_frames = 7;
+        let path = std::env::temp_dir().join(format!("pokered-fixture-readonly-{}.sav", std::process::id()));
+        let owned_sram = b"checkpoint must remain byte-for-byte unchanged";
+        std::fs::write(&path, owned_sram).unwrap();
+        game.save_path = Some(path.clone());
+        let before_save = serde_json::to_value(&game.save_data).unwrap();
+        let before_overworld = serde_json::to_value(OverworldSnapshot::capture(&game.overworld)).unwrap();
+        let before_battle = serde_json::to_value(BattleSnapshot::capture(&game.battle)).unwrap();
+        let before_state = game.debug_state_snapshot();
+        let response = serde_json::to_value(game.handle_debug_command(
+            serde_json::from_value(serde_json::json!({"cmd": "export_fixture"})).unwrap(),
+        )).unwrap();
+        assert_eq!(response["ok"], true);
+        let fixture: SaveData = serde_json::from_value(response["data"].clone()).unwrap();
+        assert_eq!(fixture.game_data.position.map_id, MapId::VermilionPokecenter as u8);
+        assert_eq!((fixture.game_data.position.x, fixture.game_data.position.y), (3, 3));
+        assert_eq!(fixture.game_data.last_map, MapId::VermilionCity as u8);
+        assert_eq!(fixture.game_data.player_money, 2081);
+        assert_eq!(fixture.party.get(0).unwrap().hp, 43);
+        assert_eq!(fixture.party.get(0).unwrap().pp[0], 5);
+        assert_ne!(serde_json::to_value(&fixture).unwrap(), before_save,
+            "export uses live position instead of the stale stored checkpoint");
+        assert_eq!(serde_json::to_value(&game.save_data).unwrap(), before_save);
+        assert_eq!(serde_json::to_value(OverworldSnapshot::capture(&game.overworld)).unwrap(), before_overworld);
+        assert_eq!(serde_json::to_value(BattleSnapshot::capture(&game.battle)).unwrap(), before_battle);
+        assert_eq!(game.debug_state_snapshot(), before_state);
+        assert_eq!(game.frame_count, 12345);
+        assert_eq!(game.pending_debug_inputs, vec![Some(GbButton::A), None]);
+        assert_eq!(game.pending_debug_frames, 7);
+        assert_eq!(std::fs::read(&path).unwrap(), owned_sram);
+        std::fs::remove_file(path).unwrap();
     }
 }
