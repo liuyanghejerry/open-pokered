@@ -530,6 +530,9 @@ pub struct BattleSnapshot {
     pub pending_item_sfx: Option<BattleItemSfx>,
     pub is_zh: bool,
     pub pending_anim_events: VecDeque<BattleAnimEvent>,
+    /// None identifies snapshots predating enemy-load notifications.
+    #[serde(default)]
+    pub loaded_enemy_slots: Option<u8>,
     pub hp_bar_anim: HpBarAnim,
     pub battle_style: BattleStyle,
     pub player_name: Option<String>,
@@ -596,6 +599,7 @@ impl BattleSnapshot {
             pending_item_sfx: screen.pending_item_sfx,
             is_zh: screen.is_zh,
             pending_anim_events: screen.pending_anim_events.clone(),
+            loaded_enemy_slots: Some(screen.loaded_enemy_slots),
             hp_bar_anim: screen.hp_bar_anim,
             battle_style: screen.battle_style,
             player_name: screen.player_name.clone(),
@@ -631,6 +635,10 @@ impl BattleSnapshot {
             player_name, shift_prompt_yes, pending_learn_moves, pending_shift_switch,
             player_badges, player_id, rng,
         );
+        screen.loaded_enemy_slots = snap.loaded_enemy_slots.unwrap_or_else(|| {
+            screen.battle_state.as_ref()
+                .map_or(0, |bs| 1 << bs.enemy.active_pokemon_index)
+        });
         screen
     }
 }
