@@ -153,6 +153,7 @@ fn exp_participant_trainer_ai_switch_starts_new_participant_history() {
         1,
         &mut count,
         &mut Vec::new(),
+        &mut s.loaded_enemy_slots,
     );
     assert_eq!(masks(&s), (SECOND, SECOND));
 }
