@@ -247,9 +247,11 @@ impl BattlePresentation {
             *self.pages.last_mut().unwrap() = step;
         }
     }
-    pub(super) fn activate(&mut self, page: usize) {
+    /// Publish one page. A frontend must present a newly activated page
+    /// before its acknowledgement can advance the caller.
+    pub(super) fn activate(&mut self, page: usize) -> bool {
         if !self.enabled || self.page == Some(page) {
-            return;
+            return false;
         }
         self.page = Some(page);
         let step = self.pages.get(page).and_then(Option::as_ref);
@@ -271,6 +273,7 @@ impl BattlePresentation {
                 (self.serial, move_id, step.player)
             })
         });
+        true
     }
     pub(super) fn next_hit(&mut self) -> bool {
         let Some(step) = self
@@ -353,6 +356,44 @@ mod tests {
         pokemon::stats::create_pokemon_with_moves,
     };
     use pokered_data::species::Species;
+
+    fn second_plain_text_page(presentation_enabled: bool) -> BattleScreen {
+        let mut battle = BattleScreen::new(true);
+        battle.set_presentation_enabled(presentation_enabled);
+        battle.show_text_then(
+            vec!["First page".to_string(), "Second page".to_string()],
+            BattlePhase::PlayerMenu,
+        );
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            battle.update_frame(BattleInput::none());
+        }
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, .. }));
+        for _ in 0..crate::battle::BATTLE_TEXT_PAGE_WAIT_FRAMES {
+            battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        }
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }));
+        assert_eq!(battle.current_message.as_deref(), Some("First page"));
+        battle
+    }
+
+    #[test]
+    fn frontend_page_is_published_before_ack_and_needs_no_extra_wait() {
+        let mut battle = second_plain_text_page(true);
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.current_message.as_deref(), Some("Second page"));
+        assert!(matches!(battle.phase, BattlePhase::ShowingText { current: 1, wait_frames: 0, .. }));
+        assert!(!battle.presentation.waiting, "plain text has no animation or sound wait");
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    }
+
+    #[test]
+    fn core_only_text_ack_does_not_wait_for_frontend_publication() {
+        let mut battle = second_plain_text_page(false);
+        battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+    }
 
     #[test]
     fn both_speed_orders_wait_for_each_animation_then_drain_only_its_damage() {
