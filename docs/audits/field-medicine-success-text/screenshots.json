@@ -1,0 +1,59 @@
+{
+  "scope": "Same exact fixture,seed42,full952buttons,actualeachframecount,frame952pair",
+  "images": [
+    {
+      "case": "potion-bench",
+      "variant": "before",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/potion-bench-before.png",
+      "sha256": "ca087ef65ac64474b4e00864bfb8fe39d106686a93fbdf69dfe64ec611695e9c",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/potion-bench/before/frame-0952.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "potion-bench",
+      "variant": "after",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/potion-bench-after.png",
+      "sha256": "89cf8518535824edd29135b957ff64a11f57860d25fc4cd21cb2109e3df0ac42",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/potion-bench/after/frame-0952.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "parlyz-bench",
+      "variant": "before",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/parlyz-bench-before.png",
+      "sha256": "3203c8ffb0094ad9f062bf75e753177a03297f7cbfe2acb0ee3e40495bd9d3f8",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/parlyz-bench/before/frame-0952.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "parlyz-bench",
+      "variant": "after",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/parlyz-bench-after.png",
+      "sha256": "4a81fddd0f2b9a62e7cbfd6741232829aa582540174202e82b2b59216044b03d",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/parlyz-bench/after/frame-0952.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "revive-bench",
+      "variant": "before",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/revive-bench-before.png",
+      "sha256": "d229af0e54935b793c6c6a92502f250db6497c06835a98e557f6e34e9ce1c3fb",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/revive-bench/before/frame-0952.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "revive-bench",
+      "variant": "after",
+      "frame": 952,
+      "path": "docs/screenshots/field-medicine-success-text/revive-bench-after.png",
+      "sha256": "ded6c2ce1428d17be25723365bb7bc6cb608a8ef475138338d093fdcecf0cf3a",
+      "source_path": "audit-920-matched-prefix-3p17kxkl/revive-bench/after/frame-0952.png",
+      "visually_inspected": true
+    }
+  ]
+}

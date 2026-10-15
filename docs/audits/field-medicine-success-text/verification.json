@@ -1,0 +1,244 @@
+{
+  "audit": 920,
+  "before": {
+    "source_commit": "05f6e76c2e8fc6c0a64dbf6486316a073fa20347",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-920-before",
+    "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-920-current05-before-debug",
+    "binary_sha256": "1261e88559c9bd01b14199077be843b9b37f7818b734e8954e43c05e2669aaa8",
+    "build_exit": 0,
+    "build_log": "audit-920-current05-before-build.log",
+    "build_target": "fidelity-920-before-target",
+    "features": "debug-server",
+    "profile": "dev opt0/debug0 incremental0, explicit --bin pokered-app; fresh isolated target"
+  },
+  "after": {
+    "source_commit": "0cf0552ba7af338524d6c41b0c348873224704dd",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-920-field-medicine-audit",
+    "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-920-final-after-debug",
+    "binary_sha256": "ec8889cabe6a8fa5f7ebf02767c470e2a7af0fdc0ee8cafcd1060b38b2eb6487",
+    "build_exit": 0,
+    "build_log": "audit-920-after-build.log",
+    "build_target": "fidelity-920-after-target",
+    "features": "debug-server",
+    "profile": "dev opt0/debug0 incremental0, explicit --bin pokered-app; fresh isolated target"
+  },
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "production_source_changed_paths": [
+    "crates/pokered-core/src/items/bag_use.rs",
+    "crates/pokered-data/src/dialog_text.rs"
+  ],
+  "source_files_compared": 2163,
+  "ordinary_SAVE_controls": {
+    "original": 6,
+    "clean_current_master_before": 6,
+    "after": 6,
+    "all18_valid_checksums": true,
+    "all6_native_pairs_entire_SRAM_and_input_equal": true
+  },
+  "cases": [
+    {
+      "case": "potion-bench",
+      "item": "Potion",
+      "original_caption": "SPROUT\nrecovered by 20!",
+      "before_caption": "SPROUT's HP was\nrestored by 20!",
+      "after_caption": "SPROUT\nrecovered by 20!",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-920-original-field-medicine-mpzdj0ut/potion-bench-1",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/potion-bench-1",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/potion-bench-1",
+          "original_record_sha256": "ca3363d796b42a0a150a61cf32d22cde7b249a2f0cfecdc7877e3eff4a06a04c",
+          "before_record_sha256": "b46dbc927a66fa16929cdec1d33bc69c6cd5eaf35fe6a6e657846f9bf9d74447",
+          "after_record_sha256": "6db7b0341e620e8e8cf12ee6f6cea318af449fecf2f8432a57dbe75613f921d5",
+          "original_sram_sha256": "c3ab85a295a84cdd1af841de9047d13fde7457d8c096ab2d446b42e694d18617",
+          "native_entire_SRAM_equal_sha256": "a0ee40eee2551aad1928abf4d71cfa0f8c062dc9e5f8edfa23a9a2fc30a638ec",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "84d9e8d6a70b3b2d1b6ad10f8fc7551fe7f6a171682c3212f91cc41bddea5319",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 21,
+          "all_protected_fields_pass": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-920-original-field-medicine-mpzdj0ut/potion-bench-2",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/potion-bench-2",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/potion-bench-2",
+          "original_record_sha256": "0d0a4e0230bdcbaaea5155afdcbc699a25824842d43f5f4cb92b37ef4a861d66",
+          "before_record_sha256": "3e95bf2023e7473e011a65bf0ad12414c85a3758d26fe6937bb5ee409002f1b8",
+          "after_record_sha256": "df4b32520c022a127167e1438270bf056d96980199e486023ed196556ab50a93",
+          "original_sram_sha256": "c3ab85a295a84cdd1af841de9047d13fde7457d8c096ab2d446b42e694d18617",
+          "native_entire_SRAM_equal_sha256": "a0ee40eee2551aad1928abf4d71cfa0f8c062dc9e5f8edfa23a9a2fc30a638ec",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "84d9e8d6a70b3b2d1b6ad10f8fc7551fe7f6a171682c3212f91cc41bddea5319",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 21,
+          "all_protected_fields_pass": true
+        }
+      ],
+      "sameframe_replay": {
+        "directory": "audit-920-matched-prefix-3p17kxkl/potion-bench",
+        "fixture_sha256": "84d9e8d6a70b3b2d1b6ad10f8fc7551fe7f6a171682c3212f91cc41bddea5319",
+        "buttons_sha256": "2906e970c7b7449ce74666bd444217c5fb99f427e2ddf8869a4ac3fb2a70efe3",
+        "perframe_states_and_inputs": 952,
+        "native_debug_states_equal_every_frame": true,
+        "screenshots_per_variant": 17,
+        "committed_pair_frame": 952,
+        "before_sha256": "ca087ef65ac64474b4e00864bfb8fe39d106686a93fbdf69dfe64ec611695e9c",
+        "after_sha256": "89cf8518535824edd29135b957ff64a11f57860d25fc4cd21cb2109e3df0ac42"
+      }
+    },
+    {
+      "case": "parlyz-bench",
+      "item": "ParlyzHeal",
+      "original_caption": "SPROUT's\nrid of paralysis!",
+      "before_caption": "SPROUT was cured\nof its status!",
+      "after_caption": "SPROUT's\nrid of paralysis!",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-920-original-field-medicine-zpjs64d6/parlyz-bench-1",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/parlyz-bench-1",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/parlyz-bench-1",
+          "original_record_sha256": "01499ba062aecc07fe4f9a0e6212c837e636a10dd96b9fa5a9c95b28015b332b",
+          "before_record_sha256": "d163a00520c9b2829da53ea6ab6344b27e4a5a9c8d2274fee6455a695a8a4e8e",
+          "after_record_sha256": "c9d04f03bf7d87bf0d39aa7f279d71f3ea1164b02e4767023923862f9b9b954d",
+          "original_sram_sha256": "ff7d35321ef33950fcfa901a1bd5f951439a2421baa3d8e9ae4939e964abd55b",
+          "native_entire_SRAM_equal_sha256": "6aec027f40f186be28be4d0e1a47ec383524af1cd3cbddde682fdf7f660471ba",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "66d7937af5209e768669b929c516e5b3e361fdeece3d701f9fc77fd7969a32bd",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 35,
+          "all_protected_fields_pass": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-920-original-field-medicine-zpjs64d6/parlyz-bench-2",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/parlyz-bench-2",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/parlyz-bench-2",
+          "original_record_sha256": "f4f6b0604dba46789b3c2a953179418c757ef5774098a36357fa71f7c94d683a",
+          "before_record_sha256": "9bbed6af33d4a363f8898dcf8bf6069c5527621246c1f21756f6523b41b99f52",
+          "after_record_sha256": "6f4f444cb50e25b36bf421229c9d897e09e765708849eedded276d09e73aa821",
+          "original_sram_sha256": "ff7d35321ef33950fcfa901a1bd5f951439a2421baa3d8e9ae4939e964abd55b",
+          "native_entire_SRAM_equal_sha256": "6aec027f40f186be28be4d0e1a47ec383524af1cd3cbddde682fdf7f660471ba",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "66d7937af5209e768669b929c516e5b3e361fdeece3d701f9fc77fd7969a32bd",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 35,
+          "all_protected_fields_pass": true
+        }
+      ],
+      "sameframe_replay": {
+        "directory": "audit-920-matched-prefix-3p17kxkl/parlyz-bench",
+        "fixture_sha256": "66d7937af5209e768669b929c516e5b3e361fdeece3d701f9fc77fd7969a32bd",
+        "buttons_sha256": "2906e970c7b7449ce74666bd444217c5fb99f427e2ddf8869a4ac3fb2a70efe3",
+        "perframe_states_and_inputs": 952,
+        "native_debug_states_equal_every_frame": true,
+        "screenshots_per_variant": 17,
+        "committed_pair_frame": 952,
+        "before_sha256": "3203c8ffb0094ad9f062bf75e753177a03297f7cbfe2acb0ee3e40495bd9d3f8",
+        "after_sha256": "4a81fddd0f2b9a62e7cbfd6741232829aa582540174202e82b2b59216044b03d"
+      }
+    },
+    {
+      "case": "revive-bench",
+      "item": "Revive",
+      "original_caption": "SPROUT\nis revitalized!",
+      "before_caption": "SPROUT was\nrevitalized!",
+      "after_caption": "SPROUT\nis revitalized!",
+      "records": [
+        {
+          "repeat": 1,
+          "original_directory": "audit-920-original-field-medicine-zpjs64d6/revive-bench-1",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/revive-bench-1",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/revive-bench-1",
+          "original_record_sha256": "26029421842cd91182006919c7198de8e07b0d2faebc00854f9a2636536e502d",
+          "before_record_sha256": "2dfc0b3814739c39d1c590099a8ae85e1ab7bdb39d869e697acf33a4de6a3766",
+          "after_record_sha256": "85aa33c25e27b502e74aac2aa7b706c54dede60b0cacb6ff0ce23a4e776fa44f",
+          "original_sram_sha256": "747db7b24fa7129c5b03227184367af83a4d99bbc6e11c2c135bbc86d7bac0cd",
+          "native_entire_SRAM_equal_sha256": "c920745e5023184cd77b00a6f913d7c53e22e1bac160760ee25dd02cce1a1743",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "b785f711a49e316cd88b8914540303d2e1f0f9b4bda48bef207d92135927eedf",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 17,
+          "all_protected_fields_pass": true
+        },
+        {
+          "repeat": 2,
+          "original_directory": "audit-920-original-field-medicine-zpjs64d6/revive-bench-2",
+          "before_directory": "audit-920-current05-native-before-k8cy2hl9/revive-bench-2",
+          "after_directory": "audit-920-current05-native-after-2tezy9nr/revive-bench-2",
+          "original_record_sha256": "67df6309ddfdc26a67b3c7e829a98f6fe482a184fd3e41557beb37dbfb83460e",
+          "before_record_sha256": "e14055b0a4446b3dab123572ce699f4706e94c8841c828b4465d9e67d707a488",
+          "after_record_sha256": "904e21e92fdc155dbfb0a4ea87b37e1d6e96825579e418aa15e74f3991a958c8",
+          "original_sram_sha256": "747db7b24fa7129c5b03227184367af83a4d99bbc6e11c2c135bbc86d7bac0cd",
+          "native_entire_SRAM_equal_sha256": "c920745e5023184cd77b00a6f913d7c53e22e1bac160760ee25dd02cce1a1743",
+          "identical_actions_sha256": "e3c6e858c1364db70f5cb4e58ca9a5e0b2762669e23dca6f8e94acc9648ea0c8",
+          "identical_fixture_sha256": "b785f711a49e316cd88b8914540303d2e1f0f9b4bda48bef207d92135927eedf",
+          "all_three_SAVE_checksums_valid": true,
+          "native_entire_32768bytes_equal": true,
+          "source_before_after_party88bytes_equal_expected": true,
+          "source_before_after_OT_and_nickname22bytes_equal": true,
+          "exactly_one_consumed": true,
+          "target_HP": 17,
+          "all_protected_fields_pass": true
+        }
+      ],
+      "sameframe_replay": {
+        "directory": "audit-920-matched-prefix-3p17kxkl/revive-bench",
+        "fixture_sha256": "b785f711a49e316cd88b8914540303d2e1f0f9b4bda48bef207d92135927eedf",
+        "buttons_sha256": "2906e970c7b7449ce74666bd444217c5fb99f427e2ddf8869a4ac3fb2a70efe3",
+        "perframe_states_and_inputs": 952,
+        "native_debug_states_equal_every_frame": true,
+        "screenshots_per_variant": 17,
+        "committed_pair_frame": 952,
+        "before_sha256": "d229af0e54935b793c6c6a92502f250db6497c06835a98e557f6e34e9ce1c3fb",
+        "after_sha256": "ded6c2ce1428d17be25723365bb7bc6cb608a8ef475138338d093fdcecf0cf3a"
+      }
+    }
+  ],
+  "tests": {
+    "core": {
+      "passed": 2893,
+      "new_meaningful_tests": 4
+    },
+    "app_debug": {
+      "passed": 289,
+      "ignored": 39
+    },
+    "data_dialog": {
+      "passed": 6,
+      "new_meaningful_tests": 1
+    },
+    "GBA": "Seven scenarios compared against unchanged checked-in baseline; see audit-920-gba-compare.log and perf.json."
+  },
+  "limits": [
+    "Legal constructed preboot party/HP/status/bag/name/map; ordinary menu input and SAVE afterwards. Not a fresh campaign.",
+    "Original/native full SRAM, RNG, CPU clocks, waveform and complete animation parity are not asserted. Original/new native per-member raw party+name fields are compared, and native before/after complete SRAM is compared.",
+    "New actual matrix is Potion/ParlyzHeal/Revive only. Other status/healing items and FullRestore branches have original source and unit coverage.",
+    "Field menu owner, effects, HP animation, notice delay/ACK, consume and app continuation are unchanged. No new persistent state or snapshot field. Battle medicine PR267 is independent.",
+    "Historical readonly8eb controls and rejected old source symbol/decoder attempts retain their actual identities in the original920 custody archive. Native current05f6 is a separate fresh build.",
+    "Native notice text is absent from debug state; exact paused PNGs were inspected and bag_use source supplies the exact English. No debug API change."
+  ]
+}
