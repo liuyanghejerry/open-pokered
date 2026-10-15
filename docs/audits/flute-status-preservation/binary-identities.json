@@ -1,0 +1,22 @@
+[
+  {
+    "path": "audit-916-after-debug",
+    "bytes": 78508768,
+    "sha256": "b1415311252ad87ee87e07e549e1c76fc1b0aa674068431399b2ae26cdc53572"
+  },
+  {
+    "path": "audit-912-current-before-debug",
+    "bytes": 78528064,
+    "sha256": "f966f7e2de570b0d94291ca5d7ecd1a8ce45083caeed9f7d7c54e24bc8190c1b"
+  },
+  {
+    "path": "audit-916-perf.gba",
+    "bytes": 5652636,
+    "sha256": "0e4bcbc890e4388c69e4ce346d8483efa2c26362465ed1cbe0aa197add70a104"
+  },
+  {
+    "path": "movement-91-setup/walking-reference.gbc",
+    "bytes": 1048576,
+    "sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+  }
+]
