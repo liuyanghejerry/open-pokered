@@ -58,3 +58,5 @@ HealAilment，等待 A/B 确认后才移除道具。它设置逃脱标记，但�
 python3 extract_evidence.py evidence.zip --verify-only
 python3 extract_evidence.py evidence.zip /tmp/pokedoll-evidence
 ```
+
+进一步整合只读诊断工具 master `dfeefa34` 后，完整 debug app 270 通过、39 个已有忽略项、0 失败；核心生产源码未改变。日志见 `diagnostic-integration.json` / `diagnostic-integration-logs.zip`。
