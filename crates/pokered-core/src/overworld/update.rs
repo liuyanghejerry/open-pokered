@@ -1205,7 +1205,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return ScreenAction::Continue;
         }
 
-        // FLASH lit a dark cave: the message has been dismissed — white out
+        // FLASH was accepted: the message has been dismissed — white out
         // the screen for a few frames (GBPalWhiteOutWithDelay3).
         if self.flash_pending_white && self.pending_dialogue.is_none() {
             self.flash_pending_white = false;
