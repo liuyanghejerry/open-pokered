@@ -72,7 +72,7 @@ mod fight_notice_sound_tests {
         let valid_selection=FightNoticeSound::before(&BattlePhase::MoveSelect);
         assert!(!valid_selection.after(&BattlePhase::LinkWaiting,false), "retain Game's existing valid Link-action gate");
         let ordinary=BattlePhase::ShowingText { messages:vec!["An ordinary turn.".into()],current:0,
-            wait_frames:10,next_phase:alloc::boxed::Box::new(BattlePhase::PlayerMenu),
+            wait_frames:10,next_phase:Box::new(BattlePhase::PlayerMenu),
             backdrop:pokered_core::battle::BattleTextBackdrop::Battle };
         assert!(!valid_selection.after(&ordinary,false), "do not broaden Game's valid-move SFX scope");
         assert!(valid_selection.after(&ordinary,true), "DirectBattle's pre-update menu gate is unchanged");
