@@ -1,3 +1,7 @@
+# 当前实际发布身份
+
+#269 head `5f4f3ac907463c9f917ddeba6bf6814c6c3deacb` 实际合入 `26bd605039be996a9cedbf02ed25e6114ac930ae` 后整合 master `26bd605039be996a9cedbf02ed25e6114ac930ae`。全部2175compiler／2693NUL mode/blob/literal symlink／702GFX与受测1011 `cb8e6b7da2abd7e8b4442ce545c827136f3f71d5`逐项相同。新远程CI未在此预先宣称全绿；其三个exacthead工作流仍须全部成功。无重建、无actual重录或历史身份改标。下方“本地准备”段和ZIP保留准备时身份，publication-1013.json新增实际集成字段。
+
 # 战斗中恢复 PP：发布准备与证据索引
 
 ## 2026-10-15 本地发布准备（尚未发布）

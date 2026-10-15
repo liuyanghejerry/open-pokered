@@ -1,6 +1,6 @@
 {
   "schema": "pp-restore-release-1013-local-preparation-v1",
-  "status": "PREPARED_PENDING_ACTUAL269_MERGE",
+  "status": "INTEGRATED_SOURCE_IDENTICAL_AWAITING_REMOTE_CI",
   "prepared_from_tested1011": "cb8e6b7da2abd7e8b4442ce545c827136f3f71d5",
   "release_branch": "fix/battle-pp-restore-caller-1013",
   "future_parent": {
@@ -521,5 +521,43 @@
     "literal-master-before-evidence.zip": "7e1a710812e4d131be6d5a39b178f61e0f6ed93ee5c47432a67c243e031f76bc"
   },
   "README_before_sha256": "0131f5aee4137b50d8d41859ceb3320b81e62d432a38622fe65df13023c67b0d",
-  "publication_policy": "No builds/actual/remoteactions in1013 preparation. Publisher can run onlyafter rootreview+actual269MERGED; mergefreshmaster then all2175compiler/2693NUL/GFX702 identicaltested1011, otherwiseSTOP. Onlydocs may change. Onepush/newPRcreate, fullrawHTTP8images+publicdocs, three exacthead workflowtriggers; no rerun/no merge/no claimremoteCIgreen."
+  "publication_policy": "No builds/actual/remoteactions in1013 preparation. Publisher can run onlyafter rootreview+actual269MERGED; mergefreshmaster then all2175compiler/2693NUL/GFX702 identicaltested1011, otherwiseSTOP. Onlydocs may change. Onepush/newPRcreate, fullrawHTTP8images+publicdocs, three exacthead workflowtriggers; no rerun/no merge/no claimremoteCIgreen.",
+  "actual_master": "26bd605039be996a9cedbf02ed25e6114ac930ae",
+  "parent269": {
+    "baseRefName": "master",
+    "headRefName": "fix/field-medicine-success-text-920",
+    "headRefOid": "5f4f3ac907463c9f917ddeba6bf6814c6c3deacb",
+    "mergeCommit": {
+      "oid": "26bd605039be996a9cedbf02ed25e6114ac930ae"
+    },
+    "mergedAt": "2026-10-15T14:19:46Z",
+    "number": 269,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/269"
+  },
+  "parent1010_publication_sha256": "49d575d62c567b7c63749ff172c44373088c0144b3ba546b3e47d6afd2724551",
+  "integrated_source_before_doc_commit": "68e8189961b24029487628a9ee3ca0ba187076b9",
+  "final_identity": {
+    "tested_source": "cb8e6b7da2abd7e8b4442ce545c827136f3f71d5",
+    "compiler_count": 2175,
+    "all_compiler_bytes_modes_equal": true,
+    "all_NUL_non_doc_count": 2693,
+    "all_NUL_non_doc_blobs_modes_literal_symlinks_equal": true,
+    "gfx_count": 702,
+    "all_gfx_equal": true
+  },
+  "own_source_paths": [
+    "crates/pokered-app/src/battle_pp_restore_tests.rs",
+    "crates/pokered-app/src/game.rs",
+    "crates/pokered-app/src/render/battle.rs",
+    "crates/pokered-app/src/render/battle_medicine_tests.rs",
+    "crates/pokered-app/src/render/session.rs",
+    "crates/pokered-core/src/battle/item_fidelity_tests.rs",
+    "crates/pokered-core/src/battle/mod.rs",
+    "crates/pokered-core/src/battle/pp_restore_caller_tests.rs",
+    "crates/pokered-core/src/battle/state.rs",
+    "crates/pokered-ui/src/menus/battle_move.rs"
+  ],
+  "publisher_sha256": "e3effa7fd98d1da67a673073267ae910938aa801b981578d311673fed8b54074",
+  "no_rebuild_replay_relabelling": true
 }
