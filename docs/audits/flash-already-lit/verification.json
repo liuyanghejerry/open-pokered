@@ -1,0 +1,267 @@
+{
+  "scope": "Queue the existing FLASH whiteout also on outside/already-lit maps; one production branch flag plus comment and two strengthened regressions. This does not implement whole FLASH restore timing.",
+  "before_commit": "6085c98704a9b0cb25cbcd34afcc028184ce9217",
+  "before_binary_sha256": "a6c380c64b6e0cf241117e1d745a87cdb75175bf06ae47d7e359f02777f37c79",
+  "after_commit": "d0cc687ddf5b4fb4fab18b3a95407fa0a63d6e31",
+  "after_binary_sha256": "9aaded888b2f547ca16a0266929937d09aa296e9eefcf570515613eeecce0aa7",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_raw_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-911-original-flash-zgyj42zn",
+  "native_raw_directories": {
+    "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-911-native-flash-before-0b3kdhfh",
+    "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-911-native-flash-after-42rw9un2"
+  },
+  "ordinary_final_SAVE_counts": {
+    "original": 6,
+    "native_before": 6,
+    "native_after": 6
+  },
+  "native_initial_SAVE_counts": {
+    "before": 6,
+    "after": 6
+  },
+  "tests": {
+    "core": {
+      "passed": 2888,
+      "ignored": 0,
+      "failed": 0,
+      "log_sha256": "05805b32b488df30c4d70627b1ff6540ce846a3d83ad289f40c5a9fa199cd6de"
+    },
+    "app": {
+      "passed": 280,
+      "ignored": 39,
+      "failed": 0,
+      "log_sha256": "cbedf204a504e5b667463e440d8ee7b4b6e9c49f364028d9b5ea51ab77bc6a64"
+    }
+  },
+  "baseline_regressions": "13PASS/2expectedFAIL: outdoor and second-cave whiteout0vs3",
+  "gba": {
+    "seven_scenario_original_gates_passed": true,
+    "rom_sha256": "c87d888a0dc4eb7b86752ab8a7194a9cdde5efb703732cc46ae3a0cc6fae0aff",
+    "idle_update_ticks": 382,
+    "trainer_update_ticks": 232,
+    "remote_CI_still_required": true
+  },
+  "cases": [
+    {
+      "case": "outside",
+      "repeat": 1,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906
+      ],
+      "initial_source_map_palette_offset": 0,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    },
+    {
+      "case": "outside",
+      "repeat": 2,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906
+      ],
+      "initial_source_map_palette_offset": 0,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    },
+    {
+      "case": "outside-fainted",
+      "repeat": 1,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906
+      ],
+      "initial_source_map_palette_offset": 0,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    },
+    {
+      "case": "outside-fainted",
+      "repeat": 2,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906
+      ],
+      "initial_source_map_palette_offset": 0,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    },
+    {
+      "case": "cave-twice",
+      "repeat": 1,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        },
+        {
+          "tag": "use2-ack-05",
+          "frame": 1882
+        },
+        {
+          "tag": "use2-ack-06",
+          "frame": 1883
+        },
+        {
+          "tag": "use2-ack-07",
+          "frame": 1884
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906,
+        2508
+      ],
+      "initial_source_map_palette_offset": 6,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    },
+    {
+      "case": "cave-twice",
+      "repeat": 2,
+      "same_fixture_inputs_initial_final_native_SRAM": true,
+      "party88_source_exact": true,
+      "before_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        }
+      ],
+      "after_white": [
+        {
+          "tag": "use1-ack-05",
+          "frame": 1630
+        },
+        {
+          "tag": "use1-ack-06",
+          "frame": 1631
+        },
+        {
+          "tag": "use1-ack-07",
+          "frame": 1632
+        },
+        {
+          "tag": "use2-ack-05",
+          "frame": 1882
+        },
+        {
+          "tag": "use2-ack-06",
+          "frame": 1883
+        },
+        {
+          "tag": "use2-ack-07",
+          "frame": 1884
+        }
+      ],
+      "source_white_calls_after_each_FLASH": [
+        1906,
+        2508
+      ],
+      "initial_source_map_palette_offset": 6,
+      "all_final_ordinary_SAVE_valid": true,
+      "native_archived_box_banks_unchanged": true
+    }
+  ],
+  "limitations": [
+    "Constructed preinput party/map/flags, ordinary menus and SAVE thereafter. No full-world reachability, whole waveform, source/native RNG or frame-clock equivalence claim.",
+    "Original whiteout explicitly waits3frames, but full map/sprite/tile restoration keeps palette white longer (outside case BGP0=1907..1944, wholewhite1908..1944). Existing native3-frame presentation is reused here; measured full restore difference remains separate unresolved candidate913.",
+    "Native initial/final byte-identical SRAM across before/after and party88 original equality are bounded saved-data checks; no complete cross-provider SRAM equality claim.",
+    "Old source controller v1 asserted the wrong field-name index5; v2 source cave prep was already lit because EnterMap bypassed WarpFound2. Finalv3 constructs actualdark-map offset6 before EnterMap and validation. All prior raw scripts/logs/records retained without relabeling.",
+    "First GBA invocation used outer workspace cwd and failed; corrected standalone mirror build and seven-scenario record/compare all passed. ROM/executable/emulator-state files stay local and their hashes are listed."
+  ]
+}
