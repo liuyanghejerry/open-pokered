@@ -211,8 +211,9 @@ fn calc_max_pp(
 ) -> u8 {
     let (base, _) = render_data.move_pp(move_id);
     let ups = pp_ups.min(3);
-    let bonus = (base as u16 * ups as u16 / 5) as u8;
-    base + bonus
+    // AddBonusPP caps each PP Up after dividing the provider's base PP.
+    let bonus_per_up = (base / 5).min(7);
+    base + ups * bonus_per_up
 }
 
 fn calc_exp_to_level_up(mon: &Pokemon) -> u32 {
