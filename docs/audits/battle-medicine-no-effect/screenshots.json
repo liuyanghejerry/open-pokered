@@ -1,0 +1,59 @@
+{
+  "scope": "Matchedcompletephysical1288buttons,seed42,exactfixture,everyactualframeverified,frame1288pairs",
+  "images": [
+    {
+      "case": "potion-full",
+      "variant": "before",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/potion-full-before.png",
+      "sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/potion-full/before/frame-1288.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "potion-full",
+      "variant": "after",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/potion-full-after.png",
+      "sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/potion-full/after/frame-1288.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "parlyz-healthy",
+      "variant": "before",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/parlyz-healthy-before.png",
+      "sha256": "0ff01da0261deeeff251c63c39aa26680246ed3f4f054f7f839a8ff570fe5358",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/parlyz-healthy/before/frame-1288.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "parlyz-healthy",
+      "variant": "after",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/parlyz-healthy-after.png",
+      "sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/parlyz-healthy/after/frame-1288.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "revive-alive",
+      "variant": "before",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/revive-alive-before.png",
+      "sha256": "6ee4b294c28e28b2c0341d0bf87de63e12be08f54ef14d9a1c3d8c8d12689bf9",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/revive-alive/before/frame-1288.png",
+      "visually_inspected": true
+    },
+    {
+      "case": "revive-alive",
+      "variant": "after",
+      "frame": 1288,
+      "path": "docs/screenshots/battle-medicine-no-effect/revive-alive-after.png",
+      "sha256": "a4ec03cea7a966fff407cc07501c4daff2ecb3d8316b6e96f9290fa43e29846c",
+      "source_path": "audit-924-fix-matched-prefix-_atnbij2/revive-alive/after/frame-1288.png",
+      "visually_inspected": true
+    }
+  ]
+}
