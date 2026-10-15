@@ -1,0 +1,28 @@
+{
+  "head_before_documentation": "db575b63bd1010fa38b6ef67321715b88f07a91f",
+  "master": "4cd8fc36490ec0875dde02f74ce7cd1bc1b9b6ee",
+  "historical_recording_identities_unchanged": true,
+  "tests": {
+    "post_capture": {
+      "passed": 8,
+      "log": "audit-898-post-capture-integrated-app.log",
+      "sha256": "237b0ec66f3e281ec0b235d9434693a9753c4e02b3c4de155916940022d66de8"
+    },
+    "tmhm_learning": {
+      "passed": 10,
+      "log": "audit-898-tmhm-integrated-app.log",
+      "sha256": "6470d22af42f745cbd50da972a9a6f93bc8d331f92c312e364c24c3dc9ef938e"
+    },
+    "rare_candy": {
+      "passed": 11,
+      "log": "audit-898-candy-integrated-app.log",
+      "sha256": "55c603c92ee8eafbb52dc963dbd03425ffac7c18d5e26683828592d1b250cd80"
+    }
+  },
+  "logs_archive": {
+    "path": "post-tmhm-integration-logs.zip",
+    "sha256": "946eaca43770cfa88d126ce977b0a61abb57606cf5a1929c21c5efb41cbdda64",
+    "bytes": 25153,
+    "all_entry_hash_readback": true
+  }
+}

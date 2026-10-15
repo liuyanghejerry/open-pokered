@@ -14,6 +14,8 @@ macro_rules! dbg_eprintln {
 
 #[path = "rare_candy.rs"]
 pub(crate) mod rare_candy;
+#[path = "post_capture.rs"]
+pub(crate) mod post_capture;
 
 use crate::alloc_prelude::*;
 
@@ -687,6 +689,7 @@ pub struct PokemonGame {
     /// CANCEL (the move is then not learned, like AbandonLearning).
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
+    post_capture_flow: Option<Box<post_capture::PostCaptureFlow>>,
     pub stats_screen: Option<StatsScreenState>,
     pub slots_screen: Option<SlotsScreen>,
     pub elevator_screen: Option<ElevatorScreen>,
@@ -1340,6 +1343,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -1516,6 +1520,7 @@ impl PokemonGame {
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -1641,6 +1646,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
             pc_stats_return_frame: None,
@@ -2182,6 +2188,7 @@ impl PokemonGame {
     #[cfg(target_os = "none")]
     #[inline(never)]
     pub fn try_load_sram_save(&mut self) {
+        self.clear_post_capture_continuation();
         // Loading starts a new session. Release the previous sequencer,
         // resume caches and decoded graphics before parsing the new save.
         self.audio = None;
@@ -2314,18 +2321,31 @@ impl PokemonGame {
         let save = import_sram(&data)
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
+        if self.post_capture_active() {
+            // The old BattleOver caller must not settle its party into the
+            // newly imported save after its capture modal is abandoned.
+            self.state.transition_to(GameScreen::Overworld);
+        }
+        self.clear_post_capture_continuation();
         self.save_data = save;
         Ok(())
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
+            self.clear_post_capture_continuation();
+        }
         #[cfg(feature = "repro-markers")]
         log::info!(
             "mk: transition to {:?} free={}B",
             screen,
             largest_free_block()
         );
-        self.prepare_gba_screen_resources(&screen);
+        // Keep the caught battle backdrop until its new-DEX announcement.
+        if !(self.state.screen == GameScreen::Battle && screen == GameScreen::Overworld
+            && self.battle.captured_mon.is_some()) {
+            self.prepare_gba_screen_resources(&screen);
+        }
         // InitBattleVariables/EndOfBattle clear wBagSavedMenuItem and scroll.
         // Main-menu/new-game entry starts another RAM session as well.
         if matches!(screen, GameScreen::Battle | GameScreen::MainMenu | GameScreen::OakSpeech)
@@ -2340,11 +2360,6 @@ impl PokemonGame {
         {
             self.start_menu.reset_saved_cursor();
         }
-        // Set in the Battle→Overworld settle below when a caught species was
-        // newly added to the Pokédex — the post-capture "New DEX data will be
-        // added…" entry then opens instead of the overworld
-        // (engine/items/item_effects.asm:521-546).
-        let mut post_catch_species: Option<pokered_data::species::Species> = None;
         match screen {
             GameScreen::IntroScene => {
                 self.intro_scene.reset();
@@ -2579,15 +2594,6 @@ impl PokemonGame {
                     }
                     _ => {
                         if self.state.screen == GameScreen::Battle {
-                            // Was the caught species new to the Pokédex? Checked
-                            // BEFORE the settle flips the owned bit (the original
-                            // tests wPokedexOwned before setting it).
-                            post_catch_species = self
-                                .battle
-                                .captured_mon
-                                .as_ref()
-                                .map(|c| c.species)
-                                .filter(|sp| !self.save_data.game_data.pokedex.is_owned(*sp));
                             // Fold the finished battle into the save (money / blackout /
                             // party writeback / catch / Pokédex / bag / encounter state).
                             // Shared verbatim with the TUI frontend.
@@ -2598,6 +2604,9 @@ impl PokemonGame {
                                     &mut self.overworld,
                                 );
                             let battle_outcome = writeback.outcome;
+                            if let Some(receipt) = writeback.captured {
+                                self.begin_post_capture(receipt);
+                            }
                             // EvolutionAfterBattle (engine/pokemon/evos_moves.asm):
                             // level-up evolutions detected at battle end play as the
                             // cutscene in the overworld, BEFORE the map music restarts
@@ -2622,7 +2631,7 @@ impl PokemonGame {
                                 // the music (stop-all → SFX_TINK →
                                 // MUSIC_SAFARI_ZONE); the map music restarts
                                 // when it finishes (PlayDefaultMusic).
-                                if self.evolution_anim.is_none() {
+                                if self.evolution_anim.is_none() && self.post_capture_flow.is_none() {
                                     let map = self.overworld.state.current_map;
                                     let data_id =
                                         pokered_core::overworld::map_loading::get_map_music(map);
@@ -2836,19 +2845,10 @@ impl PokemonGame {
                 self.trainer_card_screen = TrainerCardScreenState::new();
             }
         }
-        if let Some(species) = post_catch_species {
-            // "New DEX data will be added…": show the new species' entry before
-            // returning to the overworld (item_effects.asm:541-546). The jingle
-            // plays here; the cry fires from the update loop via cry_pending.
-            self.pokedex_screen = PokedexScreenState::new_entry(
-                self.save_data.game_data.pokedex.clone(),
-                species,
-                self.state.config.version,
-            );
-            if let Some(ref audio) = self.audio {
-                audio.play_sfx(SfxId::DexPageAdded);
-            }
-            self.state.transition_to(GameScreen::Pokedex);
+        if self.post_capture_flow.is_some() {
+            // The caught-mon caller still owns the screen and field clock.
+            // Its DATA/AskName/transfer continuation settles only once.
+            self.state.transition_to(GameScreen::Battle);
             return;
         }
         self.state.transition_to(screen);
@@ -2895,6 +2895,7 @@ impl PokemonGame {
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
         self.clear_rare_candy_continuation();
+        self.clear_post_capture_continuation();
         #[cfg(not(target_os = "none"))]
         {
             if self.external_saves {
@@ -3566,6 +3567,11 @@ impl PokemonGame {
             return;
         }
 
+        if self.post_capture_flow.as_ref().is_some_and(|flow| !flow.awaiting_entry()) {
+            self.update_post_capture(input);
+            return;
+        }
+
         // DisplayPartyMenu precedes ConnectCableText, then the animation.
         // Keep the scene suspended until the selected mon has been exchanged.
         if self.pending_trade.as_ref().is_some_and(|trade| trade.ready_to_animate)
@@ -3945,6 +3951,11 @@ impl PokemonGame {
 
                 match result {
                     OakSpeechResult::PlayerNameSet(name) => {
+                        // This is the canonical live player-name boundary,
+                        // before the first SAVE (captures copy its raw OT).
+                        if let Some(encoded) = pokered_data::charmap::encode_string(&name) {
+                            self.save_data.player_name = encoded;
+                        }
                         self.player_name = name;
                         ScreenAction::Continue
                     }
@@ -4616,13 +4627,16 @@ impl PokemonGame {
                 if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
                     self.battle.complete_move_presentation();
                 }
+                let caught_sound_holds_input = self.battle.captured_mon.is_some()
+                    && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
+                    && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
                 let battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A),
-                    b: input.is_just_pressed(GbButton::B),
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
                 };
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
@@ -4836,7 +4850,9 @@ impl PokemonGame {
                     if cur_message != self.battle_prev_message {
                         if let Some(ref msg) = cur_message {
                             let msg_lower = msg.to_lowercase();
-                            if msg_lower.contains("super effective") {
+                            if self.battle.captured_mon.is_some() && msg_lower.starts_with("all right!") {
+                                audio.play_sfx(SfxId::CaughtMon);
+                            } else if msg_lower.contains("super effective") {
                                 audio.play_sfx(SfxId::SuperEffective);
                             } else if msg_lower.contains("not very effective") {
                                 audio.play_sfx(SfxId::NotVeryEffective);
@@ -5575,7 +5591,9 @@ impl PokemonGame {
                     // start menu (RedisplayStartMenu); the post-capture entry
                     // returns to the overworld.
                     PokedexScreenAction::Closed => {
-                        if self.bag_viewer_return {
+                        if self.close_post_capture_entry() {
+                            ScreenAction::Continue
+                        } else if self.bag_viewer_return {
                             ScreenAction::Transition(GameScreen::Bag)
                         } else if self.pokedex_screen.from_list() {
                             ScreenAction::Transition(GameScreen::StartMenu)
@@ -6681,14 +6699,14 @@ impl PokemonGame {
         // Current overworld dialogue text (script @speaker / talk), so a
         // driver can observe interactions that don't change `screen`.
         let dialogue = self
-            .overworld
-            .displayed_field_dialogue()
+            .post_capture_dialogue()
+            .or_else(|| self.overworld.displayed_field_dialogue())
             .and_then(|d| d.get_display_text())
             .map(|(a, b)| format!("{} {}", a, b).trim().to_string());
         // Structured dialogue-machine state: page progress, typewriter
         // position, and whether the current page is fully revealed and
         // waiting for A — the driver can align A presses exactly.
-        let dialogue_state = self.overworld.pending_dialogue.as_ref().map(|d| {
+        let dialogue_state = self.post_capture_dialogue().or(self.overworld.pending_dialogue.as_ref()).map(|d| {
             let (a, b) = d.get_display_text().unwrap_or_default();
             serde_json::json!({
                 "text": format!("{} {}", a, b).trim(),
@@ -6704,9 +6722,8 @@ impl PokemonGame {
         // Choice-menu cursor (script `@choice`), so a driver can move the
         // highlighted option without guessing.
         let choice = self
-            .overworld
-            .pending_choice
-            .as_ref()
+            .post_capture_choice()
+            .or(self.overworld.pending_choice.as_ref())
             .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
         let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
@@ -6889,6 +6906,7 @@ impl PokemonGame {
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
         });
         // Keep this separate from the large snapshot macro's recursion budget.
+        snapshot["capture_phase"] = serde_json::json!(self.post_capture_flow.as_ref().map(|flow| format!("{:?}", flow.phase)));
         let live = self.battle.battle_state.as_ref()
             .filter(|_| matches!(self.state.screen, GameScreen::Battle));
         let party: Vec<_> = if let Some(bs) = live {
@@ -6954,8 +6972,8 @@ impl PokemonGame {
             player_y: self.overworld.state.player.y,
             player_facing: self.overworld.state.player.facing,
             overworld: OverworldObs {
-                dialogue_open: self.overworld.pending_dialogue.is_some(),
-                choice_open: self.overworld.pending_choice.is_some(),
+                dialogue_open: self.post_capture_dialogue().is_some() || self.overworld.pending_dialogue.is_some(),
+                choice_open: self.post_capture_choice().is_some() || self.overworld.pending_choice.is_some(),
                 script_running: !self.overworld.script_engine_idle()
                     || self.overworld.active_script_effect_label().is_some()
                     || self.overworld.script_awaiting_battle,
@@ -6970,8 +6988,8 @@ impl PokemonGame {
             party: &self.save_data.party,
             bag: &bag,
             obtained_badges: self.save_data.game_data.obtained_badges,
-            dialogue: self.overworld.pending_dialogue.as_ref(),
-            choice: self.overworld.pending_choice.as_ref(),
+            dialogue: self.post_capture_dialogue().or(self.overworld.pending_dialogue.as_ref()),
+            choice: self.post_capture_choice().or(self.overworld.pending_choice.as_ref()),
             battle: in_battle.then_some(&self.battle),
             npc_states: &self.overworld.npc_states,
             map_json: map_handle.as_ref().map(|h| &**h),
@@ -7014,14 +7032,11 @@ impl PokemonGame {
     #[cfg(feature = "debug-server")]
     fn debug_condition_met(&self, condition: &str) -> bool {
         match condition {
-            "dialogue_done" => self.overworld.pending_dialogue.is_none(),
-            "dialogue_ready" => self
-                .overworld
-                .pending_dialogue
-                .as_ref()
+            "dialogue_done" => self.post_capture_dialogue().is_none() && self.overworld.pending_dialogue.is_none(),
+            "dialogue_ready" => self.post_capture_dialogue().or(self.overworld.pending_dialogue.as_ref())
                 .map_or(false, |d| d.waiting_for_input()),
-            "choice_open" => self.overworld.pending_choice.is_some(),
-            "choice_closed" => self.overworld.pending_choice.is_none(),
+            "choice_open" => self.post_capture_choice().is_some() || self.overworld.pending_choice.is_some(),
+            "choice_closed" => self.post_capture_choice().is_none() && self.overworld.pending_choice.is_none(),
             "script_idle" => self.overworld.script_engine_idle(),
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
@@ -7029,6 +7044,7 @@ impl PokemonGame {
             // no pending automatic door step, and no battle suspended on the script.
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
+                    && !self.post_capture_active()
                     && self.overworld.pending_dialogue.is_none()
                     && self.overworld.pending_choice.is_none()
                     && self.overworld.active_script_effect_value().is_none()
@@ -7887,6 +7903,11 @@ impl PokemonGame {
     pub fn draw(&mut self, frame_buffer: &mut FrameBuffer) {
         if self.black_screen_frames > 0 {
             frame_buffer.clear(Rgba::BLACK);
+            return;
+        }
+
+        if self.post_capture_flow.as_ref().is_some_and(|flow| !flow.awaiting_entry()) {
+            self.draw_post_capture(frame_buffer);
             return;
         }
 

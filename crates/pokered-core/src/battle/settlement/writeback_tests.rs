@@ -230,13 +230,48 @@ fn capture_full_party_goes_to_box() {
     save.current_box.deposit(old).unwrap();
     let mut ow = overworld();
 
-    settle_battle_into_save(&mut battle, &mut save, &mut ow);
+    let receipt = settle_battle_into_save(&mut battle, &mut save, &mut ow).captured.unwrap();
+    assert_eq!(receipt.location, super::CapturedLocation::CurrentBox(0));
+    assert!(receipt.new_pokedex_entry);
     assert_eq!(save.party.count(), 6, "party stays full");
     assert_eq!(save.current_box.count(), 2, "caught mon added to the PC box");
     assert_eq!(save.current_box.get(0).unwrap().species, Species::Pidgey);
     assert_eq!(save.current_box.get(1), Some(&old));
     assert_eq!(save.pc_storage.current_box(), &save.current_box);
     assert!(save.game_data.pokedex.is_owned(Species::Pidgey));
+}
+
+#[test]
+fn capture_receipt_stamps_raw_player_ot_preserving_caught_and_old_mon_data() {
+    for boxed in [false, true] {
+        let mut old = mon(Species::Charmander, 10);
+        old.ot_id = 0xabcd;
+        old.ot_name = [0x91; 11];
+        let player = vec![old; if boxed { 6 } else { 1 }];
+        let mut caught = mon(Species::Pidgey, 5);
+        caught.hp = 3;
+        caught.status = crate::battle::state::StatusCondition::Poison;
+        caught.pp[0] = 2;
+        let mut battle = BattleScreen::from_parties(true, &player, &[caught], None);
+        battle.settlement = Some(settlement(BattleOutcome::Captured, 0, 0));
+        battle.captured_mon = Some(caught);
+        let mut save = SaveData::new();
+        save.game_data.player_id = 4660;
+        save.player_name = vec![0x8d, 0x88, 0x8d, 0x93, 0x84, 0x8d, 0x50, 0x82, 0x83, 0x84, 0x85];
+        save.game_data.pokedex.set_owned(Species::Pidgey);
+        save.current_box.deposit(old).unwrap();
+        save.sync_current_box_to_storage();
+        let receipt = settle_battle_into_save(&mut battle, &mut save, &mut overworld()).captured.unwrap();
+        assert_eq!(receipt.location, if boxed { super::CapturedLocation::CurrentBox(0) } else { super::CapturedLocation::Party(1) });
+        assert!(!receipt.new_pokedex_entry);
+        caught.ot_id = 4660;
+        caught.ot_name.copy_from_slice(&save.player_name);
+        assert_eq!(if boxed { save.current_box.get(0) } else { save.party.get(1) }, Some(&caught));
+        for index in 0..player.len() { assert_eq!(save.party.get(index), Some(&old)); }
+        assert_eq!(save.current_box.get(if boxed { 1 } else { 0 }), Some(&old));
+        assert_eq!(save.current_box, *save.pc_storage.current_box());
+        assert!(settle_battle_into_save(&mut battle, &mut save, &mut overworld()).captured.is_none());
+    }
 }
 
 /// The mutated battle party (levels/HP/…) is written back to the save.
