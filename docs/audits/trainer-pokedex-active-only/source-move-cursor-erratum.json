@@ -1,0 +1,82 @@
+{
+  "audit": "906 source AI switch control cursor erratum",
+  "discovered_by": "909 actual-menu driver diagnostic",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_code": "engine/battle/core.asm MoveSelectionMenu selectedmoveknown writes current=selected_index+1; SelectMenuItem decrements current before assigning wPlayerMoveListIndex",
+  "root_cause": "The original move menu current cursor is one-based. The source driver compared current==1 while intending the second move Tackle. It continued selecting first move Growl; a Tackle intent is not actual Tackle execution. Native menu cursor is zero-based and its target1 is Tackle.",
+  "source_script": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-switch.py",
+  "source_script_sha256": "cad4acf99ed9a3b87eecd1247e91860d7dbe9363770df23280a968988a4d29b7",
+  "records": [
+    {
+      "repeat": 1,
+      "record_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-switch-_cnqal9_/actual-1/record.json",
+      "record_sha256": "1eb9f7e60e58b1527a615716f88ded8cbd3da5c3c51e5fc82404230184ff5493",
+      "old_scope_unchanged": "Preboot EnterMap FuchsiaGym(3,7), legal Bulbasaur and typed Dexbits[1] construction; actualRight/A talk to Juggler#4, actualfightbuttons to Growl until actualAI switch whilebothenemiesalive, thenTacklevictory, actualPokedexmenu andordinarySAVE. No validation writes/directbattlecalls.",
+      "actual_final": {
+        "map": 0,
+        "party_hp": 220,
+        "observed_handles": [
+          {
+            "label": "HandleBlackOut",
+            "frame": 13795
+          }
+        ],
+        "final_pp": [
+          40,
+          35,
+          10,
+          30
+        ],
+        "initial_pp": [
+          40,
+          35,
+          10,
+          30
+        ]
+      },
+      "saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "normal_save": true
+    },
+    {
+      "repeat": 2,
+      "record_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-switch-_cnqal9_/actual-2/record.json",
+      "record_sha256": "eacb810baa3f752b13875f9c82c1f20eedc639a6dc88c71d48bbabb87b920729",
+      "old_scope_unchanged": "Preboot EnterMap FuchsiaGym(3,7), legal Bulbasaur and typed Dexbits[1] construction; actualRight/A talk to Juggler#4, actualfightbuttons to Growl until actualAI switch whilebothenemiesalive, thenTacklevictory, actualPokedexmenu andordinarySAVE. No validation writes/directbattlecalls.",
+      "actual_final": {
+        "map": 0,
+        "party_hp": 220,
+        "observed_handles": [
+          {
+            "label": "HandleBlackOut",
+            "frame": 13795
+          }
+        ],
+        "final_pp": [
+          40,
+          35,
+          10,
+          30
+        ],
+        "initial_pp": [
+          40,
+          35,
+          10,
+          30
+        ]
+      },
+      "saved_seen": [
+        1,
+        96,
+        97
+      ],
+      "normal_save": true
+    }
+  ],
+  "correction": "Source actual naturally switches while both trainer monsters are alive, continues Growl, and ultimately loses. The old record.scope suffix thenTackle/victory describes intended driver behavior, not observed behavior; it is superseded by this correction. Source loss and native win are explicitly not RNG/HP/outcome parity.",
+  "effect_on_finding": "No change to actual seen registration proof: source actual AI switch exposes Drowzee and Hypno and saves [1,96,97]; native does likewise. Final W906 README/PR already identifies source loss versus native victory and limits this control to seen/lifecycle.",
+  "preservation": "No original scripts, record.json, captures, SRAM, or old archives edited. Root will add this derived erratum separately."
+}

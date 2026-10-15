@@ -1,0 +1,62 @@
+{
+  "integrated_master": "6085c98704a9b0cb25cbcd34afcc028184ce9217",
+  "tested_production_merge": "222605b2173fe633de3807fd13bdb1ca55521f66",
+  "merge_conflicts": false,
+  "production_diff_from_master": "Actual trainer-load notifications only; same five files/289 additions/5 deletions. Integration changes relative to669ab are the two core Poke Doll confirmation/test files; snapshot.rs itself was unchanged by this merge.",
+  "tests": {
+    "core-full": {
+      "passed": 2888,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-906-master6085-core-full.log",
+      "sha256": "dda557920e16492b1f56fb2e9ef908d99991b0935234e71843ff6b019a20526b"
+    },
+    "debug-scoped": {
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-906-master6085-debug-scoped.log",
+      "sha256": "170e5342234ad554f831e4e4b8a51feb6d47f33a1fdbf37151edaaaa33af086f"
+    },
+    "app-full": {
+      "passed": 289,
+      "failed": 0,
+      "ignored": 39,
+      "log": "audit-906-master6085-app-full.log",
+      "sha256": "e70b2b2f6b6c02c852d39416ef3d1e45e51073b071fa1e715d6b6cbc4bc6dcb8"
+    },
+    "agent-determinism": {
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0,
+      "log": "audit-906-master6085-agent-determinism.log",
+      "sha256": "d7b46421401e53689b86319b249d7010a0d5d0e3526c64f7c0fa0927d8b3d7bc"
+    }
+  },
+  "gba": {
+    "build_passed": true,
+    "nightly": "nightly-2025-12-07",
+    "rom_sha256": "460febba5ebdc6e490cfca705ef6e9dfbb09b249bd9eed7c2f68e547a7cef553",
+    "all_seven_unchanged_gates_passed": true,
+    "seven_scenario_all_metrics_identical_to669ab": true,
+    "local_runs_on_this_merge": 1,
+    "trainer_update_ticks": 232,
+    "baseline_ticks": 202,
+    "limit_ticks": 232.3,
+    "not_remote_CI_completion": true
+  },
+  "logs_archive": {
+    "path": "master-6085-integration-logs.zip",
+    "sha256": "7453b2947b4898113f20348dec622fa09638c33d9f91ada7f84733f0c7e28ca6",
+    "bytes": 292424,
+    "entries": 12,
+    "all_readback_verified": true
+  },
+  "capture_identity": "Existing b7c81-before/669ab-after ordinary-input captures and original local669ab GBA repeat2 retain their exact frozen hashes. No new app actual captures or debug-app executable is represented as this integration merge.",
+  "raw_evidence_preservation": {
+    "evidence_zip_sha256": "39497ded2b8f80b7e76e7ad287e8ef80f3c9e3e9ac6c465c604ecf390329d74f",
+    "unchanged_expected_sha256": "39497ded2b8f80b7e76e7ad287e8ef80f3c9e3e9ac6c465c604ecf390329d74f",
+    "source_cursor_erratum_sha256": "95950ed4c455607fb0d07dc616d50279f66cad0a2ef25b00a41d217b3e2bda0e"
+  },
+  "source_identity": "All Rust source compiled from clean production merge222605b2; only audit documentation was uncommitted while Cargo ran. No Rust source changed throughout the host/GBA builds or tests."
+}
