@@ -1,0 +1,52 @@
+{
+  "scope": "Three source/native cases, twice each. Initial/final ordinary SAVE, real RIGHT3/UP, no live setters. Current clean master BEFORE and frozen fix AFTER use byte-identical fixture/initial SRAM/input. AFTER party88 and money agree with original. No global SRAM/time/RNG/palette/audio/full-campaign equivalence claim.",
+  "before_commit": "7310d2989501c3a0d793c794244b51693ed692c2",
+  "after_commit": "1baf4c4ea890e9465140df3edf833f06e0c4ed41",
+  "tests": {
+    "baseline": "3FAIL/0PASS",
+    "final_core": "2887PASS",
+    "final_app": "286PASS/39ignored/0FAIL",
+    "poison_scoped": "16PASS",
+    "door_scoped": "7PASS included"
+  },
+  "source_summary_sha256": "7bd6cb2823d181c94fab6a05b52e3b0ec9b8434eca8b2f4f5a648987ccff3916",
+  "source_archive_sha256": "584aca5e7e4124340d98d56d8be96ab0cc9526b71efbf7a21cd4946e2eda94d7",
+  "archive": {
+    "bytes": 1285846,
+    "sha256": "59073f3afa05177d4d024e6980a3f73d872366d90398976ac8f020009aa811cd",
+    "paths": 761,
+    "blobs": 113
+  },
+  "cases": [
+    {
+      "case": "flash",
+      "same_fixture_and_input_and_initial_sram": true,
+      "after_party88_source_exact": true,
+      "screenshot_frame": 1389,
+      "directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-before-flash-q2u3x4sl",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-after-flash-27uwh06x"
+      }
+    },
+    {
+      "case": "faint",
+      "same_fixture_and_input_and_initial_sram": true,
+      "after_party88_source_exact": true,
+      "screenshot_frame": 1600,
+      "directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-before-faint-swkrse7r",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-after-faint-qzc9c40_"
+      }
+    },
+    {
+      "case": "wipe",
+      "same_fixture_and_input_and_initial_sram": true,
+      "after_party88_source_exact": true,
+      "screenshot_frame": null,
+      "directories": {
+        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-before-wipe-nkbi8kt1",
+        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-907-native-final-after-wipe-kcwc59bc"
+      }
+    }
+  ]
+}
