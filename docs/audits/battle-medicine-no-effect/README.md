@@ -1,3 +1,15 @@
+## Literal master BEFORE supplement and root review
+
+The final PR comparison uses newly recorded clean master `f0787e19e7623106eac1d6b8de7430ca1eb4428b` BEFORE frames. `literal-master-before.json` and `literal-master-before-package.json` bind six additional ordinary SAVE controls and three 1,288-frame input prefixes to the frozen master binary. Every complete native SRAM, fixture and action array equals the unchanged `6ddab384` AFTER control; all raw master prefix observations equal the earlier staged `e26bc5c5` BEFORE. The three new `*-master-f078-before.png` files are actual master captures, not relabeled staged images. Historical staged controls and original AFTER identities remain intact.
+
+`root-review.json` independently checks the complete 630-path outer and 344-path original archives, 22 primary ordinary SAVE controls, eight entire native SRAM/input/fixture pairs, the six additional master SAVE controls, nine physical 1,288-frame prefixes, source/build hashes, complete test logs and GBA budgets. Current source contains only the three master boulder-test fixture lines beyond the recorded AFTER source; a fresh build yields the exact measured complete GBA ROM. Core 2,898; current debug app 304 (39 ignored); default app 293 (37 ignored); all seven GBA scenarios pass unchanged budgets. These results cover this constructed scenario, not a fresh campaign or complete original clock/audio/animation parity.
+
+The supplement archive has an explicit manifest and excludes binaries, ROMs and emulator states:
+
+```bash
+python3 docs/audits/battle-medicine-no-effect/extract_evidence.py --archive docs/audits/battle-medicine-no-effect/literal-master-before-evidence.zip --verify-only
+```
+
 # Battle medicine with no effect
 
 Full-HP Potion, healthy Parlyz Heal and living Revive now keep the selected member's full party screen behind the error. Living Revive also uses the original `It won't have any effect.` instead of `Can't revive that!`. This supplements the successful medicine owner in PR267: success still waits50 then ACK and gives the enemy its free turn; failure still keeps the item, uses ordinary blocking text and returns to BAG after ACK.
