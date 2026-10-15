@@ -45,3 +45,5 @@ This does not claim full playthrough completion or full framebuffer/audio parity
 Two existing blackout presentation differences remain separate follow-ups: the original fades out to black while the existing native path fades to white, and the existing `heal_requested` consumer plays HealingMachine despite the original blackout's stop/music sequence. Their original hooks and native logical73 frames are preserved in the archive's `metadata/audit-896-blackout-followup-readonly.json`; this change preserves those existing paths.
 
 最新整合：合入捕获流程 PR #251 对应 master `f44e3ef5`，保留读档时两种未完成流程的清理。生产整合提交 `d078c234` 的 core 2887、完整 debug app 278 通过，39 个已有忽略项，0 失败；完整日志和 SHA 见 `capture-integration.json` / `capture-integration-logs.zip`。原始截图及录制仍固定到真正的 `25443cf4` / `a666f609`，没有重贴为新的构建。
+
+进一步整合只读诊断工具 master `dfeefa34` 后，完整 debug app 279 通过、39 个已有忽略项、0 失败；核心生产源码未改变。日志见 `diagnostic-integration.json` / `diagnostic-integration-logs.zip`。
