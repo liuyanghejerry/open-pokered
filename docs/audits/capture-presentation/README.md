@@ -15,3 +15,9 @@
 证据清单、各实际控制终点与同输入同模拟帧截图见 `verification.json`、`screenshots.json`。`evidence.zip` 使用 SHA 内容去重，解包后逐文件保持原始字节；不包含 ROM、可执行文件或模拟器 state。使用 `python3 extract_evidence.py evidence.zip --verify-only` 核对，或 `python3 extract_evidence.py evidence.zip DIRECTORY` 解包。
 
 范围限制：不声称整段动画逐像素、音频波形或硬件时钟与原作一致；CLI 的 `audio_sfx` 是逻辑音效状态，完整原生三通道与 PCM 检查由独立 Game 测试提供。Safari 的出场、玩家背影与错误玩家 HP 栏属于另一个已记录候选，本次未修复。主线全流程与 Silph 34 帧差距不在本次验证范围。
+
+后续整合 `b7c81d82d7d94a06555f631c3c70d114f299d9d8` 后，最终生产源为 `40e86bc15e7dd18ec8c2acee3566d4ac93546311`，独立冻结二进制 SHA-256 为 `49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804`。球调用方检查移入有实际完成事件或动画内确认输入时才执行的冷路径，Safari 排除条件只在 HP 可能报警时读取。完整 app 283 通过、39 忽略；core 2888 通过，其全部 core/data 源字节与最终版本相同。
+
+最终版本重新播放八个原生普通捕获控制的完整物理按键序列，逐一核对全部原记录投球后 PNG 和普通 SAVE 的 32768 字节，均与 `fbed` 完全相同。另重放健康/HP1 的真实自然 Safari 成功投球前缀，并重新捕获同输入、同模拟帧的三张修复后对比图，图片字节与本目录提交图一致；这两个前缀不计作新增最终 SAVE 控制。原来的 `dfee/fbed` 完整矩阵与归档身份保持不变。
+
+独立 GBA 构建使用固定 nightly-2025-12-07、`perf-benchmark` 与 mGBA 0.10.5 的硬件定时器。干净 `b7` 和最终版本训练家更新均为 232 ticks；最终野生战为 214，干净 `b7` 为 213，七场景全部通过既有门禁，没有修改 baseline 或阈值。中间失败的 233/234 ticks 记录完整保留。身份、普通重放、最终同帧图和性能逐项结果见 `integration.json`；`integration-evidence.zip` 可用同一个 `extract_evidence.py` 验证与解包。该补充档不包含 ROM、可执行文件或模拟器 state。
