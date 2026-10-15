@@ -58,6 +58,8 @@ mod exp_award_notice_tests;
 mod link_battle_driver_tests;
 #[cfg(test)]
 mod catch_tests;
+#[cfg(test)]
+mod capture_outcome_tests;
 
 /// Reusable effect-stack **parity harness** (strangler slice 1) — additive,
 /// test-only, does NOT touch the production turn loop. The byte-stream shim,
@@ -5391,6 +5393,15 @@ learn {learn_name}!")];
 
     fn finalize_settlement(&mut self, outcome: BattleOutcome) {
         if let Some(ref mut bs) = self.battle_state {
+            // A real catch returns wBattleResult = 2, not a victory (core.asm:
+            // .returnAfterCapturingMon). The captured mon is still owned here;
+            // writeback takes it only after settlement. The Old-Man demo has
+            // no captured_mon and must retain its ordinary return outcome.
+            let outcome = if outcome == BattleOutcome::Win && self.captured_mon.is_some() {
+                BattleOutcome::Captured
+            } else {
+                outcome
+            };
             let mut settlement =
                 settle_battle(bs, outcome, self.trainer_class, self.player_money);
             if self.link_mode {
