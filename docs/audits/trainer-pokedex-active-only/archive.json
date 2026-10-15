@@ -1,0 +1,21 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "39497ded2b8f80b7e76e7ad287e8ef80f3c9e3e9ac6c465c604ecf390329d74f",
+  "bytes": 2080652,
+  "entries": 295,
+  "original_path_records": 659,
+  "uncompressed_evidence_bytes": 28614983,
+  "entry_manifest": "entry-manifest.json",
+  "entry_manifest_sha256": "a614f62f1e5387b5e947d8125e2c6eabc18392689fde31d641d61fdda6143c62",
+  "storage": "Exact-content SHA256 deduplication only; entry-manifest retains all original paths, original unmodified byte lengths/hashes and blob addresses. No dropped frames or invented timing labels.",
+  "all_blob_readback_sha_verified": true,
+  "passing_controls_by_scope": {
+    "source": 6,
+    "historical_native_dfee_before": 6,
+    "historical_native_7310_before": 6,
+    "historical_native_bfe_after": 6,
+    "current_native_b7c81_before": 6,
+    "current_native_669ab_after": 6
+  },
+  "scope": "All W906 original/native raw trial directories, including historical dfee/7310/bfe baselines, final b7c81/669ab controls, the failed original AI driver, exact remote GBA failure235, local failed cache235/233 metrics, setup/compiler errors, and final actual-load notification measurements. Historical runs and failures are not counted as final controls. Canonical ROM/executables excluded; exact SHA/build manifests retained. Redundant per-trial identical ROM/executable copies were removed only after termination and point to retained canonical copies."
+}
