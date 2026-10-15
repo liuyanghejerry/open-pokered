@@ -1,0 +1,437 @@
+{
+  "schema": "audit1010-PR269-744-sevenstage-publication-v1",
+  "actual_master": "f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7",
+  "parent261": {
+    "baseRefName": "master",
+    "headRefName": "fix/capture-presentation-905",
+    "headRefOid": "a9321f2111a073b295b04df65fb3e8d2a84d1f76",
+    "mergeCommit": {
+      "oid": "f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7"
+    },
+    "mergedAt": "2026-10-15T13:49:45Z",
+    "number": 261,
+    "state": "MERGED",
+    "url": "https://github.com/liuyanghejerry/open-pokered/pull/261"
+  },
+  "tested1008_source": "744ebbb9b891db442488f79f3d22f462e698956d",
+  "integrated_source_before_doc_commit": "a877539e558850d4d44f5b3636a3d7bf9d38d231",
+  "identity": {
+    "tested_source": "744ebbb9b891db442488f79f3d22f462e698956d",
+    "compiler_count": 2173,
+    "all_compiler_bytes_modes_equal": true,
+    "all_NUL_non_doc_count": 2691,
+    "all_NUL_non_doc_blobs_modes_literal_symlinks_equal": true,
+    "gfx_count": 702,
+    "all_gfx_equal": true,
+    "not_old_a07a_whole_source_equivalence": true
+  },
+  "own_source_paths": [
+    "crates/pokered-core/src/items/bag_use.rs",
+    "crates/pokered-data/src/dialog_text.rs"
+  ],
+  "new1008_validation": {
+    "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+    "plan_sha256": "4995651e14f24b8ce8b00245900a031ab6eee3184fbb493228cbb2b321292e4f",
+    "script_sha256": "d0bd81d0efe1da623c19dbee1fb972dd32878019d96336b7efcd1c2d01a645c6",
+    "started_utc": "2026-10-15T13:15:21.710603+00:00",
+    "checks": [
+      {
+        "label": "appdebug",
+        "command": [
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1008-host.sh",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "--features",
+          "debug-server",
+          "--locked"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-appdebug.log",
+        "start_utc": "2026-10-15T13:15:21.971845+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:18:59.820024+00:00",
+        "wall_seconds": 217.84818442293908,
+        "log_sha256": "95c25191733edd8f29b162c993ce1dcfa5828bbd4ba3ae9f7cbcde7e2f0a5791",
+        "counts": [
+          [
+            330,
+            0,
+            39
+          ]
+        ],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-appdebug.json",
+          "sha256": "d1e0e8568b70ee76f4df256ed07c4c8086361d41db0e2e5c5a845211b9c5e2dc",
+          "check": {
+            "utc": "2026-10-15T13:19:00.393117+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "appdefault",
+        "command": [
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1008-host.sh",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "--locked"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-appdefault.log",
+        "start_utc": "2026-10-15T13:19:00.646394+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:20:13.652461+00:00",
+        "wall_seconds": 73.00607599201612,
+        "log_sha256": "0373576a8ee667d10ddec9f8dfad4dd4ddf3cbfdf467ff2dd9e5ab05b639c0e8",
+        "counts": [
+          [
+            319,
+            0,
+            37
+          ]
+        ],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-appdefault.json",
+          "sha256": "7a357a90722b743cb39391b5cdc861f93221bec7c9a9331ee581aaf5d9f9847c",
+          "check": {
+            "utc": "2026-10-15T13:20:14.163140+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "determinism",
+        "command": [
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1008-host.sh",
+          "test",
+          "-p",
+          "pokered-app",
+          "--test",
+          "agent_determinism",
+          "--features",
+          "debug-server",
+          "--locked"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-determinism.log",
+        "start_utc": "2026-10-15T13:20:14.409910+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:20:44.374971+00:00",
+        "wall_seconds": 29.96507116802968,
+        "log_sha256": "69441bb99fdffd77f421f917b95d906a6d75915cd54f28e3586e2721c9715738",
+        "counts": [
+          [
+            10,
+            0,
+            0
+          ]
+        ],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-determinism.json",
+          "sha256": "bb101bd7f6d24ee1fc252ac08a40ed61a259a58a6adba8f8ccfa03b932b3466e",
+          "check": {
+            "utc": "2026-10-15T13:20:44.984517+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "gba-build",
+        "command": [
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/cargo-1008-gba.sh"
+        ],
+        "cwd": "/home/jerry/.cache/open-pokered-fidelity/1008-gba-source/crates/pokered-gba",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-build.log",
+        "start_utc": "2026-10-15T13:20:45.247583+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:23:51.820010+00:00",
+        "wall_seconds": 186.57243372197263,
+        "log_sha256": "8766d0d6c197c3280b63ae817df1f59a08a6d2fdcce27109fe6a0ff2bdb81c5f",
+        "counts": [],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-gba-build.json",
+          "sha256": "ced98783674fe363aa14dd36b028293e0d73c36dbf3f4e3d1e3358fbeab2269c",
+          "check": {
+            "utc": "2026-10-15T13:23:52.425691+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "gba-fix",
+        "command": [
+          "/tmp/pokered-font-cargo-home/bin/agb-gbafix",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-gba-target/thumbv4t-none-eabi/release/pokered-gba",
+          "-o",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-candidate.gba"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-fix.log",
+        "start_utc": "2026-10-15T13:23:52.691623+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:23:52.755542+00:00",
+        "wall_seconds": 0.06392858293838799,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "counts": [],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-gba-fix.json",
+          "sha256": "1bbb31f067e2e71ea4320f4e33e6610bb86e17d7a4ee69ce18bae5f9e2b1e4f9",
+          "check": {
+            "utc": "2026-10-15T13:23:53.095817+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "gba-record",
+        "command": [
+          "python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf/scripts/gba_performance.py",
+          "record",
+          "--rom",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-candidate.gba",
+          "--output",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-perf.json",
+          "--log",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-perf-raw.log"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-record.log",
+        "start_utc": "2026-10-15T13:23:53.377542+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:23:56.296010+00:00",
+        "wall_seconds": 2.9184713759459555,
+        "log_sha256": "0c54043fab2849e7c217d5a66cb562854ef073aada8fc306c62a0bc096c88ccf",
+        "counts": [],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-gba-record.json",
+          "sha256": "91cfd0d9e4bd9d5f79df72cdb4dd52e148e9bb176aafdceb3dbf8c98839a4487",
+          "check": {
+            "utc": "2026-10-15T13:23:56.537364+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      },
+      {
+        "label": "gba-compare",
+        "command": [
+          "python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf/scripts/gba_performance.py",
+          "compare",
+          "--baseline",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf/crates/pokered-gba/perf-baseline.json",
+          "--candidate",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-perf.json"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1008-field-medicine-perf",
+        "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-gba-compare.log",
+        "start_utc": "2026-10-15T13:23:56.810239+00:00",
+        "exit": 0,
+        "end_utc": "2026-10-15T13:23:56.874169+00:00",
+        "wall_seconds": 0.06393177493009716,
+        "log_sha256": "c61aaf2ae41a850dc15cda71a1a4e9887f18cd53ee0f824cf7e2bd9b5ec188d8",
+        "counts": [],
+        "source_after": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1008-own-source-after-gba-compare.json",
+          "sha256": "47353f61a594252c424d177b6174b78f4dd40b358bd22bce325987d43a0c0723",
+          "check": {
+            "utc": "2026-10-15T13:23:57.138271+00:00",
+            "head": "744ebbb9b891db442488f79f3d22f462e698956d",
+            "compiler_count": 2173,
+            "complete_non_doc_count": 2691,
+            "gfx_count": 702,
+            "all_bytes_modes_blobs_equal": true,
+            "source_clean": true
+          }
+        }
+      }
+    ],
+    "complete": true,
+    "all_pass": true,
+    "finished_utc": "2026-10-15T13:23:57.145663+00:00",
+    "all_own_child_commands_terminal": true,
+    "candidate_rom_sha256": "6063d01e9206035c3bb6fec62deb65a6c6c14215d891da8755c05c8b1a58604d"
+  },
+  "retained_historical_core": {
+    "tested_source": "a07a79148022a28579cb9bd18939969841930fe6",
+    "passed": 2934,
+    "component_paths": 1901,
+    "not_new_run": true,
+    "not_whole_old_source_equivalence": true
+  },
+  "historical_captures": {
+    "before": {
+      "source_commit": "05f6e76c2e8fc6c0a64dbf6486316a073fa20347",
+      "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-920-before",
+      "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-920-current05-before-debug",
+      "binary_sha256": "1261e88559c9bd01b14199077be843b9b37f7818b734e8954e43c05e2669aaa8",
+      "build_exit": 0,
+      "build_log": "audit-920-current05-before-build.log",
+      "build_target": "fidelity-920-before-target",
+      "features": "debug-server",
+      "profile": "dev opt0/debug0 incremental0, explicit --bin pokered-app; fresh isolated target"
+    },
+    "after": {
+      "source_commit": "0cf0552ba7af338524d6c41b0c348873224704dd",
+      "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-920-field-medicine-audit",
+      "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-920-final-after-debug",
+      "binary_sha256": "ec8889cabe6a8fa5f7ebf02767c470e2a7af0fdc0ee8cafcd1060b38b2eb6487",
+      "build_exit": 0,
+      "build_log": "audit-920-after-build.log",
+      "build_target": "fidelity-920-after-target",
+      "features": "debug-server",
+      "profile": "dev opt0/debug0 incremental0, explicit --bin pokered-app; fresh isolated target"
+    },
+    "ordinary_SAVE": {
+      "original": 6,
+      "clean_current_master_before": 6,
+      "after": 6,
+      "all18_valid_checksums": true,
+      "all6_native_pairs_entire_SRAM_and_input_equal": true
+    },
+    "screenshots": {
+      "scope": "Same exact fixture,seed42,full952buttons,actualeachframecount,frame952pair",
+      "images": [
+        {
+          "case": "potion-bench",
+          "variant": "before",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/potion-bench-before.png",
+          "sha256": "ca087ef65ac64474b4e00864bfb8fe39d106686a93fbdf69dfe64ec611695e9c",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/potion-bench/before/frame-0952.png",
+          "visually_inspected": true
+        },
+        {
+          "case": "potion-bench",
+          "variant": "after",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/potion-bench-after.png",
+          "sha256": "89cf8518535824edd29135b957ff64a11f57860d25fc4cd21cb2109e3df0ac42",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/potion-bench/after/frame-0952.png",
+          "visually_inspected": true
+        },
+        {
+          "case": "parlyz-bench",
+          "variant": "before",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/parlyz-bench-before.png",
+          "sha256": "3203c8ffb0094ad9f062bf75e753177a03297f7cbfe2acb0ee3e40495bd9d3f8",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/parlyz-bench/before/frame-0952.png",
+          "visually_inspected": true
+        },
+        {
+          "case": "parlyz-bench",
+          "variant": "after",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/parlyz-bench-after.png",
+          "sha256": "4a81fddd0f2b9a62e7cbfd6741232829aa582540174202e82b2b59216044b03d",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/parlyz-bench/after/frame-0952.png",
+          "visually_inspected": true
+        },
+        {
+          "case": "revive-bench",
+          "variant": "before",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/revive-bench-before.png",
+          "sha256": "d229af0e54935b793c6c6a92502f250db6497c06835a98e557f6e34e9ce1c3fb",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/revive-bench/before/frame-0952.png",
+          "visually_inspected": true
+        },
+        {
+          "case": "revive-bench",
+          "variant": "after",
+          "frame": 952,
+          "path": "docs/screenshots/field-medicine-success-text/revive-bench-after.png",
+          "sha256": "ded6c2ce1428d17be25723365bb7bc6cb608a8ef475138338d093fdcecf0cf3a",
+          "source_path": "audit-920-matched-prefix-3p17kxkl/revive-bench/after/frame-0952.png",
+          "visually_inspected": true
+        }
+      ]
+    }
+  },
+  "no_rebuild_replay_or_relabelling": true,
+  "remote_gate": "Fresh exacthead CI/Build GBA ROM/GBA performance allSUCCESS required beforemerge; publisher checks triggers only.",
+  "log_archive": {
+    "path": "publication-1010-logs.zip",
+    "bytes": 3525886,
+    "sha256": "14d781e359fa431d6db1b2507a5fbe110181f4646f644890e5e0efd527332103",
+    "entries": [
+      "publication-proof.json",
+      "1008-final-handoff.json",
+      "historical-core2934.log",
+      "historical920-verification.json",
+      "root-review920-only.json",
+      "old-pr269-workflows.json",
+      "audit-1008-finalize.py",
+      "audit-1008-own-check-results.json",
+      "audit-1008-own-check-plan.json",
+      "audit-1008-own-source-before.json",
+      "audit-1008-own-gba-mirror.json",
+      "audit-1008-own-source.patch",
+      "audit-1008-private-source-mapping.json",
+      "audit-1008-retained-core-proof.json",
+      "audit-1008-run-own-checks.py",
+      "audit-1008-own-runner-preflight.json",
+      "audit-1008-root-prereview.json",
+      "cargo-1008-host.sh",
+      "cargo-1008-gba.sh",
+      "audit-1008-merge-1005.log",
+      "audit-1008-initial-reader-failure.json",
+      "audit-1008-prepare-initial-dict-reader.py",
+      "audit-1008-prepare-own-checks-v2.py",
+      "audit-1008-own-checks-console.log",
+      "audit-1008-own-gba-perf.json",
+      "audit-1008-own-gba-perf-raw.log",
+      "audit-1008-own-appdebug.log",
+      "audit-1008-own-source-after-appdebug.json",
+      "audit-1008-own-appdefault.log",
+      "audit-1008-own-source-after-appdefault.json",
+      "audit-1008-own-determinism.log",
+      "audit-1008-own-source-after-determinism.json",
+      "audit-1008-own-gba-build.log",
+      "audit-1008-own-source-after-gba-build.json",
+      "audit-1008-own-gba-fix.log",
+      "audit-1008-own-source-after-gba-fix.json",
+      "audit-1008-own-gba-record.log",
+      "audit-1008-own-source-after-gba-record.json",
+      "audit-1008-own-gba-compare.log",
+      "audit-1008-own-source-after-gba-compare.json",
+      "entries.json"
+    ],
+    "scope": "Only920 historical projection and1008 new checks; no905 actual records, wholebatchmetadata, unrelated PR logs, ROM, executable or hardwarestate."
+  }
+}
