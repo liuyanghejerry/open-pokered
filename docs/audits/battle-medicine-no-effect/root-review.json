@@ -1,0 +1,36 @@
+{
+  "reviewer": "root",
+  "utc": "2026-10-15T07:49:34.676408+00:00",
+  "outer_archive": {
+    "paths": 630,
+    "blobs": 165,
+    "sha256": "6b5cda10f8c4297c4324a6e56b7fbadc1189e53e036631655082c0e89f5b32f6"
+  },
+  "nested_archive": {
+    "paths": 344,
+    "blobs": 86,
+    "sha256": "3b3d48a39b289a4cee6a14f71625170869d9c115503111abc839a15c040d678e"
+  },
+  "primary_SAVE": 22,
+  "native_entire_SRAM_input_fixture_pairs": 8,
+  "literal_f078_extra_before_SAVE": 6,
+  "strict_prefix_variants": 9,
+  "frames_per_variant": 1288,
+  "current_source_paths_verified": 2166,
+  "literal_master_before_source_paths_verified": 6727,
+  "production_unchanged_after_capture": true,
+  "fresh_app_debug": 304,
+  "fresh_app_default": 293,
+  "original_core": 2898,
+  "GBA_complete_ROM_equal_and_all31_budgets_pass": true,
+  "screenshots_master_before_byte_equal_staged_before": true,
+  "source_code_review": "Production/test delta reviewed in previous root turn, final6dd minimal diff; this pass rechecks complete raw evidence, identities and logs.",
+  "no_live_rerun_or_historical_metadata_mutation": true,
+  "limits": [
+    "Legalprebootconstructedfixtures thenordinarytrainer/menu/ACK/Tackle/SAVE; notfreshcampaign, no gameplaysetters/forcedbattle/runtimewarp.",
+    "Original/nativeRNG, fullSRAM, CPUclock/audio/wholeanimationparity notclaimed. Nativebefore/afterfullSRAM/inputequality isproved.",
+    "Actualnegativeconditions3; positiveintegrationPotiononly plusupstream267sourceproof/fulltestsforremainingpositivecases.",
+    "Fonts/Chinese/boxlayout, detailedpartyicon/HPbaranimations, unrelatedPPfailurebackgrounds andfullmaprestore areoutside.",
+    "No editsW915/W920. Newtypedphaseusesexistingread-onlyadapter andgenericprinter/ACK/BagSelect; noindependentflag/extraPartyScreenstate."
+  ]
+}

@@ -25,6 +25,15 @@ pub enum RunResult {
 ///
 /// `random_byte`: a random u8 value [0, 255] passed in for testability.
 pub fn try_run_from_battle(state: &mut BattleState, random_byte: u8) -> RunResult {
+    try_run_from_battle_with_rng(state, || random_byte)
+}
+
+/// Draw at TryRunningFromBattle.compareWithRandomValue, after its automatic
+/// escape/refusal branches. A skipped comparison must not advance battle RNG.
+pub(crate) fn try_run_from_battle_with_rng(
+    state: &mut BattleState,
+    random_byte: impl FnOnce() -> u8,
+) -> RunResult {
     // Trainer battle: can't run
     if state.battle_type == BattleType::Trainer {
         return RunResult::CannotRun;
@@ -85,7 +94,7 @@ pub fn try_run_from_battle(state: &mut BattleState, random_byte: u8) -> RunResul
 
     // Compare with random byte
     // ASM: "cp b / jr nc, .canEscape" — escape if escape_odds >= random_byte
-    if escape_odds >= random_byte {
+    if escape_odds >= random_byte() {
         state.escaped = true;
         return RunResult::Escaped;
     }

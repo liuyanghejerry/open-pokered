@@ -1,0 +1,65 @@
+{
+  "schema": "audit926-deduplicated-implementation-evidence-v1",
+  "bytes": 859947,
+  "sha256": "07e3f37f4ab1eab238220a018a2a2f07b6a651cfb83670d0af0ec8c93630d79f",
+  "paths": 239,
+  "unique_blobs": 130,
+  "original_bytes": 22283490,
+  "immutable_input_archives": [
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-926-native-evidence.zip",
+      "sha256": "e70e3d5d1a907859fcbaf69dadfc1c166531451d9387fe3c0e0a913e710bfca3"
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-926-review/source-evidence.zip",
+      "sha256": "41ca7767a2cdaec4014b526fd4337005026f278dc8aca856b05761d9fa8c513b"
+    }
+  ],
+  "metadata_allowlist": [
+    "audit-926-package-implementation.py",
+    "audit-926-compare-paired.py",
+    "audit-926-paired-comparison.json",
+    "audit-926-paired-native.py",
+    "audit-926-paired-before4c.log",
+    "audit-926-paired-afterf078.log",
+    "audit-926-current4c-before-build.log",
+    "audit-926-current4c-before-identity.json",
+    "audit-926-finalf078-after-identity.json",
+    "audit-926-finalf078-tests.json",
+    "audit-926-core-scoped.log",
+    "audit-926-app-scoped.log",
+    "audit-926-scoped-tests.json",
+    "audit-926-before-owner-probe.rs",
+    "audit-926-before-owner-probe-v1.rs",
+    "audit-926-before-owner-probe-harness-error.json",
+    "audit-926-before-owner-probe-build.log",
+    "audit-926-before-owner-probe.log",
+    "audit-926-before-owner-probe.json",
+    "audit-926-gba-build.log",
+    "audit-926-gba-identity.json",
+    "audit-926-gba-mirror.json",
+    "audit-926-gba-command.json",
+    "audit-926-perf-summary.json",
+    "cargo-926-capture-rng-audit.sh",
+    "cargo-926-current-before.sh",
+    "audit-926-finalf078-core-full.log",
+    "audit-926-finalf078-app-debug-full.log",
+    "audit-926-finalf078-agent-debug.log",
+    "audit-926-finalf078-app-default-full.log",
+    "audit-926-finalf078-agent-default.log",
+    "audit-926-finalf078-app-build.log",
+    "audit-926-perf-1.json",
+    "audit-926-perf-1.log",
+    "audit-926-perf-1-driver.log",
+    "audit-926-perf-1-compare.log",
+    "audit-926-perf-2.json",
+    "audit-926-perf-2.log",
+    "audit-926-perf-2-driver.log",
+    "audit-926-perf-2-compare.log"
+  ],
+  "new_artifact_roots": [
+    "audit-926-paired-before4c-1tsqe0vo",
+    "audit-926-paired-afterf078-lyrb2ctk"
+  ],
+  "policy": "Exact metadata whitelist/two exact newroots, plus verified manifests of two explicitly selected immutable issue926 archives. No shared prefix metadata glob; no unrelatedPRs/ROMs/executables. NativewrongBAG/captiondecoder and sourcepreboot syntax harness failures retained under original identities."
+}
