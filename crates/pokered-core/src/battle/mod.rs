@@ -2968,6 +2968,12 @@ learn {learn_name}!")];
         }
 
         let category = ItemCategory::from_item(item_id);
+        // GetPartyMonName reads the persistent party nickname, including
+        // the original identity while the active battle mon is transformed.
+        let medicine_name = self.battle_state.as_ref().map(|bs| {
+            let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+            bs.player.party_mon(pokemon_index).display_name(&mut name_buf).to_string()
+        }).unwrap_or_default();
         self.sync_player_context();
         let reset_working_on_cure = self.battle_state.as_ref().is_some_and(|bs|
             pokemon_index == bs.player.active_pokemon_index &&
@@ -2981,11 +2987,15 @@ learn {learn_name}!")];
                     match use_healing_item(mon, item_id) {
                         HealResult::Healed { hp_restored } => {
                             self.consume_selected_item();
-                            (format!("HP restored by {}!", hp_restored), true)
+                            (if item_id == ItemId::FullRestore && hp_restored == 0 {
+                                format!("{}'s\nhealth returned!", medicine_name)
+                            } else {
+                                format!("{}\nrecovered by {}!", medicine_name, hp_restored)
+                            }, true)
                         }
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
                         HealResult::AlreadyFullHp => ("It won't have any effect.".to_string(), false),
                         HealResult::NotFainted => ("It won't have any effect.".to_string(), false),
@@ -2997,7 +3007,15 @@ learn {learn_name}!")];
                     match use_status_cure(mon, item_id) {
                         StatusCureResult::Cured => {
                             self.consume_selected_item();
-                            ("Status cured!".to_string(), true)
+                            let message = match item_id {
+                                ItemId::Antidote => format!("{} was\ncured of poison!", medicine_name),
+                                ItemId::BurnHeal => format!("{}'s\nburn was healed!", medicine_name),
+                                ItemId::IceHeal => format!("{} was\ndefrosted!", medicine_name),
+                                ItemId::Awakening => format!("{}\nwoke up!", medicine_name),
+                                ItemId::ParlyzHeal => format!("{}'s\nrid of paralysis!", medicine_name),
+                                _ => format!("{}'s\nhealth returned!", medicine_name),
+                            };
+                            (message, true)
                         }
                         StatusCureResult::NoEffect => ("It won't have any effect.".to_string(), false),
                         StatusCureResult::NotApplicable => ("It won't have any effect.".to_string(), false),
@@ -3006,7 +3024,7 @@ learn {learn_name}!")];
                 ItemCategory::Revive => {
                     use crate::items::healing::{use_healing_item, HealResult};
                     match use_healing_item(mon, item_id) {
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             // ItemUseMedicine.updateInBattleFaintedData:
                             // reviving a bench mon restores its share only if
                             // it participated against this same enemy.
@@ -3014,7 +3032,7 @@ learn {learn_name}!")];
                                 bs.party_gain_exp_flags[pokemon_index] = true;
                             }
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
                         _ => ("Can't revive that!".to_string(), false),
                     }

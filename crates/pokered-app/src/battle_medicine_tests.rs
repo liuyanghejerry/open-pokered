@@ -39,7 +39,7 @@ fn medicine_result_app_snapshot_keeps_battle_owner_and_restores_live_hp_without_
         g.agent_restore_state(&saved).unwrap();
         assert_eq!(g.battle.phase, BattlePhase::ItemMedicineResult { wait_frames: 50 });
         assert_eq!(g.battle.party_cursor, 1);
-        assert_eq!(g.battle.current_message.as_deref(), Some("HP restored by 20!"));
+        assert_eq!(g.battle.current_message.as_deref(), Some("PIKACHU\nrecovered by 20!"));
         assert_eq!(g.battle.battle_state.as_ref().unwrap().player.party[1].hp, 21);
         for _ in 0..50 { g.update(&InputState::new()); }
         assert_eq!(g.battle.phase, BattlePhase::ItemMedicineResult { wait_frames: 0 });

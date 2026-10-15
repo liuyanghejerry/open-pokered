@@ -28,7 +28,7 @@ fn medicine_result_heals_one_live_target_and_holds_through_delay50_and_no_input(
             s.update_frame(BattleInput { a: true, ..BattleInput::none() });
             assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 50 });
             assert_eq!(s.party_cursor, target);
-            assert_eq!(s.current_message.as_deref(), Some("HP restored by 20!"));
+            assert_eq!(s.current_message.as_deref(), Some(if target == 0 { "BULBASAUR\nrecovered by 20!" } else { "PIKACHU\nrecovered by 20!" }));
             assert_eq!(s.player_bag.items(), &[(ItemId::Potion, 1)]);
             assert!(s.bag_menu.is_none());
             assert_eq!(s.take_item_sfx_pending(), Some(BattleItemSfx::HealHp));
@@ -87,7 +87,7 @@ fn medicine_result_snapshot_resumes_the_same_target_message_and_delay_once() {
     restored.restore_into(&mut s);
     assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 33 });
     assert_eq!(s.party_cursor, 1);
-    assert_eq!(s.current_message.as_deref(), Some("HP restored by 20!"));
+    assert_eq!(s.current_message.as_deref(), Some("PIKACHU\nrecovered by 20!"));
     assert_eq!(s.battle_state.as_ref().unwrap().player.party[1].hp, 21);
     for _ in 0..33 { s.update_frame(BattleInput { b: true, ..BattleInput::none() }); }
     assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 0 });
@@ -105,7 +105,8 @@ fn medicine_result_transformed_party_keeps_original_identity_and_pp_with_live_hp
     let player = &mut s.battle_state.as_mut().unwrap().player;
     player.active_mon_mut().hp = 1;
     player.preserve_original_identity();
-    let original = player.active_mon().clone();
+    player.original_identity.as_mut().unwrap().1.set_nickname("LEAF");
+    let original = player.original_identity.as_ref().unwrap().1.clone();
     player.active_mon_mut().species = Species::Mewtwo;
     player.active_mon_mut().moves = [MoveId::PsychicM, MoveId::None, MoveId::None, MoveId::None];
     player.active_mon_mut().pp = [5, 0, 0, 0];
@@ -118,6 +119,7 @@ fn medicine_result_transformed_party_keeps_original_identity_and_pp_with_live_hp
     assert_eq!(party[0].moves, original.moves);
     assert_eq!(party[0].pp, original.pp);
     assert_eq!(party[0].hp, 21);
+    assert_eq!(s.current_message.as_deref(), Some("LEAF\nrecovered by 20!"));
     assert_eq!(player.active_mon().species, Species::Mewtwo);
     assert_eq!(player.active_mon().pp, [5, 0, 0, 0]);
 }
@@ -141,5 +143,29 @@ fn medicine_cancel_and_no_effect_keep_the_bag_and_party_without_result_or_enemy_
         assert_eq!(s.phase, BattlePhase::BagSelect);
         assert_eq!(s.player_bag.items(), &[(item, 2)]);
         assert_eq!(serde_json::to_value(s.battle_state.as_ref().unwrap()).unwrap(), original);
+    }
+}
+
+#[test]
+fn medicine_result_names_the_selected_member_for_every_source_cure_and_full_restore_branch() {
+    for (item, status, hp, suffix) in [
+        (ItemId::Antidote, state::StatusCondition::Poison, None, " was\ncured of poison!"),
+        (ItemId::BurnHeal, state::StatusCondition::Burn, None, "'s\nburn was healed!"),
+        (ItemId::IceHeal, state::StatusCondition::Freeze, None, " was\ndefrosted!"),
+        (ItemId::Awakening, state::StatusCondition::Sleep(3), None, "\nwoke up!"),
+        (ItemId::ParlyzHeal, state::StatusCondition::Paralysis, None, "'s\nrid of paralysis!"),
+        (ItemId::FullHeal, state::StatusCondition::Poison, None, "'s\nhealth returned!"),
+        (ItemId::FullRestore, state::StatusCondition::Poison, None, "'s\nhealth returned!"),
+        (ItemId::FullRestore, state::StatusCondition::Poison, Some(1), "\nrecovered by 31!"),
+        (ItemId::Revive, state::StatusCondition::None, Some(0), "\nis revitalized!"),
+    ] {
+        let mut s = battle(item, 1);
+        let mon = &mut s.battle_state.as_mut().unwrap().player.party[1];
+        mon.set_nickname("SPARKY"); mon.status = status;
+        if let Some(hp) = hp { mon.hp = hp; }
+        s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(s.current_message.as_deref(), Some(format!("SPARKY{suffix}").as_str()), "{item:?}");
+        assert_eq!(s.phase, BattlePhase::ItemMedicineResult { wait_frames: 50 });
+        assert_eq!(s.player_bag.items(), &[(item, 1)]);
     }
 }

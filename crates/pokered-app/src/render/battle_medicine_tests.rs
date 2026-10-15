@@ -40,7 +40,7 @@ fn medicine_result_renders_updated_bench_hp_and_original_transformed_identity() 
     for language in [Lang::En, Lang::Zh] {
         let mut screen = battle();
         screen.party_cursor = 1;
-        screen.current_message = Some("HP restored by 20!".into());
+        screen.current_message = Some("PIKACHU\nrecovered by 20!".into());
         screen.phase = BattlePhase::ItemMedicineResult { wait_frames: 0 };
         let player = &mut screen.battle_state.as_mut().unwrap().player;
         player.preserve_original_identity();
