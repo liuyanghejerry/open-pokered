@@ -1,0 +1,132 @@
+{
+  "failed_remote_run": {
+    "url": "https://github.com/liuyanghejerry/open-pokered/actions/runs/38675722057/job/116228750573",
+    "pr_head": "4d85225b9c680d41faf59a116d86f8e90d9937c9",
+    "checkout_merge": "be4084c482c458a229eeb4d5c30020ad127cae37",
+    "metric": "trainer-battle-entry-v1/update_avg_ticks",
+    "baseline": 202,
+    "candidate": 235,
+    "allowed_max": 232.3,
+    "failure_type": "Measured emulated hardware-cycle regression; download/build/seven structured scenarios succeeded."
+  },
+  "local_failed_ci_rom_reproduction": "Downloaded unmodified CI ROM reproduced every metric of all seven scenarios exactly with mGBA0.10.5 SDL frontend. No host-time or runner-noise excuse.",
+  "failed_local_iterations": [
+    {
+      "source": "9ea9dc6ba02473ff62f3d084a17b38d2cd9444db",
+      "implementation": "Option<u8> active-slot cache inside registration helper",
+      "trainer_update_ticks": 235
+    },
+    {
+      "source": "bb38de3c4f58e133afa56f5879bd4859787ddded",
+      "implementation": "Option<u8> cache fast path at call site",
+      "trainer_update_ticks": 233
+    },
+    {
+      "source": "4665279987f8db1877772aa2a7d0b2b370eef82e",
+      "implementation": "u8 invalid-slot sentinel",
+      "trainer_update_ticks": 233
+    }
+  ],
+  "final": {
+    "compiled_commit": "669ab74a230b014fdec61976e4d40fa918046b2a",
+    "implementation": "Actual load notifications; no active-slot polling/cache in production.",
+    "gba_rom_sha256": "a4ef75bfc52047092dbe73114bb58379504bbdf82393e7466696312b71e7d555",
+    "nightly": "nightly-2025-12-07",
+    "profile": "release perf-benchmark, independent outside-repo source mirror with all copied bytes equal",
+    "emulator": "mGBA0.10.5 SDL, emulated hardware timer; downloaded CI ROM matches all remote metrics",
+    "repeats": 2,
+    "all_seven_original_gates_pass": true,
+    "both_repeats_identical": true,
+    "trainer_update_ticks": 232,
+    "trainer_limit": 232.3,
+    "baseline_or_allowance_changed": false,
+    "scenarios": {
+      "battle-entry-v1": {
+        "draw_max_ticks": 8861,
+        "draw_per_frame_ticks": 2644,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 567,
+        "renders": 369,
+        "samples": 500,
+        "scenario": "battle-entry-v1",
+        "update_avg_ticks": 214,
+        "update_core_avg_ticks": 203,
+        "update_flush_avg_ticks": 1
+      },
+      "intro-title-v1": {
+        "draw_max_ticks": 10015,
+        "draw_per_frame_ticks": 1214,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 354,
+        "renders": 115,
+        "samples": 250,
+        "scenario": "intro-title-v1",
+        "update_avg_ticks": 118,
+        "update_core_avg_ticks": 109,
+        "update_flush_avg_ticks": 1
+      },
+      "oak-dialogue-v1": {
+        "draw_max_ticks": 9311,
+        "draw_per_frame_ticks": 2994,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 392,
+        "renders": 307,
+        "samples": 600,
+        "scenario": "oak-dialogue-v1",
+        "update_avg_ticks": 188,
+        "update_core_avg_ticks": 178,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-idle-v1": {
+        "draw_max_ticks": 0,
+        "draw_per_frame_ticks": 0,
+        "present_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "renders": 0,
+        "samples": 1400,
+        "scenario": "overworld-idle-v1",
+        "update_avg_ticks": 382,
+        "update_core_avg_ticks": 372,
+        "update_flush_avg_ticks": 1
+      },
+      "overworld-movement-v1": {
+        "draw_max_ticks": 3111,
+        "draw_per_frame_ticks": 225,
+        "present_max_ticks": 769,
+        "present_per_frame_ticks": 70,
+        "renders": 24,
+        "samples": 240,
+        "scenario": "overworld-movement-v1",
+        "update_avg_ticks": 387,
+        "update_core_avg_ticks": 377,
+        "update_flush_avg_ticks": 1
+      },
+      "pokedex-entry-v1": {
+        "draw_max_ticks": 16318,
+        "draw_per_frame_ticks": 40,
+        "present_max_ticks": 767,
+        "present_per_frame_ticks": 1,
+        "renders": 1,
+        "samples": 400,
+        "scenario": "pokedex-entry-v1",
+        "update_avg_ticks": 116,
+        "update_core_avg_ticks": 104,
+        "update_flush_avg_ticks": 1
+      },
+      "trainer-battle-entry-v1": {
+        "draw_max_ticks": 10162,
+        "draw_per_frame_ticks": 2475,
+        "present_max_ticks": 782,
+        "present_per_frame_ticks": 344,
+        "renders": 224,
+        "samples": 500,
+        "scenario": "trainer-battle-entry-v1",
+        "update_avg_ticks": 232,
+        "update_core_avg_ticks": 221,
+        "update_flush_avg_ticks": 1
+      }
+    }
+  },
+  "remaining_gate": "Full remote platform, GBA memory and frame-pacing checks remain a separate required merge gate; these local results do not assert any remote check conclusion.",
+  "retained_failures": "Initial old remote failure and all cached235/233 measurements kept. Local setup127/workspace101 and the first core-test private-callee E0061 are kept with corrected subsequent logs; none count as PASS."
+}

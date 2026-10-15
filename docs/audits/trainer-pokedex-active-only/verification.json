@@ -1,5 +1,5 @@
 {
-  "scope": "W906 trainer-only seen registration. Six original ordinary battle/Pokedex/SAVE controls, six historical native controls, twelve authoritative current before/after controls. No live battle/state writes. Source/native complete campaign templates are construction, not asserted fully reachable.",
+  "scope": "Trainer-only actual-load seen registration. Source6 ordinary battle/Pokedex/SAVE controls plus authoritative b7c81-before6/events-after6. Historical native18 remains archived with its exact prior identities. No validation battle/state writes; construction is local-mechanic setup, not a whole reachable campaign.",
   "source": {
     "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
     "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
@@ -9,6 +9,26 @@
     "switch": "FuchsiaGym actualJuggler#4 Drowzee34/Hypno34, legalBulbasaur100 usesGrowl; naturalAI switchbeforeanyenemyfaints. Sourceultimatelyloses, nativeultimatelywins; seenonlycomparison, nooutcome/HP/RNGparityclaim."
   },
   "frozen_builds": {
+    "current-before": {
+      "compiled_commit": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+      "binary_sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9",
+      "git_status": "",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt-level=0 debug=0 incremental0"
+    },
+    "current-after": {
+      "compiled_commit": "669ab74a230b014fdec61976e4d40fa918046b2a",
+      "binary_sha256": "ad953cc62c455853e019d300d9799789e25c056614169b0729b1d9b30aabcde6",
+      "git_status": "",
+      "features": [
+        "debug-server"
+      ],
+      "profile": "dev opt-level=0 debug=0 incremental0"
+    }
+  },
+  "historical_frozen_builds": {
     "before": {
       "compiled_commit": "dfeefa3411634e187119862288ad78d5a3e933fe",
       "git_status": "",
@@ -40,16 +60,10 @@
       "build_log_sha256": "aa41ed32f69a046a767aec6bcad4625928184d10566146287f8b641b683ded1c"
     }
   },
-  "implementation": "Register original party identity of BattleState.enemy.active_pokemon_index at trainer entry and after battle update. Skip wild/link/absenttrainerclass. No party scan/copy, no new secondowner, no runtime savedfield or protocol change.",
+  "implementation": "BattleState remains the sole party owner. BattleScreen loaded_enemy_slots is a six-slot request bitmask populated only at real initial load, faint replacement and TrainerAI SwitchPokemon. App consumes original party identities once; stable frames read no party slot. Link/wild/absent trainer class consume without new seen flags. Current snapshots preserve pending masks; missing legacy field reconstructs only current canonical slot. Ordinary SRAM load/soft reset clear abandoned notifications.",
   "cases": [
     {
       "case": "loss",
-      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-loss-gguigzbv",
-      "native_directories": {
-        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-loss-6uelwgak",
-        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-loss-yv3d7x0k",
-        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-loss-x5n0c6iu"
-      },
       "source_saved_seen": [
         1,
         19
@@ -66,55 +80,30 @@
       "saved_owned_all": [
         1
       ],
-      "first_loaded_enemy_native_seen_counts": {
-        "before": 3,
-        "after": 2
-      },
-      "source_normal_save_checksum_valid_both": true,
-      "native_normal_save_checksum_valid_all_six": true,
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
       "source_sram_sha256": [
         "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a",
         "05964198ee861475da361808d0fcc45399fa126b0e3f3555aab85489af401e3a"
       ],
-      "current_native_sram_sha256": {
-        "current-before": [
-          "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e",
-          "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e"
-        ],
-        "after": [
-          "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f",
-          "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f"
-        ]
-      },
-      "paired_current_before_after": [
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 1416,
-          "whole_sram_changed_offsets": [
-            9656,
-            13603
-          ],
-          "all_other_sram_bytes_unchanged": true
-        },
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 1416,
-          "whole_sram_changed_offsets": [
-            9656,
-            13603
-          ],
-          "all_other_sram_bytes_unchanged": true
-        }
-      ]
+      "current_before_sram_sha256": [
+        "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e",
+        "1a5b2cfcaf3436de662f38ef8f8536b928f1233c968226db3f583172ff218b7e"
+      ],
+      "current_after_sram_sha256": [
+        "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f",
+        "b7edf761dad199a4382b8db34b0c28a4c6bd910bc14da08afee83f5ea1f2879f"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 1416,
+      "paired_whole_sram_changed_offsets": [
+        9656,
+        13603
+      ],
+      "all_other_sram_bytes_unchanged": true
     },
     {
       "case": "win",
-      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-win-v43za4fg",
-      "native_directories": {
-        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-win-0eu_14qo",
-        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-win-95mudbdn",
-        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-win-u1t6ukpz"
-      },
       "source_saved_seen": [
         1,
         19,
@@ -133,49 +122,27 @@
       "saved_owned_all": [
         1
       ],
-      "first_loaded_enemy_native_seen_counts": {
-        "before": 3,
-        "after": 2
-      },
-      "source_normal_save_checksum_valid_both": true,
-      "native_normal_save_checksum_valid_all_six": true,
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
       "source_sram_sha256": [
         "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7",
         "542faec59d979fa5f48018ca362419568565116166c2f62927b538b08c2c3cc7"
       ],
-      "current_native_sram_sha256": {
-        "current-before": [
-          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
-          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
-        ],
-        "after": [
-          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
-          "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
-        ]
-      },
-      "paired_current_before_after": [
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 2800,
-          "whole_sram_changed_offsets": [],
-          "all_other_sram_bytes_unchanged": true
-        },
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 2800,
-          "whole_sram_changed_offsets": [],
-          "all_other_sram_bytes_unchanged": true
-        }
-      ]
+      "current_before_sram_sha256": [
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+      ],
+      "current_after_sram_sha256": [
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9",
+        "fb7a7a37e3bad5f4cae166018815a38b286e9354da8691558ce655c4044e84c9"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 2800,
+      "paired_whole_sram_changed_offsets": [],
+      "all_other_sram_bytes_unchanged": true
     },
     {
       "case": "switch",
-      "source_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-original-trainer-seen-switch-_cnqal9_",
-      "native_directories": {
-        "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-before-switch-2heb11dc",
-        "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-current-before-switch-zyvi0gtt",
-        "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-906-native-trainer-seen-after-switch-wkse2or0"
-      },
       "source_saved_seen": [
         1,
         96,
@@ -194,78 +161,69 @@
       "saved_owned_all": [
         1
       ],
-      "first_loaded_enemy_native_seen_counts": {
-        "before": 3,
-        "after": 2
-      },
-      "source_normal_save_checksum_valid_both": true,
-      "native_normal_save_checksum_valid_all_six": true,
+      "first_loaded_enemy_seen_before": 3,
+      "first_loaded_enemy_seen_after": 2,
       "source_sram_sha256": [
         "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88",
         "4e78748ed3b578c3d4242d06e6d8778b027dc46a01448c6dbe2f710e36996f88"
       ],
-      "current_native_sram_sha256": {
-        "current-before": [
-          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
-          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
-        ],
-        "after": [
-          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
-          "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
-        ]
-      },
-      "paired_current_before_after": [
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 4912,
-          "whole_sram_changed_offsets": [],
-          "all_other_sram_bytes_unchanged": true
-        },
-        {
-          "identical_actual_inputs": true,
-          "same_pokedex_screen_frame": 4912,
-          "whole_sram_changed_offsets": [],
-          "all_other_sram_bytes_unchanged": true
-        }
-      ]
+      "current_before_sram_sha256": [
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+      ],
+      "current_after_sram_sha256": [
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93",
+        "d5ece3414536f77d378727cbe4501333edd53d2667f7c8265b40b53e6387bf93"
+      ],
+      "all_ordinary_save_checksums_valid": true,
+      "paired_same_pokedex_frame": 4912,
+      "paired_whole_sram_changed_offsets": [],
+      "all_other_sram_bytes_unchanged": true
     }
   ],
-  "repeat_checks": "Native actions, allnamedcheckpointstates/PNGs and finalSRAM repeatidentically withineach of3stages\u00d73cases. Currentbefore/afterfixturesandcompleteordinaryinputsidentical.",
+  "repeat_checks": "Both repeats have identical ordinary inputs, all named checkpoint states/PNG hashes and final SRAM within each current provider/build. Current before/after fixtures and complete ordinary inputs match.",
   "tests": {
-    "historical_debug_scoped": {
-      "passed": 4,
-      "log": "audit-906-app-scoped.log"
+    "debug_scoped": {
+      "passed": 9,
+      "log": "audit-906-ci-fix-events-debug-scoped-v2.log"
     },
-    "historical_debug_full": {
-      "passed": 273,
+    "default_scoped": {
+      "passed": 9,
+      "log": "audit-906-ci-fix-events-default-scoped.log"
+    },
+    "core_full": {
+      "passed": 2887,
+      "failed": 0,
+      "log": "audit-906-ci-fix-events-core-full-v2.log"
+    },
+    "app_full": {
+      "passed": 289,
       "ignored": 39,
       "failed": 0,
-      "log": "audit-906-app-full.log"
+      "log": "audit-906-ci-fix-events-app-full.log"
     },
-    "latest_debug_scoped": {
-      "passed": 4,
-      "log": "audit-906-current-app-scoped.log"
-    },
-    "latest_debug_full": {
-      "passed": 282,
-      "ignored": 39,
+    "agent_determinism": {
+      "passed": 8,
       "failed": 0,
-      "log": "audit-906-current-app-full.log"
+      "log": "audit-906-ci-fix-events-agent-determinism.log"
     },
-    "latest_default_scoped": {
-      "passed": 4,
-      "log": "audit-906-default-app-scoped.log"
+    "explicit_debug_app_build": {
+      "passed": true,
+      "log": "audit-906-ci-fix-events-app-build.log"
     },
-    "ordinary_save_full_comparison": {
-      "passed": "source6/native18 checksum/seen/owned and fullnativeSRAMdiff",
-      "log": "audit-906-check-evidence.log"
+    "actual_ordinary_save_comparison": {
+      "source": 6,
+      "current_native": 12,
+      "passed": true,
+      "log": "audit-906-check-current-events.log"
     }
   },
+  "performance": "See ci-performance.json: exact old remote failure retained235>232.3; final actual-load notifications232 pass all seven unchanged gates twice. This does not assert latest remote CI completion.",
   "limitations": [
-    "Actual source/native coverage is Red Route3firstloss/fullwin andFuchsiaGym AI-switch, eachrepeat2; no wholecampaign or alltrainers claim.",
-    "Link exclusion and original identity through Transform are unit/static checks; no new actuallink/Transformmatrix. Existingwild registration is deliberately untouched and doesnot claim unresolvedGhostseenfix.",
-    "Source/native inputcadence, battleRNG andsourceAIcontrolfinaloutcome differ. Only statedseenflags/active-switch/ordinarySAVE assertions compare acrossproviders; noallparty/fullSRAM crossprovider orframe/audioequivalence claim.",
-    "Currentbefore7310/afterbfe frozen hashes remain exact; dfee captures are historical, never relabeled current.",
-    "FailedsourceAIv1 requestedvictory although actualendedloss. Retainedasfailed, excluded fromfinal6sourcecontrols; v2 acceptsactualend andnormalSAVE."
+    "Actual Red source/native coverage remains Route3 first loss/full win and FuchsiaGym natural AI switch, each repeat2. No all-trainer/full-campaign claim.",
+    "AI source control ultimately loses while native uses Tackle to win after observing the switch. No final outcome/HP/RNG/whole-SRAM/frame/audio parity claim across providers.",
+    "Link/Transform/legacy snapshot/multiple queued loads are unit/static coverage, not new actual two-endpoint link or Ditto capture controls.",
+    "Initial per-frame implementation and failed caching iterations retain exact hashes/logs. Earlier dfee/7310/bfe actual captures are historical; final image metadata now points to freshly captured b7c81/669ab builds.",
+    "Failed original AI v1 required victory despite an actual loss, remains excluded and archived. Local GBA setup/compile failures and235/233 failed metrics also remain archived; no failed attempt relabelled PASS."
   ]
 }
