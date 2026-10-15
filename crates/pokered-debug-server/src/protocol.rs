@@ -32,6 +32,12 @@ pub enum GameDebugCommand {
     GetMap,
     /// Get the player's party Pokémon data.
     GetParty,
+    /// Export a bootable SaveData JSON fixture with the live map, position,
+    /// names and persisted flags. Does not advance frames, consume inputs,
+    /// modify the session or write SRAM. This is persistent game data,
+    /// not a full runtime/RNG snapshot; inspect get_state/get_agent_state
+    /// alongside it for an interrupted battle or scripted effect.
+    ExportFixture,
     /// Synchronously step the game until a named condition holds (checked
     /// after each frame), or until `max_frames` elapse. Collapses the
     /// driver's poll-every-N-frames loop into a single round trip. The
@@ -356,6 +362,10 @@ mod tests {
             cmd,
             DebugCommand::Game(GameDebugCommand::SetSeed { seed: 42 })
         ));
+
+        let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"export_fixture"}"#).unwrap();
+        assert!(matches!(cmd, DebugCommand::Game(GameDebugCommand::ExportFixture)));
+        assert_eq!(serde_json::to_value(cmd).unwrap(), serde_json::json!({"cmd": "export_fixture"}));
 
         let cmd: DebugCommand = serde_json::from_str(r#"{"cmd":"save_state","slot":1}"#).unwrap();
         assert!(matches!(

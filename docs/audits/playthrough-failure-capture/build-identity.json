@@ -1,0 +1,12 @@
+{
+  "source_commit": "d2eface67ce5c632cbc18972891cda5ef6716728",
+  "source_clean_at_build": true,
+  "sha256": "ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb",
+  "feature": "debug-server",
+  "profile": "dev opt0 debug0",
+  "build_log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-app-build.log",
+  "changed_rust_source_sha256": {
+    "crates/pokered-app/src/game.rs": "29a0c18b078d6d370d9808590e21e989d37a86f2ea548ccb7d8262741517d090",
+    "crates/pokered-debug-server/src/protocol.rs": "39253cee09ac5abc3c25e5fd930c9eeec6cd8c8794ab27f744dc5c0d759c694b"
+  }
+}

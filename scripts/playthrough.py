@@ -550,6 +550,62 @@ class Game:
         assert r["ok"], r
         (ROOT / "scripts" / ".playthrough.marker").write_text(mid)
 
+    def capture_failure_artifacts(self, directory, traceback_text):
+        """Keep independent diagnostics without replacing the original error.
+
+        export_fixture reads persistent SaveData; it neither writes the resume
+        checkpoint nor captures frame-level battle/script/RNG internals.
+        Older binaries and disconnected transports produce explicit errors.
+        """
+        directory = Path(directory)
+        captures = []
+
+        def write(name, value, command=None):
+            capture = {"file": name, "ok": False}
+            if command is not None:
+                capture["command"] = command
+            try:
+                result = value() if callable(value) else value
+                if command is not None:
+                    if not result.get("ok"):
+                        capture["response"] = result
+                        raise RuntimeError(result.get("error", "debug command failed"))
+                    if name in {"failure-state.json", "failure-fixture.json"}:
+                        result = result["data"]
+                text = result if isinstance(result, str) else json.dumps(
+                    result, ensure_ascii=False, indent=2)
+                (directory / name).write_text(text)
+                capture["ok"] = True
+            except Exception as error:
+                capture["error"] = f"{type(error).__name__}: {error}"
+                # A reused artifact directory must not retain a previous
+                # run's fixture while the manifest reports capture failure.
+                try:
+                    (directory / name).unlink(missing_ok=True)
+                except OSError as cleanup_error:
+                    capture["stale_cleanup_error"] = str(cleanup_error)
+                print(f"[failure capture] {name}: {capture['error']}", file=sys.stderr)
+            captures.append(capture)
+
+        write("failure.txt", traceback_text)
+        for name, command in (
+            ("failure-state.json", {"cmd": "get_state"}),
+            ("failure-npcs.json", {"cmd": "get_npcs"}),
+            ("failure-flags.json", {"cmd": "get_flags"}),
+            ("failure-agent.json", {"cmd": "get_agent_state", "level": 3}),
+            ("failure-fixture.json", {"cmd": "export_fixture"}),
+        ):
+            write(name, lambda command=command: self.d.cmd(**command), command)
+        try:
+            (directory / "failure-capture.json").write_text(json.dumps({
+                "scope": "Diagnostic observations and a persistent SaveData fixture; "
+                         "not ordinary SAVE validation or a full runtime/RNG snapshot.",
+                "captures": captures,
+            }, ensure_ascii=False, indent=2))
+        except Exception as error:
+            print(f"[failure capture] manifest: {type(error).__name__}: {error}", file=sys.stderr)
+        return captures
+
     def marker_at_least(self, mid):
         """True when the completed-milestone marker is >= `mid`."""
         m = (ROOT / "scripts" / ".playthrough.marker")
@@ -2183,18 +2239,7 @@ def main():
     except Exception:
         if args.artifacts:
             import traceback
-            (args.artifacts / "failure.txt").write_text(traceback.format_exc())
-            try:
-                (args.artifacts / "failure-state.json").write_text(
-                    json.dumps(g.st(), ensure_ascii=False, indent=2))
-                (args.artifacts / "failure-npcs.json").write_text(
-                    json.dumps(g.d.cmd(cmd="get_npcs"), ensure_ascii=False, indent=2))
-                (args.artifacts / "failure-flags.json").write_text(
-                    json.dumps(g.d.cmd(cmd="get_flags"), ensure_ascii=False, indent=2))
-                (args.artifacts / "failure-fixture.json").write_text(
-                    json.dumps(g.d.cmd(cmd="export_fixture")["data"], ensure_ascii=False, indent=2))
-            except Exception:
-                pass  # The game may have crashed; keep the original exception.
+            g.capture_failure_artifacts(args.artifacts, traceback.format_exc())
         raise
     finally:
         if args.artifacts:

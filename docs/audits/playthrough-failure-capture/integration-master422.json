@@ -1,0 +1,239 @@
+{
+  "master_base": "422270c4df1d6939e64ca74a941433c1c5c82fff",
+  "verified_source_commit": "6157dca950bef21ae6d178dde705e64790b7c0a4",
+  "build": {
+    "source_commit": "6157dca950bef21ae6d178dde705e64790b7c0a4",
+    "master_base": "422270c4df1d6939e64ca74a941433c1c5c82fff",
+    "source_clean_at_build": true,
+    "sha256": "25993d6b71f3cb7993c2d14f1f7c1a213c0b96c66c2332ad2ac3054a41151788",
+    "feature": "debug-server",
+    "profile": "dev opt0 debug0",
+    "build_target": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-882-diagnostic-native-target",
+    "target_isolated_and_fresh": true,
+    "build_log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-app-build.log",
+    "changed_rust_source_sha256": {
+      "crates/pokered-app/src/game.rs": "29a0c18b078d6d370d9808590e21e989d37a86f2ea548ccb7d8262741517d090",
+      "crates/pokered-debug-server/src/protocol.rs": "39253cee09ac5abc3c25e5fd930c9eeec6cd8c8794ab27f744dc5c0d759c694b"
+    }
+  },
+  "checks": [
+    {
+      "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-python-master422-tests.log",
+      "sha256": "2cecda0517ed771470120eab4fddb03d5e7e21ce495df8a7782287715917a00d",
+      "status": "PASS"
+    },
+    {
+      "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-protocol-tests.log",
+      "sha256": "ffc71754e8490a7a47b5eaa3e0a7394fd240dd49d2fdba00dcf34a00bf22084f",
+      "status": "PASS"
+    },
+    {
+      "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-app-lib-tests.log",
+      "sha256": "62c6d4704bf73a3505193747fc8270ecff297ddcc709d99dccb6353fc75fea5f",
+      "status": "PASS"
+    },
+    {
+      "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-app-bin-tests.log",
+      "sha256": "8130b0478b09ae3d13c5b334564029363fe7a442d5eeab37cf556184f9827c4b",
+      "status": "PASS"
+    },
+    {
+      "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-app-build.log",
+      "sha256": "b3bae739a35f5cd6523afbeeb70fd150c43bf4cbea691adcef7bfe4ced543626",
+      "status": "PASS"
+    }
+  ],
+  "actual_tcp_trials": [
+    {
+      "repeat": 1,
+      "source_commit": "6157dca950bef21ae6d178dde705e64790b7c0a4",
+      "binary_sha256": "25993d6b71f3cb7993c2d14f1f7c1a213c0b96c66c2332ad2ac3054a41151788",
+      "fixture_sha256": "95fefd979ee98a4b3d0efbd044c48d3c83ced75e4c718e34800cbeb7a8ac2fca",
+      "exported_fixture_sha256": "a8c5a3c682369ece110d3212b9a9d0420cc19324d83b23a86804b4448f4ab3f0",
+      "frame_count": 120,
+      "snapshot_hash_before": "b3cba103d1f1846a",
+      "snapshot_hash_after": "b3cba103d1f1846a",
+      "owned_sram_sha256_before": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "owned_sram_sha256_after": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "png_sha256_before": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "png_sha256_after": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "captures": [
+        {
+          "file": "failure.txt",
+          "ok": true
+        },
+        {
+          "file": "failure-state.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_state"
+          }
+        },
+        {
+          "file": "failure-npcs.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_npcs"
+          }
+        },
+        {
+          "file": "failure-flags.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_flags"
+          }
+        },
+        {
+          "file": "failure-agent.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_agent_state",
+            "level": 3
+          }
+        },
+        {
+          "file": "failure-fixture.json",
+          "ok": true,
+          "command": {
+            "cmd": "export_fixture"
+          }
+        }
+      ],
+      "sidecars_initially_absent": true,
+      "normal_save": false,
+      "scope": "Existing ordinary SAVE from independent875 serves as private checkpoint sentinel only. Actual TCP export/failure writer/reboot compatibility validated; no runtime patch or save/debug SAVE call in these879 controls. Persistent fixture is not full runtime/RNG replay.",
+      "observed_states_equal": true,
+      "reloaded_map": "VermilionPokecenter",
+      "reloaded_position": [
+        3,
+        3
+      ],
+      "reloaded_party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            5,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "reloaded_money": 2081
+    },
+    {
+      "repeat": 2,
+      "source_commit": "6157dca950bef21ae6d178dde705e64790b7c0a4",
+      "binary_sha256": "25993d6b71f3cb7993c2d14f1f7c1a213c0b96c66c2332ad2ac3054a41151788",
+      "fixture_sha256": "95fefd979ee98a4b3d0efbd044c48d3c83ced75e4c718e34800cbeb7a8ac2fca",
+      "exported_fixture_sha256": "a8c5a3c682369ece110d3212b9a9d0420cc19324d83b23a86804b4448f4ab3f0",
+      "frame_count": 120,
+      "snapshot_hash_before": "b3cba103d1f1846a",
+      "snapshot_hash_after": "b3cba103d1f1846a",
+      "owned_sram_sha256_before": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "owned_sram_sha256_after": "746bbc0524b4132812180ba16442c10be8ed21b3b8d6eff528cc91f8566a7f27",
+      "png_sha256_before": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "png_sha256_after": "774181d9d715e972369aebb1ba38d1a4b688bc43dc90befcbca711f827dba6e0",
+      "captures": [
+        {
+          "file": "failure.txt",
+          "ok": true
+        },
+        {
+          "file": "failure-state.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_state"
+          }
+        },
+        {
+          "file": "failure-npcs.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_npcs"
+          }
+        },
+        {
+          "file": "failure-flags.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_flags"
+          }
+        },
+        {
+          "file": "failure-agent.json",
+          "ok": true,
+          "command": {
+            "cmd": "get_agent_state",
+            "level": 3
+          }
+        },
+        {
+          "file": "failure-fixture.json",
+          "ok": true,
+          "command": {
+            "cmd": "export_fixture"
+          }
+        }
+      ],
+      "sidecars_initially_absent": true,
+      "normal_save": false,
+      "scope": "Existing ordinary SAVE from independent875 serves as private checkpoint sentinel only. Actual TCP export/failure writer/reboot compatibility validated; no runtime patch or save/debug SAVE call in these879 controls. Persistent fixture is not full runtime/RNG replay.",
+      "observed_states_equal": true,
+      "reloaded_map": "VermilionPokecenter",
+      "reloaded_position": [
+        3,
+        3
+      ],
+      "reloaded_party": [
+        {
+          "hp": 43,
+          "level": 29,
+          "max_hp": 79,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            5,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "reloaded_money": 2081
+    }
+  ],
+  "raw_api_artifacts": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-isolated-tcp-export-csympa6d",
+  "raw_verification_sha256": "fef3b288e88995c4880207f2d52a1b93a8f011ad24381c82f065f30643008f78",
+  "first_shared_target_error": {
+    "file": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-879-app-lib-master422-tests.log",
+    "sha256": "dbd72918f0533f0fd9035935285b8b7a3510316996c0a9a44cc549a9665c8b73",
+    "error": "E0599 ExportFixture enum missing from cached dependency while protocol test source contained it. Retained as rejected shared-target attempt; final validation uses a fresh private882 target."
+  },
+  "historical_capture_identity_preserved": {
+    "source_commit": "d2eface67ce5c632cbc18972891cda5ef6716728",
+    "binary_sha256": "ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb"
+  },
+  "limits": [
+    "Scoped protocol/application and Python checks; no full application suite claim.",
+    "Actual exercise checks readonly debug export and loadable diagnostic fixture, not fresh-mainline or ordinarySAVE validation.",
+    "Fresh866m16 remains unreproduced; fourteen bounded875 heal controls are not exact866 reproduction.",
+    "No new freshm49 run has started or passed."
+  ]
+}
