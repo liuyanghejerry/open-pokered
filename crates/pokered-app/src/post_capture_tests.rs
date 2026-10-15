@@ -817,6 +817,56 @@ fn failed_ball_result_waits_for_the_complete_throw() {
     panic!("failed ball presentation did not return to its caller");
 }
 
+#[test]
+fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
+    use pokered_core::battle::{BallAnimOutcome, BattleAnimEvent, BattleInput, BattlePhase};
+    use pokered_data::items::ItemId;
+    for outcome in [
+        BallAnimOutcome::Caught,
+        BallAnimOutcome::BrokeFree,
+        BallAnimOutcome::Dodged,
+        BallAnimOutcome::Blocked,
+    ] {
+        let mut g = game(true, false, false);
+        g.clear_post_capture_continuation();
+        assert!(!g.battle_vfx.has_ball_text_continuation());
+        // Isolate an already-resolved ball's presentation, including the
+        // trainer-block and ghost/Safari dodge callers. No RNG is overridden.
+        g.battle.phase = BattlePhase::ShowingText {
+            messages: vec!["Used ball".to_string(), "Result".to_string()],
+            current: 0, wait_frames: 1, next_phase: Box::new(BattlePhase::PlayerMenu),
+        };
+        g.battle_vfx.on_anim_event(BattleAnimEvent::Ball {
+            ball: ItemId::PokeBall, shakes: 1, outcome,
+        });
+        for _ in 0..1200 {
+            assert!(g.battle_vfx.has_ball_text_continuation());
+            let mut input = BattleInput { a: true, b: true, ..Default::default() };
+            g.apply_ball_text_continuation(&mut input);
+            assert!(!input.a && !input.b, "A/B cannot interrupt {outcome:?}");
+            g.battle_vfx.update(&g.battle);
+            if !g.battle_vfx.ball_animation_active() { break; }
+        }
+        assert!(!g.battle_vfx.ball_animation_active());
+        let wild_return = outcome != BallAnimOutcome::Blocked;
+        assert_eq!(g.battle_vfx.has_ball_text_continuation(), wild_return);
+        assert_eq!(g.battle_vfx.ball_result_ready(), wild_return);
+        let mut input = BattleInput::default();
+        g.apply_ball_text_continuation(&mut input);
+        assert!(!input.a, "completion cannot skip the remaining text delay");
+        assert_eq!(g.battle_vfx.ball_result_ready(), wild_return);
+        if let BattlePhase::ShowingText { wait_frames, .. } = &mut g.battle.phase {
+            *wait_frames = 0;
+        }
+        g.apply_ball_text_continuation(&mut input);
+        assert_eq!(input.a, wild_return, "trainer pages still require real input");
+        assert!(!g.battle_vfx.has_ball_text_continuation());
+        let mut next_input = BattleInput::default();
+        g.apply_ball_text_continuation(&mut next_input);
+        assert!(!next_input.a && !next_input.b, "the completed throw returns once");
+    }
+}
+
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
 #[test]

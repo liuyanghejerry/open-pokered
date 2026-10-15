@@ -4661,9 +4661,7 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
                 };
                 // Only an actual ball caller needs its text/animation gate.
-                if self.battle_vfx.ball_result_ready()
-                    || ((battle_input.a || battle_input.b) && self.battle_vfx.ball_animation_active())
-                {
+                if self.battle_vfx.has_ball_text_continuation() {
                     self.apply_ball_text_continuation(&mut battle_input);
                 }
                 // ── Link battle driving ─────────────────────────────────
