@@ -1,6 +1,7 @@
 use crate::alloc_prelude::*;
 pub mod provider;
 pub mod zh_dialogue;
+pub(crate) mod letter_delay;
 
 #[cfg(test)]
 mod tests;

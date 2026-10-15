@@ -13,6 +13,7 @@ extern crate std;
 extern crate alloc;
 
 pub mod battle_config;
+mod battle_text_input;
 pub mod game;
 #[cfg(feature = "ewram-audit")]
 pub mod mem_audit;
