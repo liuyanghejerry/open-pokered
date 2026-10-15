@@ -841,7 +841,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         });
         for _ in 0..1200 {
             assert!(g.battle_vfx.has_ball_text_continuation());
-            let mut input = BattleInput { a: true, b: true, ..Default::default() };
+            let mut input = BattleInput { a: true, b: true, ..BattleInput::none() };
             g.apply_ball_text_continuation(&mut input);
             assert!(!input.a && !input.b, "A/B cannot interrupt {outcome:?}");
             g.battle_vfx.update(&g.battle);
@@ -851,7 +851,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         let wild_return = outcome != BallAnimOutcome::Blocked;
         assert_eq!(g.battle_vfx.has_ball_text_continuation(), wild_return);
         assert_eq!(g.battle_vfx.ball_result_ready(), wild_return);
-        let mut input = BattleInput::default();
+        let mut input = BattleInput::none();
         g.apply_ball_text_continuation(&mut input);
         assert!(!input.a, "completion cannot skip the remaining text delay");
         assert_eq!(g.battle_vfx.ball_result_ready(), wild_return);
@@ -861,7 +861,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         g.apply_ball_text_continuation(&mut input);
         assert_eq!(input.a, wild_return, "trainer pages still require real input");
         assert!(!g.battle_vfx.has_ball_text_continuation());
-        let mut next_input = BattleInput::default();
+        let mut next_input = BattleInput::none();
         g.apply_ball_text_continuation(&mut next_input);
         assert!(!next_input.a && !next_input.b, "the completed throw returns once");
     }
