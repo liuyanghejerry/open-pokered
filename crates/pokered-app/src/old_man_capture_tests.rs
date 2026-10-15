@@ -5,13 +5,19 @@ use pokered_data::species::Species;
 
 #[test]
 fn old_man_ball_finishes_before_all_three_jingle_channels_and_field_return() {
+    verify_demo_jingle(false);
+    verify_demo_jingle(true);
+}
+
+fn verify_demo_jingle(low_hp: bool) {
     let mut game = PokemonGame::new_with_options(
         GameVersion::Red, None, None, None, false, None, false, true,
         #[cfg(feature = "debug-server")]
         None,
     );
     game.state.config.language = pokered_core::game_state::Lang::En;
-    let player = create_pokemon(Species::Bulbasaur, 6, [0x9a, 0x78]).unwrap();
+    let mut player = create_pokemon(Species::Bulbasaur, 6, [0x9a, 0x78]).unwrap();
+    if low_hp { player.hp = 1; }
     let enemy = create_pokemon(Species::Weedle, 5, [0x9a, 0x78]).unwrap();
     game.save_data.party.clear();
     game.save_data.party.add(player).unwrap();
@@ -31,6 +37,7 @@ fn old_man_ball_finishes_before_all_three_jingle_channels_and_field_return() {
         let mut input = InputState::new();
         if frame % 8 == 0 { input.press(GbButton::A); }
         game.update(&input);
+        assert!(!game.battle.low_health_alarm(), "the tutorial has no player HP HUD/alarm");
         game.draw(&mut framebuffer);
         assert!(!matches!(game.battle.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
         let channels = {

@@ -1505,7 +1505,7 @@ impl BattleScreen {
         // (engine/battle/end_of_battle.asm:48). Gen-1 wins always come
         // from wiping the enemy party (wild: core.asm:793; trainer:
         // core.asm:916); the battle-over phases cover escape/loss/catch.
-        if self.enemy_party_wiped()
+        if self.is_old_man || self.enemy_party_wiped()
             || matches!(
                 self.phase,
                 BattlePhase::TrainerVictory { .. } | BattlePhase::BattleOver { .. }
