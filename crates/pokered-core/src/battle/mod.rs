@@ -1911,6 +1911,7 @@ impl BattleScreen {
 
     /// Physical held input and explicit text settings share this single frame
     /// update. No frontend may call both entry points for the same frame.
+    #[inline]
     pub fn update_frame_with_text_input(
         &mut self,
         input: BattleInput,
@@ -1935,7 +1936,10 @@ impl BattleScreen {
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
         }
-        if self.fight_text_work().is_some() {
+        if matches!(&self.phase, BattlePhase::ShowingText {
+            backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(_) },
+            ..
+        }) {
             if let BattlePhase::ShowingText {
                 messages, current, wait_frames, next_phase,
                 backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(work) },
