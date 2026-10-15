@@ -19,7 +19,8 @@
 //! - link-play state (`link_rng`, link pending fields) — link battles
 //!   are out of scope for fork/restore;
 //! - battle visual effects (app-side renderer state) — presentation
-//!   only; a restore restarts transient animations.
+//!   only; a restore restarts transient animations. Text page publication
+//!   is retained separately because it controls acknowledgement inputs.
 
 use crate::alloc_prelude::*;
 
@@ -480,6 +481,10 @@ impl OverworldSnapshot {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BattleSnapshot {
     pub phase: BattlePhase,
+    /// Only the existing text publication owner affects page ACKs. None
+    /// identifies legacy snapshots whose current-page publication was unknown.
+    #[serde(default)]
+    pub text_publication: Option<crate::battle::presentation::TextPagePublication>,
     pub battle_menu: BattleMenuState,
     pub party_submenu: Option<PartySubMenuState>,
     pub bag_menu: Option<BagMenuState>,
@@ -551,6 +556,7 @@ impl BattleSnapshot {
     pub fn capture(screen: &BattleScreen) -> Self {
         Self {
             phase: screen.phase.clone(),
+            text_publication: Some(screen.presentation.capture_text_publication()),
             battle_menu: screen.battle_menu.clone(),
             party_submenu: screen.party_submenu.clone(),
             bag_menu: screen.bag_menu.clone(),
@@ -642,6 +648,13 @@ impl BattleSnapshot {
             screen.battle_state.as_ref()
                 .map_or(0, |bs| 1 << bs.enemy.active_pokemon_index)
         });
+        if let Some(publication) = snap.text_publication {
+            screen.presentation.restore_text_publication(publication);
+        } else if let BattlePhase::ShowingText { current, .. } = screen.phase {
+            // Compatibility only: preserve the old current-page ACK behavior.
+            // This cannot reconstruct unknown publication or sound receipts.
+            screen.presentation.restore_legacy_text_page(current);
+        }
         screen
     }
 }
