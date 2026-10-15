@@ -94,3 +94,7 @@ frames and SAVE. Its complete ledger, WAV, SRAM, flags and screenshot match the
 untouched f078 BEFORE bytes; this is an additional integration check, not a
 relabeling of the original matched f078 before/after controls. Both integrated
 GBA query functions still contain zero static wide-multiply call sites.
+
+## Independent root review
+
+`root-review.json` verifies the entire 6,762-file current compiler freeze (only the two declared documentation files changed afterward), all current test/build logs, both exact 2,165-file GBA mirrors and every one of their 31 budget rows. It independently compares all three raw 9,749-frame prefix arrays and the complete WAV, SRAM, flags and saved PNG; the original f078 BEFORE/AFTER and the new 32f integration identities remain separate. The production/test diff was reviewed in full. `review-logs.zip` contains the explicit small log/report allowlist and SHA manifest; ROMs, executables, hardware states and the large WAV are kept outside this PR.
