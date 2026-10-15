@@ -35,6 +35,8 @@ mod menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
+mod trainer_free_turn_tests;
+#[cfg(test)]
 mod medicine_result_tests;
 #[cfg(test)]
 mod exp_participant_tests;
@@ -3710,10 +3712,24 @@ learn {learn_name}!")];
         // apply from send-out (before the enemy's free hit lands).
         self.sync_player_context();
 
-        // Choose the enemy's move (AI, honoring a locked/forced move), then resolve
-        // Metronome / Mirror Move — exactly as the enemy path of execute_turn_with_move.
+        // MainInBattleLoop still calls TrainerAI after a successful item or
+        // voluntary switch (core.asm:314-345,416,454). It replaces the enemy's
+        // attack, but does not skip that side's residual damage.
+        let ai_cfg = if self.is_wild || self.link_mode || enemy_move_override.is_some() {
+            None
+        } else {
+            self.trainer_class.map(trainer_ai_config)
+        };
+        let trainer_name = self.trainer_name.clone().unwrap_or_else(|| "ENEMY".to_string());
+        let ai_count_seed = ai_cfg.map_or(0, |cfg| cfg.ai_count);
+        let mut enemy_ai_fired = false;
+        let mut ai_msgs = Vec::new();
+
+        // SelectEnemyMove precedes TrainerAI; called-move resolution belongs to
+        // ExecuteEnemyMove, after both TrainerAI and the ordinary status gates.
         let enemy_move_idx;
-        let (enemy_move_id, enemy_call, enemy_call_failed);
+        let mut enemy_move_id;
+        let (mut enemy_call, mut enemy_call_failed) = (None, false);
         {
             let bs = match self.battle_state.as_ref() {
                 Some(b) => b,
@@ -3737,11 +3753,7 @@ learn {learn_name}!")];
                 }
             };
             enemy_move_idx = eidx;
-            let base = if move_is_locked(&bs.enemy) { bs.enemy.selected_move } else { eid };
-            let (rid, rcall, rfailed) = resolve_called_move(base, bs.player.last_move_used, rng);
-            enemy_move_id = rid;
-            enemy_call = rcall;
-            enemy_call_failed = rfailed;
+            enemy_move_id = if move_is_locked(&bs.enemy) { bs.enemy.selected_move } else { eid };
         }
         let enemy_move = match MoveData::get(enemy_move_id) {
             Some(m) => *m,
@@ -3762,7 +3774,7 @@ learn {learn_name}!")];
             let e_recharging = bs.enemy.has_status2(NEEDS_TO_RECHARGE);
             let e_was_charging = bs.enemy.has_status1(CHARGING_UP);
             let e_had_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
-            let battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
+            let mut battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
             let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
             // The player is fleeing / has just switched → it does Nothing this turn.
             // In a ghost battle the GHOST itself never attacks either —
@@ -3784,10 +3796,54 @@ learn {learn_name}!")];
                 Some(link) => link,
                 None => &mut self.rng,
             };
-            let (_r, log) = StackDriver::execute_turn_logged(
+            let turn_start_hp = [bs.player.active_mon().hp, bs.enemy.active_mon().hp];
+            let (_r, log) = StackDriver::execute_turn_logged_with_before_action(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
+                &mut |state, effects, actor, _action, rng| {
+                    if actor != BattlerRef::OPPONENT {
+                        return;
+                    }
+                    let Some(cfg) = ai_cfg.filter(|_| self.enemy_ai_count != 0) else {
+                        return;
+                    };
+                    pokered_rules::runtime::apply_engine_to_legacy(bs, state, effects);
+                    let ai_action = Self::decide_enemy_ai_action_to_state(
+                        bs, cfg, &mut self.enemy_ai_count, rng.next_u8(),
+                    );
+                    if let Some(ai_action) = ai_action {
+                        enemy_ai_fired = true;
+                        Self::apply_enemy_ai_action_to_state(
+                            bs, ai_action, &trainer_name, ai_count_seed,
+                            &mut self.enemy_ai_count, &mut ai_msgs,
+                            &mut self.loaded_enemy_slots,
+                        );
+                        battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
+                        let (next_state, mut next_effects) =
+                            pokered_rules::runtime::engine_state_from_legacy(bs);
+                        next_effects.push(dotzuki_engine::battle::stack::EffectState {
+                            id: dotzuki_engine::battle::stack::EffectId(0x50_ff0),
+                            host: BattlerRef::OPPONENT,
+                            effect_order: 0,
+                            kind: pokered_rules::PokeVolatile::TurnSuppressed,
+                        });
+                        next_effects.extend(effects.iter().filter(|entry| matches!(
+                            entry.kind, pokered_rules::PokeVolatile::CalledMove { .. }
+                        )).cloned());
+                        *state = next_state;
+                        *effects = next_effects;
+                    }
+                },
             );
-            self.presentation.record_turn(&log, &state, &effects, [bs.player.active_mon().hp, bs.enemy.active_mon().hp]);
+            for entry in &effects {
+                if let pokered_rules::PokeVolatile::CalledMove { caller, resolved, failed } = entry.kind {
+                    if entry.host == BattlerRef::OPPONENT {
+                        enemy_call = Some(if caller == MoveId::Metronome { "METRONOME" } else { "MIRROR MOVE" });
+                        enemy_move_id = resolved;
+                        enemy_call_failed = failed;
+                    }
+                }
+            }
+            self.presentation.record_turn(&log, &state, &effects, turn_start_hp);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
 
             for ev in &log.events {
@@ -3821,7 +3877,7 @@ learn {learn_name}!")];
                     false
                 }
             });
-            if e_recharging {
+            if e_recharging && !enemy_ai_fired {
                 bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
             }
 
@@ -3839,26 +3895,27 @@ learn {learn_name}!")];
             if ghost_enemy_blocked {
                 m.push("GHOST: Get out...\nGet out...".to_string());
             }
-            if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
+            if !enemy_ai_fired && !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
                 self.presentation.charge_in_order(&mut m,
                     &pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names)), enemy_move_id, false);
             }
             let now_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
             let created_sub = pokered_rules::sub_created_this_turn(BattlerRef::OPPONENT);
-            if created_sub {
+            if !enemy_ai_fired && created_sub {
                 m.push(format!("{} put in a SUBSTITUTE!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
-            if (e_had_sub || created_sub) && !now_sub {
+            if !enemy_ai_fired && (e_had_sub || created_sub) && !now_sub {
                 m.push(format!("{}'s SUBSTITUTE broke!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
-            if e_recharging {
+            if e_recharging && !enemy_ai_fired {
                 m.insert(0, format!("{} must recharge!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
             (m, escape)
         };
+        msgs.append(&mut ai_msgs);
         msgs.extend(turn_msgs);
 
         self.sync_display_from_state();

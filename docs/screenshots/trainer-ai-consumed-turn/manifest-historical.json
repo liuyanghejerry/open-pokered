@@ -1,0 +1,22 @@
+{
+  "frame": 1080,
+  "same_complete_ordinary_input_prefix": true,
+  "input_prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+  "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+  "before": {
+    "compiled_commit": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+    "binary_sha256": "bb844b56204ef0c75c5a9e29282a54d19558798afb88f2f206597938a60bb2c9",
+    "png_sha256": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-historical-before-vdnr6fra",
+    "observed": "Enemy STARYU used TACKLE!"
+  },
+  "after": {
+    "compiled_commit": "ed65979115173b9db9d95ca9c22ede6f42965c59",
+    "binary_sha256": "ec6deed1c5777a11a1d134245d566f2b0366974733ddbde4e26585a3436dd688",
+    "png_sha256": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3",
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-private-after-kkjz6kv0",
+    "observed": "MISTY used X DEFEND!"
+  },
+  "two_repeats_each_identical": true,
+  "scope": "Historical clean b7c81 before versus private ed659791 after; future latest-parent/master PR captures still require exact identity labels and routine integration. Visual replay intentionally ends at1080; full normalSAVE controls are separate."
+}
