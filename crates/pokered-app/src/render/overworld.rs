@@ -978,11 +978,14 @@ fn draw_background_tiles(
     }
 }
 
-fn background_map_hash(screen: &OverworldScreen) -> u32 {
+pub(super) fn background_map_hash(screen: &OverworldScreen) -> u32 {
     let mut hash = 0x811c_9dc5u32;
     let Some(map) = screen.map_data.as_ref() else {
-        return hash;
+        return hash.wrapping_mul(0x0100_0193);
     };
+    // Same presence/size/live-grid fingerprint as the whole-frame key. The
+    // session may pass this value straight through during this one draw.
+    hash = (hash ^ 1).wrapping_mul(0x0100_0193);
     for byte in [map.width, map.height]
         .into_iter()
         .chain(map.blocks.iter().copied())
@@ -998,7 +1001,7 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None);
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -1008,7 +1011,7 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None);
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None, None);
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -1019,6 +1022,7 @@ pub(crate) fn draw_overworld_cached_with(
     cache: &mut OverworldBackgroundCache,
     scroll_background: &mut ScrollIndexedPixels<'_>,
     reuse_composited: bool,
+    same_frame_map_hash: Option<u32>,
 ) {
     draw_overworld_impl(
         screen,
@@ -1028,6 +1032,7 @@ pub(crate) fn draw_overworld_cached_with(
         Some(cache),
         Some(scroll_background),
         Some(reuse_composited),
+        same_frame_map_hash,
     );
 }
 
@@ -1039,6 +1044,7 @@ fn draw_overworld_impl(
     mut background_cache: Option<&mut OverworldBackgroundCache>,
     mut scroll_background: Option<&mut ScrollIndexedPixels<'_>>,
     reuse_composited_hint: Option<bool>,
+    same_frame_map_hash: Option<u32>,
 ) {
     if let Some(cache) = background_cache.as_deref_mut() {
         cache.require_full_present();
@@ -1210,7 +1216,7 @@ fn draw_overworld_impl(
                         water_shift: screen.tile_anim.water_shift(),
                         flower_frame: screen.tile_anim.flower_frame(),
                         poison_bg_flash,
-                        map_hash: background_map_hash(screen),
+                        map_hash: same_frame_map_hash.unwrap_or_else(|| background_map_hash(screen)),
                     };
                     let damage = cache.prepare(fb, key, scroll_background.as_deref_mut());
                     let is_animated = matches!(damage, BackgroundDamage::Animated);
@@ -2770,6 +2776,7 @@ mod tests {
             &mut cache,
             &mut host_scroll,
             true,
+            None,
         );
         let before = fb.clone();
 
@@ -2786,6 +2793,7 @@ mod tests {
             &mut cache,
             &mut host_scroll,
             true,
+            None,
         );
 
         // Pixel-exact against a from-scratch full render of the same state.
@@ -2911,6 +2919,7 @@ mod tests {
                     unreachable!("host framebuffer must use its planar scroll implementation")
                 },
                 reuse_composited,
+                None,
             );
             assert_eq!(
                 full.packed(),

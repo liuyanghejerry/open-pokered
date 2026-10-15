@@ -601,17 +601,7 @@ impl OverworldVisualKey {
         // Scripted tile swaps mutate the live block grid without necessarily
         // moving the camera. Hash it so a cached frame can never hide a CUT
         // tree, gym gate, or other map edit.
-        let mut map_hash = 0x811c_9dc5;
-        if let Some(map) = screen.map_data.as_ref() {
-            hash_byte(&mut map_hash, 1);
-            hash_byte(&mut map_hash, map.width);
-            hash_byte(&mut map_hash, map.height);
-            for &block in &map.blocks {
-                hash_byte(&mut map_hash, block);
-            }
-        } else {
-            hash_byte(&mut map_hash, 0);
-        }
+        let map_hash = super::overworld::background_map_hash(screen);
 
         // Delay counters and scripted paths affect future updates, but not the
         // current pixels. Hash only the NPC fields consumed by the renderer.
@@ -2407,7 +2397,7 @@ impl RenderSession {
                     fb,
                     overworld_background_cache,
                     scroll_background,
-                    overworld.is_some(),
+                    overworld.map(|key| key.map_hash),
                 );
             }
         }
@@ -2713,6 +2703,47 @@ mod session_tests {
             };
             assert!(BattleVisualKey::new(&game).is_none());
         }
+    }
+
+    #[test]
+    fn same_frame_map_hash_preserves_live_block_edits_and_full_render_pixels() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.audio = None;
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = pokered_core::overworld::OverworldScreen::new(
+            MapId::PalletTown, None, pokered_data::impl_traits::PokemonRedData);
+        game.overworld.state.player.x = 5;
+        game.overworld.state.player.y = 5;
+        assert!(game.resources.is_some());
+        let config = RenderConfig::new(160, 144);
+        let mut cached = FrameBuffer::new(config, Rgba::WHITE);
+        let mut session = RenderSession::new();
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {
+            unreachable!("host framebuffer uses its planar scroll path")
+        };
+        assert!(matches!(session.render(&mut game, &mut cached, &mut scroll), FrameUpdate::Full));
+        assert!(matches!(session.render(&mut game, &mut cached, &mut scroll), FrameUpdate::Reuse));
+        let before = cached.clone();
+        let key_before = OverworldVisualKey::new(&game).expect("ordinary map key");
+
+        // A script can change a visible block without moving the player or
+        // camera. Reusing this frame's fingerprint must never reuse an older
+        // frame's grid, even when its dimensions and pointer are unchanged.
+        let map = game.overworld.map_data.as_mut().expect("live map");
+        let visible = 2 * map.width as usize + 2;
+        let old = map.blocks[visible];
+        let replacement = map.blocks.iter().copied().find(|&block| block != old)
+            .expect("Pallet Town contains distinct legal block graphics");
+        map.blocks[visible] = replacement;
+        let key_after = OverworldVisualKey::new(&game).expect("ordinary map key");
+        assert_ne!(key_before.map_hash, key_after.map_hash);
+        assert!(!matches!(session.render(&mut game, &mut cached, &mut scroll), FrameUpdate::Reuse));
+        let mut full = FrameBuffer::new(config, Rgba::WHITE);
+        game.draw(&mut full);
+        assert_eq!(cached.packed(), full.packed());
+        assert_eq!(cached.display_palette(), full.display_palette());
+        assert_ne!(cached.packed(), before.packed(), "the visible map edit must reach the framebuffer");
+        assert!(matches!(session.render(&mut game, &mut cached, &mut scroll), FrameUpdate::Reuse));
     }
 
     #[test]
@@ -3395,7 +3426,7 @@ fn draw_full(
     frame_buffer: &mut FrameBuffer,
     background_cache: &mut Option<OverworldBackgroundCache>,
     scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
-    reuse_composited_overworld: bool,
+    same_frame_map_hash: Option<u32>,
 ) {
     let ordinary_overworld = game.black_screen_frames == 0
         && game.trade_anim.is_none()
@@ -3421,6 +3452,7 @@ fn draw_full(
         game.state.config.language,
         cache,
         scroll_background,
-        reuse_composited_overworld,
+        same_frame_map_hash.is_some(),
+        same_frame_map_hash,
     );
 }
