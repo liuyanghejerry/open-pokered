@@ -1,3 +1,13 @@
+# 场外用药提示：当前发布身份
+
+#261 head `a9321f2111a073b295b04df65fb3e8d2a84d1f76` 实际合入 `f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7` 后整合实时master `f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7`。本轮受测源码为 `744ebbb9b891db442488f79f3d22f462e698956d`，2173完整compiler、2691项docs外NUL blob/模式/literal symlink、702GFX逐项等同发布源码。相对该master只有bag_use.rs与dialog_text.rs；261单帧地图指纹优化作为已合入依赖保留。
+
+1008七阶段实际全部通过：debug app330/39忽略、default app319/37忽略、determinism10及GBA build/fix/record/compare的31项不变门槛。core2934保留原a07a/v5运行，只经1901core/data/vendor/Cargo组件证明；不是新core运行、不是旧整份2173与744相等。见publication-1010.json与publication-1010-logs.zip。仍需新发布head的三个远程工作流全绿。
+
+下方原作6/原生前6/后6普通SAVE和三组952帧截图都保留各自历史身份；严格截图重放没有额外SAVE。本轮没有新actual，旧失败与局限保持。
+
+## 历史原证据（身份保留）
+
 # Field medicine success text
 
 Field bag medicines now use the original selected member's English success text: HP recovery says `SPROUT / recovered by 20!`, paralysis cure says `SPROUT's / rid of paralysis!`, and revival says `SPROUT / is revitalized!`. The same original table supplies the Antidote, Burn Heal, Ice Heal, Awakening and Full Heal messages. Full Restore uses Full Heal's message when it only cures an ailment at full HP, otherwise the HP recovery message.
@@ -20,4 +30,4 @@ Limits: new actual controls cover Potion, Parlyz Heal and Revive; the remaining 
 
 To inspect the portable fixtures/inputs/screens/SRAM without a game binary, run `python3 extract_evidence.py --verify-only` or `python3 extract_evidence.py --output /your/private/evidence-directory`. The extracted current controls contain exact SaveData JSON fixtures and actions; each strict replay contains the complete `buttons.json` and every per-frame observation. The immutable earlier920 archive has the same manifest/blob format and can be verified/extracted by passing `--archive` to the same tool.
 
-已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2893 通过/0 忽略；app 296 通过/39 忽略，全部 0 失败。当前受测源码 `fed824303a4f886b78c132a31086db3151d28960`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
+此前整合 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2893 通过/0 忽略；app 296 通过/39 忽略，全部 0 失败。当时受测源码 `fed824303a4f886b78c132a31086db3151d28960`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
