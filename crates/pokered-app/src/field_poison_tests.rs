@@ -511,3 +511,49 @@ fn field_poison_encounter_is_discarded_before_blackout_ack_and_never_reappears()
         assert_eq!(g.save_data.game_data.player_money, 1500);
     });
 }
+
+#[test]
+fn field_poison_pending_trainer_waits_for_caller_then_resumes_with_committed_party() {
+    on_game_stack(|| {
+        use pokered_data::trainer_data::{make_trainer_id, TrainerClass};
+        for initial_hp in [1, 10] {
+            let mut g = game(&[(initial_hp, true), (31, false)]);
+            g.overworld.pending_trainer_battle = Some(
+                pokered_core::overworld::PendingTrainerBattle {
+                    trainer_id: make_trainer_id(TrainerClass::BugCatcher, 1),
+                    npc_index: 7,
+                    end_battle_text: Some("The trainer's own victory text.".into()),
+                    rival_triplet_base: None,
+                },
+            );
+            begin(&mut g);
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert!(g.overworld.pending_trainer_battle.is_some());
+            if initial_hp == 1 {
+                wait_for_prompt(&mut g);
+                assert_eq!(g.state.screen, GameScreen::Overworld);
+                assert_eq!(hp(&g), vec![0, 31]);
+                assert!(g.overworld.pending_trainer_battle.is_some());
+                acknowledge(&mut g);
+            } else {
+                for remaining in [4, 3, 2, 1] {
+                    assert_eq!(g.state.screen, GameScreen::Overworld);
+                    assert_eq!(g.overworld.poison_flow, Some(FieldPoisonFlow::Flash { frames_remaining: remaining }));
+                    assert!(g.overworld.pending_trainer_battle.is_some());
+                    g.update(&InputState::new());
+                }
+            }
+            assert!(g.overworld.poison_flow.is_none());
+            assert!(g.overworld.pending_trainer_battle.is_none());
+            assert_eq!(g.state.screen, GameScreen::Battle);
+            assert!(!g.battle.is_wild);
+            assert_eq!(g.battle.trainer_class, Some(TrainerClass::BugCatcher));
+            assert_eq!(g.battle.trainer_npc_index, Some(7));
+            assert_eq!(g.battle.end_battle_text.as_deref(), Some("The trainer's own victory text."));
+            let live = g.battle.battle_state.as_ref().unwrap();
+            assert_eq!(live.player.party[0].hp, initial_hp - 1);
+            assert_eq!(live.player.party[1].hp, 31);
+            assert_eq!(live.player.active_mon().hp, if initial_hp == 1 { 31 } else { 9 });
+        }
+    });
+}

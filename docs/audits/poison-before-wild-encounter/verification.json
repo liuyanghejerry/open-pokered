@@ -234,14 +234,15 @@
       "log": "audit-903-core-full.log"
     },
     "app_scoped_debug_server": {
-      "passed": 3,
-      "log": "audit-903-app-scoped.log"
+      "passed": 13,
+      "log": "audit-903-final-app-scoped.log",
+      "scope": "Includes parent poison lifecycle9, wild3, pending-trainer1 Game regression; trainer is unit/static, not original actualmatrix."
     },
     "app_all_debug_server": {
-      "passed": 280,
+      "passed": 281,
       "ignored": 39,
       "failed": 0,
-      "log": "audit-903-app-full.log"
+      "log": "audit-903-final-app-full.log"
     },
     "after_debug_app_build": {
       "terminal": 0,
@@ -261,6 +262,8 @@
   ],
   "limits": [
     "Native/source input cadence, clock, RNG and enemy DVs are different. Only declared per-provider poison/ACK/battle/blackout ordering and saved player party/cash are compared; no cross-provider enemy/raw full SRAM equality claim.",
+    "Actual sourcecontrols are wild3cases\u00d72 only; pending-trainer continuation is unit/static coverage, not original actual trainer validation.",
+    "Naturally coincident allKO and pending trainer has not been reproduced; static queue guards are documented. Trainer cancellation is not added; Game unit only verifies surviving-party continuation.",
     "Only Route1 Red walking and these three legal Rattata party cases were exercised. No global frame/audio/animation parity, every map, or full campaign pass claim.",
     "PR252 status/flow implementation is a private prerequisite until merged. Existing script/dialogue/warp poison guards are preserved; no general encounter/warp/script refactor.",
     "Known unrelated blackout white fade/healing audio differences remain outside this scope."
