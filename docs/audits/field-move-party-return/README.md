@@ -73,4 +73,6 @@ python3 docs/audits/field-move-party-return/extract_evidence.py \
 
 将 `--verify-only` 换成目标目录即可按清单重建原相对路径；运行脚本仍需要指定版本的原作 ROM、相应 Python/PyBoy 环境和该源提交的仓库/资源。脚本中的绝对工作区路径保持历史原样，归档提取不会悄悄重写它们。
 
-已整合最新 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2888 通过**、debug-server 应用 **296 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+此前整合 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2888 通过**、debug-server 应用 **296 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+
+已整合最新 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2888 通过**、debug-server 应用 **296 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
