@@ -145,6 +145,9 @@ pub enum PokeVolatile {
     Escaped { actor: BattlerRef, move_: MoveId },
     /// Original wPlayerUsedMove/wEnemyUsedMove, updated when move text prints.
     UsedMove { move_: MoveId },
+    /// Per-turn receipt: the player's action passed the pre-move gates. The
+    /// frontend consumes this once at the actor boundary using its PP policy.
+    PlayerPpChargePending,
     /// Per-turn call narration; the resolved move executes after status gates.
     CalledMove { caller: MoveId, resolved: MoveId, failed: bool },
     /// Inert.
@@ -1556,6 +1559,18 @@ fn remember_used_move(
     source: BattlerRef, _eff: EffectId,
 ) -> HandlerResult {
     set_used_move(ctx, source, current_move_for(source).id);
+    if source == BattlerRef::PLAYER
+        && !ctx.effects.iter().any(|entry| {
+            entry.host == source && matches!(entry.kind, PokeVolatile::PlayerPpChargePending)
+        })
+    {
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_fc0),
+            host: source,
+            effect_order: 0,
+            kind: PokeVolatile::PlayerPpChargePending,
+        });
+    }
     HandlerResult::Unchanged
 }
 

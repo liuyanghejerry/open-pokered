@@ -435,10 +435,7 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     let catch_rate = party.transform_catch_rate.unwrap_or_else(|| mon.effective_catch_rate());
     b.resources.set(super::RES_CATCH_RATE, catch_rate as u16, 255);
     super::bind_types(&mut b, (party.conversion_type1.unwrap_or(mon.type1), party.conversion_type2.unwrap_or(mon.type2)));
-    for slot in 0..4 {
-        let packed = (mon.pp[slot] & 0x3f) | ((mon.pp_ups[slot] & 3) << 6);
-        b.resources.set(super::RES_PP_BASE + slot as u16, packed as u16, 255);
-    }
+    bind_working_pp(&mut b, mon);
     let ss = &party.stat_stages;
     b.stat_stages.set(StatIndex::Attack, ss.attack);
     b.stat_stages.set(StatIndex::Defense, ss.defense);
@@ -447,6 +444,15 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     b.stat_stages.set(StatIndex::Accuracy, ss.accuracy);
     b.stat_stages.set(StatIndex::Evasion, ss.evasion);
     b
+}
+
+/// Refresh Disable's packed working view from the canonical active Pokemon.
+/// These bytes never replace the engine's ordinary PP quantities or its costs.
+pub(in crate::battle) fn bind_working_pp(b: &mut EngineBattler<PokeredRules>, mon: &Pokemon) {
+    for slot in 0..4 {
+        let packed = (mon.pp[slot] & 0x3f) | ((mon.pp_ups[slot] & 3) << 6);
+        b.resources.set(super::RES_PP_BASE + slot as u16, packed as u16, 255);
+    }
 }
 
 /// Legacy status1/2/3 flags + counters → `PokeVolatile` arena entries on `host`.

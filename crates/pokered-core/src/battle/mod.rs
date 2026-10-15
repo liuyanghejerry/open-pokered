@@ -1808,6 +1808,38 @@ impl BattleScreen {
         }
     }
 
+    /// Consume the accepted action once, after publishing its canonical state
+    /// and before the opponent can inspect PP. A final consume covers a player
+    /// acting second or ending the battle before the opponent's callback.
+    fn consume_player_pp_charge(
+        bs: &mut BattleState,
+        state: &mut dotzuki_engine::battle::BattleState<pokered_rules::PokeredRules>,
+        effects: &mut Vec<dotzuki_engine::battle::stack::EffectState<pokered_rules::PokeredRules>>,
+        entry: (u8, u8, bool, MoveId),
+        gather: bool,
+    ) {
+        use dotzuki_engine::battle::BattlerRef;
+        let pending = effects.iter().any(|entry| {
+            entry.host == BattlerRef::PLAYER
+                && matches!(entry.kind, pokered_rules::PokeVolatile::PlayerPpChargePending)
+        });
+        if !pending {
+            return;
+        }
+        effects.retain(|entry| {
+            entry.host != BattlerRef::PLAYER
+                || !matches!(entry.kind, pokered_rules::PokeVolatile::PlayerPpChargePending)
+        });
+        // Keep the original DecrementPP policy in one place, including lock-in
+        // exemptions and the persistent identity behind a newly used Transform.
+        if !gather {
+            Self::decrement_player_pp(bs, entry.0, entry.1, entry.2, entry.3);
+        }
+        pokered_rules::runtime::bind_working_pp(
+            &mut state.player_battlers[0], bs.player.active_mon(),
+        );
+    }
+
     fn format_move_outcome(
         side_name: &str,
         move_name: &str,
@@ -4467,6 +4499,8 @@ learn {learn_name}!")];
                 // entry); we narrate "flew up high!" etc. for that transition below.
                 let p_was_charging = bs.player.has_status1(CHARGING_UP);
                 let e_was_charging = bs.enemy.has_status1(CHARGING_UP);
+                let gather = !p_was_charging && matches!(player_move.effect,
+                    pokered_data::moves::MoveEffect::FlyEffect | pokered_data::moves::MoveEffect::ChargeEffect);
                 // Substitute presence BEFORE the turn — to narrate a doll raised or
                 // broken (the write-back below updates HAS_SUBSTITUTE_UP).
                 let p_had_sub = bs.player.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
@@ -4517,6 +4551,7 @@ learn {learn_name}!")];
                             return;
                         }
                         pokered_rules::runtime::apply_engine_to_legacy(bs, state, effects);
+                        Self::consume_player_pp_charge(bs, state, effects, entry_pp, gather);
                         let ai_action =
                             ai_cfg.filter(|_| self.enemy_ai_count != 0).and_then(|cfg| {
                                 Self::decide_enemy_ai_action_to_state(
@@ -4562,21 +4597,10 @@ learn {learn_name}!")];
                         }
                     }
                 }
-                // DecrementPP runs only after all status gates allowed a move.
-                // Inspect the real MoveUsed log while `bs` still has entry flags
-                // for the Bide/Thrash/Wrap/Rage exemptions. Charging gathers
-                // skip PlayerCanExecuteMove; their strike consumes the PP.
-                let used = log.events.iter().any(|ev| matches!(ev,
-                    dotzuki_engine::battle::stack::TurnEvent::MoveUsed { actor, .. }
-                    if *actor == BattlerRef::PLAYER));
-                let gather = !p_was_charging && matches!(player_move.effect,
-                    pokered_data::moves::MoveEffect::FlyEffect | pokered_data::moves::MoveEffect::ChargeEffect);
-                if used && !gather {
-                    Self::decrement_player_pp(bs, entry_pp.0, entry_pp.1, entry_pp.2, entry_pp.3);
-                }
                 self.presentation
                     .record_turn(&log, &state, &effects, turn_start_hp);
                 pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+                Self::consume_player_pp_charge(bs, &mut state, &mut effects, entry_pp, gather);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
                 // Move). The driver logs MoveUsed only for a move that passed the
                 // BeforeMove gates and executed, so a blocked / asleep / recharge /
