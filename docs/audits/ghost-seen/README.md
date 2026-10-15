@@ -32,3 +32,5 @@ Baseline regression:1 FAIL. AFTER full app270 PASS/39 ignored, core2884 PASS and
 `verification.json` has the compact checked matrix; `screenshots.json` maps frame/source/SHA. `evidence.zip` retains source4, valid native8, saved-dex4, raw SRAM, scripts, identities, logs and rejected records with exact-content SHA deduplication. Every original path has been read back and verified; ROMs, executables and emulator states are excluded. Verify or extract with `python3 extract_evidence.py evidence.zip --verify-only` or an output directory instead of `--verify-only`.
 
 This is a seen-registration/save/UI audit. It does not claim original/native Doll text or consumption timing equivalence, complete animation/audio/RNG parity, all campaign reachability or full mainline completion. Those presentation and timing concerns remain separate from this small registration change.
+
+进一步整合 master `dfeefa34` 后，`5672f312` 完整 debug app 271 通过，39 个已有忽略项，0 失败。核心源码未再改变，沿用完整 core 2884 通过结果；日志见 `integration.json` / `integration-logs.zip`。截图仍标记真实的 `f44` / `046` 录制身份。
