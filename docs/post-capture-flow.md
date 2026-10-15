@@ -49,7 +49,7 @@ NewDex→AskName→YES:A→Transfer→PA→Gate，旧队伍、OT/昵称/PP、旧
 
 声音验证记录静音设备下仍运行的 PCM 状态：成功 SFX 101、新图鉴 SFX 100 和结束后的新确认输入。
 不声称原作音频波形或采样时钟一致。普通原作与复刻的 RNG、DVs、帧耗时及捕获动画像素也未匹配。
-Silph 离场 34 帧差距和原生 IRQ 原型与本次无关，没有宣称修复。
+Silph 离场动画和原生 IRQ 原型与本次无关，没有宣称修复。
 
 ## 截图与可复查文件
 
@@ -69,3 +69,5 @@ BILL 提示配对在帧 2567。`manifest.json` 记录文件 SHA、准确版本�
 后续例行合并 master 64ef04af 后，捕获相关全部 10 个哈希和本次全部 8 个 Rust 文件保持一致；
 专项 8 项（库和二进制各运行一次）及合并后的核心全套 2883 项通过，详情见
 `docs/audits/post-capture-flow/integration-verification.json`。历史录制仍为 72912bc1/b98bd9eb，不改标为合并后录制。
+
+例行接入 master 4cd8fc36（TM/HM 完整学习流程）后，再次通过捕获 8 项、TM/HM 10 项和 Rare Candy 11 项；证据见 `post-tmhm-integration-verification.json`。历史录制身份保持原样。
