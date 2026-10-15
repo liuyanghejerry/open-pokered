@@ -120,3 +120,11 @@ selection in the standalone probe setup. Corrected drivers/checks pass.
 This is a pure game logic/test change, excluded from AGENTS.md's renderer
 screenshot requirement. Actual PNGs remain archived. No cross-provider capture
 probability, RNG-byte stream, whole-SRAM, frame or audio parity is claimed.
+
+## Current master integration and cross-author review
+
+The PR contains master `32f74146` (the independently green old-man audio fix). Current source `bd55b87d` passes core **2897**, debug app **298** (39 ignored), default app **287** (37 ignored), both determinism feature configurations **9** each, and the debug-server build. `master-32f-integration.json` and its log archive bind these checks to source hashes. The earlier two seven-scenario GBA samples remain labeled `19eac5ae`; current-head remote GBA build/performance checks are pending publication.
+
+`cross-author-review.json` independently verifies every 239 archived path/130 blobs, all 48 native snapshot forks and four ordinary SRAM saves, protected party/storage/dex/item bytes, the complete source delta, build identities and the earlier raw GBA samples. `root-primary-review.json` separately checks the original eight ordinary SAVE controls and primary source. No new live replay or historical relabeling was performed for these reviews.
+
+The core snapshot hash is logical state, not complete audio/presentation state. In the old API the restored forks can retain `audio_sfx` 59/playing instead of the initial 0/stopped; the generic audio snapshot issue is tracked separately. This normal-capture change does not claim to fix that existing limitation or Safari RNG.

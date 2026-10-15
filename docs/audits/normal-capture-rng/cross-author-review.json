@@ -1,0 +1,969 @@
+{
+  "reviewer": "object_instruction_work independent cross-author read-only review",
+  "audit": 932,
+  "subject": 926,
+  "decision": "approve bounded normal-capture RNG change; no blocking findings",
+  "reviewed_clean_head": "c3e28567f9320b099af0c9f3b522643f32092e90",
+  "frozen_production_head": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+  "base": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+  "archive": {
+    "archive": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-926-capture-rng-audit/docs/audits/normal-capture-rng/evidence.zip",
+    "archive_sha256": "07e3f37f4ab1eab238220a018a2a2f07b6a651cfb83670d0af0ec8c93630d79f",
+    "paths": 239,
+    "blobs": 130,
+    "all239_blobs_original_files_and_extracted_bytes_verified": true,
+    "extract_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-932-926-readback-93k_cj1s",
+    "immutable_input_archives": [
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-926-native-evidence.zip",
+        "paths": 62,
+        "all_subset_content_equal": true,
+        "sha256": "e70e3d5d1a907859fcbaf69dadfc1c166531451d9387fe3c0e0a913e710bfca3"
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-926-review/source-evidence.zip",
+        "paths": 70,
+        "all_subset_content_equal": true,
+        "sha256": "41ca7767a2cdaec4014b526fd4337005026f278dc8aca856b05761d9fa8c513b"
+      }
+    ],
+    "no_ROM_executable_headers_in_names": true
+  },
+  "source_files_changed": [
+    "crates/pokered-app/tests/agent_determinism.rs",
+    "crates/pokered-core/src/battle/capture.rs",
+    "crates/pokered-core/src/battle/catch_tests.rs",
+    "crates/pokered-core/src/battle/mod.rs"
+  ],
+  "production_review": {
+    "only_BattleScreen_use_ball_rebound_to_existing_self_rng": true,
+    "outside_use_ball_entire_BattleScreen_module_equal_base": true,
+    "Safari_and_unrelated_ball_guard_owner_paths_unchanged": true,
+    "legacy_rolls_direct_byte_and_arithmetic_APIs_preserve_behavior": true,
+    "no_new_RNG_field_state_owner_or_snapshot_schema": true,
+    "primary_ItemUseBall_Rand1_Master_rejections_skipped_Rand2_order_independently_read": true
+  },
+  "frozen_build_identities": {
+    "before4c": {
+      "source": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+      "source_paths": 636,
+      "binary_sha256": "e14450efb933f496b94c2656d16bda85961206295b56821563256c79591acc8d",
+      "all_frozen_source_paths_equal_git_commit": true
+    },
+    "afterf078": {
+      "source": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+      "source_paths": 636,
+      "binary_sha256": "354c438d2eb8e7c170b5903f49e6e96512cf59e06723d99df79a21797b06a327",
+      "all_frozen_source_paths_equal_git_commit": true
+    }
+  },
+  "raw_native_control_review": {
+    "initial_hash_all4": "8dc0cc43a3a51430",
+    "identical_fixture": true,
+    "forks_per_build": 24,
+    "ordinary_SAVE_total": 4,
+    "rows": [
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "initial_hash": "8dc0cc43a3a51430",
+        "actual_API_forks": 12,
+        "outcomes": {
+          "caught": 5,
+          "failed": 7
+        },
+        "post_hashes": [
+          "1cfdbd871d27106f",
+          "a691e7e54a2b15fa"
+        ],
+        "SAVE_sha256": "36e3adf3fd4971001da4f938042856e187b7fb57b2d44c9703a3d44f4dc4765c",
+        "checksum": 88,
+        "saved_party_count": 3,
+        "old88_constructed_party_bytes_equal": true,
+        "all_declared_protected_fields_equal_fixture_and_across_builds": true,
+        "raw_OT_nickname_table_sha256": "273a91f98e96b1f2b3c7b4feb6c1f23ae31f6f40ec30fb1446e99fd1013883ca"
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "initial_hash": "8dc0cc43a3a51430",
+        "actual_API_forks": 12,
+        "outcomes": {
+          "caught": 7,
+          "failed": 5
+        },
+        "post_hashes": [
+          "1cfdbd871d27106f",
+          "a691e7e54a2b15fa"
+        ],
+        "SAVE_sha256": "36e3adf3fd4971001da4f938042856e187b7fb57b2d44c9703a3d44f4dc4765c",
+        "checksum": 88,
+        "saved_party_count": 3,
+        "old88_constructed_party_bytes_equal": true,
+        "all_declared_protected_fields_equal_fixture_and_across_builds": true,
+        "raw_OT_nickname_table_sha256": "273a91f98e96b1f2b3c7b4feb6c1f23ae31f6f40ec30fb1446e99fd1013883ca"
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "initial_hash": "8dc0cc43a3a51430",
+        "actual_API_forks": 12,
+        "outcomes": {
+          "failed": 12
+        },
+        "post_hashes": [
+          "a80294c9ae258834"
+        ],
+        "SAVE_sha256": "e7e4c5a10fc88b41010dec8ac9c1e358dd705901230ff026b8537ca81559252a",
+        "checksum": 165,
+        "saved_party_count": 2,
+        "old88_constructed_party_bytes_equal": true,
+        "all_declared_protected_fields_equal_fixture_and_across_builds": true,
+        "raw_OT_nickname_table_sha256": "273a91f98e96b1f2b3c7b4feb6c1f23ae31f6f40ec30fb1446e99fd1013883ca"
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "initial_hash": "8dc0cc43a3a51430",
+        "actual_API_forks": 12,
+        "outcomes": {
+          "failed": 12
+        },
+        "post_hashes": [
+          "a80294c9ae258834"
+        ],
+        "SAVE_sha256": "e7e4c5a10fc88b41010dec8ac9c1e358dd705901230ff026b8537ca81559252a",
+        "checksum": 165,
+        "saved_party_count": 2,
+        "old88_constructed_party_bytes_equal": true,
+        "all_declared_protected_fields_equal_fixture_and_across_builds": true,
+        "raw_OT_nickname_table_sha256": "273a91f98e96b1f2b3c7b4feb6c1f23ae31f6f40ec30fb1446e99fd1013883ca"
+      }
+    ],
+    "repeat_full_SRAM_equal_within_each_build": true,
+    "no_claim_cross_build_SRAM_equal": true,
+    "audio_only_differences_outside_existing_API_snapshot_contract": [
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 1,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 2,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 3,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 4,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 5,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 6,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 7,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 8,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 9,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 10,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "fork": 11,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 1,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 2,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 3,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 4,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 5,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 6,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 7,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 8,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 9,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 10,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "fork": 11,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 1,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 2,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 3,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 4,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 5,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 6,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 7,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 8,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 9,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 10,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "fork": 11,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 1,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 2,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 3,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 4,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 5,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 6,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 7,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 8,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 9,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 10,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "fork": 11,
+        "difference": {
+          "audio_sfx": {
+            "ready": {
+              "id": 0,
+              "playing": false
+            },
+            "restored": {
+              "id": 59,
+              "playing": true
+            }
+          }
+        }
+      }
+    ],
+    "native_exact_rng_bytes_not_exported_by_debug_API": "Actual proof is restored core/runtime hashes/outcomes plus canonical core tests of serialized RNG advancement. It does not claim source/native RNG bytes or audio-complete restoration.",
+    "old_OT_nickname_raw22bytes_each_equal_across_all4": true
+  },
+  "complete_test_log_review": {
+    "core-full": {
+      "passed": 2896,
+      "ignored": 0,
+      "sha256": "e21bac7fc4896e83b0c3506a3288aeb56987f00e518e7e28cfa055346804881d"
+    },
+    "app-debug-full": {
+      "passed": 296,
+      "ignored": 39,
+      "sha256": "0a2827823872ea3f01dbf5d914bebef3e1085c3ce5c6132543736e3ed3e29f86"
+    },
+    "agent-debug": {
+      "passed": 9,
+      "ignored": 0,
+      "sha256": "be28316c0cc13594fa23be4eafdd7d0f96fec33ee1253b6d01914fe7709558b6"
+    },
+    "app-default-full": {
+      "passed": 285,
+      "ignored": 37,
+      "sha256": "6f69056d29c160675e89dee0bb559b2976a4636e0545636f2d3cc31a13cdb769"
+    },
+    "agent-default": {
+      "passed": 9,
+      "ignored": 0,
+      "sha256": "43f2254da84eb2f6b694cc2d30b14e3025111536780d2ac4500f4ed5d13e7642"
+    }
+  },
+  "GBA": {
+    "source_head": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+    "mirror_paths_checked_against_W926_and_mirror": 2163,
+    "rom_sha256": "5254f78bd6554a0a9507d9020019d1f18d791c0e4567b981ad643fb241f82577",
+    "elf_sha256": "d4caa7247dfb24e287c946432dd7ba44af79cb02b01fe99dad15a48dd7f8cf51",
+    "build_log_sha256": "15ea32ec4febb138b26f71b662bc1a27cfba68f9e66566e7b36641dc30ac4064",
+    "manifest_sha256": "82aef9c1d07458dac5b289b11636a68c0de5d2d4b0a0947ba55d16d701768383",
+    "all7scenarios_PASS_twice": true,
+    "full_metric_JSON_bytes_equal": true,
+    "independent_comparison_recomputed_twice_without_emulator": true,
+    "baseline_unchanged": true,
+    "trainer_update": 232,
+    "idle_update": 382,
+    "Oak_draw": 2994,
+    "independently_parsed_raw_logs": [
+      {
+        "repeat": 1,
+        "raw_log_sha256": "138484510e266ca57e06302c21b4f859c61131ccae1aa5918865797b22194007",
+        "metrics_json_sha256": "01373d91a36e5e250906b7562f20d92bf52d302e6b2719125d6970b67a21af16",
+        "all7_raw_scenario_lines_equal_candidate_JSON": true,
+        "terminal_raw_scenario": "pokedex-entry-v1"
+      },
+      {
+        "repeat": 2,
+        "raw_log_sha256": "138484510e266ca57e06302c21b4f859c61131ccae1aa5918865797b22194007",
+        "metrics_json_sha256": "01373d91a36e5e250906b7562f20d92bf52d302e6b2719125d6970b67a21af16",
+        "all7_raw_scenario_lines_equal_candidate_JSON": true,
+        "terminal_raw_scenario": "pokedex-entry-v1"
+      }
+    ]
+  },
+  "actual_all_owned_cargo_app_processes_terminal_evidence": "All result/build logs finish successfully, metadata exit0, and no matching live926 cargo/rustc/app process. Reviewer did not restart or repoll another agent session.",
+  "limits_and_omissions": [
+    "Source70-path/8SAVE semantic matrix was root-reviewed already and was not rerun or re-reviewed here; its complete original archive bytes are verified as an unchanged subset of239.",
+    "Actual source matrix only normal-ball success; Master/rejection/status/catch-rate/W branches are original-code plus deterministic-test coverage, not additional actual capture controls.",
+    "Native actual uses seed19, natural Rattata3 and exact A1/neutral119 forks; seeded and entropy-initialized owners are both covered by the integration test. No source/native RNG, odds, level, DV, clock, frame, audio or full-SRAM equivalence.",
+    "All exposed pre-fork state equals ready except audio_sfx after the first fork. The original driver explicitly excludes presentation from API snapshots; audio0false vs59true is retained above and belongs to separate917, not a normal-capture RNG repair. Reviewer initial overly broad audio assertion is preserved in audit-932-926-initial-audio-assumption.json.",
+    "Only fork11 continues adaptively to one ordinarySAVE per trial, four native saves total. Prefix equality does not extend to adaptive finishing inputs.",
+    "BEFORE is literal4c and AFTER is19eac5 onf078;4c\u2192f078 adds a test-only boulder fixture and docs. Neither is relabelled.",
+    "Safari/global disobedience bypasses remain separate. No full playthrough or remote-CI claim; all-owned Dex is explicit fixture convenience.",
+    "Pure logic and tests; no renderer/frontend/assets changed. Archived PNGs do not demonstrate differing captions because they sample the used-item page, but no screenshot requirement applies to this pure logic PR."
+  ],
+  "unmodified_W926": true,
+  "no_Cargo_actual_rerun_or_publication": true
+}
