@@ -274,15 +274,6 @@ enum BallShowPattern {
     HiddenThenTop,
 }
 
-/// ItemUseBall's text caller owns the animation and its unprompted return.
-/// A single inactive check keeps ordinary battle frames out of that caller.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum BallTextContinuation {
-    Inactive,
-    Animating,
-    ResultReady,
-}
-
 /// Build the step list for a thrown ball, mirroring `TossBallAnimation`:
 /// the toss variant is chosen by the ball kind, then N entries of the
 /// PokeBallAnimations table play (upper nybble of `wPokeBallAnimData`):
@@ -536,8 +527,8 @@ pub struct BattleVisualEffects {
     trainer_appear_sfx_pending: bool,
     /// Active ball-throw choreography (capture / ghost dodge / old man).
     ball_choreo: Option<BallChoreo>,
-    /// Animation/input ownership, then the unprompted wild ItemUseBall return.
-    ball_text_continuation: BallTextContinuation,
+    /// Return from a wild ItemUseBall animation to its unprompted result page.
+    ball_result_pending: bool,
     /// Horizontal tilemap displacement accumulated by Ghost Marowak's dodge.
     ball_enemy_offset_x: i32,
     /// During each Ghost Marowak tilemap copy, the upper six rows observe the
@@ -730,25 +721,16 @@ impl BattleVisualEffects {
         self.ball_choreo.is_some()
     }
 
-    pub(crate) fn has_ball_text_continuation(&self) -> bool {
-        self.ball_text_continuation != BallTextContinuation::Inactive
-    }
-
     pub(crate) fn ball_result_ready(&self) -> bool {
-        self.ball_text_continuation == BallTextContinuation::ResultReady
+        self.ball_result_pending
     }
 
     pub(crate) fn take_ball_result_ready(&mut self) -> bool {
-        if self.ball_result_ready() {
-            self.ball_text_continuation = BallTextContinuation::Inactive;
-            true
-        } else {
-            false
-        }
+        core::mem::take(&mut self.ball_result_pending)
     }
 
     pub(crate) fn clear_ball_continuation(&mut self) {
-        self.ball_text_continuation = BallTextContinuation::Inactive;
+        self.ball_result_pending = false;
         self.ball_choreo = None;
     }
 
@@ -848,7 +830,7 @@ impl BattleVisualEffects {
                 self.ball_show_pattern = None;
                 self.scheduled_ball_sfx.clear();
                 self.ball_choreo = Some(choreo);
-                self.ball_text_continuation = BallTextContinuation::Animating;
+                self.ball_result_pending = false;
             }
             BattleAnimEvent::XStatItem => {
                 self.start_non_move_anim(non_move_anim::XSTATITEM, true);
@@ -953,7 +935,7 @@ impl Default for BattleVisualEffects {
             silph_scope_sfx_pending: false,
             trainer_appear_sfx_pending: false,
             ball_choreo: None,
-            ball_text_continuation: BallTextContinuation::Inactive,
+            ball_result_pending: false,
             ball_enemy_offset_x: 0,
             ball_enemy_top_offset_x: None,
             ball_ghost_frame: None,
@@ -2337,11 +2319,7 @@ impl BattleVisualEffects {
             if choreo.step >= choreo.steps.len() {
                 // Trainer-block text has its own two prompted pages; only
                 // wild ItemUseText00 automatically returns to the result.
-                self.ball_text_continuation = if choreo.trainer_block {
-                    BallTextContinuation::Inactive
-                } else {
-                    BallTextContinuation::ResultReady
-                };
+                self.ball_result_pending = !choreo.trainer_block;
                 self.ball_choreo = None;
                 self.ball_obj_palette_flipped = false;
             } else {

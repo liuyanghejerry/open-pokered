@@ -829,7 +829,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
     ] {
         let mut g = game(true, false, false);
         g.clear_post_capture_continuation();
-        assert!(!g.battle_vfx.has_ball_text_continuation());
+        assert!(!(g.battle_vfx.ball_animation_active() || g.battle_vfx.ball_result_ready()));
         // Isolate an already-resolved ball's presentation, including the
         // trainer-block and ghost/Safari dodge callers. No RNG is overridden.
         g.battle.phase = BattlePhase::ShowingText {
@@ -840,7 +840,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
             ball: ItemId::PokeBall, shakes: 1, outcome,
         });
         for _ in 0..1200 {
-            assert!(g.battle_vfx.has_ball_text_continuation());
+            assert!((g.battle_vfx.ball_animation_active() || g.battle_vfx.ball_result_ready()));
             let mut input = BattleInput { a: true, b: true, ..BattleInput::none() };
             g.apply_ball_text_continuation(&mut input);
             assert!(!input.a && !input.b, "A/B cannot interrupt {outcome:?}");
@@ -849,7 +849,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         }
         assert!(!g.battle_vfx.ball_animation_active());
         let wild_return = outcome != BallAnimOutcome::Blocked;
-        assert_eq!(g.battle_vfx.has_ball_text_continuation(), wild_return);
+        assert_eq!((g.battle_vfx.ball_animation_active() || g.battle_vfx.ball_result_ready()), wild_return);
         assert_eq!(g.battle_vfx.ball_result_ready(), wild_return);
         let mut input = BattleInput::none();
         g.apply_ball_text_continuation(&mut input);
@@ -860,7 +860,7 @@ fn ball_caller_gate_returns_once_and_keeps_trainer_pages_prompted() {
         }
         g.apply_ball_text_continuation(&mut input);
         assert_eq!(input.a, wild_return, "trainer pages still require real input");
-        assert!(!g.battle_vfx.has_ball_text_continuation());
+        assert!(!(g.battle_vfx.ball_animation_active() || g.battle_vfx.ball_result_ready()));
         let mut next_input = BattleInput::none();
         g.apply_ball_text_continuation(&mut next_input);
         assert!(!next_input.a && !next_input.b, "the completed throw returns once");

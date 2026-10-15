@@ -4661,7 +4661,9 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
                 };
                 // Only an actual ball caller needs its text/animation gate.
-                if self.battle_vfx.has_ball_text_continuation() {
+                if self.battle_vfx.ball_result_ready()
+                    || ((battle_input.a || battle_input.b) && self.battle_vfx.ball_animation_active())
+                {
                     self.apply_ball_text_continuation(&mut battle_input);
                 }
                 // ── Link battle driving ─────────────────────────────────
@@ -4730,7 +4732,7 @@ impl PokemonGame {
                 // battle_animation below. (For link battles `self.battle` is
                 // the mirror; the canonical screen gets the same pushes above.)
                 self.battle.battle_style = self.state.config.battle_style;
-                self.battle.player_name = Some(self.player_name.clone());
+                self.battle.player_name.get_or_insert_with(String::new).clone_from(&self.player_name);
                 let action = if self.battle.link_mode && battle_over {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
