@@ -60,3 +60,5 @@ python3 extract_evidence.py evidence.zip /tmp/pokedoll-evidence
 ```
 
 进一步整合只读诊断工具 master `dfeefa34` 后，完整 debug app 270 通过、39 个已有忽略项、0 失败；核心生产源码未改变。日志见 `diagnostic-integration.json` / `diagnostic-integration-logs.zip`。
+
+已整合中毒流程 master `7310d298`。生产整合提交 `ef8b9576` 完整 debug app 279 通过、39 个已有忽略项、0 失败；完整 core 2888 通过。完整日志见 `master-7310-integration.json` / `master-7310-integration-logs.zip`，原截图与录制身份未重新标记。
