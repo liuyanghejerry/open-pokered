@@ -65,8 +65,8 @@ fn trainer_seen_uses_original_party_identity_during_transform() {
         enemy.preserve_original_identity();
         enemy.active_mon_mut().species = Species::Pikachu;
         // A restored/just-loaded enemy must use the canonical original identity.
-        g.trainer_seen_active_slot = u8::MAX;
-        g.register_active_trainer_species_seen();
+        g.battle.loaded_enemy_slots = 1;
+        g.register_loaded_trainer_species_seen();
         assert!(g.save_data.game_data.pokedex.is_seen(Species::Rattata));
         assert!(!g.save_data.game_data.pokedex.is_seen(Species::Pikachu));
         assert!(!g.save_data.game_data.pokedex.is_seen(Species::Ekans));
@@ -139,9 +139,12 @@ fn trainer_seen_snapshot_restore_rebuilds_slot_zero_and_replacement_registration
                 g.update(&InputState::new());
             }
             let mut snapshot = g.agent_save_state().unwrap();
-            // Old snapshots can predate this registration policy. The active
-            // slot must be registered even if the abandoned timeline cached it.
+            // A legacy snapshot has no queued-load field. Reconstruct only
+            // its canonical current enemy, including the first slot zero.
             snapshot.save_data.game_data.pokedex = Pokedex::new();
+            let mut legacy = serde_json::to_value(snapshot).unwrap();
+            legacy["battle"].as_object_mut().unwrap().remove("loaded_enemy_slots");
+            let snapshot = serde_json::from_value(legacy).unwrap();
             g.agent_restore_state(&snapshot).unwrap();
             assert_eq!(g.save_data.game_data.pokedex.seen_count(), 0);
             g.update(&InputState::new());
@@ -150,8 +153,9 @@ fn trainer_seen_snapshot_restore_rebuilds_slot_zero_and_replacement_registration
             assert_eq!(g.save_data.game_data.pokedex.seen_count(), 1);
         }
         g.save_data.game_data.pokedex = Pokedex::new();
+        g.battle.loaded_enemy_slots = 1 << 1;
         g.agent_save_state_slot(7).unwrap();
-        g.register_active_trainer_species_seen();
+        g.register_loaded_trainer_species_seen();
         g.agent_restore_state_slot(7).unwrap();
         g.update(&InputState::new());
         assert!(g.save_data.game_data.pokedex.is_seen(Species::Ekans));
@@ -159,7 +163,7 @@ fn trainer_seen_snapshot_restore_rebuilds_slot_zero_and_replacement_registration
 }
 
 #[test]
-fn trainer_seen_ordinary_load_and_soft_reset_abandon_old_registration_cache() {
+fn trainer_seen_ordinary_load_and_soft_reset_abandon_old_load_notifications() {
     on_game_stack(|| {
         let dir = std::env::temp_dir().join(format!("pokered-trainer-seen-906-{}", std::process::id()));
         assert!(!dir.exists());
@@ -167,14 +171,18 @@ fn trainer_seen_ordinary_load_and_soft_reset_abandon_old_registration_cache() {
         let path = dir.join("ordinary.sav");
         let mut g = trainer_game();
         g.save_to_path(&path).unwrap();
-        assert!(g.trainer_seen_active_slot < 6);
+        g.battle.battle_state.as_mut().unwrap().enemy.party[0].hp = 0;
+        g.battle.phase = BattlePhase::EnemySendingNext { wait_frames: 30 };
+        g.battle.post_text_transition();
+        assert_ne!(g.battle.loaded_enemy_slots, 0);
         g.load_from_path(&path).unwrap();
-        assert_eq!(g.trainer_seen_active_slot, u8::MAX);
-        g.register_active_trainer_species_seen();
-        assert!(g.trainer_seen_active_slot < 6);
+        assert_eq!(g.battle.loaded_enemy_slots, 0);
+        g.update(&InputState::new());
+        assert!(!g.save_data.game_data.pokedex.is_seen(Species::Ekans));
+        g.battle.loaded_enemy_slots = 1 << 1;
         g.save_path = Some(dir.join("absent.sav"));
         g.soft_reset();
-        assert_eq!(g.trainer_seen_active_slot, u8::MAX);
+        assert_eq!(g.battle.loaded_enemy_slots, 0);
         assert_eq!(g.state.screen, GameScreen::TitleScreen);
         std::fs::remove_dir_all(dir).unwrap();
     });
@@ -188,10 +196,44 @@ fn trainer_seen_does_not_add_link_or_wild_seen_flags() {
             g.save_data.game_data.pokedex = Pokedex::new();
             g.battle.is_wild = wild;
             g.battle.link_mode = link;
-            g.trainer_seen_active_slot = u8::MAX;
-            g.register_active_trainer_species_seen();
+            g.battle.loaded_enemy_slots = 1;
+            g.register_loaded_trainer_species_seen();
+            assert_eq!(g.battle.loaded_enemy_slots, 0);
             assert_eq!(g.save_data.game_data.pokedex.seen_count(), 0);
             assert_eq!(g.save_data.game_data.pokedex.owned_count(), 0);
         }
+    });
+}
+
+#[test]
+fn trainer_seen_snapshot_preserves_multiple_actual_loads_before_frontend_consumption() {
+    on_game_stack(|| {
+        let mut g = trainer_game();
+        let make = |species| pokered_core::pokemon::stats::create_pokemon(
+            species, 11, [0x9A, 0x78],
+        ).unwrap();
+        g.battle = pokered_core::battle::BattleScreen::from_parties(
+            false,
+            &[make(Species::Bulbasaur)],
+            &[make(Species::Rattata), make(Species::Ekans), make(Species::Sandshrew)],
+            Some(TrainerClass::Youngster),
+        );
+        g.register_loaded_trainer_species_seen();
+        for slot in [0, 1] {
+            g.battle.battle_state.as_mut().unwrap().enemy.party[slot].hp = 0;
+            g.battle.phase = BattlePhase::EnemySendingNext { wait_frames: 30 };
+            g.battle.post_text_transition();
+        }
+        assert_eq!(g.battle.battle_state.as_ref().unwrap().enemy.active_pokemon_index, 2);
+        assert!(!g.save_data.game_data.pokedex.is_seen(Species::Ekans));
+        assert!(!g.save_data.game_data.pokedex.is_seen(Species::Sandshrew));
+        let value = serde_json::to_string(&g.agent_save_state().unwrap()).unwrap();
+        g.register_loaded_trainer_species_seen();
+        g.agent_restore_state(&serde_json::from_str(&value).unwrap()).unwrap();
+        assert!(!g.save_data.game_data.pokedex.is_seen(Species::Ekans));
+        g.update(&InputState::new());
+        assert!(g.save_data.game_data.pokedex.is_seen(Species::Ekans));
+        assert!(g.save_data.game_data.pokedex.is_seen(Species::Sandshrew));
+        assert_eq!(g.battle.loaded_enemy_slots, 0);
     });
 }

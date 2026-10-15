@@ -731,9 +731,6 @@ pub struct PokemonGame {
     prev_title_phase: Option<TitlePhase>,
     prev_oak_phase_tag: u8,
     battle_prev_message: Option<String>,
-    /// Derived notification cache only; BattleState remains the party owner.
-    /// Enemy slots are 0..=5; u8::MAX invalidates the previous timeline.
-    pub(crate) trainer_seen_active_slot: u8,
     /// SFX_FAINT_FALL has played for an enemy faint in a trainer battle;
     /// SFX_FAINT_THUD follows once the fall finishes (engine/battle/core.asm:782-791).
     faint_thud_pending: bool,
@@ -1374,7 +1371,6 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -1549,7 +1545,6 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -1679,7 +1674,6 @@ impl PokemonGame {
             prev_title_phase: None,
             prev_oak_phase_tag: 0,
             battle_prev_message: None,
-            trainer_seen_active_slot: u8::MAX,
             faint_thud_pending: false,
             black_screen_frames: 0,
             pending_screen: None,
@@ -2328,7 +2322,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.overworld.clear_field_poison();
-        self.trainer_seen_active_slot = u8::MAX;
+        self.battle.loaded_enemy_slots = 0;
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
             // newly imported save after its capture modal is abandoned.
@@ -2903,7 +2897,7 @@ impl PokemonGame {
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
         self.overworld.clear_field_poison();
-        self.trainer_seen_active_slot = u8::MAX;
+        self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
         #[cfg(not(target_os = "none"))]
@@ -3355,8 +3349,7 @@ impl PokemonGame {
         // BoxFullCannotThrowBall guard context (app-side snapshot).
         self.battle.player_box_full = self.save_data.current_box.is_full();
         self.battle.map_id = self.overworld.state.current_map as u8;
-        self.trainer_seen_active_slot = u8::MAX;
-        self.register_active_trainer_species_seen();
+        self.register_loaded_trainer_species_seen();
         // Copy of the bag so items are usable in-battle (synced back afterwards).
         self.battle.player_bag = self.save_data.game_data.bag.clone();
         self.battle_vfx = BattleVisualEffects::default();
@@ -3372,19 +3365,19 @@ impl PokemonGame {
 
     /// LoadEnemyMonData marks the enemy actually loaded, not ReadTrainer's
     /// complete party. Link's LoadEnemyMonFromParty bypasses that flag write.
-    fn register_active_trainer_species_seen(&mut self) {
+    fn register_loaded_trainer_species_seen(&mut self) {
+        let slots = core::mem::take(&mut self.battle.loaded_enemy_slots);
         if self.battle.is_wild || self.battle.link_mode || self.battle.trainer_class.is_none() {
             return;
         }
         if let Some(bs) = &self.battle.battle_state {
-            let active_slot = bs.enemy.active_pokemon_index as u8;
-            if self.trainer_seen_active_slot == active_slot {
-                return;
+            for slot in 0..bs.enemy.party.len().min(6) {
+                if slots & (1 << slot) != 0 {
+                    // Transform changes the battle copy, not the species loaded.
+                    let species = bs.enemy.party_mon(slot).species;
+                    self.save_data.game_data.pokedex.set_seen(species);
+                }
             }
-            // Transform changes the battle copy, not the species sent out.
-            let species = bs.enemy.party_mon(bs.enemy.active_pokemon_index).species;
-            self.save_data.game_data.pokedex.set_seen(species);
-            self.trainer_seen_active_slot = active_slot;
         }
     }
 
@@ -4746,14 +4739,10 @@ impl PokemonGame {
                 } else {
                     self.battle.update_frame(battle_input)
                 };
-                // Both replacement after a faint and trainer-AI switches
-                // commit the canonical enemy active slot during this update.
-                // Keep the common GBA frame out of the registration routine:
-                // only a loaded/changed slot needs the identity and Dex write.
-                if self.battle.battle_state.as_ref().is_some_and(|bs|
-                    self.trainer_seen_active_slot != bs.enemy.active_pokemon_index as u8)
-                {
-                    self.register_active_trainer_species_seen();
+                // Only actual loads notify the frontend: stable frames do not
+                // re-read a party slot or re-register an already seen enemy.
+                if self.battle.loaded_enemy_slots != 0 {
+                    self.register_loaded_trainer_species_seen();
                 }
                 // Non-move battle animation requests (ball throws, X-stat
                 // items) queued by the core this frame.
