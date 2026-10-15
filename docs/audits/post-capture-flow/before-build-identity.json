@@ -1,0 +1,16 @@
+{
+  "commit": "72912bc174a5af7059f254581dfb720574021b7f",
+  "binary_sha256": "c7f51b327265fdfc45a78d4fab562e6453e396aba8cc2e88dc15bf8a39c04477",
+  "profile": "fresh888 same isolated worktree dev opt0 debug0",
+  "feature": "debug-server",
+  "clean": true,
+  "source_hashes": {
+    "crates/pokered-app/src/game.rs": "a8e2316e62e95b2ba4e196e23657f2355f2771b89611941bfc0710975125582e",
+    "crates/pokered-core/src/battle/mod.rs": "541d0fdf14b6123c50be3611d3da7fbe1e3b635207b01043a70660262c27e5fb",
+    "crates/pokered-core/src/battle/settlement/writeback.rs": "86c09e7c72c54ba86d0839213b012e19bd2934e4935e5fb53df80fbbec1a90df",
+    "crates/pokered-core/src/pokemon/pc_box.rs": "868bea883615cdd1aef3d0590b46f2b286943399848926b94fd495548a250c37",
+    "crates/pokered-core/src/pokemon/pokedex.rs": "fa9212866dd963dc7de7a59e9860641a3d79cc40175072c18813e13a5b548bbf",
+    "Cargo.lock": "074eae4164ec091d018bbc30696ee57e878f545bbd70350b87c27e3bc776d07d"
+  },
+  "build_log_sha256": "48c518a504a7444c23cba4239887ce49983c59663b0e0d055f9d1a5566bd9577"
+}
