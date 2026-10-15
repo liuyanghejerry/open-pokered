@@ -54,4 +54,6 @@ build. Historical captures retain their 6085/6abff identities.
 
 此前整合 master `6d30ba5a`（#257，训练家图鉴修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-6d30-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
 
-已整合最新 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+此前整合 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2889 通过**、debug-server 应用 **290 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
+
+已整合最新 master `f0787e19`（#268，巨石测试隔离；包含 #258 中毒与进门顺序）：core 2890 通过/0 忽略；app 297 通过/39 忽略，全部 0 失败。当前受测源码 `aac4a78fe58febd3d2f7f97980c94bc420e2d6b0`、编译包装脚本与日志见 `master-f078-integration.json` 和独立日志包。历史原作/原生录制与 SAVE 保留各自冻结身份；本次新 head 仍需远程三个工作流全部通过。
