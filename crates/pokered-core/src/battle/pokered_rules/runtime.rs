@@ -435,7 +435,10 @@ fn engine_active(party: &LegacyParty) -> EngineBattler<PokeredRules> {
     let catch_rate = party.transform_catch_rate.unwrap_or_else(|| mon.effective_catch_rate());
     b.resources.set(super::RES_CATCH_RATE, catch_rate as u16, 255);
     super::bind_types(&mut b, (party.conversion_type1.unwrap_or(mon.type1), party.conversion_type2.unwrap_or(mon.type2)));
-    for (slot, pp) in mon.pp.iter().enumerate() { b.resources.set(super::RES_PP_BASE + slot as u16, *pp as u16, 255); }
+    for slot in 0..4 {
+        let packed = (mon.pp[slot] & 0x3f) | ((mon.pp_ups[slot] & 3) << 6);
+        b.resources.set(super::RES_PP_BASE + slot as u16, packed as u16, 255);
+    }
     let ss = &party.stat_stages;
     b.stat_stages.set(StatIndex::Attack, ss.attack);
     b.stat_stages.set(StatIndex::Defense, ss.defense);
@@ -624,7 +627,10 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
         mon.type1 = t1;
         mon.type2 = t2;
         mon.moves = moves4;
-        mon.pp = core::array::from_fn(|i| if moves4[i] == MoveId::None { 0 } else { 5 });
+        // Use the same copy that in-turn Disable already observed.
+        mon.pp = core::array::from_fn(|i| {
+            (b.resources.current(super::RES_PP_BASE + i as u16).unwrap_or(0) as u8) & 0x3f
+        });
         // Transform writes packed PP byte 5: the copied working slots have no PP Ups.
         mon.pp_ups = [0; 4];
         let raw = crate::battle::badge_boosts::unmodified_stats(b);

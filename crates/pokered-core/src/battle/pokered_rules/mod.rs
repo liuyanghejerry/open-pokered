@@ -1575,6 +1575,7 @@ pub(super) fn escape_succeeded(effects: &[EffectState<PokeredRules>]) -> bool {
 // Resource ids are provider-private; the engine treats these as opaque values.
 pub(super) const RES_TYPE1: u16 = 0xff00;
 pub(super) const RES_TYPE2: u16 = 0xff01;
+// Packed working PP for Disable/Transform writeback, not engine PP quantities.
 pub(super) const RES_PP_BASE: u16 = 0xff10;
 pub(super) const RES_FINITE_PP: u16 = 0xff14;
 pub(super) const RES_SELECTED_SLOT: u16 = 0xff15;
@@ -2391,6 +2392,14 @@ fn transform_install(
         a.stats = stats;
         a.stat_stages = stages;
         a.moves = moves;
+        // Transform writes packed byte 5 until the first blank, then zeroes
+        // the remaining slots. Disable later THIS turn must see that copy.
+        let mut ended = false;
+        for slot in 0..4 {
+            ended |= a.moves.get(slot).is_none_or(|m| *m == MoveId::None);
+            let pp = if ended { 0 } else { 5 };
+            a.resources.set(RES_PP_BASE + slot as u16, pp, 255);
+        }
         bind_types(a, types);
         crate::battle::badge_boosts::set_unmodified_stats(a, unmodified);
         if let Some(staged) = staged { crate::battle::badge_boosts::set_staged_stats(a, staged); }
@@ -2453,9 +2462,9 @@ fn install_type_override(ctx: &mut BattleCtx<'_ , PokeredRules>, source: Battler
     });
 }
 
-/// Connecting Disable selects a random known move, rejecting empty slots and
-/// depleted PP on player/link targets, then stores a one-based slot and 1–8 turns.
-/// Ordinary non-link opponents have infinite PP, as in effects.asm.
+/// Connecting Disable first draws a known slot. Finite targets then check all
+/// current PP, but reject the selected slot only when its whole packed byte is
+/// zero. Ordinary non-link opponents skip both PP tests (effects.asm:1305–1351).
 fn disable_install(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -2475,12 +2484,24 @@ fn disable_install(
         return HandlerResult::Unchanged;
     }
     let finite = target.side == 0 || ctx.battler(target).resources.current(RES_FINITE_PP) == Some(1);
-    let eligible: [bool; 4] = core::array::from_fn(|slot| ctx.battler(target).moves.get(slot).is_some_and(|m| *m != MoveId::None)
-        && (!finite || ctx.battler(target).resources.current(RES_PP_BASE + slot as u16).unwrap_or(1) != 0));
-    if !eligible.iter().any(|ok| *ok) { return HandlerResult::Unchanged; }
+    let known: [bool; 4] = core::array::from_fn(|slot| {
+        ctx.battler(target).moves.get(slot).is_some_and(|m| *m != MoveId::None)
+    });
+    // Preserve the existing safe no-op for malformed engine battlers with no moves.
+    if !known.iter().any(|ok| *ok) { return HandlerResult::Unchanged; }
+    let packed: [u8; 4] = core::array::from_fn(|slot| {
+        ctx.battler(target).resources.current(RES_PP_BASE + slot as u16).unwrap_or(1) as u8
+    });
+    let current_pp = packed.iter().fold(0, |all, pp| all | pp) & 0x3f;
     let slot = loop {
         let slot = (ctx.rng.next_u8() & 3) as usize;
-        if eligible[slot] { break slot; }
+        if !known[slot] { continue; }
+        if finite {
+            // These tests occur AFTER the known-slot draw, even on all-zero PP.
+            if current_pp == 0 { return HandlerResult::Unchanged; }
+            if packed[slot] == 0 { continue; }
+        }
+        break slot;
     };
     let turns = (ctx.rng.next_u8() & 0x07) + 1; // (roll & 7) + 1, min 1 — matches apply_disable
     ctx.effects.push(EffectState {
@@ -3310,3 +3331,6 @@ pub mod runtime;
 
 #[cfg(test)]
 mod escape_tests;
+
+#[cfg(test)]
+mod disable_pp_tests;
