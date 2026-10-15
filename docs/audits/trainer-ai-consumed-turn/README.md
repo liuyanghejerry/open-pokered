@@ -54,3 +54,5 @@
 `current-master-verification.json` 是最终当前版本的简明结果，`current-master-evidence.zip` 保留新6d30/4dcb的完整实际记录、同帧截图、构建/回归/GBA日志及身份清单。原 `verification.json` / `evidence.zip` 按原始字节保留历史b7c81/ed6/source控制，不作为新构建结果。两个ZIP都对相同原始字节按 SHA256 去重；`entry-manifest.json` 保留所有原路径、长度及哈希，运行 `python3 extract_evidence.py evidence.zip --verify-only` 可独立校验。ROM/可执行文件只保留精确哈希，不打包。
 
 原始失败均保留并排除：原作过短按键、光标索引误用、强制换人及 Misty 颁奖对话的驱动问题；复刻 numeric ItemId fixture 拒载、PartySubMenu 调试字符串假设；缺失本地 gfx 链接、把真实药品 HP 与动画显示 HP 混淆的测试断言、wrapper 执行位及第一次 GBA cwd。旧派生 PP 草稿也保留，由真正 `battle_moves` 的读取结果更正。它们均没有改称玩家 bug 或通过结果。
+
+已整合最新 master `8eb08f56`（#262，FLASH 触发修复）：完整核心 **2898 通过**、debug-server 应用 **289 通过/39 忽略/0 失败**。精确源码与日志见 `master-8eb-integration.json` 和日志包。原作与原生实际捕获继续保留各自冻结身份；本次整合不重标截图或存档。
