@@ -46,5 +46,5 @@ strum_macros = "0.26"
 num-derive = "0.4"
 num-traits = { version = "0.2", default-features = false }
 
-# All dotzuki crates use the v0.10.1 release commit in their Cargo.toml files.
+# All dotzuki crates use v0.10.1 plus the NPC stride and audio tempo fixes.
 # Keep the root and standalone GBA workspaces on the same engine revision.
