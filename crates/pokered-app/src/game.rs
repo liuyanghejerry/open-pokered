@@ -4747,7 +4747,13 @@ impl PokemonGame {
                 };
                 // Both replacement after a faint and trainer-AI switches
                 // commit the canonical enemy active slot during this update.
-                self.register_active_trainer_species_seen();
+                // Keep the common GBA frame out of the registration routine:
+                // only a loaded/changed slot needs the identity and Dex write.
+                if self.battle.battle_state.as_ref().is_some_and(|bs|
+                    self.trainer_seen_active_slot != Some(bs.enemy.active_pokemon_index as u8))
+                {
+                    self.register_active_trainer_species_seen();
+                }
                 // Non-move battle animation requests (ball throws, X-stat
                 // items) queued by the core this frame.
                 while let Some(event) = self.battle.take_anim_event() {
