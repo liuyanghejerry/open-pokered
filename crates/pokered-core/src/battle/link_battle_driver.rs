@@ -337,7 +337,8 @@ impl LinkBattleDriver {
     /// `Transition` to the overworld is swallowed once the battle ended —
     /// link battles return to the lobby instead.
     pub fn update(&mut self, input: BattleInput) -> ScreenAction {
-        self.update_with_text_input(input, super::BattleTextFrame::from_edges(input)).0
+        let mut receipt = super::FightTextReceipt::default();
+        self.update_with_text_input(input, super::BattleTextFrame::from_edges(input), &mut receipt)
     }
 
     /// Forward the same physical text input to the canonical screen, not its
@@ -346,20 +347,22 @@ impl LinkBattleDriver {
         &mut self,
         input: BattleInput,
         text: super::BattleTextFrame,
-    ) -> (ScreenAction, super::FightTextReceipt) {
+        receipt: &mut super::FightTextReceipt,
+    ) -> ScreenAction {
+        *receipt = super::FightTextReceipt::default();
         if self.phase != LinkDriverPhase::Battling {
-            return (ScreenAction::Continue, super::FightTextReceipt::default());
+            return ScreenAction::Continue;
         }
-        let (action, receipt) = match self.screen.as_mut() {
-            Some(screen) => screen.update_frame_with_text_input(input, text),
-            None => return (ScreenAction::Continue, super::FightTextReceipt::default()),
+        let action = match self.screen.as_mut() {
+            Some(screen) => screen.update_frame_with_text_input(input, text, receipt),
+            None => return ScreenAction::Continue,
         };
         self.maybe_send_pending_action();
         self.check_battle_end();
         if self.result.is_some() {
-            return (ScreenAction::Continue, receipt);
+            return ScreenAction::Continue;
         }
-        (action, receipt)
+        action
     }
 
     /// Process incoming network messages and advance the state machine. Call
@@ -534,4 +537,37 @@ pub(crate) fn test_driver_pair(
         LinkBattleDriver::new(Box::new(t_b), party_b, "BOB".into())
             .with_host_random_list(host_list),
     )
+}
+
+#[cfg(test)]
+mod receipt_tests {
+    use super::*;
+
+    #[test]
+    fn fight_text_receipt_is_empty_when_link_driver_cannot_update() {
+        let (mut driver, _peer) =
+            test_driver_pair([0; LINK_RANDOM_LIST_SIZE], Party::new(), Party::new());
+        let input = BattleInput::none();
+        let text = super::super::BattleTextFrame::from_edges(input);
+        let mut receipt = super::super::FightTextReceipt { press_ab: true };
+        assert_eq!(
+            driver.update_with_text_input(input, text, &mut receipt),
+            ScreenAction::Continue
+        );
+        assert!(
+            !receipt.press_ab,
+            "an inactive link session must not repeat a prior sound"
+        );
+
+        driver.phase = LinkDriverPhase::Battling;
+        receipt.press_ab = true;
+        assert_eq!(
+            driver.update_with_text_input(input, text, &mut receipt),
+            ScreenAction::Continue
+        );
+        assert!(
+            !receipt.press_ab,
+            "a missing canonical screen must also clear the receipt"
+        );
+    }
 }

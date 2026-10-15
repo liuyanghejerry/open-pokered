@@ -20,14 +20,16 @@ fn step(
     held: u8,
     settings: Option<BattleTextSettings>,
 ) -> FightTextReceipt {
+    let mut receipt = FightTextReceipt::default();
     s.update_frame_with_text_input(
         edge,
         BattleTextFrame {
             held_buttons: held,
             settings,
         },
-    )
-    .1
+        &mut receipt,
+    );
+    receipt
 }
 fn scene(no_moves: bool) -> BattleScreen {
     let mut player = create_pokemon_with_moves(
@@ -73,6 +75,38 @@ fn wait(s: &BattleScreen) -> u16 {
         BattlePhase::ShowingText { wait_frames, .. } => wait_frames,
         _ => panic!("{:?}", s.phase),
     }
+}
+
+#[test]
+fn fight_text_receipt_does_not_repeat_selection_sound_during_waits_or_presentation() {
+    let mut s = scene(false);
+    let text = BattleTextFrame {
+        held_buttons: 1,
+        settings: Some(FAST),
+    };
+    let mut receipt = FightTextReceipt::default();
+    s.update_frame_with_text_input(a(), text, &mut receipt);
+    s.update_frame_with_text_input(a(), text, &mut receipt);
+    assert!(receipt.press_ab);
+    assert_eq!(wait(&s), 3);
+
+    s.update_frame_with_text_input(a(), text, &mut receipt);
+    assert!(
+        !receipt.press_ab,
+        "a protected wait must clear the previous selection sound"
+    );
+    assert_eq!(wait(&s), 2);
+
+    s.presentation.enabled = true;
+    s.presentation.waiting = true;
+    receipt.press_ab = true;
+    let phase = s.phase.clone();
+    s.update_frame_with_text_input(a(), text, &mut receipt);
+    assert!(
+        !receipt.press_ab,
+        "a frozen update must also clear its output receipt"
+    );
+    assert_eq!(s.phase, phase);
 }
 
 #[test]

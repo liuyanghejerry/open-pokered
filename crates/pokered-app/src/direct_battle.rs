@@ -371,7 +371,8 @@ impl GameLoop for DirectBattleGame {
         let text_frame = crate::battle_text_input::frame(input, Some(
             pokered_core::battle::BattleTextSettings::fight_menu(3, self.battle.link_mode),
         ));
-        let (action, text_receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
+        let mut text_receipt = pokered_core::battle::FightTextReceipt::default();
+        let action = self.battle.update_frame_with_text_input(battle_input, text_frame, &mut text_receipt);
         #[cfg(not(target_arch = "wasm32"))]
         if !ordinary_menu_sound && (text_receipt.press_ab || (fight_notice_sound.after(&self.battle.phase, false)
             && (input.is_just_pressed(GbButton::A) || input.is_just_pressed(GbButton::B)))) {

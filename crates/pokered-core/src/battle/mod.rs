@@ -1906,20 +1906,22 @@ impl BattleScreen {
     }
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
-        self.update_frame_with_text_input(input, BattleTextFrame::from_edges(input)).0
+        let mut receipt = FightTextReceipt::default();
+        self.update_frame_inner(input, BattleTextFrame::from_edges(input), &mut receipt)
     }
 
     /// Physical held input and explicit text settings share this single frame
     /// update. No frontend may call both entry points for the same frame.
+    /// Reset the output receipt even when presentation holds this frame.
     #[inline]
     pub fn update_frame_with_text_input(
         &mut self,
         input: BattleInput,
         text: BattleTextFrame,
-    ) -> (ScreenAction, FightTextReceipt) {
-        let mut receipt = FightTextReceipt::default();
-        let action = self.update_frame_inner(input, text, &mut receipt);
-        (action, receipt)
+        receipt: &mut FightTextReceipt,
+    ) -> ScreenAction {
+        *receipt = FightTextReceipt::default();
+        self.update_frame_inner(input, text, receipt)
     }
 
     fn update_frame_inner(

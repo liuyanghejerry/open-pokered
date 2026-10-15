@@ -4761,8 +4761,7 @@ impl PokemonGame {
                         // 2. Forward input; the driver swallows the
                         //    end-of-battle transition — link battles return
                         //    to the lobby.
-                        let (_, receipt) = driver.update_with_text_input(battle_input, text_frame);
-                        text_receipt.press_ab |= receipt.press_ab;
+                        driver.update_with_text_input(battle_input, text_frame, &mut text_receipt);
                         // 3. Push per-frame config onto the canonical
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
@@ -4818,17 +4817,18 @@ impl PokemonGame {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
                     // swallow the transition anyway).
-                    let (action, receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
-                    text_receipt.press_ab |= receipt.press_ab;
+                    // A terminal driver update and its mirror can both run
+                    // this frame; keep the canonical caller's sound receipt.
+                    let canonical_press_ab = text_receipt.press_ab;
+                    let action = self.battle.update_frame_with_text_input(battle_input, text_frame, &mut text_receipt);
+                    text_receipt.press_ab |= canonical_press_ab;
                     action
                 } else if self.battle.link_mode {
                     // The driver owns the canonical screen; the mirror is
                     // only ever cloned, never updated.
                     ScreenAction::Continue
                 } else {
-                    let (action, receipt) = self.battle.update_frame_with_text_input(battle_input, text_frame);
-                    text_receipt.press_ab |= receipt.press_ab;
-                    action
+                    self.battle.update_frame_with_text_input(battle_input, text_frame, &mut text_receipt)
                 };
                 // Only actual loads notify the frontend: stable frames do not
                 // re-read a party slot or re-register an already seen enemy.
