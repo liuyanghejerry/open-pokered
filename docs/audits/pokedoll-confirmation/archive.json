@@ -1,0 +1,20 @@
+{
+  "original_paths": 143,
+  "exact_content_blobs": 72,
+  "bytes": 941906,
+  "sha256": "4a69d05326e51d0ef98d30c462daf8b4bdddc654d7ddc762b02be6c6a5287c54",
+  "all_entries_readback_exact": true,
+  "source_nested_archive": {
+    "bytes": 656625,
+    "sha256": "fd55a3edfa393bcc0cb653344348c6509fe4c93b31b0bc728558a605cd59aadb"
+  },
+  "rejected_helpers": [
+    "native before-10__k54k and before-q8d_i30l use invalid numeric item JSON/fallback dummy; not gameplay failures",
+    "initial source wrong +4 camera and wall(10,17) preparations retained in source evidence; not controls",
+    "first after core test log retains obsolete pre-confirmation assertion failure; corrected test and full suite passed"
+  ],
+  "limits": [
+    "Raw traces have sampled states around multi-frame input commands; not exhaustive native per-frame rendering/audio proof.",
+    "Source ZIP excludes ROM/executable/emulator state. Native rejected helper logs are retained without treating them as valid evidence."
+  ]
+}

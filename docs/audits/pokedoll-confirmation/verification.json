@@ -1,0 +1,84 @@
+{
+  "scope": "Native before4/after4 actual ordinary initial/finalSAVE, source4 controls same initial rawSaveData. No postinput setters/directbattlecalls. Source/current initial template construction not fresh full playthrough.",
+  "before_source": "25443cf4bd209ec77961450fb6b986ed5c2308c5",
+  "after_source": "cf65fc44e6f4dc41af1bc2342a946ce21cbb14f7",
+  "controls": [
+    {
+      "ack": "a",
+      "repeat": 1,
+      "matched_input_initialstate_fixture": true,
+      "matched_pause_frames": [
+        1736,
+        1795
+      ],
+      "before_qty_at_pause": 1,
+      "after_qty_at_pause": 2,
+      "final_quantity": 1,
+      "ordinary_sram_before_after_byte_exact": true,
+      "full_raw_party404_box1122_name11_cash3_playerid2_source_exact": true,
+      "known_separate_seen_dex105_difference": true,
+      "sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "source_sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "a",
+      "repeat": 2,
+      "matched_input_initialstate_fixture": true,
+      "matched_pause_frames": [
+        1736,
+        1795
+      ],
+      "before_qty_at_pause": 1,
+      "after_qty_at_pause": 2,
+      "final_quantity": 1,
+      "ordinary_sram_before_after_byte_exact": true,
+      "full_raw_party404_box1122_name11_cash3_playerid2_source_exact": true,
+      "known_separate_seen_dex105_difference": true,
+      "sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "source_sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "b",
+      "repeat": 1,
+      "matched_input_initialstate_fixture": true,
+      "matched_pause_frames": [
+        1736,
+        1795
+      ],
+      "before_qty_at_pause": 1,
+      "after_qty_at_pause": 2,
+      "final_quantity": 1,
+      "ordinary_sram_before_after_byte_exact": true,
+      "full_raw_party404_box1122_name11_cash3_playerid2_source_exact": true,
+      "known_separate_seen_dex105_difference": true,
+      "sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "source_sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    },
+    {
+      "ack": "b",
+      "repeat": 2,
+      "matched_input_initialstate_fixture": true,
+      "matched_pause_frames": [
+        1736,
+        1795
+      ],
+      "before_qty_at_pause": 1,
+      "after_qty_at_pause": 2,
+      "final_quantity": 1,
+      "ordinary_sram_before_after_byte_exact": true,
+      "full_raw_party404_box1122_name11_cash3_playerid2_source_exact": true,
+      "known_separate_seen_dex105_difference": true,
+      "sram_sha256": "ce29b18ac199999b9d1bfed24e255ad53fc4053f4e163f7c7fcdcdfb6e2a34dc",
+      "source_sram_sha256": "6faf4fce62b8ec36bdec88a870e90e5bd67fe741864562ba907a84d8d4735d2f"
+    }
+  ],
+  "repeats_states_actions_png_save_identical": true,
+  "tests": {
+    "baseline_newtest": "1FAIL retained audit-900-baseline-test.log",
+    "first_after": "4PASS1oldexpectationFAIL retained",
+    "fullcore_corrected": "2883PASS audit-900-after-core-full.log source054 before cfg(test)248 merge"
+  },
+  "limitations": [
+    "No full waveform/frame timing parity claimed. Original item helper has no explicit soundfinish wait. Native ghostseenDex105 not fixed by this item confirmation PR. Historical engine identity retained; latest251 routine integration needs fresh tests."
+  ]
+}

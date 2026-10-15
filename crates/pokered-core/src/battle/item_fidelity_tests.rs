@@ -74,6 +74,32 @@ fn text_resumes_with_enemy_item_turn(battle: &BattleScreen) -> bool {
 }
 
 #[test]
+fn poke_doll_prints_used_item_and_consumes_once_after_acknowledgement() {
+    for use_b in [false, true] {
+        let player = create_pokemon(Species::Bulbasaur, 6, [0x9a, 0x78]).unwrap();
+        let enemy = create_pokemon(Species::Rattata, 5, [0x9a, 0x78]).unwrap();
+        let mut battle = BattleScreen::from_parties(true, &[player], &[enemy], None);
+        battle.player_name = Some("ASH".to_string());
+        battle.player_bag.add_item(ItemId::PokeDoll, 2).unwrap();
+        battle.phase = BattlePhase::PlayerMenu;
+        let protected = serde_json::to_value(battle.battle_state.as_ref().unwrap()).unwrap();
+        use_first_bag_item(&mut battle);
+        assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 2, "PrintItemUseTextAndRemoveItem waits for confirmation");
+        assert_eq!(staged_messages(&battle), vec!["ASH used\nPOKé DOLL!".to_string()]);
+        for _ in 0..40 { battle.update_frame(BattleInput::none()); }
+        assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 2);
+        battle.update_frame(if use_b { back_input() } else { input(false, true) });
+        assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 1);
+        assert!(matches!(battle.phase, BattlePhase::BattleOver { escaped: true, .. }));
+        assert!(battle.escaped_via_poke_doll);
+        battle.post_text_transition();
+        assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 1, "repeated continuation cannot consume twice");
+        assert_eq!(serde_json::to_value(battle.battle_state.as_ref().unwrap()).unwrap(), protected,
+            "doll escape spends no Pokémon turn, HP, PP, EXP or opponent action");
+    }
+}
+
+#[test]
 fn potion_from_complete_battle_bag_preserves_key_items() {
     for is_wild in [false, true] {
         let mut mon = create_pokemon(Species::Bulbasaur, 20, [0x9A, 0x78]).unwrap();
@@ -428,7 +454,7 @@ fn ether_move_menu_b_returns_to_party_select() {
 
 // ── ItemUsePokeDoll (item_effects.asm:1597-1602) ───────────────────────────
 
-/// The Poké Doll flees a WILD battle ("Got away safely!", doll consumed).
+/// The Poké Doll flees a wild battle after confirming the item-use text.
 #[test]
 fn poke_doll_flees_wild_battle() {
     let player = vec![create_pokemon(Species::Rattata, 10, [0x9A, 0x78]).unwrap()];
@@ -439,13 +465,14 @@ fn poke_doll_flees_wild_battle() {
 
     use_first_bag_item(&mut battle);
 
-    assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 0, "doll consumed");
+    assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 1, "doll remains until confirmation");
     assert!(
-        staged_messages(&battle).join(" ").contains("Got away safely"),
-        "expected the flee text, got {:?}",
+        staged_messages(&battle).join(" ").contains("used\nPOKé DOLL!"),
+        "expected the item-use text, got {:?}",
         staged_messages(&battle)
     );
-    // Dismiss the flee text (press edges alternate with release frames); the
+    for _ in 0..40 { battle.update_frame(BattleInput::none()); }
+    // Dismiss the item-use text (press edges alternate with release frames); the
     // battle then ends as an escape.
     for _ in 0..8 {
         battle.update_frame(input(false, true));
@@ -456,6 +483,7 @@ fn poke_doll_flees_wild_battle() {
         "expected a battle escape, got {:?}",
         battle.phase
     );
+    assert_eq!(bag_quantity(&battle, ItemId::PokeDoll), 0, "confirmed doll consumed");
 }
 
 /// In a TRAINER battle the doll falls through to ItemUseNotTime: the OAK
