@@ -1,0 +1,20 @@
+{
+  "source": "8b6460af0d7a9ef667ed593c8df604b47050b991",
+  "master": "7310d2989501c3a0d793c794244b51693ed692c2",
+  "tests": {
+    "app": {
+      "passed": 283,
+      "ignored": 39,
+      "file": "audit-905-merged252-903-app.log",
+      "sha256": "327113e6857666bf10264f0528c3c437d08c94c5b403b6d914aa20abb6b2dc28"
+    },
+    "core": {
+      "passed": 2888,
+      "ignored": 0,
+      "file": "audit-905-merged252-903-core.log",
+      "sha256": "eb476d4b220ceae46846a7fc40c2a043fa5d3dc4e872869d112505e6cf0fdf68"
+    }
+  },
+  "capture_identity_unchanged": true,
+  "scope": "Integrate merged field poison flow; original recorded builds retain actual identities."
+}

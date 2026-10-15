@@ -1,0 +1,68 @@
+{
+  "utc": "2026-10-15T07:36:21.597880+00:00",
+  "source_archive_paths": 70,
+  "source_archive_blobs": 29,
+  "source_archive_sha": "41ca7767a2cdaec4014b526fd4337005026f278dc8aca856b05761d9fa8c513b",
+  "all_original_source_archive_bytes_exact": true,
+  "primary_file_sha": "76b570b5216bbbcf6d9528c4704d931744a3740cce88afdc4f4f8f700449dda1",
+  "original_checksums": 8,
+  "full_SRAM_and_buttons_equal": true,
+  "old88party_box_dex_money_protected": true,
+  "observed_Rand1_then_Rand2": [
+    232,
+    36
+  ],
+  "records": [
+    {
+      "repeat": 1,
+      "fork": 0,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 1,
+      "fork": 1,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 1,
+      "fork": 2,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 1,
+      "fork": 3,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 2,
+      "fork": 0,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 2,
+      "fork": 1,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 2,
+      "fork": 2,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    },
+    {
+      "repeat": 2,
+      "fork": 3,
+      "snapshot_sha": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+      "SAVE_sha": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141"
+    }
+  ],
+  "reviewed_runtime_commit": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+  "review_scope": "Root read newmutableclosure/lazyRand2 implementation+4algorithmtests+3canonicaltests+1publicGame test; fixedbyte APIs delegate unchanged, no new arithmetic/state/renderowner. No blocker.",
+  "limits": "Originalactual allfirstthrows success only; nativeLv3/sourceLv2/RNGnotmatched; remainingguards deterministic unit evidence, no fabricatedactualmatrix."
+}

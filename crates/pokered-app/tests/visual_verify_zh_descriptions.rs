@@ -293,6 +293,7 @@ fn capture_zh_descriptions() {
         current: 0,
         wait_frames: 0,
         next_phase: Box::new(pokered_core::battle::BattlePhase::PlayerMenu),
+        backdrop: Default::default(),
     };
     battle.current_message = Some("对方的皮卡丘使用了\n十万伏特！".into());
     render::draw_battle(

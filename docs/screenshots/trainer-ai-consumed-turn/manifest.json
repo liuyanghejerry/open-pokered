@@ -1,0 +1,30 @@
+{
+  "before_source_commit": "6d30ba5abfb40e0873b6b4bea962f0ae29989bfe",
+  "before_binary_sha256": "5e7c8caf53d7825330a828cf54d987ff6c0da0861401ec4850e9ffe0b776d70e",
+  "after_source_commit": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+  "after_binary_sha256": "57a277a04a442324cc76c5fa6dfb794004ca9e09b29b24c119429724b9011629",
+  "fresh_master_capture": true,
+  "records": [
+    {
+      "repeat": 1,
+      "frame": 1080,
+      "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+      "input_prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+      "before_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-before-sptpm2zv/actual-1/record.json",
+      "before_png_sha256": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+      "after_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-after-e3k_en2_/actual-1/record.json",
+      "after_png_sha256": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3"
+    },
+    {
+      "repeat": 2,
+      "frame": 1080,
+      "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+      "input_prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+      "before_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-before-sptpm2zv/actual-2/record.json",
+      "before_png_sha256": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+      "after_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-after-e3k_en2_/actual-2/record.json",
+      "after_png_sha256": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3"
+    }
+  ],
+  "scope": "Fresh master6d30 and integrated focused4dcb binaries, same exact constructedfixture/completeordinaryinputprefix/frame1080, repeatedtwiceperbuild. Original static/native full sixturn ordinarySAVE controls are separately verified; no SAVE performed by this short visual replay. Historical b7/ed6 captures remain immutable under old archive."
+}

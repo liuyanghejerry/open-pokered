@@ -237,11 +237,12 @@ fn surf_refused_with_cycling_is_fun_while_forced() {
         SOUL,
         MapId::PalletTown,
     );
-    assert_eq!(outcome, FieldMoveOutcome::Done);
+    let FieldMoveOutcome::ReturnToParty { message } = outcome else { panic!("refusal must return to the party list") };
+        assert!(screen.pending_dialogue.is_none());
     // CyclingIsFunText (data/text/text_5.asm:28-31) — the SOUL badge check
     // passes, then IsSurfingAllowed sees BIT_ALWAYS_ON_BIKE.
     assert_eq!(
-        dialogue_text(&screen).as_deref(),
+        Some(message.as_str()),
         Some("Cycling is fun!\nForget SURFing!")
     );
     assert_eq!(
@@ -440,9 +441,10 @@ fn surf_dismount_blocked_on_current_tiles() {
         screen.state.player.y = *y as u16;
         screen.state.player.transport = TransportMode::Surfing;
         let outcome = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::PalletTown);
-        assert_eq!(outcome, FieldMoveOutcome::Done);
+        let FieldMoveOutcome::ReturnToParty { message } = outcome else { panic!("refusal must return to the party list") };
+        assert!(screen.pending_dialogue.is_none());
         assert_eq!(
-            dialogue_text(&screen).as_deref(),
+            Some(message.as_str()),
             Some("There's no place\nto get off!"),
             "{map:?} ({x},{y}) refuses the dismount"
         );

@@ -83,7 +83,7 @@ pub enum PartyScreenAction {
     ApplyItem { party_index: usize },
     /// In `SoftboiledTarget` mode, the player picked the member to heal. The
     /// caller runs the SOFTBOILED heal (user loses 1/5 max HP, target gains
-    /// it) and shows the result text on the field.
+    /// it) and acknowledges the result on the party screen.
     SoftboiledTargetChosen { target_index: usize },
     /// In the `ChooseMove` phase (TM/HM with a full moveset), the player
     /// picked the move slot to forget. The caller performs the replacement.
@@ -462,7 +462,8 @@ impl PartyScreenState {
             // SOFTBOILED target pick: B abandons the heal and returns to the
             // normal party menu (`.canceledItemUse` → the StartMenu_Pokemon
             // loop in the original).
-            if matches!(self.mode, PartyScreenMode::SoftboiledTarget(_)) {
+            if let PartyScreenMode::SoftboiledTarget(user) = self.mode {
+                self.set_cursor(user);
                 self.mode = PartyScreenMode::Normal;
                 self.phase = PartyScreenPhase::Browsing;
                 return PartyScreenAction::Active;
@@ -1279,6 +1280,7 @@ pub(crate) mod tests {
             make_test_pokemon(Species::Charmander),
         ];
         let mut screen = PartyScreenState::new_for_softboiled_target(party, 0);
+        screen.set_cursor(1);
         let result = screen.update_frame(PartyScreenInput {
             b: true,
             ..PartyScreenInput::none()
@@ -1286,6 +1288,7 @@ pub(crate) mod tests {
         // B cancels the heal; the party menu stays open in normal mode
         // (StartMenu_Pokemon loop in the original).
         assert_eq!(result, PartyScreenAction::Active);
+        assert_eq!(screen.cursor(), 0, "restore the SOFTBOILED user, not its target");
         assert_eq!(screen.mode(), PartyScreenMode::Normal);
         assert_eq!(screen.phase(), PartyScreenPhase::Browsing);
     }

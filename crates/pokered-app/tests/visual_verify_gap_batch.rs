@@ -301,6 +301,7 @@ THUNDERBOLT!".to_string()],
         current: 0,
         wait_frames: 0,
         next_phase: Box::new(BattlePhase::PlayerMenu),
+        backdrop: Default::default(),
     };
     battle.current_message = Some("PIKACHU learned
 THUNDERBOLT!".to_string());

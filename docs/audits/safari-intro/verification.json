@@ -1,0 +1,241 @@
+{
+  "frozen_native_identities": {
+    "before": {
+      "source_commit": "6085c98704a9b0cb25cbcd34afcc028184ce9217",
+      "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-910-safari-intro-audit",
+      "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-910-before-debug",
+      "binary_sha256": "a6c380c64b6e0cf241117e1d745a87cdb75175bf06ae47d7e359f02777f37c79",
+      "build_exit": 0,
+      "build_log": "audit-910-before-build.log",
+      "complete_source_manifest_sha256": "7f35c8107bfe717384972724d574f2b640a2a635f939b88d7063a06a2c7344cb",
+      "complete_source_paths": 2162
+    },
+    "after": {
+      "source_commit": "6abff9bfeb9baaae820f361645d781c492fe2454",
+      "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-910-safari-intro-audit",
+      "binary_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-910-after-debug",
+      "binary_sha256": "ba1c466b89caf45eb8d0515a565b4fcce554531dcb42b79afa785daef710d4fb",
+      "build_exit": 0,
+      "build_log": "audit-910-after-build.log",
+      "complete_source_manifest_sha256": "f7f1d619ddbacb3f3829a91af4e1282307a2cc2d4bae19255c054cb90773f254",
+      "complete_source_paths": 2162
+    }
+  },
+  "reference_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "reference_ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "RED_asset_sha256": "3d304c43c41092f127f3de65bc8573860a49dbcb18018393ca764214af8f9646",
+  "original_call_path": "LoadPlayerBackPic selectsRED forBATTLE_TYPE2; StartBattle explicitDelayFrames40 thenDisplayBattleMenu, skipsSendOutMon/LoadMonBackPic/DrawPlayerHUDAndHPBar/PrintSendOutMonMessage.",
+  "source_actual_ACK_frame": 1504,
+  "source_actual_StartBattle_hook_frame": 1512,
+  "source_actual_Menu_hook_frame": 1552,
+  "source_explicit_delay_frames": 40,
+  "controls": {
+    "original-intro-retry1": {
+      "trials": [
+        {
+          "path": "audit-910-original-intro-retry1/1",
+          "physical_frames": 3434,
+          "entire_frame_hash_sequence_sha256": "cf139cede247128c2a165d4e2cfe42dd6faa6416767da37c20e92ee28c2e90fc",
+          "SRAM_sha256": "ad27707d15869109087f62c4d770b545a68476deb76b3d187d64250a026aca42",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            32
+          ]
+        },
+        {
+          "path": "audit-910-original-intro-retry1/2",
+          "physical_frames": 3434,
+          "entire_frame_hash_sequence_sha256": "cf139cede247128c2a165d4e2cfe42dd6faa6416767da37c20e92ee28c2e90fc",
+          "SRAM_sha256": "ad27707d15869109087f62c4d770b545a68476deb76b3d187d64250a026aca42",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            32
+          ]
+        }
+      ],
+      "all_contiguous_physical_frame_PNGs_hash_verified": true,
+      "full_input_and_PNG_and_SRAM_repeat_exact": true
+    },
+    "native-intro": {
+      "trials": [
+        {
+          "path": "audit-910-native-intro/1",
+          "physical_frames": 4484,
+          "entire_frame_hash_sequence_sha256": "36aef5001c7b19aaf39a5fd6fdb22c3ba1461511390a4aa39324d3adc81ce660",
+          "SRAM_sha256": "aa704d47bdeac0811977c35b201694d23d1f4ec1b91cab7c2afb2611e41dd043",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            48
+          ]
+        },
+        {
+          "path": "audit-910-native-intro/2",
+          "physical_frames": 4484,
+          "entire_frame_hash_sequence_sha256": "36aef5001c7b19aaf39a5fd6fdb22c3ba1461511390a4aa39324d3adc81ce660",
+          "SRAM_sha256": "aa704d47bdeac0811977c35b201694d23d1f4ec1b91cab7c2afb2611e41dd043",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            48
+          ]
+        }
+      ],
+      "all_contiguous_physical_frame_PNGs_hash_verified": true,
+      "full_input_and_PNG_and_SRAM_repeat_exact": true
+    },
+    "native-intro-after": {
+      "trials": [
+        {
+          "path": "audit-910-native-intro-after/1",
+          "physical_frames": 4183,
+          "entire_frame_hash_sequence_sha256": "53e3ffd86da659737682364cd7e5ed8127d119403a8d3fa7bec126c29fe5eb58",
+          "SRAM_sha256": "26ab163a4fbe11cc0af12b338059e0f472fdf3e77a41dfd32a5fc7a9fa8405d4",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            48
+          ],
+          "preparation_frames": [
+            2403,
+            2442
+          ],
+          "preparation_frame_count": 40,
+          "first_menu_frame": 2443
+        },
+        {
+          "path": "audit-910-native-intro-after/2",
+          "physical_frames": 4183,
+          "entire_frame_hash_sequence_sha256": "53e3ffd86da659737682364cd7e5ed8127d119403a8d3fa7bec126c29fe5eb58",
+          "SRAM_sha256": "26ab163a4fbe11cc0af12b338059e0f472fdf3e77a41dfd32a5fc7a9fa8405d4",
+          "checksum_valid": true,
+          "party404_currentBox1122_bag42_cash3_rawPlayerName11_playerID2_owned19_events320_exact": true,
+          "seen_added_only": [
+            48
+          ],
+          "preparation_frames": [
+            2403,
+            2442
+          ],
+          "preparation_frame_count": 40,
+          "first_menu_frame": 2443
+        }
+      ],
+      "all_contiguous_physical_frame_PNGs_hash_verified": true,
+      "full_input_and_PNG_and_SRAM_repeat_exact": true
+    },
+    "paired_screen": {
+      "fixture_sha256": "90506a2e08a63ffac6aa60bade333a8692c5afba2f7c5fd33082688dc55b52c6",
+      "seed": 3,
+      "physical_simulation_frame": 2703,
+      "common_buttons": 2703,
+      "expanded_buttons_prefix_sha256": "6bc73414727dc1faf943bf5cc644851b161798c23668df57d54daf39045e2bdf",
+      "before": "audit-910-native-intro/1/after-one-ack.png",
+      "after": "audit-910-native-intro-after/1/after-one-ack.png"
+    },
+    "before_after_SRAM": {
+      "differences": [
+        {
+          "offset": "0x2cf0",
+          "before": 17,
+          "after": 12
+        },
+        {
+          "offset": "0x2cf1",
+          "before": 5,
+          "after": 4
+        },
+        {
+          "offset": "0x3523",
+          "before": 24,
+          "after": 30
+        }
+      ],
+      "all_other_32768bytes_exact": true
+    }
+  },
+  "tests": {
+    "regression_baseline": {
+      "core": "expectedFAIL: Safari entersPlayerSendOut instead ofwaiting; audit-910-baseline-pokered-core.log",
+      "app": "expectedFAIL: renderedback isnotRED; audit-910-baseline-pokered-app.log"
+    },
+    "scoped_after": {
+      "core": 1,
+      "app": 1
+    },
+    "full_after": {
+      "core_passed": 2889,
+      "app_passed": 281,
+      "app_ignored": 39
+    },
+    "build_exit": 0,
+    "GBA": {
+      "source_head": "6abff9bfeb9baaae820f361645d781c492fe2454",
+      "source_mirror_manifest_sha256": "515bd2906be90ca18eaa11766a6d1879fa9c48ded53397cf412fe8cf8e73ae73",
+      "nightly": "nightly-2025-12-07",
+      "emulator": "mGBA0.10.5 SDL",
+      "rom_sha256": "7d39571b81b36cef0a7421d987ea1076d86f779114302be29094561f2e149a63",
+      "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "candidate_sha256": "da0ca56b1686ea7aea884054182eb22195ba2b9be7a07e68f68a2ee793169d6e",
+      "compare_exit": 0,
+      "build_exit": 0,
+      "record_exit": 0,
+      "seven_scenarios_passed": true,
+      "trainer_update_ticks": 232,
+      "trainer_limit": 232.3
+    }
+  },
+  "terminal_exits": {
+    "before_debug_build17352": 0,
+    "source_original_retry40773": 0,
+    "native_before44522": 0,
+    "scoped_retry75665": 0,
+    "full_host6391": 0,
+    "GBA_build13914": 0,
+    "GBA_record_compare24774": 0,
+    "native_after13244": 0
+  },
+  "excluded_failures": [
+    {
+      "path": "audit-910-original-intro",
+      "exit": 1,
+      "reason": "Invalidread-onlyhookusednonexistentDEregisterproperty; entireoriginalattempt excluded; correctedretryusesD<<8|E."
+    },
+    {
+      "path": "audit-910-scoped-pokered-core.log",
+      "exit": 101,
+      "reason": "Firstcandidatecompilemissingnewenumexhaustivearm; preserved; correctedfollowup6abffpassesfullsuite."
+    }
+  ],
+  "limits": [
+    "ConstructedprebootactiveSafariCenter with30balls/100steps; nofreshadmission/payment/fullmainlineproof.",
+    "SourceNidoranM22/nativeVenonat22 naturaltables/rateunchanged; no liveRAM/species/RNGwrites. Natural species/randomDVs/enemy pixels not equated.",
+    "Exactly40sourceexplicitdelaymodeled; sourcecallerhasadditional8observedframes beforeStartBattle. No hardcoded48 or wholeintroclock/trajectory/audio-waveform parity claim.",
+    "Actualnativecontrols usehealthyBulbasaur; renderer regression also coversHP1/fullHP andtwo player species, ordinarybattleHUD andtransientWildRevealballs.",
+    "No changes to905capturecontinuation/audioor908lastballtailtext. NoSilph34-frame runtimefixclaim."
+  ],
+  "latest_master_integration": {
+    "source_head": "3bd9ed300a4ea8f49900f9f94f56a6d881f81778",
+    "integrated_master": "216cb0343ca4871663a1a45bde9c90a60b32fe75",
+    "scope": "Routine master integration only. Historical BEFORE6085/AFTER6abff actual controls retain their true build identities; no actual captures relabelled as this integration.",
+    "production_paths": 2162,
+    "two_changed_Rust_files_byte_identical_to_frozen_after": true,
+    "core_passed": 2889,
+    "app_passed": 281,
+    "app_ignored": 39,
+    "full_host_session53750_exit": 0,
+    "GBA_build_session16609_exit": 0,
+    "GBA_record_compare_session4080_exit": 0,
+    "GBA_seven_scenarios_pass": true,
+    "GBA_trainer_update_ticks": 232,
+    "GBA_wild_update_ticks": 215,
+    "GBA_ROM_sha256": "73a81e09e12d5a6b23e1894803b317c81e356802452aed643d6cc7be4d509107",
+    "GBA_baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "GBA_candidate_sha256": "ec6f943233c98123a4a2db9e9f0416d06de4bb40262cd8d43d545a44e855d706",
+    "GBA_source_mirror_manifest_sha256": "f3439643ba48ca1de017030953364a4e923bf79731e850041482d66748e1ff5c",
+    "all_910_jobs_terminal": true,
+    "full_source_manifest_sha256": "99180dd8fb301cd0b435c6cbf5aafae329a6d79609631279b0df76e1c6e397a8"
+  }
+}

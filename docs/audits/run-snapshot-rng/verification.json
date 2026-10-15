@@ -1,0 +1,272 @@
+{
+  "schema": "audit918-owned-run-v1",
+  "base": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+  "source_head": "0b4b2813ce71166cf4ee0d2e8f39460e01b789c0",
+  "production_commit": "d07da73e279efbfe272c00967144ba790f9e56ae",
+  "change": "Canonical RUN lazily draws from existing BattleScreen.rng only at original compareWithRandomValue. The public injected-byte helper remains compatible. No extra RNG or saved state.",
+  "primary_source": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "path": "engine/battle/core.asm",
+    "routine": "TryRunningFromBattle",
+    "lines": [
+      1496,
+      1576
+    ],
+    "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+  },
+  "paired_native": {
+    "source_before": "05f6e76c2e8fc6c0a64dbf6486316a073fa20347",
+    "source_after": "d07da73e279efbfe272c00967144ba790f9e56ae",
+    "all_initial_runtime_snapshot_hashes_equal": true,
+    "prefix": "A1 + neutral119 after equal-hash restore and independent re-serialization",
+    "rows": [
+      {
+        "stage": "before",
+        "repeat": 1,
+        "initial_hash": "dc76bdb70df6ae4c",
+        "post_hashes": [
+          "22d2e41def746792",
+          "2adebef3f287f3bc"
+        ],
+        "outcomes": {
+          "escaped": 4,
+          "failed": 8
+        },
+        "saved_HP": [
+          31,
+          31
+        ],
+        "party_byte_diffs_vs_legal_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "7f5e8f7ad4fc0e8f943f39445959083a3522fbcb3473709e35edcae961ea24cf",
+        "frame": 976
+      },
+      {
+        "stage": "before",
+        "repeat": 2,
+        "initial_hash": "dc76bdb70df6ae4c",
+        "post_hashes": [
+          "22d2e41def746792",
+          "2adebef3f287f3bc"
+        ],
+        "outcomes": {
+          "escaped": 3,
+          "failed": 9
+        },
+        "saved_HP": [
+          31,
+          31
+        ],
+        "party_byte_diffs_vs_legal_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "7f5e8f7ad4fc0e8f943f39445959083a3522fbcb3473709e35edcae961ea24cf",
+        "frame": 976
+      },
+      {
+        "stage": "after",
+        "repeat": 1,
+        "initial_hash": "dc76bdb70df6ae4c",
+        "post_hashes": [
+          "c101e3db6bbb3cdd"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "saved_HP": [
+          28,
+          31
+        ],
+        "party_byte_diffs_vs_legal_construction": [
+          [
+            2
+          ],
+          []
+        ],
+        "ordinary_SAVE_sha256": "8a6c0a18464ea0956657db8fef33b24afa39018a51a7cc019660b5be4cc3a8a8",
+        "frame": 976
+      },
+      {
+        "stage": "after",
+        "repeat": 2,
+        "initial_hash": "dc76bdb70df6ae4c",
+        "post_hashes": [
+          "c101e3db6bbb3cdd"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "saved_HP": [
+          28,
+          31
+        ],
+        "party_byte_diffs_vs_legal_construction": [
+          [
+            2
+          ],
+          []
+        ],
+        "ordinary_SAVE_sha256": "8a6c0a18464ea0956657db8fef33b24afa39018a51a7cc019660b5be4cc3a8a8",
+        "frame": 976
+      }
+    ],
+    "same_after_post_hash_across_24_forks": true,
+    "after_full_SRAM_repeat_equal": true,
+    "limits": [
+      "Only final fork11 continues adaptively to ordinarySAVE; not24ordinarySAVEs perprovider.",
+      "Both before/after use identical legal prebootfixture, naturalencounter and same initialRUN snapshot hash. Different finishes may legitimately have differentHP/time/SRAM, so no before-after fullSRAM equality claim.",
+      "Original prior8 full-emulator-state forks all firstRUN escaped; source failure branch not actualverified. No RNG/species/fullSRAM parity betweenproviders."
+    ]
+  },
+  "save_protection": {
+    "four_ordinary_frozen_imports_succeeded": true,
+    "money_each": 3000,
+    "bag_each": [
+      [
+        "PokeFlute",
+        1
+      ]
+    ],
+    "protected_equal_before_after": {
+      "top": [
+        "current_box",
+        "pc_storage",
+        "player_name",
+        "hall_of_fame"
+      ],
+      "game_data": [
+        "bag",
+        "pc_items",
+        "pokedex",
+        "obtained_badges",
+        "obtained_hidden_items",
+        "obtained_hidden_coins",
+        "toggleable_object_flags",
+        "event_flags",
+        "player_money",
+        "player_id"
+      ]
+    },
+    "readback_sha256": {
+      "before": [
+        "364d2ae72c47a287c8a45b5ca5edc9068fa5e6484f68704b7c1ab00abcd6ea11",
+        "364d2ae72c47a287c8a45b5ca5edc9068fa5e6484f68704b7c1ab00abcd6ea11"
+      ],
+      "after": [
+        "fc79245a0d2ed6633d90e9f8f2642ef4200aee4ab6406a76df32a6d9d1a84116",
+        "fc79245a0d2ed6633d90e9f8f2642ef4200aee4ab6406a76df32a6d9d1a84116"
+      ]
+    },
+    "native_repeat_readback_equal": {
+      "before": true,
+      "after": true
+    }
+  },
+  "current_integration": {
+    "source_commit": "0b4b2813ce71166cf4ee0d2e8f39460e01b789c0",
+    "binary_sha256": "76e79f833f6c2161201b90d08e0420a201c90068c7322802ad71090dc8776a6e",
+    "rows": [
+      {
+        "repeat": 1,
+        "initial_hash": "de4f067de8118667",
+        "frame": 976,
+        "post_hash": [
+          "72da87e6efbcb08e"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "saved_HP": [
+          28,
+          31
+        ],
+        "saved_status": [
+          64,
+          0
+        ],
+        "ordinary_SAVE_sha256": "8a6c0a18464ea0956657db8fef33b24afa39018a51a7cc019660b5be4cc3a8a8"
+      },
+      {
+        "repeat": 2,
+        "initial_hash": "de4f067de8118667",
+        "frame": 976,
+        "post_hash": [
+          "72da87e6efbcb08e"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "saved_HP": [
+          28,
+          31
+        ],
+        "saved_status": [
+          64,
+          0
+        ],
+        "ordinary_SAVE_sha256": "8a6c0a18464ea0956657db8fef33b24afa39018a51a7cc019660b5be4cc3a8a8"
+      }
+    ],
+    "ordinary_SAVE_count": 2,
+    "all24_post_hashes_equal": true,
+    "full_SRAM_repeats_equal": true,
+    "scope": "Separate integration AFTER on master4c. This does not relabel paired05f6/d07 or historical8eb/source controls."
+  },
+  "integrated_SRAM_identical_to_both_d07_after": true,
+  "checks": {
+    "core": 2895,
+    "escape_flow": 6,
+    "app_debug": {
+      "passed": 296,
+      "ignored": 39
+    },
+    "app_default": {
+      "passed": 285,
+      "ignored": 37
+    },
+    "agent_debug": 9,
+    "agent_default": 9,
+    "debug_app_build": "PASS",
+    "source_head": "0b4b2813ce71166cf4ee0d2e8f39460e01b789c0",
+    "GBA": {
+      "scenarios": 7,
+      "repeats": 2,
+      "all_pass": true,
+      "full_metric_JSON_equal": true,
+      "trainer_update_ticks": 232,
+      "idle_update_ticks": 382,
+      "oak_draw_ticks": 2994,
+      "baseline_changed": false,
+      "remote_CI_claim": false
+    }
+  },
+  "original_actual": {
+    "ordinary_SAVE_count": 8,
+    "independent_natural_encounters": 2,
+    "forks_per_encounter": 4,
+    "first_RUN_outcome": "escaped in all8; no actual first-RUN-failure source branch coverage",
+    "full_SRAM_repeats_equal": true,
+    "scope": "Independent source emulator state replay. Hardware RNG and initial DVs are not equated to native seed19."
+  },
+  "regression": {
+    "valid_before_failures": [
+      "Owned RNG word_pos stays0 instead of1 after probabilistic RUN",
+      "Actual Game snapshot+same buttons produces unequal posthashes"
+    ],
+    "retained_errata": [
+      "Initial new PP34 expectation was wrong (actual35); corrected test verifies one narration/last_move_used and complete replay identity. This is not a PP bug.",
+      "SAVE import checker expected numeric73 but typed JSON uses PokeFlute. All four imports succeeded before that checker error; corrected checker passes.",
+      "Historical8eb nativev1 START1 missed ordinary SAVE; fork12 evidence retained but that run is excluded from successful SAVE count."
+    ]
+  },
+  "limits": [
+    "Focused RUN correction only. Static capture/Safari/disobedience global RNG bypasses are separate candidates, not fixed here.",
+    "Only final native fork11 continues to ordinary SAVE: two saves per build, not one per fork. Adaptive finishing inputs are not identical between before/after timelines.",
+    "Source controls cover first-RUN success only. No cross-provider RNG, damage, DV, whole-SRAM, frame or audio parity claim.",
+    "Snapshot logic identity is asserted. Presentation resets are outside the snapshot API contract.",
+    "No full playthrough or remote CI pass is claimed. Pure game logic/tests; no renderer or layout change. All actual PNGs are retained in evidence."
+  ]
+}
