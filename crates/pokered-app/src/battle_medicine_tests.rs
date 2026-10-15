@@ -88,6 +88,9 @@ fn medicine_no_effect_app_snapshot_keeps_typed_party_text_and_free_ack() {
         let mut g = game();
         let mon = &mut g.battle.battle_state.as_mut().unwrap().player.party[1];
         mon.hp = mon.max_hp;
+        // A real battle has already ticked before its item menu. Initialize
+        // the app's badge-stat caches before comparing the complete state.
+        g.update(&InputState::new());
         let field_party = serde_json::to_value(&g.save_data.party).unwrap();
         let before = serde_json::to_value(&g.battle.battle_state).unwrap();
         let mut a = InputState::new(); a.press(GbButton::A); g.update(&a);
