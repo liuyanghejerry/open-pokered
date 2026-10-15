@@ -270,6 +270,25 @@ fn field_poison_flash_has_four_render_frames_and_preserves_obj_white() {
     });
 }
 
+#[cfg(feature = "debug-server")]
+#[test]
+fn field_poison_control_ready_waits_until_the_flash_caller_returns() {
+    on_game_stack(|| {
+        let mut g = game(&[(3, true), (31, false)]);
+        assert!(g.debug_condition_met("control_ready"));
+        begin(&mut g);
+        for _ in 0..4 {
+            assert!(g.overworld.pending_dialogue.is_none());
+            assert!(g.overworld.poison_flow.is_some());
+            assert!(!g.debug_condition_met("control_ready"));
+            g.update(&InputState::new());
+        }
+        assert!(g.overworld.poison_flow.is_none());
+        assert!(g.debug_condition_met("control_ready"));
+        assert_eq!(hp(&g), vec![2, 31]);
+    });
+}
+
 #[test]
 fn field_poison_snapshot_resumes_next_slot_once_and_accepts_legacy_missing_field() {
     on_game_stack(|| {

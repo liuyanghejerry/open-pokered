@@ -7040,6 +7040,7 @@ impl PokemonGame {
             "control_ready" => {
                 crate::cli::screen_name(&self.state.screen) == "overworld"
                     && self.overworld.pending_dialogue.is_none()
+                    && self.overworld.poison_flow.is_none()
                     && self.overworld.pending_choice.is_none()
                     && self.overworld.active_script_effect_value().is_none()
                     && self.overworld.script_engine_idle()
