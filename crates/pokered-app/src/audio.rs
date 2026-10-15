@@ -20,23 +20,28 @@ pub fn play_species_cry(audio: &AudioOutput, species: Species) {
 /// Game's usual sound gate sees the resulting phase, while DirectBattle's sees
 /// the entering phase. Both must beep for selection/manual ACK, never Delay65.
 #[derive(Clone, Copy)]
-pub(crate) struct FightNoticeSound {
-    player_menu: bool,
-    move_select: bool,
-    notice: Option<pokered_core::battle::FightNoticeWait>,
+pub(crate) enum FightNoticeSound {
+    PlayerMenu,
+    MoveSelect,
+    ManualNotice,
+    AutomaticNotice,
+    Other,
 }
 
 impl FightNoticeSound {
     #[inline]
     pub(crate) fn before(phase: &pokered_core::battle::BattlePhase) -> Self {
-        use pokered_core::battle::{BattlePhase, BattleTextBackdrop};
-        Self {
-            player_menu: matches!(phase, BattlePhase::PlayerMenu),
-            move_select: matches!(phase, BattlePhase::MoveSelect),
-            notice: match phase {
-                BattlePhase::ShowingText { backdrop: BattleTextBackdrop::FightMoveNotice { wait }, .. } => Some(*wait),
-                _ => None,
-            },
+        use pokered_core::battle::{BattlePhase, BattleTextBackdrop, FightNoticeWait};
+        match phase {
+            BattlePhase::PlayerMenu => Self::PlayerMenu,
+            BattlePhase::MoveSelect => Self::MoveSelect,
+            BattlePhase::ShowingText {
+                backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Ack }, ..
+            } => Self::ManualNotice,
+            BattlePhase::ShowingText {
+                backdrop: BattleTextBackdrop::FightMoveNotice { .. }, ..
+            } => Self::AutomaticNotice,
+            _ => Self::Other,
         }
     }
 
@@ -44,16 +49,15 @@ impl FightNoticeSound {
     /// acknowledges only when update actually leaves it (early keys are silent).
     #[inline]
     pub(crate) fn after(self, phase: &pokered_core::battle::BattlePhase, other_menu: bool) -> bool {
-        use pokered_core::battle::{BattlePhase, BattleTextBackdrop, FightNoticeWait};
-        match self.notice {
-            Some(FightNoticeWait::LinkDelay) => false,
-            Some(FightNoticeWait::Source(_)) => false,
-            Some(FightNoticeWait::Ack) => !matches!(phase, BattlePhase::ShowingText {
+        use pokered_core::battle::{BattlePhase, BattleTextBackdrop};
+        match self {
+            Self::AutomaticNotice => false,
+            Self::ManualNotice => !matches!(phase, BattlePhase::ShowingText {
                 backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. }),
-            None => other_menu
-                || (self.player_menu && matches!(phase, BattlePhase::ForcedStruggle { .. }))
-                || (self.move_select && matches!(phase, BattlePhase::ShowingText {
-                backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. })),
+            Self::PlayerMenu => other_menu || matches!(phase, BattlePhase::ForcedStruggle { .. }),
+            Self::MoveSelect => other_menu || matches!(phase, BattlePhase::ShowingText {
+                backdrop: BattleTextBackdrop::FightMoveNotice { .. }, .. }),
+            Self::Other => other_menu,
         }
     }
 }

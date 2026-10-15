@@ -4692,14 +4692,23 @@ impl PokemonGame {
             }
             GameScreen::Battle => {
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
-                // Normal FIGHT returns outside the Party/List/Slide temporary
-                // NoTextDelay scopes. Use live options, not saved WRAM flags;
-                // an active continuation retains its own captured settings.
-                let text_settings = pokered_core::battle::BattleTextSettings::fight_menu(
-                    self.state.config.text_speed.delay_frames() as u8,
-                    self.battle.link_mode,
-                );
-                let text_frame = crate::battle_text_input::frame(input, Some(text_settings));
+                // Only FIGHT entry/selection and its continuation read this
+                // text input. Link polling may replace the canonical phase,
+                // so keep supplying it throughout the existing link path.
+                let text_frame = if self.battle.link_mode || matches!(&self.battle.phase,
+                    BattlePhase::PlayerMenu | BattlePhase::MoveSelect | BattlePhase::ShowingText {
+                        backdrop: pokered_core::battle::BattleTextBackdrop::FightMoveNotice { .. }, ..
+                    }) {
+                    // These callers are outside temporary NoTextDelay scopes;
+                    // a continuation retains its own captured live options.
+                    let settings = pokered_core::battle::BattleTextSettings::fight_menu(
+                        self.state.config.text_speed.delay_frames() as u8,
+                        self.battle.link_mode,
+                    );
+                    crate::battle_text_input::frame(input, Some(settings))
+                } else {
+                    pokered_core::battle::BattleTextFrame { held_buttons: 0, settings: None }
+                };
                 let mut text_receipt = pokered_core::battle::FightTextReceipt::default();
                 // Keep deterministic turn resolution separate from presentation:
                 // finish this move's visuals, then drain its HP, then allow the
