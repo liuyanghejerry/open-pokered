@@ -301,11 +301,12 @@ impl MoveMenuState {
 
     fn try_select(&self) -> MoveMenuResult {
         let slot = &self.moves[self.cursor];
-        if slot.is_disabled {
-            return MoveMenuResult::Disabled(self.cursor);
-        }
+        // SelectMenuItem tests masked current PP before the Disable slot.
         if slot.current_pp == 0 {
             return MoveMenuResult::NoPP(self.cursor);
+        }
+        if slot.is_disabled {
+            return MoveMenuResult::Disabled(self.cursor);
         }
         MoveMenuResult::Selected(self.cursor)
     }
