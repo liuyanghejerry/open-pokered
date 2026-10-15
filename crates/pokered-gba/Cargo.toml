@@ -37,12 +37,12 @@ opening-timing = ["frame-timing"]
 # masks the original failure behind a misleading "Double panic" screen.
 agb = { version = "0.25.0", default-features = false, features = ["testing"] }
 getrandom = { version = "0.2", features = ["custom"] }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "976f86b42813a657047db89ca4dca2d6b9172dff" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "76da597b1604305121c866831b5542e70c2b82c8" }
 log = { version = "0.4", default-features = false }
 
 # The pokered game crates. Built for thumbv4t via this crate's
 # .cargo/config.toml (nightly -Zbuild-std). All dotzuki dependencies come from
-# the v0.10.1 release commit through the manifests below.
+# the same v0.10.1-based revision as the root workspace.
 # framebuffer-only everywhere on GBA (no pixels/winit/image).
 pokered-app = { path = "../pokered-app", default-features = false }
 pokered-core = { path = "../pokered-core", default-features = false, features = ["embedded-map-data"] }
