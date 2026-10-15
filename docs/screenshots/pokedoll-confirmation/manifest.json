@@ -1,0 +1,14 @@
+[
+  {
+    "label": "before",
+    "frame": 1795,
+    "source_path": "audit-900-native-doll-before-m_g0c90_/a-1/paused-059.png",
+    "sha256": "bc6836e307e2d26ad4b5724412816f157adb28275d72a1d20ce84487388091f9"
+  },
+  {
+    "label": "after",
+    "frame": 1795,
+    "source_path": "audit-900-native-doll-after-882uplzo/a-1/paused-059.png",
+    "sha256": "ecc5369d9b1cce5855172f05a000ff770f77c5b2815f916f95308404d9165fc5"
+  }
+]
