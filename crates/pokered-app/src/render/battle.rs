@@ -5769,57 +5769,60 @@ mod tests {
     fn battle_move_selection_repaint_matches_a_fresh_menu_for_every_transition() {
         use pokered_core::battle::menu::{MoveMenuState, MoveSlot};
 
-        let base = MoveMenuState::new(vec![
-            MoveSlot {
-                move_id: MoveId::Pound,
-                current_pp: 35,
-                max_pp: 35,
-                is_disabled: false,
-            },
-            MoveSlot {
-                move_id: MoveId::Growl,
-                current_pp: 39,
-                max_pp: 40,
-                is_disabled: false,
-            },
-            MoveSlot {
-                move_id: MoveId::Ember,
-                current_pp: 18,
-                max_pp: 25,
-                is_disabled: false,
-            },
-            MoveSlot {
-                move_id: MoveId::WaterGun,
-                current_pp: 4,
-                max_pp: 25,
-                is_disabled: false,
-            },
-        ]);
+        // Retain every ordinary transition and also enter/leave a disabled row.
+        for disabled in [false, true] {
+            let base = MoveMenuState::new(vec![
+                MoveSlot {
+                    move_id: MoveId::Pound,
+                    current_pp: 35,
+                    max_pp: 35,
+                    is_disabled: disabled,
+                },
+                MoveSlot {
+                    move_id: MoveId::Growl,
+                    current_pp: 39,
+                    max_pp: 40,
+                    is_disabled: false,
+                },
+                MoveSlot {
+                    move_id: MoveId::Ember,
+                    current_pp: 18,
+                    max_pp: 25,
+                    is_disabled: false,
+                },
+                MoveSlot {
+                    move_id: MoveId::WaterGun,
+                    current_pp: 4,
+                    max_pp: 25,
+                    is_disabled: false,
+                },
+            ]);
 
-        for language in [Lang::En, Lang::Zh] {
-            let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
-            for previous_cursor in 0..4 {
-                for current_cursor in 0..4 {
-                    if previous_cursor == current_cursor {
-                        continue;
+            for language in [Lang::En, Lang::Zh] {
+                let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+                for previous_cursor in 0..4 {
+                    for current_cursor in 0..4 {
+                        if previous_cursor == current_cursor {
+                            continue;
+                        }
+                        let mut previous = base.clone();
+                        previous.set_cursor(previous_cursor);
+                        let mut current = base.clone();
+                        current.set_cursor(current_cursor);
+
+                        let mut actual = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_move_menu_overlay(&previous, &mut actual, language);
+                        redraw_battle_move_menu_selection(
+                            previous_cursor,
+                            &current,
+                            &mut actual,
+                            language,
+                        );
+
+                        let mut expected = FrameBuffer::new(config, Rgba::BLACK);
+                        draw_battle_move_menu_overlay(&current, &mut expected, language);
+                        assert_framebuffers_equal(&actual, &expected);
                     }
-                    let mut previous = base.clone();
-                    previous.set_cursor(previous_cursor);
-                    let mut current = base.clone();
-                    current.set_cursor(current_cursor);
-
-                    let mut actual = FrameBuffer::new(config, Rgba::BLACK);
-                    draw_battle_move_menu_overlay(&previous, &mut actual, language);
-                    redraw_battle_move_menu_selection(
-                        previous_cursor,
-                        &current,
-                        &mut actual,
-                        language,
-                    );
-
-                    let mut expected = FrameBuffer::new(config, Rgba::BLACK);
-                    draw_battle_move_menu_overlay(&current, &mut expected, language);
-                    assert_framebuffers_equal(&actual, &expected);
                 }
             }
         }

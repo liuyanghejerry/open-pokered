@@ -189,6 +189,11 @@ fn redraw_en_selected_info<P: Painter>(
         let y = (layout.box_1.rect.ty + 1) * 8;
         painter.draw_pixel_rect(x, y, 72, 24, Rgba::INK_WHITE);
         if let Some(slot) = state.current_move() {
+            if slot.is_disabled {
+                // PrintMenuItem replaces all TYPE/PP ink with this notice.
+                painter.draw_text_px(x, y + 8, "disabled!", Rgba::INK_BLACK);
+                return;
+            }
             let kind = move_type_display_name(render_data.move_type(slot.move_id));
             painter.draw_text_px(x, y, &format!("TYPE/{kind}"), Rgba::INK_BLACK);
             painter.draw_text_px(
@@ -204,9 +209,15 @@ fn redraw_en_selected_info<P: Painter>(
         }
         return;
     }
-    // Clear only the dynamic TYPE and PP-value ink. Latin glyphs can extend
-    // outside their nominal eight-pixel row, so restore the fixed labels that
-    // overlap the cleared pixels before drawing the new values.
+    let slot = state.current_move();
+    if slot.is_some_and(|slot| slot.is_disabled) {
+        // A disabled row replaces even the fixed TYPE/PP labels.
+        painter.draw_pixel_rect(8, 72, 72, 26, Rgba::INK_WHITE);
+        painter.draw_text(TilePos::new(1, 10), "disabled!", Rgba::INK_BLACK);
+        return;
+    }
+    // Preserve the ordinary selection's smaller clears. They also erase the
+    // disabled notice when leaving it; repaint fixed labels before values.
     painter.draw_pixel_rect(8, 80, 72, 10, Rgba::INK_WHITE);
     painter.draw_pixel_rect(40, 88, 40, 10, Rgba::INK_WHITE);
     for label in layout.box_1.labels.iter() {
@@ -219,7 +230,7 @@ fn redraw_en_selected_info<P: Painter>(
             label.color.into(),
         );
     }
-    let Some(slot) = state.current_move() else {
+    let Some(slot) = slot else {
         return;
     };
     let type_name = move_type_display_name(render_data.move_type(slot.move_id));
@@ -313,6 +324,10 @@ fn draw_en_info<P: Painter>(
     // Native: TYPE/ at (1,9)=frame(0,0); type at (1,10)=frame(0,1);
     //         PP at (2,11)=frame(1,2); PP value at (5,11)=frame(4,2).
     ui.text_box(layout.box_1.rect, layout.box_1.color, true, |frame| {
+        if slot.is_disabled {
+            frame.label(0, 1, "disabled!", InkColor::Black);
+            return;
+        }
         for label in layout.box_1.labels.iter() {
             frame.label(label.tx, label.ty, &label.text, label.color);
         }
