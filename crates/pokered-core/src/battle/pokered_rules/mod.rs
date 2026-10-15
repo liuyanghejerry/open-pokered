@@ -148,6 +148,9 @@ pub enum PokeVolatile {
     /// Per-turn receipt: the player's action passed the pre-move gates. The
     /// frontend consumes this once at the actor boundary using its PP policy.
     PlayerPpChargePending,
+    /// Per-turn narration receipt from a gate whose cause is consumed in-place.
+    /// Not exported to legacy flags or rebuilt on a later turn.
+    BlockedAction { reason: super::CannotMoveReason },
     /// Per-turn call narration; the resolved move executes after status gates.
     CalledMove { caller: MoveId, resolved: MoveId, failed: bool },
     /// Inert.
@@ -1552,6 +1555,22 @@ fn resolve_call_after_status(
         kind: PokeVolatile::CalledMove { caller, resolved, failed },
     });
     HandlerResult::Unchanged
+}
+
+/// Preserve the actual gate outcome; later retaliation damage says nothing
+/// about why this actor could not move. This scratch dies with the turn arena.
+fn block_action(
+    ctx: &mut BattleCtx<'_, PokeredRules>,
+    source: BattlerRef,
+    reason: super::CannotMoveReason,
+) -> HandlerResult {
+    ctx.effects.push(EffectState {
+        id: EffectId(0x50_fc2 + source.side as u32),
+        host: source,
+        effect_order: 0,
+        kind: PokeVolatile::BlockedAction { reason },
+    });
+    HandlerResult::Fail
 }
 
 fn remember_used_move(

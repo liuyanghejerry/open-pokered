@@ -52,6 +52,8 @@ mod link_battle_driver_tests;
 mod catch_tests;
 #[cfg(test)]
 mod capture_outcome_tests;
+#[cfg(test)]
+mod flinch_lifecycle_tests;
 
 /// Reusable effect-stack **parity harness** (strangler slice 1) — additive,
 /// test-only, does NOT touch the production turn loop. The byte-stream shim,
@@ -2038,6 +2040,17 @@ impl BattleScreen {
                 ScreenAction::Continue
             }
             BattlePhase::PlayerMenu => {
+                // MainInBattleLoop clears late flinches before the next ordinary
+                // menu. A slower hit may set the bit after its target acted; it
+                // must not prevent that target's action on the following turn.
+                if let Some(bs) = self.battle_state.as_mut() {
+                    if !bs.player.has_status2(state::status2::NEEDS_TO_RECHARGE)
+                        && !bs.player.has_status2(state::status2::USING_RAGE)
+                    {
+                        bs.player.clear_status1(state::status1::FLINCHED);
+                        bs.enemy.clear_status1(state::status1::FLINCHED);
+                    }
+                }
                 // Old-Man catch tutorial: the game auto-plays a scripted, guaranteed
                 // catch (no player input). Runs once — it transitions off PlayerMenu.
                 if self.is_old_man {
@@ -4583,7 +4596,7 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
-                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. })).cloned());
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
                         }
