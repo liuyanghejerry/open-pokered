@@ -1,0 +1,56 @@
+[
+  {
+    "case": "double",
+    "side": "before",
+    "frame": 1488,
+    "path": "docs/screenshots/field-poison-flow/double-before.png",
+    "sha256": "866d2e90b7e4631d84ab3421f2e7115b8b255b44efca327670159f4a42f21af4",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-before-6100_wv5/double-1/frame-0119.png",
+    "source_commit": "25443cf4bd209ec77961450fb6b986ed5c2308c5"
+  },
+  {
+    "case": "double",
+    "side": "after",
+    "frame": 1488,
+    "path": "docs/screenshots/field-poison-flow/double-after.png",
+    "sha256": "004443d36bdcb5c0da714f4f3d66dce28ea9643f25967a6b30080a425969fbb5",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-after-uf2s2a_0/double-1/frame-0119.png",
+    "source_commit": "a666f6094a59e126f3875a83da4d5c34bc708363"
+  },
+  {
+    "case": "blink",
+    "side": "before",
+    "frame": 1387,
+    "path": "docs/screenshots/field-poison-flow/blink-before.png",
+    "sha256": "2fc016dce45e78594b5961f1b77930373cb50ffaf23564d4704e67e0007f8eeb",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-before-6100_wv5/blink-1/frame-0018.png",
+    "source_commit": "25443cf4bd209ec77961450fb6b986ed5c2308c5"
+  },
+  {
+    "case": "blink",
+    "side": "after",
+    "frame": 1387,
+    "path": "docs/screenshots/field-poison-flow/blink-after.png",
+    "sha256": "985b3a2892e9520bcb30586711508afcde529ad1a6844788b9f491cd202034c8",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-after-uf2s2a_0/blink-1/frame-0018.png",
+    "source_commit": "a666f6094a59e126f3875a83da4d5c34bc708363"
+  },
+  {
+    "case": "wipe",
+    "side": "before",
+    "frame": 1620,
+    "path": "docs/screenshots/field-poison-flow/wipe-before.png",
+    "sha256": "ff93f6410849bd26470de0a8fa89ced5cca75f1e05dedfc1a31ad6975de8b6d9",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-before-6100_wv5/wipe-1/frame-0251.png",
+    "source_commit": "25443cf4bd209ec77961450fb6b986ed5c2308c5"
+  },
+  {
+    "case": "wipe",
+    "side": "after",
+    "frame": 1620,
+    "path": "docs/screenshots/field-poison-flow/wipe-after.png",
+    "sha256": "d3a9b5004d8f5f1909dbe6459e8d52da766679de75fb9566fc1871959d72dbf3",
+    "recorded_png": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-after-uf2s2a_0/wipe-1/frame-0251.png",
+    "source_commit": "a666f6094a59e126f3875a83da4d5c34bc708363"
+  }
+]

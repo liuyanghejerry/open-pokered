@@ -1,0 +1,252 @@
+{
+  "scope": "Sequential field poison caller, ACK boundaries, BG-only4 render frames and SFX ordering. Whole-frame animation/fade/audio parity is not asserted.",
+  "controls": {
+    "source": 10,
+    "historical_native": 20,
+    "current_native": 20
+  },
+  "current_baseline_commit": "25443cf4bd209ec77961450fb6b986ed5c2308c5",
+  "current_after_compiled_commit": "a666f6094a59e126f3875a83da4d5c34bc708363",
+  "frozen": {
+    "before": {
+      "commit": "24ab208a6b3473d6a126d3ff4bbf2abdbba69ee5",
+      "binary_sha256": "68dc9e220f2cee3f82f9571f1a78efe2b4e80ab4d22810ecf1799e490f12abd3",
+      "base": "24ab208a parent field-status fix; stacked/private base, not yet current master",
+      "clean": true,
+      "feature": "debug-server",
+      "profile": "dev opt0 debug0; CARGO_INCREMENTAL=0",
+      "manifest_file": "audit-896-before-identity.json",
+      "manifest_sha256": "626cc719d6d080c550d4fbedff336fa99dd9898d1970ff195c85f9f50e3f44b0"
+    },
+    "after": {
+      "commit": "9e9b8566cb8cb83586cb288c81c0aa5519bcc8d0",
+      "binary_sha256": "8a76c41d8e656e2cd4d607f5ad9a982c7d697773cfd385c99022f16a68f34f90",
+      "base": "24ab208a parent field-status fix; stacked/private before finalmaster integration",
+      "clean": true,
+      "feature": "debug-server",
+      "profile": "dev opt0 debug0; CARGO_INCREMENTAL=0",
+      "manifest_file": "audit-896-after-identity.json",
+      "manifest_sha256": "6760524f10899ddfe5700c0aff5115e56bc8a89aa1010ca35dcc6acd4a880ac3"
+    },
+    "current-before": {
+      "commit": "25443cf4bd209ec77961450fb6b986ed5c2308c5",
+      "binary_sha256": "82149bde69f216b11122770660f585b919f40c273182f9d0f7a980f23433d080",
+      "base": "clean origin/master25443 afterPR250 merge; actual current-master capture baseline",
+      "clean": true,
+      "feature": "debug-server",
+      "profile": "dev opt0 debug0; CARGO_INCREMENTAL=0",
+      "manifest_file": "audit-896-current-before-identity.json",
+      "manifest_sha256": "88567a17e51664e1adc6e573c6814ec64fed7e47c8b7d1973a3cee428748d5c9"
+    },
+    "current-intermediate-after": {
+      "commit": "13c4c8977eceafbedfa6585ed20ae843abd3aa93",
+      "binary_sha256": "ee9c380995e7419b049b76fb3d1c65dd08b198d72f4121d19e09c462778130af",
+      "base": "25443cf4 master merged; intermediate before readiness predicate correction, not final native evidence",
+      "clean": true,
+      "feature": "debug-server",
+      "profile": "dev opt0 debug0; CARGO_INCREMENTAL=0",
+      "manifest_file": "audit-896-current-intermediate-after-identity.json",
+      "manifest_sha256": "f5a47f67e0b1cb78337eaac0de10a43d089097d902397a78051fd6fbdaba55e2"
+    },
+    "final-after": {
+      "commit": "a666f6094a59e126f3875a83da4d5c34bc708363",
+      "binary_sha256": "313c16024d041969399502068e9ed2e5d294ba3e1f456f0fc19c5b333cbe2ab3",
+      "base": "25443cf4bd209ec77961450fb6b986ed5c2308c5 currentmaster afterPR250; final field-poison flow and readiness correction",
+      "clean": true,
+      "feature": "debug-server",
+      "profile": "dev opt0 debug0; CARGO_INCREMENTAL=0",
+      "manifest_file": "audit-896-final-after-identity.json",
+      "manifest_sha256": "efabaef22433f8cbc4cbdeb9365707224edb37969ee6f4a20f4bca7cf95bc84f"
+    }
+  },
+  "checks": {
+    "all20_current_inputs_identical_between_builds": true,
+    "all20_initial_and_pretrigger_PNGs_match_between_builds": true,
+    "all20_current_frame_sequences_contiguous_and_exact_repeatable": true,
+    "all10_current_before_after_SRAM_byte_identical": true,
+    "all40_native_saved_party_records_match10_source_endpoints_44bytes_each": true,
+    "old_box1122_bag42_dex38_and_PP_preserved": true,
+    "mixed_and_blink4_native_renderframes_BGwhite_only_OBJwhite_unchanged": true,
+    "SFX_POISONED_begins_first_restored_frame": true,
+    "source_POISONED_physical0x97_native_logical66_are_distinct_namespaces": true
+  },
+  "cases": [
+    {
+      "case": "single",
+      "repeat_count_each_provider": 2,
+      "source_final_HP": [0, 31],
+      "source_final_status_bytes": [0, 0],
+      "native_before_unacknowledged": {
+        "hp": [0, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "native_after_unacknowledged": {
+        "hp": [0, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "matched_contiguous_native_frame_range": [1369, 1792],
+      "source_BGPE6_samples": [],
+      "native_flash_frames": [],
+      "native_restored_frame_then_Poisoned66": [],
+      "native_before_after_SRAM_identical": true,
+      "native_sram_sha256": ["92b606e85abe59900370b57ec290f06e58459c97ab269e51d0777e155d66dc4c", "92b606e85abe59900370b57ec290f06e58459c97ab269e51d0777e155d66dc4c"],
+      "native_checksum": [171, 171],
+      "source_sram_sha256": ["a6317f3f7838d225087e190fdccf903a45915fa3b3240abaf5ee270256d41cde", "a6317f3f7838d225087e190fdccf903a45915fa3b3240abaf5ee270256d41cde"],
+      "source_checksum": [215, 215]
+    },
+    {
+      "case": "double",
+      "repeat_count_each_provider": 2,
+      "source_final_HP": [0, 0, 31],
+      "source_final_status_bytes": [0, 0, 0],
+      "native_before_unacknowledged": {
+        "hp": [0, 0, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted! RATTATA fainted!"
+      },
+      "native_after_unacknowledged": {
+        "hp": [0, 1, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "matched_contiguous_native_frame_range": [1369, 1792],
+      "source_BGPE6_samples": [],
+      "native_flash_frames": [],
+      "native_restored_frame_then_Poisoned66": [],
+      "native_before_after_SRAM_identical": true,
+      "native_sram_sha256": ["eab0e0f777fde731f8bb9de419a82dd3d44a8c5cd138a0b0eb4c39afb0f8ecbb", "eab0e0f777fde731f8bb9de419a82dd3d44a8c5cd138a0b0eb4c39afb0f8ecbb"],
+      "native_checksum": [105, 105],
+      "source_sram_sha256": ["9ad453c4b31ad98496347fb29f6ab43eb39177c50fac38b4c1aef341cb121e4e", "9ad453c4b31ad98496347fb29f6ab43eb39177c50fac38b4c1aef341cb121e4e"],
+      "source_checksum": [202, 202]
+    },
+    {
+      "case": "blink",
+      "repeat_count_each_provider": 2,
+      "source_final_HP": [2, 31],
+      "source_final_status_bytes": [8, 0],
+      "native_before_unacknowledged": {
+        "hp": [2, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": null
+      },
+      "native_after_unacknowledged": {
+        "hp": [2, 31],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": null
+      },
+      "matched_contiguous_native_frame_range": [1369, 1792],
+      "source_BGPE6_samples": [
+        [162, 163, 164, 165],
+        [162, 163, 164, 165]
+      ],
+      "native_flash_frames": [
+        [1387, 1388, 1389, 1390],
+        [1387, 1388, 1389, 1390]
+      ],
+      "native_restored_frame_then_Poisoned66": [1391, 1391],
+      "native_before_after_SRAM_identical": true,
+      "native_sram_sha256": ["11d95f16619ac9f53ae720cf93ffc8e51936950d1a8170140b8cfde26962a8c8", "11d95f16619ac9f53ae720cf93ffc8e51936950d1a8170140b8cfde26962a8c8"],
+      "native_checksum": [161, 161],
+      "source_sram_sha256": ["e6f6aa47c72088d15ecf4d00b1063f5b2354240c99b9cc186f8a364d67943cf0", "e6f6aa47c72088d15ecf4d00b1063f5b2354240c99b9cc186f8a364d67943cf0"],
+      "source_checksum": [193, 193]
+    },
+    {
+      "case": "wipe",
+      "repeat_count_each_provider": 2,
+      "source_final_HP": [31, 31],
+      "source_final_status_bytes": [0, 0],
+      "native_before_unacknowledged": {
+        "hp": [31, 31],
+        "map": "PalletTown",
+        "money": 1500,
+        "text": "RATTATA fainted! RATTATA fainted!"
+      },
+      "native_after_unacknowledged": {
+        "hp": [0, 1],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "matched_contiguous_native_frame_range": [1369, 1792],
+      "source_BGPE6_samples": [],
+      "native_flash_frames": [],
+      "native_restored_frame_then_Poisoned66": [],
+      "native_before_after_SRAM_identical": true,
+      "native_sram_sha256": ["2139500ad4961a812aa5b7bd09a1f302f546fbf8b8b2fad2d5b03d48ab0f61eb", "2139500ad4961a812aa5b7bd09a1f302f546fbf8b8b2fad2d5b03d48ab0f61eb"],
+      "native_checksum": [172, 172],
+      "source_sram_sha256": ["3cd7b29e855a79926118e415710fdb15c36f397ebd4fa315047d29e63417cf91", "3cd7b29e855a79926118e415710fdb15c36f397ebd4fa315047d29e63417cf91"],
+      "source_checksum": [102, 102]
+    },
+    {
+      "case": "mixed",
+      "repeat_count_each_provider": 2,
+      "source_final_HP": [0, 2],
+      "source_final_status_bytes": [0, 8],
+      "native_before_unacknowledged": {
+        "hp": [0, 2],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "native_after_unacknowledged": {
+        "hp": [0, 3],
+        "map": "RedsHouse2F",
+        "money": 3000,
+        "text": "RATTATA fainted!"
+      },
+      "matched_contiguous_native_frame_range": [1369, 1792],
+      "source_BGPE6_samples": [
+        [362, 363, 364, 365],
+        [362, 363, 364, 365]
+      ],
+      "native_flash_frames": [
+        [1493, 1494, 1495, 1496],
+        [1493, 1494, 1495, 1496]
+      ],
+      "native_restored_frame_then_Poisoned66": [1497, 1497],
+      "native_before_after_SRAM_identical": true,
+      "native_sram_sha256": ["cfdcc4d728dd68315ac3faa42b93a337687238be8254c65c87e0621052bcff30", "cfdcc4d728dd68315ac3faa42b93a337687238be8254c65c87e0621052bcff30"],
+      "native_checksum": [192, 192],
+      "source_sram_sha256": ["85ecabe220c007825c83e60939f23466a5683714decce002a3fbc99dfe956a23", "85ecabe220c007825c83e60939f23466a5683714decce002a3fbc99dfe956a23"],
+      "source_checksum": [236, 236]
+    }
+  ],
+  "source_script_sha256": "06a5871c8b5dc5d8f2f23e24b0f6a90ccbe8466c0c0be00b408c90bfe6aaa30f",
+  "raw_directories": {
+    "before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-before-xrknetyp",
+    "after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-after-ktxly76_",
+    "current-before": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-before-6100_wv5",
+    "current-after": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-896-native-poison-flow-current-after-uf2s2a_0"
+  },
+  "limits": ["Legal Rattata stats, moves and Poison status are pre-input constructed; no natural capture or whole campaign reachability claim.", "Source and native walking/acknowledgement cadence differs; this is a field caller/order/palette-duration audit, not full timing parity.", "BGP changes are observed at instruction hooks and each emulated frame. The original LCD retains scanline-edge partial frames; native whole-frame renderer does not emulate that edge.", "No full framebuffer, textbox font/layout, wave/audio, dark-cave, every-map or RNG parity claim.", "Existing blackout fade remains white versus original black; existing heal_requested plays HealingMachine versus original stop/music. These are independent follow-up candidates, not fixed or claimed equivalent here.", "Broader app267 PASS/38ignored/1known GiftQuestion failure at13c; new readiness boundary test gives9 scoped PASS at a666. Full mainline not claimed.", "Original/native initial story flags, box/dex contents and input cadence are independently constructed. Only declared Rattata fields, poison rules and saved party endpoints are compared across providers."],
+  "full_verification_archive_entry": "verification-full.json",
+  "latest_validation": {
+    "head": "23dd8c0373fd1cda3ed908975e8a479ddf5747eb",
+    "master_base": "46cc1228d061bcdce77278593ec61906d2d79bfb",
+    "debug_app_full": {
+      "passed": 270,
+      "failed": 0,
+      "ignored": 38,
+      "log_sha256": "ac0f3bea0f29890f6173cce95fe83cddbb7194f12ff5fa8f5a37aab29f555a48"
+    },
+    "final_source_scoped": {
+      "debug_server": 9,
+      "default": 8
+    },
+    "core_full": {
+      "passed": 2885,
+      "compiled_head": "13c4c8977eceafbedfa6585ed20ae843abd3aa93",
+      "all380_core_and_data_source_hashes_equal_final": true
+    },
+    "capture_identity_note": "25443\u219246cc changes only cfg(test) gift tests and docs. Capture binaries retain25443/a666 IDs; no relabelling.",
+    "full_playthrough_claimed": false
+  }
+}
