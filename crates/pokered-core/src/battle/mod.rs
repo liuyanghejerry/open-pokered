@@ -35,6 +35,10 @@ mod menu_tests;
 #[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
+mod trainer_free_turn_tests;
+#[cfg(test)]
+mod medicine_result_tests;
+#[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
 mod exp_award_notice_tests;
@@ -187,7 +191,7 @@ use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
 use crate::items::inventory::{BAG_ITEM_CAPACITY, Inventory};
 use crate::main_menu::MenuInput;
 use effects::EffectRandoms;
-use escape::{try_run_from_battle, RunResult};
+use escape::{try_run_from_battle_with_rng, RunResult};
 use menu::{
     BagMenuResult, BagMenuState, BattleMenuAction, BattleMenuInput, BattleMenuState, ItemCategory,
     MoveMenuResult, MoveMenuState, MoveSlot, PartySubMenuAction, PartySubMenuState,
@@ -380,6 +384,9 @@ pub enum IntroPhase {
     TrainerSendOut,
     /// Player sends out first Pokémon — "Go! X!" with Poké Ball throw animation
     PlayerSendOut,
+    /// StartBattle's DelayFrames40 before the Safari menu; the trainer stays
+    /// on screen and no party Pokémon is sent out (core.asm:155-168).
+    SafariMenuPreparation,
 }
 
 /// Sub-phases of trainer battle victory sequence.
@@ -394,6 +401,14 @@ pub enum VictoryPhase {
     WaitFrames,
     /// Print end battle text and show money won
     EndBattleText,
+}
+
+/// The caller's screen retained behind a blocking text sequence.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum BattleTextBackdrop {
+    #[default]
+    Battle,
+    MedicineParty,
 }
 
 /// High-level battle phase (frame-loop granularity).
@@ -413,6 +428,9 @@ pub enum BattlePhase {
     BagSelect,
     /// Player selects a party member to use item on (for healing/status items).
     ItemTargetSelect { item_id: ItemId },
+    /// ItemUseMedicine keeps the redrawn party visible for Delay50 and ACK.
+    /// Party data, selection and text remain owned by the battle.
+    ItemMedicineResult { wait_frames: u8 },
     /// `ItemUsePPRestore`'s MoveSelectionMenu (wMoveMenuType $02): picking
     /// WHICH move of the chosen party member receives the (Max) Ether.
     /// B returns to the party pick (the original's `.chooseMon` loop).
@@ -427,6 +445,10 @@ pub enum BattlePhase {
         wait_frames: u16,
         /// Phase to transition to after all messages are shown.
         next_phase: Box<BattlePhase>,
+        /// Medicine failure prints over its existing party caller. Older
+        /// snapshots and every other text caller retain the battle screen.
+        #[serde(default)]
+        backdrop: BattleTextBackdrop,
     },
     /// A successfully used battle item costs the player's action. This
     /// one-frame handoff runs the opponent's free move only after the item's
@@ -502,6 +524,13 @@ pub enum BattlePhase {
         escaped: bool,
         wait_frames: u16,
     },
+}
+
+impl BattlePhase {
+    pub fn uses_medicine_party_backdrop(&self) -> bool {
+        matches!(self, Self::ItemTargetSelect { .. } | Self::ItemMedicineResult { .. }
+            | Self::ShowingText { backdrop: BattleTextBackdrop::MedicineParty, .. })
+    }
 }
 
 /// Input forwarded to the battle screen each frame.
@@ -1511,7 +1540,7 @@ impl BattleScreen {
         // (engine/battle/end_of_battle.asm:48). Gen-1 wins always come
         // from wiping the enemy party (wild: core.asm:793; trainer:
         // core.asm:916); the battle-over phases cover escape/loss/catch.
-        if self.enemy_party_wiped()
+        if self.is_old_man || self.enemy_party_wiped()
             || matches!(
                 self.phase,
                 BattlePhase::TrainerVictory { .. } | BattlePhase::BattleOver { .. }
@@ -1523,7 +1552,9 @@ impl BattleScreen {
             return false;
         }
         let pixels = (self.player_hp as u32 * 48 / self.player_max_hp as u32).max(1);
-        pixels < 10
+        // Safari never draws the player's HP HUD, so it cannot enable the
+        // alarm. Check its mode only when HP could actually enable an alarm.
+        pixels < 10 && !self.is_safari
     }
 
     /// All enemy party members fainted — the point where the original
@@ -1816,6 +1847,17 @@ impl BattleScreen {
                 phase,
                 mut wait_frames,
             } => {
+                if phase == IntroPhase::SafariMenuPreparation {
+                    // DelayFrames ignores buttons. Finish on the fortieth
+                    // update after the wild-text ACK, without consuming that
+                    // update's A/B as a Safari menu action.
+                    self.phase = if wait_frames > 1 {
+                        BattlePhase::Intro { phase, wait_frames: wait_frames - 1 }
+                    } else {
+                        BattlePhase::PlayerMenu
+                    };
+                    return ScreenAction::Continue;
+                }
                 // Button press can skip text-wait phases but NOT
                 // TransitionFlash or SilhouetteSlide (non-skippable animations).
                 let is_unskippable = matches!(
@@ -1883,6 +1925,16 @@ impl BattleScreen {
                                 phase: IntroPhase::GhostCantID,
                                 wait_frames: 30,
                             }
+                        } else if self.is_old_man {
+                            // The demonstration throws without sending out a mon.
+                            BattlePhase::PlayerMenu
+                        } else if self.is_safari {
+                            self.current_message = None;
+                            self.show_player_pokeballs = false;
+                            BattlePhase::Intro {
+                                phase: IntroPhase::SafariMenuPreparation,
+                                wait_frames: 40,
+                            }
                         } else {
                             BattlePhase::Intro {
                                 phase: IntroPhase::PlayerSendOut,
@@ -1920,6 +1972,8 @@ impl BattleScreen {
                             Some(pokered_data::battle_text::localize(&msg, self.is_zh));
                         BattlePhase::PlayerMenu
                     }
+                    // Handled above so that button input cannot skip it.
+                    IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
                     // FlashScreen strobe (Circle/DoubleCircle only) plays
                     // BEFORE the wipe, exactly as BattleTransition_Circle /
                     // BattleTransition_DoubleCircle call it in the original.
@@ -2137,6 +2191,15 @@ impl BattleScreen {
                 }
                 ScreenAction::Continue
             }
+            BattlePhase::ItemMedicineResult { wait_frames } => {
+                if wait_frames > 0 {
+                    self.phase = BattlePhase::ItemMedicineResult { wait_frames: wait_frames - 1 };
+                } else if input.a || input.b {
+                    self.current_message = None;
+                    self.phase = BattlePhase::EnemyFreeTurnAfterItem;
+                }
+                ScreenAction::Continue
+            }
             // MoveSelectionMenu for (Max) Ether: A applies to the highlighted
             // move, B loops back to the party pick (`.chooseMon`). Selecting a
             // 0-PP (or "disabled"-flagged) row is NOT vetoed here — the item
@@ -2177,6 +2240,7 @@ impl BattleScreen {
                 current,
                 wait_frames,
                 next_phase,
+                backdrop,
             } => {
                 if wait_frames > 0 {
                     self.phase = BattlePhase::ShowingText {
@@ -2184,6 +2248,7 @@ impl BattleScreen {
                         current,
                         wait_frames: wait_frames - 1,
                         next_phase,
+                        backdrop,
                     };
                     return ScreenAction::Continue;
                 }
@@ -2197,7 +2262,11 @@ impl BattleScreen {
                 if (input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
-                        self.current_message = None;
+                        // Both caught Pokémon and the demonstration retain
+                        // the success caption for their return caller.
+                        if self.captured_mon.is_none() && !self.is_old_man {
+                            self.current_message = None;
+                        }
                         self.presentation.finish_pages();
                         self.sync_display_from_state();
                         self.phase = *next_phase;
@@ -2208,6 +2277,7 @@ impl BattleScreen {
                             current: next_idx,
                             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
                             next_phase,
+                            backdrop,
                         };
                     }
                 }
@@ -2832,7 +2902,15 @@ learn {learn_name}!")];
             current: 0,
             wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
             next_phase: Box::new(next),
+            backdrop: BattleTextBackdrop::Battle,
         };
+    }
+
+    fn show_medicine_no_effect(&mut self, message: String) {
+        self.show_text_then(vec![message], BattlePhase::BagSelect);
+        if let BattlePhase::ShowingText { backdrop, .. } = &mut self.phase {
+            *backdrop = BattleTextBackdrop::MedicineParty;
+        }
     }
 
     fn handle_item_use(&mut self, item_id: ItemId) {
@@ -2925,7 +3003,7 @@ learn {learn_name}!")];
         {
             let active_hp = self.player_hp;
             if active_hp == 0 && item_id != ItemId::Revive && item_id != ItemId::MaxRevive {
-                self.show_text_then(vec!["It won't have any effect.".to_string()], BattlePhase::BagSelect);
+                self.show_medicine_no_effect("It won't have any effect.".to_string());
                 return;
             }
         }
@@ -2954,6 +3032,12 @@ learn {learn_name}!")];
         }
 
         let category = ItemCategory::from_item(item_id);
+        // GetPartyMonName reads the persistent party nickname, including
+        // the original identity while the active battle mon is transformed.
+        let medicine_name = self.battle_state.as_ref().map(|bs| {
+            let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+            bs.player.party_mon(pokemon_index).display_name(&mut name_buf).to_string()
+        }).unwrap_or_default();
         self.sync_player_context();
         let reset_working_on_cure = self.battle_state.as_ref().is_some_and(|bs|
             pokemon_index == bs.player.active_pokemon_index &&
@@ -2967,11 +3051,15 @@ learn {learn_name}!")];
                     match use_healing_item(mon, item_id) {
                         HealResult::Healed { hp_restored } => {
                             self.consume_selected_item();
-                            (format!("HP restored by {}!", hp_restored), true)
+                            (if item_id == ItemId::FullRestore && hp_restored == 0 {
+                                format!("{}'s\nhealth returned!", medicine_name)
+                            } else {
+                                format!("{}\nrecovered by {}!", medicine_name, hp_restored)
+                            }, true)
                         }
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
                         HealResult::AlreadyFullHp => ("It won't have any effect.".to_string(), false),
                         HealResult::NotFainted => ("It won't have any effect.".to_string(), false),
@@ -2983,7 +3071,15 @@ learn {learn_name}!")];
                     match use_status_cure(mon, item_id) {
                         StatusCureResult::Cured => {
                             self.consume_selected_item();
-                            ("Status cured!".to_string(), true)
+                            let message = match item_id {
+                                ItemId::Antidote => format!("{} was\ncured of poison!", medicine_name),
+                                ItemId::BurnHeal => format!("{}'s\nburn was healed!", medicine_name),
+                                ItemId::IceHeal => format!("{} was\ndefrosted!", medicine_name),
+                                ItemId::Awakening => format!("{}\nwoke up!", medicine_name),
+                                ItemId::ParlyzHeal => format!("{}'s\nrid of paralysis!", medicine_name),
+                                _ => format!("{}'s\nhealth returned!", medicine_name),
+                            };
+                            (message, true)
                         }
                         StatusCureResult::NoEffect => ("It won't have any effect.".to_string(), false),
                         StatusCureResult::NotApplicable => ("It won't have any effect.".to_string(), false),
@@ -2992,7 +3088,7 @@ learn {learn_name}!")];
                 ItemCategory::Revive => {
                     use crate::items::healing::{use_healing_item, HealResult};
                     match use_healing_item(mon, item_id) {
-                        HealResult::Revived { hp_restored } => {
+                        HealResult::Revived { .. } => {
                             // ItemUseMedicine.updateInBattleFaintedData:
                             // reviving a bench mon restores its share only if
                             // it participated against this same enemy.
@@ -3000,9 +3096,9 @@ learn {learn_name}!")];
                                 bs.party_gain_exp_flags[pokemon_index] = true;
                             }
                             self.consume_selected_item();
-                            (format!("Revived! HP restored by {}!", hp_restored), true)
+                            (format!("{}\nis revitalized!", medicine_name), true)
                         }
-                        _ => ("Can't revive that!".to_string(), false),
+                        _ => ("It won't have any effect.".to_string(), false),
                     }
                 }
                 _ => ("It won't have any effect.".to_string(), false),
@@ -3024,14 +3120,16 @@ learn {learn_name}!")];
                 _ => BattleItemSfx::HealHp,
             });
         }
-        self.show_text_then(
-            vec![result_msg],
-            if item_used {
-                BattlePhase::EnemyFreeTurnAfterItem
-            } else {
-                BattlePhase::BagSelect
-            },
-        );
+        if item_used {
+            // RedrawPartyMenu owns this result, not the battle HUD. Keep only
+            // the existing battle message/selection and a scalar Delay50;
+            // rendering reads the live (persistent-identity) party each time.
+            self.presentation.finish_pages();
+            self.current_message = Some(pokered_data::battle_text::localize(&result_msg, self.is_zh));
+            self.phase = BattlePhase::ItemMedicineResult { wait_frames: 50 };
+        } else {
+            self.show_medicine_no_effect(result_msg);
+        }
     }
 
     /// Apply a PP-restore item chosen in battle (ItemUsePPRestore's
@@ -3145,6 +3243,10 @@ learn {learn_name}!")];
                     );
                     return;
                 }
+                // ItemUseText00 precedes the animation for every Safari Ball,
+                // including a miss or a break-out. It does not spend another ball.
+                let thrower = self.player_name.as_deref().unwrap_or("RED").to_uppercase();
+                msgs.push(format!("{} used\nSAFARI BALL!", thrower));
                 // Rand1 rejection-sampled inside throw_ball (the `.loop`).
                 let result = self
                     .safari
@@ -3162,7 +3264,11 @@ learn {learn_name}!")];
                         if let Some(bs) = self.battle_state.as_ref() {
                             self.captured_mon = Some(bs.enemy.persistent_party()[bs.enemy.active_pokemon_index].clone());
                         }
-                        msgs.push(format!("All right!\n{} was caught!", name));
+                        let mut name_buf = [0u8; state::NAME_TEXT_BUF];
+                        let caught_name = self.captured_mon.as_ref()
+                            .map(|mon| mon.display_name(&mut name_buf))
+                            .unwrap_or("POKéMON");
+                        msgs.push(format!("All right!\n{} was caught!", caught_name));
                     }
                     Some(CaptureResult::Failed { shakes }) => {
                         self.pending_anim_events.push_back(BattleAnimEvent::Ball {
@@ -3211,7 +3317,7 @@ learn {learn_name}!")];
 
         // Out of Safari Balls → the game ends (checked BEFORE the upkeep, per the ASM).
         if self.safari.as_ref().map_or(false, |s| s.balls == 0) {
-            msgs.push("PA: You're out of\nSAFARI BALLs! Game over!".to_string());
+            msgs.push("PA: Ding-dong!\n\nYou are out of\nSAFARI BALLs!".to_string());
             self.show_text_then(msgs, escaped_over);
             return;
         }
@@ -3271,7 +3377,7 @@ learn {learn_name}!")];
 
     fn use_ball(&mut self, ball_id: ItemId) {
         use crate::battle::capture::{
-            try_capture_with_rolls, CaptureContext, CaptureResult,
+            try_capture_with_rng, CaptureContext, CaptureResult,
         };
         use pokered_data::pokemon_data::get_base_stats;
         let ball_name = pokered_data::item_data::get_item_data(ball_id)
@@ -3358,9 +3464,9 @@ learn {learn_name}!")];
                 wild_catch_rate: catch_rate,
                 wild_status: enemy.status,
             };
-            // Rand1 uses the original's rejection sampling (the `.loop` redraw):
-            // a Great/Ultra/Safari draw above threshold is REDRAWN, never a fail.
-            let result = try_capture_with_rolls(&ctx, &mut crate::rng::random, crate::rng::random());
+            // ItemUseBall draws Rand1 first (including Master Ball), then Rand2
+            // only if the intervening guards need it. Both use the saved owner.
+            let result = try_capture_with_rng(&ctx, &mut || self.rng.next_u8());
             self.consume_selected_item();
             self.pending_item_sfx = Some(BattleItemSfx::HealAilment);
             // wPokeBallAnimData: $43 caught (3 shakes) / $20 missed /
@@ -3559,7 +3665,7 @@ learn {learn_name}!")];
             return;
         }
         if let Some(ref mut bs) = self.battle_state {
-            let result = try_run_from_battle(bs, crate::rng::random());
+            let result = try_run_from_battle_with_rng(bs, || self.rng.next_u8());
             match result {
                 RunResult::Escaped => {
                     self.show_text_then(
@@ -3615,10 +3721,24 @@ learn {learn_name}!")];
         // apply from send-out (before the enemy's free hit lands).
         self.sync_player_context();
 
-        // Choose the enemy's move (AI, honoring a locked/forced move), then resolve
-        // Metronome / Mirror Move — exactly as the enemy path of execute_turn_with_move.
+        // MainInBattleLoop still calls TrainerAI after a successful item or
+        // voluntary switch (core.asm:314-345,416,454). It replaces the enemy's
+        // attack, but does not skip that side's residual damage.
+        let ai_cfg = if self.is_wild || self.link_mode || enemy_move_override.is_some() {
+            None
+        } else {
+            self.trainer_class.map(trainer_ai_config)
+        };
+        let trainer_name = self.trainer_name.clone().unwrap_or_else(|| "ENEMY".to_string());
+        let ai_count_seed = ai_cfg.map_or(0, |cfg| cfg.ai_count);
+        let mut enemy_ai_fired = false;
+        let mut ai_msgs = Vec::new();
+
+        // SelectEnemyMove precedes TrainerAI; called-move resolution belongs to
+        // ExecuteEnemyMove, after both TrainerAI and the ordinary status gates.
         let enemy_move_idx;
-        let (enemy_move_id, enemy_call, enemy_call_failed);
+        let mut enemy_move_id;
+        let (mut enemy_call, mut enemy_call_failed) = (None, false);
         {
             let bs = match self.battle_state.as_ref() {
                 Some(b) => b,
@@ -3642,11 +3762,7 @@ learn {learn_name}!")];
                 }
             };
             enemy_move_idx = eidx;
-            let base = if move_is_locked(&bs.enemy) { bs.enemy.selected_move } else { eid };
-            let (rid, rcall, rfailed) = resolve_called_move(base, bs.player.last_move_used, rng);
-            enemy_move_id = rid;
-            enemy_call = rcall;
-            enemy_call_failed = rfailed;
+            enemy_move_id = if move_is_locked(&bs.enemy) { bs.enemy.selected_move } else { eid };
         }
         let enemy_move = match MoveData::get(enemy_move_id) {
             Some(m) => *m,
@@ -3667,7 +3783,7 @@ learn {learn_name}!")];
             let e_recharging = bs.enemy.has_status2(NEEDS_TO_RECHARGE);
             let e_was_charging = bs.enemy.has_status1(CHARGING_UP);
             let e_had_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
-            let battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
+            let mut battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
             let (mut state, mut effects) = pokered_rules::runtime::engine_state_from_legacy(bs);
             // The player is fleeing / has just switched → it does Nothing this turn.
             // In a ghost battle the GHOST itself never attacks either —
@@ -3689,10 +3805,54 @@ learn {learn_name}!")];
                 Some(link) => link,
                 None => &mut self.rng,
             };
-            let (_r, log) = StackDriver::execute_turn_logged(
+            let turn_start_hp = [bs.player.active_mon().hp, bs.enemy.active_mon().hp];
+            let (_r, log) = StackDriver::execute_turn_logged_with_before_action(
                 &pokered_rules::PokeredRules, &mut state, &mut effects, actions, rng,
+                &mut |state, effects, actor, _action, rng| {
+                    if actor != BattlerRef::OPPONENT {
+                        return;
+                    }
+                    let Some(cfg) = ai_cfg.filter(|_| self.enemy_ai_count != 0) else {
+                        return;
+                    };
+                    pokered_rules::runtime::apply_engine_to_legacy(bs, state, effects);
+                    let ai_action = Self::decide_enemy_ai_action_to_state(
+                        bs, cfg, &mut self.enemy_ai_count, rng.next_u8(),
+                    );
+                    if let Some(ai_action) = ai_action {
+                        enemy_ai_fired = true;
+                        Self::apply_enemy_ai_action_to_state(
+                            bs, ai_action, &trainer_name, ai_count_seed,
+                            &mut self.enemy_ai_count, &mut ai_msgs,
+                            &mut self.loaded_enemy_slots,
+                        );
+                        battle_names = pokered_rules::runtime::BattleNameContext::from_legacy(bs);
+                        let (next_state, mut next_effects) =
+                            pokered_rules::runtime::engine_state_from_legacy(bs);
+                        next_effects.push(dotzuki_engine::battle::stack::EffectState {
+                            id: dotzuki_engine::battle::stack::EffectId(0x50_ff0),
+                            host: BattlerRef::OPPONENT,
+                            effect_order: 0,
+                            kind: pokered_rules::PokeVolatile::TurnSuppressed,
+                        });
+                        next_effects.extend(effects.iter().filter(|entry| matches!(
+                            entry.kind, pokered_rules::PokeVolatile::CalledMove { .. }
+                        )).cloned());
+                        *state = next_state;
+                        *effects = next_effects;
+                    }
+                },
             );
-            self.presentation.record_turn(&log, &state, &effects, [bs.player.active_mon().hp, bs.enemy.active_mon().hp]);
+            for entry in &effects {
+                if let pokered_rules::PokeVolatile::CalledMove { caller, resolved, failed } = entry.kind {
+                    if entry.host == BattlerRef::OPPONENT {
+                        enemy_call = Some(if caller == MoveId::Metronome { "METRONOME" } else { "MIRROR MOVE" });
+                        enemy_move_id = resolved;
+                        enemy_call_failed = failed;
+                    }
+                }
+            }
+            self.presentation.record_turn(&log, &state, &effects, turn_start_hp);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
 
             for ev in &log.events {
@@ -3726,7 +3886,7 @@ learn {learn_name}!")];
                     false
                 }
             });
-            if e_recharging {
+            if e_recharging && !enemy_ai_fired {
                 bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
             }
 
@@ -3744,26 +3904,27 @@ learn {learn_name}!")];
             if ghost_enemy_blocked {
                 m.push("GHOST: Get out...\nGet out...".to_string());
             }
-            if !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
+            if !enemy_ai_fired && !e_was_charging && bs.enemy.has_status1(CHARGING_UP) {
                 self.presentation.charge_in_order(&mut m,
                     &pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names)), enemy_move_id, false);
             }
             let now_sub = bs.enemy.has_status2(HAS_SUBSTITUTE_UP);
             let created_sub = pokered_rules::sub_created_this_turn(BattlerRef::OPPONENT);
-            if created_sub {
+            if !enemy_ai_fired && created_sub {
                 m.push(format!("{} put in a SUBSTITUTE!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
-            if (e_had_sub || created_sub) && !now_sub {
+            if !enemy_ai_fired && (e_had_sub || created_sub) && !now_sub {
                 m.push(format!("{}'s SUBSTITUTE broke!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
-            if e_recharging {
+            if e_recharging && !enemy_ai_fired {
                 m.insert(0, format!("{} must recharge!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
             (m, escape)
         };
+        msgs.append(&mut ai_msgs);
         msgs.extend(turn_msgs);
 
         self.sync_display_from_state();
@@ -6431,6 +6592,37 @@ mod safari_integration_tests {
     }
 
     #[test]
+    fn safari_intro_waits_forty_frames_without_sending_out_a_mon() {
+        for buttons in [BattleInput::none(), BattleInput { a: true, ..BattleInput::none() },
+            BattleInput { b: true, ..BattleInput::none() },
+            BattleInput { a: true, b: true, ..BattleInput::none() }] {
+            let mut s = safari_battle(100, 30);
+            let hp = s.player_hp;
+            s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+            s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            for elapsed in 0..40 {
+                assert!(matches!(s.phase, BattlePhase::Intro { phase, .. }
+                    if phase != IntroPhase::PlayerSendOut),
+                    "Safari must wait without sending out the party mon, elapsed={elapsed}: {:?}", s.phase);
+                assert!(!s.show_player_pokeballs);
+                assert_eq!(s.safari.as_ref().unwrap().balls, 30);
+                s.update_frame(buttons);
+            }
+            assert!(matches!(s.phase, BattlePhase::PlayerMenu), "40 frames reach the menu: {:?}", s.phase);
+            assert_eq!(s.player_hp, hp);
+            assert_eq!(s.safari.as_ref().unwrap().balls, 30, "A/B during the delay must not throw a ball");
+            assert!(!s.show_player_pokeballs);
+            assert!(s.current_message.as_ref().is_none_or(|text| !text.starts_with("Go!")));
+        }
+
+        let mut normal = safari_battle(100, 30);
+        normal.is_safari = false;
+        normal.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        normal.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(normal.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
+    }
+
+    #[test]
     fn safari_bait_halves_catch_rate() {
         let mut s = safari_battle(100, 30);
         s.resolve_safari_action(menu::SafariMenuAction::Bait);
@@ -6478,6 +6670,28 @@ mod old_man_tests {
             s.current_message
         );
         assert!(s.captured_mon.is_none(), "the tutorial WEEDLE is a demo — not kept");
+    }
+
+    #[test]
+    fn old_man_intro_skips_player_send_out_and_retains_success_caption() {
+        let mut s = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        s.is_old_man = true;
+        s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert_eq!(s.phase, BattlePhase::PlayerMenu);
+        s.update_frame(BattleInput::none());
+        for _ in 0..200 {
+            s.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            if matches!(s.phase, BattlePhase::BattleOver { .. }) { break; }
+        }
+        assert!(matches!(s.phase, BattlePhase::BattleOver { .. }));
+        assert_eq!(s.current_message.as_deref(), Some("All right!\nWEEDLE was caught!"));
+        assert!(s.captured_mon.is_none());
+
+        let mut ordinary = BattleScreen::from_parties(true, &[mk(Species::Charmander, 5)], &[mk(Species::Weedle, 5)], None);
+        ordinary.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        ordinary.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        assert!(matches!(ordinary.phase, BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, .. }));
     }
 
     #[test]
@@ -7324,6 +7538,7 @@ mod hp_bar_anim_tests {
             current: 0,
             wait_frames: 0,
             next_phase: Box::new(BattlePhase::PlayerMenu),
+            backdrop: Default::default(),
         };
         // Frame 1: message shows, input pressed but drain still active.
         s.update_frame(BattleInput {
@@ -7575,3 +7790,32 @@ mod fidelity_blackout_tests {
 
 #[cfg(test)]
 mod nickname_narration_tests;
+
+
+#[cfg(test)]
+mod safari_capture_alarm_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+
+    #[test]
+    fn safari_has_no_player_alarm_but_ordinary_low_hp_keeps_it() {
+        let mut player = create_pokemon(Species::Bulbasaur, 12, [0x9a, 0x78]).unwrap();
+        player.hp = 1;
+        let enemy = create_pokemon(Species::Venonat, 22, [0x9a, 0x78]).unwrap();
+        let mut screen = BattleScreen::from_parties(true, &[player], &[enemy], None);
+        screen.phase = BattlePhase::PlayerMenu;
+        assert!(screen.low_health_alarm());
+        screen.is_safari = true;
+        screen.safari = Some(safari::SafariState::new(190, 1));
+        assert!(!screen.low_health_alarm());
+        screen.show_text_then(vec!["All right!\nVENONAT was caught!".to_string()],
+            BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 });
+        assert!(!screen.low_health_alarm());
+        assert_eq!(screen.player_hp, 1, "Safari presentation does not heal the party");
+        screen.is_safari = false;
+        assert!(screen.low_health_alarm());
+    }
+}
+
+#[cfg(test)]
+mod run_rng_tests;

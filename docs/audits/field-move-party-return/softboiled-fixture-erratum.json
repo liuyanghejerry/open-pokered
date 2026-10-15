@@ -1,0 +1,18 @@
+{
+  "audit": 912,
+  "scope": "Immutable fixture-label correction, no original record/script altered.",
+  "old_case_file": "audit-912-other-cases.json",
+  "old_case_file_sha256": "3d615d97941d5b048e6139f54fcc927d0c5c9543d1528b90f09828882ae511e3",
+  "issue": "Old Softboiled controls used Chansey Lv12 with Growl; source Chansey learns Growl at30 and naturally obtainable minimum23 at SafariZoneCenter. Those controls prove generic engine/continuation behavior only, not a naturally obtainable party. The return-to-party result is unchanged.",
+  "affected_original": "audit-912-original-other-menu-ex0npoz6/softboiled-* (4controls)",
+  "affected_native_historical": "audit-912-native-other-menu-zq4s5go3/softboiled-* (4controls)",
+  "affected_native_current": "audit-912-native-final-before-kb242hj1/softboiled-* (4controls)",
+  "replacement": "Final Soft controls preboot construct Chansey23 with base Pound/Doubleslap plus compatible TM41 Softboiled, DVs9A78, zeroStatExp, source formula stats andEXP; max152, denial30, success152\u2192122 with Bulba1\u219231. Campaign travel is still bootstrapped rather than played. Other6cases unchanged.",
+  "replacement_case_file": "audit-912-other-cases-v2.json",
+  "source_evidence": [
+    "data/pokemon/base_stats/chansey.asm base Pound/DoubleSlap and SOFTBOILED TM",
+    "data/pokemon/evos_moves.asm648\u2013657 Growl30",
+    "data/wild/maps/SafariZoneCenter.asm25 Chansey23"
+  ],
+  "preparation_failure": "First in-memory generator used DoubleSlap casing; Python native data file is Doubleslap.json, FileNotFoundError before case file or validation process was created. Corrected case spelling only; no game result involved."
+}

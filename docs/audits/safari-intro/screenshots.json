@@ -1,0 +1,27 @@
+{
+  "fixture_sha256": "90506a2e08a63ffac6aa60bade333a8692c5afba2f7c5fd33082688dc55b52c6",
+  "seed": 3,
+  "physical_simulation_frame": 2703,
+  "common_buttons": 2703,
+  "expanded_buttons_prefix_sha256": "6bc73414727dc1faf943bf5cc644851b161798c23668df57d54daf39045e2bdf",
+  "before": "audit-910-native-intro/1/after-one-ack.png",
+  "after": "audit-910-native-intro-after/1/after-one-ack.png",
+  "files": {
+    "before": {
+      "path": "docs/screenshots/safari-intro/before.png",
+      "bytes": 5443,
+      "sha256": "78ae2cbd0732bb3525453c39040ad39fb5776a2621109e94334f1fe2dc457355",
+      "physical_frame": 2703,
+      "frame_manifest_capture_index": 2702,
+      "source_commit": "6085c98704a9b0cb25cbcd34afcc028184ce9217"
+    },
+    "after": {
+      "path": "docs/screenshots/safari-intro/after.png",
+      "bytes": 5326,
+      "sha256": "1706fd44800424b0b87d1ceec2c4760102f5e09360f0cffbc843cfad716b1227",
+      "physical_frame": 2703,
+      "frame_manifest_capture_index": 2702,
+      "source_commit": "6abff9bfeb9baaae820f361645d781c492fe2454"
+    }
+  }
+}

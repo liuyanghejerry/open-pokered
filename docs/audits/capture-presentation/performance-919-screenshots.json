@@ -1,0 +1,78 @@
+{
+  "master_base": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+  "captures": [
+    {
+      "scene": "normal-return",
+      "label": "\u524d",
+      "frame": 2717,
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+      "binary_sha256": "66e94f06b6648c6a1c32061e38c65e372bc9c46685cbffdf8b52adc7d7563a93",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "capture": "audit-919-matched-prefix-master8eb-before-cron_hfc/return-caption.png",
+      "public_png": "docs/screenshots/capture-presentation/return-before.png",
+      "sha256": "54993e734b5b34a8f8f6a1ca7076a76c76d3e1d73303c8adc7b6e5547f839621"
+    },
+    {
+      "scene": "normal-return",
+      "label": "\u540e",
+      "frame": 2717,
+      "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+      "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "capture": "audit-919-matched-prefix-master8eb-after-ig7n6j9h/return-caption.png",
+      "public_png": "docs/screenshots/capture-presentation/return-after.png",
+      "sha256": "2d2729a560960e7f7b4bb9c34bbe857bca668c4834d082bd81a3187c4d50c8ad"
+    },
+    {
+      "scene": "safari-used",
+      "label": "\u524d",
+      "frame": 2233,
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+      "binary_sha256": "66e94f06b6648c6a1c32061e38c65e372bc9c46685cbffdf8b52adc7d7563a93",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "capture": "audit-919-safari-matched-prefix-master8eb-before-dld_16ex/frames/frame-002232.png",
+      "public_png": "docs/screenshots/capture-presentation/safari-used-before.png",
+      "sha256": "768adfe3909af5ad776521190988a99df5b104c28f47880ae842b8b66403cf9e"
+    },
+    {
+      "scene": "safari-caught",
+      "label": "\u524d",
+      "frame": 2633,
+      "source": "8eb08f56945bf7db3650896295e8048cf97d14c8",
+      "binary_sha256": "66e94f06b6648c6a1c32061e38c65e372bc9c46685cbffdf8b52adc7d7563a93",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "capture": "audit-919-safari-matched-prefix-master8eb-before-dld_16ex/return-caption.png",
+      "public_png": "docs/screenshots/capture-presentation/safari-name-before.png",
+      "sha256": "b250c5574a6cb1885dd8935094e6144592eb51457fd50149c8b058c7f1d8c250"
+    },
+    {
+      "scene": "safari-used",
+      "label": "\u540e",
+      "frame": 2233,
+      "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+      "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "capture": "audit-919-master8eb-after-safari-prefix-hp0-10s9tbfy/frames/frame-002232.png",
+      "public_png": "docs/screenshots/capture-presentation/safari-used-after.png",
+      "sha256": "3ee2090cc9e1f25cc7b095f455d6436df5be1dccdca4bcf9ea057ad17ea67aff"
+    },
+    {
+      "scene": "safari-caught",
+      "label": "\u540e",
+      "frame": 2633,
+      "source": "f0f528666afbaf4458d1bc6e911e6ef43e7e8053",
+      "binary_sha256": "c51bfe57cfb0d6399032a9b4b6335dbbc74fd1f2e1b59687fd6760c4b36c52e5",
+      "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+      "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+      "capture": "audit-919-master8eb-after-safari-prefix-hp0-10s9tbfy/caption.png",
+      "public_png": "docs/screenshots/capture-presentation/safari-name-after.png",
+      "sha256": "4d4901b2e5b29e0b29e467ebdf4a04557cc7ac6fb6dad627d01810f8a634de31"
+    }
+  ],
+  "policy": "New actual master8eb BEFORE and integrated f0 AFTER replays. Same fixture, physical input sequence and simulation frame; all six PNG files byte-identical to their already committed public images. Historical screenshots.json retains its original identities."
+}

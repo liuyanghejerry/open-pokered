@@ -1,0 +1,476 @@
+{
+  "schema": "audit926-owned-normal-capture-v1",
+  "source_head": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+  "implementation_commit": "0d097141",
+  "base": "f0787e19e7623106eac1d6b8de7430ca1eb4428b",
+  "change": "Canonical ordinary ball captures use existing persistent BattleScreen.rng. Rand1 (including Master) before conditional Rand2; no extra RNG/schema, no capture formula or renderer change.",
+  "paired": {
+    "schema": "audit926-paired-native-v1",
+    "before": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+    "after": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+    "all_initial_snapshot_hashes_equal": true,
+    "prefix": "A1 neutral119 after restore and independent reserialization hashchecks",
+    "rows": [
+      {
+        "stage": "before4c",
+        "repeat": 1,
+        "source": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+        "initial_hash": "8dc0cc43a3a51430",
+        "frame": 1064,
+        "post_hashes": [
+          "1cfdbd871d27106f",
+          "a691e7e54a2b15fa"
+        ],
+        "outcomes": {
+          "caught": 5,
+          "failed": 7
+        },
+        "final_saved_party_count": 3,
+        "final_saved_HP": [
+          31,
+          31
+        ],
+        "final_saved_status": [
+          0,
+          0
+        ],
+        "old_party_byte_diffs_vs_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "36e3adf3fd4971001da4f938042856e187b7fb57b2d44c9703a3d44f4dc4765c",
+        "checksum": 88
+      },
+      {
+        "stage": "before4c",
+        "repeat": 2,
+        "source": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+        "initial_hash": "8dc0cc43a3a51430",
+        "frame": 1064,
+        "post_hashes": [
+          "1cfdbd871d27106f",
+          "a691e7e54a2b15fa"
+        ],
+        "outcomes": {
+          "caught": 7,
+          "failed": 5
+        },
+        "final_saved_party_count": 3,
+        "final_saved_HP": [
+          31,
+          31
+        ],
+        "final_saved_status": [
+          0,
+          0
+        ],
+        "old_party_byte_diffs_vs_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "36e3adf3fd4971001da4f938042856e187b7fb57b2d44c9703a3d44f4dc4765c",
+        "checksum": 88
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 1,
+        "source": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+        "initial_hash": "8dc0cc43a3a51430",
+        "frame": 1064,
+        "post_hashes": [
+          "a80294c9ae258834"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "final_saved_party_count": 2,
+        "final_saved_HP": [
+          31,
+          31
+        ],
+        "final_saved_status": [
+          0,
+          0
+        ],
+        "old_party_byte_diffs_vs_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "e7e4c5a10fc88b41010dec8ac9c1e358dd705901230ff026b8537ca81559252a",
+        "checksum": 165
+      },
+      {
+        "stage": "afterf078",
+        "repeat": 2,
+        "source": "19eac5aee7689c058bfe5afaf905a5c9c74b59e8",
+        "initial_hash": "8dc0cc43a3a51430",
+        "frame": 1064,
+        "post_hashes": [
+          "a80294c9ae258834"
+        ],
+        "outcomes": {
+          "failed": 12
+        },
+        "final_saved_party_count": 2,
+        "final_saved_HP": [
+          31,
+          31
+        ],
+        "final_saved_status": [
+          0,
+          0
+        ],
+        "old_party_byte_diffs_vs_construction": [
+          [],
+          []
+        ],
+        "ordinary_SAVE_sha256": "e7e4c5a10fc88b41010dec8ac9c1e358dd705901230ff026b8537ca81559252a",
+        "checksum": 165
+      }
+    ],
+    "after24_single_posthash": true,
+    "after2_full_SRAM_equal": true,
+    "all4_ordinary_SAVE_checksums_valid": true,
+    "protected_equal_before_after": {
+      "top": [
+        "current_box",
+        "pc_storage",
+        "player_name",
+        "hall_of_fame"
+      ],
+      "game_data": [
+        "bag",
+        "pc_items",
+        "pokedex",
+        "obtained_badges",
+        "obtained_hidden_items",
+        "obtained_hidden_coins",
+        "toggleable_object_flags",
+        "event_flags",
+        "player_money",
+        "player_id"
+      ]
+    },
+    "scope": [
+      "Only final fork11continues adaptively to ordinarySAVE, two perbuild; not24SAVEs.",
+      "No source/native RNG,level,DV,frame,audio,outcome or wholeSRAM equivalence claimed.",
+      "Before4c and afterf078 differ onlyfix plus f078test/doc-only merge; historical05f6 rootproof unchanged."
+    ]
+  },
+  "original": {
+    "schema": "audit926-original-normalball-forks-v1",
+    "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "prepared_state_sha256": "cf22e75f8a67b77186706e5ed4434c317462dce1968b45a7730d7f68db372c1c",
+    "artifact_root": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-926-original-capture-94vs_aqm",
+    "ordinary_SAVE_count": 8,
+    "all8_full_SRAM_equal": true,
+    "all8_actions_equal": true,
+    "rows": [
+      {
+        "repeat": 1,
+        "fork": 0,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 1,
+        "fork": 1,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 1,
+        "fork": 2,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 1,
+        "fork": 3,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 2,
+        "fork": 0,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 2,
+        "fork": 1,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 2,
+        "fork": 2,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      },
+      {
+        "repeat": 2,
+        "fork": 3,
+        "outcome": "caught",
+        "snapshot_sha256": "3ef1751c16a4bbd9a791bd1f4f0a27471301801ae124f876bd32f40a21f96d6a",
+        "random_draws": [
+          {
+            "kind": "Rand1-return",
+            "value": 232
+          },
+          {
+            "kind": "Rand2-return",
+            "value": 36
+          }
+        ],
+        "natural_species": 165,
+        "natural_level": 2,
+        "enemy_HP": [
+          0,
+          13
+        ],
+        "enemy_status": 0,
+        "enemy_catch_rate": 255,
+        "party_count": 3,
+        "saved_HP": [
+          31,
+          31,
+          13
+        ],
+        "sram_sha256": "7e1bc6b5700216a611285ee9c0323e5266e8a400270f27adb6a129899ea95141",
+        "checksum": 55
+      }
+    ],
+    "limits": [
+      "Actual ordinary PokeBall with two healthy legalRattata12, naturalRattata2, defaultallownedDex from native fixture explicitly set preinput. This does not claim an allownedDex campaign playthrough.",
+      "Original actual controls allcaught with Rand1=232 thenRand2=36. No actual source failure/MasterBall/rejection/status/lowHPguard matrix yet; those remain primary-source design/test vectors.",
+      "Native/source hardwareRNG,DVs,clock,outcomes,fullSRAM are not equated.",
+      "Initial source scriptv1 syntax typo failed before emulator startup; v2 corrected; both retained. Root nativev1wrongBAG/v2decoder failures remain in root originalarchive.",
+      "No production edits/builds/push/PR."
+    ]
+  },
+  "checks": {
+    "scoped_core": 7,
+    "scoped_game": 1,
+    "full_core": 2896,
+    "full_app_debug": {
+      "pass_count": 296,
+      "ignored": 39
+    },
+    "full_app_default": {
+      "pass_count": 285,
+      "ignored": 37
+    },
+    "agent_debug": 9,
+    "agent_default": 9,
+    "debug_app_build": "PASS",
+    "GBA": {
+      "scenarios": 7,
+      "repeats": 2,
+      "all_pass": true,
+      "full_metric_JSON_equal": true,
+      "trainer_update_ticks": 232,
+      "idle_update_ticks": 382,
+      "Oak_draw_ticks": 2994,
+      "baseline_changed": false,
+      "remote_CI_claim": false
+    }
+  },
+  "baseline_probe": {
+    "before_source": "4c364111dd2a5d4e6322b13b53fbb3caa56a3d88",
+    "exit": 101,
+    "expected_failure": "Original MasterBall consumes one Rand1; existing saved battle owner actuallystayswordpos0 instead of1",
+    "scope": "Standalone publicBattleScreen ordinary menu input against fresh4c BEFORE linkedrlibs; productionfiles unchanged."
+  },
+  "limits": [
+    "Ordinary capture only. Existing direct-byte/roll1+fixedRand2 APIs and Safari callers retain behavior; Safari/disobedience global RNG bypasses are separate.",
+    "Original actual matrix covers normalPokeBall success/Rand1thenRand2 only. Master/rejection/status/catchRate/W draw budgets come from primarysource plus deterministic tests, not an invented actualmatrix.",
+    "Source/native RNG,DVs,levels,clock,outcome,wholeSRAM and frame/audio parity are not equated.",
+    "Only final fork11continues to ordinarySAVE pertrial, two saves pernativebuild. Adaptive finish is not compared as an identical prefix.",
+    "Clean4c BEFORE was frozen before masterf078 landed; f078 changes one testfixture/docs only. AFTER is separately compiled19eac5 on f078. No historicalsource relabel.",
+    "Full playthrough and remoteCI are not claimed. Pure logic/tests; actualPNG evidence retained."
+  ]
+}

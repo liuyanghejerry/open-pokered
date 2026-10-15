@@ -1,0 +1,520 @@
+{
+  "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+  "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+  "complete_final_build_source_manifest": "audit-905-gated-complete-build-source.json",
+  "frozen_broad_matrix": {
+    "before": "dfeefa3411634e187119862288ad78d5a3e933fe",
+    "after": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "evidence_zip_sha256": "498d2a03ab0f66fbb32f48b7c6acc058dc8c89b6d2558105249cef5abb254932",
+    "identities_not_relabelled": true
+  },
+  "master_integration": {
+    "frozen_source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "integrated_source": "3fc826ca7fc8d6dcbe254ed60fd9dc6081b2fb03",
+    "master_parent": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+    "scope_files_exact": {
+      "crates/pokered-core/src/battle/mod.rs": "4f58dbe80a32d7f980804b6a26423569bfb3d4a5067ad56976964b9170cf42ef",
+      "crates/pokered-app/src/render/battle.rs": "174654527e612b54e519d4d5c2da11cee1a16e4a54f52307325b867b93ff8f9b",
+      "crates/pokered-app/src/post_capture.rs": "9b42d5b7295115eda4f9a8e8ca8e0744868720ab0d4bfd90c8b3b86d0ef1afa9",
+      "crates/pokered-app/src/post_capture_tests.rs": "5ae4bd4cb5968c6af65782976bf185af873db693435e14c3430ddcc8d56af731"
+    },
+    "Game_Battle_update_branch_sha256": "3138cc7fb9ecec9597d1cd886d81ccc6b787fcd5073f1408fa8228f1cf491d3b",
+    "recorded_identities_preserved": true,
+    "no_map_or_Cargo_diff": true
+  },
+  "performance": {
+    "master_b7": {
+      "source": "b7c81d82d7d94a06555f631c3c70d114f299d9d8",
+      "gate_PASS": true,
+      "metrics": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8861,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 213,
+          "update_core_avg_ticks": 202,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 354,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9311,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 178,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 382,
+          "update_core_avg_ticks": 372,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 387,
+          "update_core_avg_ticks": 377,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16318,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 104,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 221,
+          "update_flush_avg_ticks": 1
+        }
+      },
+      "candidate_path": "audit-905-base-perf-1.json",
+      "compare_log": "audit-905-base-perf-1-compare.log"
+    },
+    "integrated_before_optimization": {
+      "source": "3fc826ca7fc8d6dcbe254ed60fd9dc6081b2fb03",
+      "gate_PASS": false,
+      "candidate_path": "audit-905-perf-1.json",
+      "compare_log": "audit-905-perf-1-compare.log",
+      "trainer_update_avg_ticks": 233,
+      "wild_update_avg_ticks": 217
+    },
+    "ball_peek": {
+      "source": "788f97d02e0f02feb21f44ec24844118b372b1cf",
+      "gate_PASS": false,
+      "candidate_path": "audit-905-gated-perf-1.json",
+      "compare_log": "audit-905-gated-perf-1-compare.log",
+      "trainer_update_avg_ticks": 233,
+      "wild_update_avg_ticks": 217
+    },
+    "low_hp_predicate": {
+      "source": "fd124dc589e6597fda072ea8541633aacbcb0896",
+      "gate_PASS": false,
+      "candidate_path": "audit-905-alarm-gate-perf-1.json",
+      "compare_log": "audit-905-alarm-gate-perf-1-compare.log",
+      "trainer_update_avg_ticks": 234,
+      "wild_update_avg_ticks": 217
+    },
+    "final_cold_caller": {
+      "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+      "gate_PASS": true,
+      "metrics": {
+        "battle-entry-v1": {
+          "draw_max_ticks": 8860,
+          "draw_per_frame_ticks": 2644,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 567,
+          "renders": 369,
+          "samples": 500,
+          "scenario": "battle-entry-v1",
+          "update_avg_ticks": 214,
+          "update_core_avg_ticks": 203,
+          "update_flush_avg_ticks": 1
+        },
+        "intro-title-v1": {
+          "draw_max_ticks": 10015,
+          "draw_per_frame_ticks": 1214,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 353,
+          "renders": 115,
+          "samples": 250,
+          "scenario": "intro-title-v1",
+          "update_avg_ticks": 118,
+          "update_core_avg_ticks": 109,
+          "update_flush_avg_ticks": 1
+        },
+        "oak-dialogue-v1": {
+          "draw_max_ticks": 9312,
+          "draw_per_frame_ticks": 2994,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 392,
+          "renders": 307,
+          "samples": 600,
+          "scenario": "oak-dialogue-v1",
+          "update_avg_ticks": 188,
+          "update_core_avg_ticks": 178,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-idle-v1": {
+          "draw_max_ticks": 0,
+          "draw_per_frame_ticks": 0,
+          "present_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "renders": 0,
+          "samples": 1400,
+          "scenario": "overworld-idle-v1",
+          "update_avg_ticks": 382,
+          "update_core_avg_ticks": 372,
+          "update_flush_avg_ticks": 1
+        },
+        "overworld-movement-v1": {
+          "draw_max_ticks": 3111,
+          "draw_per_frame_ticks": 225,
+          "present_max_ticks": 769,
+          "present_per_frame_ticks": 70,
+          "renders": 24,
+          "samples": 240,
+          "scenario": "overworld-movement-v1",
+          "update_avg_ticks": 387,
+          "update_core_avg_ticks": 377,
+          "update_flush_avg_ticks": 1
+        },
+        "pokedex-entry-v1": {
+          "draw_max_ticks": 16318,
+          "draw_per_frame_ticks": 40,
+          "present_max_ticks": 767,
+          "present_per_frame_ticks": 1,
+          "renders": 1,
+          "samples": 400,
+          "scenario": "pokedex-entry-v1",
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 104,
+          "update_flush_avg_ticks": 1
+        },
+        "trainer-battle-entry-v1": {
+          "draw_max_ticks": 10162,
+          "draw_per_frame_ticks": 2475,
+          "present_max_ticks": 782,
+          "present_per_frame_ticks": 344,
+          "renders": 224,
+          "samples": 500,
+          "scenario": "trainer-battle-entry-v1",
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 221,
+          "update_flush_avg_ticks": 1
+        }
+      },
+      "candidate_path": "audit-905-cold-perf-1.json",
+      "compare_log": "audit-905-cold-perf-1-compare.log"
+    }
+  },
+  "performance_environment": {
+    "compiler": "nightly-2025-12-07",
+    "features": [
+      "perf-benchmark"
+    ],
+    "emulator": "mGBA0.10.5 SDL",
+    "clock": "GBA emulated hardware timer, not host elapsed time",
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "baseline_and_threshold_unchanged": true,
+    "mirrors": "Outside repo ancestry, exact source hashes verified before/after every build; private905 target; no shared Cargo cache edits."
+  },
+  "equivalent_predicates": [
+    "No pending result and no A/B with active ball: the previous path only returnedfalse and at most wrotefalse overfalse, so the cold caller can be skipped.",
+    "Within an actual ball caller, animation blocking and once-only result matching are unchanged; true input edges and trainer-block prompted pages are preserved.",
+    "Safari alarm exclusion moved after the existing computed lowHP predicate; ordinaryHP1 and SafariHP1 outcomes remain unchanged."
+  ],
+  "tests": {
+    "app_full": {
+      "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+      "result": "283PASS/39ignored",
+      "log": "audit-905-cold-full-app.log"
+    },
+    "core_full": {
+      "source": "fd124dc589e6597fda072ea8541633aacbcb0896",
+      "result": "2888PASS",
+      "log": "audit-905-final-gated-full-core.log",
+      "core_data_hashes_exact_at_final": true
+    }
+  },
+  "ordinary_gated_replays": {
+    "count": 8,
+    "all_exact_physical_input_prefixes": true,
+    "all_original_postball_PNGs_exact": true,
+    "all_final_32768_byte_ordinary_SAVE_files_exact": true,
+    "scope": "Equivalence to preserved fbed completed native controls, not new original-ROM fullclock parity.",
+    "controls": [
+      {
+        "case": "party5-healthy-1",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+        "seed": 12,
+        "buttons_sha256": "b20cdfdf4d2b08722e2e5896ec0cdb2358f280c21839ca60e0c4d16eed6b3a02",
+        "final_frame": 3982,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "27c209015fe48f0920105514ecd8b38fe260210ada77394d16f06b6f6071b7ab",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 598,
+        "postball_PNG_frame_range": [
+          2105,
+          2702
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party5-healthy-1/verification.json"
+      },
+      {
+        "case": "party5-healthy-2",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+        "seed": 12,
+        "buttons_sha256": "b20cdfdf4d2b08722e2e5896ec0cdb2358f280c21839ca60e0c4d16eed6b3a02",
+        "final_frame": 3982,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "27c209015fe48f0920105514ecd8b38fe260210ada77394d16f06b6f6071b7ab",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 598,
+        "postball_PNG_frame_range": [
+          2105,
+          2702
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party5-healthy-2/verification.json"
+      },
+      {
+        "case": "party5-hp1-1",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "f7b89522a2a9d2beaf40c84aab3ca616ae542e275586750b715a9fa263048993",
+        "seed": 12,
+        "buttons_sha256": "0bf75a213527713cdefccd682c31ccd0b4dedb087607b32a01701b8879e49ff0",
+        "final_frame": 3854,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "fffbb93a9c871c1608654007be2cb56a68a7ed331313e2643454cc58acb22e16",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 470,
+        "postball_PNG_frame_range": [
+          2105,
+          2574
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party5-hp1-1/verification.json"
+      },
+      {
+        "case": "party5-hp1-2",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "f7b89522a2a9d2beaf40c84aab3ca616ae542e275586750b715a9fa263048993",
+        "seed": 12,
+        "buttons_sha256": "0bf75a213527713cdefccd682c31ccd0b4dedb087607b32a01701b8879e49ff0",
+        "final_frame": 3854,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "fffbb93a9c871c1608654007be2cb56a68a7ed331313e2643454cc58acb22e16",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 470,
+        "postball_PNG_frame_range": [
+          2105,
+          2574
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party5-hp1-2/verification.json"
+      },
+      {
+        "case": "party6-healthy-1",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "c8492cc8c7f058c54926ceb601ba35a7735e0242de93a3330c3770dc52c5451e",
+        "seed": 12,
+        "buttons_sha256": "f444170c25b1dddb8c1dc9dbe3287c2652a360805562b0dfb45c9a953a2046a4",
+        "final_frame": 4117,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "d063c52807f95011f6de76067e4f365f8d08a857e71e68a549478cd32bb9a0d6",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 733,
+        "postball_PNG_frame_range": [
+          2105,
+          2837
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party6-healthy-1/verification.json"
+      },
+      {
+        "case": "party6-healthy-2",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "c8492cc8c7f058c54926ceb601ba35a7735e0242de93a3330c3770dc52c5451e",
+        "seed": 12,
+        "buttons_sha256": "f444170c25b1dddb8c1dc9dbe3287c2652a360805562b0dfb45c9a953a2046a4",
+        "final_frame": 4117,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "d063c52807f95011f6de76067e4f365f8d08a857e71e68a549478cd32bb9a0d6",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 733,
+        "postball_PNG_frame_range": [
+          2105,
+          2837
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party6-healthy-2/verification.json"
+      },
+      {
+        "case": "party6-hp1-1",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "d3b64c71c2a864b300e253180c520a7a7f8f45c8168b97f6a43ae5ac1bbc078f",
+        "seed": 12,
+        "buttons_sha256": "67450b0a8d01717639f7d95bf747edccd49836d99a88db51e14d12ba91b9e187",
+        "final_frame": 3989,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "b1b3ccb3e00558738cbc1914a0069fcc1659026b6db55d59d050058e981c4fde",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 605,
+        "postball_PNG_frame_range": [
+          2105,
+          2709
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party6-hp1-1/verification.json"
+      },
+      {
+        "case": "party6-hp1-2",
+        "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+        "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+        "fixture_sha256": "d3b64c71c2a864b300e253180c520a7a7f8f45c8168b97f6a43ae5ac1bbc078f",
+        "seed": 12,
+        "buttons_sha256": "67450b0a8d01717639f7d95bf747edccd49836d99a88db51e14d12ba91b9e187",
+        "final_frame": 3989,
+        "ordinary_saved_SRAM_all32768bytes_equal": true,
+        "SRAM_sha256": "b1b3ccb3e00558738cbc1914a0069fcc1659026b6db55d59d050058e981c4fde",
+        "scope": "New gated build replays entire exact physical input prefix of preserved fbed completed successful control, including ordinary pre/post SAVE. Neutral gaps are explicit; no live setters. Every original postball PNG compared at exact physical frame; new full recording retained. This verifies equivalence to that existing scenario, not a new original-ROM parity claim.",
+        "postball_PNG_count": 605,
+        "postball_PNG_frame_range": [
+          2105,
+          2709
+        ],
+        "complete_comparisons_in_archive": "raw/audit-905-gated-ordinary-replay/party6-hp1-2/verification.json"
+      }
+    ]
+  },
+  "paired_final_images": {
+    "normal": {
+      "stage": "gated",
+      "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+      "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804",
+      "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+      "seed": 12,
+      "frame": 2717,
+      "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+      "PNG_sha256": "2d2729a560960e7f7b4bb9c34bbe857bca668c4834d082bd81a3187c4d50c8ad",
+      "scope": "Matched immutable fixture+seed12+same physical button prefix to2717. Initial2105 frames reconstructed from synchronous BEFORE commands; omitted step_frames gaps are explicit neutral. Then neutral400/A/neutral200/A/neutral10. Every frame recorded by CLI; GetState sampled only at declared batch boundaries. This is a focused paired image replay, not an extra complete post-capture/ordinarySAVE control."
+    },
+    "normal_path": "audit-905-matched-prefix-gated-3jjh9u3f",
+    "safari": [
+      {
+        "HP1": false,
+        "attempts": [
+          {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-905-gated-safari-prefix-hp0-7c95zwdi",
+            "caught": true
+          }
+        ],
+        "successful_prefix": {
+          "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+          "seed": 3,
+          "HP1": false,
+          "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+          "frame": 2633,
+          "actual_caught": true,
+          "battle_message": "All right!\nVENONAT was caught!",
+          "audio_sfx": {
+            "id": 101,
+            "playing": true
+          },
+          "scope": "Gated final build exact preboot fixture and actual synchronous prefix through first normal Safari Ball, no live setters. Natural catch entropy unchanged, every failed attempt retained. Every physical frame recorded; GetState only at2232/2233/2633. This is bounded presentation replay, not additional finalSAVE/source-species or waveform parity.",
+          "correct_caught_caption_and_sound_active": true,
+          "paired_public_PNGs_exact": true,
+          "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+          "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804"
+        },
+        "path": "audit-905-gated-safari-prefix-hp0-7c95zwdi"
+      },
+      {
+        "HP1": true,
+        "attempts": [
+          {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-905-gated-safari-prefix-hp1-30twqloa",
+            "caught": true
+          }
+        ],
+        "successful_prefix": {
+          "fixture_sha256": "cca11b1639b5ff09fc20adfc30541cc0bd424f8d1d015cc46e07e9f55e97bc1e",
+          "seed": 3,
+          "HP1": true,
+          "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+          "frame": 2633,
+          "actual_caught": true,
+          "battle_message": "All right!\nVENONAT was caught!",
+          "audio_sfx": {
+            "id": 101,
+            "playing": true
+          },
+          "scope": "Gated final build exact preboot fixture and actual synchronous prefix through first normal Safari Ball, no live setters. Natural catch entropy unchanged, every failed attempt retained. Every physical frame recorded; GetState only at2232/2233/2633. This is bounded presentation replay, not additional finalSAVE/source-species or waveform parity.",
+          "correct_caught_caption_and_sound_active": true,
+          "source": "40e86bc15e7dd18ec8c2acee3566d4ac93546311",
+          "binary_sha256": "49b8ae0d381f6afa47b34a63dde5e5be61a8c8f32bb73449dc062bdef35e9804"
+        },
+        "path": "audit-905-gated-safari-prefix-hp1-30twqloa"
+      }
+    ],
+    "all_three_after_PNGs_byte_equal_to_committed_images": true
+  },
+  "actual_terminal_exits": {
+    "integrated_fullapp_core5234": 0,
+    "first_GBA4356": 0,
+    "first_record32978": 0,
+    "peek_fullapp52578": 0,
+    "peek_GBA21802": 0,
+    "peek_record84621": 0,
+    "master_GBA94782": 0,
+    "master_record79436": 0,
+    "predicate_GBA75658": 0,
+    "predicate_record55395": 0,
+    "predicate_host69453": 0,
+    "cold_GBA89800": 0,
+    "cold_record65835": 0,
+    "cold_host44517": 0,
+    "ordinary_replay72850": 0,
+    "Safari_prefix1587": 0,
+    "normal_prefix40746": 0
+  },
+  "limits": [
+    "Original14 saved scenarios and broad native before/after matrix retain dfee/fbed identities.",
+    "Final Safari prefix controls do not perform a new finalSAVE; fullfinalSAVE/source controls are the preserved broader fbed matrix.",
+    "Final CLI recordings capture every physical frame; GetState sampled at declared batch boundaries except the broad old perframe control records.",
+    "Audio logic/three native channels/PCM audibility tested; no whole audio waveform or hardwareclock parity claim.",
+    "No Safari intro/backpic/playerHUD/out-of-balls text or fullmainline/Silph34-frame fix claimed."
+  ],
+  "detailed_report_in_archive": {
+    "path": "review/integration.json",
+    "sha256": "254e8d1fcbc3570daba62f41f7c163f4661cd4a700797ef4962b22e4ce50f29f",
+    "scope": "Full per-frame hash comparisons and original expanded identity fields retained in immutable integration-evidence.zip. This public report summarizes the same results."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "before_source_commit": "216cb0343ca4871663a1a45bde9c90a60b32fe75",
+  "before_binary_sha256": "f966f7e2de570b0d94291ca5d7ecd1a8ce45083caeed9f7d7c54e24bc8190c1b",
+  "after_source_commit": "cd33b24e54bb572ff7b8b1d76a2f44f38c63203f",
+  "after_binary_sha256": "cfaee98b60ded8bce547f1a4f4df93ce2dd8634a8ae8101a7c996190cdd8b77a",
+  "pairs": [
+    {
+      "case": "fly-indoor",
+      "frame": 544,
+      "repeats_per_build": 2,
+      "fixture_sha256": "c6498dc052744ed048c5df883bf0c1bebaddc00003a09896b3c79be6dc9f1e4b",
+      "ordinary_input_prefix_sha256": "3ba7efdec003235f58386e204c2b018575d305cb9b15b340c0a79a5056f2ab2c",
+      "before_png_path": "audit-912-native-final-before-kb242hj1/fly-indoor-1/matched-after-first-ack.png",
+      "before_png_sha256": "efb5a675d2bae4847a6d0feb46fc06643f890d5716577bbb4cccfda8febf8f65",
+      "after_png_path": "audit-912-native-final-after-0tniimht/fly-indoor-1/matched-after-first-ack.png",
+      "after_png_sha256": "e7c2435ed64dcaf0329e2876dbc5f31740ba08e9f1f15d3117606862f7c53946"
+    },
+    {
+      "case": "softboiled-success",
+      "frame": 608,
+      "repeats_per_build": 2,
+      "fixture_sha256": "8145d17ef9bcd930a4bb6a96a165e225f97887d36910c613815d9dfeaba025d3",
+      "ordinary_input_prefix_sha256": "31429c3730421be881b55077930cd1b84f27ccf4afc6e1009f53e010a7b92b86",
+      "before_png_path": "audit-912-native-final-before-0xz81zqv/softboiled-success-1/matched-after-first-ack.png",
+      "before_png_sha256": "efb5a675d2bae4847a6d0feb46fc06643f890d5716577bbb4cccfda8febf8f65",
+      "after_png_path": "audit-912-native-final-after-0tniimht/softboiled-success-1/matched-after-first-ack.png",
+      "after_png_sha256": "098723d622a6007bb7c4611de9d00e5fd5111accaeaf6c982e4f07ce4299eeed"
+    }
+  ],
+  "scope": "Same fixture and full ordinary-input prefix through actual first ACK, matching frame544/608, repeated2 per build; no state setters. Subsequent ordinarySAVE controls retained separately. Original screenshots are additional source references, not substituted for native BEFORE/AFTER."
+}

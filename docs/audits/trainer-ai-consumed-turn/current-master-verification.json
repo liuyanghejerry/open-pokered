@@ -1,0 +1,179 @@
+{
+  "scope": "Canonical TrainerAI on successful player item/voluntary switch free turns only. Parent257 merged, final fresh actualmaster6d30 baseline and integrated4dcb after.",
+  "before": {
+    "source_commit": "6d30ba5abfb40e0873b6b4bea962f0ae29989bfe",
+    "binary_sha256": "5e7c8caf53d7825330a828cf54d987ff6c0da0861401ec4850e9ffe0b776d70e",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-909-current-before",
+    "build_target": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-909-current-before-target",
+    "features": "debug-server",
+    "profile": "dev opt0/debug0, CARGO_INCREMENTAL=0, explicit --bin pokered-app"
+  },
+  "after": {
+    "source_commit": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+    "binary_sha256": "57a277a04a442324cc76c5fa6dfb794004ca9e09b29b24c119429724b9011629",
+    "source_worktree": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-909-trainer-free-turn",
+    "build_target": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-909-native-target",
+    "features": "debug-server",
+    "profile": "dev opt0/debug0, CARGO_INCREMENTAL=0, explicit --bin pokered-app"
+  },
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "ordinary_save_controls": {
+    "source": 6,
+    "fresh_current_before": 6,
+    "fresh_current_after": 6
+  },
+  "cases": [
+    {
+      "case": "juggler-item",
+      "repeats_each_provider": 2,
+      "original_specials_each": 2,
+      "current_before_specials_each": 0,
+      "current_after_specials_each": 2,
+      "ordinary_saves_all_checksum_valid": true,
+      "within_provider_and_build_repeat_entire_sram_identical": true,
+      "native_live_PP_after_six_actions": [
+        40,
+        35,
+        10,
+        30
+      ],
+      "native_current_box_PC_HoF_archived_banks_protected": true,
+      "original_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-original-juggler-item-su8v1fbg",
+      "current_before_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-before-juggler-item-qngb6pc6",
+      "current_after_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-after-juggler-item-cm9p9a8j"
+    },
+    {
+      "case": "juggler-switch",
+      "repeats_each_provider": 2,
+      "original_specials_each": 1,
+      "current_before_specials_each": 0,
+      "current_after_specials_each": 2,
+      "ordinary_saves_all_checksum_valid": true,
+      "within_provider_and_build_repeat_entire_sram_identical": true,
+      "native_live_PP_after_six_actions": [
+        40,
+        35,
+        10,
+        30
+      ],
+      "native_current_box_PC_HoF_archived_banks_protected": true,
+      "original_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-original-juggler-switch-t2oiglhe",
+      "current_before_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-before-juggler-switch-7gqx03qa",
+      "current_after_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-after-juggler-switch-rraej5ef"
+    },
+    {
+      "case": "misty-item",
+      "repeats_each_provider": 2,
+      "original_specials_each": 1,
+      "current_before_specials_each": 0,
+      "current_after_specials_each": 1,
+      "ordinary_saves_all_checksum_valid": true,
+      "within_provider_and_build_repeat_entire_sram_identical": true,
+      "native_live_PP_after_six_actions": [
+        40,
+        35,
+        10,
+        30
+      ],
+      "native_current_box_PC_HoF_archived_banks_protected": true,
+      "original_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-original-misty-item-gzzgugt4",
+      "current_before_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-before-misty-item-i5n9akjc",
+      "current_after_directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-native-current-after-misty-item-_6sq39j9"
+    }
+  ],
+  "tests": {
+    "core-scoped": {
+      "passed": 10,
+      "ignored": 0,
+      "failed": 0,
+      "log": "audit-909-current-core-scoped.log",
+      "sha256": "08b3f7023bc2cc12effab347b17809672f801e28081d7fb0796c72225af61b29"
+    },
+    "core-full": {
+      "passed": 2898,
+      "ignored": 0,
+      "failed": 0,
+      "log": "audit-909-current-core-full.log",
+      "sha256": "17d7d5f015f9c25fb0b3d468966100164a3684cc0ecf1f257a25f351b0b34de6"
+    },
+    "app-full": {
+      "passed": 289,
+      "ignored": 39,
+      "failed": 0,
+      "log": "audit-909-current-app-full.log",
+      "sha256": "9ba9a5555478fd147ec3c50ad616d3719f7d55467cdeb081d3f2bff2b6ae3536"
+    },
+    "agent-determinism": {
+      "passed": 8,
+      "ignored": 0,
+      "failed": 0,
+      "log": "audit-909-current-agent-determinism.log",
+      "sha256": "cbaf4bbaae672e14ad1f075d12d363b0a7fa6180510bf9a7fa93719f233e9e59"
+    }
+  },
+  "debug_app_build": {
+    "exit": 0,
+    "log": "audit-909-current-app-build.log"
+  },
+  "gba": {
+    "all_seven_unchanged_gates_passed": true,
+    "measurements": 1,
+    "source_commit": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+    "rom_sha256": "f8589e1eae80e9d60a5e897b403d182c4a5297bfa71a95990a7d61a271e75246",
+    "trainer_update_ticks": 232,
+    "idle_update_ticks": 382,
+    "oak_draw_ticks": 2994,
+    "log": "audit-909-current-perf-compare.log"
+  },
+  "same_frame_pair": {
+    "before_source_commit": "6d30ba5abfb40e0873b6b4bea962f0ae29989bfe",
+    "before_binary_sha256": "5e7c8caf53d7825330a828cf54d987ff6c0da0861401ec4850e9ffe0b776d70e",
+    "after_source_commit": "4dcbffa810e75dfb8d2bf0e82640973de054194c",
+    "after_binary_sha256": "57a277a04a442324cc76c5fa6dfb794004ca9e09b29b24c119429724b9011629",
+    "fresh_master_capture": true,
+    "records": [
+      {
+        "repeat": 1,
+        "frame": 1080,
+        "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+        "input_prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+        "before_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-before-sptpm2zv/actual-1/record.json",
+        "before_png_sha256": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+        "after_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-after-e3k_en2_/actual-1/record.json",
+        "after_png_sha256": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3"
+      },
+      {
+        "repeat": 2,
+        "frame": 1080,
+        "fixture_sha256": "a2f243170ec4c564abad1c7b43ab92029ab3ce2e169f59a9d8d81fdd76aa1e22",
+        "input_prefix_sha256": "5a14ccb243f192d6b96828c8aa9ef1890df219fc808fd7cf03ea64bb21b707b9",
+        "before_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-before-sptpm2zv/actual-2/record.json",
+        "before_png_sha256": "a8b46bdcb5eb3095fb9f3bde3a4c9763e951b6237e62b82bf64d9da0e451fe8f",
+        "after_record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-909-prefix-current-after-e3k_en2_/actual-2/record.json",
+        "after_png_sha256": "4439e36866d2788300d323ff79ae9de226567954e29c2e404754975652f18fb3"
+      }
+    ],
+    "scope": "Fresh master6d30 and integrated focused4dcb binaries, same exact constructedfixture/completeordinaryinputprefix/frame1080, repeatedtwiceperbuild. Original static/native full sixturn ordinarySAVE controls are separately verified; no SAVE performed by this short visual replay. Historical b7/ed6 captures remain immutable under old archive."
+  },
+  "current_raw_summaries": {
+    "before_and_original": {
+      "file": "audit-909-current-baseline-verification.json",
+      "sha256": "481fef8347a0a5a9a038555554d7644347e4c438a47b9dfe629bf0806214f4e4"
+    },
+    "after": {
+      "file": "audit-909-current-after-verification.json",
+      "sha256": "db5f7adfd97eeb22267f9f9758b748c248bc214f9dabc123330cbcae5c9f085b"
+    }
+  },
+  "preservation": "Original evidence.zip and verification.json remain unchanged historical records. Current master evidence is additional, not oldcaptures relabelled.",
+  "limits": [
+    "Source/native RNG, final HP, exact item/switch action occurrence count and outcome are not cross-provider parity claims.",
+    "Original controls use repeated XAccuracy, voluntary switch, and Misty XDefend; Potion continuation plus charge/recharge, healing AI/residual, exhausted AI, wild/link and called moves are core regression/static coverage only.",
+    "Whole SRAM is not compared across native before/after because restored AI changes damage, move PP, battle length and valid outcomes; unrelated current box, PC storage, HoF and archived SRAM banks were explicitly compared.",
+    "A matched current-master screenshot pair is checked separately; this data-only report does not assert cross-build framebuffer equality.",
+    "All fixtures explicitly prepared before boot, not played campaign provenance. No in-validation state/RNG/AI result writes or direct debug battle.",
+    "Original Juggler controls settle by Growl blackout, original Misty uses correct1based Tackle2 and wins; native settles by Tackle victory. No crossprovider random/HP/outcome/frame/audio or wholeSRAM equivalence claim.",
+    "Actual Potion UI is a separate readonly915finding; currentmedicine ACK/HP/item boundaries remain unchanged. This fix preserves the existing EnemyFreeTurnAfterItem caller.",
+    "No remoteCIgreen or latestmainlinecompletion claim."
+  ]
+}

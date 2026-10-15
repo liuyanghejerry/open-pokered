@@ -16,6 +16,9 @@ macro_rules! dbg_eprintln {
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
 pub(crate) mod post_capture;
+#[cfg(all(test, not(target_os = "none")))]
+#[path = "old_man_capture_tests.rs"]
+mod old_man_capture_tests;
 
 use crate::alloc_prelude::*;
 
@@ -681,7 +684,7 @@ pub struct PokemonGame {
     /// field move for it; the party screen reopens in target-pick mode
     /// (Gen-1 `.softboiled` → `GoBackToPartyMenu`), cleared when the heal is
     /// applied or the pick is cancelled.
-    pending_softboiled_user: Option<usize>,
+    pub(crate) pending_softboiled_user: Option<usize>,
     /// A move the party screen must offer to forget: a level-up/evolution
     /// move that could not be learned because the moveset is full (Gen-1
     /// `LearnMove`'s forget-a-move prompt, learn_move.asm:98-184). Holds
@@ -850,14 +853,46 @@ struct QuerySeedSnapshot {
 }
 
 const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+#[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
 const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+// Thumb-1 has native 32-bit multiplication but lowers a u64 product to
+// __aeabi_lmul. Keep the exact FNV prime: 2^40 + 435. The 16-bit partial
+// products below fit in u32, including their carry.
+#[cfg(any(
+    test,
+    all(target_arch = "arm", target_pointer_width = "32", target_os = "none")
+))]
+#[inline]
+fn fnv_multiply_arm32(value: u64) -> u64 {
+    let lo = value as u32;
+    let hi = (value >> 32) as u32;
+    let low_product = (lo & 0xffff) * 435;
+    let high_product = (lo >> 16) * 435 + (low_product >> 16);
+    let result_lo = (low_product & 0xffff) | (high_product << 16);
+    let result_hi = hi
+        .wrapping_mul(435)
+        .wrapping_add(high_product >> 16)
+        .wrapping_add(lo << 8);
+    (u64::from(result_hi) << 32) | u64::from(result_lo)
+}
 
 fn fnv_mix(h: &mut u64, bytes: &[u8]) {
     for &b in bytes {
-        *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
+        {
+            *h = fnv_multiply_arm32(*h ^ u64::from(b));
+        }
+        #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
+        {
+            *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
+        }
     }
 }
 
+#[cfg(test)]
+#[path = "context_update_tests.rs"]
+mod context_update_tests;
 impl QuerySeedSnapshot {
     fn hash_u8(h: &mut u64, v: u8) {
         fnv_mix(h, &[v]);
@@ -2188,6 +2223,7 @@ impl PokemonGame {
     #[cfg(target_os = "none")]
     #[inline(never)]
     pub fn try_load_sram_save(&mut self) {
+        self.pending_softboiled_user = None;
         self.clear_post_capture_continuation();
         // Loading starts a new session. Release the previous sequencer,
         // resume caches and decoded graphics before parsing the new save.
@@ -2321,6 +2357,7 @@ impl PokemonGame {
         let save = import_sram(&data)
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
+        self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.battle.loaded_enemy_slots = 0;
         if self.post_capture_active() {
@@ -2335,6 +2372,7 @@ impl PokemonGame {
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
+            self.pending_softboiled_user = None;
             self.clear_post_capture_continuation();
         }
         #[cfg(feature = "repro-markers")]
@@ -2896,6 +2934,7 @@ impl PokemonGame {
     /// all sounds, reload the save from disk (unsaved progress is lost, as on
     /// hardware), and return to the title screen.
     fn soft_reset(&mut self) {
+        self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
@@ -4624,6 +4663,11 @@ impl PokemonGame {
                         self.overworld.pending_hof_ceremony = false;
                         self.start_hof_ceremony();
                         ScreenAction::Continue
+                    } else if self.overworld.poison_flow.is_some() {
+                        // ApplyOutOfBattlePoisonDamage returns before NewBattle:
+                        // retain this step's encounter through each faint ACK
+                        // and all four BG flash renders. Blackout discards it.
+                        ScreenAction::Continue
                     } else if let Some(encounter) = self.overworld.pending_wild_encounter.take() {
                         self.start_wild_battle(encounter.species, encounter.level);
                         // The Old-Man catch tutorial auto-plays a guaranteed-catch demo.
@@ -4654,17 +4698,31 @@ impl PokemonGame {
                 if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
                     self.battle.complete_move_presentation();
                 }
-                let caught_sound_holds_input = self.battle.captured_mon.is_some()
+                // ItemUseBallText05 also plays for the old man's demonstration,
+                // which deliberately does not put a captured mon in the save.
+                let caught_sound_holds_input = (self.battle.captured_mon.is_some() || self.battle.is_old_man)
                     && self.battle.current_message.as_ref().is_some_and(|msg| msg.starts_with("All right!"))
                     && self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active());
-                let battle_input = BattleInput {
+                // ItemUseBall completes every toss/poof/shake before printing
+                // the success text and starting its three-channel jingle.
+                // Advancing the demo early lets a queued Tink replace CHAN5.
+                let demo_animation_holds_input = self.battle.is_old_man
+                    && matches!(self.battle.phase, pokered_core::battle::BattlePhase::ShowingText { .. })
+                    && !self.battle_vfx.item_animation_capture_finished();
+                let mut battle_input = BattleInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),
                     left: input.is_just_pressed(GbButton::Left),
                     right: input.is_just_pressed(GbButton::Right),
-                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input,
-                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input,
+                    a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
+                    b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
                 };
+                // Only an actual ball caller needs its text/animation gate.
+                if self.battle_vfx.ball_result_ready()
+                    || ((battle_input.a || battle_input.b) && self.battle_vfx.ball_animation_active())
+                {
+                    self.apply_ball_text_continuation(&mut battle_input);
+                }
                 // ── Link battle driving ─────────────────────────────────
                 // The CORE `LinkBattleDriver` owns the battle screen (turn
                 // resolution, RNG, end detection); `self.battle` is a
@@ -4689,7 +4747,9 @@ impl PokemonGame {
                         //    screen.
                         if let Some(screen) = driver.screen_mut() {
                             screen.battle_style = self.state.config.battle_style;
-                            screen.player_name = Some(self.player_name.clone());
+                            if screen.player_name.as_deref() != Some(self.player_name.as_str()) {
+                                screen.player_name = Some(self.player_name.clone());
+                            }
                         }
                         // 4. Mirror the canonical screen into `self.battle`
                         //    for the render/vfx/audio blocks below and the
@@ -4731,7 +4791,9 @@ impl PokemonGame {
                 // battle_animation below. (For link battles `self.battle` is
                 // the mirror; the canonical screen gets the same pushes above.)
                 self.battle.battle_style = self.state.config.battle_style;
-                self.battle.player_name = Some(self.player_name.clone());
+                if self.battle.player_name.as_deref() != Some(self.player_name.as_str()) {
+                    self.battle.player_name = Some(self.player_name.clone());
+                }
                 let action = if self.battle.link_mode && battle_over {
                     // The driver's screen is frozen at the end narration;
                     // advance the mirror through it (the driver would
@@ -4882,7 +4944,7 @@ impl PokemonGame {
                     if cur_message != self.battle_prev_message {
                         if let Some(ref msg) = cur_message {
                             let msg_lower = msg.to_lowercase();
-                            if self.battle.captured_mon.is_some() && msg_lower.starts_with("all right!") {
+                            if (self.battle.captured_mon.is_some() || self.battle.is_old_man) && msg_lower.starts_with("all right!") {
                                 audio.play_sfx(SfxId::CaughtMon);
                             } else if msg_lower.contains("super effective") {
                                 audio.play_sfx(SfxId::SuperEffective);
@@ -5047,6 +5109,13 @@ impl PokemonGame {
                 };
                 let prior_menu = party_input.a.then(|| self.party_screen.clone());
                 let action = self.party_screen.update_frame(party_input);
+                // Cancelling the SOFTBOILED target picker resumes the normal
+                // party list. Do not reopen the abandoned picker after STATS.
+                if self.pending_softboiled_user.is_some()
+                    && self.party_screen.mode() == pokered_core::party_screen::PartyScreenMode::Normal
+                {
+                    self.pending_softboiled_user = None;
+                }
 
                 // Mirror any in-screen swap back into the canonical save data.
                 if let Some((a, b)) = self.party_screen.take_pending_swap() {
@@ -5375,6 +5444,10 @@ impl PokemonGame {
                             pokered_core::overworld::field_moves::FieldMoveOutcome::Done => {
                                 ScreenAction::Transition(GameScreen::Overworld)
                             }
+                            pokered_core::overworld::field_moves::FieldMoveOutcome::ReturnToParty { message } => {
+                                self.party_screen.show_item_use_notice(message, 0, PartyNoticeReturn::Party);
+                                ScreenAction::Continue
+                            }
                             pokered_core::overworld::field_moves::FieldMoveOutcome::OpenFlyMap => {
                                 self.pending_fly_map = true;
                                 ScreenAction::Transition(GameScreen::TownMap)
@@ -5414,22 +5487,25 @@ impl PokemonGame {
                                     .to_string(),
                             },
                         };
-                        let message = match outcome {
-                            pokered_core::items::bag_use::ItemApplyOutcome::Used {
-                                message,
-                                ..
-                            } => message,
-                            pokered_core::items::bag_use::ItemApplyOutcome::NoEffect {
-                                message,
-                            } => message,
-                            // apply_softboiled never asks for a move replace or
-                            // an evolution.
-                            _ => pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(),
+                        let (message, wait) = match outcome {
+                            pokered_core::items::bag_use::ItemApplyOutcome::Used { message, .. } => {
+                                if let Some(audio) = &self.audio {
+                                    audio.play_sfx(SfxId::HealHP);
+                                }
+                                (message, 50)
+                            }
+                            pokered_core::items::bag_use::ItemApplyOutcome::NoEffect { message } => (message, 0),
+                            _ => (pokered_core::items::bag_use::NO_EFFECT_MESSAGE.to_string(), 0),
                         };
-                        let message = self.localize_dialogue(&message);
-                        self.overworld.pending_dialogue =
-                            Some(BedroomDialogue::from_message(&message));
-                        ScreenAction::Transition(GameScreen::Overworld)
+                        // The pseudo-medicine result is acknowledged on the
+                        // party screen. StartMenu_Pokemon then restores the
+                        // SOFTBOILED user's cursor and its normal `.loop`.
+                        self.party_screen = PartyScreenState::new(self.save_data.party.to_vec());
+                        self.party_screen.set_cursor(user_index.unwrap_or(0));
+                        self.party_screen.show_item_use_notice(
+                            self.localize_dialogue(&message), wait, PartyNoticeReturn::Party,
+                        );
+                        ScreenAction::Continue
                     }
                     PartyScreenAction::Active => ScreenAction::Continue,
                 }
@@ -8263,9 +8339,17 @@ impl PokemonGame {
     }
 }
 
+#[cfg(test)]
+#[path = "field_move_continuation_tests.rs"]
+mod field_move_continuation_tests;
+
 #[cfg(all(test, feature = "debug-server"))]
 #[path = "pp_up_maxed_retry_tests.rs"]
 mod pp_up_maxed_retry_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "battle_medicine_tests.rs"]
+mod battle_medicine_tests;
 
 #[cfg(test)]
 #[path = "trainer_seen_tests.rs"]

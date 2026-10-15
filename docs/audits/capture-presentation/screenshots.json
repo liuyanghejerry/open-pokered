@@ -1,0 +1,74 @@
+[
+  {
+    "surface": "capture return caption",
+    "stage": "before",
+    "frame": 2717,
+    "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+    "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+    "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+    "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+    "source_path": "audit-905-matched-prefix-before-n0ve6_oz/return-caption.png",
+    "path": "docs/screenshots/capture-presentation/return-before.png",
+    "sha256": "54993e734b5b34a8f8f6a1ca7076a76c76d3e1d73303c8adc7b6e5547f839621"
+  },
+  {
+    "surface": "Safari used-ball prefix",
+    "stage": "before",
+    "frame": 2233,
+    "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+    "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+    "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+    "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+    "source_path": "audit-905-safari-matched-prefix-before-f8gezzh6/frames/frame-002232.png",
+    "path": "docs/screenshots/capture-presentation/safari-used-before.png",
+    "sha256": "768adfe3909af5ad776521190988a99df5b104c28f47880ae842b8b66403cf9e"
+  },
+  {
+    "surface": "Safari caught name",
+    "stage": "before",
+    "frame": 2633,
+    "source": "dfeefa3411634e187119862288ad78d5a3e933fe",
+    "binary_sha256": "6e96cc08d37b86a9489f5c515c591b7c226ac650290ab9fc7a5e1fbd0664701c",
+    "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+    "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+    "source_path": "audit-905-safari-matched-prefix-before-f8gezzh6/frames/frame-002632.png",
+    "path": "docs/screenshots/capture-presentation/safari-name-before.png",
+    "sha256": "b250c5574a6cb1885dd8935094e6144592eb51457fd50149c8b058c7f1d8c250"
+  },
+  {
+    "surface": "capture return caption",
+    "stage": "after",
+    "frame": 2717,
+    "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+    "fixture_sha256": "5a9f7b48b7fc560c15f89c2c7adba4d480a20c4cc0b96bd964ab13c7c6829c42",
+    "buttons_sha256": "d6147ed6af3d4392137e8b4859865b85fb7f07f2cbe4b4c9721e46a81790a27d",
+    "source_path": "audit-905-matched-prefix-after-aw0k8bn4/return-caption.png",
+    "path": "docs/screenshots/capture-presentation/return-after.png",
+    "sha256": "2d2729a560960e7f7b4bb9c34bbe857bca668c4834d082bd81a3187c4d50c8ad"
+  },
+  {
+    "surface": "Safari used-ball prefix",
+    "stage": "after",
+    "frame": 2233,
+    "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+    "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+    "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+    "source_path": "audit-905-safari-matched-prefix-after-_lo67rsm/frames/frame-002232.png",
+    "path": "docs/screenshots/capture-presentation/safari-used-after.png",
+    "sha256": "3ee2090cc9e1f25cc7b095f455d6436df5be1dccdca4bcf9ea057ad17ea67aff"
+  },
+  {
+    "surface": "Safari caught name",
+    "stage": "after",
+    "frame": 2633,
+    "source": "fbed8302e50735b77e658b4650dde4531e9acbe4",
+    "binary_sha256": "5dfffecc541dc26d7435492e4cdbc49173834f0887d7047339f0341a564dcbec",
+    "fixture_sha256": "35ce68ad3431e0b8659e671f256311992d0fcddf2c5b7ded0d2fd4cfd4e194a3",
+    "buttons_sha256": "34d5a7a264723c90974a6433ae41cb2e9152788cb13ba01c171b62b191432963",
+    "source_path": "audit-905-safari-matched-prefix-after-_lo67rsm/frames/frame-002632.png",
+    "path": "docs/screenshots/capture-presentation/safari-name-after.png",
+    "sha256": "4d4901b2e5b29e0b29e467ebdf4a04557cc7ac6fb6dad627d01810f8a634de31"
+  }
+]

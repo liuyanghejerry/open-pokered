@@ -167,6 +167,10 @@ fn finish_poison_tick(save: &mut SaveData, overworld: &mut OverworldScreen) {
     if save.party.iter().any(|mon| mon.hp > 0) {
         overworld.poison_flow = None;
     } else {
+        // The source jumps to HandleBlackOut before calling NewBattle. The
+        // native step has already rolled an encounter; it must not survive
+        // this blackout and start after the party is healed or warped.
+        overworld.pending_wild_encounter = None;
         // HandleBlackOut replaces CheckWarps: the original door and its sound
         // must never resume after the player is healed at the blackout point.
         if overworld.poison_step_warp_sound.take().is_some() {

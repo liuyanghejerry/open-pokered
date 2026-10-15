@@ -105,6 +105,31 @@ impl PostCaptureFlow {
 }
 
 impl PokemonGame {
+    /// ItemUseBall owns the whole toss/poof/shake sequence. Its used-item
+    /// text ends without a prompt; later result/name pages still need input.
+    /// Keep this uncommon caller out of ordinary battle update frames.
+    #[cold]
+    #[inline(never)]
+    pub(super) fn apply_ball_text_continuation(&mut self, input: &mut BattleInput) {
+        use pokered_core::battle::BattlePhase;
+        if self.battle_vfx.ball_animation_active()
+            && matches!(self.battle.phase, BattlePhase::ShowingText { .. })
+        {
+            input.a = false;
+            input.b = false;
+        }
+        if self.battle_vfx.ball_result_ready() {
+            let advance = match &self.battle.phase {
+                BattlePhase::ShowingText { current: 0, wait_frames: 0, messages, .. }
+                    if messages.len() > 1 => self.battle_vfx.take_ball_result_ready(),
+                BattlePhase::ShowingText { current: 0, messages, .. }
+                    if messages.len() > 1 => false,
+                _ => { self.battle_vfx.take_ball_result_ready(); false }
+            };
+            input.a |= advance;
+        }
+    }
+
     pub(super) fn begin_post_capture(&mut self, receipt: CapturedMonReceipt) {
         let met_bill = self.overworld.unified_flags().get_flag("EVENT_MET_BILL");
         self.post_capture_flow = Some(Box::new(PostCaptureFlow::new(
@@ -116,6 +141,7 @@ impl PokemonGame {
 
     pub(crate) fn clear_post_capture_continuation(&mut self) {
         self.post_capture_flow = None;
+        self.battle_vfx.clear_ball_continuation();
     }
 
     pub(crate) fn post_capture_active(&self) -> bool {

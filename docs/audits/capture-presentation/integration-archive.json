@@ -1,0 +1,10 @@
+{
+  "path": "integration-evidence.zip",
+  "bytes": 4478964,
+  "sha256": "e0222da9b750d8f634e1443ebccbf1692032b43acae6379cfc3892ef1422b096",
+  "manifest_sha256": "af2949c92ed8bf35858cf6d362d65869a1fd59af8a9b2b1657a7a118df6ea223",
+  "original_paths": 40028,
+  "unique_blobs": 812,
+  "all_exact_paths_and_PNGs_readback_verified": true,
+  "ROM_executable_emulator_state_excluded": true
+}

@@ -177,6 +177,7 @@ impl PokemonGame {
         // Menu continuations are outside this overworld/battle snapshot.
         // Drop the abandoned timeline before later party inputs can resume it.
         self.clear_rare_candy_continuation();
+        self.pending_softboiled_user = None;
         self.clear_post_capture_continuation();
         self.state.screen = match snapshot.screen {
             GameScreenTag::Overworld => GameScreen::Overworld,

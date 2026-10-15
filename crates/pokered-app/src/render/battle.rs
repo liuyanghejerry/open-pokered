@@ -527,6 +527,8 @@ pub struct BattleVisualEffects {
     trainer_appear_sfx_pending: bool,
     /// Active ball-throw choreography (capture / ghost dodge / old man).
     ball_choreo: Option<BallChoreo>,
+    /// Return from a wild ItemUseBall animation to its unprompted result page.
+    ball_result_pending: bool,
     /// Horizontal tilemap displacement accumulated by Ghost Marowak's dodge.
     ball_enemy_offset_x: i32,
     /// During each Ghost Marowak tilemap copy, the upper six rows observe the
@@ -713,6 +715,25 @@ impl BattleVisualEffects {
         self.ball_choreo.is_none() && self.anim_player.is_finished() && self.anim_wait == 0
     }
 
+    /// A toss owns its complete synchronous sequence, including the gaps
+    /// between raw animation commands and both failed and successful throws.
+    pub(crate) fn ball_animation_active(&self) -> bool {
+        self.ball_choreo.is_some()
+    }
+
+    pub(crate) fn ball_result_ready(&self) -> bool {
+        self.ball_result_pending
+    }
+
+    pub(crate) fn take_ball_result_ready(&mut self) -> bool {
+        core::mem::take(&mut self.ball_result_pending)
+    }
+
+    pub(crate) fn clear_ball_continuation(&mut self) {
+        self.ball_result_pending = false;
+        self.ball_choreo = None;
+    }
+
     pub(crate) fn set_capture_applying_type(&mut self, kind: u8, player: bool) {
         let anim_type=match kind {
             1=>AnimationType::ShakeScreenVertically,
@@ -809,6 +830,7 @@ impl BattleVisualEffects {
                 self.ball_show_pattern = None;
                 self.scheduled_ball_sfx.clear();
                 self.ball_choreo = Some(choreo);
+                self.ball_result_pending = false;
             }
             BattleAnimEvent::XStatItem => {
                 self.start_non_move_anim(non_move_anim::XSTATITEM, true);
@@ -913,6 +935,7 @@ impl Default for BattleVisualEffects {
             silph_scope_sfx_pending: false,
             trainer_appear_sfx_pending: false,
             ball_choreo: None,
+            ball_result_pending: false,
             ball_enemy_offset_x: 0,
             ball_enemy_top_offset_x: None,
             ball_ghost_frame: None,
@@ -945,7 +968,7 @@ impl BattleVisualEffects {
             // Ether's per-move pick reuses the FIGHT move-menu layout.
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
-            BattlePhase::ItemTargetSelect { .. } => BattlePhaseKind::ItemTargetSelect,
+            BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. } => BattlePhaseKind::ItemTargetSelect,
             BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
                 BattlePhaseKind::ShowingText
             }
@@ -1077,9 +1100,9 @@ impl BattleVisualEffects {
                     self.cry_pending = Some(enemy_species);
                 }
             }
-            IntroPhase::GhostCantID => {
-                // No-scope ghost battle: the GHOST stays unidentified — static
-                // text phase, no cry, no animation.
+            IntroPhase::GhostCantID | IntroPhase::SafariMenuPreparation => {
+                // Static unidentified-ghost text / Safari menu preparation:
+                // no send-out, poof or second cry.
                 self.intro_anim = IntroAnimState::None;
                 self.player_visible = true;
                 self.enemy_visible = true;
@@ -2294,6 +2317,9 @@ impl BattleVisualEffects {
             choreo.step += 1;
             choreo.started = false;
             if choreo.step >= choreo.steps.len() {
+                // Trainer-block text has its own two prompted pages; only
+                // wild ItemUseText00 automatically returns to the result.
+                self.ball_result_pending = !choreo.trainer_block;
                 self.ball_choreo = None;
                 self.ball_obj_palette_flipped = false;
             } else {
@@ -3812,6 +3838,23 @@ pub fn draw_battle(
     language: pokered_core::game_state::Lang,
 ) {
     fb.clear(Rgba::WHITE);
+    if screen.phase.uses_medicine_party_backdrop() {
+        if let Some(bs) = screen.battle_state.as_ref() {
+            // A draw-only adapter: input and item effects always operate on
+            // BattleState, never on the field PartyScreen/save-data copy.
+            let mut party = pokered_core::party_screen::PartyScreenState::new(bs.player.persistent_party());
+            party.set_cursor(screen.party_cursor);
+            super::menu::draw_party_screen_base(&party, res.as_mut(), 0, fb, language);
+            let message = match screen.phase {
+                BattlePhase::ItemTargetSelect { .. } if language == Lang::Zh => "对哪只宝可梦使用道具？",
+                BattlePhase::ItemTargetSelect { .. } => "Use item on which\nPOKéMON?",
+                _ => screen.current_message.as_deref().unwrap_or(""),
+            };
+            let mut painter = FrameBufferPainter::new(fb).with_lang(language);
+            menus::party::draw_notice(&mut Ui::new(&mut painter), message);
+        }
+        return;
+    }
     let pal = &GRAYSCALE_PALETTE;
     let sprite_pal = &GRAYSCALE_SPRITE_PALETTE;
     // `GRAYSCALE_SPRITE_PALETTE` makes color 0 transparent for ordinary
@@ -3952,7 +3995,9 @@ pub fn draw_battle(
                     | IntroPhase::WildReveal
             )
         );
-        let hide_player_hud = matches!(
+        // Safari and the demonstration both keep the trainer back picture
+        // and omit the player Pokémon HUD.
+        let hide_player_hud = screen.is_safari || screen.is_old_man || matches!(
             &screen.phase,
             BattlePhase::Intro { phase, .. }
             if matches!(
@@ -4007,7 +4052,7 @@ pub fn draw_battle(
                 wait_frames,
             } if *wait_frames < WILD_REVEAL_BALL_FRAMES
         );
-        if screen.show_player_pokeballs || wild_reveal_balls {
+        if !screen.is_old_man && (screen.show_player_pokeballs || wild_reveal_balls) {
             let player_balls: [BallStatus; 6] =
                 screen.player_pokeball_status.map(slot_status_to_pokeball);
             BallIndicators::draw_player(&mut tile_buf, &player_balls);
@@ -4089,8 +4134,15 @@ pub fn draw_battle(
                     }
                     _ => None,
                 },
+                BattlePhase::BattleOver { .. } if screen.captured_mon.is_some() => {
+                    screen.current_message.clone()
+                }
                 BattlePhase::BattleOver { won, escaped, .. } => {
-                    if *escaped {
+                    if screen.is_old_man {
+                        // ItemUseBallText05 remains until the demonstration
+                        // returns to ViridianCity, without a victory message.
+                        screen.current_message.clone()
+                    } else if *escaped {
                         None
                     } else if *won {
                         Some("You won!".to_string())
@@ -4422,7 +4474,7 @@ pub fn draw_battle(
             }
         }
 
-        let show_player_trainer_back = match &screen.phase {
+        let show_player_trainer_back = screen.is_safari || screen.is_old_man || match &screen.phase {
             BattlePhase::Intro { phase, .. } => {
                 matches!(phase, IntroPhase::SilhouetteSlide | IntroPhase::WildReveal)
                     || (!screen.is_wild
@@ -6041,6 +6093,53 @@ mod fidelity_flow_regressions {
     use pokered_data::species::Species;
 
     #[test]
+    fn safari_keeps_red_back_and_no_player_hud_through_battle_text() {
+        use pokered_renderer::resource::AssetRoot;
+        let mut res = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let cached = res.as_mut().unwrap().load(AssetCategory::Player, "redb").unwrap();
+        let red = scale_sprite_by_two(&cached.tileset, (cached.source_size.0 / TILE_SIZE) as usize);
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+        blit_battle_tileset_on_white(&mut expected, &red, 8, 40, 7);
+        let mut s = BattleScreen::new(true);
+        s.is_safari = true;
+        s.enemy_species = Species::Venonat;
+        s.enemy_level = 22;
+        for player_species in [Species::Bulbasaur, Species::Pikachu] {
+            s.player_species = player_species;
+            for hp in [1, s.player_max_hp] {
+                s.player_hp = hp;
+                for phase in [BattlePhase::PlayerMenu,
+                    BattlePhase::Intro { phase: IntroPhase::SafariMenuPreparation, wait_frames: 17 },
+                    BattlePhase::ShowingText { messages: vec!["A Safari action.".into()], current: 0,
+                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu) },
+                    BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 0 }] {
+                    s.phase = phase;
+                    let mut fb = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle(&s, &mut res, &mut fb, &mut BattleVisualEffects::default(), Lang::En);
+                    for y in 40..96 { for x in 8..64 {
+                        assert_eq!(fb.get_pixel(x, y), expected.get_pixel(x, y), "Safari always shows RED, ({x},{y})");
+                    }}
+                    for y in 56..96 { for x in 72..152 {
+                        assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE), "Safari has no player HP HUD, ({x},{y})");
+                    }}
+                }
+            }
+        }
+        s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        let mut reveal = FrameBuffer::new(config, Rgba::WHITE);
+        draw_battle(&s, &mut res, &mut reveal, &mut BattleVisualEffects::default(), Lang::En);
+        assert!((56..96).any(|y| (72..152).any(|x| reveal.get_pixel(x,y) != Some(Rgba::WHITE))),
+            "the source's temporary WildReveal party balls are retained");
+        s.is_safari = false;
+        s.phase = BattlePhase::PlayerMenu;
+        let mut normal = FrameBuffer::new(config, Rgba::WHITE);
+        draw_battle(&s, &mut res, &mut normal, &mut BattleVisualEffects::default(), Lang::En);
+        assert!((56..96).any(|y| (72..152).any(|x| normal.get_pixel(x,y) != Some(Rgba::WHITE))),
+            "ordinary battles still show the player's HP HUD");
+    }
+
+    #[test]
     fn forest_string_shot_turn_finishes_after_real_trainer_intro() {
         let mut game = PokemonGame::new(GameVersion::Red);
         game.audio = None;
@@ -6130,5 +6229,63 @@ mod zh_render_tests {
             let _ = fb_zh.save_png(&out("tui-battle-zh.png"));
             let _ = fb_en.save_png(&out("tui-battle-en.png"));
         }
+    }
+}
+
+#[cfg(test)]
+#[path = "battle_medicine_tests.rs"]
+mod battle_medicine_tests;
+
+#[cfg(test)]
+mod old_man_render_tests {
+    use super::*;
+    use pokered_renderer::resource::AssetRoot;
+
+    #[test]
+    fn tutorial_keeps_its_intro_portrait_without_player_hud_after_reveal() {
+        let root = AssetRoot::auto_detect().expect("gfx assets for tutorial render regression");
+        let mut resources = Some(ResourceManager::new(root));
+        let mut screen = BattleScreen::new(true);
+        screen.is_old_man = true;
+        screen.show_player_pokeballs = true;
+        screen.current_message = Some("All right!\nWEEDLE was caught!".to_string());
+        let mut render = |screen: &BattleScreen| {
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            draw_battle(screen, &mut resources, &mut fb,
+                &mut BattleVisualEffects::default(), Lang::En);
+            fb
+        };
+        let portrait = |fb: &FrameBuffer| {
+            (40..96).flat_map(|y| (8..64).map(move |x| fb.get_pixel(x, y)))
+                .collect::<Vec<_>>()
+        };
+        screen.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 32 };
+        let intro = render(&screen);
+        let expected = portrait(&intro);
+        assert!(expected.iter().any(|p| p.is_some_and(|color| color != Rgba::WHITE)));
+        for phase in [BattlePhase::PlayerMenu,
+            BattlePhase::ShowingText { messages: vec![screen.current_message.clone().unwrap()],
+                current: 0, wait_frames: 0,
+                 backdrop: pokered_core::battle::BattleTextBackdrop::Battle,
+                next_phase: Box::new(BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }) },
+            BattlePhase::BattleOver { won: true, escaped: false, wait_frames: 30 }]
+        {
+            screen.phase = phase;
+            let frame = render(&screen);
+            assert_eq!(portrait(&frame), expected, "tutorial must retain OldManPicBack");
+            assert!((56..96).all(|y| (72..160).all(|x| frame.get_pixel(x, y) == Some(Rgba::WHITE))),
+                "tutorial has neither a player HP HUD nor party balls");
+            assert!((0..32).any(|y| (0..88).any(|x| frame.get_pixel(x, y) != Some(Rgba::WHITE))),
+                "enemy name/HP HUD remains visible");
+        }
+        screen.is_old_man = false;
+        screen.phase = BattlePhase::PlayerMenu;
+        let ordinary = render(&screen);
+        assert_ne!(portrait(&ordinary), expected, "ordinary battle keeps the Pokémon back pic");
+        assert!((56..96).any(|y| (72..160).any(|x| ordinary.get_pixel(x, y) != Some(Rgba::WHITE))),
+            "ordinary battle keeps its player HUD");
     }
 }
