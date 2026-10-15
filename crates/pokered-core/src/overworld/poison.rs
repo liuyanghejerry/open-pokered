@@ -131,6 +131,10 @@ fn finish_poison_tick(save: &mut SaveData, overworld: &mut OverworldScreen) {
     if save.party.iter().any(|mon| mon.hp > 0) {
         overworld.poison_flow = None;
     } else {
+        // The source jumps to HandleBlackOut before calling NewBattle. The
+        // native step has already rolled an encounter; it must not survive
+        // this blackout and start after the party is healed or warped.
+        overworld.pending_wild_encounter = None;
         // TEXT_BLACKED_OUT is a separate blocking DisplayTextID call.
         let message = format!("{}\nblacked out!", overworld.player_name);
         show_poison_dialogue(overworld, &message);

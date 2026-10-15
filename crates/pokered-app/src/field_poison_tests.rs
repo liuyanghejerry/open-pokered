@@ -436,3 +436,78 @@ fn field_poison_ordinary_sram_load_clears_old_party_continuation() {
         assert_eq!(g.save_data.game_data.player_money, 3001);
     });
 }
+
+fn queue_step_encounter(g: &mut PokemonGame) {
+    g.overworld.pending_wild_encounter = Some(pokered_core::overworld::PendingWildEncounter {
+        species: Species::Rattata,
+        level: 3,
+        old_man: false,
+        hooked: false,
+    });
+}
+
+#[test]
+fn field_poison_encounter_waits_for_four_flash_renders_then_uses_damaged_party() {
+    on_game_stack(|| {
+        let mut g = game(&[(10, true), (31, false)]);
+        queue_step_encounter(&mut g);
+        begin(&mut g);
+        for remaining in [4, 3, 2, 1] {
+            assert_eq!(g.state.screen, GameScreen::Overworld);
+            assert_eq!(g.overworld.poison_flow, Some(FieldPoisonFlow::Flash { frames_remaining: remaining }));
+            assert!(g.overworld.pending_wild_encounter.is_some());
+            assert_eq!(hp(&g), vec![9, 31]);
+            g.update(&InputState::new());
+        }
+        assert!(g.overworld.poison_flow.is_none());
+        assert!(g.overworld.pending_wild_encounter.is_none());
+        assert_eq!(g.state.screen, GameScreen::Battle);
+        let live = g.battle.battle_state.as_ref().unwrap();
+        assert_eq!(live.player.party[0].hp, 9);
+        assert_eq!(live.player.party[1].hp, 31);
+    });
+}
+
+#[test]
+fn field_poison_encounter_waits_for_faint_ack_and_sends_healthy_member() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (31, false)]);
+        queue_step_encounter(&mut g);
+        begin(&mut g);
+        wait_for_prompt(&mut g);
+        assert_eq!(g.state.screen, GameScreen::Overworld);
+        assert_eq!(hp(&g), vec![0, 31]);
+        assert!(g.overworld.pending_wild_encounter.is_some());
+        acknowledge(&mut g);
+        assert!(g.overworld.poison_flow.is_none());
+        assert_eq!(g.state.screen, GameScreen::Battle);
+        let live = g.battle.battle_state.as_ref().unwrap();
+        assert_eq!(live.player.party[0].hp, 0);
+        assert_eq!(live.player.party[1].hp, 31);
+        assert_eq!(live.player.active_mon().hp, 31);
+    });
+}
+
+#[test]
+fn field_poison_encounter_is_discarded_before_blackout_ack_and_never_reappears() {
+    on_game_stack(|| {
+        let mut g = game(&[(1, true), (1, true)]);
+        queue_step_encounter(&mut g);
+        begin(&mut g);
+        acknowledge(&mut g);
+        assert!(g.overworld.pending_wild_encounter.is_some());
+        acknowledge(&mut g);
+        assert_eq!(g.overworld.poison_flow, Some(FieldPoisonFlow::Blackout));
+        assert!(g.overworld.pending_wild_encounter.is_none());
+        assert_eq!(hp(&g), vec![0, 0]);
+        assert_eq!(g.state.screen, GameScreen::Overworld);
+        acknowledge(&mut g);
+        for _ in 0..120 {
+            g.update(&InputState::new());
+            assert_ne!(g.state.screen, GameScreen::Battle);
+        }
+        assert_eq!(g.overworld.state.current_map, MapId::PalletTown);
+        assert_eq!(hp(&g), vec![31, 31]);
+        assert_eq!(g.save_data.game_data.player_money, 1500);
+    });
+}

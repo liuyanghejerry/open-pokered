@@ -4605,6 +4605,11 @@ impl PokemonGame {
                         self.overworld.pending_hof_ceremony = false;
                         self.start_hof_ceremony();
                         ScreenAction::Continue
+                    } else if self.overworld.poison_flow.is_some() {
+                        // ApplyOutOfBattlePoisonDamage returns before NewBattle:
+                        // retain this step's encounter through each faint ACK
+                        // and all four BG flash renders. Blackout discards it.
+                        ScreenAction::Continue
                     } else if let Some(encounter) = self.overworld.pending_wild_encounter.take() {
                         self.start_wild_battle(encounter.species, encounter.level);
                         // The Old-Man catch tutorial auto-plays a guaranteed-catch demo.
