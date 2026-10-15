@@ -1,3 +1,5 @@
+> Historical validation: current-base evidence is recorded in [fight-refusal-1044.md](fight-refusal-1044.md). The original source identities and results below remain unchanged.
+
 # FIGHT 拒绝提示与自动 STRUGGLE 验证
 
 选择没有 PP 或被定身法禁用的招式时，提示原先会被招式菜单遮住，B 还可能直接退出到 FIGHT 主菜单。全部招式没有 PP 时，提示又会等待额外确认，阻断原作的自动 STRUGGLE 流程。
