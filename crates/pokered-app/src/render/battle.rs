@@ -1077,9 +1077,9 @@ impl BattleVisualEffects {
                     self.cry_pending = Some(enemy_species);
                 }
             }
-            IntroPhase::GhostCantID => {
-                // No-scope ghost battle: the GHOST stays unidentified — static
-                // text phase, no cry, no animation.
+            IntroPhase::GhostCantID | IntroPhase::SafariMenuPreparation => {
+                // Static unidentified-ghost text / Safari menu preparation:
+                // no send-out, poof or second cry.
                 self.intro_anim = IntroAnimState::None;
                 self.player_visible = true;
                 self.enemy_visible = true;
@@ -3952,7 +3952,7 @@ pub fn draw_battle(
                     | IntroPhase::WildReveal
             )
         );
-        let hide_player_hud = matches!(
+        let hide_player_hud = screen.is_safari || matches!(
             &screen.phase,
             BattlePhase::Intro { phase, .. }
             if matches!(
@@ -4422,7 +4422,7 @@ pub fn draw_battle(
             }
         }
 
-        let show_player_trainer_back = match &screen.phase {
+        let show_player_trainer_back = screen.is_safari || match &screen.phase {
             BattlePhase::Intro { phase, .. } => {
                 matches!(phase, IntroPhase::SilhouetteSlide | IntroPhase::WildReveal)
                     || (!screen.is_wild
@@ -6039,6 +6039,53 @@ mod fidelity_flow_regressions {
     use pokered_core::{data::wild_data::GameVersion, game_state::GameScreen,
         pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
     use pokered_data::species::Species;
+
+    #[test]
+    fn safari_keeps_red_back_and_no_player_hud_through_battle_text() {
+        use pokered_renderer::resource::AssetRoot;
+        let mut res = Some(ResourceManager::new(AssetRoot::auto_detect().unwrap()));
+        let cached = res.as_mut().unwrap().load(AssetCategory::Player, "redb").unwrap();
+        let red = scale_sprite_by_two(&cached.tileset, (cached.source_size.0 / TILE_SIZE) as usize);
+        let config = dotzuki_engine::render_config::RenderConfig::new(160, 144);
+        let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+        blit_battle_tileset_on_white(&mut expected, &red, 8, 40, 7);
+        let mut s = BattleScreen::new(true);
+        s.is_safari = true;
+        s.enemy_species = Species::Venonat;
+        s.enemy_level = 22;
+        for player_species in [Species::Bulbasaur, Species::Pikachu] {
+            s.player_species = player_species;
+            for hp in [1, s.player_max_hp] {
+                s.player_hp = hp;
+                for phase in [BattlePhase::PlayerMenu,
+                    BattlePhase::Intro { phase: IntroPhase::SafariMenuPreparation, wait_frames: 17 },
+                    BattlePhase::ShowingText { messages: vec!["A Safari action.".into()], current: 0,
+                        wait_frames: 0, next_phase: Box::new(BattlePhase::PlayerMenu) },
+                    BattlePhase::BattleOver { won: false, escaped: true, wait_frames: 0 }] {
+                    s.phase = phase;
+                    let mut fb = FrameBuffer::new(config, Rgba::BLACK);
+                    draw_battle(&s, &mut res, &mut fb, &mut BattleVisualEffects::default(), Lang::En);
+                    for y in 40..96 { for x in 8..64 {
+                        assert_eq!(fb.get_pixel(x, y), expected.get_pixel(x, y), "Safari always shows RED, ({x},{y})");
+                    }}
+                    for y in 56..96 { for x in 72..152 {
+                        assert_eq!(fb.get_pixel(x, y), Some(Rgba::WHITE), "Safari has no player HP HUD, ({x},{y})");
+                    }}
+                }
+            }
+        }
+        s.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 0 };
+        let mut reveal = FrameBuffer::new(config, Rgba::WHITE);
+        draw_battle(&s, &mut res, &mut reveal, &mut BattleVisualEffects::default(), Lang::En);
+        assert!((56..96).any(|y| (72..152).any(|x| reveal.get_pixel(x,y) != Some(Rgba::WHITE))),
+            "the source's temporary WildReveal party balls are retained");
+        s.is_safari = false;
+        s.phase = BattlePhase::PlayerMenu;
+        let mut normal = FrameBuffer::new(config, Rgba::WHITE);
+        draw_battle(&s, &mut res, &mut normal, &mut BattleVisualEffects::default(), Lang::En);
+        assert!((56..96).any(|y| (72..152).any(|x| normal.get_pixel(x,y) != Some(Rgba::WHITE))),
+            "ordinary battles still show the player's HP HUD");
+    }
 
     #[test]
     fn forest_string_shot_turn_finishes_after_real_trainer_intro() {
