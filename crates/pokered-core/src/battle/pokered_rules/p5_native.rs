@@ -780,7 +780,7 @@ pub fn flinch_gate(
     match idx {
         Some(i) => {
             ctx.effects.remove(i); // consume the flinch
-            HandlerResult::Fail // move aborted this turn
+            super::block_action(ctx, source, crate::battle::CannotMoveReason::Flinched)
         }
         None => HandlerResult::Unchanged,
     }
@@ -824,7 +824,7 @@ pub fn confusion_gate(
         super::set_shared_damage(ctx, self_damage.min(ctx.battler(source).hp));
         ctx.battler_mut(source).take_damage(self_damage);
         cancel_multiturn_after_status(ctx, source, false);
-        return HandlerResult::Fail; // hit itself → move aborted
+        return super::block_action(ctx, source, crate::battle::CannotMoveReason::ConfusedSelfHit);
     }
     HandlerResult::Unchanged // confused but acts this turn
 }
