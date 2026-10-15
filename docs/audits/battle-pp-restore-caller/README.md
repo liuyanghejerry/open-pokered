@@ -14,7 +14,7 @@ Ether／Max Ether 的招式选择现在显示原作的 “Restore PP of which te
 | 前 | `c6e5762f55d449cbba1c4fb896e63b3634585e25`：待合入 #267（含其负向用药修复）与 master `32f74146` 的组合；二进制 `d6cd45bb7983accf0fdad84db35d574fbd4ce842ea61b1ceee326d876594477b` |
 | 后 | `af3f5241fd85b2623c8f9d1e6334cdb11aa07d53`：同一依赖、PP 修复与 master `1dff02a2`；二进制 `0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174` |
 
-这里的前图是私有依赖组合阶段的对照，**不是 literal master**。发布阶段在 #267 合入后另补实际 master 的前图与控制；本档案保持原身份。
+这里的历史前图是私有依赖组合阶段的对照，**不是 literal master**；上述记录与原 ZIP 保持原身份。#267 合入后的实际主分支前图已另补，见下方主分支对照补充。
 
 ## 普通输入和存档
 
@@ -51,3 +51,15 @@ python3 docs/audits/battle-pp-restore-caller/extract_evidence.py --output /your/
 ```
 
 fixture 与脚本保留原始路径和构造说明；运行原作仍需要合法本地 ROM 和所记录的外部初始地图 state，这些未放进档案。旧驱动通用 scope 字符串中的 `master32f` 是继承的祖先标签；AFTER 的实际冻结头是 `af3f`（含 `1dff`）。活跃成员为取得胜利会继续消耗 Tackle，保存检查因此验证恢复的 Growl，全部四槽 PP 另在敌方行动前的实际 FIGHT 菜单核对。原始脚本／记录未据此改标。
+
+## 主分支对照补充
+
+#267 合入后，从实际 master `a2fa94f185c08dfb568929a022b2ca66da0e0aa4` 新建独立工作树与构建目标，冻结 BEFORE 二进制 SHA256 `5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558`。四组重播逐帧复用原 AFTER 的 fixture、seed42 和完整按钮前缀，核验全部 5528 个实际单帧状态与七张同帧画面。AFTER 保持原 `af3f` 冻结身份，没有重跑或改标；本补充不另计普通 SAVE。四组展示图的实际帧分别是 Ether 选择 688、Ether 结果 1328、Elixir 结果 1288、Transform 选择 952。
+
+实际 master 已合并到本修复的 `279a11b96c71871ffc18033b2d9260df5f961863`。唯一冲突是老人教学测试的 ShowingText 构造字段顺序，保留已测试的 `af3f` 顺序及完整教学／用药测试模块。全部 2170 个已编译源文件的路径集合与 SHA256 均与 `af3f` 完全相同，因此沿用上述完整 core、app、GBA 检查；合并未新增生产改动，也未重复构建。
+
+[literal-master-before-verification.json](literal-master-before-verification.json) 记录真实构建身份、四组单帧核验和源文件同一性；[literal-master-before-screenshots.json](literal-master-before-screenshots.json) 映射新主分支前图与原 AFTER。独立的 [literal-master-before-archive.json](literal-master-before-archive.json) 描述 `literal-master-before-evidence.zip`，仅收本次补录、对应的原 AFTER、构建／合并／校验记录。原 `evidence.zip` 的 SHA256 仍为 `00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966`，内容未覆盖。新 ZIP 也不含 ROM、可执行文件或模拟器 state。
+
+```bash
+python3 docs/audits/battle-pp-restore-caller/extract_evidence.py --archive docs/audits/battle-pp-restore-caller/literal-master-before-evidence.zip --verify-only
+```

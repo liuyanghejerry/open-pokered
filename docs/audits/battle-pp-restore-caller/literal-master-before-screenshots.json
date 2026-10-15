@@ -1,0 +1,89 @@
+{
+  "scope": "Literal actual master a2fa after267 merged BEFORE; unchanged original af3f AFTER. Identical fixture, seed42, complete physical buttons and actual simulation frames. No new SAVE/AFTER rerun, historical c6e records untouched.",
+  "pairs": [
+    {
+      "surface": "ether-choice",
+      "case": "ether-second-success",
+      "frame": 688,
+      "fixture_sha256": "42433a87c40e31f0407d0456e82763dcf031f104635dad4dd3872b7471d48b32",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-ether-choice-before.png",
+        "sha256": "47bd77017eac379d7bdb10bfc01573c199eae3f0e800939e11d1935d4616bfd2",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ether-second-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-ether-choice-after.png",
+        "sha256": "013a48bda37312c9989b6f1181a52fd8130959284eb9901ed8845b0a8d66ec3d",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ether-second-success/after/record.json"
+      }
+    },
+    {
+      "surface": "ether-result",
+      "case": "ether-second-success",
+      "frame": 1328,
+      "fixture_sha256": "42433a87c40e31f0407d0456e82763dcf031f104635dad4dd3872b7471d48b32",
+      "buttons_sha256": "0677c2a130523018afe67903f42b51b336f750380d1d25272cbaa4187925fb82",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-ether-result-before.png",
+        "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ether-second-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-ether-result-after.png",
+        "sha256": "0a2a7ec56469049ea95e65ae8b96f0720bfd9f2c118a26f089ad1ae5280e4c55",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ether-second-success/after/record.json"
+      }
+    },
+    {
+      "surface": "elixir-result",
+      "case": "elixer-all-success",
+      "frame": 1288,
+      "fixture_sha256": "4a2c2253f49367b61450ccc6e2349b5bbf21a05fdc87287cd624790d692872f0",
+      "buttons_sha256": "481b3848c8417fbbcd4451f1a87f38ebf94775c1c18217515f17d8319f308960",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-elixir-result-before.png",
+        "sha256": "a6dd0d5b26e1ff909e34f457f42747bcf039e489da3bc70f14a199a5a07bbb93",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/elixer-all-success/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-elixir-result-after.png",
+        "sha256": "888e2cf6f25112f6f60269f4a1341bbeed258273c4b458a178c2bf58fd21e66f",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/elixer-all-success/after/record.json"
+      }
+    },
+    {
+      "surface": "transform-choice",
+      "case": "ditto-transform-ether",
+      "frame": 952,
+      "fixture_sha256": "6ae674c92d65cbb07661dcb723346d9b1a3033dc2fabe0158bbffb09fb24c34a",
+      "buttons_sha256": "9cf2e351bf88130e47c949c893dea222cee35b3067423e94e9e316c0e3125f8c",
+      "before": {
+        "source_commit": "a2fa94f185c08dfb568929a022b2ca66da0e0aa4",
+        "binary_sha256": "5a4831ccf960d1c00794ec8cd80b43dbc64a181748552b5b6dce6ebb6145f558",
+        "path": "docs/screenshots/battle-pp-restore-master-transform-choice-before.png",
+        "sha256": "93401836362f70fbea557e173838725c836219dbf5ecee29989759a13efe3b7c",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-literal-master-prefix-zl49er59/ditto-transform-ether/before/record.json"
+      },
+      "after": {
+        "source_commit": "af3f5241fd85b2623c8f9d1e6334cdb11aa07d53",
+        "binary_sha256": "0d505cc0c1e078e92ab2ea06949c6dc228d88c79828430ca734b0687f6aac174",
+        "path": "docs/screenshots/battle-pp-restore-combined-transform-choice-after.png",
+        "sha256": "956f122289c53d2a5523341220276bbccf83f84ba9554832e798b0077231cc43",
+        "record": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-935-matched-prefix-bkazg4do/ditto-transform-ether/after/record.json"
+      }
+    }
+  ]
+}
