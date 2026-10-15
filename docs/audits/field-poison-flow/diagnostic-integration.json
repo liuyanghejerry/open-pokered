@@ -1,0 +1,10 @@
+{
+  "source": "f059cbda17fba9427c1f881cb5bc11bce9c7ddb1",
+  "master": "dfeefa3411634e187119862288ad78d5a3e933fe",
+  "debug_app_passed": 279,
+  "ignored": 39,
+  "failed": 0,
+  "log_sha256": "76bdd9fd614abe47bdd5fa08140b322374d47c36fb050ac58ef793171cbfd170",
+  "core_source_unchanged_from_prior_full_suite": true,
+  "scope": "Latest master adds readonly diagnostic fixture export; no prior capture source identities relabelled."
+}
