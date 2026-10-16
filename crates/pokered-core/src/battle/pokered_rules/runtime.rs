@@ -305,6 +305,18 @@ pub fn translate_turn_named(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), move_name(*move_, false), crit, missed, eff, None));
                 }
+                // PayDayEffect runs after this action's applied/substitute
+                // damage and before faint handling, not at the end of the turn.
+                // The receipt was made by the actual positive damage hook.
+                if md.effect == pokered_data::moves::MoveEffect::PayDayEffect {
+                    if let Some((_, substitute_broke)) = super::payday_scatter(effects, actor) {
+                        if substitute_broke {
+                            msgs.push(format!("{}'s SUBSTITUTE broke!",
+                                display_name_named(state, opp_ref(actor), names)));
+                        }
+                        msgs.push("Coins scattered\neverywhere!".to_string());
+                    }
+                }
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY
                 // StatusChangesEliminatedText ("All STATUS changes are
                 // eliminated!", text_3.asm:269-271) — no per-stat or
