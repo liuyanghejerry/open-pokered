@@ -13091,6 +13091,10 @@ mod map_on_load_tests {
     }
 }
 
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/bedroom_save_regressions.rs"]
+mod bedroom_save_regressions;
+
 #[cfg(test)]
 mod continue_map_music_tests {
     use super::*;
