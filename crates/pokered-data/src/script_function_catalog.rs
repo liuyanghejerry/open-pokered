@@ -11,6 +11,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "elevatorMenu",
     "enterHallOfFame",
     "filterBag",
+    "finishFieldText",
     "followNpcPath",
     "getBadgeCount",
     "getCoins",

@@ -427,6 +427,7 @@ impl ScriptHost for NativeHost {
 
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
             "waitSound" => Ok(pokemon(PokemonScriptCommand::WaitSound)),
+            "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
             "walkTogether" => {
                 let npc_id = args::text(v.first().ok_or("walkTogether: missing NPC")?, "walkTogether")?;
@@ -489,7 +490,18 @@ impl ScriptHost for NativeHost {
                     Some(Value::Bool(retain)) => *retain,
                     Some(_) => return Err("printFieldText: retainWindow must be a boolean".into()),
                 };
-                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text, retain_window }))
+                let prompt = match v.get(2) {
+                    None | Some(Value::Bool(false)) => pokered_data::script_command::FieldTextPrompt::Done,
+                    Some(Value::Bool(true)) => pokered_data::script_command::FieldTextPrompt::Button,
+                    Some(Value::Text(mode)) if mode == "prompt" => pokered_data::script_command::FieldTextPrompt::Protected,
+                    Some(_) => return Err("printFieldText: prompt must be false, true, or prompt".into()),
+                };
+                let leading_sound = match v.get(3) {
+                    None => None,
+                    Some(Value::Text(sound)) => Some(sound.clone()),
+                    Some(_) => return Err("printFieldText: leadingSound must be a string".into()),
+                };
+                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text, retain_window, prompt, leading_sound }))
             }
             "readingMenu" => {
                 let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
@@ -3632,4 +3644,63 @@ mod tests {
                 }
             }
         }
-    }}
+    }
+
+    #[test]
+    fn six_cinnabar_quizzes_preserve_original_inner_text_sound_and_gate_order() {
+        use pokered_data::script_command::FieldTextPrompt;
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+        for (index, correct) in [0, 1, 1, 1, 0, 1].into_iter().enumerate() {
+            let number = index + 1;
+            let gate = format!("EVENT_CINNABAR_GYM_GATE{number}_UNLOCKED");
+            for lang in ["en", "zh"] {
+                for prior_open in [false, true] {
+                    for answer in [0, 1] {
+                        let mut engine = NativeScriptEngine::new();
+                        engine.load_map("CinnabarGym", &scene);
+                        engine.set_lang(lang);
+                        engine.seed_text("playerFacing", "up");
+                        engine.set_flag(&gate, prior_open);
+                        let commands = drive_fidelity_scene(&mut engine, &format!("quizMachine{number}"), false, "lose", &[answer]);
+                        let mut trace = Vec::new();
+                        for command in &commands {
+                            trace.push(match command {
+                                ScriptCommand::ShowChoice { .. } => "choice".to_string(),
+                                ScriptCommand::PlaySound { sound_id } => sound_id.clone(),
+                                ScriptCommand::StartBattle { .. } => "battle".into(),
+                                ScriptCommand::Custom { name, args } => match PokemonScriptCommand::from_custom(name, args).unwrap() {
+                                    PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Protected, leading_sound: None, .. } => "prompt".into(),
+                                    PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None, .. } => "done".into(),
+                                    PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Button, leading_sound: Some(sound), .. } if sound == "SFX_GET_ITEM_1" => "leading-GET1-prompt-button".into(),
+                                    PokemonScriptCommand::WaitSound => "wait".into(),
+                                    PokemonScriptCommand::ReplaceTileBlock { .. } => "block".into(),
+                                    PokemonScriptCommand::FinishFieldText => "finish".into(),
+                                    other => panic!("unexpected quiz command {other:?}"),
+                                },
+                                other => panic!("unexpected quiz command {other:?}"),
+                            });
+                        }
+                        let expected: &[&str] = if answer != correct {
+                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish", "battle"]
+                        } else if prior_open {
+                            &["prompt", "done", "choice", "leading-GET1-prompt-button", "block", "finish"]
+                        } else {
+                            &["prompt", "done", "choice", "leading-GET1-prompt-button", "wait", "SFX_GO_INSIDE", "wait", "block", "finish"]
+                        };
+                        assert_eq!(trace, expected, "quiz={number},lang={lang},open={prior_open},answer={answer}");
+                        assert_eq!(engine.get_flag(&gate), prior_open || answer == correct);
+                        for other in 1..=6 {
+                            if other != number {
+                                assert!(!engine.get_flag(&format!("EVENT_CINNABAR_GYM_GATE{other}_UNLOCKED")));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("CinnabarGym", &scene);
+        engine.seed_text("playerFacing", "down");
+        assert!(drive_fidelity_scene(&mut engine, "quizMachine1", false, "", &[]).is_empty());
+    }
+}

@@ -1874,6 +1874,11 @@
     {
       "from": "script:CinnabarGym:quizMachine1",
       "to": "flag:EVENT_CINNABAR_GYM_GATE1_UNLOCKED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine1",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE1_UNLOCKED",
       "kind": "sets"
     },
     {
@@ -1895,6 +1900,11 @@
       "from": "script:CinnabarGym:quizMachine2",
       "to": "flag:EVENT_BEAT_CINNABAR_GYM_TRAINER_2",
       "kind": "sets"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine2",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE2_UNLOCKED",
+      "kind": "requires"
     },
     {
       "from": "script:CinnabarGym:quizMachine2",
@@ -1924,6 +1934,11 @@
     {
       "from": "script:CinnabarGym:quizMachine3",
       "to": "flag:EVENT_CINNABAR_GYM_GATE3_UNLOCKED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine3",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE3_UNLOCKED",
       "kind": "sets"
     },
     {
@@ -1945,6 +1960,11 @@
       "from": "script:CinnabarGym:quizMachine4",
       "to": "flag:EVENT_BEAT_CINNABAR_GYM_TRAINER_4",
       "kind": "sets"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine4",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE4_UNLOCKED",
+      "kind": "requires"
     },
     {
       "from": "script:CinnabarGym:quizMachine4",
@@ -1974,6 +1994,11 @@
     {
       "from": "script:CinnabarGym:quizMachine5",
       "to": "flag:EVENT_CINNABAR_GYM_GATE5_UNLOCKED",
+      "kind": "requires"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine5",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE5_UNLOCKED",
       "kind": "sets"
     },
     {
@@ -1995,6 +2020,11 @@
       "from": "script:CinnabarGym:quizMachine6",
       "to": "flag:EVENT_BEAT_CINNABAR_GYM_TRAINER_6",
       "kind": "sets"
+    },
+    {
+      "from": "script:CinnabarGym:quizMachine6",
+      "to": "flag:EVENT_CINNABAR_GYM_GATE6_UNLOCKED",
+      "kind": "requires"
     },
     {
       "from": "script:CinnabarGym:quizMachine6",
