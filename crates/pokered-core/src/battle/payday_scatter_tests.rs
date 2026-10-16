@@ -139,6 +139,11 @@ fn real_substitute_surviving_or_breaking_still_scatters_after_its_damage() {
             .unwrap()
             .enemy
             .has_status2(HAS_SUBSTITUTE_UP));
+        // Isolate this hit from the enemy's next action: after its doll breaks,
+        // another Substitute would legitimately spend HP to create a new one.
+        let enemy = s.battle_state.as_mut().unwrap().enemy.active_mon_mut();
+        enemy.moves[0] = MoveId::Splash;
+        enemy.pp[0] = 40;
         let hp = s.battle_state.as_ref().unwrap().enemy.active_mon().hp;
         s.execute_turn_with_move(0);
         let lines = pages(&s);
