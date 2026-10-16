@@ -1,0 +1,301 @@
+{
+  "scope": "Actual execution summary; raw full logs/freezes retained in local audit, not bundled.",
+  "actual_master": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+  "actual_tested_source": "77db4bcb3dc745a4b913c61301ff28852dd64e2e",
+  "publication_child": "Documentation/evidence only; all production and tests remain byte-identical to77db.",
+  "tests": {
+    "actual_session": 80686,
+    "actual_terminal_exit": 0,
+    "result_sha256": "16f1d2f472a3bf4a747d31fba4d76a6cb3255e22bd32d22454df90981896e00a",
+    "stages": [
+      {
+        "stage": "core-choice-confirmation",
+        "argv": [
+          "cargo",
+          "test",
+          "-vv",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-p",
+          "pokered-core",
+          "--lib",
+          "choice_confirm_audio_tests",
+          "--",
+          "--test-threads=1"
+        ],
+        "exit_code": 0,
+        "passed_names": [
+          "overworld::update::choice_confirm_audio_tests::choice_a_b_and_combined_confirmation_play_once_without_changing_the_result",
+          "overworld::update::choice_confirm_audio_tests::choice_idle_and_cursor_movement_do_not_play_confirmation",
+          "overworld::update::choice_confirm_audio_tests::nested_gift_choice_emits_the_common_confirmation_once",
+          "overworld::update::choice_confirm_audio_tests::nested_reading_choice_emits_the_common_confirmation_once"
+        ],
+        "test_summaries": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 3011 filtered out; finished in 0.10s"
+        ],
+        "stdout_sha256": "31a3aed26c7e81337aaace6c79e64e58fac5eb96c002109e7aab3bb950a81cc9",
+        "stderr_sha256": "46d4ea983b0463a84b66fa6237a1ea57dd91e6e7d7da71fdabbe684072e47c30"
+      },
+      {
+        "stage": "app-cold-SRAM-real-PCM",
+        "argv": [
+          "cargo",
+          "test",
+          "-vv",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "debug-server",
+          "cinnabar_quiz_audio_tests",
+          "--",
+          "--test-threads=1"
+        ],
+        "exit_code": 0,
+        "passed_names": [
+          "game::cinnabar_quiz_audio_tests::muted_choice_confirmation_starts_real_press_ab_once_while_held",
+          "game::cinnabar_quiz_audio_tests::muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_door",
+          "game::cinnabar_quiz_audio_tests::muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_release",
+          "game::cinnabar_quiz_audio_tests::muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_prompt"
+        ],
+        "test_summaries": [
+          "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 380 filtered out; finished in 7.50s"
+        ],
+        "stdout_sha256": "73fc48d356112dc2198a3053ee217d6ff0493964fda6fa81f697836eeb78f805",
+        "stderr_sha256": "c765167112d957408391560cc3a4d4f70dc951d39a04dcb52e3561d60aac18d0"
+      },
+      {
+        "stage": "new-frozen-debug-CLI-for-approved-native-pair",
+        "argv": [
+          "cargo",
+          "build",
+          "-vv",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "debug-server"
+        ],
+        "exit_code": 0,
+        "passed_names": [],
+        "test_summaries": [],
+        "stdout_sha256": "dd99e33de660792f63a849911f0d061a542728256cedfad56ede2005f0d0f205",
+        "stderr_sha256": "ac1deaf3664ebdf6a4dc9996b547658b7c9c49be0433674ff65950dc6b07d107"
+      }
+    ],
+    "core_pass": 4,
+    "app_named_pass": 4,
+    "app_cold_cases": 7,
+    "scope_limit": "No full core suite, App-wide suite, GBA build or CI result is claimed here."
+  },
+  "native": {
+    "actual_session": 98457,
+    "actual_terminal_exit": 0,
+    "result_sha256": "1b716a8db2ab62938376b64b2d9007da198892c446769a27f0b72a39ced78f93",
+    "peer_sha256": "8c47683d100d104d0df1a7a3058b7dcf3c40cd4b052ee5746e77d5adbab14fca",
+    "source_heads": {
+      "before": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+      "after": "77db4bcb3dc745a4b913c61301ff28852dd64e2e"
+    },
+    "binary_sha256": {
+      "before": "c13fd2f3cba4cbf4878a7a3497a35af39b210becf0e006f03554d1bf8549911c",
+      "after": "94dd18437e4692351653a831737a4a66fb59bb592c5620149b9ed12236101db2"
+    },
+    "seed": 42,
+    "physical_sram_sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+    "buttons_sha256": "15ba422b1f32fbd1f3943dfe3c695668d10d3c83cb4dbbc34522c74ab1c53764",
+    "frames": 2012,
+    "full_public_prefix_equal_inclusive": [
+      0,
+      1020
+    ],
+    "first_difference": 1021,
+    "actual1021": {
+      "before": {
+        "id": 0,
+        "playing": false
+      },
+      "after": {
+        "id": 63,
+        "playing": true
+      },
+      "both_effect": "WaitSound"
+    },
+    "actor_events": {
+      "before": {
+        "first_choice": 995,
+        "choice_confirmation": 1021,
+        "first_denied_playing": 1023,
+        "first_nonzero_walk_counter": 1089,
+        "route_complete": 1121,
+        "first_prebattle": 1123,
+        "prebattle_final_page_ready": 1174,
+        "first_battle": 1182
+      },
+      "after": {
+        "first_choice": 995,
+        "choice_confirmation": 1021,
+        "first_denied_playing": 1039,
+        "first_nonzero_walk_counter": 1121,
+        "route_complete": 1153,
+        "first_prebattle": 1155,
+        "prebattle_final_page_ready": 1206,
+        "first_battle": 1214
+      }
+    },
+    "public_audio_choice": {
+      "after_PressAB_inclusive": [
+        1021,
+        1037
+      ],
+      "before_Denied_inclusive": [
+        1023,
+        1051
+      ],
+      "after_Denied_inclusive": [
+        1039,
+        1067
+      ]
+    },
+    "conserved": "Both providers: ordinary zero-padding inputs; money/coins/badges/party/HP/PP unchanged from frame604; bag empty and unchanged; gate/trainer flags unset; actual NPC route and prebattle then battle; SRAM unchanged/no companion JSON.",
+    "rpc_command_counts": {
+      "before": {
+        "get_state": 2029,
+        "get_npcs": 2029,
+        "get_flags": 2029,
+        "get_bag": 2,
+        "press_timeline": 2012,
+        "capture_frame": 16
+      },
+      "after": {
+        "get_state": 2029,
+        "get_npcs": 2029,
+        "get_flags": 2029,
+        "get_bag": 2,
+        "press_timeline": 2012,
+        "capture_frame": 16
+      }
+    },
+    "raw_artifacts": 45,
+    "raw_pngs": 32,
+    "all_artifact_sha_verified": true,
+    "all_owned_process_groups_gone": true,
+    "screenshots": [
+      {
+        "frame": 604,
+        "before_sha256": "325ad32154e46a1e1cbbb95487609d906d1b450904f8db2958f343d580619c1f",
+        "after_sha256": "325ad32154e46a1e1cbbb95487609d906d1b450904f8db2958f343d580619c1f",
+        "byte_equal": true
+      },
+      {
+        "frame": 1023,
+        "before_sha256": "15d32ace27feea40e9e1ec906d649691fc12258fc2cad43c43a3990da18d51ad",
+        "after_sha256": "15d32ace27feea40e9e1ec906d649691fc12258fc2cad43c43a3990da18d51ad",
+        "byte_equal": true
+      },
+      {
+        "frame": 1057,
+        "before_sha256": "96a5ba435a9bdf939daa65b6451c249d68377971c832796852a440aa96848605",
+        "after_sha256": "15d32ace27feea40e9e1ec906d649691fc12258fc2cad43c43a3990da18d51ad",
+        "byte_equal": false
+      },
+      {
+        "frame": 1064,
+        "before_sha256": "7986509fb025ecd71de224044f37e2e67eb7d5aa66fe53946c94eeb7869ceb25",
+        "after_sha256": "15d32ace27feea40e9e1ec906d649691fc12258fc2cad43c43a3990da18d51ad",
+        "byte_equal": false
+      },
+      {
+        "frame": 1087,
+        "before_sha256": "b292d175f46e840aff0ed162ec99ccdef3cb8f528fab84fcaf5cbc02e510bfcc",
+        "after_sha256": "48db7c2cb8a8cc25a98c0c59d100bc94a332c2037ab301cab54562e71a782b57",
+        "byte_equal": false
+      },
+      {
+        "frame": 1090,
+        "before_sha256": "b292d175f46e840aff0ed162ec99ccdef3cb8f528fab84fcaf5cbc02e510bfcc",
+        "after_sha256": "26a3aac21993bad9025c22736892b4c76c1d7a9763b32f2fd1376bd3fa809ff0",
+        "byte_equal": false
+      },
+      {
+        "frame": 1100,
+        "before_sha256": "dc4f4dd2ee27a91461b2c091f4437a96030574eb5d1dc530de3c366adf539592",
+        "after_sha256": "0bba18252cf4210147009bbb11134e8895b685741e3dfb5702423db8c49132e0",
+        "byte_equal": false
+      },
+      {
+        "frame": 1110,
+        "before_sha256": "2d89eb4b2bc2cce38d4d3e55c0fb1504e0456057a586007edce23d760e990d9f",
+        "after_sha256": "0bba18252cf4210147009bbb11134e8895b685741e3dfb5702423db8c49132e0",
+        "byte_equal": false
+      },
+      {
+        "frame": 1120,
+        "before_sha256": "f015371bc9ef2831559b86461ace7ea18236f6b9de3ee52dc00a871d475ea2d1",
+        "after_sha256": "b292d175f46e840aff0ed162ec99ccdef3cb8f528fab84fcaf5cbc02e510bfcc",
+        "byte_equal": false
+      },
+      {
+        "frame": 1140,
+        "before_sha256": "b82c8051b5972ae4efa41515cbabe7a612ab07394aeb7e62e091d4e8673f5eb2",
+        "after_sha256": "591de3fb162aa25cceac9924b5a755addc1070fc15cc65d3ce4d90090d03b740",
+        "byte_equal": false
+      },
+      {
+        "frame": 1160,
+        "before_sha256": "dda771a2afc73427394c358f0c8fc9fd348cde9f2c87da220efc073359f33cbf",
+        "after_sha256": "d561fa86cf55c8812907061b2eec43c39c96516525707799c6d5001b4335719f",
+        "byte_equal": false
+      },
+      {
+        "frame": 1200,
+        "before_sha256": "e780006af1ea49f8b99a30f3de4ce68ffcf9fb0638354d0b6510d7b3ec048a16",
+        "after_sha256": "1a93bc732e04d3c8e7a259369dec1ee05c5347541a7eb76672c5cf9b93439324",
+        "byte_equal": false
+      },
+      {
+        "frame": 1240,
+        "before_sha256": "238368f521e6052a6b3977d30ceb5b9fd7d5042ec772fc517dca9905f17d7278",
+        "after_sha256": "5c0c43a931fe2785aaff84d205f519ef80bcfd6c588af20492b987c496478a36",
+        "byte_equal": false
+      },
+      {
+        "frame": 1280,
+        "before_sha256": "bac3a245b5646a1801d7b3ed4d592811630ced62c83c00361710859392ef5ae1",
+        "after_sha256": "f8b93a09042cc0042c36ea7a244d421d9db9ceb236bf129d831a7c0970a6bd03",
+        "byte_equal": false
+      },
+      {
+        "frame": 1340,
+        "before_sha256": "a7e27939ed169816fefef44d24f5efa34d184d7e78bdc8c62d27dbfa4ec85b31",
+        "after_sha256": "624c0a5f85a778393d32cc5e4a3ae72ed7df8c73c91bf10458d4aef0a6ba554e",
+        "byte_equal": false
+      },
+      {
+        "frame": 2012,
+        "before_sha256": "a83a601d2d75d16a693adea3dc6f95e829d12ed281b70e3b7361289cd0197587",
+        "after_sha256": "a83a601d2d75d16a693adea3dc6f95e829d12ed281b70e3b7361289cd0197587",
+        "byte_equal": true
+      }
+    ]
+  },
+  "first_failure_note": "Original run76222 stopped at1021 because the plan incorrectly used native PressAB ID144. Raw failure retained (result SHA f816e406c77bebdd8c361a6352a9e71691d96ea265059e1548a694833d6c0785); source confirms PressAB=63. Separate approved v2 changed only that plan ID and controller plan-path/hash; inputs/captures/other expectations unchanged.",
+  "not_claimed": [
+    "directRNGidentity",
+    "rawnativePCMwaveform",
+    "new15framecompletion",
+    "A+Bpriorityfixed",
+    "hardwarefullframeparity",
+    "fullplaythrough",
+    "unassistedSAVEboot"
+  ]
+}

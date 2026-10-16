@@ -356,6 +356,11 @@ impl Session {
     fn correct_text(&mut self) {
         let question = self.visible();
         self.step(&[GbButton::A]); // YES: the actual selected option, not a VM result injection.
+        assert_eq!(
+            self.game.overworld.sfx_event,
+            OverworldSfxEvent::TextAdvance
+        );
+        assert_eq!(self.sound(), (SfxId::PressAB as u8, true));
         assert_eq!(self.visible(), question);
         assert!(matches!(self.effect(), Some(ScriptEffect::PrintFieldText {
             leading_sound: Some(sound), leading_sound_started: false, ..
@@ -537,7 +542,12 @@ fn muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_
         let mut session = Session::boot_at_machine(false);
         session.question(GbButton::A);
         let question = session.visible();
-        session.step(&[GbButton::B]); // Ordinary NO. Missing shared selection audio is not faked.
+        session.step(&[GbButton::B]); // Ordinary NO; the common choice supplies its sound.
+        assert_eq!(
+            session.game.overworld.sfx_event,
+            OverworldSfxEvent::TextAdvance
+        );
+        assert_eq!(session.sound(), (SfxId::PressAB as u8, true));
         assert!(matches!(session.effect(), Some(ScriptEffect::WaitSound)));
         for _ in 0..WATCHDOG {
             if session.sound() == (SfxId::Denied as u8, true) {
@@ -672,4 +682,53 @@ fn muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_
     );
     assert!(!session.sfx_starts.contains(&(SfxId::GoInside as u8)));
     session.fixture.assert_unchanged();
+}
+
+#[test]
+fn muted_choice_confirmation_starts_real_press_ab_once_while_held() {
+    for (button, following) in [
+        (GbButton::A, SfxId::GetItem1),
+        (GbButton::B, SfxId::Denied),
+    ] {
+        let mut session = Session::boot_at_machine(false);
+        session.question(GbButton::A);
+        assert!(
+            !session.sound().1,
+            "the question has naturally outlasted its prior cue"
+        );
+        session.pcm_sfx_ids.clear(); // Observation log only; leave Game/audio state untouched.
+        let starts_before = session.sfx_starts.len();
+        session.step(&[button]);
+        assert_eq!(
+            session.game.overworld.sfx_event,
+            OverworldSfxEvent::TextAdvance
+        );
+        assert_eq!(session.sound(), (SfxId::PressAB as u8, true));
+        assert!(session.pcm_sfx_ids.contains(&(SfxId::PressAB as u8)));
+
+        // Keep the same physical button down while the real PCM owner runs
+        // the existing GET_ITEM or DENIED path. This bound is a stuck-test
+        // watchdog, not a replacement cue duration or extra neutral padding.
+        let mut following_started = false;
+        for _ in 0..WATCHDOG {
+            let (id, playing) = session.sound();
+            following_started |= id == following as u8 && playing;
+            if following_started && !playing {
+                break;
+            }
+            session.step(&[button]);
+            assert_eq!(session.game.overworld.sfx_event, OverworldSfxEvent::None);
+        }
+        assert!(following_started && !session.sound().1);
+        assert!(session.pcm_sfx_ids.contains(&(following as u8)));
+        assert_eq!(
+            session.sfx_starts[starts_before..]
+                .iter()
+                .filter(|&&id| id == SfxId::PressAB as u8)
+                .count(),
+            1
+        );
+        assert!(!session.gate_open());
+        session.fixture.assert_unchanged();
+    }
 }
