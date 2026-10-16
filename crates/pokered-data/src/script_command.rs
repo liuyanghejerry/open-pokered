@@ -87,6 +87,8 @@ pub enum PokemonScriptCommand {
         block_id: u8,
     },
     PlayShipDeparture,
+    /// Original Silph liberation: fade, replace the object roster under black, fade in.
+    SilphRocketDeparture,
     EnterHallOfFame,
     WaitMusic,
     WaitSound,
@@ -130,6 +132,7 @@ impl PokemonScriptCommand {
             Self::WithdrawDaycare => "withdrawDaycare",
             Self::ReplaceTileBlock { .. } => "replaceTileBlock",
             Self::PlayShipDeparture => "playShipDeparture",
+            Self::SilphRocketDeparture => "silphRocketDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
             Self::WaitMusic => "waitMusic",
             Self::WaitSound => "waitSound",
@@ -202,6 +205,7 @@ impl PokemonScriptCommand {
             | Self::LinkStart
             | Self::WithdrawDaycare
             | Self::PlayShipDeparture
+            | Self::SilphRocketDeparture
             | Self::EnterHallOfFame
             | Self::WaitMusic
             | Self::WaitSound
@@ -376,6 +380,10 @@ impl PokemonScriptCommand {
                 block_id: u8_arg(2)?,
             },
             "playShipDeparture" => Self::PlayShipDeparture,
+            "silphRocketDeparture" => {
+                if !args.is_empty() { return Err("silphRocketDeparture: no arguments expected".into()); }
+                Self::SilphRocketDeparture
+            },
             "enterHallOfFame" => Self::EnterHallOfFame,
             _ => return Err(format!("unsupported Pokémon script command: {name}")),
         })
@@ -385,6 +393,30 @@ impl PokemonScriptCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn silph_departure_is_a_strict_no_argument_command() {
+        let typed = PokemonScriptCommand::SilphRocketDeparture;
+        let ScriptCommand::Custom { name, args } = typed.clone().into_script_command() else {
+            panic!("custom command");
+        };
+        assert_eq!(name, "silphRocketDeparture");
+        assert!(args.is_empty());
+        assert_eq!(
+            PokemonScriptCommand::from_custom(&name, &args).unwrap(),
+            typed
+        );
+        for args in [
+            vec![json!(false)],
+            vec![json!(null)],
+            vec![json!("ignored")],
+        ] {
+            assert_eq!(
+                PokemonScriptCommand::from_custom(&name, &args).unwrap_err(),
+                "silphRocketDeparture: no arguments expected"
+            );
+        }
+    }
 
     #[test]
     fn custom_command_round_trips_through_protocol() {

@@ -785,37 +785,50 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             } else {
                 Vec::new()
             };
-            let done = Self::tick_active_effect(
-                effect,
-                a_just_pressed,
-                b_just_pressed,
-                input.a,
-                input.b,
-                up_just_pressed,
-                down_just_pressed,
-                &mut self.pending_dialogue,
-                &mut self.last_script_dialogue,
-                &mut self.pending_choice,
-                &mut self.pending_pokedex_entry,
-                &mut self.pending_naming_screen,
-                &mut self.party_select_requested,
-                &mut self.pending_emotion_bubble,
-                &mut self.pending_healing_machine,
-                &mut self.npc_states,
-                &self.state.player,
-                &mut self.scripted_player_path,
-                self.map_data.as_ref(),
-                &self.map_script_config,
-                self.party_count,
-                &mut self.audio_requests,
-                self.state.current_map,
-                &mut self.sfx_event,
-                &mut self.ship_departure,
-                &dialogue_names,
-                self.script_music_playing,
-                self.script_sfx_playing,
-                self.retain_field_text,
-            );
+            let mut departure_apply_objects = false;
+            let done = if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
+                use super::silph_departure::DepartureTick;
+                match state.advance() {
+                    DepartureTick::ApplyObjects => {
+                        departure_apply_objects = true;
+                        false
+                    }
+                    DepartureTick::Complete => true,
+                    DepartureTick::Waiting => false,
+                }
+            } else {
+                Self::tick_active_effect(
+                    effect,
+                    a_just_pressed,
+                    b_just_pressed,
+                    input.a,
+                    input.b,
+                    up_just_pressed,
+                    down_just_pressed,
+                    &mut self.pending_dialogue,
+                    &mut self.last_script_dialogue,
+                    &mut self.pending_choice,
+                    &mut self.pending_pokedex_entry,
+                    &mut self.pending_naming_screen,
+                    &mut self.party_select_requested,
+                    &mut self.pending_emotion_bubble,
+                    &mut self.pending_healing_machine,
+                    &mut self.npc_states,
+                    &self.state.player,
+                    &mut self.scripted_player_path,
+                    self.map_data.as_ref(),
+                    &self.map_script_config,
+                    self.party_count,
+                    &mut self.audio_requests,
+                    self.state.current_map,
+                    &mut self.sfx_event,
+                    &mut self.ship_departure,
+                    &dialogue_names,
+                    self.script_music_playing,
+                    self.script_sfx_playing,
+                    self.retain_field_text,
+                )
+            };
             // A nested text caller (for example a gift/menu flow) owns the
             // window once it creates its dialogue, just like ShowDialogue.
             if !dialogue_was_open && self.pending_dialogue.is_some() && !owns_print_window {
@@ -923,6 +936,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ));
                 }
                 self.sync_flags_from_engine();
+            }
+            if departure_apply_objects {
+                // TeamRocketLeaves is synchronous under black: no render,
+                // serialization or VM continuation can see half of its roster.
+                for toggle in pokered_data::toggleable_objects::SILPH_ROCKETS_HIDDEN {
+                    self.set_named_object_visible(toggle, false);
+                }
+                for toggle in pokered_data::toggleable_objects::SILPH_CITIZENS_SHOWN {
+                    self.set_named_object_visible(toggle, true);
+                }
             }
             // Scripted player path must also advance during script effects so
             // that MovePlayer can observe the path draining. Without this, the
@@ -2788,6 +2811,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    fn set_named_object_visible(&mut self, toggle_id: &str, visible: bool) {
+        use pokered_data::toggleable_objects::{
+            set_object_hidden, set_object_shown, toggle_id_to_bit_index,
+        };
+        if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(toggle_id) {
+            if let Some(npc) = self.npc_states.iter_mut().find(|npc| npc.text_id == npc_id) {
+                npc.visible = visible;
+            }
+        }
+        // Keep live NPCs, both engine/unified flags and SRAM bits consistent.
+        self.set_flag_live(&format!("__OBJ_HIDDEN_{toggle_id}"), !visible);
+        self.set_flag_live(&format!("__OBJ_SHOWN_{toggle_id}"), visible);
+        if let Some(bit) = toggle_id_to_bit_index(toggle_id) {
+            if visible {
+                set_object_shown(&mut self.toggleable_object_flags, bit);
+            } else {
+                set_object_hidden(&mut self.toggleable_object_flags, bit);
+            }
+        }
+    }
+
     fn tick_active_effect(
         effect: &mut script_bridge::ScriptEffect,
         a_just_pressed: bool,
@@ -3639,6 +3683,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
             }
+            script_bridge::ScriptEffect::SilphRocketDeparture { .. } => false,
             _ => true,
         }
     }
@@ -3812,45 +3857,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
                 script_bridge::ScriptEffect::ShowObjectByName { toggle_id } => {
-                    use pokered_data::toggleable_objects::{
-                        set_object_shown, toggle_id_to_bit_index,
-                    };
-                    if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(&toggle_id) {
-                        if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_id)
-                        {
-                            npc.visible = true;
-                        }
-                    }
-                    // Clear the hidden flag in unified_flags
-                    let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.set_flag_live(&flag_key, false);
-                    let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.set_flag_live(&shown_key, true);
-                    // Also update toggleable_object_flags for SRAM persistence
-                    if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
-                        set_object_shown(&mut self.toggleable_object_flags, bit_index);
-                    }
+                    self.set_named_object_visible(&toggle_id, true);
                 }
                 script_bridge::ScriptEffect::HideObjectByName { toggle_id } => {
-                    use pokered_data::toggleable_objects::{
-                        set_object_hidden, toggle_id_to_bit_index,
-                    };
-                    if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(&toggle_id) {
-                        if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_id)
-                        {
-                            npc.visible = false;
-                        }
-                    }
-                    // Update both stores so a later engine sync cannot restore
-                    // a stale shown flag loaded from a save or previous map.
-                    let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.set_flag_live(&flag_key, true);
-                    let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.set_flag_live(&shown_key, false);
-                    // Also update toggleable_object_flags for SRAM persistence
-                    if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
-                        set_object_hidden(&mut self.toggleable_object_flags, bit_index);
-                    }
+                    self.set_named_object_visible(&toggle_id, false);
                 }
                 script_bridge::ScriptEffect::PlayMusic { music_id } => {
                     self.audio_requests

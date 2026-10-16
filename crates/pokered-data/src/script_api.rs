@@ -508,6 +508,17 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn(
+            "silphRocketDeparture",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                if !args.is_empty() {
+                    return Err(boa_engine::JsNativeError::typ()
+                        .with_message("silphRocketDeparture: no arguments expected").into());
+                }
+                Ok(PokemonScriptCommand::SilphRocketDeparture.into_script_command())
+            },
+        );
+
         // game.choosePartyPokemon() -> Promise<number>
         // Opens the party menu as a selector (Name Rater); resolves to the
         // chosen 0-based index, or -1 on cancel.
@@ -772,6 +783,52 @@ mod tests {
     use crate::script_function_catalog::POKERED_SCRIPT_FUNCTIONS;
     use super::PokemonScriptApi;
     use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+
+    #[test]
+    fn boa_silph_departure_await_blocks_and_extra_arguments_reject() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine
+            .load_script(
+                r#"
+            export async function departure() {
+                await game.silphRocketDeparture();
+                await game.showText("after fade");
+            }
+            export async function invalid() {
+                try {
+                    await game.silphRocketDeparture(false);
+                    await game.showText("INVALID_ARGUMENT_ACCEPTED");
+                } catch (error) {
+                    await game.showText(error.name + ":" + error.message);
+                }
+            }
+        "#,
+            )
+            .unwrap();
+        let command = PokemonScriptCommand::SilphRocketDeparture.into_script_command();
+        assert_eq!(
+            engine.call_function("departure", &[]).unwrap(),
+            Some(command.clone())
+        );
+        for _ in 0..3 {
+            assert_eq!(engine.tick(), Some(command.clone()));
+        }
+        assert_eq!(
+            engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "after fade".into()
+            })
+        );
+        assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
+        assert_eq!(
+            engine.call_function("invalid", &[]).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "TypeError:silphRocketDeparture: no arguments expected".into()
+            })
+        );
+        assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
+    }
 
     #[test]
     fn fidelity_menus_and_reward_sound_suspend_with_typed_commands_in_boa() {

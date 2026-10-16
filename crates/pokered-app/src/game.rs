@@ -13639,3 +13639,7 @@ mod cinnabar_victory_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/start_menu_button_audio_tests.rs"]
 mod start_menu_button_audio_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/silph_departure_tests.rs"]
+mod silph_departure_tests;
