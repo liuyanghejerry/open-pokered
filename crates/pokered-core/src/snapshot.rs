@@ -463,6 +463,7 @@ impl OverworldSnapshot {
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
             post_dialogue_battle, fishing_anim, pending_fishing, ship_departure,
         );
+        screen.remove_legacy_on_load_trigger();
         if let Some(engine) = &self.script_engine {
             screen.script_engine.restore_snapshot(engine);
         }

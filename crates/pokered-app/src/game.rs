@@ -2629,6 +2629,10 @@ impl PokemonGame {
                                 },
                             );
                         }
+                        // Both host and bare-metal arms have now installed
+                        // the new save context. Run the entry phase once here,
+                        // rather than in the context-free screen constructor.
+                        self.overworld.run_on_load();
                         if let Some(ref audio) = self.audio {
                             audio.play_music(MusicId::PALLET_TOWN);
                         }
@@ -11031,7 +11035,12 @@ mod link_stats_cry_fidelity_tests {
         game.overworld.run_on_load();
         let idle = InputState::new();
         for _ in 0..60 { game.update(&idle); }
-        game.update(&button(GbButton::Start));
+        // JoypadOverworld samples only on alternate foreground frames.
+        // Hold across both phases while retaining just one host input edge.
+        let mut start = button(GbButton::Start);
+        game.update(&start);
+        start.begin_frame();
+        game.update(&start);
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
         game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
@@ -12956,6 +12965,134 @@ mod pokedex_held_combination_tests {
             game.update(&input);
             assert_eq!(game.pokedex_screen.cursor(), cursor);
         }
+    }
+}
+
+#[cfg(all(test, not(target_os = "none")))]
+mod map_on_load_tests {
+    use super::*;
+
+    #[test]
+    fn new_game_runs_the_first_bedroom_load_after_context_is_seeded() {
+        use pokered_core::game_state::{Lang, MainMenuChoice};
+        use pokered_core::overworld::Direction;
+        for language in [Lang::En, Lang::Zh] {
+            let mut game = PokemonGame::new_with_options(
+                GameVersion::Red, None, None, None, false, None, false, true,
+                #[cfg(feature = "debug-server")] None,
+            );
+            game.state.config.language = language;
+            game.state.screen = GameScreen::MainMenu;
+            game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+            game.handle_transition(GameScreen::OakSpeech);
+            game.player_name = "RED".into();
+            game.rival_name = "BLUE".into();
+            game.handle_transition(GameScreen::Overworld);
+            assert_eq!(game.overworld.state.current_map, MapId::RedsHouse2F);
+            assert_eq!(game.overworld.player_name, "RED");
+            assert_eq!(game.overworld.rival_name, "BLUE");
+            assert_eq!(game.overworld.party_count, 0);
+            assert_eq!(game.overworld.script_lang(), Some(if language == Lang::Zh { "zh" } else { "en" }));
+            assert_eq!(game.overworld.active_script_effect_value(), Some(serde_json::json!({
+                "effect": "FacePlayer", "direction": "Up",
+            })));
+            let position = (game.overworld.state.player.x, game.overworld.state.player.y);
+            let idle = InputState::new();
+            for _ in 0..64 {
+                if game.overworld.script_engine_idle()
+                    && game.overworld.active_script_effect_label().is_none() { break; }
+                game.update(&idle);
+            }
+            assert!(game.overworld.script_engine_idle());
+            assert!(game.overworld.active_script_effect_label().is_none());
+            assert_eq!(game.overworld.state.player.facing, Direction::Up);
+            for _ in 0..16 {
+                game.update(&idle);
+                assert!(game.overworld.script_engine_idle());
+                assert!(game.overworld.active_script_effect_label().is_none());
+            }
+            assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), position);
+        }
+    }
+
+    #[test]
+    fn new_game_startup_map_non_idempotent_load_runs_once_and_not_on_menu_return() {
+        use pokered_core::game_state::MainMenuChoice;
+        let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .unwrap().as_nanos();
+        let directory = std::env::temp_dir().join(format!("pokered-onload-newgame-{}-{unique}", std::process::id()));
+        let map_dir = directory.join("CinnabarGym");
+        std::fs::create_dir_all(&map_dir).unwrap();
+        std::fs::write(map_dir.join("script.scene"), "game_scene CinnabarGym {\n  @load {\n    giveMoney(37)\n    giveMoney(83)\n  }\n}\n").unwrap();
+        std::fs::write(map_dir.join("script_config.json"), r#"{"onLoad":"CinnabarGymOnLoad"}"#).unwrap();
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, Some(directory.clone()), false,
+            Some("CinnabarGym,15,8".into()), false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.state.screen = GameScreen::MainMenu;
+        game.main_menu.last_choice = Some(MainMenuChoice::NewGame);
+        game.handle_transition(GameScreen::OakSpeech);
+        let initial_money = game.save_data.game_data.player_money;
+        game.handle_transition(GameScreen::Overworld);
+        // The entry engine/config have been loaded through NewGame itself;
+        // no test-side run_on_load, skip-intro, or later scene injection.
+        std::fs::remove_dir_all(&directory).unwrap();
+        assert_eq!(game.overworld.state.current_map, MapId::CinnabarGym);
+        assert_eq!(game.overworld.active_script_effect_value(), Some(serde_json::json!({
+            "effect": "GiveMoney", "amount": 37,
+        })));
+        let idle = InputState::new();
+        for _ in 0..64 { game.update(&idle); }
+        assert_eq!(game.save_data.game_data.player_money, initial_money + 37 + 83);
+        assert!(game.overworld.script_engine_idle());
+        assert!(game.overworld.active_script_effect_label().is_none());
+        game.handle_transition(GameScreen::StartMenu);
+        game.handle_transition(GameScreen::Overworld);
+        for _ in 0..16 { game.update(&idle); }
+        assert_eq!(game.save_data.game_data.player_money, initial_money + 37 + 83);
+        assert!(game.overworld.script_engine_idle());
+        assert!(game.overworld.active_script_effect_label().is_none());
+    }
+
+    #[test]
+    fn continue_cinnabar_load_finishes_once_before_ordinary_up_input() {
+        use pokered_core::overworld::Direction;
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.save_data = SaveData::new();
+        game.save_data.game_data.position.map_id = MapId::CinnabarGym as u8;
+        game.save_data.game_data.position.x = 15;
+        game.save_data.game_data.position.y = 8;
+        game.save_data.game_data.player_direction = 0; // original facing Down
+        game.state.screen = GameScreen::MainMenu;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("ReplaceTileBlock"));
+        let idle = InputState::new();
+        // Stop at the first completed direct load, without waiting through
+        // another initializer or changing the subsequent physical input.
+        for _ in 0..64 {
+            if game.overworld.script_engine_idle()
+                && game.overworld.active_script_effect_label().is_none() { break; }
+            game.update(&idle);
+        }
+        assert!(game.overworld.script_engine_idle());
+        assert!(game.overworld.active_script_effect_label().is_none());
+        for _ in 0..2 {
+            game.update(&idle);
+            assert!(game.overworld.script_engine_idle());
+            assert!(game.overworld.active_script_effect_label().is_none(), "Continue requeued gate initialization");
+        }
+        let mut up = InputState::new();
+        up.press(GbButton::Up);
+        game.update(&up);
+        up.begin_frame();
+        game.update(&up);
+        assert_eq!(game.overworld.state.player.facing, Direction::Up);
+        assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (15, 8));
     }
 }
 
