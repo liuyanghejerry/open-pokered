@@ -265,8 +265,10 @@ fn cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_
         }
         assert!(
             battle_seen && completed,
-            "ordinary Surf/FIGHT inputs must finish trainer={trainer}: {}",
-            s.game.debug_state_snapshot()
+            "ordinary Surf/FIGHT inputs must finish trainer={trainer}: screen={:?}, battle_phase={:?}, effect={:?}",
+            s.game.state.screen,
+            s.game.battle.phase,
+            s.game.overworld.active_script_effect_label()
         );
         assert_eq!(go_count, 1);
         assert!(go_pcm);
