@@ -27,7 +27,7 @@ fn ordinary_frames(screen: &mut OverworldScreen<PokemonRedData>, frames: usize) 
 }
 
 fn counter_source(key: &str) -> String {
-    format!("game_scene {key} {{\n @load {{\n giveMoney(37)\n giveMoney(83)\n }}\n}}")
+    format!("game_scene {key} {{\n  @load {{\n    giveMoney(37)\n    giveMoney(83)\n  }}\n}}")
 }
 
 fn register_counter(screen: &mut OverworldScreen<PokemonRedData>, map: MapId) {

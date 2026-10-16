@@ -13018,7 +13018,7 @@ mod map_on_load_tests {
         let directory = std::env::temp_dir().join(format!("pokered-onload-newgame-{}-{unique}", std::process::id()));
         let map_dir = directory.join("CinnabarGym");
         std::fs::create_dir_all(&map_dir).unwrap();
-        std::fs::write(map_dir.join("script.scene"), "game_scene CinnabarGym {\n @load {\n giveMoney(37)\n giveMoney(83)\n }\n}\n").unwrap();
+        std::fs::write(map_dir.join("script.scene"), "game_scene CinnabarGym {\n  @load {\n    giveMoney(37)\n    giveMoney(83)\n  }\n}\n").unwrap();
         std::fs::write(map_dir.join("script_config.json"), r#"{"onLoad":"CinnabarGymOnLoad"}"#).unwrap();
         let mut game = PokemonGame::new_with_options(
             GameVersion::Red, None, None, Some(directory.clone()), false,
