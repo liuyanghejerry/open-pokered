@@ -91,7 +91,6 @@ impl SaveData {
     /// (the original refuses all three). Mirrors `MoveMon PARTY_TO_DAYCARE`.
     pub fn deposit_daycare(&mut self, index: u8) {
         use crate::pokemon::move_learning::is_hm_move;
-        use pokered_data::pokemon_data::get_base_stats;
         let idx = index as usize;
         let ok = self
             .party
@@ -105,9 +104,6 @@ impl SaveData {
         let Ok(mon) = self.party.remove(idx) else {
             return;
         };
-        let catch_rate = get_base_stats(mon.species)
-            .map(|b| b.catch_rate)
-            .unwrap_or(0);
         let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
         let name = mon.display_name(&mut name_buf);
         let dc = &mut self.game_data.daycare;
@@ -116,10 +112,11 @@ impl SaveData {
         dc.hp = mon.hp;
         dc.box_level = mon.level;
         dc.status = ser_pokemon::status_to_byte(&mon.status);
-        // Day Care copies the complete box struct, including current types.
+        // Day Care copies the complete box struct, including types and the
+        // per-instance MON_CATCH_RATE byte; only legacy absence uses a default.
         dc.type1 = mon.type1 as u8;
         dc.type2 = mon.type2 as u8;
-        dc.catch_rate = catch_rate;
+        dc.catch_rate = mon.effective_catch_rate();
         dc.moves = [
             mon.moves[0] as u8,
             mon.moves[1] as u8,
@@ -176,6 +173,7 @@ impl SaveData {
                 mon.status = ser_pokemon::byte_to_status(dc.status);
                 mon.type1 = pokered_data::types::PokemonType::from_id(dc.type1);
                 mon.type2 = pokered_data::types::PokemonType::from_id(dc.type2);
+                mon.catch_rate = Some(dc.catch_rate);
                 mon.ot_name.fill(0x50);
                 let ot = &self.game_data.daycare_mon_ot;
                 let len = ot.len().min(mon.ot_name.len());
