@@ -2,7 +2,7 @@
 //! No script/phase/flag/last setter, snapshot restore or debug RPC is used.
 use super::*;
 use pokered_core::foreground_input::{A, B, DOWN};
-use pokered_core::save::{export_sram, import_sram, SaveData};
+use pokered_core::save::{sram_export::export_sram, sram_import::import_sram, SaveData};
 use pokered_data::{moves::MoveId, species::Species};
 use serde_json::json;
 

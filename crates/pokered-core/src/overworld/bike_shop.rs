@@ -319,7 +319,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::foreground_input::{ForegroundJoypad, SELECT, START};
+    use crate::foreground_input::{ForegroundJoypad, LEFT, SELECT, START, UP};
     use crate::overworld::script_bridge::ScriptEffect;
     use crate::overworld::Direction;
     use crate::snapshot::OverworldSnapshot;
@@ -587,8 +587,34 @@ mod tests {
             field.source_foreground().is_some(),
             "Bike field continuation must outlive the one-shot terminal borrow"
         );
-        // Actual ordinary NPC handler, not a fake completed dialogue or sample.
-        assert!(field.try_call_script_npc_talk(3));
+        // Ordinary walking reaches the stationary youngster at (1,3).
+        // Row4 is the shop floor; the clerk counter is above (6,4), and the
+        // wandering woman's range stays on rows5..7. No private script call
+        // or runtime position/history setter starts this next conversation.
+        for _ in 0..400 {
+            step(&mut field, LEFT);
+            if field.state.player.x == 1
+                && field.state.player.movement_state == crate::overworld::MovementState::Idle
+            {
+                break;
+            }
+        }
+        assert_eq!((field.state.player.x, field.state.player.y), (1, 4));
+        for _ in 0..8 {
+            step(&mut field, 0);
+        }
+        for buttons in [UP, UP, 0, 0, A, A] {
+            step(&mut field, buttons);
+        }
+        assert!(
+            matches!(&field.active_script_effect, Some(ScriptEffect::ShowDialogue { text })
+            if text.starts_with("These BIKEs"))
+        );
+        assert_eq!(
+            field.source_foreground().unwrap().last(),
+            Some(A),
+            "actual talk poll owns A"
+        );
         for _ in 0..80 {
             step(&mut field, 0);
             if field
@@ -604,7 +630,7 @@ mod tests {
         assert_eq!(
             field.source_foreground().unwrap().last(),
             Some(0),
-            "new NPC instant glyphs do not poll"
+            "instant glyphs return to the real outer ACK, whose neutral poll owns last"
         );
         assert!(field.no_text_delay());
     }
@@ -637,8 +663,8 @@ mod tests {
                 assert_eq!(actual.status_flags, expected);
                 let mut save = crate::save::SaveData::new();
                 save.game_data = actual;
-                let bytes = crate::save::export_sram(&save);
-                let restored = crate::save::import_sram(&bytes).unwrap();
+                let bytes = crate::save::sram_export::export_sram(&save);
+                let restored = crate::save::sram_import::import_sram(&bytes).unwrap();
                 assert_eq!(restored.game_data.status_flags, expected);
             }
         }
