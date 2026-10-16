@@ -60,7 +60,24 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                             .with_message("printFieldText: retainWindow must be a boolean")
                     })?
                 };
-                Ok(PokemonScriptCommand::PrintFieldText { text, retain_window }.into_script_command())
+                let value = args.get_or_undefined(2);
+                let prompt = if value.is_undefined() {
+                    crate::script_command::FieldTextPrompt::Done
+                } else if let Some(enabled) = value.as_boolean() {
+                    if enabled { crate::script_command::FieldTextPrompt::Button }
+                    else { crate::script_command::FieldTextPrompt::Done }
+                } else if value.as_string().is_some_and(|s| s.to_std_string_lossy() == "prompt") {
+                    crate::script_command::FieldTextPrompt::Protected
+                } else {
+                    return Err(boa_engine::JsNativeError::typ()
+                        .with_message("printFieldText: prompt must be false, true, or prompt").into());
+                };
+                let sound = args.get_or_undefined(3);
+                let leading_sound = if sound.is_undefined() { None } else {
+                    Some(sound.as_string().ok_or_else(|| boa_engine::JsNativeError::typ()
+                        .with_message("printFieldText: leadingSound must be a string"))?.to_std_string_lossy())
+                };
+                Ok(PokemonScriptCommand::PrintFieldText { text, retain_window, prompt, leading_sound }.into_script_command())
             },
         );
 
@@ -432,6 +449,13 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "waitSound",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
                 Ok(PokemonScriptCommand::WaitSound.into_script_command())
+            },
+        );
+
+        engine.register_async_fn(
+            "finishFieldText",
+            |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(PokemonScriptCommand::FinishFieldText.into_script_command())
             },
         );
 
@@ -1171,9 +1195,9 @@ mod tests {
             }
         "#).unwrap();
         let expected = [
-            PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true },
+            PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true, prompt: crate::script_command::FieldTextPrompt::Done, leading_sound: None },
             PokemonScriptCommand::WaitSound,
-            PokemonScriptCommand::PrintFieldText { text: "ordinary".into(), retain_window: false },
+            PokemonScriptCommand::PrintFieldText { text: "ordinary".into(), retain_window: false, prompt: crate::script_command::FieldTextPrompt::Done, leading_sound: None },
         ];
         let mut next = engine.call_function("verifyCryWait", &[]).unwrap();
         for expected in expected {
@@ -1183,4 +1207,39 @@ mod tests {
             next = engine.signal_done(CommandResult::Void).unwrap();
         }
         assert!(next.is_none());
-    }}
+    }
+
+    #[test]
+    fn boa_retained_prompt_modes_suspend_and_resume_without_coercing_invalid_modes() {
+        use crate::script_command::{FieldTextPrompt, PokemonScriptCommand};
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function verifyQuizText() {
+                await game.printFieldText("intro", true, "prompt");
+                await game.printFieldText("question", true, false);
+                await game.printFieldText("correct", true, true, "SFX_GET_ITEM_1");
+                await game.finishFieldText();
+            }
+        "#).unwrap();
+        let expected = [
+            PokemonScriptCommand::PrintFieldText { text: "intro".into(), retain_window: true, prompt: FieldTextPrompt::Protected, leading_sound: None },
+            PokemonScriptCommand::PrintFieldText { text: "question".into(), retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None },
+            PokemonScriptCommand::PrintFieldText { text: "correct".into(), retain_window: true, prompt: FieldTextPrompt::Button, leading_sound: Some("SFX_GET_ITEM_1".into()) },
+            PokemonScriptCommand::FinishFieldText,
+        ];
+        let mut next = engine.call_function("verifyQuizText", &[]).unwrap();
+        for expected in expected {
+            let Some(ScriptCommand::Custom { name, args }) = &next else { panic!("missing command: {next:?}"); };
+            assert_eq!(PokemonScriptCommand::from_custom(name, args).unwrap(), expected);
+            assert_eq!(engine.tick(), next, "each async call must suspend until the caller resumes it");
+            next = engine.signal_done(CommandResult::Void).unwrap();
+        }
+        assert!(next.is_none());
+        engine.load_script(r#"
+            export async function invalidQuizText() {
+                await game.printFieldText("invalid", true, "true");
+            }
+        "#).unwrap();
+        assert!(engine.call_function("invalidQuizText", &[]).is_err());
+    }
+}

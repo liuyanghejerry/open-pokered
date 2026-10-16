@@ -13482,3 +13482,7 @@ game_scene PokemonTower6F {
     }
 
 }
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/cinnabar_quiz_audio_tests.rs"]
+mod cinnabar_quiz_audio_tests;
