@@ -4088,8 +4088,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.map_script_config = MapScriptConfig::default();
 
         #[cfg(feature = "script-boa")]
-        match &mut self.script_engine {
-            super::native_script::OverworldScriptEngine::Boa(engine) => {
+        if let super::native_script::OverworldScriptEngine::Boa(engine) = &mut self.script_engine {
                 if let Some(shared_source) = self.script_loader.get_script("shared/pokecenter") {
                     log::info!(target: "pokered::overworld", "[Script] Loading shared/pokecenter module ({} bytes)", shared_source.len());
                     match engine.load_shared_module("pokecenter.js", shared_source) {
@@ -4109,7 +4108,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 } else {
                     log::warn!(target: "pokered::overworld", "[Script] No script found for key '{}'", map_key);
                 }
-            }
         }
 
         #[cfg(not(feature = "script-boa"))]
