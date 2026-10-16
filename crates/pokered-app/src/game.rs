@@ -5056,6 +5056,14 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B),
                     start: input.is_just_pressed(GbButton::Start),
                 };
+                // HandleMenuInput plays PRESS_AB before returning its full
+                // key mask to DisplayStartMenu, including UP+A / UP+B polls.
+                // Direction priority and submenu eligibility do not suppress it.
+                if sm_input.a || sm_input.b {
+                    if let Some(audio) = &self.audio {
+                        audio.play_sfx(SfxId::PressAB);
+                    }
+                }
                 match self.start_menu.update_frame(sm_input) {
                     StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
                     StartMenuAction::OpenOption => {
@@ -13655,3 +13663,7 @@ mod cinnabar_victory_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/faint_narration_tests.rs"]
 mod faint_narration_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/start_menu_button_audio_tests.rs"]
+mod start_menu_button_audio_tests;
