@@ -782,6 +782,7 @@ pub(super) fn can_reuse_composited_frame(screen: &OverworldScreen) -> bool {
         && screen.fly_arrival_delay_frames == 0
         && screen.fishing_anim.is_none()
         && screen.ship_departure.is_none()
+        && screen.silph_rocket_departure_palette_index().is_none()
         && screen.flash_lit_frames == 0
         && screen.boulder_push.is_none()
         && !screen.boulder_dust.is_active()
@@ -809,6 +810,7 @@ fn draw_background_tiles(
     blockset: &[u8],
     shake_offset_y: i32,
     poison_bg_flash: bool,
+    silph_bg_palette: Option<&Palette>,
     anim_out: Option<&mut AnimRows>,
 ) {
     if matches!(damage, BackgroundDamage::None) {
@@ -965,7 +967,9 @@ fn draw_background_tiles(
             } else {
                 ts.get(tile_idx)
             };
-            if poison_bg_flash {
+            if let Some(palette) = silph_bg_palette {
+                fb.blit_gb_tile(screen_x, screen_y, tile, palette, false, false, false);
+            } else if poison_bg_flash {
                 fb.blit_gb_tile(screen_x, screen_y, tile, &poison_palette, false, false, false);
             } else {
                 fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
@@ -1086,7 +1090,14 @@ fn draw_overworld_impl(
     // poison write therefore changes no visible color there.
     let poison_bg_flash = !screen.dark_cave.is_dark()
         && screen.poison_flow.is_some_and(|flow| flow.bg_flash_active());
-    let sprite_pal = pokered_renderer::overworld_palette::normal_sprite_palette();
+    let silph_palette = screen.silph_rocket_departure_palette_index().map(|index| FADE_PALETTES[index]);
+    let silph_bg = silph_palette.map(|palette| pokered_renderer::overworld_palette::background_palette(palette.bgp));
+    let sprite_pal = silph_palette.map_or_else(
+        pokered_renderer::overworld_palette::normal_sprite_palette,
+        |palette| pokered_renderer::overworld_palette::sprite_palette(palette.obp0),
+    );
+    if silph_palette.is_some() { fb.reset_palette(); }
+
 
     let player_tx = screen.state.player.x as i32 * 2;
     let player_ty = screen.state.player.y as i32 * 2;
@@ -1205,7 +1216,9 @@ fn draw_overworld_impl(
                 None
             };
 
-            let cache_allowed = shake_offset_y == 0 && !departure_active;
+            // A palette stage redraws from raw 2bpp data, never remaps a
+            // previously faded/cache-composited shade. Invalidate on return too.
+            let cache_allowed = shake_offset_y == 0 && !departure_active && silph_palette.is_none();
             if cache_allowed {
                 if let Some(cache) = background_cache.as_deref_mut() {
                     let key = OverworldBackgroundKey {
@@ -1242,6 +1255,7 @@ fn draw_overworld_impl(
                         blockset,
                         shake_offset_y,
                         poison_bg_flash,
+                        silph_bg.as_ref(),
                         if is_animated {
                             Some(&mut anim_out)
                         } else {
@@ -1290,6 +1304,7 @@ fn draw_overworld_impl(
                         blockset,
                         shake_offset_y,
                         poison_bg_flash,
+                        silph_bg.as_ref(),
                         None,
                     );
                 }
@@ -1319,6 +1334,7 @@ fn draw_overworld_impl(
                     blockset,
                     shake_offset_y,
                     poison_bg_flash,
+                    silph_bg.as_ref(),
                     None,
                 );
             }
@@ -2010,7 +2026,10 @@ fn draw_overworld_impl(
                     Rgba::rgb(0xFF, 0xFF, 0xFF),
                     Rgba::rgb(0x00, 0x00, 0x00),
                 ]);
-                let heal_pal = if healing_state.flash_active {
+                let silph_obp1 = silph_palette.map(|palette| pokered_renderer::overworld_palette::sprite_palette(palette.obp1));
+                let heal_pal = if let Some(ref palette) = silph_obp1 {
+                    palette
+                } else if healing_state.flash_active {
                     &obp1_flash
                 } else {
                     &obp1_pal
@@ -2243,6 +2262,10 @@ fn draw_overworld_impl(
     }
 
     draw_script_money(screen, fb, language == pokered_core::game_state::Lang::Zh);
+
+    // This caller already used independent BGP/OBP registers at raw tile
+    // writes. A framebuffer-wide BGP pass would incorrectly remap OBJ colors.
+    if silph_palette.is_some() { return; }
 
     // ── GB palette effects (home/fade.asm) ─────────────────────────
     // Priority: FLASH white-out > dark cave (LoadGBPal with wMapPalOffset=6)
@@ -3485,3 +3508,6 @@ mod fly_arrival_tests {
         }
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod silph_departure_tests;

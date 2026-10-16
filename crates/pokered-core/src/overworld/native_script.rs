@@ -517,6 +517,10 @@ impl ScriptHost for NativeHost {
                 Ok(pokemon(PokemonScriptCommand::ReadingMenu { options, texts }))
             }
             "playShipDeparture" => Ok(pokemon(PokemonScriptCommand::PlayShipDeparture)),
+            "silphRocketDeparture" => {
+                if !v.is_empty() { return Err("silphRocketDeparture: no arguments expected".into()); }
+                Ok(pokemon(PokemonScriptCommand::SilphRocketDeparture))
+            },
             "animateHealingMachine" => Ok(pokemon(PokemonScriptCommand::AnimateHealingMachine)),
             "openNamingScreen" => {
                 let species = args::text(v.first().ok_or("openNamingScreen: missing species")?, "openNamingScreen")?;
@@ -1699,6 +1703,71 @@ impl Default for OverworldScriptEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn silph_departure_native_host_rejects_extra_arguments() {
+        let mut host = NativeHost::new();
+        assert!(
+            matches!(host.call("silphRocketDeparture", &[]).unwrap(), HostCall::Command(ScriptCommand::Custom {name, args}) if name=="silphRocketDeparture" && args.is_empty())
+        );
+        assert_eq!(
+            host.call("silphRocketDeparture", &[Value::Bool(false)])
+                .unwrap_err(),
+            "silphRocketDeparture: no arguments expected"
+        );
+    }
+
+    #[test]
+    fn silph_both_winning_handlers_await_departure_before_setting_the_beat_flag() {
+        for handler in ["giovanniStep", "talkGiovanni"] {
+            for outcome in ["win", "lose", "draw"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map(
+                    "SilphCo11F",
+                    &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap(),
+                );
+                engine.set_player_position(6, 13);
+                let mut next = engine.call_function_no_args(handler).unwrap();
+                let mut departures = 0;
+                for _ in 0..30 {
+                    let Some(command) = next else {
+                        break;
+                    };
+                    let result = match &command {
+                        ScriptCommand::StartBattle { .. } => CommandResult::Text(outcome.into()),
+                        ScriptCommand::Custom { name, args } if name == "silphRocketDeparture" => {
+                            departures += 1;
+                            assert!(args.is_empty());
+                            assert!(!engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
+                            assert_eq!(
+                                engine.tick(),
+                                Some(command.clone()),
+                                "await may not run the following flag"
+                            );
+                            assert!(!engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
+                            CommandResult::Void
+                        }
+                        _ => CommandResult::Void,
+                    };
+                    next = engine.signal_done(result).unwrap();
+                }
+                assert!(next.is_none());
+                assert_eq!(departures, usize::from(outcome == "win"));
+                assert_eq!(
+                    engine.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"),
+                    outcome == "win"
+                );
+            }
+            let mut repeated = NativeScriptEngine::new();
+            repeated.load_map("SilphCo11F", &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap());
+            repeated.set_flag("EVENT_BEAT_SILPH_CO_GIOVANNI", true);
+            repeated.set_player_position(6, 13);
+            let commands = drive_fidelity_scene(&mut repeated, handler, false, "", &[]);
+            assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::StartBattle { .. })));
+            assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::Custom { name, .. } if name == "silphRocketDeparture")));
+            assert!(repeated.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
+        }
+    }
 
     #[test]
     fn host_sync_queries_read_seeded_state() {
@@ -3482,15 +3551,21 @@ mod tests {
                 engine.load_map("SilphCo11F", &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap());
                 engine.set_player_position(6, 13);
                 let commands = drive_fidelity_scene(&mut engine, handler, false, outcome, &[]);
-                let hides: Vec<String> = commands.iter().filter_map(|command| {
-                    if let ScriptCommand::HideObjectByName { toggle_id } = command {
-                        Some(toggle_id.clone())
-                    } else { None }
+                let hides: Vec<String> = commands.iter().flat_map(|command| {
+                    match command {
+                        ScriptCommand::HideObjectByName { toggle_id } => vec![toggle_id.clone()],
+                        ScriptCommand::Custom { name, args } if name == "silphRocketDeparture" && args.is_empty() =>
+                            pokered_data::toggleable_objects::SILPH_ROCKETS_HIDDEN.iter().map(|id| id.to_string()).collect(),
+                        _ => Vec::new(),
+                    }
                 }).collect();
-                let shows: Vec<String> = commands.iter().filter_map(|command| {
-                    if let ScriptCommand::ShowObjectByName { toggle_id } = command {
-                        Some(toggle_id.clone())
-                    } else { None }
+                let shows: Vec<String> = commands.iter().flat_map(|command| {
+                    match command {
+                        ScriptCommand::ShowObjectByName { toggle_id } => vec![toggle_id.clone()],
+                        ScriptCommand::Custom { name, args } if name == "silphRocketDeparture" && args.is_empty() =>
+                            pokered_data::toggleable_objects::SILPH_CITIZENS_SHOWN.iter().map(|id| id.to_string()).collect(),
+                        _ => Vec::new(),
+                    }
                 }).collect();
                 if outcome == "win" {
                     assert_eq!(hides, expected, "{handler}");

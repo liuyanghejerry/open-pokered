@@ -24,6 +24,7 @@ pub mod player_movement;
 pub mod poison;
 pub mod presentation;
 pub mod script_bridge;
+pub mod silph_departure;
 pub mod script_interactions;
 pub mod special_terrain;
 pub mod spinner_paths;
@@ -97,3 +98,6 @@ pub use dotzuki_engine::overworld::{
 // Re-export all public items from screen.rs so external
 // code (`pokered-app`, `pokered-tui`) continues to work unchanged.
 pub use screen::*;
+
+#[cfg(all(test, not(target_os = "none")))]
+mod tests_silph_departure;
