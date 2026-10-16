@@ -3900,6 +3900,17 @@ impl PokemonGame {
         // Each evolution's mutation is applied only when its morph resolves —
         // a B-cancel applies nothing (CancelledEvolution, evos_moves.asm:293).
         if self.evolution_anim.is_some() {
+            if !self
+                .evolution_anim
+                .as_ref()
+                .unwrap()
+                .supports_terminal_input()
+            {
+                // The actual item/trade origin still has its legacy callback.
+                // Explicitly end the unsupported source continuation instead of
+                // entering AwaitLearning without a matching completion owner.
+                self.overworld.take_source_foreground();
+            }
             let done = {
                 let anim = self.evolution_anim.as_mut().unwrap();
                 let evo_input = pokered_core::evolution_screen::EvolutionInput {
@@ -8392,7 +8403,9 @@ impl PokemonGame {
             if let Some(owner) = self.overworld.source_foreground_mut() {
                 owner.retire_history();
             }
-            self.evolution_anim = Some(EvolutionScreenState::new(queue, pre_text, is_zh));
+            self.evolution_anim = Some(EvolutionScreenState::new_after_battle(
+                queue, pre_text, is_zh,
+            ));
         }
     }
 

@@ -82,6 +82,14 @@ pub struct PendingEvolution {
     pub force: bool,
 }
 
+/// Actual producer identity. Legacy item/trade movies have a different
+/// completion callback and cannot opt into the post-battle learning handoff.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EvolutionOrigin {
+    Other,
+    AfterBattle,
+}
+
 /// Sounds the cutscene asks the frontend to play.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EvolutionSfx {
@@ -197,6 +205,7 @@ pub struct EvolutionScreenState {
     source_terminal_enabled: bool,
     terminal_text: Option<TerminalTextWork>,
     completed_evolution: Option<PendingEvolution>,
+    origin: EvolutionOrigin,
 }
 
 impl EvolutionScreenState {
@@ -225,7 +234,24 @@ impl EvolutionScreenState {
             source_terminal_enabled: false,
             terminal_text: None,
             completed_evolution: None,
+            origin: EvolutionOrigin::Other,
         }
+    }
+
+    /// The actual settlement producer uses this constructor. Merely carrying
+    /// a foreground ledger cannot change an item's legacy completion owner.
+    pub fn new_after_battle(
+        queue: Vec<PendingEvolution>,
+        pre_text: Option<String>,
+        is_zh: bool,
+    ) -> Self {
+        let mut movie = Self::new(queue, pre_text, is_zh);
+        movie.origin = EvolutionOrigin::AfterBattle;
+        movie
+    }
+
+    pub fn supports_terminal_input(&self) -> bool {
+        self.origin == EvolutionOrigin::AfterBattle
     }
 
     pub fn phase(&self) -> EvolutionPhase {
@@ -477,6 +503,14 @@ impl EvolutionScreenState {
         options_delay: u8,
         owner: &mut ForegroundJoypad,
     ) -> TerminalTextStep {
+        if !self.supports_terminal_input() {
+            return TerminalTextStep {
+                input_error: Some(
+                    crate::text::terminal_input::TerminalInputError::UnsupportedEvolutionOrigin,
+                ),
+                ..TerminalTextStep::default()
+            };
+        }
         owner.read_raw(held_buttons);
         self.source_terminal_enabled = true;
         self.tick_inner(input, sound_playing, Some((owner, options_delay)))
@@ -668,9 +702,40 @@ mod tests {
     use super::*;
 
     #[test]
+    fn other_origin_rejects_terminal_capability_without_a_poll_or_await_learning() {
+        let mut anim = screen(false);
+        let mut owner = ForegroundJoypad::default();
+        let original_phase = anim.phase();
+        let step =
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, 0xff, 1, &mut owner);
+        assert_eq!(
+            step.input_error,
+            Some(crate::text::terminal_input::TerminalInputError::UnsupportedEvolutionOrigin)
+        );
+        assert_eq!(anim.phase(), original_phase);
+        assert_eq!(owner.last(), None);
+        assert_eq!(owner.raw(), 0);
+        for _ in 0..2000 {
+            anim.tick_with_sound(EvolutionInput::none(), false);
+            assert!(
+                !anim.awaiting_learning(),
+                "legacy completion still owns this origin"
+            );
+            if anim.is_done() {
+                break;
+            }
+        }
+        assert!(anim.is_done());
+        assert_eq!(
+            anim.take_outcome().unwrap().kind,
+            EvolutionOutcomeKind::Evolved
+        );
+    }
+
+    #[test]
     fn source_success_keeps_last_real_into_letter_poll_through_jingle_and_forty_frames() {
         use crate::foreground_input::{A, SELECT, START, UP};
-        let mut anim = screen(false);
+        let mut anim = EvolutionScreenState::new_after_battle(vec![evo(false)], None, false);
         let mut owner = ForegroundJoypad::default();
         let mut saw_terminal_printing = false;
         let mut last_letter = None;
@@ -723,7 +788,8 @@ mod tests {
         use crate::foreground_input::{A, SELECT, START};
         let mut second = evo(false);
         second.party_index = 1;
-        let mut anim = EvolutionScreenState::new(vec![evo(false), second], None, false);
+        let mut anim =
+            EvolutionScreenState::new_after_battle(vec![evo(false), second], None, false);
         let mut owner = ForegroundJoypad::default();
         for _ in 0..2000 {
             anim.tick_with_terminal_input(EvolutionInput::none(), false, A | SELECT, 1, &mut owner);
@@ -762,7 +828,7 @@ mod tests {
     #[test]
     fn source_cancel_uses_stopped_real_prompt_instead_of_morph_or_exit_raw() {
         use crate::foreground_input::{A, B, SELECT, START};
-        let mut anim = screen(false);
+        let mut anim = EvolutionScreenState::new_after_battle(vec![evo(false)], None, false);
         let mut owner = ForegroundJoypad::default();
         for _ in 0..2000 {
             let cancel = anim.cancel_window_open();
