@@ -142,13 +142,13 @@ impl Repro {
             effect.as_deref().unwrap_or("none"),
             overworld.script_engine_idle(),
             overworld.state.player.movement_state,
-            overworld.state.walk_counter,
+            overworld.state.walk_counter
         );
         if let Some(dialogue) = dialogue {
             for (page, text) in dialogue.pages().iter().enumerate() {
                 agb::println!(
                     "route22-anchor-text frame={} page={} line1={} line2={}",
-                    frame, page, text.line1, text.line2,
+                    frame, page, text.line1, text.line2
                 );
             }
         }
