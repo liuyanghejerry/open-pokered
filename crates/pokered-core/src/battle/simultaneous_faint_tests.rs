@@ -410,3 +410,270 @@ fn real_double_ko_loss_writes_blackout_without_trainer_victory() {
         assert!(save.party.iter().all(|mon| mon.hp == 0));
     }
 }
+
+// Narration observes the same actual-turn fixtures as the outcome tests above.
+// The core harness acknowledges ONLY the existing frontend presentation API;
+// it does not fabricate an HP-zero log, handler selector or reserve receipt.
+fn narration(screen: &mut BattleScreen) -> (Vec<FaintCue>, Vec<String>) {
+    let mut cues = Vec::new();
+    let mut captions = Vec::new();
+    let mut serial = None;
+    for _ in 0..2500 {
+        if !matches!(screen.phase, BattlePhase::ShowingText { .. }) {
+            return (cues, captions);
+        }
+        if let Some((id, cue)) = screen.presentation.current_faint() {
+            if serial != Some(id) {
+                cues.push(cue);
+                serial = Some(id);
+            }
+        }
+        if screen.presentation.waiting {
+            // Even A/B cannot acknowledge an unfinished structural action.
+            let before = screen.current_message.clone();
+            screen.update_frame(BattleInput {
+                a: true,
+                b: true,
+                ..BattleInput::none()
+            });
+            assert_eq!(screen.current_message, before);
+            screen.complete_move_presentation();
+        }
+        if let Some(message) = screen
+            .current_message
+            .as_ref()
+            .filter(|m| m.ends_with("fainted!"))
+        {
+            if captions.last() != Some(message) {
+                captions.push(message.clone());
+            }
+        }
+        // A hidden cue must return without consuming a text acknowledgement.
+        let silent = screen
+            .presentation
+            .current_faint()
+            .is_some_and(|(_, cue)| cue.text.is_none());
+        screen.update_frame(if silent {
+            BattleInput::none()
+        } else {
+            BattleInput {
+                a: true,
+                ..BattleInput::none()
+            }
+        });
+    }
+    panic!("faint presentation did not return: {:?}", screen.phase);
+}
+
+fn narration_matrix(move_id: MoveId) {
+    for wild in [false, true] {
+        for player_attacks in [true, false] {
+            for reserve in [None, Some(false), Some(true)] {
+                for actor_first in [false, true] {
+                    let mut screen = battle(wild, player_attacks, move_id, reserve, false);
+                    let bs = screen.battle_state.as_mut().unwrap();
+                    let player_fast = player_attacks == actor_first;
+                    bs.player.active_mon_mut().speed = if player_fast { 200 } else { 1 };
+                    bs.enemy.active_mon_mut().speed = if player_fast { 1 } else { 200 };
+                    screen.set_presentation_enabled(true);
+                    attack(&mut screen);
+                    let pp = screen.battle_state.as_ref().unwrap().player.active_mon().pp;
+                    let outcome = continuation(&screen).clone();
+                    let (cues, captions) = narration(&mut screen);
+                    let alive = reserve == Some(true);
+                    let enemy_sound = if wild {
+                        FaintSound::WildVictory
+                    } else {
+                        FaintSound::EnemyFall
+                    };
+                    let expected = if player_attacks {
+                        vec![
+                            FaintCue {
+                                side: FaintSide::Enemy,
+                                sound: Some(enemy_sound),
+                                text: None,
+                            },
+                            FaintCue {
+                                side: FaintSide::Player,
+                                sound: None,
+                                text: alive.then_some(FaintSide::Enemy),
+                            },
+                        ]
+                    } else {
+                        let mut cues = vec![FaintCue {
+                            side: FaintSide::Player,
+                            sound: Some(FaintSound::OwnCry),
+                            text: Some(FaintSide::Player),
+                        }];
+                        if alive {
+                            cues.push(FaintCue {
+                                side: FaintSide::Enemy,
+                                sound: Some(enemy_sound),
+                                text: Some(FaintSide::Enemy),
+                            });
+                        }
+                        cues
+                    };
+                    assert_eq!(cues, expected, "actor={player_attacks} first={actor_first} reserve={reserve:?} move={move_id:?}");
+                    let expected_captions: Vec<_> =
+                        expected.iter().filter_map(|cue| cue.text).collect();
+                    assert_eq!(captions.len(), expected_captions.len());
+                    for (caption, side) in captions.iter().zip(expected_captions) {
+                        assert_eq!(caption.starts_with("Enemy "), side == FaintSide::Enemy);
+                    }
+                    assert_eq!(
+                        screen.battle_state.as_ref().unwrap().player.active_mon().pp,
+                        pp
+                    );
+                    assert_eq!(screen.phase, outcome);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn actual_selfdestruct_and_explosion_faint_narration_uses_handler_entry_in_both_speed_slots() {
+    narration_matrix(MoveId::Selfdestruct);
+    narration_matrix(MoveId::Explosion);
+}
+
+#[test]
+fn actual_lethal_recoil_uses_the_same_handler_narration_and_structural_slides() {
+    narration_matrix(MoveId::DoubleEdge);
+}
+
+#[test]
+fn enemy_free_turn_faint_narration_retains_own_before_enemy_and_blackout_short_circuit() {
+    for reserve in [None, Some(false), Some(true)] {
+        let mut screen = battle(false, false, MoveId::Selfdestruct, reserve, false);
+        screen.set_presentation_enabled(true);
+        screen.run_enemy_free_turn_stack(Vec::new(), Some((MoveId::Selfdestruct, 0)));
+        let (cues, captions) = narration(&mut screen);
+        assert_eq!(
+            cues[0],
+            FaintCue {
+                side: FaintSide::Player,
+                sound: Some(FaintSound::OwnCry),
+                text: Some(FaintSide::Player)
+            }
+        );
+        assert_eq!(cues.len(), if reserve == Some(true) { 2 } else { 1 });
+        assert_eq!(captions.len(), cues.len());
+    }
+}
+
+#[test]
+fn single_user_recoil_selfdestruct_and_residual_faints_keep_their_real_cause_and_own_cry() {
+    for move_id in [MoveId::Selfdestruct, MoveId::DoubleEdge] {
+        let mut screen = battle(false, true, move_id, Some(true), false);
+        // The actual target survives: player move identity must not suppress
+        // this ordinary HandlePlayerMonFainted path.
+        screen.battle_state.as_mut().unwrap().enemy.party[0] =
+            mon(Species::Snorlax, 100, MoveId::Splash);
+        screen.set_presentation_enabled(true);
+        screen.execute_turn_with_move(0);
+        assert!(screen.battle_state.as_ref().unwrap().enemy.active_mon().hp > 0);
+        let (cues, captions) = narration(&mut screen);
+        assert_eq!(
+            cues,
+            vec![FaintCue {
+                side: FaintSide::Player,
+                sound: Some(FaintSound::OwnCry),
+                text: Some(FaintSide::Player)
+            }]
+        );
+        assert_eq!(captions.len(), 1);
+    }
+    let mut screen = battle(false, true, MoveId::Splash, Some(true), false);
+    screen
+        .battle_state
+        .as_mut()
+        .unwrap()
+        .player
+        .active_mon_mut()
+        .status = state::StatusCondition::Poison;
+    screen
+        .battle_state
+        .as_mut()
+        .unwrap()
+        .enemy
+        .active_mon_mut()
+        .hp = 100;
+    screen
+        .battle_state
+        .as_mut()
+        .unwrap()
+        .enemy
+        .active_mon_mut()
+        .max_hp = 100;
+    screen.set_presentation_enabled(true);
+    screen.execute_turn_with_move(0);
+    let messages = match &screen.phase {
+        BattlePhase::ShowingText { messages, .. } => messages,
+        _ => panic!(),
+    };
+    assert!(messages.iter().any(|message| message.contains("POISON")));
+    let (cues, captions) = narration(&mut screen);
+    assert_eq!(
+        cues,
+        vec![FaintCue {
+            side: FaintSide::Player,
+            sound: Some(FaintSound::OwnCry),
+            text: Some(FaintSide::Player)
+        }]
+    );
+    assert_eq!(captions.len(), 1);
+}
+
+#[test]
+fn silent_faint_page_snapshot_keeps_typed_actions_and_needs_no_new_ack() {
+    use crate::snapshot::BattleSnapshot;
+    let mut screen = battle(false, true, MoveId::Selfdestruct, None, false);
+    screen.set_presentation_enabled(true);
+    attack(&mut screen);
+    for _ in 0..1000 {
+        if screen.presentation.current_faint().is_some() {
+            break;
+        }
+        if screen.presentation.waiting {
+            screen.complete_move_presentation();
+        }
+        screen.update_frame(BattleInput {
+            a: true,
+            ..BattleInput::none()
+        });
+    }
+    let expected = screen.presentation.current_faint().unwrap();
+    assert_eq!(expected.1.text, None);
+    let snapshot = BattleSnapshot::capture(&screen);
+    let saved = serde_json::to_vec(&snapshot).unwrap();
+    let snapshot: BattleSnapshot = serde_json::from_slice(&saved).unwrap();
+    let mut restored = BattleScreen::new(false);
+    snapshot.restore_into(&mut restored);
+    assert_eq!(restored.presentation.current_faint(), Some(expected));
+    assert!(restored.presentation.waiting);
+    let (cues, captions) = narration(&mut restored);
+    assert_eq!(cues.len(), 2);
+    assert!(captions.is_empty());
+    assert_terminal(&restored, false);
+}
+
+#[test]
+fn link_turn_retains_its_existing_faint_text_and_does_not_enter_the_new_presentation_policy() {
+    let mut screen = battle(false, true, MoveId::Selfdestruct, Some(true), false);
+    screen.link_mode = true;
+    screen.execute_turn_with_move(0);
+    assert!(screen.presentation.current_faint().is_none());
+    let messages = match &screen.phase {
+        BattlePhase::ShowingText { messages, .. } => messages,
+        _ => panic!(),
+    };
+    assert_eq!(
+        messages
+            .iter()
+            .filter(|message| message.ends_with("fainted!"))
+            .count(),
+        2
+    );
+}

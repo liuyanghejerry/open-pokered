@@ -1,0 +1,257 @@
+{
+  "schema": "simultaneous-faint-1069-v1",
+  "actual_before": "77062f0a6d5bd3ee51a9e3826905c01021357c88",
+  "actual_after": "3a4833b23d509147325ca568bea53e492f9960bd",
+  "actual_historical_tests": "6f92af333dbafce23d596c0fc52ea81ceca35886",
+  "branch": "fix/simultaneous-faint-narration-1067",
+  "native": {
+    "actual_tool_session": 98107,
+    "actual_terminal_exit": 0,
+    "normal_App_libs_not_libtest": true,
+    "same_witness_sha256": "9c8720c8388bc1781319701b0c2cddabb66a20625b46e906fc1db13a7a620143",
+    "preboot_seed": 42,
+    "preboot_seed_calls_per_Game": 1,
+    "runtime_seed_changes": 0,
+    "other_state_setters": 0,
+    "Game_calls": 4,
+    "input_frames": 14288,
+    "state_rows": 14292,
+    "original_PNG_count": 1732,
+    "draws_per_Game": 3572,
+    "PCM_samples_per_update": 1470,
+    "actual_new_Cargo_calls": 1,
+    "actual_reused_candidate_Cargo_calls": 1,
+    "actual_witness_rustc_calls": 2,
+    "result_sha256": "a4ad05d19ba24664811b5081fd3052e1fee9fa37a34faf50bc6ff26caff5a5d3",
+    "providers_sha256": "76352833f666de49a4fadff84f27620d5946f213e34c62e32af7d495dcb0dbd8",
+    "source_before_sha256": "0ca290264194c5a630bd2c7bd3588d7c498f291d2143c05f19383bdda6972cae",
+    "source_after_sha256": "0ca290264194c5a630bd2c7bd3588d7c498f291d2143c05f19383bdda6972cae",
+    "fullsource_unchanged": true,
+    "engine_sha": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+    "engine_files": 981,
+    "GFX_files": 702
+  },
+  "automatic": {
+    "source": "6f92af333dbafce23d596c0fc52ea81ceca35886",
+    "native_core_PASS": 3057,
+    "render_faint_PASS": 1,
+    "Game_unique_names": 2,
+    "Game_features": [
+      "default",
+      "debug-server"
+    ],
+    "Game_named_executions": 4,
+    "Game_cold_cases": 6,
+    "new_unique_test_names": 9,
+    "combined_result_sha256": "74e1eda92f7a6223d6c14456b1d4dd5a3cc576e3f83fcbbf59381fb7497465a3",
+    "log_SHA256s": [
+      "a78b2277116523f503cb30c157edcd0820062fc9b1bf8657606e21fe60cf0c31",
+      "c0044cc32749392ea0c68b8387881e68382b5f6041d0ed1eca52d685f2e1c29e",
+      "36facb3b949e823c7fba7437751cf493bcf7673a9ebd1bef6c195a0f953e49a7",
+      "6844146e02f93dbbb6fe37112cabb424f9e2a7bfb74abdc2ab8157909cfa954f"
+    ],
+    "source_integration_only": true,
+    "command_scope": "cargo test -p pokered-core --lib; integration targets not part of3057"
+  },
+  "providers": {
+    "before": {
+      "actual_source": "77062f0a6d5bd3ee51a9e3826905c01021357c88",
+      "ELF_sha256": "35409b559e97bcea259278f565aebe28f0148eb356a1db8f4dcd77465767b032",
+      "ELF_bytes": 47157048,
+      "actual_App_rustc_sha256": "b4c2e957a3a9faeef1021f3754b206a1bf9232b24f0c15b4d31fd0fd5a5d9aad",
+      "dependency_roster_sha256": "15f514709377ed6a2d2fb434fea08892cdbaa6f9ede8ce9cce4850cd05841f9c"
+    },
+    "after": {
+      "actual_source": "3a4833b23d509147325ca568bea53e492f9960bd",
+      "ELF_sha256": "9d25e526db28c3637f9ff9511bae68fbce3c357ac66515dbb8b8c32c5b2f9094",
+      "ELF_bytes": 47922144,
+      "actual_App_rustc_sha256": "5aa3bafae00c59984241b59f8c691a2a0011e5dc5058542d66a63d19be6497a0",
+      "dependency_roster_sha256": "69e2b64229bb8952c9ef493d769707623dffac4ddc8b660e45b9000c6ab6cf3f"
+    }
+  },
+  "source_integration": {
+    "actual_result_sha256": "c9195fb56f43bb7e6e06074310e6996bcfa3f140aa17c682d718319e4853036d",
+    "owned_eleven_equal_to": "6f92af333dbafce23d596c0fc52ea81ceca35886",
+    "other_source_equal_to": "77062f0a6d5bd3ee51a9e3826905c01021357c88"
+  },
+  "original": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "core_asm_sha256": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+    "core_lines": [
+      [
+        732,
+        813
+      ],
+      [
+        969,
+        987
+      ],
+      [
+        1027,
+        1044
+      ]
+    ],
+    "primary_source_pins_sha256": "a9e19a31e9d4c8b46d96ad567b8640c896760370437d37a61cc90514ec66bb53"
+  },
+  "raw_case_records": [
+    {
+      "case": "only-geodude",
+      "role": "before",
+      "result_sha256": "75d3d6dcbc463d392b2ce600a66ff8820ba4b2beacea9b11b88bd054b812f823",
+      "inputs_sha256": "21fc39d332b17b9fa240d5a1c5fe15cc1e2ca292e732bf6524ce3d118f49ba7e",
+      "states_sha256": "771e8a4438c47aa59cf2a239254e655cc3ab6de0f455e09f0c217d1a3d92ab21",
+      "events_sha256": "a78a2ff5860cccfc62200148ace0f8ad2dac78cfe294c666b0b6a94e357820e1",
+      "PCM_metadata_sha256": "da00b02a1b9d7080721cc11529f24c4745007226f218af4c0dd641336d83baee",
+      "PCM_raw_sha256": "735dc6a03bb3edc269380a8ade7931120d4e5881e7f36821a6f13080361ddf31"
+    },
+    {
+      "case": "only-geodude",
+      "role": "after",
+      "result_sha256": "0d2b6885a3b68d310e1ba55d7c294ed34108a0df5cbc437ceb3f72da666a4862",
+      "inputs_sha256": "21fc39d332b17b9fa240d5a1c5fe15cc1e2ca292e732bf6524ce3d118f49ba7e",
+      "states_sha256": "96219518d7227d1c2993c7db954109b98af3ec3f327b32717717ae5d5c56b53c",
+      "events_sha256": "f10810de68928db407813471e59c61b1d40fa83c6be85a8391a37a653e4bf2be",
+      "PCM_metadata_sha256": "7b9ab68214237a8acc41c33753abcf5aae932d590d25331b09ee5e329e298219",
+      "PCM_raw_sha256": "a0733dec320d2025c557a439f4d03cfd9efdf69e2045a34c7d905f35008b2123"
+    },
+    {
+      "case": "healthy-reserve",
+      "role": "before",
+      "result_sha256": "e10959a1b98cef71a3add39c99163b42e6714878605f73ff9f1085103a8d24e5",
+      "inputs_sha256": "21fc39d332b17b9fa240d5a1c5fe15cc1e2ca292e732bf6524ce3d118f49ba7e",
+      "states_sha256": "713b74c362fbedb13d2cf7e033dcedf55bd170b0c95a1512abd82519d6a37bf0",
+      "events_sha256": "f6f6187c68ba06de4d540460822d14f63468581be48b3b5f114937dd8ef1e4f2",
+      "PCM_metadata_sha256": "74c1c51711fdd0348ed797de5d47c10b8c66daf9578959dc860a294eca5d7139",
+      "PCM_raw_sha256": "4c14de5661bdad451e97cffe628e634be40b0a15e87c32731a5227e55be04e0b"
+    },
+    {
+      "case": "healthy-reserve",
+      "role": "after",
+      "result_sha256": "b5a9eefc8d96c7d85164f065c59b352278471f1139c15c6ecfabe40090353777",
+      "inputs_sha256": "21fc39d332b17b9fa240d5a1c5fe15cc1e2ca292e732bf6524ce3d118f49ba7e",
+      "states_sha256": "a4b35dc4909907dfccaec32994840988eedd12a6056f913e9e442a84d77720bd",
+      "events_sha256": "e457ae17438c92d70b43139b3ec3ca511417cbc1e1c24867b10d8dd089b38a3b",
+      "PCM_metadata_sha256": "8509f45f336fa93eb5cfb99de7a3f620dffdec182b85e0fe65b17044546f7f74",
+      "PCM_raw_sha256": "01ac8581e3db3ced94ea57f7c6849a982e460e37089e6339f7de63dd4be9acb8"
+    }
+  ],
+  "included_assets": [
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/only-geodude-2208-before.png",
+      "sha256": "eb91e113a784b833b9b4bd3f46c4b5b903f8c0438f08903ac02cc3c5e1f45f74",
+      "bytes": 3989,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "only-geodude",
+      "frame": 2208,
+      "side": "before",
+      "actual_source": "77062f0a6d5bd3ee51a9e3826905c01021357c88"
+    },
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/only-geodude-2208-after.png",
+      "sha256": "ffcceeb706508195bb61b1d5ab0f486c7d3bb52beb70c9f863862bb9d4d120a5",
+      "bytes": 3480,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "only-geodude",
+      "frame": 2208,
+      "side": "after",
+      "actual_source": "3a4833b23d509147325ca568bea53e492f9960bd"
+    },
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/healthy-reserve-2208-before.png",
+      "sha256": "0b0a37f95542a864c57cdabea73858f07e3ee4dc87681542d74fb03f2def481b",
+      "bytes": 3942,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "healthy-reserve",
+      "frame": 2208,
+      "side": "before",
+      "actual_source": "77062f0a6d5bd3ee51a9e3826905c01021357c88"
+    },
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/healthy-reserve-2208-after.png",
+      "sha256": "f6a13d59b6ff592cbf3bc2d1f777e377af8edbe1874ffa56b35aadd2cf77a151",
+      "bytes": 3436,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "healthy-reserve",
+      "frame": 2208,
+      "side": "after",
+      "actual_source": "3a4833b23d509147325ca568bea53e492f9960bd"
+    },
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/healthy-reserve-2245-before.png",
+      "sha256": "5e8e71dd23db5d673348f0a18bca3fd72db61eedd48452b172978bbd99012fb2",
+      "bytes": 2727,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "healthy-reserve",
+      "frame": 2245,
+      "side": "before",
+      "actual_source": "77062f0a6d5bd3ee51a9e3826905c01021357c88"
+    },
+    {
+      "path": "docs/screenshots/simultaneous-faint-1069/healthy-reserve-2245-after.png",
+      "sha256": "4c81c2ea85b5465a93ac27beddfe653cab9a4f9d8ed59d6d9cae8b2e1d26d014",
+      "bytes": 3302,
+      "role": "original actual160x144 same-absolute-frame PNG",
+      "case": "healthy-reserve",
+      "frame": 2245,
+      "side": "after",
+      "actual_source": "3a4833b23d509147325ca568bea53e492f9960bd"
+    },
+    {
+      "path": "docs/validation/simultaneous-faint-1069/faint-witness.rs",
+      "sha256": "9c8720c8388bc1781319701b0c2cddabb66a20625b46e906fc1db13a7a620143",
+      "bytes": 21419,
+      "role": "actual same Rust witness source used by both new ELF"
+    },
+    {
+      "path": "docs/validation/simultaneous-faint-1069/only-geodude.sav",
+      "sha256": "bc768c940f2ad29408b99f546556edb48494d1454c8a5391a30e4431be836fa1",
+      "bytes": 32768,
+      "role": "unchanged original physical SRAM"
+    },
+    {
+      "path": "docs/validation/simultaneous-faint-1069/healthy-reserve.sav",
+      "sha256": "b718311bb11361d20aa79b05e5ba5b86a6086622f3656dc35c1fa4b90c1cc026",
+      "bytes": 32768,
+      "role": "unchanged original physical SRAM"
+    },
+    {
+      "path": "docs/validation/simultaneous-faint-1069/fixed-buttons.json",
+      "sha256": "081594cdc6be3f4ff1d4a8085d77204f82f2320fbb26d88fadb9eab840bdb39c",
+      "bytes": 23003,
+      "role": "unchanged original3572-frame literal"
+    },
+    {
+      "path": "docs/validation/simultaneous-faint-1069/README.md",
+      "sha256": "4e5d5cd38e1c8a7ef5a2bff7d1a7c9152657cf26a292392346cd26f3f93b92fe",
+      "bytes": 7049,
+      "role": "generated concise validation report; exact staged bytes"
+    }
+  ],
+  "source_identity_limits": {
+    "doc_commit_is_not_executed_source": true,
+    "future_M8_is_not_executed_source": true,
+    "DirectBattle_PCM_executions": 0,
+    "complete_hidden_NPC_RNG_state_equality_claim": false,
+    "isolated_PCM_waveform_or_device_recording_claim": false,
+    "all_four_handler_matrix_native_coverage_claim": false
+  },
+  "full_local_evidence_summary_sha256": "11d631f1dbf7d33b1088ea4faee25af146f19b8a86fc7fc6facd1ceee23a3cd4",
+  "first_failures_kept": [
+    {
+      "stage": "572 true snapshot regression",
+      "result_sha256": "554f55a52a7f439c7fa4b248f49f347861794e0bbc3136a65d6139e5d285f9bb"
+    },
+    {
+      "stage": "v1 depinfo reader stop; no witness/Game",
+      "result_sha256": "cd8499a3e508fe129ba0bb426a3b4b162cc4bf646f56185f433d6b007c7f8f6d"
+    },
+    {
+      "stage": "v2 transient settlement observer; one complete3572beforeGame exit1",
+      "result_sha256": "cc9daf4dc91f0e5c7475ab26b72723774a25c5e1700b2ab4a02135e3dac83566"
+    }
+  ],
+  "independent_review": {
+    "raw_native_peer_sha256": "d703ef6a0b15e29d1de6c5f47802c485c998217137ed98d38a8794aa0852b616",
+    "root_ten_original_PNGs_and_audio_sequence_sha256": "fb1eccb53de730a5ad24450571ff67ef53ef7765c3b11882eb5bade333efca73"
+  }
+}
