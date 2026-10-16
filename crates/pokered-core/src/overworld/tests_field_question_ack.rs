@@ -173,9 +173,12 @@ fn open_question(field: &mut Field, caller: Caller, hold: bool, roundtrip: bool)
                 );
                 assert_eq!(field.pending_choice.as_ref().unwrap().selected, 0);
             }
+            assert_eq!(field.prev_a_pressed, hold, "{caller:?} lost its held input");
             return;
         }
-        let mut a = false;
+        // DONE retires the dialogue before the next update creates the menu.
+        // Keep the same physical hold across that no-dialogue handoff too.
+        let mut a = hold && field.pending_dialogue.is_none();
         if let Some(d) = &field.pending_dialogue {
             if d.is_last_page() {
                 if roundtrip
@@ -246,9 +249,13 @@ fn typing_hold_does_not_answer_the_menu_and_fresh_b_takes_cancel() {
     for caller in CALLERS {
         let mut field = at_question(caller, 3, 1000);
         open_question(&mut field, caller, true, false);
-        for _ in 0..20 {
+        for frame in 0..20 {
             field.update_frame(input(true, false));
-            assert_eq!(field.pending_choice.as_ref().unwrap().selected, 0);
+            assert_eq!(
+                field.pending_choice.as_ref().map(|c| c.selected),
+                Some(0),
+                "{caller:?} accepted held A on menu frame {frame}"
+            );
         }
         field.update_frame(input(false, false));
         field.update_frame(input(false, true));
@@ -315,6 +322,18 @@ fn both_early_exit_callers_preserve_or_clear_allowance_before_the_return_path() 
     for caller in [Caller::EarlyLoad, Caller::EarlyRow] {
         for yes in [false, true] {
             let mut field = at_question(caller, 1, 1000);
+            // EarlyRow's real step onto the coordinate trigger also requests
+            // one ordinary Day Care tick. EarlyLoad's scripted step does not.
+            let entry_requests = field.game_data_requests.clone();
+            assert_eq!(
+                entry_requests,
+                if matches!(caller, Caller::EarlyRow) {
+                    vec![OverworldGameDataRequest::TickDaycareExp]
+                } else {
+                    vec![]
+                },
+                "{caller:?} entry-step requests"
+            );
             open_question(&mut field, caller, false, false);
             field.update_frame(input(false, false));
             field.update_frame(input(yes, !yes));
@@ -325,7 +344,10 @@ fn both_early_exit_callers_preserve_or_clear_allowance_before_the_return_path() 
             assert_eq!(field.is_safari_game_active(), !yes);
             assert_eq!(field.safari_steps_remaining(), if yes { 0 } else { 450 });
             assert_eq!(field.safari_balls_remaining(), if yes { 0 } else { 20 });
-            assert!(field.game_data_requests.is_empty());
+            assert_eq!(
+                field.game_data_requests, entry_requests,
+                "{caller:?} answer must not add persistent-data requests"
+            );
         }
     }
 }
@@ -376,6 +398,14 @@ fn bike_sale_and_both_cancel_inputs_keep_money_items_and_final_response_owner() 
             // Ownership is a pre-existing separate branch: talking again
             // must show the cycling advice rather than this new menu seam.
             field.set_flag_live("EVENT_GOT_BICYCLE", true);
+            // The previous ACK and the original interaction both held A.
+            // Release through one complete two-VBlank idle sampling cycle
+            // before asking the NPC a second time with a fresh press.
+            for _ in 0..2 {
+                field.update_frame(input(false, false));
+            }
+            assert!(!field.prev_a_pressed);
+            assert!(!field.sampled_player_input.a());
             for _ in 0..120 {
                 field.update_frame(input(true, false));
                 if field.active_script_effect.is_some() {
