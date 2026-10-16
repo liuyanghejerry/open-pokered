@@ -7315,6 +7315,16 @@
     },
     {
       "from": "script:RedsHouse2F:@load",
+      "to": "flag:SCRIPT_REDSHOUSE2F_NOOP",
+      "kind": "requires"
+    },
+    {
+      "from": "script:RedsHouse2F:@load",
+      "to": "flag:SCRIPT_REDSHOUSE2F_NOOP",
+      "kind": "sets"
+    },
+    {
+      "from": "script:RedsHouse2F:@load",
       "to": "map:RedsHouse2F",
       "kind": "triggered_at"
     },
