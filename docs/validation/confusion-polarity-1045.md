@@ -45,7 +45,9 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 
 在同一混乱 WT 原有专属 target 上，使用同样离线、锁定依赖、单任务及 `opt-level=0`／`debug=0` 环境，只运行一次完整 `pokered-core`。结果为 **3406 项通过，0 失败**（2994 lib + 412 integration），另有 1 个已有 doc test ignored。实际 session `27214` 退出 0，runner `3227809` 与 Cargo `3228015` 的进程组均已结束。新增五项混乱、继承畏缩／捕获、FIGHT 文本／通知及 Link 空 receipt 等 35 项指定测试逐名通过；所有测试 summary 均为 0 failed。没有修改断言／fixture 或重跑同版本。
 
-本次冻结覆盖 2706 个非文档文件（2188 个编译相关文件）、702 项 GFX，以及 dotzuki `e533a3d2` 的 981 个 tracked 文件；前后源码完全一致。当前结果来自本地私有集成，没有把 PR279 合入实际主分支，也没有新增 App、原生 Game、GBA 或截图执行；PR279 自身的历史验证保持原身份。
+本次冻结覆盖 2706 个非文档文件（2188 个编译相关文件）、702 项 GFX，以及 dotzuki `e533a3d2` 的 981 个 tracked 文件；前后源码完全一致。该次测试来自本地私有集成，测试操作没有修改实际主分支，也没有新增 App、原生 Game、GBA 或截图执行；PR279 自身的历史验证保持原身份。
+
+随后 PR279 已实际合入主线 `e323f16e1de75fdd8b94dc347f70cfbd82fa7b4e`，该主线的整个文件树与已发布 `1d2911cf` 完全相同。本分支再用普通 merge 合入这个实际主线，生成 `15435de06749263d5099b21ff4ebc3f5fd2b34ce`；整个文件树与合并前文档版本 `4f9c8b8a` 完全相同，编译源码继续逐项等于实际跑过 3406 项测试的 `06d80d3d`。因此没有重跑 Cargo。后续文档提交只补充这一事实；当前实际基线为 `e323f16e`，测试证据仍明确标记为实际测试版本 `06d80d3d`，不把它重标成新的运行。
 
 | 本次证据（同一本地证据目录） | SHA-256 |
 | --- | --- |
@@ -54,6 +56,7 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 | `audit-1045-confusion-pr279-integrated-core-v1/full-core.log` | `d9a97a86f35d5b821192e03999c78738175f00af5db5b9700fe08eff38f8ed49` |
 | `audit-1045-confusion-pr279-integrated-core-v1/source-before.json`／`source-after.json` | 均为 `62089c4a9f0240a335de42854d25721abd20d8642593c333eda0b988afe83279` |
 | `audit-1045-confusion-pr279-integrated-core-receipt-v1.json` | `b0454fd91b5ef7f726f9e96d7d2d6854499a68b08a5ca33d62fd0947e87300b4` |
+| `audit-1045-confusion-actualmaster-merge-source-equivalence-v1.json` | `5784878eb81e8bda16229faf9e713c44ffbe2e1313664c69edf484799ce27864` |
 
 ## 保留的失败记录与证据身份
 
