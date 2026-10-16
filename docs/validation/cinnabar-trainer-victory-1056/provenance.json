@@ -698,5 +698,10 @@
     "path": "docs/validation/cinnabar-trainer-victory-1056/M2-integration.json",
     "sha256": "2c4f20e3c269cee368a077005613fbd7bfcb527cbb003e3f34ae98216767db9c",
     "bytes": 3818
+  },
+  "default_feature_ci": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/default-feature-ci.json",
+    "sha256": "edb5a07e21ed4e181f996bbc9a0686fab0c04b2c8670fb5760a1d811d02326e0",
+    "bytes": 6106
   }
 }

@@ -54,6 +54,12 @@ App 胜利测试使用真实 Game、音频 sequencer、活跃声道和非零 PCM
 
 随后普通合入当前 master **M2 `d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3`**，产生 `cd04a2cd80529847fa636029d054e5928dbcb74a`，无人工冲突处理。相对实际验证的 912，继承的生产改动仅为既有 field ShowChoice 分支内 4 行确认声，另有测试和文档；这时整棵树已不再与 912 相同。两条直接交谈 storyline 无 choice 调用，六份完整回放的 23,068 份状态均无 ShowChoice effect / 非空 choice，且 Game 战斗驱动未变，因此这项共享选择音改动不会进入所录路线。此为源码与记录闭环推断，不是 M2 整合头重跑；原 M1 / 912 截图和测试身份均保留。详见 [M2-integration.json](cinnabar-trainer-victory-1056/M2-integration.json)。
 
+## 默认 feature 的 CI 跟进
+
+首次发布的 `4dcb0e28` 在 Coverage 和 App 默认构建中遇到 E0599：新增测试的失败诊断调用了仅 `debug-server` 提供的方法。`adfacd86` 只将这段诊断改为常驻只读接口，测试条件、输入、PCM / 台词 / 旗标 / 门块断言及生产源码均未改。该实际提交分别执行默认 feature 和 `debug-server` 精确 App 测试，各 1 项通过、各覆盖同样 3 份冷 SRAM，共 2 次执行 / 6 场景；完整来源与日志 SHA 见 [default-feature-ci.json](cinnabar-trainer-victory-1056/default-feature-ci.json)。
+
+原始三条 workflow 均已终态，失败日志原样保留；GBA ROM 与 GBA performance 成功，14 个实际性能步骤全部通过，三份 attempt1 原始日志 ZIP 均校验完整。这不代表上述原始 CI 全绿，也没有重跑或改标历史原生对照。
+
 ## 精简复现附件
 
 [provenance.json](cinnabar-trainer-victory-1056/provenance.json) 保存三组实际边界、按钮 / 存档 / 截图 / 原始日志 SHA-256；[source-manifest.json](cinnabar-trainer-victory-1056/source-manifest.json) 记录实际 Git、CLI、源码树与 engine 身份；[validation.json](cinnabar-trainer-victory-1056/validation.json) 保存各阶段原始摘要和必要测试名；[recorded-controller.py](cinnabar-trainer-victory-1056/recorded-controller.py) 是本次实际执行源码存档，保留当时本地证据路径。
