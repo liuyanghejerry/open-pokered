@@ -212,6 +212,8 @@ impl Session {
             &[],
             &[],
             &[GbButton::A],
+            &[GbButton::A],
+            &[],
             &[],
         ] {
             session.step(buttons);
