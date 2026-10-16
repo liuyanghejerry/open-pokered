@@ -392,7 +392,21 @@ mod tests {
             {
                 return;
             }
-            step(field, if frame % 16 == 0 { A } else { 0 });
+            // Confirm only preceding owned prompts. Periodic A during the
+            // last Welcome glyphs can also be accepted by its same-update
+            // protected-prompt fallthrough, skipping this observation point.
+            let preceding_ack = offer(field).is_some_and(|state| {
+                matches!(
+                    state.phase,
+                    Phase::Prompt(
+                        AfterPrompt::WelcomeParagraph
+                            | AfterPrompt::NativePage(
+                                TextPart::WelcomeFirst | TextPart::WelcomeLast
+                            )
+                    )
+                )
+            });
+            step(field, if preceding_ack { A } else { 0 });
         }
         panic!("ordinary Welcome/PARA/PROMPT never completed: initial={initial:?}, first_question={first_question:?}, first_answer={first_answer:?}, final_effect={:?}, page={:?}, owner={:?}",
             field.active_script_effect_value(), field.pending_dialogue.as_ref().map(|d|
