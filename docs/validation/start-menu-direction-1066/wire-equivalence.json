@@ -1,0 +1,25 @@
+{
+  "logical_file": "boot-prefix1428-logical.json",
+  "logical_sha256": "fe448c75c727651ac6e5422395fb4f9c37d14f1a04cdd071f70ae8013d5b0de0",
+  "wire_file": "boot-prefix1428-wire.json",
+  "wire_sha256": "6e394532dd5400ffa33d42d8c70060e90f3e811e55bdaef34918c8c2e54dbcee",
+  "frames": 1428,
+  "normalization": "[] -> null; [button] -> button",
+  "reverse_mapping": "null -> []; button -> [button]",
+  "all1428_reconstructed_logical_entries_exactly_equal": true,
+  "original_master_only_recording": "062e76d91fdbf5109fcc02793b8a8064788e8700 / audit-1065-double-ko-only-base-discovery-v1",
+  "source_runtime_is_not_relabelled": "This old recording supplies literal boot inputs only, not a current source/RNG snapshot. Four new actual runs use the actual source heads in provenance.json.",
+  "following128_frames": "neutral32, START2, neutral30, [UP,A|B]1, neutral31, B2, neutral30",
+  "same_complete_fixed_vector_for_each_provider": true,
+  "complete_frames": 1556,
+  "fixed_vectors": {
+    "up-a": {
+      "path": "fixed-up-a.json",
+      "sha256": "f85ffef5a05b4d7542928fce9c4cab5c263d0788d128735cd34b2e5b26027375"
+    },
+    "up-b": {
+      "path": "fixed-up-b.json",
+      "sha256": "58fadb5df81180216b3577c36d01b4f0eb4719d51213a27e9b1d2581ac5a96e1"
+    }
+  }
+}

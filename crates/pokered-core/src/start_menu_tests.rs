@@ -301,3 +301,112 @@ fn battle_reset_clears_current_and_remembered_row_without_changing_items() {
         assert_eq!(menu.items(), items);
     }
 }
+
+#[test]
+fn direction_with_confirm_or_cancel_only_moves_start_menu_cursor() {
+    for has_pokedex in [false, true] {
+        for linked in [false, true] {
+            for down in [false, true] {
+                for button in [input_a(), input_b(), input_start()] {
+                    let mut menu = StartMenuState::new(has_pokedex, true, linked);
+                    menu.update_frame(input_down());
+                    menu.update_frame(input_down());
+                    let input = StartMenuInput {
+                        up: !down,
+                        down,
+                        ..button
+                    };
+                    assert_eq!(menu.update_frame(input), StartMenuAction::Redisplay);
+                    assert_eq!(menu.cursor(), if down { 3 } else { 1 });
+                    // DisplayStartMenu writes the saved row only on its
+                    // button-only path, never when returning to .loop.
+                    assert_eq!(menu.saved_cursor(), 0);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn start_menu_direction_wrap_does_not_dispatch_the_destination() {
+    for has_pokedex in [false, true] {
+        let mut menu = StartMenuState::new(has_pokedex, false, false);
+        assert_eq!(
+            menu.update_frame(StartMenuInput {
+                up: true,
+                a: true,
+                ..input_none()
+            }),
+            StartMenuAction::Redisplay
+        );
+        assert_eq!(menu.current_item(), StartMenuItem::Exit);
+        assert_eq!(menu.saved_cursor(), 0);
+
+        assert_eq!(
+            menu.update_frame(StartMenuInput {
+                down: true,
+                a: true,
+                b: true,
+                start: true,
+                ..input_none()
+            }),
+            StartMenuAction::Redisplay
+        );
+        assert_eq!(menu.cursor(), 0);
+        assert_eq!(
+            menu.current_item(),
+            if has_pokedex {
+                StartMenuItem::Pokedex
+            } else {
+                StartMenuItem::Pokemon
+            }
+        );
+        assert_eq!(menu.saved_cursor(), 0);
+    }
+}
+
+#[test]
+fn start_menu_up_precedes_down_and_all_button_bits() {
+    let mut menu = StartMenuState::new(true, true, false);
+    menu.update_frame(input_down());
+    menu.update_frame(input_down());
+    assert_eq!(
+        menu.update_frame(StartMenuInput {
+            up: true,
+            down: true,
+            a: true,
+            b: true,
+            start: true,
+        }),
+        StartMenuAction::Redisplay
+    );
+    assert_eq!(menu.current_item(), StartMenuItem::Pokemon);
+    assert_eq!(menu.saved_cursor(), 0);
+}
+
+#[test]
+fn later_button_only_poll_can_confirm_or_close_after_start_menu_direction() {
+    // StartMenuInput contains the caller's sampled just-pressed bits. A
+    // neutral call followed by a new button models release then re-press;
+    // this core test does not claim to exercise the physical App sampler.
+    for (button, expected) in [
+        (input_a(), StartMenuAction::OpenItem),
+        (input_b(), StartMenuAction::Close),
+        (input_start(), StartMenuAction::Close),
+    ] {
+        let mut menu = StartMenuState::new(false, true, false);
+        assert_eq!(
+            menu.update_frame(StartMenuInput {
+                down: true,
+                ..button
+            }),
+            StartMenuAction::Redisplay
+        );
+        assert_eq!(menu.current_item(), StartMenuItem::Item);
+        assert_eq!(menu.update_frame(input_none()), StartMenuAction::Redisplay);
+        assert_eq!(menu.cursor(), 1);
+        assert_eq!(menu.saved_cursor(), 0);
+        assert_eq!(menu.update_frame(button), expected);
+        assert_eq!(menu.saved_cursor(), 1);
+    }
+}
