@@ -1,0 +1,133 @@
+{
+  "actual_source": "912a593109c13495d04968e0b12436de6b910508",
+  "counts": {
+    "full_core_pass": 3427,
+    "lib_unit": 3015,
+    "integration": 412,
+    "doc_ignored": 1,
+    "agent": 56,
+    "AppVictory_named": 1,
+    "AppVictory_physical_cold_scenarios": 3,
+    "existing_quiz_named": 3
+  },
+  "phases": [
+    {
+      "stage": "core-cinnabar",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 16,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "e1514aadaac8c828318cb471b1bbee9242d1ee2455b58bc26d671472c8994276",
+      "stderr_sha256": "7759e19497b0b4580bc0e110f1e9149ec17d2138a3df23bbc92b1778bb2eb11f",
+      "required_name_pass": {
+        "overworld::native_script::tests::cinnabar_thirteen_victory_callers_carry_original_quotes_before_sound_and_flags": true,
+        "overworld::update::cinnabar_victory_caller_tests::scene_quote_reaches_pending_battle_and_both_sound_waits_precede_win_mutations": true,
+        "overworld::update::cinnabar_victory_caller_tests::explicit_quote_is_consumed_once_and_cannot_leak_into_legacy_or_rival_requests": true,
+        "overworld::update::cinnabar_quiz_audio_tests::wrong_quiz_waits_on_both_sides_of_denied_then_one_prompt_and_outer_release": true,
+        "overworld::native_script::tests::six_cinnabar_quizzes_preserve_original_inner_text_sound_and_gate_order": true,
+        "overworld::tests_cutscene_movement::cinnabar_wrong_answers_wait_for_each_real_trainer_route_before_text_and_battle": true
+      }
+    },
+    {
+      "stage": "core-legacy-bridge",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 1,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "6ce3fa0de120ed9e87ecdc6c534a70b262d8d475689ec2d543b6292e56eba689",
+      "stderr_sha256": "0f4e2da89fd5697050fcc1dc0115df080620d1ddda9469f1bb3eaa379ab37d2f",
+      "required_name_pass": {
+        "overworld::script_bridge::field_sound_window_snapshot_tests::explicit_battle_quote_does_not_change_old_api_or_legacy_effect_defaults": true
+      }
+    },
+    {
+      "stage": "full-core-once",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 3427,
+      "ignored_from_summaries": 1,
+      "stdout_sha256": "0cc7ed1669ae6b3d98d659e548e41183b0e897fc3fd936db54100aba374d1c15",
+      "stderr_sha256": "3e75214ae29c2925d5a2f06636a2130c588974112ec3385c983d385391168fb4",
+      "required_name_pass": {
+        "overworld::native_script::tests::cinnabar_thirteen_victory_callers_carry_original_quotes_before_sound_and_flags": true,
+        "overworld::update::cinnabar_victory_caller_tests::scene_quote_reaches_pending_battle_and_both_sound_waits_precede_win_mutations": true,
+        "overworld::update::cinnabar_victory_caller_tests::explicit_quote_is_consumed_once_and_cannot_leak_into_legacy_or_rival_requests": true,
+        "overworld::script_bridge::field_sound_window_snapshot_tests::explicit_battle_quote_does_not_change_old_api_or_legacy_effect_defaults": true,
+        "overworld::update::cinnabar_quiz_audio_tests::wrong_quiz_waits_on_both_sides_of_denied_then_one_prompt_and_outer_release": true,
+        "overworld::native_script::tests::six_cinnabar_quizzes_preserve_original_inner_text_sound_and_gate_order": true,
+        "overworld::tests_cutscene_movement::cinnabar_wrong_answers_wait_for_each_real_trainer_route_before_text_and_battle": true
+      }
+    },
+    {
+      "stage": "agent-lib",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 56,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "71c593e38204e7cb591f251e23ad39749f39c2992196068d4f1a7eb3231569c9",
+      "stderr_sha256": "8781df0642f0ab3fdca27e09878ef8b18436ebadff5a94344fcb04b2157fe312",
+      "required_name_pass": {
+        "semantics::extract::tests::quoted_trainer_command_retains_the_same_battle_state_effect": true
+      }
+    },
+    {
+      "stage": "app-natural-victory-pcm",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 1,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "ca7aa82f0b2743ec5d336c05bdbf13d491e2c3f9d623a6c4722706997ba6f2f5",
+      "stderr_sha256": "6c903845c2f67024054a110a647b04d488d8d3c5dde5d0b4943375dc7219d891",
+      "required_name_pass": {
+        "game::cinnabar_victory_tests::cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_go_inside": true
+      }
+    },
+    {
+      "stage": "app-existing-quiz",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 3,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "6f0420d280f32a1beac978cc6b41202fc8990868319128fdf47bb6f9d51796a8",
+      "stderr_sha256": "ed9e6366768460dcab008416236dcb728707d87279d593865f4e3b066dd3efcd",
+      "required_name_pass": {
+        "game::cinnabar_quiz_audio_tests::muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_release": true,
+        "game::cinnabar_quiz_audio_tests::muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_prompt": true,
+        "game::cinnabar_quiz_audio_tests::muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_door": true
+      }
+    },
+    {
+      "stage": "freeze-debug-cli",
+      "actual_head": "912a593109c13495d04968e0b12436de6b910508",
+      "Cargo_exit": 0,
+      "passed_literal_names": 0,
+      "ignored_from_summaries": 0,
+      "stdout_sha256": "52b87bf5be48d5c73ea0a6803dcdd18af8736c8459b286dafff145b2c1ac0bcb",
+      "stderr_sha256": "2005c74ad6eb2833061fb8f48b921d57a6ae0ca15907fd24d921a77f0a35ccc2",
+      "required_name_pass": {}
+    }
+  ],
+  "historical_typed": {
+    "source": "d96c92abaa2ea0ad82bf1a51c74178b0534f6879",
+    "PASS": 1,
+    "not_rerun_or_relabelled": true
+  },
+  "historical_Boa": {
+    "source": "5ac8db7e5ad56bf7eb40f81ac79bdad968b12047",
+    "PASS": 1,
+    "not_rerun_or_relabelled": true
+  },
+  "agent_strict_guard_passed_names": [
+    "mode::tests::boot_and_title_are_unknown",
+    "semantics::extract::tests::synchronized_escort_records_both_actors_without_unknown_constructs",
+    "semantics::extract::tests::unknown_constructs_are_reported_not_guessed",
+    "semantics::gen::tests::coverage_has_no_unbounded_unknowns",
+    "semantics::gen::tests::generation_is_deterministic",
+    "semantics::gen::tests::graph_json_matches_committed_file"
+  ],
+  "committed_graph_unchanged_sha256": "c7dfdcf0149ea4d4fef3f7886a774f7493beb1652b860c044cb95638757565c2",
+  "actual_912_combined_receipt_sha256": "10a719ede82276e5e38a678d303be5017d45641e445ee240dc7d91f5aee4c2d4",
+  "AppVictory_scope": "One named Game test / three physical cold-SRAM cases; real audio sequencer, active SFX channel and nonzero muted PCM; no runtime battle/result setter. The same test also checks later defeated talk and no field-text/pending-battle leak.",
+  "existing_quiz_scope": "Three named Game tests / five preboot scenarios; ordinary Continue and input.",
+  "new_merge_head_tests": "Not rerun or relabelled; M1 merge whole-tree equality is recorded in source-manifest.json."
+}

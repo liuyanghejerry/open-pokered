@@ -1,0 +1,697 @@
+{
+  "scope": "Actual M1 versus actual912 native fixed pairs; all original private raw results, failed discovery attempts and 5292 screenshots remain preserved locally. This archive contains eight untouched images and compact records only.",
+  "before": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+  "after": "912a593109c13495d04968e0b12436de6b910508",
+  "original_game_run_options": [
+    "run",
+    "--headless",
+    "--speed",
+    "0",
+    "--seed",
+    "42",
+    "--lang",
+    "en",
+    "--no-audio",
+    "--save",
+    "individual ordinary.sav"
+  ],
+  "no_scripts_dir_or_map_environment_override": true,
+  "physical_fixture_declaration": {
+    "construction": "Verbatim actual912 App Session::boot SaveData construction, exported/imported by pure Rust codec linked to actual077034d rlibs. Codec subsystem bytes proved equal to M1/912; tool build identity not relabelled.",
+    "player": "RED",
+    "rival": "BLUE",
+    "player_id": 1234,
+    "map": "CinnabarGym",
+    "last_map": "CinnabarIsland",
+    "money": 3000,
+    "party": [
+      {
+        "species": "BLASTOISE",
+        "level": 100,
+        "DVs": "9a78",
+        "OT_ID": 1234,
+        "moves": [
+          "SURF",
+          "NONE",
+          "NONE",
+          "NONE"
+        ],
+        "HP": "288/288",
+        "PP": "15,0,0,0"
+      }
+    ],
+    "bag": [],
+    "badges": 0,
+    "text_speed": "Fast",
+    "event_flags": "Only trainer1-open starts with GATE1_UNLOCKED set; all trainer beaten flags clear; no companion flags files.",
+    "not_a_runtime_or_RNG_snapshot": true
+  },
+  "input_policy": "Each vector frozen from the successful M1-only discovery plus predeclared (B2,N30)*16+N64; candidate never selects or changes buttons. Prefix (A1,N7)*70+N32+UP2,N2,A2,N2=600. One press_timeline per physical frame, zero padding.",
+  "fixtures": [
+    {
+      "case": "trainer0-locked",
+      "trainer": 0,
+      "position": [
+        17,
+        3
+      ],
+      "initial_gate_flag": false,
+      "save": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer0-locked-preboot.sav",
+        "sha256": "bac12d7f20251c18287dfe59cebc0e2d10ef5c0e2e1d6386b11c6571aa5f4b65",
+        "bytes": 32768
+      },
+      "buttons": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer0-locked-buttons.json",
+        "sha256": "1d482c3a2bffef2dfd2874cd617597be77c0f98885ae838bbc4137ff88a6755c",
+        "bytes": 26604,
+        "physical_frames": 3929
+      },
+      "roundtrip": {
+        "Cargo_calls": 0,
+        "Game_runs": 0,
+        "all_serialized_fields_equal_except_comparison_normalizations": true,
+        "bytes": 32768,
+        "case": "trainer0-locked",
+        "comparison_only_normalizations": [
+          "player/rival0x50terminator",
+          "boxinitializedbit7"
+        ],
+        "gate_initially_open": false,
+        "import_checksum_pass": true,
+        "reexport_bytes_equal": true,
+        "runtime_snapshot": false,
+        "trainer": 0
+      },
+      "observed_effects": {
+        "before": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 12,
+            "ShowDialogue": 196,
+            "StartBattle": 1
+          },
+          "non_null_choice_frames": 0
+        },
+        "after": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 12,
+            "ShowDialogue": 69,
+            "StartBattle": 1,
+            "WaitSound": 45,
+            "PlaySound": 1
+          },
+          "non_null_choice_frames": 0
+        }
+      },
+      "actual_pair_result_sha256": "b3e00798475d28127384121d5d390aa925c4c9d8022e30155128e2bb85fc2961",
+      "public_prefix_compared_fields": [
+        "screen",
+        "map_id",
+        "map_name",
+        "player_x",
+        "player_y",
+        "player_facing",
+        "player_transport",
+        "party",
+        "badges",
+        "money",
+        "coins",
+        "map_blocks",
+        "battle_phase",
+        "battle_message",
+        "battle_live",
+        "battle_moves",
+        "audio_sfx",
+        "dialogue",
+        "dialogue_state",
+        "choice",
+        "script_running",
+        "active_script_effect",
+        "script_awaiting_battle"
+      ],
+      "public_prefix_equal_frames": [
+        0,
+        3129
+      ],
+      "providers": {
+        "before": {
+          "source": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+          "frames": 3929,
+          "raw_states": 3930,
+          "accepted_physical_frames": 3929,
+          "RPC_pairs": 10351,
+          "capture_zero_advance_guard_count": 860,
+          "battle_enter": 668,
+          "first_quote": null,
+          "first_money": 3130,
+          "first_exit": 3162,
+          "GO_busy": [],
+          "first_beaten_rise": 3162,
+          "first_gate_rise": 3162,
+          "first_continuation_idle": 3289,
+          "physical_gate_block_changes": []
+        },
+        "after": {
+          "source": "912a593109c13495d04968e0b12436de6b910508",
+          "frames": 3929,
+          "raw_states": 3930,
+          "accepted_physical_frames": 3929,
+          "RPC_pairs": 10319,
+          "capture_zero_advance_guard_count": 860,
+          "battle_enter": 668,
+          "first_quote": 3130,
+          "first_money": 3172,
+          "first_exit": 3194,
+          "GO_busy": [
+            3220,
+            3221,
+            3222,
+            3223,
+            3224,
+            3225,
+            3226,
+            3227,
+            3228,
+            3229,
+            3230,
+            3231,
+            3232,
+            3233,
+            3234,
+            3235,
+            3236,
+            3237,
+            3238,
+            3239
+          ],
+          "first_beaten_rise": 3240,
+          "first_gate_rise": 3240,
+          "first_continuation_idle": 3240,
+          "physical_gate_block_changes": []
+        }
+      },
+      "raw_log_artifacts": {
+        "before": {
+          "states.jsonl": {
+            "sha256": "80ac30d5df90de4e09a44c90403a15c289591806e1810075abdd96a096b30b13",
+            "bytes": 9613871
+          },
+          "rpc.jsonl": {
+            "sha256": "9dc071d6eedd06b6ff460ac81502f37ffaaead995c401bd0e995392af12893c5",
+            "bytes": 16638789
+          },
+          "game.log": {
+            "sha256": "6a91f228c315f9a2619db46a63e0ecd0743029afcfde1505aa006b87c6693019",
+            "bytes": 534
+          }
+        },
+        "after": {
+          "states.jsonl": {
+            "sha256": "d3dab37143b17b82d0f330b6b7d38daf047b1b68d6df32fe93b5441b0404b329",
+            "bytes": 9587362
+          },
+          "rpc.jsonl": {
+            "sha256": "19c9248cee09668757345ae226fb9988f78adff38be1619c889bcdb46f245444",
+            "bytes": 16574010
+          },
+          "game.log": {
+            "sha256": "cf8d332cb78e1c9fce6cc9b57dfb368e16ca638fbeed44e394302e812ad26ac1",
+            "bytes": 527
+          }
+        }
+      }
+    },
+    {
+      "case": "trainer1-locked",
+      "trainer": 1,
+      "position": [
+        17,
+        9
+      ],
+      "initial_gate_flag": false,
+      "save": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer1-locked-preboot.sav",
+        "sha256": "c8e9330d4b2a2440842c849fd3e4a31da48de4327d8d8b46cc120dd11a21622f",
+        "bytes": 32768
+      },
+      "buttons": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer1-locked-buttons.json",
+        "sha256": "902dd3614d1dc9abc94bce9f8805bb9492fef3b359583db403e210a37b46ca89",
+        "bytes": 25748,
+        "physical_frames": 3801
+      },
+      "roundtrip": {
+        "Cargo_calls": 0,
+        "Game_runs": 0,
+        "all_serialized_fields_equal_except_comparison_normalizations": true,
+        "bytes": 32768,
+        "case": "trainer1-locked",
+        "comparison_only_normalizations": [
+          "player/rival0x50terminator",
+          "boxinitializedbit7"
+        ],
+        "gate_initially_open": false,
+        "import_checksum_pass": true,
+        "reexport_bytes_equal": true,
+        "runtime_snapshot": false,
+        "trainer": 1
+      },
+      "observed_effects": {
+        "before": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 37,
+            "ShowDialogue": 139,
+            "StartBattle": 1
+          },
+          "non_null_choice_frames": 0
+        },
+        "after": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 13,
+            "ShowDialogue": 69,
+            "StartBattle": 1,
+            "WaitSound": 45,
+            "PlaySound": 1
+          },
+          "non_null_choice_frames": 0
+        }
+      },
+      "actual_pair_result_sha256": "ba7264c3c9699bbd552ab3eff9a60b3e3d8622fb326afb5154e74a4d0f74ce54",
+      "public_prefix_compared_fields": [
+        "screen",
+        "map_id",
+        "map_name",
+        "player_x",
+        "player_y",
+        "player_facing",
+        "player_transport",
+        "party",
+        "badges",
+        "money",
+        "coins",
+        "map_blocks",
+        "battle_phase",
+        "battle_message",
+        "battle_live",
+        "battle_moves",
+        "audio_sfx",
+        "dialogue",
+        "dialogue_state",
+        "choice",
+        "script_running",
+        "active_script_effect",
+        "script_awaiting_battle"
+      ],
+      "public_prefix_equal_frames": [
+        0,
+        3033
+      ],
+      "providers": {
+        "before": {
+          "source": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+          "frames": 3801,
+          "raw_states": 3802,
+          "accepted_physical_frames": 3801,
+          "RPC_pairs": 10129,
+          "capture_zero_advance_guard_count": 893,
+          "battle_enter": 668,
+          "first_quote": null,
+          "first_money": 3034,
+          "first_exit": 3066,
+          "GO_busy": [],
+          "first_beaten_rise": 3066,
+          "first_gate_rise": 3066,
+          "first_continuation_idle": 3161,
+          "physical_gate_block_changes": [
+            {
+              "frame": 3091,
+              "before": 84,
+              "after": 14
+            }
+          ]
+        },
+        "after": {
+          "source": "912a593109c13495d04968e0b12436de6b910508",
+          "frames": 3801,
+          "raw_states": 3802,
+          "accepted_physical_frames": 3801,
+          "RPC_pairs": 10097,
+          "capture_zero_advance_guard_count": 893,
+          "battle_enter": 668,
+          "first_quote": 3034,
+          "first_money": 3076,
+          "first_exit": 3098,
+          "GO_busy": [
+            3124,
+            3125,
+            3126,
+            3127,
+            3128,
+            3129,
+            3130,
+            3131,
+            3132,
+            3133,
+            3134,
+            3135,
+            3136,
+            3137,
+            3138,
+            3139,
+            3140,
+            3141,
+            3142,
+            3143
+          ],
+          "first_beaten_rise": 3144,
+          "first_gate_rise": 3144,
+          "first_continuation_idle": 3145,
+          "physical_gate_block_changes": [
+            {
+              "frame": 3145,
+              "before": 84,
+              "after": 14
+            }
+          ]
+        }
+      },
+      "raw_log_artifacts": {
+        "before": {
+          "states.jsonl": {
+            "sha256": "bb9dd2fe3b89c609c9cdd5d9117ce9b7a6c03f0cd55344fa1af42194ef6429dc",
+            "bytes": 9279703
+          },
+          "rpc.jsonl": {
+            "sha256": "debd0db9ed030b691e526bf93086bf6bd547922aaa268fc09ab6e26075e67789",
+            "bytes": 16454384
+          },
+          "game.log": {
+            "sha256": "004f37b7cf4c3dde7e1c6d7863302bce21ca24f155dfb70a5abc8114f91504c7",
+            "bytes": 534
+          }
+        },
+        "after": {
+          "states.jsonl": {
+            "sha256": "9bf9a31fc9927ab5badd290ec640498b0b5d7a5740cf7ced4a3ad35da1daf465",
+            "bytes": 9264549
+          },
+          "rpc.jsonl": {
+            "sha256": "99bb3ebe0780d0bcf00d9546b75271e93a6c1a88e1557c3f1e024b22a9ec0024",
+            "bytes": 16402844
+          },
+          "game.log": {
+            "sha256": "d90d0d92a459c8d9b667b564692ce87354283df631b662e2924b7d2e6e3d35fa",
+            "bytes": 527
+          }
+        }
+      }
+    },
+    {
+      "case": "trainer1-open",
+      "trainer": 1,
+      "position": [
+        17,
+        9
+      ],
+      "initial_gate_flag": true,
+      "save": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer1-open-preboot.sav",
+        "sha256": "edd71f3d903734658b5f9b772fd0f57eb9f2cde9cb0517d08054421f590fc5d8",
+        "bytes": 32768
+      },
+      "buttons": {
+        "path": "docs/validation/cinnabar-trainer-victory-1056/trainer1-open-buttons.json",
+        "sha256": "902dd3614d1dc9abc94bce9f8805bb9492fef3b359583db403e210a37b46ca89",
+        "bytes": 25748,
+        "physical_frames": 3801
+      },
+      "roundtrip": {
+        "Cargo_calls": 0,
+        "Game_runs": 0,
+        "all_serialized_fields_equal_except_comparison_normalizations": true,
+        "bytes": 32768,
+        "case": "trainer1-open",
+        "comparison_only_normalizations": [
+          "player/rival0x50terminator",
+          "boxinitializedbit7"
+        ],
+        "gate_initially_open": true,
+        "import_checksum_pass": true,
+        "reexport_bytes_equal": true,
+        "runtime_snapshot": false,
+        "trainer": 1
+      },
+      "observed_effects": {
+        "before": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 37,
+            "ShowDialogue": 139,
+            "StartBattle": 1
+          },
+          "non_null_choice_frames": 0
+        },
+        "after": {
+          "active_script_effect_frames": {
+            "ReplaceTileBlock": 13,
+            "ShowDialogue": 69,
+            "StartBattle": 1,
+            "WaitSound": 45,
+            "PlaySound": 1
+          },
+          "non_null_choice_frames": 0
+        }
+      },
+      "actual_pair_result_sha256": "88c0d6953ef2ceae072f27ba90eb6abd37950d35fbbd224937629b7286e2733f",
+      "public_prefix_compared_fields": [
+        "screen",
+        "map_id",
+        "map_name",
+        "player_x",
+        "player_y",
+        "player_facing",
+        "player_transport",
+        "party",
+        "badges",
+        "money",
+        "coins",
+        "map_blocks",
+        "battle_phase",
+        "battle_message",
+        "battle_live",
+        "battle_moves",
+        "audio_sfx",
+        "dialogue",
+        "dialogue_state",
+        "choice",
+        "script_running",
+        "active_script_effect",
+        "script_awaiting_battle"
+      ],
+      "public_prefix_equal_frames": [
+        0,
+        3033
+      ],
+      "providers": {
+        "before": {
+          "source": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+          "frames": 3801,
+          "raw_states": 3802,
+          "accepted_physical_frames": 3801,
+          "RPC_pairs": 10129,
+          "capture_zero_advance_guard_count": 893,
+          "battle_enter": 668,
+          "first_quote": null,
+          "first_money": 3034,
+          "first_exit": 3066,
+          "GO_busy": [],
+          "first_beaten_rise": 3066,
+          "first_gate_rise": null,
+          "first_continuation_idle": 3161,
+          "physical_gate_block_changes": []
+        },
+        "after": {
+          "source": "912a593109c13495d04968e0b12436de6b910508",
+          "frames": 3801,
+          "raw_states": 3802,
+          "accepted_physical_frames": 3801,
+          "RPC_pairs": 10097,
+          "capture_zero_advance_guard_count": 893,
+          "battle_enter": 668,
+          "first_quote": 3034,
+          "first_money": 3076,
+          "first_exit": 3098,
+          "GO_busy": [
+            3124,
+            3125,
+            3126,
+            3127,
+            3128,
+            3129,
+            3130,
+            3131,
+            3132,
+            3133,
+            3134,
+            3135,
+            3136,
+            3137,
+            3138,
+            3139,
+            3140,
+            3141,
+            3142,
+            3143
+          ],
+          "first_beaten_rise": 3144,
+          "first_gate_rise": null,
+          "first_continuation_idle": 3145,
+          "physical_gate_block_changes": []
+        }
+      },
+      "raw_log_artifacts": {
+        "before": {
+          "states.jsonl": {
+            "sha256": "9e7db876ba23114241ab4a72f315453cd5b23dfb5f7b6a455fd568d93460db5a",
+            "bytes": 9279703
+          },
+          "rpc.jsonl": {
+            "sha256": "d42a0f4e7042f8afbabcdc60abc336a4bb4c4af87aa19c475e4d94580344014c",
+            "bytes": 16450855
+          },
+          "game.log": {
+            "sha256": "06ce9028609b1dff3967be0812a82ec42af7db47103b04a742dce1b57c36c803",
+            "bytes": 532
+          }
+        },
+        "after": {
+          "states.jsonl": {
+            "sha256": "e330eedf8dc2e5983214bb6e58169444635207dbb1063d87862ff8cd18a4f165",
+            "bytes": 9264549
+          },
+          "rpc.jsonl": {
+            "sha256": "2df73a0252ecd58a9654f54f9ab265c55e59c416fac7e9bea5d4e60085785a64",
+            "bytes": 16401293
+          },
+          "game.log": {
+            "sha256": "d27f889020f3fe75fc6605d420c66431860ecb58fae078315e0c53d261dfd5d5",
+            "bytes": 525
+          }
+        }
+      }
+    }
+  ],
+  "screenshots": [
+    {
+      "case": "trainer0-locked",
+      "frame": 3154,
+      "same_screen": "battle",
+      "images": {
+        "before": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer0-quote-before.png",
+          "sha256": "53e98ed2723d66edd8b571ccd8775972803b4108aa8a2f4de4e6373fef2b333a",
+          "bytes": 4196
+        },
+        "after": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer0-quote-after.png",
+          "sha256": "d882d77ce1546b55fd3d7af69af0d4effa34e432aec1397d01c5963d4aa4dbdf",
+          "bytes": 4019
+        }
+      }
+    },
+    {
+      "case": "trainer0-locked",
+      "frame": 3220,
+      "same_screen": "overworld",
+      "images": {
+        "before": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer0-return-before.png",
+          "sha256": "5488c7a97f8999c4249a5bc9d4f72aaa92d8284125770dd0db7b3e1c22eaa261",
+          "bytes": 4710
+        },
+        "after": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer0-return-after.png",
+          "sha256": "41f4c7951683332cfc547bc3f1acc2ab999c14a1abe1b625b720f8429c7045c4",
+          "bytes": 6121
+        }
+      }
+    },
+    {
+      "case": "trainer1-locked",
+      "frame": 3124,
+      "same_screen": "overworld",
+      "images": {
+        "before": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer1-door-before.png",
+          "sha256": "c1995a400902562fc255d7b0c1075e844815f83e5698f99a2841eb70ec269ec9",
+          "bytes": 5868
+        },
+        "after": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer1-door-after.png",
+          "sha256": "5614de8215f22ff8d5bacdd423aaf32cf85f8fe2feb4bda2bf38a1f9db73512f",
+          "bytes": 7829
+        }
+      }
+    },
+    {
+      "case": "trainer1-open",
+      "frame": 3058,
+      "same_screen": "battle",
+      "images": {
+        "before": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer1-open-quote-before.png",
+          "sha256": "96dfbb93d5c72dd4346e655f9a45a3991044a119e7c95c219dafe9bf9be135f4",
+          "bytes": 4226
+        },
+        "after": {
+          "path": "docs/screenshots/cinnabar-trainer-victory-1056/trainer1-open-quote-after.png",
+          "sha256": "1bc1c596cf6346b48e5fcc0723a044d571bc0c3a8772363c160b0e449306c7dc",
+          "bytes": 3944
+        }
+      }
+    }
+  ],
+  "recorded_controller": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/recorded-controller.py",
+    "sha256": "677d907bae8b590fa3cbd7f4040c1c1b2cb1431df98dd5728063a22fade04685",
+    "bytes": 21720
+  },
+  "source_manifest": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/source-manifest.json",
+    "sha256": "a092734f3edc9b22f3b11039269466f651c26128cff263d95faf3c601b60ba2d",
+    "bytes": 8907
+  },
+  "validation": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/validation.json",
+    "sha256": "dd32b6dabade94ac45c0839a0f6cdc661dd42e53b537556395ef9b2cf01f010e",
+    "bytes": 7264
+  },
+  "native_review_receipt_sha256": "d8700ccdf8210542418673960d99980cc7c12f66596228d46d0cad4807ac26f2",
+  "fixed_pair_plan_sha256": "f34c21ce750cd23a4818e852c33b05f039cd3bfac9cb4e88542597814fbfc1e6",
+  "cleanup_only_proof_sha256": "aaa79a878b3b08f5e12c288e25b46ded1b7a80626ff67ec870eaad063931ce7c",
+  "all_9_owned_process_groups_gone": true,
+  "all_source_guards_before_after_equal": true,
+  "total_physical_press_calls": 23062,
+  "RNG_state_equality_claim": false,
+  "muted_audio_scope": "Native pair observes real logical SFX/WaitSound completion. Nonzero PCM is independently covered by actual912 App test. No guessed sound-duration oracle.",
+  "preserved_local_first_failures": [
+    {
+      "archive": ".task-tmp/fidelity-39-plus/audit-1057-victory-before-discoveries-v1/result.json",
+      "sha256": "6d3577c0e3134ecf2b862380af45c51e0c4aedb631b233a7d89bd5c6453b7246",
+      "scope": "Frame0 wire-format rejection; no physical gameplay input accepted."
+    },
+    {
+      "archive": ".task-tmp/fidelity-39-plus/audit-1057-victory-before-discoveries-v2/result.json",
+      "sha256": "0272dc62171f52c3bafa887767fc7fdf3c1877135e8db7bf4d00c330ea33f6ad",
+      "scope": "One-frame A at597 missed the normal two-VBlank sample; 598-frame before-only plan stopped, no battle or candidate."
+    },
+    {
+      "archive": ".task-tmp/fidelity-39-plus/audit-1057-victory-912-serial-execution-v5/result.json",
+      "sha256": "eb4ff0898a826d129f7660e8d572235f4ec05137dd29309b2af0ee8570c70d35",
+      "scope": "App actualPASS; external build-log shell-reader bookkeeping stop preserved; no App rerun."
+    }
+  ],
+  "old_test_first_failures": {
+    "d96E0433": "7e5e6ae90e0edeaf7938b3028a6aec17e5a13efdfba390466bb866e8bd2b9ea4",
+    "5acOldQuiz": "e460a874023275967d9ad4f1c6a6fea88a0571b02a9239437d5181cf0febcf77"
+  }
+}
