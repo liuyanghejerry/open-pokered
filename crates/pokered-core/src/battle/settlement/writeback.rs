@@ -198,6 +198,14 @@ pub fn settle_battle_into_save(
                     log::info!("Oak's Lab Rival1 loss: skipping blackout (original behavior)");
                 }
             }
+            BattleOutcome::Escaped => {
+                // Doll / escape-move exits can leave wBattleResult at zero.
+                // Their finalized receipt awards only the qualified Pay Day
+                // pot, while the script outcome and trainer flags stay escaped.
+                save.game_data.player_money = (save.game_data.player_money as u32)
+                    .saturating_add(settlement.money_gained)
+                    .min(999_999);
+            }
             _ => {}
         }
     }
