@@ -298,3 +298,90 @@ fn injected_scene_does_not_shadow_other_maps() {
         "shared pokecenter AST must still resolve"
     );
 }
+
+/// The native command trace checks the quiz's text/audio prefix separately.
+/// Complete that prefix here, then let the real overworld driver own facing,
+/// every NPC stride, trainer dialogue and the battle handoff. Never signal
+/// completion of MoveNpc from the test: its real path/counter must finish.
+#[test]
+fn cinnabar_wrong_answers_wait_for_each_real_trainer_route_before_text_and_battle() {
+    use super::native_script::{NativeScriptEngine, OverworldScriptEngine};
+    use super::script_bridge::{dispatch_command, ScriptEffect};
+    use dotzuki_engine_script::{CommandResult, ScriptCommand};
+
+    let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+    let routes: [(u8, (u16, u16), (u16, u16), &[(u16, u16)], Direction, usize); 6] = [
+        (3, (15, 8), (17, 8), &[(16, 8)], Direction::Right, 1),
+        (4, (10, 2), (11, 4), &[(10, 4), (10, 3)], Direction::Down, 0),
+        (5, (9, 8), (11, 8), &[(10, 8)], Direction::Right, 0),
+        (6, (9, 14), (11, 14), &[(10, 14)], Direction::Right, 0),
+        (7, (1, 14), (3, 14), &[(2, 14)], Direction::Right, 1),
+        (8, (1, 8), (3, 8), &[(2, 8)], Direction::Right, 0),
+    ];
+    for (index, (text_id, player, initial, path, facing, wrong_answer)) in routes.into_iter().enumerate() {
+        let number = index + 1;
+        let mut screen = OverworldScreen::new(MapId::CinnabarGym, None, PokemonRedData);
+        screen.state.player.x = player.0;
+        screen.state.player.y = player.1;
+        screen.state.player.facing = Direction::Up;
+        let npc_index = screen.npc_states.iter().position(|npc| npc.text_id == text_id).unwrap();
+        assert_eq!((screen.npc_states[npc_index].x, screen.npc_states[npc_index].y), initial);
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("CinnabarGym", &scene);
+        engine.seed_text("playerFacing", "up");
+        screen.script_engine = OverworldScriptEngine::Native(engine);
+
+        let mut next = screen.script_engine.call_function_no_args(&format!("quizMachine{number}")).unwrap();
+        let mut facing_command = None;
+        for _ in 0..20 {
+            let command = next.take().expect("wrong-answer continuation must reach facePlayer");
+            if matches!(command, ScriptCommand::FacePlayer { .. }) {
+                facing_command = Some(command);
+                break;
+            }
+            assert!(!matches!(command, ScriptCommand::MoveNpc { .. } | ScriptCommand::ShowText { .. } | ScriptCommand::StartBattle { .. }));
+            let result = if matches!(command, ScriptCommand::ShowChoice { .. }) {
+                CommandResult::Number(wrong_answer as f64)
+            } else {
+                CommandResult::Void
+            };
+            next = screen.script_engine.signal_done(result).unwrap();
+        }
+        screen.active_script_effect = Some(dispatch_command(&facing_command.expect("facePlayer command")));
+
+        let mut visited = Vec::new();
+        let mut saw_moving = false;
+        let mut saw_trainer_text = false;
+        for _ in 0..300 {
+            screen.update_frame(neutral_input());
+            let npc = &screen.npc_states[npc_index];
+            let position = (npc.x, npc.y);
+            if position != initial && visited.last() != Some(&position) {
+                visited.push(position);
+            }
+            let moving = npc.walk_counter != 0 || !npc.scripted_path.is_empty();
+            saw_moving |= moving;
+            assert!(!screen.script_awaiting_battle, "quiz {number} started battle before trainer text");
+            if moving {
+                assert!(screen.pending_dialogue.is_none(), "quiz {number} showed text during the walk");
+                assert!(matches!(screen.active_script_effect, Some(ScriptEffect::MoveNpc { .. })));
+            }
+            if screen.pending_dialogue.is_some() {
+                assert!(saw_moving, "quiz {number} skipped actual NPC movement");
+                assert!(!moving, "quiz {number} did not await the final movement counter");
+                assert_eq!(visited.as_slice(), path, "quiz {number} route");
+                assert_eq!(screen.state.player.facing, facing);
+                saw_trainer_text = true;
+                break;
+            }
+        }
+        assert!(saw_trainer_text, "quiz {number} did not reach trainer text after its walk");
+        for frame in 0..600 {
+            screen.update_frame(if frame % 20 == 0 { a_input() } else { neutral_input() });
+            if screen.script_awaiting_battle {
+                break;
+            }
+        }
+        assert!(screen.script_awaiting_battle, "quiz {number} did not battle after dismissing trainer text");
+    }
+}
