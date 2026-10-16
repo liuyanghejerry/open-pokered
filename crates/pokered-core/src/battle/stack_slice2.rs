@@ -256,7 +256,7 @@ use crate::alloc_prelude::*;
 
     // ───────────────────────── Confusion (ASM #7, bug #13) ───────────────────
 
-    /// Confusion self-hit (`confusion_roll < 128`): the gate draws ONE confusion
+    /// Confusion self-hit (`confusion_roll >= 128`): the gate draws ONE confusion
     /// byte, applies the typeless 40-power self-hit, and aborts the move. The
     /// self-hit damage and the abort (no enemy damage from the confused mon) must
     /// match legacy, AND `consumed()` must match (1 confusion byte, no crit/acc/
@@ -265,7 +265,7 @@ use crate::alloc_prelude::*;
     fn confusion_self_hit_draws_one_byte_and_aborts() {
         let mut s = base("confused self-hit");
         s.player_confused_turns = 3; // confused, will decrement to 2 (> 0)
-        s.first.confusion = 0; // < 128 → self-hit
+        s.first.confusion = 128; // >= 128 → self-hit
 
         let legacy = legacy_run(&s);
         let (stack, consumed, first) = stack_run(&s);
@@ -290,14 +290,14 @@ use crate::alloc_prelude::*;
         );
     }
 
-    /// Confused but acts (`confusion_roll >= 128`): the gate draws ONE confusion
+    /// Confused but acts (`confusion_roll < 128`): the gate draws ONE confusion
     /// byte, the mon does NOT hit itself, and the move proceeds normally. Both
     /// outcome AND `consumed()` asserted.
     #[test]
     fn confusion_acts_through_draws_one_byte() {
         let mut s = base("confused but acts");
         s.player_confused_turns = 3;
-        s.first.confusion = 200; // >= 128 → acts normally
+        s.first.confusion = 64; // < 128 → acts normally
 
         let legacy = legacy_run(&s);
         let (stack, consumed, first) = stack_run(&s);
@@ -332,7 +332,7 @@ use crate::alloc_prelude::*;
     fn confusion_snaps_out_no_draw_and_acts() {
         let mut s = base("confusion snaps out");
         s.player_confused_turns = 1; // decrements to 0 → snap out, no byte
-        s.first.confusion = 0; // would self-hit IF drawn — but it must NOT be drawn
+        s.first.confusion = 128; // would self-hit IF drawn — but it must NOT be drawn
 
         let legacy = legacy_run(&s);
         let (stack, consumed, first) = stack_run(&s);
@@ -347,7 +347,7 @@ use crate::alloc_prelude::*;
         // The player ACTED (snapped out) and damaged the enemy; took NO self-hit
         // (the self-hit byte was never read). Compared to an unconfused control,
         // the player's HP is identical (only the enemy retaliation), proving the
-        // confusion self-hit byte (0) was NOT consumed.
+        // confusion self-hit byte (128) was NOT consumed.
         assert!(
             stack.opponent_battlers[0].hp < 200,
             "snapped-out player must act and damage enemy"
@@ -369,18 +369,16 @@ use crate::alloc_prelude::*;
     /// flipping the outcome and breaking parity with the legacy oracle (which
     /// always reads `confusion_roll` before `paralysis_roll`).
     ///
-    /// Trap: confusion byte 200 (>=128 → acts, no self-hit), paralysis byte 0
-    /// (<63 → fully paralyzed). Correct order → confusion passes, paralysis
-    /// aborts → player deals no damage. Swapped order → the para handler would
-    /// read 200 (acts) and the confusion handler would read 0 (self-hit) → player
-    /// takes self-damage and is NOT para-blocked → different state.
+    /// Trap: confusion byte 64 (<128 → acts), paralysis byte 0 (<63 → blocks).
+    /// Correct order consumes both gate bytes and aborts. If swapped, paralysis
+    /// reads 64 and passes, then confusion reads 0 and passes: Tackle lands.
     #[test]
     fn confusion_drawn_before_paralysis() {
         let mut s = base("para + confused: confusion byte first");
         s.player_status = LegacyStatus::Paralysis;
         s.player_speed = 1000; // stays first even after ÷4, no tie byte
         s.player_confused_turns = 3; // confused, decrements to 2 (> 0) → draws
-        s.first.confusion = 200; // >= 128 → confusion passes (acts)
+        s.first.confusion = 64; // < 128 → confusion passes (acts)
         s.first.paralysis = 0; // < 63 → full para aborts
 
         let legacy = legacy_run(&s);
@@ -401,17 +399,17 @@ use crate::alloc_prelude::*;
         //
         // (a) Paralysis aborted the move (byte 0 read at the PARA offset) → the
         //     player dealt NO damage, enemy untouched. If the handlers were
-        //     swapped, the para handler would read 200 (acts) and the player
+        //     swapped, the para handler would read 64 (acts) and the player
         //     would damage the enemy here.
         assert_eq!(
             stack.opponent_battlers[0].hp, 200,
             "paralysis byte (0) read at para offset → fully paralyzed, no damage"
         );
-        // (b) Confusion did NOT self-hit (byte 200 read at the CONFUSION offset).
+        // (b) Confusion did NOT self-hit (byte 64 at the CONFUSION offset).
         //     Proven by comparing to a para-only (unconfused) control: the
         //     player's HP is the SAME (only the enemy's retaliation, no extra
-        //     self-hit). A swapped order would read 0 at confusion → self-hit →
-        //     strictly less HP than the control.
+        //     self-hit). The enemy-HP and exact-consumption assertions above
+        //     distinguish the swapped-gate path.
         let mut para_only = base("para-only control");
         para_only.player_status = LegacyStatus::Paralysis;
         para_only.player_speed = 1000;
@@ -420,7 +418,7 @@ use crate::alloc_prelude::*;
         assert_eq!(
             stack.player_battlers[0].hp,
             control.player_battlers[0].hp,
-            "confusion byte (200) read at confusion offset → no self-hit (HP == para-only control)"
+            "confusion byte (64) read at confusion offset → no self-hit (HP == para-only control)"
         );
         assert!(
             stack.player_battlers[0].hp < 200,
@@ -445,7 +443,7 @@ use crate::alloc_prelude::*;
         // `first` MoveBytes is the FIRST mover (enemy here) — always hit.
         s.first = MoveBytes::always_hit();
         // `second` MoveBytes is the SECOND mover (the confused player).
-        s.second.confusion = 0; // < 128 → self-hit, aborts
+        s.second.confusion = 128; // >= 128 → self-hit, aborts
 
         let legacy = legacy_run(&s);
         let (stack, consumed, first) = stack_run(&s);
@@ -494,24 +492,24 @@ use crate::alloc_prelude::*;
 
         let mut conf_hit = base("confusion self-hit");
         conf_hit.player_confused_turns = 3;
-        conf_hit.first.confusion = 0;
+        conf_hit.first.confusion = 128;
         matrix.push(conf_hit);
 
         let mut conf_acts = base("confusion acts");
         conf_acts.player_confused_turns = 3;
-        conf_acts.first.confusion = 200;
+        conf_acts.first.confusion = 64;
         matrix.push(conf_acts);
 
         let mut conf_snap = base("confusion snap-out");
         conf_snap.player_confused_turns = 1;
-        conf_snap.first.confusion = 0;
+        conf_snap.first.confusion = 128;
         matrix.push(conf_snap);
 
         let mut both = base("para + confused");
         both.player_status = LegacyStatus::Paralysis;
         both.player_speed = 1000;
         both.player_confused_turns = 3;
-        both.first.confusion = 200;
+        both.first.confusion = 64;
         both.first.paralysis = 0;
         matrix.push(both);
 

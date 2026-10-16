@@ -723,10 +723,10 @@ fn freeze_gate(
 ///   * decrement `turns_left` (min 0);
 ///   * if it hits 0 → confusion ends (remove the volatile) and the mon may act,
 ///     drawing **NO** confusion byte (matches legacy "snap out" which skips the
-///     `random < 128` read);
-///   * otherwise draw ONE confusion byte; `< 128` → 50% self-hit: apply the
+///     confusion roll);
+///   * otherwise draw ONE confusion byte; `>= 128` → 50% self-hit: apply the
 ///     typeless 40-power self-damage to `source` and `Fail` (move aborted);
-///     `>= 128` → the mon acts normally.
+///     `< 128` → the mon acts normally.
 ///
 /// Drawing the byte ONLY when still confused-and-not-snapping-out keeps
 /// `consumed()` identical to the legacy meaningful-read, and the `order:70`
@@ -765,9 +765,9 @@ fn confusion_gate(
         return HandlerResult::Unchanged;
     }
 
-    // Still confused: 50% self-hit (legacy `random_confusion < 128`).
+    // Original CP $80 / JR C: raw bytes >= 128 hit self.
     let roll = ctx.rng.next_u8();
-    if roll < 128 {
+    if roll >= 128 {
         let self_damage = confusion_self_hit_damage(ctx, source);
         ctx.battler_mut(source).take_damage(self_damage);
         return HandlerResult::Fail; // hit itself → move aborted
@@ -2084,11 +2084,11 @@ pub struct MoveBytes {
 }
 
 impl MoveBytes {
-    /// confusion 255 (no self-hit), paralysis 255 (not full-para), crit 255 (no
+    /// confusion 0 (no self-hit), paralysis 255 (not full-para), crit 255 (no
     /// crit at low threshold), accuracy 0 (always hits), damage 255 (max roll).
     pub fn always_hit() -> Self {
         Self {
-            confusion: 255,
+            confusion: 0,
             paralysis: 255,
             crit: 255,
             accuracy: 0,
@@ -2263,7 +2263,7 @@ pub fn build_stack_stream(s: &Scenario, first: FirstMover, tie: bool) -> (Vec<u8
                 let turns_after = confused_turns - 1;
                 if turns_after > 0 {
                     bytes.push(mb.confusion);
-                    if mb.confusion < 128 {
+                    if mb.confusion >= 128 {
                         return true; // confusion self-hit → aborts; no further draws
                     }
                 }
