@@ -48,7 +48,7 @@
 | `912a593109c13495d04968e0b12436de6b910508` | core 红莲专项 16、旧 bridge 专项 1；全量 core 3427（3015 unit + 412 integration），0 失败、1 doc ignored；agent 56（含严格 coverage、unknown guard、生成图及确定性）；App 胜利 1 个测试 / 3 份冷 SRAM；原有答题 3 个测试 / 5 场景；debug CLI 构建 |
 | 实际 M1 / `912a5931` CLI | 本文三组普通输入前后对照 |
 
-App 胜利测试使用真实 Game、音频 sequencer、活跃声道和非零静音 PCM，检查台词先于奖金、等待期间物理门块与旗标未变、胜利后无残留，并再次交谈检查原有 AfterBattleText。Core 回归覆盖 13 个调用、已开门 / 无物理门、loss / draw 不写入、旧 API / serde 缺省及劲敌特殊台词不泄漏。原有 event graph 字节未改，严格 unknown guard 未放宽。
+App 胜利测试使用真实 Game、音频 sequencer、活跃声道和非零 PCM，检查台词先于奖金、等待期间物理门块与旗标未变、胜利后无残留，并再次交谈检查原有 AfterBattleText。Core 回归覆盖 13 个调用、已开门 / 无物理门、loss / draw 不写入、旧 API / serde 缺省及劲敌特殊台词不泄漏。原有 event graph 字节未改，严格 unknown guard 未放宽。
 
 三组 Game 全终态之后才普通 merge M1，产生 `0a142ec43f1f1fe9252ed399192ded0064c1a4bf`，父提交精确为 `912a5931` 与 M1。预测及实际整棵 tree 都是 `1a563049ecee604dc51c71ee25c47899004d0d2e`，与实际验证的 `912a5931` 完全相同；源码、engine 981 文件、GFX 702 文件和原作 6 文件复核一致。文档附件提交不是新执行，历史测试和截图没有改标成合并头。
 
