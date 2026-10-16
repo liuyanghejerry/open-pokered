@@ -692,6 +692,11 @@ fn muted_choice_confirmation_starts_real_press_ab_once_while_held() {
     ] {
         let mut session = Session::boot_at_machine(false);
         session.question(GbButton::A);
+        assert!(
+            !session.sound().1,
+            "the question has naturally outlasted its prior cue"
+        );
+        session.pcm_sfx_ids.clear(); // Observation log only; leave Game/audio state untouched.
         let starts_before = session.sfx_starts.len();
         session.step(&[button]);
         assert_eq!(
@@ -699,6 +704,7 @@ fn muted_choice_confirmation_starts_real_press_ab_once_while_held() {
             OverworldSfxEvent::TextAdvance
         );
         assert_eq!(session.sound(), (SfxId::PressAB as u8, true));
+        assert!(session.pcm_sfx_ids.contains(&(SfxId::PressAB as u8)));
 
         // Keep the same physical button down while the real PCM owner runs
         // the existing GET_ITEM or DENIED path. This bound is a stuck-test
