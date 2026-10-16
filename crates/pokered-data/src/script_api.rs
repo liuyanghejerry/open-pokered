@@ -168,6 +168,24 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        // Scene-owned ordinary trainer: explicit localized PrintEndBattleText.
+        // The generic startBattle and rival startBattleSet keep their defaults.
+        engine.register_async_fn(
+            "startBattleWithText",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let string = |index: usize| {
+                    args.get_or_undefined(index).as_string()
+                        .map(|value| value.to_std_string_lossy())
+                        .ok_or_else(|| boa_engine::JsNativeError::typ()
+                            .with_message(format!("startBattleWithText: argument {index} must be a string")))
+                };
+                Ok(PokemonScriptCommand::StartBattleWithText {
+                    trainer_id: string(0)?,
+                    end_battle_text: string(1)?,
+                }.into_script_command())
+            },
+        );
+
         // game.startWildBattle(species: string, level: number) -> Promise<string>
         // Starts a catchable wild/static battle (legendary or route blocker) and
         // resolves to the outcome ("win" | "lose" | "caught" | "fled" | "draw").
@@ -1251,4 +1269,34 @@ mod tests {
             }));
         assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
     }
+    #[test]
+    fn quoted_battle_awaits_the_real_result_and_invalid_payload_rejects_the_promise() {
+        for outcome in ["win", "lose", "draw"] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(r#"export async function f() {
+                let r = await game.startBattleWithText("OPP_BURGLAR4", "I\nsurrender!");
+                await game.showText(r);
+            }"#).unwrap();
+            let expected = PokemonScriptCommand::StartBattleWithText {
+                trainer_id: "OPP_BURGLAR4".into(), end_battle_text: "I\nsurrender!".into(),
+            }.into_script_command();
+            assert_eq!(engine.call_function("f", &[]).unwrap(), Some(expected.clone()));
+            assert_eq!(engine.tick(), Some(expected));
+            assert_eq!(engine.signal_done(CommandResult::Text(outcome.into())).unwrap(),
+                Some(ScriptCommand::ShowText { text: outcome.into() }));
+            assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+        }
+        for (arguments, index) in [("7, \"text\"", 0), ("\"ID\"", 1), ("\"ID\", null", 1)] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(&format!(r#"export async function f() {{
+                try {{ await game.startBattleWithText({arguments}); await game.showText("INVALID_PAYLOAD_ACCEPTED"); }}
+                catch (e) {{ await game.showText(String(e)); }}
+            }}"#)).unwrap();
+            assert_eq!(engine.call_function("f", &[]).unwrap(), Some(ScriptCommand::ShowText {
+                text: format!("TypeError: startBattleWithText: argument {index} must be a string"),
+            }));
+            assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+        }
+    }
+
 }

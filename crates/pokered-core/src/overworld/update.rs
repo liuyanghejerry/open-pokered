@@ -3863,7 +3863,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::FadeOutMusic);
                 }
-                script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base } => {
+                script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base, end_battle_text } => {
                     // The scene runs its own battle flow (gym leaders, rivals):
                     // cancel any parked before-battle text phase so the fight
                     // does not double-fire when the scene's text closes.
@@ -3871,9 +3871,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.pending_trainer_battle = Some(PendingTrainerBattle {
                         trainer_id,
                         npc_index: u8::MAX,
-                        // Script-driven battles (gym leaders, rivals) show their
-                        // own reward/quip text from the .scene.
-                        end_battle_text: None,
+                        // Legacy leaders/rivals keep None; ordinary scene
+                        // trainers can explicitly supply PrintEndBattleText.
+                        end_battle_text,
                         rival_triplet_base,
                     });
                 }
@@ -5838,5 +5838,89 @@ mod cinnabar_quiz_audio_tests {
         assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::ShowDialogue { .. })));
         assert!(ow.last_script_dialogue.is_none());
         assert!(!ow.retain_field_text);
+    }
+}
+
+#[cfg(test)]
+mod cinnabar_victory_caller_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    type Field = OverworldScreen<PokemonRedData>;
+    const GATE: &str = "EVENT_CINNABAR_GYM_GATE1_UNLOCKED";
+    const BEATEN: &str = "EVENT_BEAT_CINNABAR_GYM_TRAINER_1";
+    fn input(a: bool) -> OverworldInput { OverworldInput::new(false,false,false,false,a,false,false,false) }
+    fn request(ow: &mut Field) -> PendingTrainerBattle {
+        for frame in 0..4000 {
+            ow.update_frame(input(frame % 2 == 0));
+            if let Some(request) = ow.pending_trainer_battle.take() { return request; }
+        }
+        panic!("canonical scene did not request its battle");
+    }
+    fn gate_block(ow: &Field) -> u8 {
+        let map = ow.map_data.as_ref().unwrap(); map.blocks[3 * map.width as usize + 9]
+    }
+    #[test]
+    fn scene_quote_reaches_pending_battle_and_both_sound_waits_precede_win_mutations() {
+        for open in [false, true] {
+            let mut ow = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+            ow.set_flag_live(GATE, open); ow.run_on_load();
+            for _ in 0..80 { ow.update_frame(input(false)); }
+            let initial_block = if open { 14 } else { 84 };
+            assert_eq!(gate_block(&ow), initial_block);
+            let command = ow.script_engine.call_function_no_args("talkSuperNerd2").unwrap().unwrap();
+            ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+            let pending = request(&mut ow);
+            assert_eq!(pending.trainer_id, "OPP_BURGLAR4");
+            assert_eq!(pending.npc_index, u8::MAX);
+            assert_eq!(pending.rival_triplet_base, None);
+            assert_eq!(pending.end_battle_text.as_deref(), Some("I\nsurrender!"));
+            assert!(ow.script_awaiting_battle && !ow.script_engine.get_flag(BEATEN));
+            for _ in 0..4 { ow.update_frame(input(false)); assert!(ow.pending_trainer_battle.is_none()); }
+            ow.resume_script_after_battle("win");
+            // Contract input only; the App test must prove actual PCM timing.
+            for wait in 0..2 {
+                ow.script_sfx_playing = true;
+                for _ in 0..7 {
+                    ow.update_frame(input(false));
+                    assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
+                    assert!(!ow.script_engine.get_flag(BEATEN));
+                    assert_eq!(ow.script_engine.get_flag(GATE), open);
+                    assert_eq!(gate_block(&ow), initial_block);
+                }
+                ow.script_sfx_playing = false; ow.update_frame(input(false));
+                if wait == 0 {
+                    assert!(matches!(&ow.active_script_effect, Some(script_bridge::ScriptEffect::PlaySound { sound_id }) if sound_id == "SFX_GO_INSIDE"));
+                    ow.update_frame(input(false));
+                    assert!(matches!(&ow.audio_requests[..], [OverworldAudioRequest::PlaySound { sound_id }] if sound_id == "SFX_GO_INSIDE"));
+                }
+            }
+            assert!(ow.script_engine.get_flag(BEATEN) && ow.script_engine.get_flag(GATE));
+            for _ in 0..4 { ow.update_frame(input(false)); }
+            assert_eq!(gate_block(&ow), 14);
+            assert!(ow.script_engine.is_idle() && ow.pending_dialogue.is_none());
+        }
+    }
+    #[test]
+    fn explicit_quote_is_consumed_once_and_cannot_leak_into_legacy_or_rival_requests() {
+        let mut ow = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+        ow.reload_scene_with_config("CinnabarGym", r#"
+game_scene CinnabarGym {
+  @storyline("probe") {
+    result = startBattleWithText("OPP_SUPER_NERD9", "ONLY FIRST")
+    result = startBattle("OPP_BLAINE1")
+    result = startBattleSet("OPP_RIVAL2", 6)
+  }
+}
+"#, None).unwrap();
+        let command = ow.script_engine.call_function_no_args("probe").unwrap().unwrap();
+        ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+        for (id, quote, base) in [("OPP_SUPER_NERD9", Some("ONLY FIRST"), None), ("OPP_BLAINE1", None, None), ("OPP_RIVAL2", None, Some(6))] {
+            let pending = request(&mut ow);
+            assert_eq!(pending.trainer_id, id); assert_eq!(pending.end_battle_text.as_deref(), quote);
+            assert_eq!(pending.rival_triplet_base, base); assert_eq!(pending.npc_index, u8::MAX);
+            ow.resume_script_after_battle("draw");
+        }
+        assert!(!ow.script_awaiting_battle && ow.script_engine.is_idle());
+        assert!(ow.pending_trainer_battle.is_none());
     }
 }

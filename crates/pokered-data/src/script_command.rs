@@ -55,6 +55,8 @@ pub enum PokemonScriptCommand {
         trainer_id: String,
         rival_triplet_base: u8,
     },
+    /// Explicit scene-owned trainer quote, carried into the actual battle.
+    StartBattleWithText { trainer_id: String, end_battle_text: String },
     OpenSlots {
         lucky: Option<bool>,
     },
@@ -113,6 +115,7 @@ impl PokemonScriptCommand {
             Self::ChoosePartyPokemon => "choosePartyPokemon",
             Self::SetPartyNickname { .. } => "setPartyNickname",
             Self::StartBattleSet { .. } => "startBattleSet",
+            Self::StartBattleWithText { .. } => "startBattleWithText",
             Self::OpenSlots { .. } => "openSlots",
             Self::ElevatorMenu { .. } => "elevatorMenu",
             Self::FilterBag { .. } => "filterBag",
@@ -182,6 +185,7 @@ impl PokemonScriptCommand {
             } => {
                 vec![json!(trainer_id), json!(rival_triplet_base)]
             }
+            Self::StartBattleWithText { trainer_id, end_battle_text } => vec![json!(trainer_id), json!(end_battle_text)],
             Self::OpenSlots { lucky } => vec![json!(lucky)],
             Self::ElevatorMenu { floors } => vec![json!(floors)],
             Self::FilterBag { item_ids } => vec![json!(item_ids)],
@@ -340,6 +344,10 @@ impl PokemonScriptCommand {
                 trainer_id: string(0)?,
                 rival_triplet_base: u8_arg(1)?,
             },
+            "startBattleWithText" => Self::StartBattleWithText {
+                trainer_id: string(0)?,
+                end_battle_text: string(1)?,
+            },
             "openSlots" => Self::OpenSlots {
                 lucky: args.first().and_then(Value::as_bool),
             },
@@ -486,4 +494,18 @@ mod field_text_terminator_tests {
         assert!(args.is_empty());
         assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), finish);
     }
+    #[test]
+    fn battle_quote_is_an_explicit_two_string_custom_payload() {
+        let expected = PokemonScriptCommand::StartBattleWithText {
+            trainer_id: "OPP_SUPER_NERD9".into(), end_battle_text: "Yow!\nHot, hot, hot!".into(),
+        };
+        let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!() };
+        assert_eq!(name, "startBattleWithText");
+        assert_eq!(args, vec![json!("OPP_SUPER_NERD9"), json!("Yow!\nHot, hot, hot!")]);
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+        for args in [vec![], vec![json!("ID")], vec![json!(7), json!("quote")], vec![json!("ID"), json!(null)]] {
+            assert!(PokemonScriptCommand::from_custom("startBattleWithText", &args).is_err());
+        }
+    }
+
 }
