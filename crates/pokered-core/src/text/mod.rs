@@ -2,6 +2,7 @@ use crate::alloc_prelude::*;
 pub mod provider;
 pub mod zh_dialogue;
 pub(crate) mod letter_delay;
+pub mod terminal_input;
 
 #[cfg(test)]
 mod tests;

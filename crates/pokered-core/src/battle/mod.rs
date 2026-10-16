@@ -4,8 +4,10 @@ pub mod presentation;
 mod faint;
 pub use faint::{FaintCue, FaintSide, FaintSound};
 mod fight_text;
+mod terminal_input;
 pub use fight_text::{
-    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
+    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage,
+    FightTextWork,
 };
 mod switch_dialogue;
 #[cfg(test)]
@@ -477,6 +479,14 @@ pub enum BattleTextBackdrop {
 /// High-level battle phase (frame-loop granularity).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattlePhase {
+    /// An explicitly identified returning PrintText call. The old edge-only
+    /// API never creates this phase; its source-aware caller lends one ledger.
+    TerminalText {
+        messages: Vec<String>,
+        current: usize,
+        work: crate::text::terminal_input::TerminalTextWork,
+        next_phase: Box<BattlePhase>,
+    },
     Intro {
         /// Current sub-phase of the intro sequence.
         phase: IntroPhase,
@@ -1952,7 +1962,12 @@ impl BattleScreen {
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
         let mut receipt = FightTextReceipt::default();
-        self.update_frame_inner(input, BattleTextFrame::from_edges(input), &mut receipt)
+        self.update_frame_inner(
+            input,
+            BattleTextFrame::from_edges(input),
+            &mut receipt,
+            None,
+        )
     }
 
     /// Physical held input and explicit text settings share this single frame
@@ -1966,7 +1981,21 @@ impl BattleScreen {
         receipt: &mut FightTextReceipt,
     ) -> ScreenAction {
         *receipt = FightTextReceipt::default();
-        self.update_frame_inner(input, text, receipt)
+        self.update_frame_inner(input, text, receipt, None)
+    }
+
+    /// Canonical update for a caller carrying a verified foreground ledger.
+    /// Raw refresh is not a poll. Legacy wrappers retain their old None path.
+    pub fn update_frame_with_terminal_input(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+        owner: &mut crate::foreground_input::ForegroundJoypad,
+    ) -> ScreenAction {
+        *receipt = FightTextReceipt::default();
+        owner.read_raw(text.held_buttons);
+        self.update_frame_inner(input, text, receipt, Some(owner))
     }
 
     fn update_frame_inner(
@@ -1974,8 +2003,11 @@ impl BattleScreen {
         input: BattleInput,
         text: BattleTextFrame,
         receipt: &mut FightTextReceipt,
+        mut foreground: Option<&mut crate::foreground_input::ForegroundJoypad>,
     ) -> ScreenAction {
-        if self.presentation.enabled && self.presentation.waiting { return ScreenAction::Continue; }
+        if self.presentation.enabled && self.presentation.waiting {
+            return ScreenAction::Continue;
+        }
         // HP-bar drain/refill animation (engine/gfx/hp_bar.asm): steps the
         // displayed HP toward the real HP at 1 bar pixel per 2 frames.
         self.hp_bar_anim
@@ -1996,6 +2028,10 @@ impl BattleScreen {
             }
         }
         match self.phase.clone() {
+            BattlePhase::TerminalText { messages, current, work, next_phase } => {
+                self.update_terminal_text(messages, current, work, next_phase,
+                    foreground.as_deref_mut(), receipt)
+            }
             BattlePhase::Intro {
                 phase,
                 mut wait_frames,
@@ -2884,6 +2920,36 @@ learn {learn_name}!")];
                                     .unwrap_or_else(|| "RED".to_string());
                                 let money_msgs =
                                     trainer_winnings_messages(&player_name, prize);
+                                if let (Some(_), Some(settings)) =
+                                    (foreground.as_ref(), text.settings)
+                                {
+                                    if !settings.no_text_delay {
+                                        // Bind Prize before localization. The
+                                        // quip remains a separate PrintText.
+                                        let next = self.terminal_text_phase(
+                                            money_msgs,
+                                            crate::text::terminal_input::TerminalTextKind::Prize,
+                                            if settings.effective_letter_flags() & 1 != 0 {
+                                                settings.options_delay & 0x0f
+                                            } else {
+                                                1
+                                            },
+                                            BattlePhase::TrainerVictory {
+                                                phase: EndBattleText,
+                                                wait_frames: 0,
+                                                player_won,
+                                            },
+                                        );
+                                        if let Some(quip) =
+                                            self.end_battle_text.as_ref().filter(|q| !q.is_empty())
+                                        {
+                                            self.show_text_then(vec![quip.clone()], next);
+                                        } else {
+                                            self.phase = next;
+                                        }
+                                        return ScreenAction::Continue;
+                                    }
+                                }
                                 // Prepend the trainer's one-shot victory quip
                                 // (original PrintEndBattleText, shown before the
                                 // prize-money text) for sight/talk battles.

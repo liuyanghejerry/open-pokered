@@ -49,6 +49,8 @@
 
 use crate::alloc_prelude::*;
 use pokered_data::species::Species;
+use crate::foreground_input::ForegroundJoypad;
+use crate::text::terminal_input::{TerminalTextEnd, TerminalTextKind, TerminalTextStep, TerminalTextWork};
 
 /// `DelayFrames(50)` after "What? X is evolving!" (evos_moves.asm:122-123).
 pub const IS_EVOLVING_FRAMES: u16 = 50;
@@ -159,6 +161,7 @@ pub enum EvolutionPhase {
 #[derive(Debug, Clone, Copy)]
 enum SuccessSoundStage {
     Cry,
+    Text,
     Jingle,
     Delay,
 }
@@ -186,6 +189,10 @@ pub struct EvolutionScreenState {
     /// SFX queued since the last tick; drained by the frontend.
     pub pending_sfx: Vec<EvolutionSfx>,
     outcomes: VecDeque<EvolutionOutcome>,
+    /// Borrowed-ledger API owns only the returning text. Legacy wrappers
+    /// leave this disabled; no second input history lives in the cutscene.
+    source_terminal_enabled: bool,
+    terminal_text: Option<TerminalTextWork>,
 }
 
 impl EvolutionScreenState {
@@ -211,6 +218,8 @@ impl EvolutionScreenState {
             is_zh,
             pending_sfx: Vec::new(),
             outcomes: VecDeque::new(),
+            source_terminal_enabled: false,
+            terminal_text: None,
         }
     }
 
@@ -292,6 +301,19 @@ impl EvolutionScreenState {
 
     /// The current two text-box lines, if a text phase is active.
     pub fn text_lines(&self) -> Option<(String, String)> {
+        if self.source_terminal_enabled
+            && matches!(
+                self.phase,
+                EvolutionPhase::EvolvedText | EvolutionPhase::StoppedText
+            )
+        {
+            let visible = self.terminal_text.as_ref()?.visible_text();
+            let mut lines = visible.splitn(2, '\n');
+            return Some((
+                lines.next().unwrap_or("").into(),
+                lines.next().unwrap_or("").into(),
+            ));
+        }
         match self.phase {
             EvolutionPhase::IntroText => {
                 let text = self.pre_text.clone()?;
@@ -341,6 +363,7 @@ impl EvolutionScreenState {
     fn enter(&mut self, phase: EvolutionPhase) {
         self.phase = phase;
         self.frame = 0;
+        self.terminal_text = None;
         let cur = self.queue.front().cloned();
         match phase {
             EvolutionPhase::Tink => {
@@ -403,6 +426,32 @@ impl EvolutionScreenState {
 
     /// Advance using the sequencer status, including muted/headless playback.
     pub fn tick_with_sound(&mut self, input: EvolutionInput, sound_playing: bool) -> bool {
+        self.tick_inner(input, sound_playing, None).complete
+    }
+
+    /// Real returning Evolved/Into DONE and Stopped PROMPT owner. Earlier
+    /// morph/forget-menu parity is not inferred from this terminal contract.
+    /// The frontend lends the same ledger used for money/PayDay/learning.
+    pub fn tick_with_terminal_input(
+        &mut self,
+        input: EvolutionInput,
+        sound_playing: bool,
+        held_buttons: u8,
+        options_delay: u8,
+        owner: &mut ForegroundJoypad,
+    ) -> TerminalTextStep {
+        owner.read_raw(held_buttons);
+        self.source_terminal_enabled = true;
+        self.tick_inner(input, sound_playing, Some((owner, options_delay)))
+    }
+
+    fn tick_inner(
+        &mut self,
+        input: EvolutionInput,
+        sound_playing: bool,
+        mut foreground: Option<(&mut ForegroundJoypad, u8)>,
+    ) -> TerminalTextStep {
+        let mut result = TerminalTextStep::default();
         match self.phase {
             EvolutionPhase::IntroText => {
                 if input.a || input.b {
@@ -441,7 +490,8 @@ impl EvolutionScreenState {
                 }
                 if self.cancelled {
                     self.enter(EvolutionPhase::StoppedText);
-                    return self.is_done();
+                    result.complete = self.is_done();
+                    return result;
                 }
                 self.morph_frame += 1;
                 if self.morph_frame >= Self::iteration_frames(self.morph_iter) {
@@ -450,6 +500,50 @@ impl EvolutionScreenState {
                     if self.morph_iter >= MORPH_ITERATIONS {
                         self.enter(EvolutionPhase::EvolvedText);
                     }
+                }
+            }
+            EvolutionPhase::EvolvedText if self.source_terminal_enabled => {
+                match self.success_sound_stage {
+                    SuccessSoundStage::Cry if !sound_playing => {
+                        if let Some((_, delay)) = foreground.as_ref() {
+                            let (first, second) = self.full_success_lines();
+                            // PrintText(Evolved) has Delay3; Into immediately
+                            // uses PrintText_NoCreatingTextBox, with no extra3.
+                            self.terminal_text = Some(TerminalTextWork::new(
+                                TerminalTextKind::EvolvedInto,
+                                format!("{first}\n{second}"),
+                                TerminalTextEnd::Done,
+                                *delay,
+                                3,
+                            ));
+                            self.success_sound_stage = SuccessSoundStage::Text;
+                        }
+                    }
+                    SuccessSoundStage::Text => {
+                        if let Some((owner, _)) = foreground.as_mut() {
+                            let step = self
+                                .terminal_text
+                                .as_mut()
+                                .unwrap()
+                                .tick(owner, sound_playing);
+                            result.input_error = step.input_error;
+                            if step.complete {
+                                self.pending_sfx.push(EvolutionSfx::GetItem2);
+                                self.success_sound_stage = SuccessSoundStage::Jingle;
+                            }
+                        }
+                    }
+                    SuccessSoundStage::Jingle if !sound_playing => {
+                        self.success_sound_stage = SuccessSoundStage::Delay;
+                        self.frame = 0;
+                    }
+                    SuccessSoundStage::Delay => {
+                        self.frame += 1;
+                        if self.frame >= EVOLVED_TEXT_FRAMES {
+                            self.finish_current(EvolutionOutcomeKind::Evolved);
+                        }
+                    }
+                    _ => {}
                 }
             }
             EvolutionPhase::EvolvedText => match self.success_sound_stage {
@@ -469,6 +563,33 @@ impl EvolutionScreenState {
                 }
                 _ => {}
             },
+            EvolutionPhase::StoppedText if self.source_terminal_enabled => {
+                if let Some((owner, delay)) = foreground.as_mut() {
+                    if self.terminal_text.is_none() {
+                        if !sound_playing {
+                            let (first, second) = self.full_stopped_lines();
+                            self.terminal_text = Some(TerminalTextWork::new(
+                                TerminalTextKind::Stopped,
+                                format!("{first}\n{second}"),
+                                TerminalTextEnd::Prompt,
+                                *delay,
+                                3,
+                            ));
+                        }
+                    } else {
+                        let step = self
+                            .terminal_text
+                            .as_mut()
+                            .unwrap()
+                            .tick(owner, sound_playing);
+                        result.press_ab |= step.press_ab;
+                        result.input_error = step.input_error;
+                        if step.complete {
+                            self.finish_current(EvolutionOutcomeKind::Cancelled);
+                        }
+                    }
+                }
+            }
             EvolutionPhase::StoppedText => {
                 // PlayCry finishes before the prompt can be dismissed.
                 if !sound_playing && (input.a || input.b) {
@@ -477,13 +598,124 @@ impl EvolutionScreenState {
             }
             EvolutionPhase::Done => {}
         }
-        self.is_done()
+        result.complete = self.is_done();
+        result
+    }
+
+    fn full_success_lines(&self) -> (String, String) {
+        let cur = self
+            .current()
+            .expect("success text retains its queue member");
+        let to = pokered_data::lang_data::species_name(cur.to, self.is_zh);
+        if self.is_zh {
+            (format!("{} 进化成了", cur.name), format!("{}！", to))
+        } else {
+            (format!("{} evolved", cur.name), format!("into {}!", to))
+        }
+    }
+
+    fn full_stopped_lines(&self) -> (String, String) {
+        let cur = self
+            .current()
+            .expect("stopped text retains its queue member");
+        if self.is_zh {
+            ("啊？".into(), format!("{} 停止了进化！", cur.name))
+        } else {
+            (format!("Huh? {}", cur.name), "stopped evolving!".into())
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn source_success_keeps_last_real_into_letter_poll_through_jingle_and_forty_frames() {
+        use crate::foreground_input::{A, SELECT, START, UP};
+        let mut anim = screen(false);
+        let mut owner = ForegroundJoypad::default();
+        let mut saw_terminal_printing = false;
+        let mut last_letter = None;
+        let mut delay_frames = 0;
+        for _ in 0..2000 {
+            let printing = anim.phase == EvolutionPhase::EvolvedText
+                && matches!(anim.success_sound_stage, SuccessSoundStage::Text);
+            let tail = anim.phase == EvolutionPhase::EvolvedText
+                && matches!(
+                    anim.success_sound_stage,
+                    SuccessSoundStage::Jingle | SuccessSoundStage::Delay
+                );
+            let counted_delay = anim.phase == EvolutionPhase::EvolvedText
+                && matches!(anim.success_sound_stage, SuccessSoundStage::Delay);
+            let held = if printing { A | SELECT } else { START | UP };
+            let step =
+                anim.tick_with_terminal_input(EvolutionInput::none(), false, held, 1, &mut owner);
+            if printing {
+                saw_terminal_printing = true;
+                last_letter = owner.last();
+            }
+            if tail {
+                assert_eq!(owner.last(), last_letter, "sound/Delay40 do not poll");
+                delay_frames += u16::from(counted_delay);
+            }
+            if step.complete {
+                break;
+            }
+        }
+        assert!(anim.is_done() && saw_terminal_printing);
+        assert_eq!(last_letter, Some(A | SELECT));
+        assert_eq!(delay_frames, EVOLVED_TEXT_FRAMES);
+        assert_eq!(owner.last(), last_letter);
+        assert_eq!(
+            anim.take_outcome().unwrap().kind,
+            EvolutionOutcomeKind::Evolved
+        );
+    }
+
+    #[test]
+    fn source_cancel_uses_stopped_real_prompt_instead_of_morph_or_exit_raw() {
+        use crate::foreground_input::{A, B, SELECT, START};
+        let mut anim = screen(false);
+        let mut owner = ForegroundJoypad::default();
+        for _ in 0..2000 {
+            let cancel = anim.cancel_window_open();
+            anim.tick_with_terminal_input(
+                EvolutionInput {
+                    a: false,
+                    b: cancel,
+                },
+                false,
+                B | SELECT,
+                1,
+                &mut owner,
+            );
+            if anim
+                .terminal_text
+                .as_ref()
+                .is_some_and(|work| work.waiting_for_input())
+            {
+                break;
+            }
+        }
+        assert_eq!(anim.phase(), EvolutionPhase::StoppedText);
+        assert_eq!(owner.last(), Some(B | SELECT));
+        let held =
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, B | SELECT, 1, &mut owner);
+        assert!(
+            !held.complete && !held.press_ab,
+            "held printing B is already consumed"
+        );
+        anim.tick_with_terminal_input(EvolutionInput::none(), false, 0, 1, &mut owner);
+        let ack =
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, A | START, 1, &mut owner);
+        assert!(ack.complete && ack.press_ab);
+        assert_eq!(owner.last(), Some(A | START));
+        assert_eq!(
+            anim.take_outcome().unwrap().kind,
+            EvolutionOutcomeKind::Cancelled
+        );
+    }
 
     #[test]
     fn chinese_evolution_rows_fit_all_species_and_valid_nicknames() {

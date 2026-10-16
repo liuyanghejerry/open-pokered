@@ -313,6 +313,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.source_foreground.get_or_insert_with(Default::default)
     }
 
+    /// An explicit source caller opts in before its first held-only poll.
+    /// Creation leaves preceding input Unknown; it does not invent a sample.
+    pub fn begin_source_foreground(&mut self) -> &mut crate::foreground_input::ForegroundJoypad {
+        self.source_foreground_error = None;
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Field;
+        self.source_foreground.get_or_insert_with(Default::default)
+    }
+
     pub fn no_text_delay(&self) -> bool { self.no_text_delay }
 
     /// Only original status-bit writers call this; closing a textbox does not.
@@ -368,6 +376,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         &self,
     ) -> Option<crate::foreground_input::ForegroundInputError> {
         self.source_foreground_error
+    }
+
+    /// Transfer/retire a continuation explicitly; a raw refresh is not a
+    /// returning field poll.
+    pub fn take_source_foreground(&mut self) -> Option<crate::foreground_input::ForegroundJoypad> {
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
+        self.source_foreground.take()
     }
 
     /// Re-baseline the button edge detectors (`prev_*_pressed`) to the

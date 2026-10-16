@@ -24,7 +24,9 @@ fn phase_tag(phase: &BattlePhase) -> u8 {
         BattlePhase::BagSelect => 11,
         BattlePhase::ItemTargetSelect { .. } => 12,
         BattlePhase::ItemMedicineResult { .. } => 18,
-        BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => 4,
+        BattlePhase::ShowingText { .. }
+        | BattlePhase::TerminalText { .. }
+        | BattlePhase::EnemyFreeTurnAfterItem => 4,
         BattlePhase::PartySelect => 5,
         BattlePhase::PartySubMenu { .. } => 9,
         BattlePhase::PartyStats { .. } => 10,
