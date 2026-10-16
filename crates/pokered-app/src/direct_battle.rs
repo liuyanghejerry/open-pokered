@@ -244,6 +244,25 @@ impl DirectBattleGame {
             }
         }
 
+        if !self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active()) {
+            if let Some(sound) = self.battle_vfx.take_faint_sound() {
+                use pokered_core::battle::FaintSound;
+                match sound {
+                    FaintSound::OwnCry => self.play_cry(self.battle.player_species),
+                    FaintSound::EnemyFall => {
+                        self.play_sfx(SfxId::FaintFall);
+                        self.faint_thud_pending = true;
+                    }
+                    FaintSound::WildVictory => {
+                        if let Some(id) = MusicId::from_u8(self.battle.victory_music_id()) {
+                            self.play_music(id);
+                        }
+                        self.battle_vfx.victory_music_played = true;
+                    }
+                }
+            }
+        }
+
         let cur_phase_tag = phase_tag(&self.battle.phase);
         let phase_changed = cur_phase_tag != self.prev_phase_tag;
         let cur_message = self.battle.current_message.clone();
@@ -269,8 +288,10 @@ impl DirectBattleGame {
                 BattlePhase::BattleOver { won, .. } => {
                     if !self.end_music_played {
                         if won {
-                            if let Some(id) = MusicId::from_u8(self.battle.victory_music_id()) {
-                                self.play_music(id);
+                            if !self.battle_vfx.victory_music_played {
+                                if let Some(id) = MusicId::from_u8(self.battle.victory_music_id()) {
+                                    self.play_music(id);
+                                }
                             }
                         } else {
                             if let Some(ref audio) = self.audio {
@@ -296,7 +317,7 @@ impl DirectBattleGame {
                     self.play_sfx(SfxId::SuperEffective);
                 } else if msg_lower.contains("not very effective") {
                     self.play_sfx(SfxId::NotVeryEffective);
-                } else if msg_lower.ends_with("fainted!") {
+                } else if self.battle.presentation.current_faint().is_none() && msg_lower.ends_with("fainted!") {
                     // HandleEnemyMonFainted: trainer battles play
                     // SFX_FAINT_FALL then SFX_FAINT_THUD; wild battles play
                     // the victory music instead. A PLAYER faint plays the
@@ -363,7 +384,16 @@ impl GameLoop for DirectBattleGame {
             b: input.is_just_pressed(GbButton::B),
         };
         self.battle.set_presentation_enabled(true);
-        if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
+        let faint_audio_finished = {
+            #[cfg(not(target_arch = "wasm32"))]
+            { !self.faint_thud_pending && !self.audio.as_ref().is_some_and(|audio|
+                audio.is_sfx_playing() && !audio.low_health_alarm_active()) }
+            #[cfg(target_arch = "wasm32")]
+            { true }
+        };
+        if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable()
+            && (self.battle.presentation.current_faint().is_none() || faint_audio_finished)
+        {
             self.battle.complete_move_presentation();
         }
         // DirectBattle has no save/options owner: this synthetic entry uses
@@ -379,6 +409,8 @@ impl GameLoop for DirectBattleGame {
             self.play_sfx(SfxId::PressAB);
         }
         self.battle_vfx.update(&self.battle);
+        #[cfg(target_arch = "wasm32")]
+        { let _ = self.battle_vfx.take_faint_sound(); }
 
         #[cfg(not(target_arch = "wasm32"))]
         self.update_audio();

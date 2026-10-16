@@ -659,7 +659,7 @@ impl BattleSnapshot {
             screen.battle_state.as_ref()
                 .map_or(0, |bs| 1 << bs.enemy.active_pokemon_index)
         });
-        if let Some(publication) = snap.text_publication {
+        if let Some(publication) = snap.text_publication.clone() {
             screen.presentation.restore_text_publication(publication);
         } else if let BattlePhase::ShowingText { current, .. } = screen.phase {
             // Compatibility only: preserve the old current-page ACK behavior.

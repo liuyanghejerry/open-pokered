@@ -1,6 +1,8 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod presentation;
+mod faint;
+pub use faint::{FaintCue, FaintSide, FaintSound};
 mod fight_text;
 pub use fight_text::{
     BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
@@ -2307,14 +2309,19 @@ impl BattleScreen {
                     };
                     return ScreenAction::Continue;
                 }
-                self.current_message = Some(messages[current].clone());
+                let faint = self.presentation.faint_at(current);
+                if faint.is_none() { self.current_message = Some(messages[current].clone()); }
                 let first_publication = self.presentation.activate(current);
                 if self.presentation.waiting || first_publication { return ScreenAction::Continue; }
+                if faint.is_some_and(|cue| cue.text.is_some()) {
+                    self.current_message = Some(messages[current].clone());
+                    if self.presentation.publish_faint_text(current) { return ScreenAction::Continue; }
+                }
                 // The original animates the HP bar *synchronously* before
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the
                 // current page until the drain/refill finishes.
-                if (link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
+                if (faint.is_some_and(|cue| cue.text.is_none()) || link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
                         if let BattleTextBackdrop::PpRestoreParty { consume_on_ack: Some(item), .. } = backdrop {
@@ -2343,7 +2350,8 @@ impl BattleScreen {
                         self.phase = BattlePhase::ShowingText {
                             messages,
                             current: next_idx,
-                            wait_frames: if link_notice { 65 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
+                            wait_frames: if self.presentation.faint_at(next_idx).is_some() { 0 }
+                                else if link_notice { 65 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
                             next_phase,
                             backdrop,
                         };
@@ -3015,7 +3023,11 @@ learn {learn_name}!")];
         self.presentation.begin_pages();
         let mut expanded = Vec::new();
         for message in &messages {
-            let pages = paginate_battle_text(&pokered_data::battle_text::localize(message, self.is_zh));
+            let pages = if message.is_empty() && self.presentation.has_silent_faint() {
+                vec![String::new()] // a typed action slot, never a displayed empty caption
+            } else {
+                paginate_battle_text(&pokered_data::battle_text::localize(message, self.is_zh))
+            };
             self.presentation.add_pages(message, pages.len());
             expanded.extend(pages);
         }
@@ -3026,12 +3038,14 @@ learn {learn_name}!")];
             return;
         }
 
-        self.current_message = Some(expanded[0].clone());
+        if self.presentation.faint_at(0).is_none() {
+            self.current_message = Some(expanded[0].clone());
+        }
         self.presentation.activate(0);
         self.phase = BattlePhase::ShowingText {
             messages: expanded,
             current: 0,
-            wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
+            wait_frames: if self.presentation.faint_at(0).is_some() { 0 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
             next_phase: Box::new(next),
             backdrop: BattleTextBackdrop::Battle,
         };
@@ -4047,8 +4061,11 @@ learn {learn_name}!")];
                     }
                 }
             }
-            self.presentation.record_turn(&log, &state, &effects, turn_start_hp);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+            let faint_plan = (!self.link_mode).then(|| faint::FaintPlan::from_turn(
+                &log, bs.player.party.iter().any(|mon| mon.hp > 0), self.is_wild));
+            self.presentation.record_turn(&log, &state, &effects, turn_start_hp,
+                faint_plan.as_ref(), Some(&battle_names));
             self.original_battle_result = Self::result_after_faint_receipts(
                 self.original_battle_result,
                 &log,
@@ -4079,7 +4096,7 @@ learn {learn_name}!")];
                 bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
             }
 
-            let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
+            let mut m = pokered_rules::runtime::translate_turn_named_with_faints(&log, &state, &effects, Some(&battle_names), faint_plan.as_ref());
             if let Some(label) = enemy_call {
                 if !ghost_enemy_blocked {
                     self.presentation.called_move_in_order(&mut m,
@@ -4717,9 +4734,11 @@ learn {learn_name}!")];
                         }
                     }
                 }
-                self.presentation
-                    .record_turn(&log, &state, &effects, turn_start_hp);
                 pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+                let faint_plan = (!self.link_mode).then(|| faint::FaintPlan::from_turn(
+                    &log, bs.player.party.iter().any(|mon| mon.hp > 0), self.is_wild));
+                self.presentation.record_turn(&log, &state, &effects, turn_start_hp,
+                    faint_plan.as_ref(), Some(&battle_names));
                 self.original_battle_result = Self::result_after_faint_receipts(
                     self.original_battle_result,
                     &log,
@@ -4767,7 +4786,7 @@ learn {learn_name}!")];
                 if e_recharging && !enemy_ai_fired {
                     bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
                 }
-                let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
+                let mut m = pokered_rules::runtime::translate_turn_named_with_faints(&log, &state, &effects, Some(&battle_names), faint_plan.as_ref());
                 // Called moves stay beside their resolved action, including when
                 // the caller acts second. Their own animation precedes the strike.
                 for (call, actor, resolved, failed) in [
