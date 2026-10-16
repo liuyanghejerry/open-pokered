@@ -8,11 +8,11 @@ use std::io::Write;
 use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 const LIMIT: usize = 12000; // stuck-test bound, never a sound-duration oracle
-struct Session {
-    game: PokemonGame,
+pub(super) struct Session {
+    pub(super) game: PokemonGame,
     input: InputState,
-    path: PathBuf,
-    bytes: Vec<u8>,
+    pub(super) path: PathBuf,
+    pub(super) bytes: Vec<u8>,
     pcm: Vec<f32>,
 }
 impl Drop for Session {
@@ -25,7 +25,7 @@ impl Drop for Session {
     }
 }
 impl Session {
-    fn step(&mut self, buttons: &[GbButton]) -> (u8, bool, bool) {
+    pub(super) fn step(&mut self, buttons: &[GbButton]) -> (u8, bool, bool) {
         self.input.begin_frame();
         self.input.set_from_bitmask(0);
         for button in buttons {
@@ -64,7 +64,25 @@ impl Session {
             .copied()
             .unwrap_or(false)
     }
-    fn boot(trainer: usize, open: bool) -> Self {
+    pub(super) fn boot(trainer: usize, open: bool) -> Self {
+        let mon = create_pokemon_with_moves(
+            Species::Blastoise,
+            100,
+            [0x9a, 0x78],
+            [MoveId::Surf, MoveId::None, MoveId::None, MoveId::None],
+        )
+        .unwrap();
+        Self::boot_with_party(trainer, open, vec![mon], false)
+    }
+
+    /// Source-owner callers reuse this same physical SRAM/Continue owner;
+    /// assisted party records are fixed before Game exists.
+    pub(super) fn boot_with_party(
+        trainer: usize,
+        open: bool,
+        party: Vec<pokered_core::battle::state::Pokemon>,
+        exp_all: bool,
+    ) -> Self {
         // All assistance is a valid physical save constructed before Game.
         let mut save = SaveData::new();
         save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
@@ -82,15 +100,16 @@ impl Session {
             let flag = EventFlag::EVENT_CINNABAR_GYM_GATE1_UNLOCKED;
             save.game_data.event_flags[flag.byte_offset()] |= flag.bit_mask();
         }
-        let mut mon = create_pokemon_with_moves(
-            Species::Blastoise,
-            100,
-            [0x9a, 0x78],
-            [MoveId::Surf, MoveId::None, MoveId::None, MoveId::None],
-        )
-        .unwrap();
-        mon.ot_id = 1234;
-        save.party.add(mon).unwrap();
+        for mut mon in party {
+            mon.ot_id = 1234;
+            save.party.add(mon).unwrap();
+        }
+        if exp_all {
+            save.game_data
+                .bag
+                .add_item(pokered_data::items::ItemId::ExpAll, 1)
+                .unwrap();
+        }
         let bytes = export_sram(&save);
         let decoded = import_sram(&bytes).unwrap();
         assert!(!decoded.imported_legacy_native);

@@ -25,7 +25,7 @@ enum LearnTerminalStage {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LearnMoveTerminal {
     stage: LearnTerminalStage,
-    move_name: String,
+    final_line: String,
     options_delay: u8,
     final_text: String,
 }
@@ -34,15 +34,20 @@ impl LearnMoveTerminal {
     /// LearnedMove1Text: resolved far text, sound_GET_ITEM_1 + WaitSound,
     /// then PROMPT_BUTTON (without ProtectedDelay3).
     pub fn learned(mon_name: &str, move_name: &str, options_delay: u8) -> Self {
+        Self::learned_text(format!("{mon_name} learned\n{move_name}!"), options_delay)
+    }
+
+    /// The caller resolves its existing localization before creating work.
+    pub fn learned_text(text: String, options_delay: u8) -> Self {
         Self {
             stage: LearnTerminalStage::Learned(TerminalTextWork::new(
                 TerminalTextKind::Learned,
-                format!("{mon_name} learned\n{move_name}!"),
+                text,
                 TerminalTextEnd::LearnedMove,
                 options_delay,
                 3,
             )),
-            move_name: move_name.into(),
+            final_line: String::new(),
             options_delay,
             final_text: String::new(),
         }
@@ -51,17 +56,33 @@ impl LearnMoveTerminal {
     /// DidNotLearn is not a direct field return: its CONT prompt, two
     /// five-frame scrolls and final PROMPT all belong to this real text call.
     pub fn abandoned(mon_name: &str, move_name: &str, options_delay: u8) -> Self {
+        Self::abandoned_parts(
+            format!("{mon_name}\ndid not learn"),
+            "did not learn".into(),
+            format!("{move_name}!"),
+            options_delay,
+        )
+    }
+
+    /// Explicit resolved CONT parts; this does not infer an input command
+    /// from labels, message contents or the number of generic UI options.
+    pub fn abandoned_parts(
+        intro: String,
+        retained_line: String,
+        final_line: String,
+        options_delay: u8,
+    ) -> Self {
         Self {
             stage: LearnTerminalStage::AbandonedIntro(TerminalTextWork::new(
                 TerminalTextKind::DidNotLearn,
-                format!("{mon_name}\ndid not learn"),
+                intro,
                 TerminalTextEnd::Prompt,
                 options_delay,
                 3,
             )),
-            move_name: move_name.into(),
+            final_line,
             options_delay,
-            final_text: String::new(),
+            final_text: retained_line,
         }
     }
 
@@ -119,8 +140,8 @@ impl LearnMoveTerminal {
                 if *remaining == 0 {
                     let mut work = TerminalTextWork::after_cont(
                         TerminalTextKind::DidNotLearn,
-                        "did not learn",
-                        &format!("{}!", self.move_name),
+                        &self.final_text,
+                        &self.final_line,
                         TerminalTextEnd::Prompt,
                         self.options_delay,
                     );

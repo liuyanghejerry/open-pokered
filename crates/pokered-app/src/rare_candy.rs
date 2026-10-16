@@ -25,6 +25,7 @@ pub(crate) enum RareCandyPhase {
 enum LearningOrigin {
     RareCandy,
     Machine { item: ItemId, learned: bool },
+    PostBattleEvolution,
 }
 
 pub(super) struct RareCandyFlow {
@@ -34,6 +35,7 @@ pub(super) struct RareCandyFlow {
     current_move: Option<MoveId>,
     pub(super) phase: RareCandyPhase,
     evolution_checked: bool,
+    source_result: Option<pokered_core::pokemon::learn_terminal::LearnMoveTerminal>,
 }
 
 impl PokemonGame {
@@ -51,7 +53,70 @@ impl PokemonGame {
             .map(|flow| flow.phase)
     }
 
-    /// Both item kinds share this continuation, including restore/reset cleanup.
+    pub(super) fn post_battle_learning_active(&self) -> bool {
+        self.rare_candy_flow
+            .as_ref()
+            .is_some_and(|flow| matches!(flow.origin, LearningOrigin::PostBattleEvolution))
+    }
+
+    pub(super) fn begin_post_battle_evolution_learning(
+        &mut self,
+        party_index: usize,
+        learning: Vec<pokered_core::pokemon::evolution::EvolutionMoveLearning>,
+    ) {
+        let moves = learning
+            .into_iter()
+            .filter_map(|entry| match entry.result {
+                LearnMoveResult::AlreadyKnown => None,
+                LearnMoveResult::Learned { .. } => Some((entry.move_id, true)),
+                LearnMoveResult::MoveSlotsFull => Some((entry.move_id, false)),
+            })
+            .collect();
+        let mut flow = RareCandyFlow {
+            origin: LearningOrigin::PostBattleEvolution,
+            party_index,
+            moves,
+            current_move: None,
+            phase: RareCandyPhase::TryingToLearn(0),
+            evolution_checked: true,
+            source_result: None,
+        };
+        // Do not display an extra prompt for no new/already-known moves.
+        if flow.moves.is_empty() {
+            self.resume_post_battle_evolution();
+            return;
+        }
+        self.handle_transition(GameScreen::PartyScreen);
+        self.party_screen =
+            PartyScreenState::new_for_move_choice(self.save_data.party.to_vec(), party_index);
+        if self.candy_next_move(&mut flow) {
+            self.rare_candy_flow = Some(flow);
+        }
+    }
+
+    fn resume_post_battle_evolution(&mut self) {
+        if let Some(anim) = self.evolution_anim.as_mut() {
+            anim.resume_after_learning();
+        }
+        if self.evolution_anim.as_ref().is_some_and(|anim|
+            anim.phase() == pokered_core::evolution_screen::EvolutionPhase::IsEvolving) {
+            if let Some(owner) = self.overworld.source_foreground_mut() { owner.retire_history(); }
+        }
+        if self
+            .evolution_anim
+            .as_ref()
+            .is_some_and(|anim| anim.is_done())
+        {
+            self.finish_evolution_cutscene();
+        }
+        // An empty learning list never left the movie. Only a real party
+        // continuation needs a sub-screen return, never a second settlement.
+        if self.state.screen == GameScreen::PartyScreen {
+            self.handle_transition(GameScreen::Overworld);
+        }
+    }
+
+    /// All learning origins share restore/reset cleanup.
     pub(crate) fn clear_rare_candy_continuation(&mut self) {
         self.rare_candy_flow = None;
     }
@@ -68,6 +133,7 @@ impl PokemonGame {
             current_move: None,
             phase: RareCandyPhase::LevelAndStats,
             evolution_checked: false,
+            source_result: None,
         };
         let name = self.candy_mon_name(&flow);
         self.candy_notice(format!("{name} grew to\nlevel {level}!"));
@@ -97,6 +163,7 @@ impl PokemonGame {
             current_move: None,
             phase: RareCandyPhase::TryingToLearn(0),
             evolution_checked: true,
+            source_result: None,
         };
         // apply_item_to_pokemon already writes a free slot. Full-slot machines
         // use the same Trying/Delete/Abandon/HM-guard flow as level-up learning.
@@ -132,6 +199,14 @@ impl PokemonGame {
     }
 
     fn candy_trying_page(&mut self, flow: &mut RareCandyFlow, page: u8) {
+        // The existing earlier learn/forget menu is an unmodeled owner. Its
+        // final real result PrintText will establish history; no physical-edge
+        // snapshot here is promoted to a source foreground poll.
+        if matches!(flow.origin, LearningOrigin::PostBattleEvolution) {
+            if let Some(owner) = self.overworld.source_foreground_mut() {
+                owner.retire_history();
+            }
+        }
         let name = self.candy_mon_name(flow);
         let move_name = self.candy_move_name(flow);
         let text = match page {
@@ -160,11 +235,22 @@ impl PokemonGame {
             };
         }
         flow.phase = RareCandyPhase::Learned(flow.current_move.unwrap());
-        self.candy_notice(format!(
+        let text = format!(
             "{} learned\n{}!",
             self.candy_mon_name(flow),
             self.candy_move_name(flow)
-        ));
+        );
+        if matches!(flow.origin, LearningOrigin::PostBattleEvolution) {
+            flow.source_result = Some(
+                pokered_core::pokemon::learn_terminal::LearnMoveTerminal::learned_text(
+                    self.localize_dialogue(&text),
+                    self.state.config.text_speed.delay_frames() as u8,
+                ),
+            );
+            self.candy_notice(String::new());
+            return;
+        }
+        self.candy_notice(text);
         if let Some(audio) = &self.audio {
             audio.play_sfx(SfxId::GetItem1);
         }
@@ -191,6 +277,10 @@ impl PokemonGame {
             return true;
         }
         flow.current_move = None;
+        if matches!(flow.origin, LearningOrigin::PostBattleEvolution) {
+            self.resume_post_battle_evolution();
+            return false;
+        }
         if let LearningOrigin::Machine { item, learned } = flow.origin {
             // ItemUseTMHM tests LearnMove's success flag only after its learned
             // text (and sound) return. Abandon never consumes, nor does any HM.
@@ -234,6 +324,51 @@ impl PokemonGame {
         let Some(mut flow) = self.rare_candy_flow.take() else {
             return;
         };
+        if let Some(work) = flow.source_result.as_mut() {
+            let Some(owner) = self.overworld.source_foreground_mut() else {
+                self.overworld.block_source_foreground(
+                    pokered_core::text::terminal_input::TerminalInputError::MissingLearningOwner,
+                );
+                self.rare_candy_flow = Some(flow);
+                return;
+            };
+            let step = work.tick_with_input(
+                input.raw_current(),
+                self.audio
+                    .as_ref()
+                    .is_some_and(|audio| audio.is_sfx_playing()),
+                owner,
+            );
+            let visible = work.visible_text();
+            if let Some(error) = step.input_error {
+                self.overworld.block_source_foreground(error);
+            }
+            // Display is a projection of the work cursor, never a second clock.
+            self.candy_notice(visible);
+            if let Some(audio) = &self.audio {
+                if step.learned_sound {
+                    audio.play_sfx(SfxId::GetItem1);
+                }
+                if step.press_ab {
+                    audio.play_sfx(SfxId::PressAB);
+                }
+            }
+            let keep = if step.complete {
+                flow.source_result = None;
+                self.candy_next_move(&mut flow)
+            } else {
+                true
+            };
+            if keep {
+                self.rare_candy_flow = Some(flow);
+            }
+            return;
+        }
+        if matches!(flow.origin, LearningOrigin::PostBattleEvolution) {
+            if let Some(owner) = self.overworld.source_foreground_mut() {
+                owner.read_raw(input.raw_current());
+            }
+        }
         let controls = PartyScreenInput {
             up: input.is_just_pressed(GbButton::Up),
             down: input.is_just_pressed(GbButton::Down),
@@ -280,11 +415,24 @@ impl PokemonGame {
                     if abandoning {
                         if yes {
                             flow.phase = RareCandyPhase::DidNotLearn;
-                            self.candy_notice(format!(
+                            let text = self.localize_dialogue(&format!(
                                 "{}\ndid not learn\n{}!",
                                 self.candy_mon_name(&flow),
                                 self.candy_move_name(&flow)
                             ));
+                            if matches!(flow.origin, LearningOrigin::PostBattleEvolution) {
+                                // This explicit DidNotLearn descriptor owns CONT;
+                                // translation resolves text, never command identity.
+                                let (intro, final_line) =
+                                    text.rsplit_once('\n').expect("authored DidNotLearn CONT");
+                                let retained = intro.rsplit('\n').next().unwrap_or(intro);
+                                flow.source_result = Some(pokered_core::pokemon::learn_terminal::LearnMoveTerminal::abandoned_parts(
+                                    intro.into(), retained.into(), final_line.into(),
+                                    self.state.config.text_speed.delay_frames() as u8));
+                                self.candy_notice(String::new());
+                            } else {
+                                self.candy_notice(text);
+                            }
                         } else {
                             self.candy_trying_page(&mut flow, 0);
                         }

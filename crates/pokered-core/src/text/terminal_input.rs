@@ -39,12 +39,9 @@ pub enum TerminalTextStage {
     Blocked(TerminalInputError),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TerminalInputError {
-    /// A caller/snapshot lost its ledger after the real nonempty letters.
-    /// Do not reinterpret unknown preceding input as neutral/current.
-    UnknownBeforePrompt,
-}
+// Compatibility name for the older terminal API; the canonical input
+// contract is shared with ordinary field consumers, not owned by battles.
+pub use crate::foreground_input::ForegroundInputError as TerminalInputError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 enum LetterWait {

@@ -154,6 +154,9 @@ pub enum EvolutionPhase {
     EvolvedText,
     /// "Huh? X stopped evolving!" — a `prompt` text, waits for A/B.
     StoppedText,
+    /// The source caller finishes this mon's LearnMove before starting the
+    /// next queued evolution. Only the opt-in terminal API enters here.
+    AwaitLearning,
     /// Queue exhausted.
     Done,
 }
@@ -193,6 +196,7 @@ pub struct EvolutionScreenState {
     /// leave this disabled; no second input history lives in the cutscene.
     source_terminal_enabled: bool,
     terminal_text: Option<TerminalTextWork>,
+    completed_evolution: Option<PendingEvolution>,
 }
 
 impl EvolutionScreenState {
@@ -220,6 +224,7 @@ impl EvolutionScreenState {
             outcomes: VecDeque::new(),
             source_terminal_enabled: false,
             terminal_text: None,
+            completed_evolution: None,
         }
     }
 
@@ -233,7 +238,29 @@ impl EvolutionScreenState {
 
     /// The evolution currently on screen, if any.
     pub fn current(&self) -> Option<&PendingEvolution> {
-        self.queue.front()
+        if self.phase == EvolutionPhase::AwaitLearning {
+            self.completed_evolution.as_ref()
+        } else {
+            self.queue.front()
+        }
+    }
+
+    pub fn awaiting_learning(&self) -> bool {
+        self.phase == EvolutionPhase::AwaitLearning
+    }
+
+    /// Invoke only after the actual learning result prompt returns, or when
+    /// this confirmed evolution made no new learning attempt.
+    pub fn resume_after_learning(&mut self) {
+        if !self.awaiting_learning() {
+            return;
+        }
+        self.completed_evolution = None;
+        self.enter(if self.queue.is_empty() {
+            EvolutionPhase::Done
+        } else {
+            EvolutionPhase::IsEvolving
+        });
     }
 
     /// Cancel-check frames of morph iteration `k` (`c = 16, 14, …, 2`,
@@ -293,7 +320,7 @@ impl EvolutionScreenState {
                     cur.from
                 })
             }
-            EvolutionPhase::EvolvedText => Some(cur.to),
+            EvolutionPhase::EvolvedText | EvolutionPhase::AwaitLearning => Some(cur.to),
             EvolutionPhase::StoppedText => Some(cur.from),
             _ => Some(cur.from),
         }
@@ -304,7 +331,9 @@ impl EvolutionScreenState {
         if self.source_terminal_enabled
             && matches!(
                 self.phase,
-                EvolutionPhase::EvolvedText | EvolutionPhase::StoppedText
+                EvolutionPhase::EvolvedText
+                    | EvolutionPhase::StoppedText
+                    | EvolutionPhase::AwaitLearning
             )
         {
             let visible = self.terminal_text.as_ref()?.visible_text();
@@ -409,6 +438,14 @@ impl EvolutionScreenState {
                 to: cur.to,
                 kind,
             });
+            if self.source_terminal_enabled && kind == EvolutionOutcomeKind::Evolved {
+                self.completed_evolution = Some(cur);
+                // Keep the completed Into page while its learning caller
+                // runs. No new queued mon or field frame may take ownership.
+                self.phase = EvolutionPhase::AwaitLearning;
+                self.cancelled = false;
+                return;
+            }
         }
         self.cancelled = false;
         if self.queue.is_empty() {
@@ -596,7 +633,7 @@ impl EvolutionScreenState {
                     self.finish_current(EvolutionOutcomeKind::Cancelled);
                 }
             }
-            EvolutionPhase::Done => {}
+            EvolutionPhase::AwaitLearning | EvolutionPhase::Done => {}
         }
         result.complete = self.is_done();
         result
@@ -659,11 +696,12 @@ mod tests {
                 assert_eq!(owner.last(), last_letter, "sound/Delay40 do not poll");
                 delay_frames += u16::from(counted_delay);
             }
-            if step.complete {
+            if anim.awaiting_learning() {
+                assert!(!step.complete, "the caller must finish learning first");
                 break;
             }
         }
-        assert!(anim.is_done() && saw_terminal_printing);
+        assert!(anim.awaiting_learning() && saw_terminal_printing);
         assert_eq!(last_letter, Some(A | SELECT));
         assert_eq!(delay_frames, EVOLVED_TEXT_FRAMES);
         assert_eq!(owner.last(), last_letter);
@@ -671,6 +709,54 @@ mod tests {
             anim.take_outcome().unwrap().kind,
             EvolutionOutcomeKind::Evolved
         );
+        anim.resume_after_learning();
+        assert!(anim.is_done());
+        assert_eq!(
+            owner.last(),
+            last_letter,
+            "returning a no-move result is not a poll"
+        );
+    }
+
+    #[test]
+    fn source_party_loop_waits_for_actual_learning_return_before_the_next_mon() {
+        use crate::foreground_input::{A, SELECT, START};
+        let mut second = evo(false);
+        second.party_index = 1;
+        let mut anim = EvolutionScreenState::new(vec![evo(false), second], None, false);
+        let mut owner = ForegroundJoypad::default();
+        for _ in 0..2000 {
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, A | SELECT, 1, &mut owner);
+            if anim.awaiting_learning() {
+                break;
+            }
+        }
+        assert!(anim.awaiting_learning());
+        assert_eq!(anim.take_outcome().unwrap().party_index, 0);
+        let last = owner.last();
+        for _ in 0..20 {
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, START, 1, &mut owner);
+            assert_eq!(anim.current().unwrap().party_index, 0);
+            assert!(anim.take_outcome().is_none());
+            assert_eq!(
+                owner.last(),
+                last,
+                "paused movie does not sample a fake terminal key"
+            );
+        }
+        anim.resume_after_learning();
+        assert_eq!(anim.phase(), EvolutionPhase::IsEvolving);
+        assert_eq!(anim.current().unwrap().party_index, 1);
+        assert_eq!(owner.last(), last);
+        for _ in 0..2000 {
+            anim.tick_with_terminal_input(EvolutionInput::none(), false, A, 1, &mut owner);
+            if anim.awaiting_learning() {
+                break;
+            }
+        }
+        assert_eq!(anim.take_outcome().unwrap().party_index, 1);
+        anim.resume_after_learning();
+        assert!(anim.is_done());
     }
 
     #[test]
