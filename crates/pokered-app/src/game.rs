@@ -770,10 +770,12 @@ pub struct PokemonGame {
     /// instead of writing one PNG per frame.
     #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
     pub video_recorder: Option<VideoRecorder>,
-    /// Consecutive frames A+B+Start+Select have all been held — the original's
-    /// soft-reset combo (engine/joypad.asm `_Joypad`/`TrySoftReset`, 16 frames
-    /// of PAD_BUTTONS held → `SoftReset`).
-    soft_reset_frames: u8,
+    /// Init seeds hSoftReset=16; only raw PAD_BUTTONS polls decrement it.
+    /// A non-combo poll leaves the remaining count intact.
+    soft_reset_counter: SoftResetCounter,
+    /// The platform must abandon this RAM session before any deferred work.
+    #[cfg(any(target_os = "none", test))]
+    platform_reset_requested: bool,
     /// Whether `overworld.update_frame` ran on the previous frame. The
     /// overworld owns per-button edge detectors (`prev_*_pressed` in
     /// update.rs); any frame it doesn't run — sub-screens, naming screen,
@@ -1427,7 +1429,9 @@ impl PokemonGame {
             frame_recorder: None,
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
-            soft_reset_frames: 0,
+            soft_reset_counter: SoftResetCounter::new(),
+            #[cfg(any(target_os = "none", test))]
+            platform_reset_requested: false,
             ow_ran_last_frame: false,
             #[cfg(not(target_os = "none"))]
             save_path,
@@ -1591,7 +1595,9 @@ impl PokemonGame {
             agent_state_slots: crate::alloc_prelude::BTreeMap::new(),
             debug_input: InputState::new(),
             startup_warp: None,
-            soft_reset_frames: 0,
+            soft_reset_counter: SoftResetCounter::new(),
+            #[cfg(any(target_os = "none", test))]
+            platform_reset_requested: false,
             ow_ran_last_frame: false,
             query_seed: QuerySeedSnapshot::default(),
         };
@@ -1726,7 +1732,9 @@ impl PokemonGame {
             #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
             video_recorder: None,
             startup_warp: None,
-            soft_reset_frames: 0,
+            soft_reset_counter: SoftResetCounter::new(),
+            #[cfg(any(target_os = "none", test))]
+            platform_reset_requested: false,
             ow_ran_last_frame: false,
             #[cfg(not(target_os = "none"))]
             save_path: None,
@@ -2934,11 +2942,42 @@ impl PokemonGame {
         );
     }
 
-    /// A+B+Start+Select held for 16 frames — the original's soft reset
-    /// (engine/joypad.asm `TrySoftReset` → home/init.asm `SoftReset`): stop
-    /// all sounds, reload the save from disk (unsaved progress is lost, as on
-    /// hardware), and return to the title screen.
+    /// TrySoftReset completed: hosted callers reload their saved session;
+    /// bare-metal callers request a ROM restart before deferred game work.
     fn soft_reset(&mut self) {
+        #[cfg(target_os = "none")]
+        self.request_platform_soft_reset();
+        #[cfg(not(target_os = "none"))]
+        self.soft_reset_host();
+    }
+
+    /// Remains set until the platform restarts the cartridge; reading it
+    /// must not accidentally consume the only request before that boundary.
+    #[cfg(any(target_os = "none", test))]
+    pub fn platform_reset_requested(&self) -> bool {
+        self.platform_reset_requested
+    }
+
+    #[cfg(any(target_os = "none", test))]
+    fn request_platform_soft_reset(&mut self) {
+        if !self.platform_reset_requested {
+            if let Some(audio) = self.audio.as_ref() {
+                audio.stop_all();
+            }
+            self.platform_reset_requested = true;
+        }
+    }
+
+    /// Prepare the actual display frame, including every indexed shade.
+    /// Palette entry3 is also the GBA presenter's outside-viewport border.
+    #[cfg(any(target_os = "none", test))]
+    pub fn draw_soft_reset_white_frame(fb: &mut FrameBuffer) {
+        fb.clear(Rgba::WHITE);
+        fb.set_palette(pokered_renderer::palette::Palette::new(&[Rgba::WHITE; 4]));
+    }
+
+    #[cfg(not(target_os = "none"))]
+    fn soft_reset_host(&mut self) {
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
@@ -2971,6 +3010,7 @@ impl PokemonGame {
                 let _ = self.load_from_path(&path);
             }
         }
+        self.soft_reset_counter = SoftResetCounter::new();
         self.handle_transition(GameScreen::TitleScreen);
     }
 
@@ -3427,6 +3467,10 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        #[cfg(any(target_os = "none", test))]
+        if self.platform_reset_requested {
+            return;
+        }
         // Full-screen sequences own their OAM; only map-backed menus
         // continue publishing the frozen field sprites under the overlay.
         if matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
@@ -3434,6 +3478,10 @@ impl PokemonGame {
         }
         self.sync_bag_list_memory();
         self.update_inner(input);
+        #[cfg(any(target_os = "none", test))]
+        if self.platform_reset_requested {
+            return;
+        }
         self.sync_bag_list_memory();
         // Per-frame recorders (`--record-frames` / `--record-video`):
         // capture AFTER the frame's logic ran, and do it here rather than
@@ -3589,22 +3637,13 @@ impl PokemonGame {
             input
         };
 
-        // Soft reset: hold A+B+Start+Select for 16 consecutive frames
-        // (engine/joypad.asm `_Joypad`: hJoyInput == PAD_BUTTONS → TrySoftReset
-        // decrements hSoftReset from 16 while the combo stays held).
-        if input.is_held(GbButton::A)
-            && input.is_held(GbButton::B)
-            && input.is_held(GbButton::Start)
-            && input.is_held(GbButton::Select)
-        {
-            self.soft_reset_frames = self.soft_reset_frames.saturating_add(1);
-            if self.soft_reset_frames >= SOFT_RESET_HOLD_FRAMES {
-                self.soft_reset_frames = 0;
-                self.soft_reset();
-                return;
-            }
-        } else {
-            self.soft_reset_frames = 0;
+        // `_Joypad` tests raw hJoyInput before JoyIgnore. Only Init seeds
+        // hSoftReset=16; releasing the combo does not reset that counter.
+        // This adapter supplies one poll per Game update, not a model of
+        // every original foreground owner's polling cadence.
+        if self.soft_reset_counter.poll(input.raw_current()) {
+            self.soft_reset();
+            return;
         }
 
         // Tick play time every frame once the game proper has started
@@ -4246,10 +4285,7 @@ impl PokemonGame {
                     // `_Joypad` routes PAD_BUTTONS to TrySoftReset before the
                     // menu handlers) — the start menu must not open or a held
                     // combo would never reach the 16-frame reset.
-                    let soft_reset_combo_held = input.is_held(GbButton::A)
-                        && input.is_held(GbButton::B)
-                        && input.is_held(GbButton::Start)
-                        && input.is_held(GbButton::Select);
+                    let soft_reset_combo_held = soft_reset_combo_held(input);
                     if ow_gapped_last_frame {
                         let previously_held = |b| input.is_just_released(b)
                             || (input.is_held(b) && !input.is_just_pressed(b));
@@ -8438,9 +8474,15 @@ mod ghost_seen_tests;
 
 const BLACK_SCREEN_DURATION: u32 = 30;
 
-/// Frames A+B+Start+Select must be held to trigger a soft reset
-/// (`hSoftReset` starts at 16 in home/init.asm).
+/// Reset polls seeded by Init. Kept under the existing name for callers;
+/// these polls need not be consecutive, and App tick cadence is an adapter.
 const SOFT_RESET_HOLD_FRAMES: u8 = 16;
+
+/// `_Joypad` checks the raw byte before wJoyIgnore/BIT_DISABLE_JOYPAD.
+/// Adding any D-pad direction must take the ordinary input path instead.
+fn soft_reset_combo_held(input: &InputState) -> bool {
+    SoftResetCounter::is_combo(input.raw_current())
+}
 
 #[cfg(all(feature = "desktop", not(target_arch = "wasm32"), not(target_os = "none")))]
 impl GameLoop for PokemonGame {
@@ -13671,3 +13713,11 @@ mod start_menu_button_audio_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/silph_departure_tests.rs"]
 mod silph_departure_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/platform_soft_reset_tests.rs"]
+mod platform_soft_reset_tests;
+
+#[path = "game/reset_counter.rs"]
+mod reset_counter;
+use reset_counter::SoftResetCounter;
