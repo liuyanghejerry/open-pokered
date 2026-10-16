@@ -248,6 +248,18 @@ fn four_questions_open_without_final_ack_at_each_speed_and_restore() {
 fn typing_hold_does_not_answer_the_menu_and_fresh_b_takes_cancel() {
     for caller in CALLERS {
         let mut field = at_question(caller, 3, 1000);
+        // Both row callers reach their trigger by one ordinary completed
+        // step; unlike snapshot restore, this test retains its queued tick.
+        let entry_requests = field.game_data_requests.clone();
+        assert_eq!(
+            entry_requests,
+            if matches!(caller, Caller::Admission | Caller::EarlyRow) {
+                vec![OverworldGameDataRequest::TickDaycareExp]
+            } else {
+                vec![]
+            },
+            "{caller:?} entry-step requests"
+        );
         open_question(&mut field, caller, true, false);
         for frame in 0..20 {
             field.update_frame(input(true, false));
@@ -263,7 +275,10 @@ fn typing_hold_does_not_answer_the_menu_and_fresh_b_takes_cancel() {
             field.pending_choice.is_none(),
             "one fresh B is the menu answer"
         );
-        assert!(field.game_data_requests.is_empty());
+        assert_eq!(
+            field.game_data_requests, entry_requests,
+            "{caller:?} cancel must not add persistent-data requests"
+        );
         for frame in 0..1000 {
             if let Some(response) = text(&field) {
                 assert!(response.starts_with(match caller {
