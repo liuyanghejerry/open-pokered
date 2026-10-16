@@ -78,6 +78,8 @@ fn bedroom_snapshot_resumes_initialization_and_keeps_the_saved_noop() {
     let mut screen = bedroom(0);
     screen.run_on_load();
     assert!(screen.active_script_effect.is_some());
+    assert!(!screen.unified_flags().get_flag(NOOP));
+    assert_eq!(screen.state.player.facing, Direction::Down);
     let snapshot = OverworldSnapshot::capture(&screen);
     let mut resumed = bedroom(0);
     snapshot.restore_into(&mut resumed);

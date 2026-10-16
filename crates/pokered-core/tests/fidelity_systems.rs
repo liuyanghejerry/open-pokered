@@ -496,6 +496,9 @@ fn original_bedroom_script_byte_is_authoritative_and_survives_sram() {
         for legacy in [false, true] {
             let mut save = import_sram(&original_sram()).unwrap();
             save.imported_legacy_native = legacy;
+            for (index, value) in save.game_data.game_progress_flags.iter_mut().enumerate() {
+                *value = (index as u8).wrapping_mul(37) ^ 0xa5;
+            }
             save.game_data.game_progress_flags[REDS_HOUSE_2F_SCRIPT_INDEX] = script;
             let original_progress = save.game_data.game_progress_flags.clone();
             let mut stale_companion = pokered_core::hash_compat::HashMap::default();
