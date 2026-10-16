@@ -657,11 +657,44 @@ struct PerfBenchmark {
     battle_started: bool,
     trainer_battle_started: bool,
     pokedex_started: bool,
+    movement_start: Option<(u16, u16)>,
+    movement_verified: bool,
 }
 
 #[cfg(feature = "perf-benchmark")]
 impl PerfBenchmark {
+    fn movement_anchor(game: &PokemonGame, frame: u32) -> (u16, u16) {
+        assert_eq!(game.state.screen, pokered_core::game_state::GameScreen::Overworld);
+        assert_eq!(game.overworld.state.current_map, pokered_data::maps::MapId::RedsHouse2F);
+        assert!(game.overworld.displayed_field_dialogue().is_none());
+        assert!(game.overworld.pending_choice.is_none());
+        assert!(game.overworld.active_script_effect_label().is_none());
+        assert!(game.overworld.script_engine_idle());
+        assert_eq!(game.overworld.state.player.movement_state, pokered_core::overworld::MovementState::Idle);
+        assert_eq!(game.overworld.state.walk_counter, 0);
+        let position = (game.overworld.state.player.x, game.overworld.state.player.y);
+        agb::println!("gba-perf movement-anchor frame={} map={} x={} y={} facing={} dialogue=0 effect=0 idle=1",
+            frame, game.overworld.state.current_map as u8, position.0, position.1,
+            game.overworld.state.player.facing as u8);
+        position
+    }
+
     fn drive_scene(&mut self, game: &mut PokemonGame, frame: u32) {
+        // Check the actual scene, rather than accepting a cheap/wrong sample
+        // or silently benchmarking a retained text window after menu spam.
+        if self.movement_start.is_none() && frame >= 4050 {
+            assert_eq!(frame, 4050);
+            let position = Self::movement_anchor(game, frame);
+            assert_eq!(position, (3, 6));
+            self.movement_start = Some(position);
+        }
+        if !self.movement_verified && frame >= 4290 {
+            assert_eq!(frame, 4290);
+            let position = Self::movement_anchor(game, frame);
+            let start = self.movement_start.expect("movement entry anchor");
+            assert_eq!(position, (start.0 + 1, start.1));
+            self.movement_verified = true;
+        }
         if !self.battle_started && frame >= 4400 {
             game.debug_start_wild_battle(pokered_data::species::Species::Pidgey, 5);
             self.battle_started = true;
@@ -810,6 +843,8 @@ fn game_main() -> ! {
     let mut profile = ProfileSamples::default();
     #[cfg(feature = "perf-benchmark")]
     let mut benchmark = PerfBenchmark::default();
+    #[cfg(feature = "perf-benchmark")]
+    let mut benchmark_input = autopilot::BenchmarkInput::default();
     // Retain input history across display frames so a held key produces one
     // edge instead of appearing newly pressed on every pass through the loop.
     let mut state = InputState::new();
@@ -828,6 +863,10 @@ fn game_main() -> ! {
         state.set_from_bitmask(0);
         #[cfg(feature = "autopilot")]
         {
+            #[cfg(feature = "perf-benchmark")]
+            state.set_from_bitmask(benchmark_input.buttons_at(
+                frame, game.state.screen == pokered_core::game_state::GameScreen::Overworld));
+            #[cfg(not(feature = "perf-benchmark"))]
             state.set_from_bitmask(autopilot::buttons_at(frame));
         }
         #[cfg(not(feature = "autopilot"))]
