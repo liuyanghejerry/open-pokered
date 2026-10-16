@@ -81,6 +81,17 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn("bikeShopOffer", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            if args.len() != 7 {
+                return Err(boa_engine::JsNativeError::typ().with_message("bikeShopOffer: seven text arguments expected").into());
+            }
+            let texts = args.iter().map(|value| value.as_string()
+                .map(|text| text.to_std_string_lossy())
+                .ok_or_else(|| boa_engine::JsNativeError::typ().with_message("bikeShopOffer: text arguments must be strings")))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(PokemonScriptCommand::BikeShopOffer { texts }.into_script_command())
+        });
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -1357,4 +1368,22 @@ mod tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod bike_offer_boa_tests {
+    use super::*;
+    use dotzuki_engine_script::{ScriptEngine, CommandResult};
+    #[test]
+    fn bike_offer_boa_await_keeps_the_real_caller_suspended_until_outer_close() {
+        let mut engine=ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"export async function offer() {
+          await game.bikeShopOffer("first", "last", "question", "refusal", "goodbye", "bicycle", "cancel");
+          await game.showText("returned");
+        }"#).unwrap();
+        let expected=Some(PokemonScriptCommand::BikeShopOffer {texts:["first","last","question","refusal","goodbye","bicycle","cancel"].into_iter().map(str::to_string).collect()}.into_script_command());
+        assert_eq!(engine.call_function("offer",&[]).unwrap(),expected);
+        assert_eq!(engine.tick(),expected,"idle ticking is not an outer textbox close");
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),Some(ScriptCommand::ShowText{text:"returned".into()}));
+    }
 }

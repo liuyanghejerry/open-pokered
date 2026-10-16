@@ -6,10 +6,12 @@
 //! the game's overworld map system.
 
 pub mod bookshelf;
+pub mod bike_shop;
 pub mod collision;
 pub mod doors_elevators;
 pub mod event_flags;
 pub mod field_moves;
+mod field_text;
 pub mod fishing;
 pub mod forced_bike;
 pub mod hidden_items;

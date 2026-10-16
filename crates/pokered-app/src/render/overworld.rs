@@ -52,7 +52,7 @@ fn draw_script_choice(
         let mut ui = Ui::new(&mut painter);
         menus::yes_no::draw(
             &choice.options,
-            choice.selected,
+            if choice.cursor_visible { choice.selected } else { u32::MAX },
             &YES_NO_DEFAULT_LAYOUT,
             &mut ui,
         );
@@ -71,7 +71,7 @@ fn draw_script_choice(
         area,
         None,
         content,
-        CursorStyle::new(Some(223), Default::default()),
+        CursorStyle::new(if choice.cursor_visible { Some(223) } else { None }, Default::default()),
     );
     pokered_ui::menus::yes_no::draw_with_config(
         &choice.options,

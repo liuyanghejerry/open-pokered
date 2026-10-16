@@ -378,6 +378,14 @@ impl<'de> serde::Deserialize<'de> for DialoguePage {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, serde::Serialize, serde::Deserialize)]
+enum SourceLetterWait {
+    #[default]
+    None,
+    Polling(u16),
+    HeldVBlank,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BedroomDialogue {
     pages: Vec<DialoguePage>,
@@ -394,6 +402,10 @@ pub struct BedroomDialogue {
     /// Outer field display preparation, separate from per-letter waits.
     #[serde(default)]
     field_entry_frames: u8,
+    #[serde(default)]
+    source_letter_wait: SourceLetterWait,
+    #[serde(default)]
+    source_prompt_remaining: Option<u8>,
 }
 
 impl BedroomDialogue {
@@ -429,6 +441,8 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            source_letter_wait: SourceLetterWait::None,
+            source_prompt_remaining: None,
         }
     }
 
@@ -454,6 +468,8 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            source_letter_wait: SourceLetterWait::None,
+            source_prompt_remaining: None,
         }
     }
 
@@ -511,6 +527,8 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            source_letter_wait: SourceLetterWait::None,
+            source_prompt_remaining: None,
         }
     }
 
@@ -625,6 +643,65 @@ impl BedroomDialogue {
         }
     }
 
+    /// The same display cursor, driven by real PrintLetterDelay operations.
+    /// NO_TEXT_DELAY returns before Joypad; options zero still polls. Raw is
+    /// refreshed by the host and preparation never changes the last poll.
+    pub(crate) fn reveal_next_char_with_source(
+        &mut self,
+        no_text_delay: bool,
+        owner: &mut crate::foreground_input::ForegroundJoypad,
+    ) {
+        if self.field_entry_frames > 0 {
+            self.field_entry_frames -= 1;
+            if self.field_entry_frames > 0 { return; }
+        }
+        if no_text_delay {
+            self.char_index = self.total_chars();
+            self.waiting_for_input = true;
+            self.source_letter_wait = SourceLetterWait::None;
+            return;
+        }
+        match self.source_letter_wait {
+            SourceLetterWait::HeldVBlank => self.source_letter_wait = SourceLetterWait::None,
+            SourceLetterWait::Polling(remaining) => {
+                let poll = owner.poll();
+                if poll.held & (crate::foreground_input::A | crate::foreground_input::B) != 0 {
+                    self.source_letter_wait = SourceLetterWait::HeldVBlank;
+                    return;
+                }
+                if remaining > 1 {
+                    self.source_letter_wait = SourceLetterWait::Polling(remaining - 1);
+                    return;
+                }
+                self.source_letter_wait = SourceLetterWait::None;
+            }
+            SourceLetterWait::None => {}
+        }
+        if self.char_index == self.total_chars() {
+            self.waiting_for_input = true;
+            return;
+        }
+        self.char_index += 1;
+        let poll = owner.poll();
+        self.source_letter_wait = if poll.held & (crate::foreground_input::A | crate::foreground_input::B) != 0 {
+            SourceLetterWait::HeldVBlank
+        } else {
+            // The first real poll is on this glyph's writing update.
+            SourceLetterWait::Polling(self.text_delay_frames.max(1))
+        };
+    }
+
+    pub(crate) fn source_prompt_ready(&mut self, protected: bool) -> bool {
+        if !protected { return true; }
+        match self.source_prompt_remaining {
+            None => { self.source_prompt_remaining = Some(3); false }
+            Some(remaining) if remaining > 1 => {
+                self.source_prompt_remaining = Some(remaining - 1); false
+            }
+            Some(_) => { self.source_prompt_remaining = Some(0); true }
+        }
+    }
+
     pub fn skip_to_full_page(&mut self) {
         self.char_index = self.total_chars();
         self.waiting_for_input = true;
@@ -636,6 +713,8 @@ impl BedroomDialogue {
         self.waiting_for_input = false;
         self.delay_counter = 0;
         self.field_entry_frames = 0;
+        self.source_letter_wait = SourceLetterWait::None;
+        self.source_prompt_remaining = None;
         self.current_page < self.pages.len()
     }
 
@@ -746,6 +825,14 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     /// Direct clerk-text closure; independent of START/submenu reloads.
     pub mart_text_restore: Option<presentation::MartTextRestoreState>,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
+    /// One foreground history, recorded only by real field/text/menu polls.
+    /// Observed legacy boundaries do not certify an unmodeled edge consumer.
+    pub(crate) source_foreground: Option<crate::foreground_input::ForegroundJoypad>,
+    pub(crate) source_foreground_mode: crate::foreground_input::ForegroundMode,
+    /// Live projection of original wStatusFlags5 BIT_NO_TEXT_DELAY. Canonical
+    /// SRAM still owns the byte; save writeback changes this one bit only.
+    pub(crate) no_text_delay: bool,
+    pub(crate) source_foreground_error: Option<crate::foreground_input::ForegroundInputError>,
     pub pending_pokedex_entry: Option<PokedexEntryState>,
     pub pending_naming_screen: Option<crate::naming_screen::NamingScreenState>,
     /// Remaining frames of the white flash when the naming screen opens and
@@ -1260,6 +1347,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             retain_field_text: false,
             mart_text_restore: None,
             pending_choice: None,
+            source_foreground: None,
+            source_foreground_mode: crate::foreground_input::ForegroundMode::Observed,
+            no_text_delay: false,
+            source_foreground_error: None,
             pending_pokedex_entry: None,
             pending_naming_screen: None,
             naming_flash_frames: 0,
@@ -1551,12 +1642,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     /// FoundItemText has no ManualTextScroll prompt while its jingle plays.
+    /// Visible menu labels may precede the actual HandleMenuInput poll.
+    pub fn choice_accepts_input(&self) -> bool {
+        self.pending_choice.as_ref().is_some_and(|choice| choice.input_enabled)
+    }
+
     pub fn dialogue_needs_button(&self) -> bool {
         let effect = match self.active_script_effect.as_ref() {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
         };
-        self.pending_choice.is_none()
+        !self.choice_accepts_input()
             && !(self.retain_field_text && self.pending_dialogue.is_none())
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
@@ -2733,6 +2829,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.forced_bike.active = data.status_flags[5] & (1 << 5) != 0;
+        self.no_text_delay = data.status_flags[5] & (1 << 6) != 0;
         self.player_last_stop_direction = data.player_last_stop_direction;
         self.player_moving_direction = data.player_moving_direction;
         self.first_lock_trash_can = data.first_lock_trash_can;
@@ -2752,6 +2849,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        // Read/modify/write only the original live bit, preserving every
+        // unrelated status flag (including ALWAYS_ON_BIKE in the same byte).
+        if self.no_text_delay { data.status_flags[5] |= 1 << 6; }
+        else { data.status_flags[5] &= !(1 << 6); }
         // Preserve BIT_ALWAYS_ON_BIKE separately from the player sprite/mode.
         if self.forced_bike.active { data.status_flags[5] |= 1 << 5; }
         else { data.status_flags[5] &= !(1 << 5); }
