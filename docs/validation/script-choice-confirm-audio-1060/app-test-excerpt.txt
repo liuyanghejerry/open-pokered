@@ -1,0 +1,8 @@
+Selected actual stdout lines; full stdout SHA-256: 73fc48d356112dc2198a3053ee217d6ff0493964fda6fa81f697836eeb78f805
+
+running 4 tests
+test game::cinnabar_quiz_audio_tests::muted_choice_confirmation_starts_real_press_ab_once_while_held ... ok
+test game::cinnabar_quiz_audio_tests::muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_door ... ok
+test game::cinnabar_quiz_audio_tests::muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_release ... ok
+test game::cinnabar_quiz_audio_tests::muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_prompt ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 380 filtered out; finished in 7.50s

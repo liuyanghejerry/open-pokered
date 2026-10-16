@@ -3100,6 +3100,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     } else if down_pressed {
                         choice.move_down();
                     }
+                    // HandleMenuInput plays PRESS_AB once for accepted A/B.
+                    if a_just_pressed || b_just_pressed {
+                        *sfx_event = OverworldSfxEvent::TextAdvance;
+                    }
                     if a_just_pressed {
                         *selected = choice.selected;
                         *pending_choice = None;
@@ -4681,6 +4685,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         });
     }
 }
+
+#[cfg(test)]
+#[path = "choice_confirm_audio_tests.rs"]
+mod choice_confirm_audio_tests;
 
 #[cfg(test)]
 mod safari_timer_tests {
