@@ -5,6 +5,7 @@
 use super::*;
 use pokered_core::overworld::script_bridge::ScriptEffect;
 use pokered_core::pokemon::stats::create_pokemon;
+use pokered_core::snapshot::OverworldSnapshot;
 use pokered_data::event_flags::EventFlag;
 use pokered_data::script_command::FieldTextPrompt;
 use pokered_data::species::Species;
@@ -154,8 +155,18 @@ impl Session {
         (manager.sequencer.current_sfx_id, manager.is_sfx_playing())
     }
 
-    fn effect(&self) -> Option<&ScriptEffect> {
-        self.game.overworld.active_script_effect.as_ref()
+    fn effect(&self) -> Option<ScriptEffect> {
+        // An immutable observation copy only: never restore or resume Game.
+        OverworldSnapshot::capture(&self.game.overworld).active_script_effect
+    }
+
+    fn gate_open(&self) -> bool {
+        self.game
+            .overworld
+            .script_flags()
+            .get(GATE)
+            .copied()
+            .unwrap_or(false)
     }
 
     fn visible(&self) -> serde_json::Value {
@@ -195,7 +206,7 @@ impl Session {
         // Normal splash/title/menu/CONTINUE inputs; no skip-intro or screen setter.
         for frame in 0..WATCHDOG {
             if session.game.state.screen == GameScreen::Overworld
-                && session.game.overworld.script_engine.is_idle()
+                && session.game.overworld.script_engine_idle()
                 && session.effect().is_none()
             {
                 break;
@@ -204,7 +215,7 @@ impl Session {
         }
         assert_eq!(session.game.state.screen, GameScreen::Overworld);
         assert_eq!(session.game.overworld.state.current_map, MapId::CinnabarGym);
-        assert!(session.game.overworld.script_engine.is_idle() && session.effect().is_none());
+        assert!(session.game.overworld.script_engine_idle() && session.effect().is_none());
         assert_eq!(
             (
                 session.game.overworld.state.player.x,
@@ -212,9 +223,18 @@ impl Session {
             ),
             (15, 8)
         );
-        assert_eq!(session.game.overworld.script_engine.get_flag(GATE), open);
-        session.step(&[]);
-        session.step(&[]);
+        assert_eq!(session.gate_open(), open);
+        // Continue directly runs @load, then the first ordinary field update
+        // dispatches its OnEnter hook. Allow that dispatch, all six gate
+        // effects, and the field-loop wait to finish before the unchanged UP2.
+        for _ in 0..8 {
+            session.step(&[]);
+        }
+        assert!(session.game.overworld.script_engine_idle() && session.effect().is_none());
+        assert!(session.game.overworld.pending_dialogue.is_none());
+        assert!(session.game.overworld.pending_choice.is_none());
+        #[cfg(feature = "debug-server")]
+        assert!(session.game.debug_condition_met("control_ready"));
         // UP faces the adjacent solid machine; A interacts with its real tile.
         session.step(&[GbButton::Up]);
         session.step(&[GbButton::Up]);
@@ -252,7 +272,7 @@ impl Session {
         for frame in 0..WATCHDOG {
             if matches!(self.effect(), Some(ScriptEffect::PrintFieldText {
                 prompt: actual, leading_sound: None, ..
-            }) if *actual == prompt)
+            }) if actual == prompt)
                 && self
                     .game
                     .overworld
@@ -293,7 +313,7 @@ impl Session {
             self.step(&[button]);
             assert!(matches!(self.effect(), Some(ScriptEffect::PrintFieldText {
                 prompt: FieldTextPrompt::Protected, prompt_frames_remaining, ..
-            }) if *prompt_frames_remaining == remaining));
+            }) if prompt_frames_remaining == remaining));
             assert_eq!(self.game.overworld.sfx_event, OverworldSfxEvent::None);
         }
         self.step(&[button]);
@@ -460,12 +480,12 @@ fn muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_r
             if playing && id == SfxId::PressAB as u8 {
                 press_waited += 1;
                 assert!(matches!(session.effect(), Some(ScriptEffect::WaitSound)));
-                assert!(!session.game.overworld.script_engine.get_flag(GATE));
+                assert!(!session.gate_open());
             }
             if playing && id == SfxId::GoInside as u8 {
                 door_waited += 1;
                 assert!(matches!(session.effect(), Some(ScriptEffect::WaitSound)));
-                assert!(!session.game.overworld.script_engine.get_flag(GATE));
+                assert!(!session.gate_open());
             }
             assert_eq!(session.visible(), result);
             session.step(&[GbButton::A]); // ignored by sound waits; A still holds outer caller.
@@ -477,7 +497,7 @@ fn muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_r
             session.effect(),
             Some(ScriptEffect::FinishFieldText)
         ));
-        assert!(session.game.overworld.script_engine.get_flag(GATE));
+        assert!(session.gate_open());
         for _ in 0..11 {
             session.step(&[GbButton::A]);
             assert!(matches!(
@@ -487,7 +507,7 @@ fn muted_quiz_correct_uses_real_get_item_press_ab_and_door_sounds_then_outer_a_r
             assert_eq!(session.visible(), result);
         }
         session.step(&[]);
-        assert!(session.game.overworld.script_engine.is_idle() && session.effect().is_none());
+        assert!(session.game.overworld.script_engine_idle() && session.effect().is_none());
         assert!(!session.game.overworld.retain_field_text);
         assert!(session.game.overworld.displayed_field_dialogue().is_none());
         assert_eq!(
@@ -609,7 +629,7 @@ fn muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_
         assert_eq!(session.game.overworld.sfx_event, OverworldSfxEvent::None);
         assert!(!session.game.overworld.retain_field_text);
         assert!(session.game.overworld.displayed_field_dialogue().is_none());
-        assert!(!session.game.overworld.script_engine.get_flag(GATE));
+        assert!(!session.gate_open());
         // Stop here: trainer approach/prebattle text and shared menu15 are
         // separate outstanding fixes, and are not claimed covered by this test.
         session.fixture.assert_unchanged();
@@ -639,7 +659,7 @@ fn muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_
         Some(ScriptEffect::FinishFieldText)
     ));
     session.step(&[GbButton::B]);
-    assert!(session.game.overworld.script_engine.is_idle() && session.effect().is_none());
+    assert!(session.game.overworld.script_engine_idle() && session.effect().is_none());
     assert!(session.game.overworld.displayed_field_dialogue().is_none());
     assert!(!session.game.overworld.retain_field_text);
     assert_eq!(

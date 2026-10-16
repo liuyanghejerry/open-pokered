@@ -89,11 +89,11 @@ struct MoveBytes {
 }
 
 impl MoveBytes {
-    /// crit 255 (no crit), accuracy 0 (always hits), damage 255 (max roll),
+    /// confusion 0 (acts), crit 255 (no crit), accuracy 0 (always hits), damage 255 (max roll),
     /// side_effect 255 (a 255 byte is `>= any threshold` ⇒ secondary does NOT fire),
     /// multi_hit 0 (< 96 ⇒ the 2-5 distribution yields 2 hits).
     fn always_hit() -> Self {
-        Self { confusion: 255, paralysis: 255, crit: 255, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0 }
+        Self { confusion: 0, paralysis: 255, crit: 255, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0 }
     }
 }
 
@@ -3165,25 +3165,98 @@ fn gate_paralysis_full_para_blocks_else_acts() {
     assert!(s2.opponent_battlers[0].hp < 300, "para byte 63 ≥ 63 → acts → Tackle hits");
 }
 
-/// Confusion gate: a confused mon draws one byte — `< 128` ⇒ 40-power typeless
-/// self-hit (move aborts), `>= 128` ⇒ acts.
+/// Original CP $80 / JR C: bytes >=128 self-hit; bytes <128 act.
 #[test]
 fn gate_confusion_self_hit_else_acts() {
-    // byte 0 < 128 → self-hit: player loses hp, Tackle aborts (enemy unharmed).
+    // byte 128 hits self: player loses hp, Tackle aborts (enemy unharmed).
     let (mut s1, mut e1) = gate_state(None);
     e1.push(EffectState { id: EffectId(800), host: BattlerRef::PLAYER, effect_order: 0, kind: PokeVolatile::Confused { turns: 3 } });
-    let mut r1 = ScriptedRng::new(vec![0]);
+    let mut r1 = ScriptedRng::new(vec![128]);
     StackDriver::execute_turn(&PokeredRules, &mut s1, &mut e1, gate_actions(), &mut r1);
     assert_eq!(s1.opponent_battlers[0].hp, 300, "confusion self-hit → Tackle aborts → enemy unharmed");
     assert!(s1.player_battlers[0].hp < 300, "confusion self-hit damages the confused mon");
     assert_eq!(r1.consumed(), 1, "only the confusion gate byte is drawn on a self-hit");
-    // byte 255 ≥ 128 → acts → Tackle lands.
+    // byte 127 continues normally → Tackle lands.
     let (mut s2, mut e2) = gate_state(None);
     e2.push(EffectState { id: EffectId(801), host: BattlerRef::PLAYER, effect_order: 0, kind: PokeVolatile::Confused { turns: 3 } });
-    let mut r2 = ScriptedRng::new(vec![255, 255, 0, 255]); // confusion(255 act), crit, acc, dmg
+    let mut r2 = ScriptedRng::new(vec![127, 255, 0, 255]); // confusion(127 act), crit, acc, dmg
     StackDriver::execute_turn(&PokeredRules, &mut s2, &mut e2, gate_actions(), &mut r2);
-    assert!(s2.opponent_battlers[0].hp < 300, "confusion byte 255 ≥ 128 → acts → Tackle hits");
+    assert!(s2.opponent_battlers[0].hp < 300, "confusion byte 127 < 128 → acts → Tackle hits");
     assert_eq!(s2.player_battlers[0].hp, 300, "no self-hit when the mon acts through confusion");
+}
+
+/// Independent original-ASM contract, not inferred from the legacy oracle:
+/// player CP (50*$ff/100+1) and enemy CP $80 both JR C to normal execution.
+#[test]
+fn gate_confusion_original_raw_boundaries_on_both_sides() {
+    for actor in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
+        for (byte, self_hit) in [(0,false),(127,false),(128,true),(255,true)] {
+            let (mut state,mut effects)=gate_state(None);
+            effects.push(EffectState {id:EffectId(803),host:actor,effect_order:0,kind:PokeVolatile::Confused {turns:3}});
+            let mut actions=[BattleAction::<PokeredRules>::Nothing,BattleAction::Nothing];
+            actions[actor.side as usize]=BattleAction::Fight {move_:MoveId::Tackle};
+            let mut rng=ScriptedRng::new(vec![byte,255,0,255]);
+            let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,actions,&mut rng);
+            let own=battler_at(&state,actor).hp;
+            let other=battler_at(&state,opp_ref(actor)).hp;
+            assert_eq!(own<300,self_hit,"actor={actor:?}, raw={byte}");
+            assert_eq!(other<300,!self_hit,"actor={actor:?}, raw={byte}");
+            assert_eq!(log.events.iter().any(|e|matches!(e,TurnEvent::Blocked {actor:a} if *a==actor)),self_hit);
+            assert_eq!(log.events.iter().any(|e|matches!(e,TurnEvent::MoveUsed {actor:a,..} if *a==actor)),!self_hit);
+            assert_eq!(rng.consumed(),if self_hit {1} else {4},"self-hit skips crit/accuracy/damage");
+            assert!(effects.iter().any(|e|e.host==actor && matches!(e.kind,PokeVolatile::Confused {turns:2})));
+        }
+    }
+}
+
+#[test]
+fn gate_confusion_link_list_keeps_raw_polarity_and_exact_index() {
+    use crate::link::rng::LinkRng;
+    for actor in [BattlerRef::PLAYER,BattlerRef::OPPONENT] {
+        for (byte,self_hit) in [(0,false),(127,false),(128,true),(255,true)] {
+            let (mut state,mut effects)=gate_state(None);
+            effects.push(EffectState {id:EffectId(804),host:actor,effect_order:0,kind:PokeVolatile::Confused {turns:3}});
+            let mut actions=[BattleAction::<PokeredRules>::Nothing,BattleAction::Nothing];
+            actions[actor.side as usize]=BattleAction::Fight {move_:MoveId::Tackle};
+            let list=[byte,255,0,255,91,82,73,64,55,46];
+            let mut rng=LinkRng::new(list);
+            let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,actions,&mut rng);
+            assert_eq!(battler_at(&state,actor).hp<300,self_hit,"raw Link byte {byte}");
+            assert_eq!(battler_at(&state,opp_ref(actor)).hp<300,!self_hit);
+            assert_eq!(log.events.iter().any(|e|matches!(e,TurnEvent::Blocked {actor:a} if *a==actor)),self_hit);
+            assert_eq!(rng.consumed(),if self_hit {1} else {4});
+            assert_eq!(rng.index(),if self_hit {1} else {4});
+            assert_eq!(rng.list(),list,"no refill/complement within these four reads");
+        }
+    }
+}
+
+#[test]
+fn gate_confusion_original_polarity_preserves_paralysis_read_order() {
+    for (byte,self_hit,consumed) in [(127,false,2),(128,true,1)] {
+        let (mut state,mut effects)=gate_state(Some(LegacyStatus::Paralysis));
+        effects.push(EffectState {id:EffectId(805),host:BattlerRef::PLAYER,effect_order:0,kind:PokeVolatile::Confused {turns:3}});
+        let mut rng=ScriptedRng::new(vec![byte,0,255,0,255]);
+        let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,gate_actions(),&mut rng);
+        assert_eq!(state.player_battlers[0].hp<300,self_hit);
+        assert_eq!(state.opponent_battlers[0].hp,300);
+        assert_eq!(rng.consumed(),consumed,"confusion first; only a normal roll reaches paralysis");
+        assert!(log.events.iter().any(|e|matches!(e,TurnEvent::Blocked {actor} if *actor==BattlerRef::PLAYER)));
+    }
+}
+
+#[test]
+fn gate_confusion_snap_out_never_reads_the_high_self_hit_byte() {
+    let (mut state,mut effects)=gate_state(None);
+    effects.push(EffectState {id:EffectId(806),host:BattlerRef::PLAYER,effect_order:0,kind:PokeVolatile::Confused {turns:1}});
+    // These are crit/accuracy/damage. The leading 255 would self-hit if the
+    // expired confusion gate incorrectly consumed it.
+    let mut rng=ScriptedRng::new(vec![255,0,255]);
+    StackDriver::execute_turn(&PokeredRules,&mut state,&mut effects,gate_actions(),&mut rng);
+    assert_eq!(state.player_battlers[0].hp,300);
+    assert!(state.opponent_battlers[0].hp<300);
+    assert_eq!(rng.consumed(),3);
+    assert!(!effects.iter().any(|e|e.host==BattlerRef::PLAYER && matches!(e.kind,PokeVolatile::Confused {..})));
 }
 
 /// P6b: a BLOCKED move (here an asleep mover) logs `TurnEvent::Blocked{actor}` and

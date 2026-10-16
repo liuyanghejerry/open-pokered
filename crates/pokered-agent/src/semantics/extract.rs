@@ -198,6 +198,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
     // Inner PrintText returns to its caller; it only presents dialogue.
     "printFieldText",
+    // Closes the owned field window; event flags/inventory remain unchanged.
+    "finishFieldText",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",
@@ -216,6 +218,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "playMusic",
     // Suspends the scene until CHAN1 finishes; no event-graph state changes.
     "waitMusic",
+    // Waits for the existing SFX sequencer; only presentation timing changes.
+    "waitSound",
     "playSound",
     "playCry",
     "stopMusic",
