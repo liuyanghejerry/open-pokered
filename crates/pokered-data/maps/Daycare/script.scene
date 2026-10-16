@@ -87,7 +87,8 @@ game_scene Daycare {
           }
         }
         @option(@t("NO", "否")) {
-          @speaker("") { @t("All right then, come again.", "那好吧，下次再来吧。") }
+          // Initial refusal starts at .ComeAgainText, skipping .AllRightThenText.
+          @speaker("") { @t("come again.", "下次再来吧。") }
         }
       }
     }
