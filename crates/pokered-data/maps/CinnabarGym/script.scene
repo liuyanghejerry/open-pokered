@@ -11,7 +11,8 @@
 //    that machine's gate (EVENT_CINNABAR_GYM_GATE1..6_UNLOCKED); the trainers
 //    stay challengeable.
 //  - Answering WRONG plays SFX_DENIED and, unless that gate's trainer is
-//    already beaten, pits you against the gate-linked trainer
+//    already beaten, turns the player, walks the gate-linked trainer over,
+//    and shows that trainer's normal prebattle text before starting battle
 //    (wOpponentAfterWrongAnswer = gate index + 2 upstream; mapped here to
 //    trainer npc gate+2). Gate flags and trainer flags are separate.
 //  - Gates are closed/open tile swaps re-applied on every load
@@ -142,6 +143,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+            facePlayer("right")
+            moveNpc("3", [[16, 8]])
+            @speaker("") {
+              @t("I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！")
+            }
             result = startBattle("OPP_BURGLAR4")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
@@ -170,6 +176,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+            facePlayer("down")
+            moveNpc("4", [[10, 4], [10, 3]])
+            @speaker("") {
+              @t("You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！")
+            }
             result = startBattle("OPP_SUPER_NERD10")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
@@ -211,6 +222,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+            facePlayer("right")
+            moveNpc("5", [[10, 8]])
+            @speaker("") {
+              @t("I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！")
+            }
             result = startBattle("OPP_BURGLAR5")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
@@ -252,6 +268,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+            facePlayer("right")
+            moveNpc("6", [[10, 14]])
+            @speaker("") {
+              @t("I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！")
+            }
             result = startBattle("OPP_SUPER_NERD11")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
@@ -306,6 +327,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+            facePlayer("right")
+            moveNpc("7", [[2, 14]])
+            @speaker("") {
+              @t("I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！")
+            }
             result = startBattle("OPP_BURGLAR6")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
@@ -334,6 +360,11 @@ game_scene CinnabarGym {
           printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
           finishFieldText()
           @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+            facePlayer("right")
+            moveNpc("8", [[2, 8]])
+            @speaker("") {
+              @t("Fire is weak against H2O!", "火怕水，就是H2O！")
+            }
             result = startBattle("OPP_SUPER_NERD12")
             @if (result == "win") {
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
