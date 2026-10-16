@@ -42,10 +42,10 @@ rustc --edition=2021 --crate-name silph_formal_ordinary_witness_1072 silph-witne
 在本目录下，用已冻结的两个独立ELF按顺序运行（每个输出目录必须不存在）：
 
 ```sh
-before-witness silph-before-giovanni.sav fixed-buttons7928.json before-main before main
-after-witness silph-before-giovanni.sav fixed-buttons7928.json after-main after main
-before-witness before-main/saved-artifacts/ordinary.sav reload-route-buttons3972.json before-reload before reload
-after-witness after-main/saved-artifacts/ordinary.sav reload-route-buttons3972.json after-reload after reload
+./before-witness silph-before-giovanni.sav fixed-buttons7928.json before-main before main
+./after-witness silph-before-giovanni.sav fixed-buttons7928.json after-main after main
+./before-witness before-main/saved-artifacts/ordinary.sav reload-route-buttons3972.json before-reload before reload
+./after-witness after-main/saved-artifacts/ordinary.sav reload-route-buttons3972.json after-reload after reload
 ```
 
 主段前7000输入逐帧不变，后928帧只追加普通 START、四次DOWN、SAVE确认、等待、B关闭；实际SAVE必须由真实120帧保存、SFX92完成和30帧等待后发生，固定中性预算不是猜音长。witness把真正写出的 `ordinary.sav` 及存在的 `ordinary.script_flags.json` 原字节放入 `saved-artifacts`，reload须保留相邻伴随文件，不能拿初始存档或JSON重建替代。冷加载前1460帧是原boot prefix，随后2512帧是预先冻结的普通方向路线；[literal-prefix-proof.json](literal-prefix-proof.json) 保留原逐帧相等证明。
