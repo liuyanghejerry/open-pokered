@@ -2560,9 +2560,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn run_on_load(&mut self) {
-        self.script_engine
-            .seed_flags(&self.unified_flags.to_hashmap());
-
         // GameCornerSelectLuckySlotMachine (scripts/GameCorner.asm:8-22): on
         // every Game Corner map load, roll one of hidden event indices 0..7;
         // index+1 == roll makes that machine lucky (250 vs 253 odds). A roll
@@ -2574,21 +2571,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.lucky_slot_machine_sign = if roll == 0 { None } else { Some(roll + 1) };
         }
 
-        if let Some(fn_name) = self.map_script_config.on_load() {
-            if self.script_engine.has_function(fn_name) {
-                self.script_engine
-                    .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
-                if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
-                    self.active_script_effect = Some(crate::overworld::script_bridge::dispatch_command_with_names(
-                        &cmd,
-                        &self.player_name,
-                        &self.rival_name,
-                        &self.starter_display_name(),
-                    ));
-                }
-                self.sync_flags_from_engine();
-            }
-        }
+        self.call_map_on_load_script();
         // CONTINUE and skip-intro construct the screen directly, without a
         // warp's load_map_script call. Install the same interaction bindings.
         self.setup_triggers_for_map(self.state.current_map);
@@ -2610,10 +2593,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.script_awaiting_battle {
             return;
         }
+        self.call_map_on_load_script();
+    }
+
+    /// The single dispatcher for an explicit map-entry or post-battle load
+    /// phase. Installing position triggers must never schedule this again.
+    pub(super) fn call_map_on_load_script(&mut self) {
         self.script_engine
             .seed_flags(&self.unified_flags.to_hashmap());
         if let Some(fn_name) = self.map_script_config.on_load() {
             if self.script_engine.has_function(fn_name) {
+                log::info!(target: "pokered::overworld", "[Script] Calling on_load: {}", fn_name);
                 self.script_engine
                     .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
                 if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
@@ -2625,6 +2615,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ));
                 }
                 self.sync_flags_from_engine();
+            } else {
+                log::warn!(target: "pokered::overworld", "[Script] on_load function '{}' not found in module", fn_name);
             }
         }
     }

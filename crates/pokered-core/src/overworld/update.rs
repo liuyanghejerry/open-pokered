@@ -4170,29 +4170,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.map_script_config.coord_events.len(),
         );
 
-        self.script_engine
-            .seed_flags(&self.unified_flags.to_hashmap());
-
         if fire_on_load {
-            if let Some(fn_name) = self.map_script_config.on_load() {
-                log::info!(target: "pokered::overworld", "[Script] on_load function: {}", fn_name);
-                if self.script_engine.has_function(fn_name) {
-                    log::info!(target: "pokered::overworld", "[Script] Calling on_load: {}", fn_name);
-                    self.script_engine
-                        .set_player_position(self.state.player.x as u8, self.state.player.y as u8);
-                    if let Ok(Some(cmd)) = self.script_engine.call_function_no_args(fn_name) {
-                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
-                            &cmd,
-                            &self.player_name,
-                            &self.rival_name,
-                            &self.starter_display_name(),
-                        ));
-                    }
-                    self.sync_flags_from_engine();
-                } else {
-                    log::warn!(target: "pokered::overworld", "[Script] on_load function '{}' not found in module", fn_name);
-                }
-            }
+            self.call_map_on_load_script();
+        } else {
+            self.script_engine.seed_flags(&self.unified_flags.to_hashmap());
         }
 
         // ── Build triggers from config + script exports ─────────────
@@ -4204,9 +4185,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Populates the [`TriggerManager`] with entries derived from the current
     /// map's `script_config.json` and detected JS function-name patterns.
     ///
-    /// The existing script system (`load_map_script`, `coord_event_fn`,
-    /// `npc_talk_fn`, `on_load`) continues to work unchanged — the trigger
-    /// manager runs in parallel as an additional unified dispatch layer.
+    /// Map-entry `on_load` is dispatched directly by its caller, not as a
+    /// position trigger. These bindings cover coordinates and interactions.
     pub(super) fn setup_triggers_for_map(&mut self, map_id: MapId) {
         use dotzuki_engine::metatile::TriggerType;
         use dotzuki_engine::trigger_manager::Trigger;
@@ -4298,26 +4278,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
 
-        // 2. on_load / enterMap → OnEnter trigger at player position
-        if let Some(fn_name) = self.map_script_config.on_load() {
-            if self.script_engine.has_function(fn_name) {
-                self.trigger_manager.add_trigger(Trigger::single_tile(
-                    format!("enter_{}", fn_name),
-                    map_key.clone(),
-                    TriggerType::OnEnter,
-                    self.state.player.x as u32,
-                    self.state.player.y as u32,
-                    fn_name.to_string(),
-                    true,
-                ));
-            }
-        }
-
         // NPC dialogue is dispatched by try_interact at the NPC's live position.
         // Fixed coordinate triggers would bypass trainer battle handoff and still
         // talk to NPCs after they move away or become hidden.
 
-        // 4. Sign talk functions → OnInteract triggers at sign positions
+        // Sign talk functions → OnInteract triggers at sign positions
         for sign_cfg in &self.map_script_config.signs {
             if self.script_engine.has_function(&sign_cfg.talk) {
                 if let Some(map) = &self.map_data {
@@ -4337,6 +4302,34 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         log::info!(target: "pokered::overworld", "[Trigger] Built {} triggers for {}", self.trigger_manager.len(), map_key);
+    }
+
+    /// Old snapshots can contain the automatic duplicate `@load` binding.
+    /// Remove only that binding, retaining the original manager's position
+    /// history and every other trigger's order, one-shot and fired state.
+    pub(crate) fn remove_legacy_on_load_trigger(&mut self) {
+        use dotzuki_engine::metatile::TriggerType;
+        let Some(handler) = self.map_script_config.on_load() else { return; };
+        let key = script_bridge::map_id_to_script_key(self.state.current_map);
+        let id = format!("enter_{handler}");
+        let legacy = |trigger: &dotzuki_engine::trigger_manager::Trigger| {
+            trigger.map_id == key
+                && trigger.trigger_type == TriggerType::OnEnter
+                && trigger.id == id
+                && trigger.script_name == handler
+        };
+        if !self.trigger_manager.all_triggers().any(legacy) { return; }
+        let retained: Vec<_> = self.trigger_manager.all_triggers()
+            .filter(|trigger| !legacy(trigger)).cloned().collect();
+        // Public remove/add operations affect only the trigger Vec. Keep this
+        // manager, not Default/new: its previous map/X/Y are snapshot state.
+        loop {
+            let map = self.trigger_manager.all_triggers().next()
+                .map(|trigger| trigger.map_id.clone());
+            let Some(map) = map else { break; };
+            self.trigger_manager.remove_triggers_for_map(&map);
+        }
+        self.trigger_manager.add_triggers(retained);
     }
 
     fn try_call_script_npc_talk(&mut self, text_id: u8) -> bool {

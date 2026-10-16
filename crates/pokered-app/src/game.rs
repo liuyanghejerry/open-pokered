@@ -12957,6 +12957,51 @@ mod pokedex_held_combination_tests {
     }
 }
 
+#[cfg(all(test, not(target_os = "none")))]
+mod map_on_load_tests {
+    use super::*;
+
+    #[test]
+    fn continue_cinnabar_load_finishes_once_before_ordinary_up_input() {
+        use pokered_core::overworld::Direction;
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.save_data = SaveData::new();
+        game.save_data.game_data.position.map_id = MapId::CinnabarGym as u8;
+        game.save_data.game_data.position.x = 15;
+        game.save_data.game_data.position.y = 8;
+        game.save_data.game_data.player_direction = 0; // original facing Down
+        game.state.screen = GameScreen::MainMenu;
+        game.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
+        game.handle_transition(GameScreen::Overworld);
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("ReplaceTileBlock"));
+        let idle = InputState::new();
+        // Stop at the first completed direct load, without waiting through
+        // another initializer or changing the subsequent physical input.
+        for _ in 0..64 {
+            if game.overworld.script_engine_idle()
+                && game.overworld.active_script_effect_label().is_none() { break; }
+            game.update(&idle);
+        }
+        assert!(game.overworld.script_engine_idle());
+        assert!(game.overworld.active_script_effect_label().is_none());
+        for _ in 0..2 {
+            game.update(&idle);
+            assert!(game.overworld.script_engine_idle());
+            assert!(game.overworld.active_script_effect_label().is_none(), "Continue requeued gate initialization");
+        }
+        let mut up = InputState::new();
+        up.press(GbButton::Up);
+        game.update(&up);
+        up.begin_frame();
+        game.update(&up);
+        assert_eq!(game.overworld.state.player.facing, Direction::Up);
+        assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (15, 8));
+    }
+}
+
 #[cfg(test)]
 mod continue_map_music_tests {
     use super::*;

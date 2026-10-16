@@ -38,7 +38,7 @@ fn map_triggers_do_not_accumulate_across_all_maps_and_revisits() {
 }
 
 #[test]
-fn rebuilding_map_triggers_preserves_on_enter_edges_and_rearms_on_revisit() {
+fn rebuilding_map_bindings_does_not_schedule_another_on_load() {
     use dotzuki_engine::metatile::TriggerType;
     use pokered_data::impl_traits::PokemonRedData;
 
@@ -46,38 +46,13 @@ fn rebuilding_map_triggers_preserves_on_enter_edges_and_rearms_on_revisit() {
     let key = script_bridge::map_id_to_script_key(map);
     let mut screen = OverworldScreen::new(map, None, PokemonRedData);
     screen.load_map_script_ex(map, false);
-    let enter = screen
-        .trigger_manager
-        .all_triggers()
-        .find(|trigger| trigger.trigger_type == TriggerType::OnEnter)
-        .unwrap()
-        .clone();
-    assert!(screen
-        .trigger_manager
-        .check_triggers(&key, enter.x, enter.y)
-        .contains(&enter.script_name));
-
-    screen.setup_triggers_for_map(map);
-    assert!(
-        !screen
-            .trigger_manager
-            .check_triggers(&key, enter.x, enter.y)
-            .contains(&enter.script_name),
-        "same-map reload must preserve the entry edge"
-    );
-
-    screen.state.current_map = MapId::PalletTown;
-    screen.load_map_script_ex(MapId::PalletTown, false);
-    screen.trigger_manager.check_triggers("PalletTown", 0, 0);
-    screen.state.current_map = map;
-    screen.load_map_script_ex(map, false);
-    assert!(
-        screen
-            .trigger_manager
-            .check_triggers(&key, enter.x, enter.y)
-            .contains(&enter.script_name),
-        "revisiting must rearm the one-shot entry trigger"
-    );
+    for _ in 0..2 {
+        assert!(screen.trigger_manager.all_triggers()
+            .all(|trigger| trigger.trigger_type != TriggerType::OnEnter));
+        let handler = screen.map_script_config.on_load().unwrap().to_string();
+        assert!(!screen.trigger_manager.check_triggers(&key, 3, 6).contains(&handler));
+        screen.setup_triggers_for_map(map);
+    }
 }
 
 // ── Map Header Data Tests ──────────────────────────────────────────
