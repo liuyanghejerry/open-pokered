@@ -1,0 +1,337 @@
+[
+  {
+    "frame": 1460,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      13
+    ],
+    "facing": "Down",
+    "source": "actual cold Continue; before any route input"
+  },
+  {
+    "frame": 1524,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      13
+    ],
+    "source": "64 initial neutral route frames"
+  },
+  {
+    "frame": 1564,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1604,
+    "map": "SilphCo11F",
+    "position": [
+      5,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1644,
+    "map": "SilphCo11F",
+    "position": [
+      4,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1684,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1724,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      13
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1764,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      12
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1804,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      11
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1844,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      10
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1884,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      9
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1924,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      8
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 1964,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      7
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 2004,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      6
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 2044,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      5
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 2084,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      4
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 2124,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      3
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 2676,
+    "map": "SilphCo7F",
+    "position": [
+      5,
+      7
+    ],
+    "source": "first warp destination after fixed512 neutral"
+  },
+  {
+    "frame": 2716,
+    "map": "SilphCo7F",
+    "position": [
+      4,
+      7
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3268,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      2
+    ],
+    "source": "return warp destination after fixed512 neutral"
+  },
+  {
+    "frame": 3308,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      3
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3348,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      4
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3388,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      5
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3428,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      6
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3468,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      7
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3508,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      8
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3548,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      9
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3588,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      10
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3628,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      11
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3668,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      12
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3708,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      13
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3748,
+    "map": "SilphCo11F",
+    "position": [
+      3,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3788,
+    "map": "SilphCo11F",
+    "position": [
+      4,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3828,
+    "map": "SilphCo11F",
+    "position": [
+      5,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3868,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      14
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3908,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      13
+    ],
+    "source": "independent source-derived single-tile slot; no adaptive input"
+  },
+  {
+    "frame": 3972,
+    "map": "SilphCo11F",
+    "position": [
+      6,
+      13
+    ],
+    "facing": "Up",
+    "source": "final route neutral64 after final UP tile"
+  }
+]
