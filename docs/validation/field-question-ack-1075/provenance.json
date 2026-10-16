@@ -1,0 +1,660 @@
+{
+  "schema": "field-question-ack-small-review-evidence-v1",
+  "created_UTC": "2026-10-16T15:58:22.582732+00:00",
+  "integrated_source_head": "4007b3c9ebe740608868dc5a2e527ef0b9206b71",
+  "base_M10": "7d811775cc3dbc596cae16c230014300811fa55d",
+  "historical_native_actual_before": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+  "historical_native_actual_after": "2c9b876e7983ea34852cafa249b0747068db9bac",
+  "native_runs_not_relabelled_as_M10": true,
+  "source_integration": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1074-field-question-M10-integration-v1/result.json",
+    "sha256": "dafb9d32151b392b8c54923d3a133266e0dc272a3b48ef998cb05224fbd19568",
+    "bytes": 4074
+  },
+  "actual_frozen_providers": {
+    "before_provider": {
+      "head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+      "kind": "normal-CLI-debug-server",
+      "binary": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/pokered-app",
+        "sha256": "d60505928f57a9eb74b2309eb2d4e11a32e3cf8cf90748df910cd07a084696d7",
+        "bytes": 78046680
+      },
+      "identity": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/CLI-identity.json",
+        "sha256": "90f4fdd240443baa0e1f012b422ca33ef571c23b67ffcc9df3b89fa909fec732",
+        "bytes": 3685
+      },
+      "identity_head_path": [
+        "head"
+      ],
+      "identity_binary_sha_path": [
+        "binary",
+        "sha256"
+      ],
+      "source_guard": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/M9-source-guard.json",
+        "sha256": "5e4aebd1c54cf41f49efc93cfdfacb510121b7db270c014faedaec3b411a998a",
+        "bytes": 1130704
+      }
+    },
+    "after_provider": {
+      "head": "2c9b876e7983ea34852cafa249b0747068db9bac",
+      "kind": "normal-CLI-debug-server",
+      "binary": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/pokered-app",
+        "sha256": "de209bdfaa7c653a027f6bf2d59ab57f633fe4a5a07f866def0149dc6b846687",
+        "bytes": 78464984
+      },
+      "identity": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/CLI-identity.json",
+        "sha256": "aaef1ffe752516bfbd75a68091dd202ad116c985e0cf91a79fec1caffebe65b5",
+        "bytes": 4491
+      },
+      "identity_head_path": [
+        "head"
+      ],
+      "identity_binary_sha_path": [
+        "binary",
+        "sha256"
+      ],
+      "source_guard": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-tools-v1/candidate-source-guard.json",
+        "sha256": "43dcf451506721f3ff13befd22e7c0ef4c9e5fb226ce030b68e7d159e6ab2120",
+        "bytes": 1461453
+      }
+    }
+  },
+  "cases": {
+    "bike-sale": {
+      "actual_before_source": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+      "actual_after_source": "2c9b876e7983ea34852cafa249b0747068db9bac",
+      "literal_frames": 1019,
+      "final_question_ready_F_on_before": 955,
+      "candidate_first_choice_frame": 959,
+      "matched_frame": 1019,
+      "before_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/result.json",
+        "sha256": "73f8f808000dc8eb92fcc671bf45bf8a497de5d3b17af8cb9b0f347a7fe21b71",
+        "bytes": 77776
+      },
+      "after_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1/bike-sale/result.json",
+        "sha256": "69dd2bd1b3fafcf3a974e2c4c518d627a154ee59f2c6c0682d5d930b87cd4135",
+        "bytes": 73708
+      },
+      "fixture": {
+        "repo_path": "docs/validation/field-question-ack-1075/fixtures/bike-sale.sav",
+        "kind": "canonical_physical_SRAM32KiB",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+          "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+          "bytes": 32768
+        },
+        "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+        "bytes": 32768
+      },
+      "literal_tape": {
+        "repo_path": "docs/validation/field-question-ack-1075/tapes/bike-sale.json",
+        "kind": "actually_replayed_literal_input_prefix",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/question-neutral-prefix.json",
+          "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+          "bytes": 8189
+        },
+        "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+        "bytes": 8189
+      },
+      "screenshots": {
+        "before": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/bike-sale-before.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/01019-neutral-Fplus64.png",
+            "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+            "bytes": 17437
+          },
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437,
+          "frame": 1019,
+          "RGBA_sha256": "042b9d421335e631e397fc8a2163ead95d8c5d247d7026a5ff8c83b8468c9f25"
+        },
+        "after": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/bike-sale-after.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1/bike-sale/01019-neutral-Fplus64.png",
+            "sha256": "84d99b4df6a8f34e421283bb32fc2cd5abe8f2d2ff5015056cef39c497909d1b",
+            "bytes": 12150
+          },
+          "sha256": "84d99b4df6a8f34e421283bb32fc2cd5abe8f2d2ff5015056cef39c497909d1b",
+          "bytes": 12150,
+          "frame": 1019,
+          "RGBA_sha256": "2b0dabf014e5e3677e08dff99f2e3cc1d522212525562043a4c25cc75b3ad9b1"
+        }
+      },
+      "candidate_final_money": 1000,
+      "candidate_final_position": [
+        6,
+        4
+      ],
+      "candidate_final_options": {
+        "options": [
+          "BICYCLE ¥1000000",
+          "CANCEL"
+        ],
+        "selected": 0
+      },
+      "extra_A_probe_in_candidate": false,
+      "earlier_page_reading_pause_strategy_frames": null
+    },
+    "safari-admission": {
+      "actual_before_source": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+      "actual_after_source": "2c9b876e7983ea34852cafa249b0747068db9bac",
+      "literal_frames": 1199,
+      "final_question_ready_F_on_before": 1135,
+      "candidate_first_choice_frame": 1137,
+      "matched_frame": 1199,
+      "before_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1/result.json",
+        "sha256": "4ac50f88dd36ae36375bd87ea524346b21edcd591b7487c898bfbc771d8dc1e3",
+        "bytes": 77709
+      },
+      "after_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-admission/result.json",
+        "sha256": "a3b74aa856db04542d52017f2b6202fec6121fbcf100c47d33b8abf81b86a038",
+        "bytes": 70376
+      },
+      "fixture": {
+        "repo_path": "docs/validation/field-question-ack-1075/fixtures/safari-admission.sav",
+        "kind": "canonical_physical_SRAM32KiB",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+          "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+          "bytes": 32768
+        },
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "literal_tape": {
+        "repo_path": "docs/validation/field-question-ack-1075/tapes/safari-admission.json",
+        "kind": "actually_replayed_literal_input_prefix",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1/question-neutral-prefix.json",
+          "sha256": "d5820f3adeca683c6bb35881ec61ef95efdc5350aca66e999a5b4e10cb434072",
+          "bytes": 9632
+        },
+        "sha256": "d5820f3adeca683c6bb35881ec61ef95efdc5350aca66e999a5b4e10cb434072",
+        "bytes": 9632
+      },
+      "screenshots": {
+        "before": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/safari-admission-before.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1/01199-neutral-Fplus64.png",
+            "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+            "bytes": 13152
+          },
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152,
+          "frame": 1199,
+          "RGBA_sha256": "b3269f8b76c71f1b3952ad04d54f3961bf2243a7863e760d704bc3496e3a179c"
+        },
+        "after": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/safari-admission-after.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-admission/01199-neutral-Fplus64.png",
+            "sha256": "1ea6ed1d00d8b6ef334b78cebb9cb29bfba15db969aaafbbb57f86b20ac2d77a",
+            "bytes": 5284
+          },
+          "sha256": "1ea6ed1d00d8b6ef334b78cebb9cb29bfba15db969aaafbbb57f86b20ac2d77a",
+          "bytes": 5284,
+          "frame": 1199,
+          "RGBA_sha256": "f2608af4733bbbde519859af071713e99fc16ed759bac7a616f43d66b30897c2"
+        }
+      },
+      "candidate_final_money": 1000,
+      "candidate_final_position": [
+        4,
+        2
+      ],
+      "candidate_final_options": {
+        "options": [
+          "YES",
+          "NO"
+        ],
+        "selected": 0
+      },
+      "extra_A_probe_in_candidate": false,
+      "earlier_page_reading_pause_strategy_frames": 32
+    },
+    "safari-return": {
+      "actual_before_source": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+      "actual_after_source": "2c9b876e7983ea34852cafa249b0747068db9bac",
+      "literal_frames": 840,
+      "final_question_ready_F_on_before": 776,
+      "candidate_first_choice_frame": 800,
+      "matched_frame": 840,
+      "before_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/result.json",
+        "sha256": "9c60fd1087a46db00b6731cdb270a37c62136c301f66d18fbfc1deda165483ef",
+        "bytes": 75967
+      },
+      "after_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-return/result.json",
+        "sha256": "9f1e84278dfa079bc6492938b19919930aebe2d7b078d433aedcfeb194737337",
+        "bytes": 72473
+      },
+      "fixture": {
+        "repo_path": "docs/validation/field-question-ack-1075/fixtures/safari-return.sav",
+        "kind": "canonical_physical_SRAM32KiB",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+          "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+          "bytes": 32768
+        },
+        "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+        "bytes": 32768
+      },
+      "literal_tape": {
+        "repo_path": "docs/validation/field-question-ack-1075/tapes/safari-return.json",
+        "kind": "actually_replayed_literal_input_prefix",
+        "source": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/question-neutral-prefix.json",
+          "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+          "bytes": 6865
+        },
+        "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+        "bytes": 6865
+      },
+      "screenshots": {
+        "before": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/safari-return-before.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00840-neutral-Fplus64.png",
+            "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+            "bytes": 10045
+          },
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045,
+          "frame": 840,
+          "RGBA_sha256": "4404d27b3469e3d765b468913a0b5264b48b5f4821a93bd22281e55ad6c6d4e7"
+        },
+        "after": {
+          "repo_path": "docs/screenshots/field-question-ack-1075/safari-return-after.png",
+          "kind": "unmodified_original_matched_PNG",
+          "source": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-return/00840-neutral-Fplus64.png",
+            "sha256": "0a4197c4e5e77fd30c7c030b134214733a9397d4742274a61b70d91c99be84b5",
+            "bytes": 8664
+          },
+          "sha256": "0a4197c4e5e77fd30c7c030b134214733a9397d4742274a61b70d91c99be84b5",
+          "bytes": 8664,
+          "frame": 840,
+          "RGBA_sha256": "95d0838d73c57b98ab1afdd9321f8822bd701d4fc21e903ef3cdd90765b01a0b"
+        }
+      },
+      "candidate_final_money": 1000,
+      "candidate_final_position": [
+        3,
+        1
+      ],
+      "candidate_final_options": {
+        "options": [
+          "YES",
+          "NO"
+        ],
+        "selected": 0
+      },
+      "extra_A_probe_in_candidate": false,
+      "earlier_page_reading_pause_strategy_frames": null
+    }
+  },
+  "historical_local_H2_checks": {
+    "named_PASS": 67,
+    "result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-focused-checks-v2/result.json",
+      "sha256": "2b8a7a7cfa8d66cc68ce05d01fdc078f20ac35c687b8aa04c6042db5a1b5d12a",
+      "bytes": 23374
+    },
+    "independent_peer": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-focused-independent-peer-v1.json",
+      "sha256": "255a5d734f1ecbfb706ef5ed8ab97bb7110427369ffb00802b1c4b8a5c492eed",
+      "bytes": 17519
+    }
+  },
+  "M10_execution_checks": {
+    "status": "8stages69PASS_on4007",
+    "repo_path": "docs/validation/field-question-ack-1075/component-checks-M10.json",
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1071-field-question-ack/docs/validation/field-question-ack-1075/component-checks-M10.json",
+    "sha256": "4ba14f86ec5187652dd15a27ade19bae5adbe0877f5f4fbe0c26907bfd727b97",
+    "bytes": 15528,
+    "independent_review": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1075-field-question-M10-focused-independent-peer-v1.json",
+      "sha256": "82db94cb8a9e295567ca0b75c88eedc319c3ce3c5beb48f6c5ab2c2765f564bf",
+      "bytes": 18472
+    },
+    "independent_tool_terminal": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1075-field-question-M10-focused-independent-tool-terminal-v1.json",
+      "sha256": "acb5a3e5dc6c49754a8c9d6629a70cd75e5f3882fd3cdfaa0818339ebb84aa38",
+      "bytes": 1256
+    }
+  },
+  "actual_combined_native_independent_peer": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-fixed-replay-independent-v2.json",
+    "sha256": "15079cc6594eeefa1adf6f76b001fcb6f39a2cf0b6cca16a618c455166ead489",
+    "bytes": 49958
+  },
+  "actual_reader_terminal": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-fixed-replay-independent-v2-tool-terminal.json",
+    "sha256": "c825f3814e9f12fb91c0f7b354ae6fd9cd08e055f7461608e4f557e311a78319",
+    "bytes": 1270
+  },
+  "first_failure_preserved": {
+    "overall_result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1/result.json",
+      "sha256": "1f71f12e8b28c34c043817da5a3898f2a41f4ed659d304c290b272728143ce2c",
+      "bytes": 2869
+    },
+    "overall_all_pass": false,
+    "old_Admission_result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1/safari-admission/result.json",
+      "sha256": "a82d5317ee56fec02f306d4b04dc5367293fb9c479cb6c95f003a49f073e94e0",
+      "bytes": 71255
+    },
+    "old_Admission_all_pass": false,
+    "old_Admission_frames": 1103,
+    "independent_diagnosis": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-first-failure-independent-v1/receipt.json",
+      "sha256": "486f69816e21da8f876b32d8e0fa16f6a359ec0cc35a7340f3ea31be58eef046",
+      "bytes": 14424
+    }
+  },
+  "original_primary": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "local_archive": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "files": {
+      "scripts/BikeShop.asm": {
+        "path": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/BikeShop.asm",
+        "sha256": "539f7465bffdff41009c0462aac03a7def8d241e44ea36ea363e6464d13d9756",
+        "bytes": 2915
+      },
+      "scripts/SafariZoneGate.asm": {
+        "path": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/SafariZoneGate.asm",
+        "sha256": "8dda5c961d7c69b6b43d60896154b6239da5bb5792fbd00c4bed31a6f081f21b",
+        "bytes": 8066
+      },
+      "text/BikeShop.asm": {
+        "path": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/text/BikeShop.asm",
+        "sha256": "e99d2d311a9f98cdd979db9e8cbac1da81ec53c64f5bd44d49a68911ff953938",
+        "bytes": 1248
+      },
+      "text/SafariZoneGate.asm": {
+        "path": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/text/SafariZoneGate.asm",
+        "sha256": "8b55ca88c4d64b5b0bed004b67127f196eb9feb4fcf64e6dab1b647b82480f23",
+        "bytes": 1965
+      },
+      "home/text.asm": {
+        "path": "/tmp/pokered-reference-audit-2_47ofmo/pokered-fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/text.asm",
+        "sha256": "1d04789b7fea0f80374b7f8efaf97e1bfdf5f374201a3dd102a21957bcd69f89",
+        "bytes": 10890
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/bike-sale-before.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/01019-neutral-Fplus64.png",
+        "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+        "bytes": 17437
+      },
+      "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+      "bytes": 17437,
+      "frame": 1019,
+      "RGBA_sha256": "042b9d421335e631e397fc8a2163ead95d8c5d247d7026a5ff8c83b8468c9f25"
+    },
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/bike-sale-after.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1/bike-sale/01019-neutral-Fplus64.png",
+        "sha256": "84d99b4df6a8f34e421283bb32fc2cd5abe8f2d2ff5015056cef39c497909d1b",
+        "bytes": 12150
+      },
+      "sha256": "84d99b4df6a8f34e421283bb32fc2cd5abe8f2d2ff5015056cef39c497909d1b",
+      "bytes": 12150,
+      "frame": 1019,
+      "RGBA_sha256": "2b0dabf014e5e3677e08dff99f2e3cc1d522212525562043a4c25cc75b3ad9b1"
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/fixtures/bike-sale.sav",
+      "kind": "canonical_physical_SRAM32KiB",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+        "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+        "bytes": 32768
+      },
+      "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+      "bytes": 32768
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/tapes/bike-sale.json",
+      "kind": "actually_replayed_literal_input_prefix",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/question-neutral-prefix.json",
+        "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+        "bytes": 8189
+      },
+      "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+      "bytes": 8189
+    },
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/safari-admission-before.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1/01199-neutral-Fplus64.png",
+        "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+        "bytes": 13152
+      },
+      "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+      "bytes": 13152,
+      "frame": 1199,
+      "RGBA_sha256": "b3269f8b76c71f1b3952ad04d54f3961bf2243a7863e760d704bc3496e3a179c"
+    },
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/safari-admission-after.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-admission/01199-neutral-Fplus64.png",
+        "sha256": "1ea6ed1d00d8b6ef334b78cebb9cb29bfba15db969aaafbbb57f86b20ac2d77a",
+        "bytes": 5284
+      },
+      "sha256": "1ea6ed1d00d8b6ef334b78cebb9cb29bfba15db969aaafbbb57f86b20ac2d77a",
+      "bytes": 5284,
+      "frame": 1199,
+      "RGBA_sha256": "f2608af4733bbbde519859af071713e99fc16ed759bac7a616f43d66b30897c2"
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/fixtures/safari-admission.sav",
+      "kind": "canonical_physical_SRAM32KiB",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+      "bytes": 32768
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/tapes/safari-admission.json",
+      "kind": "actually_replayed_literal_input_prefix",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1/question-neutral-prefix.json",
+        "sha256": "d5820f3adeca683c6bb35881ec61ef95efdc5350aca66e999a5b4e10cb434072",
+        "bytes": 9632
+      },
+      "sha256": "d5820f3adeca683c6bb35881ec61ef95efdc5350aca66e999a5b4e10cb434072",
+      "bytes": 9632
+    },
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/safari-return-before.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00840-neutral-Fplus64.png",
+        "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+        "bytes": 10045
+      },
+      "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+      "bytes": 10045,
+      "frame": 840,
+      "RGBA_sha256": "4404d27b3469e3d765b468913a0b5264b48b5f4821a93bd22281e55ad6c6d4e7"
+    },
+    {
+      "repo_path": "docs/screenshots/field-question-ack-1075/safari-return-after.png",
+      "kind": "unmodified_original_matched_PNG",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-replay-v2/safari-return/00840-neutral-Fplus64.png",
+        "sha256": "0a4197c4e5e77fd30c7c030b134214733a9397d4742274a61b70d91c99be84b5",
+        "bytes": 8664
+      },
+      "sha256": "0a4197c4e5e77fd30c7c030b134214733a9397d4742274a61b70d91c99be84b5",
+      "bytes": 8664,
+      "frame": 840,
+      "RGBA_sha256": "95d0838d73c57b98ab1afdd9321f8822bd701d4fc21e903ef3cdd90765b01a0b"
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/fixtures/safari-return.sav",
+      "kind": "canonical_physical_SRAM32KiB",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+        "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+        "bytes": 32768
+      },
+      "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+      "bytes": 32768
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/tapes/safari-return.json",
+      "kind": "actually_replayed_literal_input_prefix",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/question-neutral-prefix.json",
+        "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+        "bytes": 6865
+      },
+      "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+      "bytes": 6865
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/controllers/before-discovery-v2.py",
+      "kind": "unchanged_actually_executed_controller_source",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-physical-preparation-v2/before-discovery.py",
+        "sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+        "bytes": 20321
+      },
+      "sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+      "bytes": 20321
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/controllers/admission-before-discovery-v3.py",
+      "kind": "unchanged_actually_executed_controller_source",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-reading32-protocol-source-v1/admission-before-discovery-v3.py",
+        "sha256": "0b4a83deb06c67f00b312d6e3b71bf0b2376735a70ee4b5aa9dcfcd65bd2c738",
+        "bytes": 21983
+      },
+      "sha256": "0b4a83deb06c67f00b312d6e3b71bf0b2376735a70ee4b5aa9dcfcd65bd2c738",
+      "bytes": 21983
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/controllers/candidate-fixed-replay-v1.py",
+      "kind": "unchanged_actually_executed_controller_source",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1.py",
+        "sha256": "6bf608da21761978517008219d4604ca92557aa2393f820716d5fabb15283af5",
+        "bytes": 15484
+      },
+      "sha256": "6bf608da21761978517008219d4604ca92557aa2393f820716d5fabb15283af5",
+      "bytes": 15484
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/controllers/candidate-fixed-replay-v2.py",
+      "kind": "unchanged_actually_executed_controller_source",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-reading32-protocol-source-v1/candidate-fixed-replay-v2.py",
+        "sha256": "976343e1364d4c785f29edff20338cb59d4235a44848243754cdf712bc759971",
+        "bytes": 15517
+      },
+      "sha256": "976343e1364d4c785f29edff20338cb59d4235a44848243754cdf712bc759971",
+      "bytes": 15517
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/plans/before-v2.json",
+      "kind": "unchanged_actually_executed_local_absolute_READY_plan",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/ready-plan.json",
+        "sha256": "347debe6b45e404a5f6155d356bc87c42385497388ac77d63450b8876a28e2c3",
+        "bytes": 7367
+      },
+      "sha256": "347debe6b45e404a5f6155d356bc87c42385497388ac77d63450b8876a28e2c3",
+      "bytes": 7367
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/plans/admission-before-v3.json",
+      "kind": "unchanged_actually_executed_local_absolute_READY_plan",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-ready-v1/ready-plan.json",
+        "sha256": "c3647af6a1fe1a8fb6c6478d8302493269c13b8fe37b38e09ff50eef70f8f1e2",
+        "bytes": 6546
+      },
+      "sha256": "c3647af6a1fe1a8fb6c6478d8302493269c13b8fe37b38e09ff50eef70f8f1e2",
+      "bytes": 6546
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/plans/candidate-v1.json",
+      "kind": "unchanged_actually_executed_local_absolute_READY_plan",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-replay-ready-v1/ready-plan.json",
+        "sha256": "9ef52ce94a2a0510a6a48b38eee39f5c3de3bbb7ab0c6551a017759da6c16777",
+        "bytes": 32372
+      },
+      "sha256": "9ef52ce94a2a0510a6a48b38eee39f5c3de3bbb7ab0c6551a017759da6c16777",
+      "bytes": 32372
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/plans/candidate-v2.json",
+      "kind": "unchanged_actually_executed_local_absolute_READY_plan",
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-reading32-ready-v2/ready-plan.json",
+        "sha256": "0fbb3415976ec55be636428e43e78d3a478be00e52634f231446fff7762e8974",
+        "bytes": 29794
+      },
+      "sha256": "0fbb3415976ec55be636428e43e78d3a478be00e52634f231446fff7762e8974",
+      "bytes": 29794
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/README.md",
+      "kind": "new_explanatory_validation_document",
+      "sha256": "7812d3a3ab29a6c487ae35241cac7e7eb1ec1eb60caf00594583c88a57d04eb7",
+      "bytes": 6795
+    },
+    {
+      "repo_path": "docs/validation/field-question-ack-1075/component-checks-M10.json",
+      "kind": "actual_M10_component_check_summary",
+      "sha256": "4ba14f86ec5187652dd15a27ade19bae5adbe0877f5f4fbe0c26907bfd727b97",
+      "bytes": 15528
+    }
+  ],
+  "scope_limits": [
+    "Pure4caller terminalACK correction; no full2optionpriority/15VBlank/NO_DELAY/outerentrycadence repair claim.",
+    "Admission reading32 is a separate predeclared test-input protocol, not original timing.",
+    "No rawPCM/deviceaudibility/originalCPUOAM/fullplaythrough proof.",
+    "Actualplans/controllers reference local archival absolutepaths; package alone is not portable."
+  ],
+  "no_ELF_deps_large_rawlogs_copied": true
+}
