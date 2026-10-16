@@ -376,14 +376,28 @@ mod tests {
         field
     }
     fn welcome_prompt(field: &mut Field) {
+        let initial = (field.text_delay_frames, field.no_text_delay());
+        let mut first_question = None;
+        let mut first_answer = None;
         for frame in 0..8000 {
+            if let Some(state) = offer(field) {
+                if state.phase == Phase::Text(TextPart::Question) && first_question.is_none() {
+                    first_question = Some(frame);
+                }
+                if state.accepted_buttons.is_some() && first_answer.is_none() {
+                    first_answer = Some((frame, state.accepted_buttons));
+                }
+            }
             if offer(field).is_some_and(|state| state.phase == Phase::Prompt(AfterPrompt::Question))
             {
                 return;
             }
             step(field, if frame % 16 == 0 { A } else { 0 });
         }
-        panic!("ordinary Welcome/PARA/PROMPT never completed");
+        panic!("ordinary Welcome/PARA/PROMPT never completed: initial={initial:?}, first_question={first_question:?}, first_answer={first_answer:?}, final_effect={:?}, page={:?}, owner={:?}",
+            field.active_script_effect_value(), field.pending_dialogue.as_ref().map(|d|
+                (d.current_page(), d.char_index(), d.total_chars(), d.waiting_for_input())),
+            field.foreground_observation());
     }
     fn begin_question_with_b(field: &mut Field) {
         welcome_prompt(field);
@@ -677,7 +691,11 @@ mod tests {
                 save.game_data = actual;
                 let bytes = crate::save::sram_export::export_sram(&save);
                 let restored = crate::save::sram_import::import_sram(&bytes).unwrap();
-                assert_eq!(restored.game_data.status_flags, expected);
+                // Original SRAM stores ten named status bytes. Container
+                // spare slots10/11 have no source slot and import as zero.
+                // The separate live RMW assertion above still checks all12.
+                assert_eq!(&restored.game_data.status_flags[..10], &expected[..10]);
+                assert_eq!(&restored.game_data.status_flags[10..], &[0, 0]);
             }
         }
     }
