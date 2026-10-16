@@ -207,6 +207,12 @@ fn cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_
         };
         assert!(!s.flag(&beaten));
         assert_eq!(s.flag(&gate), open);
+        let map = s.game.overworld.map_data.as_ref().unwrap();
+        let initial_blocks = map.blocks.clone();
+        let gate_index = (trainer == 1).then_some(3 * map.width as usize + 9);
+        if let Some(index) = gate_index {
+            assert_eq!(initial_blocks[index], if open { 14 } else { 84 });
+        }
         let mut battle_seen = false;
         let mut go_count = 0;
         let mut previous_go = false;
@@ -243,6 +249,12 @@ fn cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_
                 );
                 assert!(!s.flag(&beaten));
                 assert_eq!(s.flag(&gate), open);
+                let blocks = &s.game.overworld.map_data.as_ref().unwrap().blocks;
+                if let Some(index) = gate_index {
+                    assert_eq!(blocks[index], initial_blocks[index]);
+                } else {
+                    assert_eq!(blocks, &initial_blocks, "trainer 0 has no physical gate");
+                }
             }
             previous_go = go;
             if battle_seen && s.flag(&beaten) && s.game.overworld.script_engine_idle() {
@@ -267,6 +279,12 @@ fn cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_
         assert!(quote_at < money_at);
         assert!(!messages.iter().any(|m| m.contains(after)));
         assert!(s.flag(&gate));
+        let blocks = &s.game.overworld.map_data.as_ref().unwrap().blocks;
+        if let Some(index) = gate_index {
+            assert_eq!(blocks[index], 14);
+        } else {
+            assert_eq!(blocks, &initial_blocks, "trainer 0 must not change map blocks");
+        }
         assert!(s.game.overworld.displayed_field_dialogue().is_none());
         // Later defeated talk still owns AfterBattleText; no stale battle request.
         for _ in 0..32 {
