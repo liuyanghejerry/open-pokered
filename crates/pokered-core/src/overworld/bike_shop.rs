@@ -188,6 +188,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 match next {
                     AfterPrompt::WelcomeParagraph => {
                         self.pending_dialogue = None;
+                        // Paragraph clears the text rows, not the enclosing
+                        // window. Reuse the retained display owner while its
+                        // Delay20 neither prints nor accepts another button.
+                        self.last_script_dialogue =
+                            Some(BedroomDialogue::from_pages(vec![super::DialoguePage {
+                                line1: "".into(),
+                                line2: "".into(),
+                            }]));
                         state.phase = Phase::ParagraphClear { remaining: 20 };
                     }
                     AfterPrompt::Question => {
@@ -413,6 +421,16 @@ mod tests {
                     assert!(
                         field.pending_dialogue.is_none(),
                         "no next paragraph before wait20: {elapsed}"
+                    );
+                    assert!(field.retain_field_text);
+                    assert_eq!(
+                        field.displayed_field_dialogue().unwrap().get_display_text(),
+                        Some((String::new(), String::new())),
+                        "PARA retains a blank window"
+                    );
+                    assert!(
+                        !field.dialogue_needs_button(),
+                        "Delay20 is not another prompt"
                     );
                     assert_eq!(
                         field.source_foreground().unwrap().last(),
