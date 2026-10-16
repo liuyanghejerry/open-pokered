@@ -20,7 +20,24 @@
 
 本目录的 `include_str!` 文件名与实际witness完全相同。初始文件 [silph-before-giovanni.sav](silph-before-giovanni.sav) 是32KiB物理SRAM，不是运行态快照：11F(6,14)，Blastoise60满174HP，Surf/Bite/Withdraw/SkullBash，PP15/25/40/15，钱包10000；两名普通守卫已胜，Giovanni未胜。原始39shown+1OFF/6hidden名单不变。
 
-在两个精确源版本分别执行正常构建 `cargo build -p pokered-app --lib --features debug-server --offline --locked -j1 -vv`，本次使用 dev/test opt-level=0、debug=0、incremental=0。取该次实际 App rustc `--extern` 中的 `pokered_app/pokered_core/pokered_renderer/pokered_audio/pokered_data/dotzuki_engine/serde_json` 七个rlib，连同实际 `-L dependency` / `-L native` 路径，用同一源码执行 `rustc --edition=2021 --crate-name silph_formal_ordinary_witness_1072 silph-witness.rs -C debuginfo=0 -o <本端witness>`。不要通配符任取缓存库；完整本次实际库哈希在provenance。先冻结before ELF，再构建/链接after，防止共用target覆盖旧库。
+在两个精确源版本分别执行正常构建 `cargo build -p pokered-app --lib --features debug-server --offline --locked -j1 -vv`，本次使用 dev/test opt-level=0、debug=0、incremental=0。**App rustc 的 `--extern` 不包含它自己**：由该条命令的 `--out-dir` 与 `-C extra-filename=...` 定位自身 `libpokered_app<extra-filename>.rlib`；其余六个库从同次 App rustc 的 `--extern name=path` 定位对应rlib，并核对实际文件。不要通配符任取缓存库；本次七个实际库的字节哈希见provenance。
+
+以下展示本次确证的七个文件名及实际 `-L dependency/native` 路径，在本目录执行。其他构建环境必须按本次 App `-vv` 输出替换路径/文件名；本次 M9/H 的库文件名相同，但字节并不相同，须按各端哈希核验后立即链接。先冻结before ELF，再构建/链接after；after端将输出改为独立的 `after-witness`，不能覆盖before。
+
+```sh
+DEPS=/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps
+NATIVE=/home/jerry/.local/share/starheir-build/sysroot/usr/lib/x86_64-linux-gnu
+rustc --edition=2021 --crate-name silph_formal_ordinary_witness_1072 silph-witness.rs \
+  -C debuginfo=0 -o ./before-witness \
+  -L "dependency=$DEPS" -L "native=$NATIVE" \
+  --extern "pokered_app=$DEPS/libpokered_app-a033ddfe954130fb.rlib" \
+  --extern "pokered_core=$DEPS/libpokered_core-e07ae5bfb6097161.rlib" \
+  --extern "pokered_renderer=$DEPS/libpokered_renderer-db429ded8bfb8bae.rlib" \
+  --extern "dotzuki_engine=$DEPS/libdotzuki_engine-dd0c57d22d9f030e.rlib" \
+  --extern "serde_json=$DEPS/libserde_json-2e61534cb1deef90.rlib" \
+  --extern "pokered_audio=$DEPS/libpokered_audio-903466a71c39bea6.rlib" \
+  --extern "pokered_data=$DEPS/libpokered_data-f594fe7b4773f2c9.rlib"
+```
 
 在本目录下，用已冻结的两个独立ELF按顺序运行（每个输出目录必须不存在）：
 
