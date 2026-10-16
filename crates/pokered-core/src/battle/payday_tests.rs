@@ -337,3 +337,183 @@ fn legacy_snapshots_do_not_fabricate_missing_escape_history() {
         );
     }
 }
+
+/// Unit caller input: physical edges remain separate from the one serialized
+/// foreground ledger. The ledger starts Unknown and only real text polls fill it.
+struct SourceInput {
+    owner: crate::foreground_input::ForegroundJoypad,
+    physical_previous: u8,
+}
+
+impl SourceInput {
+    fn new() -> Self {
+        Self {
+            owner: Default::default(),
+            physical_previous: 0,
+        }
+    }
+
+    fn step(&mut self, s: &mut BattleScreen, held: u8) -> (ScreenAction, FightTextReceipt) {
+        use crate::foreground_input::{A, B, DOWN, LEFT, RIGHT, UP};
+        let pressed = held & !self.physical_previous;
+        self.physical_previous = held;
+        let mut receipt = FightTextReceipt::default();
+        let action = s.update_frame_with_terminal_input(
+            BattleInput {
+                a: pressed & A != 0,
+                b: pressed & B != 0,
+                up: pressed & UP != 0,
+                down: pressed & DOWN != 0,
+                left: pressed & LEFT != 0,
+                right: pressed & RIGHT != 0,
+            },
+            BattleTextFrame {
+                held_buttons: held,
+                settings: Some(BattleTextSettings::fight_menu(1, false)),
+            },
+            &mut receipt,
+            &mut self.owner,
+        );
+        (action, receipt)
+    }
+
+    fn reach_prompt(
+        &mut self,
+        s: &mut BattleScreen,
+        kind: crate::text::terminal_input::TerminalTextKind,
+    ) {
+        use crate::foreground_input::A;
+        for frame in 0..4000 {
+            if s.terminal_text_work()
+                .is_some_and(|work| work.kind == kind && work.waiting_for_input())
+            {
+                return;
+            }
+            self.step(s, if frame % 2 == 0 { A } else { 0 });
+            assert!(
+                s.settlement.is_none(),
+                "settlement must wait for the requested real PROMPT"
+            );
+        }
+        panic!("source caller did not reach {kind:?}: {:?}", s.phase);
+    }
+}
+
+#[test]
+fn typed_trainer_prize_then_pickup_snapshot_keeps_the_real_last_and_pays_once() {
+    use crate::foreground_input::{A, B, SELECT, START};
+    use crate::text::terminal_input::TerminalTextKind;
+    let mut s = BattleScreen::from_parties(
+        false,
+        &[mon(Species::Meowth, 50, MoveId::Swift)],
+        &[mon(Species::Rattata, 14, MoveId::Tackle)],
+        Some(TrainerClass::Youngster),
+    );
+    s.player_name = Some("RED".into());
+    s.end_battle_text = Some("You beat me!".into());
+    s.battle_state.as_mut().unwrap().total_payday_money = 40;
+    s.phase = BattlePhase::TrainerVictory {
+        phase: VictoryPhase::EndBattleText,
+        wait_frames: 60,
+        player_won: true,
+    };
+    let mut input = SourceInput::new();
+    input.step(&mut s, SELECT);
+    assert_eq!(
+        pages(&s),
+        ["You beat me!"],
+        "the quote is still a separate call"
+    );
+    assert_eq!(
+        input.owner.last(),
+        None,
+        "constructing the continuation is not a poll"
+    );
+    input.reach_prompt(&mut s, TerminalTextKind::Prize);
+    assert_eq!(
+        s.terminal_text_work().unwrap().visible_text(),
+        "RED got $210 for\nwinning!"
+    );
+    input.step(&mut s, 0);
+    assert!(input.step(&mut s, A | START | SELECT).1.press_ab);
+    input.reach_prompt(&mut s, TerminalTextKind::PayDay);
+    assert_eq!(
+        s.terminal_text_work().unwrap().visible_text(),
+        "RED picked up\n$40!"
+    );
+    assert!(s.payday_pickup_shown && s.settlement.is_none());
+    input.step(&mut s, 0); // Actual ManualTextScroll poll establishes neutral.
+
+    let bytes = serde_json::to_vec(&(BattleSnapshot::capture(&s), input.owner.clone())).unwrap();
+    let (snapshot, owner): (BattleSnapshot, crate::foreground_input::ForegroundJoypad) =
+        serde_json::from_slice(&bytes).unwrap();
+    snapshot.restore_into(&mut s);
+    input.owner = owner;
+    assert!(s.payday_pickup_shown && s.settlement.is_none());
+    assert_eq!(
+        s.terminal_text_work().unwrap().kind,
+        TerminalTextKind::PayDay
+    );
+    let (_, receipt) = input.step(&mut s, B | START | SELECT);
+    assert!(receipt.press_ab);
+    let last = input.owner.last();
+    assert_eq!(last, Some(B | START | SELECT));
+    let (action, receipt) = input.step(&mut s, A);
+    assert!(matches!(
+        action,
+        ScreenAction::Transition(GameScreen::Overworld)
+    ));
+    assert!(!receipt.press_ab, "settlement cannot replay the pickup ACK");
+    assert_eq!(
+        input.owner.last(),
+        last,
+        "settlement raw is not a foreground poll"
+    );
+    assert_eq!(s.settlement.as_ref().unwrap().money_gained, 250);
+    assert_eq!(s.settlement.as_ref().unwrap().payday_bonus, 40);
+    assert_eq!(writeback(&mut s, 100), (350, Some("win")));
+}
+
+#[test]
+fn typed_actual_doll_and_teleport_return_the_pickup_poll_even_with_escaped_outcome() {
+    use crate::foreground_input::{B, SELECT, START};
+    use crate::text::terminal_input::TerminalTextKind;
+    for doll in [true, false] {
+        let mut s = wild();
+        if doll {
+            use_item(&mut s, ItemId::PokeDoll);
+        } else {
+            s.execute_turn_with_move(0);
+        }
+        let mut input = SourceInput::new();
+        input.reach_prompt(&mut s, TerminalTextKind::PayDay);
+        assert_eq!(s.original_battle_result, Some(0));
+        assert_eq!(
+            s.terminal_text_work().unwrap().visible_text(),
+            "RED picked up\n$40!"
+        );
+        input.step(&mut s, 0);
+        assert!(input.step(&mut s, B | START | SELECT).1.press_ab);
+        let last = input.owner.last();
+        assert_eq!(last, Some(B | START | SELECT));
+        let (action, receipt) = input.step(&mut s, SELECT);
+        assert!(matches!(
+            action,
+            ScreenAction::Transition(GameScreen::Overworld)
+        ));
+        assert!(!receipt.press_ab);
+        assert_eq!(
+            input.owner.last(),
+            last,
+            "escaped is not a history invalidation"
+        );
+        assert_eq!(
+            s.settlement.as_ref().unwrap().outcome,
+            BattleOutcome::Escaped
+        );
+        assert_eq!(
+            writeback(&mut s, 100),
+            (140, Some(if doll { "fled" } else { "ran" }))
+        );
+    }
+}

@@ -271,3 +271,143 @@ fn actual_battle_levelups_evolve_then_finish_hm_retry_replace_or_abandon_before_
         assert_eq!(std::fs::read(&session.path).unwrap(), session.bytes);
     }
 }
+
+#[test]
+fn actual_pay_day_then_pickup_pcm_returns_held_or_new_start_with_the_pickup_last() {
+    use pokered_core::pokemon::stats::create_pokemon_with_moves;
+    use pokered_data::{moves::MoveId, species::Species};
+    for held_start in [false, true] {
+        let mon = create_pokemon_with_moves(
+            Species::Blastoise,
+            100,
+            [0x9a, 0x78],
+            [MoveId::Surf, MoveId::PayDay, MoveId::None, MoveId::None],
+        )
+        .unwrap();
+        let mut session = Session::boot_with_party(0, false, vec![mon], false);
+        let wallet_before = session.game.save_data.game_data.player_money;
+        let mut opted_in = false;
+        let mut saw_prize = false;
+        let mut ready = false;
+        // Ordinary policy: use Pay Day until a real successful scatter, then
+        // Surf. No pot/outcome/phase/history setter or seed search is used.
+        for frame in 0..LIMIT {
+            if !opted_in && session.game.state.screen == GameScreen::Battle {
+                assert_eq!(
+                    session.game.overworld.begin_source_foreground().last(),
+                    None
+                );
+                opted_in = true;
+            }
+            if let Some(work) = session.game.battle.terminal_text_work() {
+                saw_prize |= work.kind == TerminalTextKind::Prize;
+                if work.kind == TerminalTextKind::PayDay && work.waiting_for_input() {
+                    ready = true;
+                    break;
+                }
+                if work.kind == TerminalTextKind::Prize && work.waiting_for_input() {
+                    session.step(&[]);
+                    session.step(&[GbButton::A]);
+                    continue;
+                }
+            }
+            let button = if matches!(session.game.battle.phase, BattlePhase::MoveSelect) {
+                let pot = session
+                    .game
+                    .battle
+                    .battle_state
+                    .as_ref()
+                    .unwrap()
+                    .total_payday_money;
+                let desired = usize::from(pot == 0);
+                let cursor = session.game.battle.move_menu.as_ref().unwrap().cursor();
+                if cursor == desired {
+                    GbButton::A
+                } else if desired == 1 {
+                    GbButton::Down
+                } else {
+                    GbButton::Up
+                }
+            } else {
+                GbButton::A
+            };
+            session.step(if frame % 8 == 0 {
+                std::slice::from_ref(&button)
+            } else {
+                &[]
+            });
+        }
+        assert!(opted_in && saw_prize && ready);
+        assert!(session.game.overworld.source_foreground_error().is_none());
+        let battle = &session.game.battle;
+        let state = battle.battle_state.as_ref().unwrap();
+        let pot = state.total_payday_money;
+        assert!(pot > 0, "the real Pay Day move must have scattered coins");
+        assert!(
+            state.player.active_mon().pp[1]
+                < pokered_core::pokemon::move_learning::get_move_max_pp(MoveId::PayDay)
+        );
+        let prize = pokered_core::battle::settlement::money::calc_prize_money(
+            battle.trainer_class.unwrap(),
+            state.enemy.party.last().unwrap().level,
+        );
+        assert_eq!(battle.original_battle_result, Some(0));
+        assert!(battle.payday_pickup_shown && battle.settlement.is_none());
+        assert_eq!(session.game.save_data.game_data.player_money, wallet_before);
+        assert_eq!(
+            battle.terminal_text_work().unwrap().visible_text(),
+            format!("RED picked up\n${pot}!")
+        );
+        assert!(
+            !session.game.audio.as_ref().unwrap().is_sfx_playing(),
+            "the natural pickup prompt must distinguish this ACK from the prior cue"
+        );
+
+        session.step(&[]); // Real ManualTextScroll neutral poll; not padding.
+        let buttons = if held_start {
+            &[GbButton::B, GbButton::Start, GbButton::Select][..]
+        } else {
+            &[GbButton::B, GbButton::Select][..]
+        };
+        let (id, busy, pcm) = session.step(buttons);
+        assert_eq!(id, SfxId::PressAB as u8);
+        assert!(
+            busy && pcm,
+            "the real pickup ACK must be consumed into PressAB PCM"
+        );
+        let last = pokered_core::foreground_input::B | SELECT | if held_start { START } else { 0 };
+        assert_eq!(
+            session.game.overworld.source_foreground().unwrap().last(),
+            Some(last)
+        );
+        let mut go_seen = false;
+        let mut returned = false;
+        for _ in 0..LIMIT {
+            let (id, busy, _) = session.step(&[GbButton::Start, GbButton::Select]);
+            go_seen |= id == 86 && busy;
+            let Some(owner) = session.game.overworld.source_foreground() else {
+                returned = true;
+                break;
+            };
+            assert_eq!(owner.last(), Some(last), "settlement and GO do not poll");
+            assert!(session.game.overworld.source_foreground_error().is_none());
+        }
+        assert!(go_seen && returned);
+        assert_eq!(
+            session.game.state.screen,
+            if held_start {
+                GameScreen::Overworld
+            } else {
+                GameScreen::StartMenu
+            }
+        );
+        assert_eq!(
+            session.game.save_data.game_data.player_money,
+            wallet_before
+                .saturating_add(prize)
+                .saturating_add(pot)
+                .min(999_999)
+        );
+        assert_eq!(std::fs::read(&session.path).unwrap(), session.bytes);
+    }
+}

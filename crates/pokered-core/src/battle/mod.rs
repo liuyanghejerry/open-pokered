@@ -2986,7 +2986,11 @@ learn {learn_name}!")];
                             } else {
                                 BattleOutcome::Loss
                             };
-                            if self.defer_payday_pickup(outcome, self.phase.clone()) {
+                            if self.defer_payday_pickup(
+                                outcome,
+                                self.phase.clone(),
+                                foreground.as_ref().and(text.settings),
+                            ) {
                                 return ScreenAction::Continue;
                             }
                             self.finalize_settlement(outcome);
@@ -3025,9 +3029,15 @@ learn {learn_name}!")];
                 } else {
                     BattleOutcome::Loss
                 };
-                if self.defer_payday_pickup(outcome, BattlePhase::BattleOver {
-                    won, escaped, wait_frames: 0,
-                }) {
+                if self.defer_payday_pickup(
+                    outcome,
+                    BattlePhase::BattleOver {
+                        won,
+                        escaped,
+                        wait_frames: 0,
+                    },
+                    foreground.as_ref().and(text.settings),
+                ) {
                     return ScreenAction::Continue;
                 }
                 self.finalize_settlement(outcome);
@@ -5579,22 +5589,50 @@ learn {learn_name}!")];
         self.battle_state.as_ref().map_or(0, |bs| bs.total_payday_money.min(999_999))
     }
 
-    fn defer_payday_pickup(&mut self, outcome: BattleOutcome, next: BattlePhase) -> bool {
+    fn defer_payday_pickup(
+        &mut self,
+        outcome: BattleOutcome,
+        next: BattlePhase,
+        source_text: Option<BattleTextSettings>,
+    ) -> bool {
         let payday = self.payday_pickup_amount(outcome);
-        if self.payday_pickup_shown || payday == 0 { return false; }
+        if self.payday_pickup_shown || payday == 0 {
+            return false;
+        }
         self.payday_pickup_shown = true;
-        self.show_payday_pickup_then(payday, next);
+        self.show_payday_pickup_then(payday, next, source_text);
         true
     }
 
     /// Explicit source printing call, after prize text and before settlement /
     /// evolution. Future source text owners can attach here without guessing
     /// the identity of a localized/paginated string.
-    fn show_payday_pickup_then(&mut self, payday: u32, next: BattlePhase) {
-        self.show_text_then(
-            vec![payday_pickup_message(self.player_name.as_deref().unwrap_or("RED"), payday)],
-            next,
-        );
+    fn show_payday_pickup_then(
+        &mut self,
+        payday: u32,
+        next: BattlePhase,
+        source_text: Option<BattleTextSettings>,
+    ) {
+        let messages = vec![payday_pickup_message(
+            self.player_name.as_deref().unwrap_or("RED"),
+            payday,
+        )];
+        if let Some(settings) = source_text.filter(|settings| !settings.no_text_delay) {
+            // EndOfBattle's explicit PrintText call owns a real PROMPT. The
+            // same borrowed ledger survives result0 escape and settlement.
+            self.phase = self.terminal_text_phase(
+                messages,
+                crate::text::terminal_input::TerminalTextKind::PayDay,
+                if settings.effective_letter_flags() & 1 != 0 {
+                    settings.options_delay & 0x0f
+                } else {
+                    1
+                },
+                next,
+            );
+        } else {
+            self.show_text_then(messages, next);
+        }
     }
 
     fn finalize_settlement(&mut self, outcome: BattleOutcome) {
