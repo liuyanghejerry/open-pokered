@@ -134,3 +134,54 @@ fn actual_bedroom_continue_persists_original_script_byte_without_companion() {
         assert_eq!(std::fs::read(&saved_path).unwrap(), saved_bytes);
     }
 }
+
+#[test]
+fn new_game_entry_clears_a_reused_bedroom_script_before_running_it() {
+    let mut game = PokemonGame::new_with_options(
+        GameVersion::Red,
+        None,
+        None,
+        None,
+        false,
+        None,
+        false,
+        true,
+        #[cfg(feature = "debug-server")]
+        None,
+    );
+    game.handle_transition(GameScreen::OakSpeech);
+    game.overworld = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+    game.state.screen = GameScreen::Overworld;
+    game.overworld.state.player.x = 3;
+    game.overworld.state.player.y = 6;
+    game.run_initial_new_game_map_script();
+    finish_initial_load(&mut game);
+    assert!(game
+        .overworld
+        .unified_flags()
+        .get_flag("SCRIPT_REDSHOUSE2F_NOOP"));
+
+    // GBA retains this screen across soft reset. Oak's NEW GAME entry clears
+    // SaveData, but the old screen still has its completed script alias.
+    game.handle_transition(GameScreen::OakSpeech);
+    assert_eq!(
+        game.save_data.game_data.game_progress_flags[REDS_HOUSE_2F_SCRIPT_INDEX],
+        0
+    );
+    assert!(game
+        .overworld
+        .unified_flags()
+        .get_flag("SCRIPT_REDSHOUSE2F_NOOP"));
+    game.overworld.state.player.facing = Direction::Down;
+    game.state.screen = GameScreen::Overworld;
+
+    // Exercise the production entry phase shared by host and bare-metal,
+    // without the host's replacement Overworld masking the stale alias.
+    game.run_initial_new_game_map_script();
+    finish_initial_load(&mut game);
+    assert_eq!(game.overworld.state.player.facing, Direction::Up);
+    assert!(game
+        .overworld
+        .unified_flags()
+        .get_flag("SCRIPT_REDSHOUSE2F_NOOP"));
+}
