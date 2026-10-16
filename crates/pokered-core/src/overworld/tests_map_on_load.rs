@@ -54,15 +54,15 @@ fn direct_load_runs_non_idempotent_effects_once_across_ordinary_loops() {
     assert_eq!(ordinary_frames(&mut screen, 32), [37, 83]);
     assert!(screen.script_engine.is_idle());
     assert!(screen.active_script_effect.is_none());
-    assert_eq!(ordinary_frames(&mut screen, 32), []);
+    assert!(ordinary_frames(&mut screen, 32).is_empty());
 }
 
 #[test]
 fn rebuilding_functions_without_load_never_defers_load_to_on_enter() {
     let mut screen = counter_screen();
-    assert_eq!(ordinary_frames(&mut screen, 32), []);
+    assert!(ordinary_frames(&mut screen, 32).is_empty());
     screen.load_map_script_ex(MapId::RedsHouse2F, false);
-    assert_eq!(ordinary_frames(&mut screen, 32), []);
+    assert!(ordinary_frames(&mut screen, 32).is_empty());
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn crossing_a_real_connection_runs_the_destination_load_once() {
     screen.state.player.x = 10;
     screen.state.player.y = 0;
     screen.state.player.facing = Direction::Up;
-    screen.encounter_cooldown = 255;
+    screen.state.encounter_cooldown = 255;
     let up = OverworldInput::new(true, false, false, false, false, false, false, false);
     let mut trace = Vec::new();
     for _ in 0..64 {
@@ -204,7 +204,7 @@ fn restore_removes_only_legacy_load_binding_and_preserves_every_manager_field() 
         // Whole manager equality covers trigger ordering/all struct fields,
         // fired/oneShot state AND private prev_player_map/X/Y, not just IDs.
         assert_eq!(serde_json::to_value(&screen.trigger_manager).unwrap(), expected);
-        assert_eq!(ordinary_frames(&mut screen, 32), []);
+        assert!(ordinary_frames(&mut screen, 32).is_empty());
         assert!(screen.script_engine.is_idle());
     }
 }
