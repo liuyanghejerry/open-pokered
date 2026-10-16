@@ -673,7 +673,7 @@ impl PerfBenchmark {
         assert_eq!(game.overworld.state.player.movement_state, pokered_core::overworld::MovementState::Idle);
         assert_eq!(game.overworld.state.walk_counter, 0);
         let position = (game.overworld.state.player.x, game.overworld.state.player.y);
-        agb::println!("gba-perf movement-anchor frame={} map={} x={} y={} facing={} dialogue=0 effect=0 idle=1",
+        agb::println!("gba-benchmark-anchor frame={} map={} x={} y={} facing={} dialogue=0 effect=0 idle=1",
             frame, game.overworld.state.current_map as u8, position.0, position.1,
             game.overworld.state.player.facing as u8);
         position
