@@ -22,16 +22,20 @@ pub fn calc_total_winnings(prize_money: u32, payday_bonus: u32) -> u32 {
 }
 
 /// End-of-battle winnings text (`_MoneyForWinningText`, text_2.asm:867):
-/// "<PLAYER> got $<total> for winning!" — Pay Day money is part of the single
-/// total; the original has no tip request or running-total pages.
-pub fn trainer_winnings_messages(player_name: &str, total_winnings: u32) -> Vec<String> {
-    if total_winnings == 0 {
+/// "<PLAYER> got $<prize> for winning!". EndOfBattle prints Pay Day separately.
+pub fn trainer_winnings_messages(player_name: &str, prize_money: u32) -> Vec<String> {
+    if prize_money == 0 {
         return Vec::new();
     }
     vec![format!(
         "{} got ${} for\nwinning!",
-        player_name, total_winnings
+        player_name, prize_money
     )]
+}
+
+/// `_PickUpPayDayMoneyText` (text_2.asm:1343), before EvolutionAfterBattle.
+pub fn payday_pickup_message(player_name: &str, payday_bonus: u32) -> String {
+    format!("{} picked up\n${}!", player_name, payday_bonus)
 }
 
 #[cfg(test)]
@@ -39,14 +43,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn winnings_text_uses_player_name_and_total() {
-        let msgs = trainer_winnings_messages("RED", calc_total_winnings(210, 0));
+    fn winnings_and_payday_are_distinct_original_messages() {
+        let msgs = trainer_winnings_messages("RED", 210);
         assert_eq!(msgs, vec!["RED got $210 for\nwinning!"]);
-
-        // Pay Day is folded into the single original amount.
-        let msgs = trainer_winnings_messages("RED", calc_total_winnings(210, 40));
-        assert_eq!(msgs, vec!["RED got $250 for\nwinning!"]);
-
+        assert_eq!(payday_pickup_message("RED", 40), "RED picked up\n$40!");
+        assert_eq!(calc_total_winnings(210, 40), 250);
         assert!(trainer_winnings_messages("RED", 0).is_empty());
     }
 }

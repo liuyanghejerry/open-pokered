@@ -30,6 +30,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "giveBadge",
     "startBattle",
     "startBattleSet",
+    "startBattleWithText",
     "startWildBattle",
     "oldManTutorial",
     "warpTo",
@@ -41,6 +42,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "followNpc",
     "followNpcPath",
     "walkTogether",
+    "silphRocketDeparture",
     "movePlayer",
     "movePlayerTo",
     "movePlayerRelative",
@@ -109,7 +111,7 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
                 None => dynamic(),
             }
         }
-        "startBattle" | "startBattleSet" => match str_arg(0) {
+        "startBattle" | "startBattleSet" | "startBattleWithText" => match str_arg(0) {
             Some(trainer_id) => {
                 let (class, set) = trainer_parts(&trainer_id);
                 StateEffect::BattleStarted {
@@ -469,13 +471,28 @@ impl<'a> Extractor<'a> {
                     self.walk_expression(arg);
                 }
                 let name = normalize_name(name);
-                if NO_STATE_COMMANDS.contains(&name) {
+                if name == "silphRocketDeparture" {
+                    self.silph_departure(args);
+                } else if NO_STATE_COMMANDS.contains(&name) {
                     self.coverage.commands_recognized += 1;
                 } else {
                     self.effect(command_effect(name, args));
                     if name == "walkTogether" { self.effects.push(StateEffect::PlayerMoved); }
                 }
             }
+        }
+    }
+
+    fn silph_departure(&mut self, args: &[Expression]) {
+        if !args.is_empty() {
+            self.effect(StateEffect::Unknown { construct: "silphRocketDeparture(unexpected_arg)".into() });
+            return;
+        }
+        for toggle in pokered_data::toggleable_objects::SILPH_ROCKETS_HIDDEN {
+            self.effect(StateEffect::ObjectHidden { toggle_id: toggle.into() });
+        }
+        for toggle in pokered_data::toggleable_objects::SILPH_CITIZENS_SHOWN {
+            self.effect(StateEffect::ObjectShown { toggle_id: toggle.into() });
         }
     }
 
@@ -505,7 +522,9 @@ impl<'a> Extractor<'a> {
                 // `setFlag(...)` expressions) — produce effects for
                 // them here as well as in statement position.
                 let callee = normalize_name(callee);
-                if NO_STATE_COMMANDS.contains(&callee) {
+                if callee == "silphRocketDeparture" {
+                    self.silph_departure(args);
+                } else if NO_STATE_COMMANDS.contains(&callee) {
                     self.coverage.commands_recognized += 1;
                 } else if EFFECT_COMMANDS.contains(&callee) {
                     self.effect(command_effect(callee, args));
@@ -671,6 +690,117 @@ mod tests {
             .into_iter()
             .find(|s| s.storyline == storyline)
             .unwrap_or_else(|| panic!("storyline {storyline}"))
+    }
+
+    #[test]
+    fn silph_departure_both_real_handlers_keep_all_original_forty_six_effects() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap();
+        let golden: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../pokered-data/src/silph_liberation_golden.json"
+        ))
+        .unwrap();
+        let mut hidden: Vec<String> = [1, 2, 3, 4, 5, 6, 7, 14, 15]
+            .into_iter()
+            .map(|id| format!("SAFFRON_CITY_OBJ_{id}"))
+            .collect();
+        hidden.extend(
+            golden["cases"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|case| case["toggle"].as_str().unwrap().to_string()),
+        );
+        for handler in ["giovanniStep", "talkGiovanni"] {
+            let semantics = sem(&scene, handler);
+            let hides: Vec<_> = semantics
+                .effects
+                .iter()
+                .filter_map(|effect| match effect {
+                    StateEffect::ObjectHidden { toggle_id } => Some(toggle_id.clone()),
+                    _ => None,
+                })
+                .collect();
+            let shows: Vec<_> = semantics
+                .effects
+                .iter()
+                .filter_map(|effect| match effect {
+                    StateEffect::ObjectShown { toggle_id } => Some(toggle_id.clone()),
+                    _ => None,
+                })
+                .collect();
+            let mut expected = hidden.clone();
+            expected.sort();
+            assert_eq!(hides, expected, "{handler}");
+            assert_eq!(
+                shows,
+                [
+                    "SAFFRON_CITY_OBJ_10",
+                    "SAFFRON_CITY_OBJ_11",
+                    "SAFFRON_CITY_OBJ_12",
+                    "SAFFRON_CITY_OBJ_13",
+                    "SAFFRON_CITY_OBJ_8",
+                    "SAFFRON_CITY_OBJ_9"
+                ]
+            );
+            assert!(semantics.effects.contains(&StateEffect::FlagSet {
+                flag: "EVENT_BEAT_SILPH_CO_GIOVANNI".into()
+            }));
+            assert!(!semantics
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, StateEffect::Unknown { .. })));
+        }
+    }
+
+    #[test]
+    fn silph_departure_semantics_expand_statement_and_call_but_reject_any_argument() {
+        for expression in [false, true] {
+            for args in [
+                vec![],
+                vec![Expression::BoolLit(false)],
+                vec![Expression::Variable("dynamic".into())],
+            ] {
+                let mut coverage = CoverageAccum::default();
+                let mut extractor = Extractor {
+                    map: "test",
+                    reads: Vec::new(),
+                    effects: Vec::new(),
+                    coverage: &mut coverage,
+                };
+                if expression {
+                    extractor.walk_expression(&Expression::Call {
+                        callee: "silphRocketDeparture".into(),
+                        args: args.clone(),
+                    });
+                } else {
+                    extractor.walk_statements(&[StoryStmt::Command {
+                        name: "silphRocketDeparture".into(),
+                        args: args.clone(),
+                        span: dotzuki_engine_dsl::ast::SourceSpan::new(
+                            "test.scene",
+                            1,
+                            1,
+                            1,
+                            1,
+                            0,
+                            0,
+                        ),
+                    }]);
+                }
+                if args.is_empty() {
+                    assert_eq!(extractor.effects.len(), 46);
+                    assert!(!extractor
+                        .effects
+                        .iter()
+                        .any(|effect| matches!(effect, StateEffect::Unknown { .. })));
+                } else {
+                    assert!(matches!(
+                        extractor.effects.as_slice(),
+                        [StateEffect::Unknown { .. }]
+                    ));
+                }
+            }
+        }
     }
 
     #[test]
@@ -1002,4 +1132,14 @@ mod tests {
     }
 
     use dotzuki_engine_dsl::ast::SourceSpan;
+    #[test]
+    fn quoted_trainer_command_retains_the_same_battle_state_effect() {
+        let id = Expression::StringLit("OPP_BURGLAR4".into());
+        let quoted = command_effect("startBattleWithText", &[id.clone(), Expression::StringLit("I\nsurrender!".into())]);
+        assert!(matches!(&quoted, StateEffect::BattleStarted { battle: BattleKind::Trainer { .. } }));
+        assert_eq!(quoted, command_effect("startBattle", &[id]));
+        assert!(EFFECT_COMMANDS.contains(&"startBattleWithText"));
+        assert!(!NO_STATE_COMMANDS.contains(&"startBattleWithText"));
+    }
+
 }

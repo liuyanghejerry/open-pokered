@@ -34,13 +34,91 @@ fn spam_at(frame: u32) -> u8 {
     0
 }
 
-/// Returns the held-button bitmask for `frame`.
-pub fn buttons_at(frame: u32) -> u8 {
-    let mut held = spam_at(frame);
+/// Original frame-indexed opening, retained to check the unchanged windows.
+#[cfg(test)]
+fn buttons_at(frame: u32) -> u8 {
+    scripted_buttons(frame, spam_at(frame))
+}
+
+fn scripted_buttons(frame: u32, mut held: u8) -> u8 {
     for &(from, until, buttons) in SCRIPT {
         if frame >= from && frame < until {
             held = buttons;
         }
     }
     held
+}
+
+/// Stop confirming opening menus once normal play starts. All opt-in
+/// diagnostic ROMs share this gate; their scenario drivers still replace
+/// or add their own input afterward. Fixed SCRIPT windows remain unchanged.
+#[derive(Default)]
+pub struct AutopilotInput {
+    reached_overworld: bool,
+}
+
+impl AutopilotInput {
+    pub fn buttons_at(&mut self, frame: u32, is_overworld: bool) -> u8 {
+        self.reached_overworld |= is_overworld;
+        scripted_buttons(frame, if self.reached_overworld { 0 } else { spam_at(frame) })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn autopilot_keeps_opening_and_menu_inputs_until_overworld() {
+        let mut input = AutopilotInput::default();
+        for frame in 0..2600 {
+            assert_eq!(input.buttons_at(frame, false), buttons_at(frame));
+        }
+        assert_eq!(buttons_at(2620), 1);
+        assert_eq!(input.buttons_at(2620, true), 0);
+    }
+
+    #[test]
+    fn autopilot_never_restarts_menu_spam_after_leaving_overworld() {
+        let mut input = AutopilotInput::default();
+        assert_eq!(input.buttons_at(2620, true), 0);
+        assert_eq!(buttons_at(2668), 1);
+        assert_eq!(input.buttons_at(2668, false), 0);
+        assert_eq!(input.buttons_at(2716, false), 0);
+    }
+
+    #[test]
+    fn autopilot_preserves_both_literal_movement_windows() {
+        let mut input = AutopilotInput::default();
+        input.buttons_at(2620, true);
+        for frame in 4000..4400 {
+            let expected = match frame {
+                4100..=4115 => 128,
+                4200..=4215 => 16,
+                _ => 0,
+            };
+            assert_eq!(input.buttons_at(frame, true), expected, "frame {frame}");
+        }
+    }
+
+    #[test]
+    fn stopping_menu_spam_preserves_non_menu_intro_buttons() {
+        let mut input = AutopilotInput::default();
+        assert_eq!(input.buttons_at(0, true), 0);
+        for frame in [560, 567, 700, 707, 900, 907, 1100, 1107, 1300, 1307] {
+            assert_eq!(input.buttons_at(frame, false), 1, "frame {frame}");
+        }
+        assert_eq!(input.buttons_at(940, false), 0);
+        assert_eq!(input.buttons_at(2668, false), 0);
+    }
+
+    #[test]
+    fn opening_menu_spam_keeps_its_original_windows() {
+        assert_eq!(buttons_at(940), 1);
+        assert_eq!(buttons_at(947), 1);
+        assert_eq!(buttons_at(948), 0);
+        assert_eq!(buttons_at(2668), 1);
+        assert_eq!(buttons_at(3964), 1);
+        assert_eq!(buttons_at(4000), 0);
+    }
 }

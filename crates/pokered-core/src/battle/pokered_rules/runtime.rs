@@ -261,6 +261,16 @@ pub fn translate_turn_named(
     effects: &[EffectState<PokeredRules>],
     names: Option<&BattleNameContext>,
 ) -> Vec<String> {
+    translate_turn_named_with_faints(log, state, effects, names, None)
+}
+
+pub(crate) fn translate_turn_named_with_faints(
+    log: &TurnLog<PokeredRules>,
+    state: &EngineState<PokeredRules>,
+    effects: &[EffectState<PokeredRules>],
+    names: Option<&BattleNameContext>,
+    faint_plan: Option<&crate::battle::faint::FaintPlan>,
+) -> Vec<String> {
     let evs = &log.events;
     let mut msgs = Vec::new();
     // The move whose effect events are currently being walked — Haze's own
@@ -305,6 +315,18 @@ pub fn translate_turn_named(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), move_name(*move_, false), crit, missed, eff, None));
                 }
+                // PayDayEffect runs after this action's applied/substitute
+                // damage and before faint handling, not at the end of the turn.
+                // The receipt was made by the actual positive damage hook.
+                if md.effect == pokered_data::moves::MoveEffect::PayDayEffect {
+                    if let Some((_, substitute_broke)) = super::payday_scatter(effects, actor) {
+                        if substitute_broke {
+                            msgs.push(format!("{}'s SUBSTITUTE broke!",
+                                display_name_named(state, opp_ref(actor), names)));
+                        }
+                        msgs.push("Coins scattered\neverywhere!".to_string());
+                    }
+                }
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY
                 // StatusChangesEliminatedText ("All STATUS changes are
                 // eliminated!", text_3.asm:269-271) — no per-stat or
@@ -316,7 +338,17 @@ pub fn translate_turn_named(
             TurnEvent::Blocked { actor } => {
                 msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
             }
-            TurnEvent::Fainted { who } => msgs.push(format!("{} fainted!", display_name_named(state, *who, names))),
+            TurnEvent::Fainted { who } => {
+                if let Some(plan) = faint_plan {
+                    if let Some(cue) = plan.at(i) {
+                        // A silent typed action still occupies the existing page
+                        // sequence; it never prints or waits for a text ACK.
+                        msgs.push(faint_caption(cue, state, names));
+                    }
+                } else {
+                    msgs.push(format!("{} fainted!", display_name_named(state, *who, names)));
+                }
+            },
             TurnEvent::StatusInflicted { target, status } => {
                 let name = display_name_named(state, *target, names);
                 let line = match status {
@@ -960,4 +992,17 @@ mod catch_byte_tests {
             assert_eq!(legacy.player.party_mon(0).catch_rate, Some(35));
         }
     }
+}
+
+/// Typed producer used both for the page metadata and the text, before localization.
+pub(crate) fn faint_caption(
+    cue: crate::battle::FaintCue,
+    state: &EngineState<PokeredRules>,
+    names: Option<&BattleNameContext>,
+) -> String {
+    use crate::battle::FaintSide;
+    cue.text.map(|side| {
+        let who = if side == FaintSide::Player { BattlerRef::PLAYER } else { BattlerRef::OPPONENT };
+        format!("{} fainted!", display_name_named(state, who, names))
+    }).unwrap_or_default()
 }

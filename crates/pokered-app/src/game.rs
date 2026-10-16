@@ -4720,7 +4720,11 @@ impl PokemonGame {
                 // finish this move's visuals, then drain its HP, then allow the
                 // next narration/action. Core-only consumers remain unblocked.
                 self.battle.set_presentation_enabled(!self.battle.link_mode);
-                if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable() {
+                if self.battle.presentation.waiting && self.battle_vfx.is_frame_stable()
+                    && (self.battle.presentation.current_faint().is_none()
+                        || (!self.faint_thud_pending
+                            && !self.audio.as_ref().is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active())))
+                {
                     self.battle.complete_move_presentation();
                 }
                 // ItemUseBallText05 also plays for the old man's demonstration,
@@ -4857,6 +4861,9 @@ impl PokemonGame {
                     .as_ref()
                     .is_some_and(|a| a.is_sfx_playing() && !a.low_health_alarm_active());
                 self.battle_vfx.update(&self.battle);
+                let faint_sound_ready = !self.audio.as_ref().is_some_and(|audio|
+                    audio.is_sfx_playing() && !audio.low_health_alarm_active());
+                let faint_sound = faint_sound_ready.then(|| self.battle_vfx.take_faint_sound()).flatten();
 
                 if let Some(ref audio) = self.audio {
                     // wLowHealthAlarm: re-evaluated every frame from the
@@ -4937,6 +4944,23 @@ impl PokemonGame {
                         }
                     }
 
+                    if let Some(sound) = faint_sound {
+                        use pokered_core::battle::FaintSound;
+                        match sound {
+                            FaintSound::OwnCry => play_species_cry(audio, self.battle.player_species),
+                            FaintSound::EnemyFall => {
+                                audio.play_sfx(SfxId::FaintFall);
+                                self.faint_thud_pending = true;
+                            }
+                            FaintSound::WildVictory => {
+                                if let Some(id) = MusicId::from_u8(self.battle.victory_music_id()) {
+                                    audio.play_music(id);
+                                }
+                                self.battle_vfx.victory_music_played = true;
+                            }
+                        }
+                    }
+
                     // Victory music
                     if self.battle.is_victory_phase() && !self.battle_vfx.victory_music_played {
                         if let Some(id) = MusicId::from_u8(self.battle.victory_music_id()) {
@@ -4980,7 +5004,7 @@ impl PokemonGame {
                                 audio.play_sfx(SfxId::SuperEffective);
                             } else if msg_lower.contains("not very effective") {
                                 audio.play_sfx(SfxId::NotVeryEffective);
-                            } else if msg_lower.ends_with("fainted!") {
+                            } else if self.battle.presentation.current_faint().is_none() && msg_lower.ends_with("fainted!") {
                                 // HandleEnemyMonFainted: trainer battles play
                                 // SFX_FAINT_FALL then SFX_FAINT_THUD; wild
                                 // battles play the victory music instead (via
@@ -5032,6 +5056,14 @@ impl PokemonGame {
                     b: input.is_just_pressed(GbButton::B),
                     start: input.is_just_pressed(GbButton::Start),
                 };
+                // HandleMenuInput plays PRESS_AB before returning its full
+                // key mask to DisplayStartMenu, including UP+A / UP+B polls.
+                // Direction priority and submenu eligibility do not suppress it.
+                if sm_input.a || sm_input.b {
+                    if let Some(audio) = &self.audio {
+                        audio.play_sfx(SfxId::PressAB);
+                    }
+                }
                 match self.start_menu.update_frame(sm_input) {
                     StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
                     StartMenuAction::OpenOption => {
@@ -11035,7 +11067,12 @@ mod link_stats_cry_fidelity_tests {
         game.overworld.run_on_load();
         let idle = InputState::new();
         for _ in 0..60 { game.update(&idle); }
-        game.update(&button(GbButton::Start));
+        // JoypadOverworld samples only on alternate foreground frames.
+        // Hold across both phases while retaining just one host input edge.
+        let mut start = button(GbButton::Start);
+        game.update(&start);
+        start.begin_frame();
+        game.update(&start);
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
         game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
@@ -13622,3 +13659,19 @@ game_scene PokemonTower6F {
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/cinnabar_quiz_audio_tests.rs"]
 mod cinnabar_quiz_audio_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/cinnabar_victory_tests.rs"]
+mod cinnabar_victory_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/faint_narration_tests.rs"]
+mod faint_narration_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/start_menu_button_audio_tests.rs"]
+mod start_menu_button_audio_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/silph_departure_tests.rs"]
+mod silph_departure_tests;

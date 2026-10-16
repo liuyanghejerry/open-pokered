@@ -55,6 +55,8 @@ pub enum PokemonScriptCommand {
         trainer_id: String,
         rival_triplet_base: u8,
     },
+    /// Explicit scene-owned trainer quote, carried into the actual battle.
+    StartBattleWithText { trainer_id: String, end_battle_text: String },
     OpenSlots {
         lucky: Option<bool>,
     },
@@ -85,6 +87,8 @@ pub enum PokemonScriptCommand {
         block_id: u8,
     },
     PlayShipDeparture,
+    /// Original Silph liberation: fade, replace the object roster under black, fade in.
+    SilphRocketDeparture,
     EnterHallOfFame,
     WaitMusic,
     WaitSound,
@@ -113,6 +117,7 @@ impl PokemonScriptCommand {
             Self::ChoosePartyPokemon => "choosePartyPokemon",
             Self::SetPartyNickname { .. } => "setPartyNickname",
             Self::StartBattleSet { .. } => "startBattleSet",
+            Self::StartBattleWithText { .. } => "startBattleWithText",
             Self::OpenSlots { .. } => "openSlots",
             Self::ElevatorMenu { .. } => "elevatorMenu",
             Self::FilterBag { .. } => "filterBag",
@@ -127,6 +132,7 @@ impl PokemonScriptCommand {
             Self::WithdrawDaycare => "withdrawDaycare",
             Self::ReplaceTileBlock { .. } => "replaceTileBlock",
             Self::PlayShipDeparture => "playShipDeparture",
+            Self::SilphRocketDeparture => "silphRocketDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
             Self::WaitMusic => "waitMusic",
             Self::WaitSound => "waitSound",
@@ -182,6 +188,7 @@ impl PokemonScriptCommand {
             } => {
                 vec![json!(trainer_id), json!(rival_triplet_base)]
             }
+            Self::StartBattleWithText { trainer_id, end_battle_text } => vec![json!(trainer_id), json!(end_battle_text)],
             Self::OpenSlots { lucky } => vec![json!(lucky)],
             Self::ElevatorMenu { floors } => vec![json!(floors)],
             Self::FilterBag { item_ids } => vec![json!(item_ids)],
@@ -198,6 +205,7 @@ impl PokemonScriptCommand {
             | Self::LinkStart
             | Self::WithdrawDaycare
             | Self::PlayShipDeparture
+            | Self::SilphRocketDeparture
             | Self::EnterHallOfFame
             | Self::WaitMusic
             | Self::WaitSound
@@ -340,6 +348,10 @@ impl PokemonScriptCommand {
                 trainer_id: string(0)?,
                 rival_triplet_base: u8_arg(1)?,
             },
+            "startBattleWithText" => Self::StartBattleWithText {
+                trainer_id: string(0)?,
+                end_battle_text: string(1)?,
+            },
             "openSlots" => Self::OpenSlots {
                 lucky: args.first().and_then(Value::as_bool),
             },
@@ -368,6 +380,10 @@ impl PokemonScriptCommand {
                 block_id: u8_arg(2)?,
             },
             "playShipDeparture" => Self::PlayShipDeparture,
+            "silphRocketDeparture" => {
+                if !args.is_empty() { return Err("silphRocketDeparture: no arguments expected".into()); }
+                Self::SilphRocketDeparture
+            },
             "enterHallOfFame" => Self::EnterHallOfFame,
             _ => return Err(format!("unsupported Pokémon script command: {name}")),
         })
@@ -377,6 +393,30 @@ impl PokemonScriptCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn silph_departure_is_a_strict_no_argument_command() {
+        let typed = PokemonScriptCommand::SilphRocketDeparture;
+        let ScriptCommand::Custom { name, args } = typed.clone().into_script_command() else {
+            panic!("custom command");
+        };
+        assert_eq!(name, "silphRocketDeparture");
+        assert!(args.is_empty());
+        assert_eq!(
+            PokemonScriptCommand::from_custom(&name, &args).unwrap(),
+            typed
+        );
+        for args in [
+            vec![json!(false)],
+            vec![json!(null)],
+            vec![json!("ignored")],
+        ] {
+            assert_eq!(
+                PokemonScriptCommand::from_custom(&name, &args).unwrap_err(),
+                "silphRocketDeparture: no arguments expected"
+            );
+        }
+    }
 
     #[test]
     fn custom_command_round_trips_through_protocol() {
@@ -486,4 +526,18 @@ mod field_text_terminator_tests {
         assert!(args.is_empty());
         assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), finish);
     }
+    #[test]
+    fn battle_quote_is_an_explicit_two_string_custom_payload() {
+        let expected = PokemonScriptCommand::StartBattleWithText {
+            trainer_id: "OPP_SUPER_NERD9".into(), end_battle_text: "Yow!\nHot, hot, hot!".into(),
+        };
+        let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!() };
+        assert_eq!(name, "startBattleWithText");
+        assert_eq!(args, vec![json!("OPP_SUPER_NERD9"), json!("Yow!\nHot, hot, hot!")]);
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+        for args in [vec![], vec![json!("ID")], vec![json!(7), json!("quote")], vec![json!("ID"), json!(null)]] {
+            assert!(PokemonScriptCommand::from_custom("startBattleWithText", &args).is_err());
+        }
+    }
+
 }

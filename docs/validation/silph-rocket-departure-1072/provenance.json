@@ -1,0 +1,1372 @@
+{
+  "schema": "silph-rocket-departure-1072-public-provenance-v1",
+  "actual_base": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+  "actual_head": "1b474fd7f67cd8a33651f9cf56bc9694286b01ec",
+  "docs_scope": "Documentation child is source-equivalent to H; tests/native below were actually executed at H/M9, never at the later docs commit.",
+  "branch": "fix/silph-rocket-departure-1070",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_contract": {
+    "script": {
+      "path": "scripts/SilphCo11F.asm",
+      "sha256": "425b50fd7296ac7baf0b7e4c53d5e2ec0483e4da3509ff9be177f2224d004c21",
+      "sequence_lines": [
+        225,
+        233
+      ],
+      "roster_lines": [
+        73,
+        147
+      ]
+    },
+    "fade": {
+      "path": "home/fade.asm",
+      "sha256": "784cefe6c0b20b717684dfbfbb561019c16752996e3d2c07b08a955396a003fa"
+    },
+    "independent_oracle_sha256": "a59ca5c2297f36292329a90b0868b45aa22ce74323dd970c963f446e86afbd05",
+    "source_wait_offsets": [
+      0,
+      8,
+      16,
+      24,
+      32,
+      35,
+      43,
+      51,
+      59,
+      67
+    ],
+    "palette_BGP_OBP0_OBP1_hex": [
+      [
+        "E4",
+        "D0",
+        "E0"
+      ],
+      [
+        "F9",
+        "E4",
+        "E4"
+      ],
+      [
+        "FE",
+        "FE",
+        "F8"
+      ],
+      [
+        "FF",
+        "FF",
+        "FF"
+      ]
+    ],
+    "hide_targets": 40,
+    "show_targets": 6,
+    "physical_prestate": "39shown + SaffronOBJ15alreadyOFF /6citizenshidden",
+    "observed_changed_bits": 45,
+    "source_calls": 46
+  },
+  "runtime": {
+    "root_actual_session": 71933,
+    "complete": true,
+    "all_pass": true,
+    "result_sha256": "9eed0350f2d8699c0d7ba627861180ece086bb4f5d89efa46791dafe58162f71",
+    "raw_independent_peer_sha256": "5d921565c4fe892664382d01c3b9b1c6c9a534b782333549648623314591a832",
+    "counts": {
+      "cold_Games": 4,
+      "input_update_draw_APU_pull_frames": 23800,
+      "state_rows_including_four_frame0": 23804,
+      "PNG_captured": 2022,
+      "main_each_frames": 7928,
+      "reload_each_frames": 3972
+    },
+    "inputs": "Same exact main tape on both; original7000 literal prefix unchanged. Same exact reload tape on both, original1460 boot + independently fixed2512 normalroute. One prebootseed42 per coldGame; no other seed/setters/restore/warp/skip/RPC.",
+    "actual_source_phase": {
+      "start": 5823,
+      "atomic_batch": 5855,
+      "first_normal_palette_still_blocked": 5882,
+      "completed_beatflag": 5890,
+      "all_black_frames": 19,
+      "VM_and_unified_flags_and_liveNPC_and_togglebits_checked": true
+    },
+    "SAVE": {
+      "actual_Sfx92_event_frame": 7249,
+      "actual_changed_disk_write_frame": 7318,
+      "physical_checksum_import_valid": true,
+      "actual_companion_produced_on_both_main": true,
+      "cold_reload_input": "Each provider reloads its own real main Game-written SRAM plus exact actual companion; no reconstructed JSON runtime state.",
+      "reload_bytes_unchanged": true
+    },
+    "reentry": {
+      "maps": [
+        "SilphCo11F",
+        "SilphCo7F",
+        "SilphCo11F"
+      ],
+      "actual_warp_frames": [
+        2174,
+        2768
+      ],
+      "settled_fixed_anchors": 37,
+      "11F_enemy_actors_hidden": [
+        3,
+        4,
+        5
+      ],
+      "7F_enemy_actors_hidden": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "new_battles": 0,
+      "new_departure": 0,
+      "new_SAVE": 0,
+      "end_position": [
+        6,
+        13
+      ],
+      "scope": "Bounded same-SAV pad re-entry; not Saffron/1F/elevator or a full unassisted story playthrough."
+    },
+    "cases": {
+      "before-main": {
+        "role": "before",
+        "mode": "main",
+        "frames": 7928,
+        "states": 7929,
+        "all_literal_masks_and_previous_verified": true,
+        "all_event_rows_recomputed": true,
+        "all_packed_FNV_verified": true,
+        "all_saved_PNG_RGBA_exact": 973
+      },
+      "after-main": {
+        "role": "after",
+        "mode": "main",
+        "frames": 7928,
+        "states": 7929,
+        "all_literal_masks_and_previous_verified": true,
+        "all_event_rows_recomputed": true,
+        "all_packed_FNV_verified": true,
+        "all_saved_PNG_RGBA_exact": 973
+      },
+      "before-reload": {
+        "role": "before",
+        "mode": "reload",
+        "frames": 3972,
+        "states": 3973,
+        "all_literal_masks_and_previous_verified": true,
+        "all_event_rows_recomputed": true,
+        "all_packed_FNV_verified": true,
+        "all_saved_PNG_RGBA_exact": 38
+      },
+      "after-reload": {
+        "role": "after",
+        "mode": "reload",
+        "frames": 3972,
+        "states": 3973,
+        "all_literal_masks_and_previous_verified": true,
+        "all_event_rows_recomputed": true,
+        "all_packed_FNV_verified": true,
+        "all_saved_PNG_RGBA_exact": 38
+      }
+    },
+    "audio": "Actual no-device AudioOutput manager; one1470mixed-f32 APU render per update, sequencer unchanged by pull. Only mixed nonzero summaries stored; no isolated waveform, device-audibility or Direct audio proof.",
+    "source_rosters": {
+      "base_tracked_files": 7223,
+      "head_tracked_files": 7227,
+      "engine_tracked_files": 981,
+      "GFX_files": 702
+    },
+    "all_owned_process_groups_gone": true,
+    "actual_main_saved_files": {
+      "before": {
+        "SRAM": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-v1/before-main/saved-artifacts/ordinary.sav",
+          "sha256": "e1f07952b54e1c81070a35b58f91f825b61bfd653d96018b63daa08d0ca0fc35",
+          "bytes": 32768
+        },
+        "companion": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-v1/before-main/saved-artifacts/ordinary.script_flags.json",
+          "sha256": "691a86efc2cb3f11a9d591597b21c902a861b1cc1631457852879e74523cc837",
+          "bytes": 3984
+        }
+      },
+      "after": {
+        "SRAM": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-v1/after-main/saved-artifacts/ordinary.sav",
+          "sha256": "e1f07952b54e1c81070a35b58f91f825b61bfd653d96018b63daa08d0ca0fc35",
+          "bytes": 32768
+        },
+        "companion": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-v1/after-main/saved-artifacts/ordinary.script_flags.json",
+          "sha256": "691a86efc2cb3f11a9d591597b21c902a861b1cc1631457852879e74523cc837",
+          "bytes": 3984
+        }
+      }
+    }
+  },
+  "normal_App_providers": {
+    "before": {
+      "actual_source": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+      "witness_ELF_sha256": "239e2b049690f79e63a1f65af55638afe853b731cf005e9cea6d75aede98bfe6",
+      "same_common_witness_sha256": "ed1d7a4c89b5231c017a300f3b32f5121097674fd7d625d79519f3453b28fd4b",
+      "selected_seven_externs": {
+        "pokered_app": {
+          "sha256": "187c55c866e263530cf0cbc88f7fd14eeea0d0160fc0e8a651ce41433a506916",
+          "bytes": 40955302,
+          "rlib_filename": "libpokered_app-a033ddfe954130fb.rlib",
+          "depinfo_sha256": "4d7139ba2cf5046ac1836d1057bf6c0accb45ab92c2701631c245c5345345586"
+        },
+        "pokered_core": {
+          "sha256": "9ec574731fa794407ad72f43b0c990009a437be14a082e4847bebe7d84791826",
+          "bytes": 27527140,
+          "rlib_filename": "libpokered_core-e07ae5bfb6097161.rlib",
+          "depinfo_sha256": "543d32736f8a36c5df6094a80006a5489d1d86d8c090c9856ee6cb6cf4fceb92"
+        },
+        "pokered_renderer": {
+          "sha256": "4dceaaecbc8d1512e7e55b5e78c0933e395af9f71d0059d3af8cf37e16c2c830",
+          "bytes": 1765934,
+          "rlib_filename": "libpokered_renderer-db429ded8bfb8bae.rlib",
+          "depinfo_sha256": "e49e981aea29a35fbb470d2193e9147d475c1e45a46b1092ea9dea776b57474e"
+        },
+        "dotzuki_engine": {
+          "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
+          "bytes": 4525360,
+          "rlib_filename": "libdotzuki_engine-dd0c57d22d9f030e.rlib",
+          "depinfo_sha256": "053c5ee58ba3e15baae3ed79ec31ae7a37e40ba23331a208afe3a7e044b7eae5"
+        },
+        "serde_json": {
+          "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
+          "bytes": 2459412,
+          "rlib_filename": "libserde_json-2e61534cb1deef90.rlib",
+          "depinfo_sha256": "a34361222677f84f99e13e52dbf4153c49f94518094f5776ef00c1a622f666fb"
+        },
+        "pokered_audio": {
+          "sha256": "c40c86a5d654a9fbdf68efd22b22e0785e2e6ec12614eb59508e614318116cea",
+          "bytes": 1058642,
+          "rlib_filename": "libpokered_audio-903466a71c39bea6.rlib",
+          "depinfo_sha256": "0efd9fc3e86e75296595ece6d130423daad82d945af55fdf6b98634266944c8d"
+        },
+        "pokered_data": {
+          "sha256": "aef14965a2d21a483002a95fcde106ddad76cc80fce0131cb38d6e5d81ee5639",
+          "bytes": 31542704,
+          "rlib_filename": "libpokered_data-f594fe7b4773f2c9.rlib",
+          "depinfo_sha256": "f28c71ff8591b81076695a394514f392df5d562f69cf9777dc56104b7869c453"
+        }
+      },
+      "full_actual_dependency_roster_sha256": "92c4c913d5658c4c66b1731d1901879670af6dfe86660ab19fa4be6975c66763",
+      "normal_App_not_libtest": true
+    },
+    "after": {
+      "actual_source": "1b474fd7f67cd8a33651f9cf56bc9694286b01ec",
+      "witness_ELF_sha256": "a0e7362de11591a98f20a39898f8c990151627784e5ae253d3ac9b140f7b0b29",
+      "same_common_witness_sha256": "ed1d7a4c89b5231c017a300f3b32f5121097674fd7d625d79519f3453b28fd4b",
+      "selected_seven_externs": {
+        "pokered_app": {
+          "sha256": "07b6cc17e18a5aecbff1b37295039e05e9dc203b5bc8ec6f8150efe6d1e5aa68",
+          "bytes": 41143476,
+          "rlib_filename": "libpokered_app-a033ddfe954130fb.rlib",
+          "depinfo_sha256": "4d7139ba2cf5046ac1836d1057bf6c0accb45ab92c2701631c245c5345345586"
+        },
+        "pokered_core": {
+          "sha256": "8fad37595e9fc466228f616b434f6d3f27f0e3762a2bfd471fad9f62c17b00bc",
+          "bytes": 27647048,
+          "rlib_filename": "libpokered_core-e07ae5bfb6097161.rlib",
+          "depinfo_sha256": "ef2ee90c62f7c66b5d8bdd7b2b80c08bfb039544f63cfde02dbbf2e2b63c7fbf"
+        },
+        "pokered_renderer": {
+          "sha256": "c0ae4dcb1b92412884e0375c40492d65f1d8f662047cb1ba85f0eb3b85f4ba47",
+          "bytes": 1788598,
+          "rlib_filename": "libpokered_renderer-db429ded8bfb8bae.rlib",
+          "depinfo_sha256": "1ad90df486ed41b5e7b58705b2cda5ca924424486f2a01af9c75dd47171684b2"
+        },
+        "dotzuki_engine": {
+          "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
+          "bytes": 4525360,
+          "rlib_filename": "libdotzuki_engine-dd0c57d22d9f030e.rlib",
+          "depinfo_sha256": "053c5ee58ba3e15baae3ed79ec31ae7a37e40ba23331a208afe3a7e044b7eae5"
+        },
+        "serde_json": {
+          "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
+          "bytes": 2459412,
+          "rlib_filename": "libserde_json-2e61534cb1deef90.rlib",
+          "depinfo_sha256": "a34361222677f84f99e13e52dbf4153c49f94518094f5776ef00c1a622f666fb"
+        },
+        "pokered_audio": {
+          "sha256": "c40c86a5d654a9fbdf68efd22b22e0785e2e6ec12614eb59508e614318116cea",
+          "bytes": 1058642,
+          "rlib_filename": "libpokered_audio-903466a71c39bea6.rlib",
+          "depinfo_sha256": "0efd9fc3e86e75296595ece6d130423daad82d945af55fdf6b98634266944c8d"
+        },
+        "pokered_data": {
+          "sha256": "0085a93519a21c98c8def65e64cf8c0791a6d965047a23aeac823a7f08ab9205",
+          "bytes": 32364582,
+          "rlib_filename": "libpokered_data-f594fe7b4773f2c9.rlib",
+          "depinfo_sha256": "348f2bdb90ec2c1c95806fcef782a6b52d5d8de74083dbee04c967e0d399911b"
+        }
+      },
+      "full_actual_dependency_roster_sha256": "622e426b8273e20ec2a1beeee8fd3714115b2a214f8c1502af35f656f8b4198f",
+      "normal_App_not_libtest": true
+    }
+  },
+  "seven_stage_tests": {
+    "actual_source_head": "1b474fd7f67cd8a33651f9cf56bc9694286b01ec",
+    "result_sha256": "357b464cd52a2f799e0bb4fa10b376aea86d3d4abb2a51ab54f48f71f297195a",
+    "independent_peer_sha256": "fae4eeff7792dc9f700fdf5d9d7fac2f03349038d09d05a8a6bf6da0a506bc82",
+    "passed_executions": 3132,
+    "failed": 0,
+    "new_unique_tests": 12,
+    "new_test_executions": 14,
+    "cold_Game_claim": false,
+    "stages": [
+      {
+        "label": "01-data-protocol-roster",
+        "passed": 3,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-data",
+          "--lib",
+          "silph",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_departure_is_a_strict_no_argument_command": [
+            "script_command::tests::silph_departure_is_a_strict_no_argument_command"
+          ],
+          "silph_departure_roster_matches_31_silph_golden_and_original_saffron_fifteen": [
+            "toggleable_objects::silph_departure_roster_tests::silph_departure_roster_matches_31_silph_golden_and_original_saffron_fifteen"
+          ],
+          "enemy_save_bits_match_original_toggle_constants_and_object_ids": [
+            "toggleable_objects::silph_liberation_source_tests::enemy_save_bits_match_original_toggle_constants_and_object_ids"
+          ]
+        },
+        "log_sha256": "a8414de14a2701b8fe6d4bad4f68e29198cac7a6057dcf371f5a4b373827974f"
+      },
+      {
+        "label": "02-boa-live-await",
+        "passed": 1,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-data",
+          "--features",
+          "script-boa",
+          "--lib",
+          "boa_silph_departure",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "boa_silph_departure_await_blocks_and_extra_arguments_reject": [
+            "script_api::tests::boa_silph_departure_await_blocks_and_extra_arguments_reject"
+          ]
+        },
+        "log_sha256": "2fc8ed25dd4e6dfd6e110cc72e1453cce7d82aaa6f7ade4b6cc8670cfc78d6a3"
+      },
+      {
+        "label": "03-native-core-lib-once",
+        "passed": 3065,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-core",
+          "--lib",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_departure_native_host_rejects_extra_arguments": [
+            "overworld::native_script::tests::silph_departure_native_host_rejects_extra_arguments"
+          ],
+          "silph_both_winning_handlers_await_departure_before_setting_the_beat_flag": [
+            "overworld::native_script::tests::silph_both_winning_handlers_await_departure_before_setting_the_beat_flag"
+          ],
+          "silph_departure_host_waits_32_batch_3_32_and_normal_palette_does_not_resume_early": [
+            "overworld::tests_silph_departure::silph_departure_host_waits_32_batch_3_32_and_normal_palette_does_not_resume_early"
+          ],
+          "silph_departure_native_vm_and_effect_round_trip_at_every_wait_without_reapplying_batch": [
+            "overworld::tests_silph_departure::silph_departure_native_vm_and_effect_round_trip_at_every_wait_without_reapplying_batch"
+          ],
+          "fidelity_silph_victory_hides_all_original_enemies_from_both_handlers": [
+            "overworld::native_script::tests::fidelity_silph_victory_hides_all_original_enemies_from_both_handlers"
+          ]
+        },
+        "log_sha256": "9232f9cf36db1def207ec08f96618576236b81af73f4e5fc8be497ba79af4df1"
+      },
+      {
+        "label": "04-renderer-register-golden",
+        "passed": 1,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-renderer",
+          "--lib",
+          "silph_fade_registers",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_fade_registers_map_raw_bg_and_obj_indices_independently": [
+            "overworld_palette::tests::silph_fade_registers_map_raw_bg_and_obj_indices_independently"
+          ]
+        },
+        "log_sha256": "872ba431f13696e714dcf31d39b9d0771196d4be3d91577754bfe9fcaee6c33e"
+      },
+      {
+        "label": "05-agent-strict-graph",
+        "passed": 58,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-agent",
+          "--lib",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_departure_both_real_handlers_keep_all_original_forty_six_effects": [
+            "semantics::extract::tests::silph_departure_both_real_handlers_keep_all_original_forty_six_effects"
+          ],
+          "silph_departure_semantics_expand_statement_and_call_but_reject_any_argument": [
+            "semantics::extract::tests::silph_departure_semantics_expand_statement_and_call_but_reject_any_argument"
+          ],
+          "generation_is_deterministic": [
+            "semantics::gen::tests::generation_is_deterministic"
+          ],
+          "graph_json_matches_committed_file": [
+            "semantics::gen::tests::graph_json_matches_committed_file"
+          ],
+          "coverage_has_no_unbounded_unknowns": [
+            "semantics::gen::tests::coverage_has_no_unbounded_unknowns"
+          ],
+          "unknown_constructs_are_reported_not_guessed": [
+            "semantics::extract::tests::unknown_constructs_are_reported_not_guessed"
+          ]
+        },
+        "log_sha256": "e6ea432b35705575e758a3011c7f7897882d30b98b4e87b8bdcee69337664083"
+      },
+      {
+        "label": "06-app-default",
+        "passed": 2,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "silph_departure",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_flag": [
+            "game::silph_departure_tests::silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_flag"
+          ],
+          "silph_departure_real_map_cached_draw_matches_raw_redraw_and_does_not_tick_the_owner": [
+            "render::overworld::silph_departure_tests::silph_departure_real_map_cached_draw_matches_raw_redraw_and_does_not_tick_the_owner"
+          ]
+        },
+        "log_sha256": "dd0c8f06108a6a20dde23f1b879d023f711d62b9a1df623cda316ce72273e7dc"
+      },
+      {
+        "label": "07-app-debug-server",
+        "passed": 2,
+        "argv": [
+          "cargo",
+          "test",
+          "--offline",
+          "--locked",
+          "-j1",
+          "-vv",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "debug-server",
+          "silph_departure",
+          "--",
+          "--test-threads=1"
+        ],
+        "required_names": {
+          "silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_flag": [
+            "game::silph_departure_tests::silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_flag"
+          ],
+          "silph_departure_real_map_cached_draw_matches_raw_redraw_and_does_not_tick_the_owner": [
+            "render::overworld::silph_departure_tests::silph_departure_real_map_cached_draw_matches_raw_redraw_and_does_not_tick_the_owner"
+          ]
+        },
+        "log_sha256": "869492d26a90dbcfdfbb034c7bbe963ae57b4cde83c15329e3f0bc7c94344c03"
+      }
+    ]
+  },
+  "screenshots": {
+    "method": "Lossless PNG encoding of each already-recorded absolute-frame packed5760bytes plus that frame actual16RGBA palette. Runtime captured PNG window4900..5800 missed actualfade5823..5890; complete packed+palette was recorded at every literal frame. No extra Game/draw or M8 shot reuse.",
+    "derived_provenance_sha256": "005da9f7a9552b01da828d4e80dd59d5ef944a19f8f5b1e969e4d45ef20d2048",
+    "all6_original_copies_byte_exact": true,
+    "images": [
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5831-before-fadeout-Pal3.png",
+        "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7",
+        "bytes": 2404,
+        "role": "before",
+        "absolute_frame": 5831,
+        "relative_to_candidate_start": 8,
+        "boundary": "fadeout-Pal3",
+        "RGBA_sha256": "df0068b271e822b685408a8ff5997eacc9b6cc452e4f6aacf25fba0cc45fcff9",
+        "packed_offset": 33580800,
+        "packed_fnv": "50f73d637c8b4e11",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5855-before-atomic-46-writes-black.png",
+        "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7",
+        "bytes": 2404,
+        "role": "before",
+        "absolute_frame": 5855,
+        "relative_to_candidate_start": 32,
+        "boundary": "atomic-46-writes-black",
+        "RGBA_sha256": "df0068b271e822b685408a8ff5997eacc9b6cc452e4f6aacf25fba0cc45fcff9",
+        "packed_offset": 33719040,
+        "packed_fnv": "50f73d637c8b4e11",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5866-before-fadein-Pal2.png",
+        "sha256": "7e2624bc134f34438b58adfba4e074833bb1d326f4a9233b6652d0eb49de6603",
+        "bytes": 2087,
+        "role": "before",
+        "absolute_frame": 5866,
+        "relative_to_candidate_start": 43,
+        "boundary": "fadein-Pal2",
+        "RGBA_sha256": "273aab318a09a131c08922e10e5995bb5af385c5f5b530bcb5e04e4716c7fe38",
+        "packed_offset": 33782400,
+        "packed_fnv": "a37ada652eb9b035",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5831-after-fadeout-Pal3.png",
+        "sha256": "9e59ff362bf11e94fabe81ce8fea0570c2527c82360db39c15fa5bb0dda3496c",
+        "bytes": 2114,
+        "role": "after",
+        "absolute_frame": 5831,
+        "relative_to_candidate_start": 8,
+        "boundary": "fadeout-Pal3",
+        "RGBA_sha256": "bcd41329d357a866a453f787f4c5f5cdc50f78e1233ca939aadd9fa25f9b0a03",
+        "packed_offset": 33580800,
+        "packed_fnv": "c1f24a25b8f44fed",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5855-after-atomic-46-writes-black.png",
+        "sha256": "0a2817119f4336bca422ecce920612512e1caa345311e2809ca0c8bef2f27969",
+        "bytes": 446,
+        "role": "after",
+        "absolute_frame": 5855,
+        "relative_to_candidate_start": 32,
+        "boundary": "atomic-46-writes-black",
+        "RGBA_sha256": "fc25121efb4a45f650f86e5ba6acb8f0916478fe3c99ae04f5dbf1102a650462",
+        "packed_offset": 33719040,
+        "packed_fnv": "b0f98ce3407a38a5",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "path": "docs/screenshots/silph-rocket-departure-1072/5866-after-fadein-Pal2.png",
+        "sha256": "83c54b01721e93fcd6f045091149012e52e25c5494d55d263c3ca6b88e96e06f",
+        "bytes": 1438,
+        "role": "after",
+        "absolute_frame": 5866,
+        "relative_to_candidate_start": 43,
+        "boundary": "fadein-Pal2",
+        "RGBA_sha256": "44fa8f394fb2cc5a5d9c74691fbb7498432d4c9d40a7f655f68a8d165a043b8b",
+        "packed_offset": 33782400,
+        "packed_fnv": "f115f66e11bdce71",
+        "display_palette_RGBA": [
+          [
+            255,
+            255,
+            255,
+            255
+          ],
+          [
+            170,
+            170,
+            170,
+            255
+          ],
+          [
+            85,
+            85,
+            85,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ],
+          [
+            0,
+            0,
+            0,
+            255
+          ]
+        ]
+      }
+    ]
+  },
+  "local_archive_receipts": {
+    "source_freeze_H": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-silph-M9-source-v1/source-freeze.json",
+      "sha256": "f1ec9018f7fbd3a5ca9601734ec0122c3a76da642c99797b3e6055a649a2b749",
+      "bytes": 1468654
+    },
+    "source_closure_H": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-silph-M9-source-v1/tree-and-source-closure.json",
+      "sha256": "545a77a74f7d4c88d69671b319ccaf5b5f0f84d505ef2e63dad2b42af34e4e04",
+      "bytes": 2686
+    },
+    "normal_base_build": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-M9-normal-App-lib-v1/result.json",
+      "sha256": "ed9f0087d7fbf35e9e7ccd0c2a9d20530efdd2c00d3d991cdfb757aab569babd",
+      "bytes": 8660
+    },
+    "before_link": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-M9-before-witness-link-v2/result.json",
+      "sha256": "11874809c48e64b3f0627fdef255a8ba85c5087af0934acf025e1cc47eb108b2",
+      "bytes": 12804
+    },
+    "after_build_link": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-H-after-witness-link-v1/result.json",
+      "sha256": "291659e9b1f8b26979b5857563ddcf78e70f86bfba45df87b7338136c0e34912",
+      "bytes": 4977
+    },
+    "native_result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-v1/result.json",
+      "sha256": "9eed0350f2d8699c0d7ba627861180ece086bb4f5d89efa46791dafe58162f71",
+      "bytes": 601662
+    },
+    "native_independent_peer": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-independent-peer-v1.json",
+      "sha256": "5d921565c4fe892664382d01c3b9b1c6c9a534b782333549648623314591a832",
+      "bytes": 64190
+    }
+  },
+  "preserved_tool_stops": [
+    {
+      "artifact": "audit-1072-silph-M9-before-witness-link-v1/result.json",
+      "scope": "Before-source-reader symlink-schema mismatch. stages=[];0rustc/Cargo/Game. Link literal exact; v2 reader accepts original per-freeze schema."
+    },
+    {
+      "artifact": "audit-1072-silph-after-ready-argument-stop-v1.json",
+      "scope": "Wrong ready-hash CLI argument rejected before OUT/subprocess;0Cargo/rustc/Game. Exact unchanged ready used for subsequent actual run."
+    }
+  ],
+  "copy_sources": [
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/silph-witness.rs",
+        "sha256": "ed1d7a4c89b5231c017a300f3b32f5121097674fd7d625d79519f3453b28fd4b",
+        "bytes": 36180
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/silph-witness.rs",
+      "sha256": "ed1d7a4c89b5231c017a300f3b32f5121097674fd7d625d79519f3453b28fd4b"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/fixed-buttons7928.json",
+        "sha256": "4722662ed067ba73514b8728661fbd27c9cdb0e29d515fad36fcc712d5a2ef79",
+        "bytes": 52199
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/fixed-buttons7928.json",
+      "sha256": "4722662ed067ba73514b8728661fbd27c9cdb0e29d515fad36fcc712d5a2ef79"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/reload-route-buttons3972.json",
+        "sha256": "1cd98848feea141fce66630c015a2c7fe1e0396e0e96343338b8e39ff83bc58a",
+        "bytes": 27645
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/reload-route-buttons3972.json",
+      "sha256": "1cd98848feea141fce66630c015a2c7fe1e0396e0e96343338b8e39ff83bc58a"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/roster-oracle.json",
+        "sha256": "0d85b08e39d4cc3cbbedb54d4d97522be6fa5fa97d51996ea26a9ec29d5179cc",
+        "bytes": 14101
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/roster-oracle.json",
+      "sha256": "0d85b08e39d4cc3cbbedb54d4d97522be6fa5fa97d51996ea26a9ec29d5179cc"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/route-anchors.json",
+        "sha256": "a6e3f29b661d509911e58de9c5abc998cb8fa70c4d4fa6e1620e2e3f8803eb7f",
+        "bytes": 6398
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/route-anchors.json",
+      "sha256": "a6e3f29b661d509911e58de9c5abc998cb8fa70c4d4fa6e1620e2e3f8803eb7f"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-formal-native-source-v2/literal-prefix-proof.json",
+        "sha256": "106dddc6a5f78d0eb50fd3aa64154d46eb89f17dffe65b49d4de411eefb910eb",
+        "bytes": 16055
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/literal-prefix-proof.json",
+      "sha256": "106dddc6a5f78d0eb50fd3aa64154d46eb89f17dffe65b49d4de411eefb910eb"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1070-silph-physical-save-v1/output/silph-before-giovanni.sav",
+        "sha256": "c35eb3a936e99001775876b6f3ea24dd3c13cfe4072049398ecf98adece8e438",
+        "bytes": 32768
+      },
+      "committed_path": "docs/validation/silph-rocket-departure-1072/silph-before-giovanni.sav",
+      "sha256": "c35eb3a936e99001775876b6f3ea24dd3c13cfe4072049398ecf98adece8e438"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5831-before-fadeout-Pal3.png",
+        "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7",
+        "bytes": 2404
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5831-before-fadeout-Pal3.png",
+      "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5855-before-atomic-46-writes-black.png",
+        "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7",
+        "bytes": 2404
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5855-before-atomic-46-writes-black.png",
+      "sha256": "83954ee6c7ed20b34de9672ee16117d99ff90a2bfcf3f511ce857da5ca1c83a7"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5866-before-fadein-Pal2.png",
+        "sha256": "7e2624bc134f34438b58adfba4e074833bb1d326f4a9233b6652d0eb49de6603",
+        "bytes": 2087
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5866-before-fadein-Pal2.png",
+      "sha256": "7e2624bc134f34438b58adfba4e074833bb1d326f4a9233b6652d0eb49de6603"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5831-after-fadeout-Pal3.png",
+        "sha256": "9e59ff362bf11e94fabe81ce8fea0570c2527c82360db39c15fa5bb0dda3496c",
+        "bytes": 2114
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5831-after-fadeout-Pal3.png",
+      "sha256": "9e59ff362bf11e94fabe81ce8fea0570c2527c82360db39c15fa5bb0dda3496c"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5855-after-atomic-46-writes-black.png",
+        "sha256": "0a2817119f4336bca422ecce920612512e1caa345311e2809ca0c8bef2f27969",
+        "bytes": 446
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5855-after-atomic-46-writes-black.png",
+      "sha256": "0a2817119f4336bca422ecce920612512e1caa345311e2809ca0c8bef2f27969"
+    },
+    {
+      "source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-silph-requested-six-PNG-v1/5866-after-fadein-Pal2.png",
+        "sha256": "83c54b01721e93fcd6f045091149012e52e25c5494d55d263c3ca6b88e96e06f",
+        "bytes": 1438
+      },
+      "committed_path": "docs/screenshots/silph-rocket-departure-1072/5866-after-fadein-Pal2.png",
+      "sha256": "83c54b01721e93fcd6f045091149012e52e25c5494d55d263c3ca6b88e96e06f"
+    }
+  ],
+  "limitations": [
+    "Explicit source DelayFrames model, not original CPU/OAM elapsed-cycle or hardware-frame equivalence.",
+    "No claim complete hidden NPC/RNG history equality.",
+    "No field input/NoDelay/terminal-owner fixes included.",
+    "Full packed/logs/libraries remain local audit artifacts; public replay source, originalSAV and literal inputs suffice to rebuild a new independently identified replay."
+  ],
+  "compiler_version": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n"
+}

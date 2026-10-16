@@ -765,3 +765,116 @@ mod silph_liberation_source_tests {
         }
     }
 }
+
+/// TeamRocketLeaves (SilphCo11F.asm:73-146), in its original write order.
+pub const SILPH_ROCKETS_HIDDEN: [&str; 40] = [
+    "SAFFRON_CITY_OBJ_1",
+    "SAFFRON_CITY_OBJ_2",
+    "SAFFRON_CITY_OBJ_3",
+    "SAFFRON_CITY_OBJ_4",
+    "SAFFRON_CITY_OBJ_5",
+    "SAFFRON_CITY_OBJ_6",
+    "SAFFRON_CITY_OBJ_7",
+    "SAFFRON_CITY_OBJ_14",
+    "SAFFRON_CITY_OBJ_15",
+    "SILPH_CO_2F_OBJ_2",
+    "SILPH_CO_2F_OBJ_3",
+    "SILPH_CO_2F_OBJ_4",
+    "SILPH_CO_2F_OBJ_5",
+    "SILPH_CO_3F_OBJ_2",
+    "SILPH_CO_3F_OBJ_3",
+    "SILPH_CO_4F_OBJ_2",
+    "SILPH_CO_4F_OBJ_3",
+    "SILPH_CO_4F_OBJ_4",
+    "SILPH_CO_5F_OBJ_2",
+    "SILPH_CO_5F_OBJ_3",
+    "SILPH_CO_5F_OBJ_4",
+    "SILPH_CO_5F_OBJ_5",
+    "SILPH_CO_6F_OBJ_6",
+    "SILPH_CO_6F_OBJ_7",
+    "SILPH_CO_6F_OBJ_8",
+    "SILPH_CO_7F_OBJ_5",
+    "SILPH_CO_7F_OBJ_6",
+    "SILPH_CO_7F_OBJ_7",
+    "SILPH_CO_7F_OBJ_8",
+    "SILPH_CO_8F_OBJ_2",
+    "SILPH_CO_8F_OBJ_3",
+    "SILPH_CO_8F_OBJ_4",
+    "SILPH_CO_9F_OBJ_2",
+    "SILPH_CO_9F_OBJ_3",
+    "SILPH_CO_9F_OBJ_4",
+    "SILPH_CO_10F_OBJ_1",
+    "SILPH_CO_10F_OBJ_2",
+    "SILPH_CO_11F_OBJ_3",
+    "SILPH_CO_11F_OBJ_4",
+    "SILPH_CO_11F_OBJ_5",
+];
+pub const SILPH_CITIZENS_SHOWN: [&str; 6] = [
+    "SAFFRON_CITY_OBJ_8",
+    "SAFFRON_CITY_OBJ_9",
+    "SAFFRON_CITY_OBJ_10",
+    "SAFFRON_CITY_OBJ_11",
+    "SAFFRON_CITY_OBJ_12",
+    "SAFFRON_CITY_OBJ_13",
+];
+
+#[cfg(test)]
+mod silph_departure_roster_tests {
+    use super::*;
+    use crate::alloc_prelude::*;
+    #[test]
+    fn silph_departure_roster_matches_31_silph_golden_and_original_saffron_fifteen() {
+        // Independent original source: SilphCo11F.asm:73-146. The existing
+        // golden covers only the 31 Silph enemies, not the Saffron objects.
+        let golden: serde_json::Value =
+            serde_json::from_str(include_str!("silph_liberation_golden.json")).unwrap();
+        let mut hidden: Vec<String> = [1, 2, 3, 4, 5, 6, 7, 14, 15]
+            .into_iter()
+            .map(|id| format!("SAFFRON_CITY_OBJ_{id}"))
+            .collect();
+        hidden.extend(
+            golden["cases"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|case| case["toggle"].as_str().unwrap().to_string()),
+        );
+        assert_eq!(
+            SILPH_ROCKETS_HIDDEN.as_slice(),
+            hidden.iter().map(String::as_str).collect::<Vec<_>>()
+        );
+        assert_eq!(
+            SILPH_CITIZENS_SHOWN,
+            [
+                "SAFFRON_CITY_OBJ_8",
+                "SAFFRON_CITY_OBJ_9",
+                "SAFFRON_CITY_OBJ_10",
+                "SAFFRON_CITY_OBJ_11",
+                "SAFFRON_CITY_OBJ_12",
+                "SAFFRON_CITY_OBJ_13"
+            ]
+        );
+        assert_eq!(hidden.len(), 40);
+        // Original toggle_constants.asm, the extra nine hidden + six shown
+        // Saffron entries excluded from silph_liberation_golden.json.
+        for (toggle, bit) in [
+            ("SAFFRON_CITY_OBJ_1", 0x0a),
+            ("SAFFRON_CITY_OBJ_2", 0x0b),
+            ("SAFFRON_CITY_OBJ_3", 0x0c),
+            ("SAFFRON_CITY_OBJ_4", 0x0d),
+            ("SAFFRON_CITY_OBJ_5", 0x0e),
+            ("SAFFRON_CITY_OBJ_6", 0x0f),
+            ("SAFFRON_CITY_OBJ_7", 0x10),
+            ("SAFFRON_CITY_OBJ_14", 0x17),
+            ("SAFFRON_CITY_OBJ_15", 0x18),
+            ("SAFFRON_CITY_OBJ_8", 0x11),
+            ("SAFFRON_CITY_OBJ_9", 0x12),
+            ("SAFFRON_CITY_OBJ_10", 0x13),
+            ("SAFFRON_CITY_OBJ_11", 0x14),
+            ("SAFFRON_CITY_OBJ_12", 0x15),
+            ("SAFFRON_CITY_OBJ_13", 0x16),
+        ] {
+            assert_eq!(toggle_id_to_bit_index(toggle), Some(bit));
+        }
+    }
+}

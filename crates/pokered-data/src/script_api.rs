@@ -168,6 +168,24 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        // Scene-owned ordinary trainer: explicit localized PrintEndBattleText.
+        // The generic startBattle and rival startBattleSet keep their defaults.
+        engine.register_async_fn(
+            "startBattleWithText",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let string = |index: usize| {
+                    args.get_or_undefined(index).as_string()
+                        .map(|value| value.to_std_string_lossy())
+                        .ok_or_else(|| boa_engine::JsNativeError::typ()
+                            .with_message(format!("startBattleWithText: argument {index} must be a string")))
+                };
+                Ok(PokemonScriptCommand::StartBattleWithText {
+                    trainer_id: string(0)?,
+                    end_battle_text: string(1)?,
+                }.into_script_command())
+            },
+        );
+
         // game.startWildBattle(species: string, level: number) -> Promise<string>
         // Starts a catchable wild/static battle (legendary or route blocker) and
         // resolves to the outcome ("win" | "lose" | "caught" | "fled" | "draw").
@@ -490,6 +508,17 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn(
+            "silphRocketDeparture",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                if !args.is_empty() {
+                    return Err(boa_engine::JsNativeError::typ()
+                        .with_message("silphRocketDeparture: no arguments expected").into());
+                }
+                Ok(PokemonScriptCommand::SilphRocketDeparture.into_script_command())
+            },
+        );
+
         // game.choosePartyPokemon() -> Promise<number>
         // Opens the party menu as a selector (Name Rater); resolves to the
         // chosen 0-based index, or -1 on cancel.
@@ -754,6 +783,52 @@ mod tests {
     use crate::script_function_catalog::POKERED_SCRIPT_FUNCTIONS;
     use super::PokemonScriptApi;
     use dotzuki_engine_script::{CommandResult, ScriptCommand, ScriptEngine};
+
+    #[test]
+    fn boa_silph_departure_await_blocks_and_extra_arguments_reject() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine
+            .load_script(
+                r#"
+            export async function departure() {
+                await game.silphRocketDeparture();
+                await game.showText("after fade");
+            }
+            export async function invalid() {
+                try {
+                    await game.silphRocketDeparture(false);
+                    await game.showText("INVALID_ARGUMENT_ACCEPTED");
+                } catch (error) {
+                    await game.showText(error.name + ":" + error.message);
+                }
+            }
+        "#,
+            )
+            .unwrap();
+        let command = PokemonScriptCommand::SilphRocketDeparture.into_script_command();
+        assert_eq!(
+            engine.call_function("departure", &[]).unwrap(),
+            Some(command.clone())
+        );
+        for _ in 0..3 {
+            assert_eq!(engine.tick(), Some(command.clone()));
+        }
+        assert_eq!(
+            engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "after fade".into()
+            })
+        );
+        assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
+        assert_eq!(
+            engine.call_function("invalid", &[]).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "TypeError:silphRocketDeparture: no arguments expected".into()
+            })
+        );
+        assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
+    }
 
     #[test]
     fn fidelity_menus_and_reward_sound_suspend_with_typed_commands_in_boa() {
@@ -1251,4 +1326,35 @@ mod tests {
             }));
         assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
     }
+    #[test]
+    fn quoted_battle_awaits_the_real_result_and_invalid_payload_rejects_the_promise() {
+        use crate::script_command::PokemonScriptCommand;
+        for outcome in ["win", "lose", "draw"] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(r#"export async function f() {
+                let r = await game.startBattleWithText("OPP_BURGLAR4", "I\nsurrender!");
+                await game.showText(r);
+            }"#).unwrap();
+            let expected = PokemonScriptCommand::StartBattleWithText {
+                trainer_id: "OPP_BURGLAR4".into(), end_battle_text: "I\nsurrender!".into(),
+            }.into_script_command();
+            assert_eq!(engine.call_function("f", &[]).unwrap(), Some(expected.clone()));
+            assert_eq!(engine.tick(), Some(expected));
+            assert_eq!(engine.signal_done(CommandResult::Text(outcome.into())).unwrap(),
+                Some(ScriptCommand::ShowText { text: outcome.into() }));
+            assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+        }
+        for (arguments, index) in [("7, \"text\"", 0), ("\"ID\"", 1), ("\"ID\", null", 1)] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(&format!(r#"export async function f() {{
+                try {{ await game.startBattleWithText({arguments}); await game.showText("INVALID_PAYLOAD_ACCEPTED"); }}
+                catch (e) {{ await game.showText(String(e)); }}
+            }}"#)).unwrap();
+            assert_eq!(engine.call_function("f", &[]).unwrap(), Some(ScriptCommand::ShowText {
+                text: format!("TypeError: startBattleWithText: argument {index} must be a string"),
+            }));
+            assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+        }
+    }
+
 }

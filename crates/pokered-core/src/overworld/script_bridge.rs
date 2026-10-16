@@ -168,6 +168,9 @@ pub enum ScriptEffect {
     StartBattle {
         trainer_id: String,
         rival_triplet_base: Option<u8>,
+        /// Optional explicit caller payload; old script snapshots keep None.
+        #[serde(default)]
+        end_battle_text: Option<String>,
     },
     StartWildBattle {
         species: String,
@@ -332,6 +335,9 @@ pub enum ScriptEffect {
     PlayShipDeparture {
         started: bool,
     },
+    SilphRocketDeparture {
+        state: super::silph_departure::SilphRocketDepartureState,
+    },
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -492,10 +498,12 @@ impl ScriptEffect {
             ScriptEffect::StartBattle {
                 trainer_id,
                 rival_triplet_base,
+                end_battle_text,
             } => json!({
                 "effect": "StartBattle",
                 "trainer_id": trainer_id,
                 "rival_triplet_base": rival_triplet_base,
+                "end_battle_text": end_battle_text,
             }),
             ScriptEffect::StartWildBattle { species, level } => {
                 json!({ "effect": "StartWildBattle", "species": species, "level": level })
@@ -641,6 +649,9 @@ impl ScriptEffect {
             }
             ScriptEffect::PlayShipDeparture { started } => {
                 json!({ "effect": "PlayShipDeparture", "started": started })
+            }
+            ScriptEffect::SilphRocketDeparture { state } => {
+                json!({ "effect": "SilphRocketDeparture", "state": state })
             }
             // Unit variants.
             ScriptEffect::Heal => json!({ "effect": "Heal" }),
@@ -803,6 +814,7 @@ pub fn dispatch_command_with_names(
         ScriptCommand::StartBattle { trainer_id } => ScriptEffect::StartBattle {
             trainer_id: trainer_id.clone(),
             rival_triplet_base: None,
+            end_battle_text: None,
         },
         ScriptCommand::StartWildBattle { species, level } => ScriptEffect::StartWildBattle {
             species: species.clone(),
@@ -814,6 +826,9 @@ pub fn dispatch_command_with_names(
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
             if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text, .. } = &mut effect {
+                *text = resolve_placeholders(text, player_name, rival_name, starter_name);
+            }
+            if let ScriptEffect::StartBattle { end_battle_text: Some(text), .. } = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -949,6 +964,12 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::StartBattleSet { trainer_id, rival_triplet_base } => ScriptEffect::StartBattle {
             trainer_id,
             rival_triplet_base: Some(rival_triplet_base),
+            end_battle_text: None,
+        },
+        PokemonScriptCommand::StartBattleWithText { trainer_id, end_battle_text } => ScriptEffect::StartBattle {
+            trainer_id,
+            rival_triplet_base: None,
+            end_battle_text: Some(end_battle_text),
         },
         PokemonScriptCommand::OpenSlots { lucky } => ScriptEffect::OpenSlots { lucky },
         PokemonScriptCommand::ElevatorMenu { floors } => ScriptEffect::ElevatorMenu { floors },
@@ -974,6 +995,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             block_id,
         },
         PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
+        PokemonScriptCommand::SilphRocketDeparture => ScriptEffect::SilphRocketDeparture {
+            state: super::silph_departure::SilphRocketDepartureState::new(),
+        },
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
         PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
         PokemonScriptCommand::WaitSound => ScriptEffect::WaitSound,
@@ -1215,4 +1239,28 @@ mod field_sound_window_snapshot_tests {
         assert!(matches!(finish, ScriptEffect::FinishFieldText));
         assert_eq!(finish.to_debug_json()["effect"], "FinishFieldText");
     }
+    #[test]
+    fn explicit_battle_quote_does_not_change_old_api_or_legacy_effect_defaults() {
+        let command = PokemonScriptCommand::StartBattleWithText {
+            trainer_id: "OPP_SUPER_NERD9".into(), end_battle_text: "<PLAYER> won!".into(),
+        }.into_script_command();
+        let effect = dispatch_command_with_names(&command, "RED", "BLUE", "BULBASAUR");
+        assert!(matches!(&effect, ScriptEffect::StartBattle {
+            trainer_id, rival_triplet_base: None, end_battle_text: Some(text),
+        } if trainer_id == "OPP_SUPER_NERD9" && text == "RED won!"));
+        let restored: ScriptEffect = serde_json::from_value(serde_json::to_value(effect).unwrap()).unwrap();
+        assert!(matches!(restored, ScriptEffect::StartBattle { end_battle_text: Some(_), .. }));
+        let old: ScriptEffect = serde_json::from_value(serde_json::json!({
+            "StartBattle": {"trainer_id":"OPP_BLAINE1", "rival_triplet_base":null}
+        })).unwrap();
+        assert!(matches!(old, ScriptEffect::StartBattle { end_battle_text: None, .. }));
+        assert!(matches!(dispatch_command(&ScriptCommand::StartBattle { trainer_id: "OPP_BLAINE1".into() }),
+            ScriptEffect::StartBattle { end_battle_text: None, rival_triplet_base: None, .. }));
+        assert!(matches!(dispatch_command(&PokemonScriptCommand::StartBattleSet {
+            trainer_id: "OPP_RIVAL2".into(), rival_triplet_base: 6,
+        }.into_script_command()), ScriptEffect::StartBattle {
+            end_battle_text: None, rival_triplet_base: Some(6), ..
+        }));
+    }
+
 }

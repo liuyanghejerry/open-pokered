@@ -785,37 +785,50 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             } else {
                 Vec::new()
             };
-            let done = Self::tick_active_effect(
-                effect,
-                a_just_pressed,
-                b_just_pressed,
-                input.a,
-                input.b,
-                up_just_pressed,
-                down_just_pressed,
-                &mut self.pending_dialogue,
-                &mut self.last_script_dialogue,
-                &mut self.pending_choice,
-                &mut self.pending_pokedex_entry,
-                &mut self.pending_naming_screen,
-                &mut self.party_select_requested,
-                &mut self.pending_emotion_bubble,
-                &mut self.pending_healing_machine,
-                &mut self.npc_states,
-                &self.state.player,
-                &mut self.scripted_player_path,
-                self.map_data.as_ref(),
-                &self.map_script_config,
-                self.party_count,
-                &mut self.audio_requests,
-                self.state.current_map,
-                &mut self.sfx_event,
-                &mut self.ship_departure,
-                &dialogue_names,
-                self.script_music_playing,
-                self.script_sfx_playing,
-                self.retain_field_text,
-            );
+            let mut departure_apply_objects = false;
+            let done = if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
+                use super::silph_departure::DepartureTick;
+                match state.advance() {
+                    DepartureTick::ApplyObjects => {
+                        departure_apply_objects = true;
+                        false
+                    }
+                    DepartureTick::Complete => true,
+                    DepartureTick::Waiting => false,
+                }
+            } else {
+                Self::tick_active_effect(
+                    effect,
+                    a_just_pressed,
+                    b_just_pressed,
+                    input.a,
+                    input.b,
+                    up_just_pressed,
+                    down_just_pressed,
+                    &mut self.pending_dialogue,
+                    &mut self.last_script_dialogue,
+                    &mut self.pending_choice,
+                    &mut self.pending_pokedex_entry,
+                    &mut self.pending_naming_screen,
+                    &mut self.party_select_requested,
+                    &mut self.pending_emotion_bubble,
+                    &mut self.pending_healing_machine,
+                    &mut self.npc_states,
+                    &self.state.player,
+                    &mut self.scripted_player_path,
+                    self.map_data.as_ref(),
+                    &self.map_script_config,
+                    self.party_count,
+                    &mut self.audio_requests,
+                    self.state.current_map,
+                    &mut self.sfx_event,
+                    &mut self.ship_departure,
+                    &dialogue_names,
+                    self.script_music_playing,
+                    self.script_sfx_playing,
+                    self.retain_field_text,
+                )
+            };
             // A nested text caller (for example a gift/menu flow) owns the
             // window once it creates its dialogue, just like ShowDialogue.
             if !dialogue_was_open && self.pending_dialogue.is_some() && !owns_print_window {
@@ -923,6 +936,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     ));
                 }
                 self.sync_flags_from_engine();
+            }
+            if departure_apply_objects {
+                // TeamRocketLeaves is synchronous under black: no render,
+                // serialization or VM continuation can see half of its roster.
+                for toggle in pokered_data::toggleable_objects::SILPH_ROCKETS_HIDDEN {
+                    self.set_named_object_visible(toggle, false);
+                }
+                for toggle in pokered_data::toggleable_objects::SILPH_CITIZENS_SHOWN {
+                    self.set_named_object_visible(toggle, true);
+                }
             }
             // Scripted player path must also advance during script effects so
             // that MovePlayer can observe the path draining. Without this, the
@@ -2788,6 +2811,27 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    fn set_named_object_visible(&mut self, toggle_id: &str, visible: bool) {
+        use pokered_data::toggleable_objects::{
+            set_object_hidden, set_object_shown, toggle_id_to_bit_index,
+        };
+        if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(toggle_id) {
+            if let Some(npc) = self.npc_states.iter_mut().find(|npc| npc.text_id == npc_id) {
+                npc.visible = visible;
+            }
+        }
+        // Keep live NPCs, both engine/unified flags and SRAM bits consistent.
+        self.set_flag_live(&format!("__OBJ_HIDDEN_{toggle_id}"), !visible);
+        self.set_flag_live(&format!("__OBJ_SHOWN_{toggle_id}"), visible);
+        if let Some(bit) = toggle_id_to_bit_index(toggle_id) {
+            if visible {
+                set_object_shown(&mut self.toggleable_object_flags, bit);
+            } else {
+                set_object_hidden(&mut self.toggleable_object_flags, bit);
+            }
+        }
+    }
+
     fn tick_active_effect(
         effect: &mut script_bridge::ScriptEffect,
         a_just_pressed: bool,
@@ -3099,6 +3143,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         choice.move_up();
                     } else if down_pressed {
                         choice.move_down();
+                    }
+                    // HandleMenuInput plays PRESS_AB once for accepted A/B.
+                    if a_just_pressed || b_just_pressed {
+                        *sfx_event = OverworldSfxEvent::TextAdvance;
                     }
                     if a_just_pressed {
                         *selected = choice.selected;
@@ -3635,6 +3683,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
             }
+            script_bridge::ScriptEffect::SilphRocketDeparture { .. } => false,
             _ => true,
         }
     }
@@ -3808,45 +3857,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
                 script_bridge::ScriptEffect::ShowObjectByName { toggle_id } => {
-                    use pokered_data::toggleable_objects::{
-                        set_object_shown, toggle_id_to_bit_index,
-                    };
-                    if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(&toggle_id) {
-                        if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_id)
-                        {
-                            npc.visible = true;
-                        }
-                    }
-                    // Clear the hidden flag in unified_flags
-                    let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.set_flag_live(&flag_key, false);
-                    let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.set_flag_live(&shown_key, true);
-                    // Also update toggleable_object_flags for SRAM persistence
-                    if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
-                        set_object_shown(&mut self.toggleable_object_flags, bit_index);
-                    }
+                    self.set_named_object_visible(&toggle_id, true);
                 }
                 script_bridge::ScriptEffect::HideObjectByName { toggle_id } => {
-                    use pokered_data::toggleable_objects::{
-                        set_object_hidden, toggle_id_to_bit_index,
-                    };
-                    if let Some(npc_id) = self.map_script_config.npc_id_by_toggle(&toggle_id) {
-                        if let Some(npc) = self.npc_states.iter_mut().find(|n| n.text_id == npc_id)
-                        {
-                            npc.visible = false;
-                        }
-                    }
-                    // Update both stores so a later engine sync cannot restore
-                    // a stale shown flag loaded from a save or previous map.
-                    let flag_key = format!("__OBJ_HIDDEN_{}", toggle_id);
-                    self.set_flag_live(&flag_key, true);
-                    let shown_key = format!("__OBJ_SHOWN_{}", toggle_id);
-                    self.set_flag_live(&shown_key, false);
-                    // Also update toggleable_object_flags for SRAM persistence
-                    if let Some(bit_index) = toggle_id_to_bit_index(&toggle_id) {
-                        set_object_hidden(&mut self.toggleable_object_flags, bit_index);
-                    }
+                    self.set_named_object_visible(&toggle_id, false);
                 }
                 script_bridge::ScriptEffect::PlayMusic { music_id } => {
                     self.audio_requests
@@ -3863,7 +3877,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.audio_requests
                         .push(OverworldAudioRequest::FadeOutMusic);
                 }
-                script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base } => {
+                script_bridge::ScriptEffect::StartBattle { trainer_id, rival_triplet_base, end_battle_text } => {
                     // The scene runs its own battle flow (gym leaders, rivals):
                     // cancel any parked before-battle text phase so the fight
                     // does not double-fire when the scene's text closes.
@@ -3871,9 +3885,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.pending_trainer_battle = Some(PendingTrainerBattle {
                         trainer_id,
                         npc_index: u8::MAX,
-                        // Script-driven battles (gym leaders, rivals) show their
-                        // own reward/quip text from the .scene.
-                        end_battle_text: None,
+                        // Legacy leaders/rivals keep None; ordinary scene
+                        // trainers can explicitly supply PrintEndBattleText.
+                        end_battle_text,
                         rival_triplet_base,
                     });
                 }
@@ -4681,6 +4695,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         });
     }
 }
+
+#[cfg(test)]
+#[path = "choice_confirm_audio_tests.rs"]
+mod choice_confirm_audio_tests;
 
 #[cfg(test)]
 mod safari_timer_tests {
@@ -5832,5 +5850,89 @@ mod cinnabar_quiz_audio_tests {
         assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::ShowDialogue { .. })));
         assert!(ow.last_script_dialogue.is_none());
         assert!(!ow.retain_field_text);
+    }
+}
+
+#[cfg(test)]
+mod cinnabar_victory_caller_tests {
+    use super::*;
+    use pokered_data::impl_traits::PokemonRedData;
+    type Field = OverworldScreen<PokemonRedData>;
+    const GATE: &str = "EVENT_CINNABAR_GYM_GATE1_UNLOCKED";
+    const BEATEN: &str = "EVENT_BEAT_CINNABAR_GYM_TRAINER_1";
+    fn input(a: bool) -> OverworldInput { OverworldInput::new(false,false,false,false,a,false,false,false) }
+    fn request(ow: &mut Field) -> PendingTrainerBattle {
+        for frame in 0..4000 {
+            ow.update_frame(input(frame % 2 == 0));
+            if let Some(request) = ow.pending_trainer_battle.take() { return request; }
+        }
+        panic!("canonical scene did not request its battle");
+    }
+    fn gate_block(ow: &Field) -> u8 {
+        let map = ow.map_data.as_ref().unwrap(); map.blocks[3 * map.width as usize + 9]
+    }
+    #[test]
+    fn scene_quote_reaches_pending_battle_and_both_sound_waits_precede_win_mutations() {
+        for open in [false, true] {
+            let mut ow = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+            ow.set_flag_live(GATE, open); ow.run_on_load();
+            for _ in 0..80 { ow.update_frame(input(false)); }
+            let initial_block = if open { 14 } else { 84 };
+            assert_eq!(gate_block(&ow), initial_block);
+            let command = ow.script_engine.call_function_no_args("talkSuperNerd2").unwrap().unwrap();
+            ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+            let pending = request(&mut ow);
+            assert_eq!(pending.trainer_id, "OPP_BURGLAR4");
+            assert_eq!(pending.npc_index, u8::MAX);
+            assert_eq!(pending.rival_triplet_base, None);
+            assert_eq!(pending.end_battle_text.as_deref(), Some("I\nsurrender!"));
+            assert!(ow.script_awaiting_battle && !ow.script_engine.get_flag(BEATEN));
+            for _ in 0..4 { ow.update_frame(input(false)); assert!(ow.pending_trainer_battle.is_none()); }
+            ow.resume_script_after_battle("win");
+            // Contract input only; the App test must prove actual PCM timing.
+            for wait in 0..2 {
+                ow.script_sfx_playing = true;
+                for _ in 0..7 {
+                    ow.update_frame(input(false));
+                    assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
+                    assert!(!ow.script_engine.get_flag(BEATEN));
+                    assert_eq!(ow.script_engine.get_flag(GATE), open);
+                    assert_eq!(gate_block(&ow), initial_block);
+                }
+                ow.script_sfx_playing = false; ow.update_frame(input(false));
+                if wait == 0 {
+                    assert!(matches!(&ow.active_script_effect, Some(script_bridge::ScriptEffect::PlaySound { sound_id }) if sound_id == "SFX_GO_INSIDE"));
+                    ow.update_frame(input(false));
+                    assert!(matches!(&ow.audio_requests[..], [OverworldAudioRequest::PlaySound { sound_id }] if sound_id == "SFX_GO_INSIDE"));
+                }
+            }
+            assert!(ow.script_engine.get_flag(BEATEN) && ow.script_engine.get_flag(GATE));
+            for _ in 0..4 { ow.update_frame(input(false)); }
+            assert_eq!(gate_block(&ow), 14);
+            assert!(ow.script_engine.is_idle() && ow.pending_dialogue.is_none());
+        }
+    }
+    #[test]
+    fn explicit_quote_is_consumed_once_and_cannot_leak_into_legacy_or_rival_requests() {
+        let mut ow = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+        ow.reload_scene_with_config("CinnabarGym", r#"
+game_scene CinnabarGym {
+  @storyline("probe") {
+    result = startBattleWithText("OPP_SUPER_NERD9", "ONLY FIRST")
+    result = startBattle("OPP_BLAINE1")
+    result = startBattleSet("OPP_RIVAL2", 6)
+  }
+}
+"#, None).unwrap();
+        let command = ow.script_engine.call_function_no_args("probe").unwrap().unwrap();
+        ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+        for (id, quote, base) in [("OPP_SUPER_NERD9", Some("ONLY FIRST"), None), ("OPP_BLAINE1", None, None), ("OPP_RIVAL2", None, Some(6))] {
+            let pending = request(&mut ow);
+            assert_eq!(pending.trainer_id, id); assert_eq!(pending.end_battle_text.as_deref(), quote);
+            assert_eq!(pending.rival_triplet_base, base); assert_eq!(pending.npc_index, u8::MAX);
+            ow.resume_script_after_battle("draw");
+        }
+        assert!(!ow.script_awaiting_battle && ow.script_engine.is_idle());
+        assert!(ow.pending_trainer_battle.is_none());
     }
 }

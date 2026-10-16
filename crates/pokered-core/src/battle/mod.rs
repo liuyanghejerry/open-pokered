@@ -1,6 +1,8 @@
 use crate::alloc_prelude::*;
 pub mod accuracy;
 pub mod presentation;
+mod faint;
+pub use faint::{FaintCue, FaintSide, FaintSound};
 mod fight_text;
 pub use fight_text::{
     BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
@@ -53,6 +55,8 @@ mod pp_restore_caller_tests;
 #[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
+mod simultaneous_faint_tests;
+#[cfg(test)]
 mod exp_award_notice_tests;
 #[cfg(test)]
 mod link_battle_driver_tests;
@@ -62,6 +66,10 @@ mod catch_tests;
 mod transform_capture_tests;
 #[cfg(test)]
 mod capture_outcome_tests;
+#[cfg(test)]
+mod payday_tests;
+#[cfg(test)]
+mod payday_scatter_tests;
 #[cfg(test)]
 mod confusion_polarity_tests;
 #[cfg(test)]
@@ -204,7 +212,7 @@ pub fn prepare_battle_rules() {
 // ── BattleScreen (frame-loop adapter) ─────────────────────────────
 
 use crate::battle::experience::gain::gain_experience;
-use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, trainer_winnings_messages};
+use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, payday_pickup_message, trainer_winnings_messages};
 use crate::battle::settlement::settle::settle_battle;
 use crate::battle::settlement::{BattleOutcome, BattleSettlement};
 use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
@@ -1019,12 +1027,19 @@ pub struct BattleScreen {
     /// into the party (or a PC box if full) and registers it in the Pokédex.
     pub captured_mon: Option<state::Pokemon>,
     /// True when the battle was escaped with a POKé DOLL (`wEscapedFromBattle`
-    /// in the original, set ONLY by ItemUsePokeDoll). The original keeps
-    /// `wBattleResult` at 0 for a Doll escape but writes $2 for a menu run
+    /// in the original, set ONLY by ItemUsePokeDoll). It preserves the earlier
+    /// `wBattleResult` for a Doll escape but writes $2 for a menu run
     /// (core.asm:1600-1602) and for a capture (core.asm:2293) — scripts that
     /// branch on `wBattleResult` (the Pokémon Tower ghost) treat a Doll skip
     /// as a defeat but a menu run / capture as NOT defeating it.
     pub escaped_via_poke_doll: bool,
+    /// Actual writes to Gen-1 wBattleResult: 0 at entry/enemy faint, 1 at
+    /// player faint, 2 on RUN/capture. Doll and escape moves preserve it.
+    /// None denotes an old snapshot whose earlier writes cannot be recovered.
+    pub original_battle_result: Option<u8>,
+    /// The pickup prompt has been queued. Persisted so resuming its text does
+    /// not print it twice or settle money before its confirmation.
+    pub payday_pickup_shown: bool,
     /// Current map ID (for dungeon transition detection)
     pub map_id: u8,
     /// Selected battle transition type
@@ -1305,6 +1320,8 @@ impl BattleScreen {
             end_battle_text: None,
             captured_mon: None,
             escaped_via_poke_doll: false,
+            original_battle_result: Some(0),
+            payday_pickup_shown: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
@@ -1407,6 +1424,8 @@ impl BattleScreen {
             end_battle_text: None,
             captured_mon: None,
             escaped_via_poke_doll: false,
+            original_battle_result: Some(0),
+            payday_pickup_shown: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
@@ -2290,14 +2309,19 @@ impl BattleScreen {
                     };
                     return ScreenAction::Continue;
                 }
-                self.current_message = Some(messages[current].clone());
+                let faint = self.presentation.faint_at(current);
+                if faint.is_none() { self.current_message = Some(messages[current].clone()); }
                 let first_publication = self.presentation.activate(current);
                 if self.presentation.waiting || first_publication { return ScreenAction::Continue; }
+                if faint.is_some_and(|cue| cue.text.is_some()) {
+                    self.current_message = Some(messages[current].clone());
+                    if self.presentation.publish_faint_text(current) { return ScreenAction::Continue; }
+                }
                 // The original animates the HP bar *synchronously* before
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the
                 // current page until the drain/refill finishes.
-                if (link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
+                if (faint.is_some_and(|cue| cue.text.is_none()) || link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
                         if let BattleTextBackdrop::PpRestoreParty { consume_on_ack: Some(item), .. } = backdrop {
@@ -2326,7 +2350,8 @@ impl BattleScreen {
                         self.phase = BattlePhase::ShowingText {
                             messages,
                             current: next_idx,
-                            wait_frames: if link_notice { 65 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
+                            wait_frames: if self.presentation.faint_at(next_idx).is_some() { 0 }
+                                else if link_notice { 65 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
                             next_phase,
                             backdrop,
                         };
@@ -2832,18 +2857,12 @@ learn {learn_name}!")];
                             }
                             if player_won {
                                 let prize = self.calc_prize_money();
-                                let payday = self
-                                    .battle_state
-                                    .as_ref()
-                                    .map(|bs| bs.total_payday_money)
-                                    .unwrap_or(0);
-                                let total = calc_total_winnings(prize, payday);
                                 let player_name = self
                                     .player_name
                                     .clone()
                                     .unwrap_or_else(|| "RED".to_string());
                                 let money_msgs =
-                                    trainer_winnings_messages(&player_name, total);
+                                    trainer_winnings_messages(&player_name, prize);
                                 // Prepend the trainer's one-shot victory quip
                                 // (original PrintEndBattleText, shown before the
                                 // prize-money text) for sight/talk battles.
@@ -2880,6 +2899,9 @@ learn {learn_name}!")];
                             } else {
                                 BattleOutcome::Loss
                             };
+                            if self.defer_payday_pickup(outcome, self.phase.clone()) {
+                                return ScreenAction::Continue;
+                            }
                             self.finalize_settlement(outcome);
                             ScreenAction::Transition(GameScreen::Overworld)
                         } else {
@@ -2916,6 +2938,11 @@ learn {learn_name}!")];
                 } else {
                     BattleOutcome::Loss
                 };
+                if self.defer_payday_pickup(outcome, BattlePhase::BattleOver {
+                    won, escaped, wait_frames: 0,
+                }) {
+                    return ScreenAction::Continue;
+                }
                 self.finalize_settlement(outcome);
                 ScreenAction::Transition(GameScreen::Overworld)
             }
@@ -2996,7 +3023,11 @@ learn {learn_name}!")];
         self.presentation.begin_pages();
         let mut expanded = Vec::new();
         for message in &messages {
-            let pages = paginate_battle_text(&pokered_data::battle_text::localize(message, self.is_zh));
+            let pages = if message.is_empty() && self.presentation.has_silent_faint() {
+                vec![String::new()] // a typed action slot, never a displayed empty caption
+            } else {
+                paginate_battle_text(&pokered_data::battle_text::localize(message, self.is_zh))
+            };
             self.presentation.add_pages(message, pages.len());
             expanded.extend(pages);
         }
@@ -3007,12 +3038,14 @@ learn {learn_name}!")];
             return;
         }
 
-        self.current_message = Some(expanded[0].clone());
+        if self.presentation.faint_at(0).is_none() {
+            self.current_message = Some(expanded[0].clone());
+        }
         self.presentation.activate(0);
         self.phase = BattlePhase::ShowingText {
             messages: expanded,
             current: 0,
-            wait_frames: BATTLE_TEXT_PAGE_WAIT_FRAMES,
+            wait_frames: if self.presentation.faint_at(0).is_some() { 0 } else { BATTLE_TEXT_PAGE_WAIT_FRAMES },
             next_phase: Box::new(next),
             backdrop: BattleTextBackdrop::Battle,
         };
@@ -3374,6 +3407,7 @@ learn {learn_name}!")];
 
         // RUN always escapes a Safari battle.
         if matches!(action, SafariMenuAction::Run) {
+            self.original_battle_result = Some(2);
             self.show_text_then(vec!["Got away safely!".to_string()], escaped_over);
             return;
         }
@@ -3421,6 +3455,7 @@ learn {learn_name}!")];
                 match result {
                     Some(CaptureResult::Captured) => {
                         caught = true;
+                        self.original_battle_result = Some(2);
                         // $43: caught — toss, poof, hide pic, 3 shakes.
                         self.pending_anim_events.push_back(BattleAnimEvent::Ball {
                             ball: ItemId::SafariBall,
@@ -3653,6 +3688,7 @@ learn {learn_name}!")];
             });
             let (msg, next) = match result {
                 CaptureResult::Captured => {
+                    self.original_battle_result = Some(2);
                     self.captured_mon = Some(caught_candidate);
                     // A catch ENDS the battle (the app adds the caught mon on
                     // settle) — previously the BattleOver phase set here was
@@ -3824,6 +3860,7 @@ learn {learn_name}!")];
         // (Pokémon Tower without the SILPH SCOPE) ALWAYS allows escape
         // (`call IsGhostBattle / jp z, .canEscape`).
         if self.is_ghost && self.battle_state.is_some() {
+            self.original_battle_result = Some(2);
             self.show_text_then(
                 vec!["Got away safely!".to_string()],
                 BattlePhase::BattleOver {
@@ -3838,6 +3875,7 @@ learn {learn_name}!")];
             let result = try_run_from_battle_with_rng(bs, || self.rng.next_u8());
             match result {
                 RunResult::Escaped => {
+                    self.original_battle_result = Some(2);
                     self.show_text_then(
                         vec!["Got away safely!".to_string()],
                         BattlePhase::BattleOver {
@@ -4007,6 +4045,7 @@ learn {learn_name}!")];
                         });
                         next_effects.extend(effects.iter().filter(|entry| matches!(
                             entry.kind, pokered_rules::PokeVolatile::CalledMove { .. }
+                                | pokered_rules::PokeVolatile::PayDayScattered { .. }
                         )).cloned());
                         *state = next_state;
                         *effects = next_effects;
@@ -4022,8 +4061,16 @@ learn {learn_name}!")];
                     }
                 }
             }
-            self.presentation.record_turn(&log, &state, &effects, turn_start_hp);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+            let faint_plan = (!self.link_mode).then(|| faint::FaintPlan::from_turn(
+                &log, bs.player.party.iter().any(|mon| mon.hp > 0), self.is_wild));
+            self.presentation.record_turn(&log, &state, &effects, turn_start_hp,
+                faint_plan.as_ref(), Some(&battle_names));
+            self.original_battle_result = Self::result_after_faint_receipts(
+                self.original_battle_result,
+                &log,
+                bs.player.party.iter().any(|mon| mon.hp > 0),
+            );
 
             for ev in &log.events {
                 if let TurnEvent::MoveUsed { actor, move_ } = ev {
@@ -4033,17 +4080,6 @@ learn {learn_name}!")];
                         bs.enemy.last_move_used = *move_;
                     }
                 }
-            }
-            let enemy_connected = |mv: MoveId| {
-                log.events.iter().any(|ev| matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                    if *actor == BattlerRef::OPPONENT && *move_ == mv))
-                    && !log.events.iter().any(|ev| matches!(ev, TurnEvent::Missed { actor }
-                        if *actor == BattlerRef::OPPONENT))
-            };
-            // Enemy Pay Day scatters coins into the pot.
-            if enemy_connected(MoveId::PayDay) {
-                let lvl = bs.enemy.active_mon().level as u32;
-                bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
             }
             // A connecting enemy Whirlwind/Roar/Teleport flees a WILD battle.
             let escape = log.events.iter().any(|ev| {
@@ -4060,7 +4096,7 @@ learn {learn_name}!")];
                 bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
             }
 
-            let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
+            let mut m = pokered_rules::runtime::translate_turn_named_with_faints(&log, &state, &effects, Some(&battle_names), faint_plan.as_ref());
             if let Some(label) = enemy_call {
                 if !ghost_enemy_blocked {
                     self.presentation.called_move_in_order(&mut m,
@@ -4092,6 +4128,9 @@ learn {learn_name}!")];
                 m.insert(0, format!("{} must recharge!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
+            bs.total_payday_money = bs.total_payday_money
+                .saturating_add(pokered_rules::take_payday_coins(&mut effects, BattlerRef::OPPONENT))
+                .min(999_999);
             (m, escape)
         };
         msgs.append(&mut ai_msgs);
@@ -4679,7 +4718,7 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
-                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. })).cloned());
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. } | pokered_rules::PokeVolatile::PayDayScattered { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
                         }
@@ -4695,9 +4734,16 @@ learn {learn_name}!")];
                         }
                     }
                 }
-                self.presentation
-                    .record_turn(&log, &state, &effects, turn_start_hp);
                 pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+                let faint_plan = (!self.link_mode).then(|| faint::FaintPlan::from_turn(
+                    &log, bs.player.party.iter().any(|mon| mon.hp > 0), self.is_wild));
+                self.presentation.record_turn(&log, &state, &effects, turn_start_hp,
+                    faint_plan.as_ref(), Some(&battle_names));
+                self.original_battle_result = Self::result_after_faint_receipts(
+                    self.original_battle_result,
+                    &log,
+                    bs.player.party.iter().any(|mon| mon.hp > 0),
+                );
                 Self::consume_player_pp_charge(bs, &mut state, &mut effects, entry_pp, gather);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
                 // Move). The driver logs MoveUsed only for a move that passed the
@@ -4710,27 +4756,6 @@ learn {learn_name}!")];
                         } else {
                             bs.enemy.last_move_used = *move_;
                         }
-                    }
-                }
-                // Pay Day: each side that connected with Pay Day scatters coins = 2 ×
-                // its level into the battle-wide payday pot (read by settlement).
-                {
-                    use dotzuki_engine::battle::stack::TurnEvent;
-                    let used_payday = |who: BattlerRef| {
-                        log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                                if *actor == who && *move_ == pokered_data::moves::MoveId::PayDay)
-                        }) && !log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::Missed { actor } if *actor == who)
-                        })
-                    };
-                    if used_payday(BattlerRef::PLAYER) {
-                        let lvl = bs.player.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
-                    }
-                    if used_payday(BattlerRef::OPPONENT) {
-                        let lvl = bs.enemy.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
                     }
                 }
                 // Whirlwind / Roar / Teleport: a connecting switch/flee move ends a
@@ -4761,7 +4786,7 @@ learn {learn_name}!")];
                 if e_recharging && !enemy_ai_fired {
                     bs.enemy.clear_status2(NEEDS_TO_RECHARGE);
                 }
-                let mut m = pokered_rules::runtime::translate_turn_named(&log, &state, &effects, Some(&battle_names));
+                let mut m = pokered_rules::runtime::translate_turn_named_with_faints(&log, &state, &effects, Some(&battle_names), faint_plan.as_ref());
                 // Called moves stay beside their resolved action, including when
                 // the caller acts second. Their own animation precedes the strike.
                 for (call, actor, resolved, failed) in [
@@ -4800,7 +4825,11 @@ learn {learn_name}!")];
                         if created {
                             m.push(format!("{} put in a SUBSTITUTE!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
-                        if (had || created) && !now {
+                        if (had || created) && !now
+                            && !pokered_rules::payday_scatter(&effects,
+                                if who.side == 0 { BattlerRef::OPPONENT } else { BattlerRef::PLAYER })
+                                .is_some_and(|(_, broke)| broke)
+                        {
                             m.push(format!("{}'s SUBSTITUTE broke!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
                     }
@@ -4851,6 +4880,13 @@ learn {learn_name}!")];
                         // status line (fast asleep / frozen) from the log leads.
                         m.extend(ghost_msgs);
                     }
+                }
+                // The same real effect receipt owns narration and the pool.
+                // Consume it only after all action-local text has been attached.
+                for actor in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
+                    bs.total_payday_money = bs.total_payday_money
+                        .saturating_add(pokered_rules::take_payday_coins(&mut effects, actor))
+                        .min(999_999);
                 }
                 (m, escape, result.first)
             };
@@ -4919,6 +4955,32 @@ learn {learn_name}!")];
             // when both mons faint. Preserve fought history for a later Revive.
             if player_fainted {
                 bs.party_gain_exp_flags[bs.player.active_pokemon_index] = false;
+                let alive_player = bs
+                    .player
+                    .party
+                    .iter()
+                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.player.active_mon()));
+                if !alive_player {
+                    // AnyPartyAlive precedes victory, even when both active
+                    // mons faint. Each Link peer also checks its own party: a
+                    // double final KO returns Lose on BOTH sides (core.asm
+                    // FaintEnemyPokemon / HandlePlayerBlackOut).
+                    if self.link_mode {
+                        self.link_result = Some(crate::link::protocol::LinkBattleResult::Lose);
+                    }
+                    if bs.battle_type == BattleType::Trainer {
+                        return BattlePhase::TrainerVictory {
+                            phase: VictoryPhase::TrainerPicScrollIn,
+                            wait_frames: 50,
+                            player_won: false,
+                        };
+                    }
+                    return BattlePhase::BattleOver {
+                        won: false,
+                        escaped: false,
+                        wait_frames: 60,
+                    };
+                }
             }
 
             if enemy_fainted {
@@ -4951,6 +5013,12 @@ learn {learn_name}!")];
                 }
                 self.show_player_pokeballs = false;
                 self.show_enemy_pokeballs = false;
+                if player_fainted {
+                    // Both parties can continue: ChooseNextMon runs before
+                    // ReplaceFaintedEnemyMon. Link replacements still use the
+                    // existing exchange of the two players' Switch actions.
+                    return BattlePhase::PlayerFaintSwitch;
+                }
                 if self.link_mode {
                     // No SHIFT prompt / auto send-out in link battles: the
                     // enemy trainer's replacement is the remote player's
@@ -4976,31 +5044,6 @@ learn {learn_name}!")];
             }
 
             if player_fainted {
-                let alive_player = bs
-                    .player
-                    .party
-                    .iter()
-                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.player.active_mon()));
-                if !alive_player {
-                    // We're out of mons: battle over, we lose (the original's
-                    // HandlePlayerBlackOut → LinkBattleLostText; the remote
-                    // side resolves the mirror and wins).
-                    if self.link_mode {
-                        self.link_result = Some(crate::link::protocol::LinkBattleResult::Lose);
-                    }
-                    if bs.battle_type == BattleType::Trainer {
-                        return BattlePhase::TrainerVictory {
-                            phase: VictoryPhase::TrainerPicScrollIn,
-                            wait_frames: 50,
-                            player_won: false,
-                        };
-                    }
-                    return BattlePhase::BattleOver {
-                        won: false,
-                        escaped: false,
-                        wait_frames: 60,
-                    };
-                }
                 self.show_player_pokeballs = false;
                 self.show_enemy_pokeballs = false;
                 return BattlePhase::PlayerFaintSwitch;
@@ -5247,7 +5290,28 @@ learn {learn_name}!")];
             self.record_switch_in_enemy_hp();
             self.show_player_pokeballs = true;
             self.show_enemy_pokeballs = !self.is_wild;
-            self.show_text_then(vec![send_out], BattlePhase::PlayerMenu);
+            let next = if self
+                .battle_state
+                .as_ref()
+                .is_some_and(|bs| bs.enemy.active_mon().hp == 0)
+            {
+                // ChooseNextMon returns to ReplaceFaintedEnemyMon: even
+                // after a forced player replacement, the original still
+                // offers SHIFT by party count (including fainted slots).
+                // Resume directly, without repeating faint/EXP processing.
+                let bs = self.battle_state.as_ref().unwrap();
+                if bs.battle_type == BattleType::Trainer
+                    && self.battle_style == BattleStyle::Shift
+                    && bs.player.party.len() >= 2
+                {
+                    BattlePhase::ShiftPrompt
+                } else {
+                    BattlePhase::EnemySendingNext { wait_frames: 30 }
+                }
+            } else {
+                BattlePhase::PlayerMenu
+            };
+            self.show_text_then(vec![send_out], next);
         }
     }
 
@@ -5418,7 +5482,58 @@ learn {learn_name}!")];
         0
     }
 
+    fn result_after_faint_receipts(
+        current: Option<u8>,
+        log: &dotzuki_engine::battle::stack::TurnLog<pokered_rules::PokeredRules>,
+        has_live_player: bool,
+    ) -> Option<u8> {
+        use dotzuki_engine::battle::stack::TurnEvent;
+        let player_fainted = log.events.iter().any(|event| matches!(event,
+            TurnEvent::Fainted { who } if who.side == 0));
+        let enemy_fainted = log.events.iter().any(|event| matches!(event,
+            TurnEvent::Fainted { who } if who.side == 1));
+        // RemoveFaintedPlayerMon writes 1 first. FaintEnemyPokemon only writes
+        // 0 if AnyPartyAlive succeeds, including simultaneous recoil KOs. The
+        // engine's target/actor event order is not the original handler order.
+        let current = if player_fainted { Some(1) } else { current };
+        if enemy_fainted && has_live_player { Some(0) } else { current }
+    }
+
+    fn payday_pickup_amount(&self, outcome: BattleOutcome) -> u32 {
+        if self.link_mode || self.captured_mon.is_some()
+            || !matches!(outcome, BattleOutcome::Win | BattleOutcome::Escaped)
+        {
+            return 0;
+        }
+        // Legacy snapshots never stored the result's earlier writes. Preserve
+        // their old victory eligibility rather than inventing an escape win.
+        let eligible = self.original_battle_result
+            .map_or(outcome == BattleOutcome::Win, |result| result == 0);
+        if !eligible { return 0; }
+        self.battle_state.as_ref().map_or(0, |bs| bs.total_payday_money.min(999_999))
+    }
+
+    fn defer_payday_pickup(&mut self, outcome: BattleOutcome, next: BattlePhase) -> bool {
+        let payday = self.payday_pickup_amount(outcome);
+        if self.payday_pickup_shown || payday == 0 { return false; }
+        self.payday_pickup_shown = true;
+        self.show_payday_pickup_then(payday, next);
+        true
+    }
+
+    /// Explicit source printing call, after prize text and before settlement /
+    /// evolution. Future source text owners can attach here without guessing
+    /// the identity of a localized/paginated string.
+    fn show_payday_pickup_then(&mut self, payday: u32, next: BattlePhase) {
+        self.show_text_then(
+            vec![payday_pickup_message(self.player_name.as_deref().unwrap_or("RED"), payday)],
+            next,
+        );
+    }
+
     fn finalize_settlement(&mut self, outcome: BattleOutcome) {
+        let payday = self.payday_pickup_amount(outcome);
+        let prize = self.calc_prize_money();
         if let Some(ref mut bs) = self.battle_state {
             // A real catch returns wBattleResult = 2, not a victory (core.asm:
             // .returnAfterCapturingMon). The captured mon is still owned here;
@@ -5431,6 +5546,12 @@ learn {learn_name}!")];
             };
             let mut settlement =
                 settle_battle(bs, outcome, self.trainer_class, self.player_money);
+            settlement.payday_bonus = payday;
+            settlement.money_gained = match outcome {
+                BattleOutcome::Win => calc_total_winnings(prize, payday),
+                BattleOutcome::Escaped => calc_total_winnings(0, payday),
+                _ => 0,
+            };
             if self.link_mode {
                 // Link battles neither pay nor lose money: the original's
                 // TrainerBattleVictory skips the prize flow for
