@@ -1758,6 +1758,14 @@ mod tests {
                     outcome == "win"
                 );
             }
+            let mut repeated = NativeScriptEngine::new();
+            repeated.load_map("SilphCo11F", &pokered_data::embedded_scenes::get_scene_ast("SilphCo11F").unwrap());
+            repeated.set_flag("EVENT_BEAT_SILPH_CO_GIOVANNI", true);
+            repeated.set_player_position(6, 13);
+            let commands = drive_fidelity_scene(&mut repeated, handler, false, "", &[]);
+            assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::StartBattle { .. })));
+            assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::Custom { name, .. } if name == "silphRocketDeparture")));
+            assert!(repeated.get_flag("EVENT_BEAT_SILPH_CO_GIOVANNI"));
         }
     }
 

@@ -141,8 +141,17 @@ fn silph_departure_host_waits_32_batch_3_32_and_normal_palette_does_not_resume_e
             elapsed == 67
         );
         assert_eq!(screen.script_engine_idle(), elapsed == 67);
+        assert_eq!((screen.state.player.x, screen.state.player.y), (6, 14));
+        assert!(
+            screen.audio_requests.is_empty(),
+            "departure adds no music/SFX producer"
+        );
         if elapsed < 67 {
-            screen.update_frame(neutral());
+            let all_buttons = OverworldInput::new(true, true, true, true, true, true, true, true);
+            assert!(matches!(
+                screen.update_frame(all_buttons),
+                crate::game_state::ScreenAction::Continue
+            ));
         }
     }
     let mut save = crate::save::SaveData::new();
