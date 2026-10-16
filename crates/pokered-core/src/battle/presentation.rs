@@ -89,17 +89,17 @@ impl BattlePresentation {
         for page in &mut self.pages {
             if page.as_ref().is_some_and(|step| step.faint.is_some()) { *page = None; }
         }
-        if saved.faints.iter().any(Option::is_some) {
-            self.pages = saved.faints.into_iter().map(|faint| faint.map(|(cue, continuation, published)| {
-                let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
-                step.faint_continuation = continuation;
-                step.faint_text_published = published;
-                step
-            })).collect();
-            self.serial = saved.faint_serial;
-            self.current_faint = saved.active_faint;
-            self.waiting = saved.faint_waiting;
-        }
+        // This vector is positional: all-None ordinary pages must survive
+        // capture -> restore -> capture just as pages with a faint cue do.
+        self.pages = saved.faints.into_iter().map(|faint| faint.map(|(cue, continuation, published)| {
+            let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
+            step.faint_continuation = continuation;
+            step.faint_text_published = published;
+            step
+        })).collect();
+        self.serial = saved.faint_serial;
+        self.current_faint = saved.active_faint;
+        self.waiting = saved.faint_waiting;
     }
 
     /// Old snapshots did not record publication. Preserve their prior ACK
