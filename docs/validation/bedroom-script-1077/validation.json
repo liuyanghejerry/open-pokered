@@ -1,0 +1,46 @@
+{
+  "original": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c scripts/RedsHouse2F.asm",
+  "scenario": "original SRAM script byte1, ordinary boot and Continue",
+  "seed": 42,
+  "frames": 679,
+  "first_overworld_frame": 615,
+  "runtime_setters": 0,
+  "adaptive_input_decisions": 0,
+  "fixture_sha256": "e963c4463c0306dad4b76444a74738576eb74dc1c12a408d939d7c7f22ed5b23",
+  "input_tape_sha256": "43b3a64c685699931e3d48e9bd1702d4c2532e8ff239a4e12473dcabf79d3295",
+  "cases": {
+    "before": {
+      "source": "3ada1c5272bce1a402d020380fec40bf092e6af5",
+      "facing": "Up",
+      "map": "RedsHouse2F",
+      "position": [
+        3,
+        6
+      ],
+      "png_sha256": "efb5a675d2bae4847a6d0feb46fc06643f890d5716577bbb4cccfda8febf8f65"
+    },
+    "after": {
+      "source": "93dd7057b9538f09a66075f784e706551d696e86",
+      "facing": "Down",
+      "map": "RedsHouse2F",
+      "position": [
+        3,
+        6
+      ],
+      "png_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d"
+    }
+  },
+  "validation": [
+    {
+      "source": "dc68fcb3cefa32683b32684f122f036a82a1b0ea",
+      "scope": "core native bedroom3, SRAM1, Boa bedroom2, agent graph58; these source paths unchanged in93dd",
+      "named_pass": 64
+    },
+    {
+      "source": "93dd7057b9538f09a66075f784e706551d696e86",
+      "scope": "App bedroom module default2/debug2, actual NewGame owner1",
+      "named_pass": 5
+    }
+  ],
+  "limits": "Native screenshots prove the stated Continue case. App regression exercises the shared host/bare NEW GAME script phase; it is not an actual GBA run or a full-map soft-reset regression."
+}

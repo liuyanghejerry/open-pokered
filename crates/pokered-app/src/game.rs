@@ -2632,7 +2632,7 @@ impl PokemonGame {
                         // Both host and bare-metal arms have now installed
                         // the new save context. Run the entry phase once here,
                         // rather than in the context-free screen constructor.
-                        self.overworld.run_on_load();
+                        self.run_initial_new_game_map_script();
                         if let Some(ref audio) = self.audio {
                             audio.play_music(MusicId::PALLET_TOWN);
                         }
@@ -2897,6 +2897,15 @@ impl PokemonGame {
             return;
         }
         self.state.transition_to(screen);
+    }
+
+    fn run_initial_new_game_map_script(&mut self) {
+        // InitPlayerData2 clears the original saved map-script bytes. The
+        // bare-metal NEW GAME arm can reuse a screen from before soft reset;
+        // seed its aliases from the fresh save before the first script runs.
+        self.overworld
+            .restore_loaded_save_flags(&self.save_data, None);
+        self.overworld.run_on_load();
     }
 
     /// Reclaim decoded graphics at GBA full-screen boundaries. Leaving battle
@@ -13127,6 +13136,10 @@ mod map_on_load_tests {
         assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (15, 8));
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/bedroom_save_regressions.rs"]
+mod bedroom_save_regressions;
 
 #[cfg(test)]
 mod continue_map_music_tests {
