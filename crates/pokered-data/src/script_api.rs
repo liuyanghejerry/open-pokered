@@ -1237,9 +1237,18 @@ mod tests {
         assert!(next.is_none());
         engine.load_script(r#"
             export async function invalidQuizText() {
-                await game.printFieldText("invalid", true, "true");
+                try {
+                    await game.printFieldText("invalid", true, "true");
+                    await game.showText("INVALID_MODE_ACCEPTED");
+                } catch (error) {
+                    await game.showText(error.name + ":" + error.message);
+                }
             }
         "#).unwrap();
-        assert!(engine.call_function("invalidQuizText", &[]).is_err());
+        assert_eq!(engine.call_function("invalidQuizText", &[]).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "TypeError:printFieldText: prompt must be false, true, or prompt".into(),
+            }));
+        assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
     }
 }
