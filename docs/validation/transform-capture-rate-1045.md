@@ -82,11 +82,39 @@ One additional complete `pokered-core` run passed **3404 tests**: 2992 unit
 tests and 412 integration tests, with zero failures and one ignored doctest.
 This includes the complete Transform matrix and the inherited FIGHT, capture
 and flinch regressions. The source, engine and GFX freezes matched before and
-after this run, and the runner and Cargo process groups exited. Subsequent
-documentation changes preserve these integrated non-document source bytes.
+after this run, and the runner and Cargo process groups exited. The documentation-only publication `eb67b46e` preserved these integrated
+non-document source bytes.
 
 These are deterministic core-caller tests with unit fixtures, including an
 explicit speed fixture for the Mirror Move turn. They are not a native Game
 playthrough, original-emulator replay, App/CLI/GBA build, or official CI run.
 The change is pure core logic, which falls under the repository's screenshot
 exception.
+
+## Update after PR282 merged
+
+The original publication `eb67b46e` passed all three original-attempt-1
+workflows on historical base `e323f16e`: [CI](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827949902),
+[GBA ROM](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827950063),
+and [GBA performance](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827950241).
+The repository requires an up-to-date branch (`strict=true`), so those old
+results cannot replace checks on the updated head.
+
+A normal merge of actual master `42b41f7c359c4b5cd8c0d3d1cec81a8639f70b32` produced
+`12d6826ea02102df7a2f85d0dae0305deb95f32c`, without conflicts or manual Rust changes.
+The Transform reader and its three-test module remain byte-identical to
+`eb67b46e`; the inherited confusion fix and already merged Day Care dialogue
+are now included. Every non-document byte equals the PR281+PR282+PR283 prefix
+`8cd4ea152b67679fe9e10d707fddecb768799f87` of the private four-PR combination
+`fb6f73dd79328c30dc345c214fa305498b4abc76`. That complete four-PR combination
+actually passed **3411 core tests** (2999 unit + 412 integration, zero failures,
+one ignored doctest), with unchanged source/engine/GFX freezes. It also
+contains the still-separate Day Care record fix; this combined result is not
+relabeled as a new run of this branch. Its raw result SHA-256 is
+`4434b19e6555d0233fe4a4c4413b4aacacf1ca499f9038b5cb7c73f1084a93d4`,
+and independent terminal review is
+`36c9a3226a66e4e7670a5d212ff1b80957ef9c3ec000b5b6581cc16e8edd5f17`.
+
+The following commit only updates this record. No local Cargo run was
+repeated for this base update; official CI evaluates the new published head
+separately. The historical 3404-test run keeps its actual source identity.
