@@ -1,0 +1,593 @@
+{
+  "schema": "double-ko-native-validation-1066-v1",
+  "actual_before": {
+    "head": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+    "binary_sha256": "0046c0c06c45f9baea25b92b01cd84c66f6ff3ff6dd3430d1fc5745d0ab66a1e",
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-payday-base-provider-v1/result.json",
+      "sha256": "1bf2a92950c99e656d70b324ca139e361d8395301942151b4edd55799ed1530e",
+      "bytes": 929
+    },
+    "source_freeze": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-payday-base-cli-build-v1/before.json",
+      "sha256": "5ddfcdc57430d9120518e2ec1e6d22b5765aec5c974f5bdd6058175b96a932b5",
+      "bytes": 531611
+    }
+  },
+  "actual_after": {
+    "head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7",
+    "integration_base": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+    "binary_sha256": "533a3cd22054f51d62440087f50cd715fd94d1f3b8924bda0a603376121b4661",
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-provider-v1/result.json",
+      "sha256": "0545131e2f4c1202f583d90642ad6a83461c0e3ab0c0a257354ba8ec550a4c47",
+      "bytes": 979
+    },
+    "source_freeze": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-cli-build-v1/before.json",
+      "sha256": "e23ec5271779257341bc26959a2d5e4c4635edc3b0788a7735ef654c6c09bab5",
+      "bytes": 532034
+    }
+  },
+  "engine_revision": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+  "counts": {
+    "after_non_docs": 2714,
+    "engine_tracked": 981,
+    "external_GFX": 702
+  },
+  "runtime": {
+    "seed": 42,
+    "speed": 0,
+    "language": "en",
+    "audio": false,
+    "startup": "ordinary cold boot and physical SRAM CONTINUE",
+    "no_runtime_setters": true,
+    "no_snapshots_or_warps": true,
+    "candidate_adaptive_input": false
+  },
+  "fixture": {
+    "location": "ViridianForest2,19; ordinary UP then A engages NPC4 BugCatcher set3 Weedle9",
+    "Geodude": {
+      "level": 21,
+      "hp": 1,
+      "max_hp": 54,
+      "DVs": [
+        255,
+        255
+      ],
+      "moves": [
+        "Tackle",
+        "DefenseCurl",
+        "RockThrow",
+        "Selfdestruct"
+      ],
+      "initial_PP": [
+        35,
+        40,
+        15,
+        5
+      ]
+    },
+    "reserve": "Pidgey5 HP20/20 only in healthy-reserve case",
+    "initial_money": 1000,
+    "initial_coins": 0,
+    "trainer_flag": "EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2 initially false",
+    "codec_producer": "001baef21de4b1660a9c301adb57451cfeda5c68; not relabelled M4 or8c3",
+    "codec_receipt": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v2/result.json",
+      "sha256": "c2419c806242f85de99351ef3bf6ddb5a5d7c6d36161a5cc0b4a12e3b9257ac2",
+      "bytes": 4059
+    },
+    "roundtrip": "32768byte SRAM checksum/import/reexport byte-identical; no sidecar;175of176 codec source inputs equalM4, remaining unused bedroom constant"
+  },
+  "fixed_input": {
+    "frames": 3572,
+    "sha256": "081594cdc6be3f4ff1d4a8085d77204f82f2320fbb26d88fadb9eab840bdb39c",
+    "origin": "two independent M4-only2484frame discoveries yielded identical bytes; append predeclared32*(B2+neutral30)+neutral64=1088frames; locked before candidate execution",
+    "before_only_discoveries": [
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-base-discovery-v1/result.json",
+        "sha256": "f69aeb6970f0b985a3603d6630d72fdd8f72c49513affe72fe70ff2a4b2863a5",
+        "bytes": 1210780
+      },
+      {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-reserve-base-discovery-v1/result.json",
+        "sha256": "011eef57f85416ca4dcc65e00df6137f46f4dfef510cd49b7c36c6ced3a476ac",
+        "bytes": 1332805
+      }
+    ]
+  },
+  "actual_core": {
+    "head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7",
+    "passed": 3051,
+    "session": 55987,
+    "result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-core-full-v1/result.json",
+      "sha256": "fab60f597dc3efa81cff87011a0b07f584f0bcadbc3971cebc19898a35d290de",
+      "bytes": 659
+    },
+    "raw_log_sha256": "6c08d864615f8975ae384b9ce8a11029f114bd7d9464712df1908679e91b6ce9",
+    "argv": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--offline",
+      "--locked",
+      "-j1",
+      "--lib",
+      "--",
+      "--test-threads=1"
+    ]
+  },
+  "actual_debug_CLI_build": {
+    "head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7",
+    "session": 56972,
+    "result": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-cli-build-v1/result.json",
+      "sha256": "c9ef79aae90f06001b60fb1ae515d997748d860992d97dbae35ada2ed3abe363",
+      "bytes": 665
+    }
+  },
+  "pairs": [
+    {
+      "case": "only-geodude",
+      "result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-M5-fixed-pair-v1/result.json",
+        "sha256": "da138959f6a9058016036dd32073005238aa35f2290630431a2f4fd45dbb40d1",
+        "bytes": 3234039
+      },
+      "session": 99901,
+      "actual_runner_exit": 0,
+      "frames_per_provider": 3572,
+      "actor_summary": {
+        "before": {
+          "head": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+          "markers": {
+            "selfdestruct-used": 1973,
+            "both-active-zero": 1973,
+            "terminal-win": 2229,
+            "prize": 2400
+          },
+          "money": 1090,
+          "map": "ViridianForest",
+          "position": [
+            2,
+            19
+          ],
+          "party": [
+            {
+              "hp": 0,
+              "level": 21,
+              "max_hp": 54,
+              "moves": [
+                "Tackle",
+                "DefenseCurl",
+                "RockThrow",
+                "Selfdestruct"
+              ],
+              "pp": [
+                35,
+                40,
+                15,
+                4
+              ],
+              "species": "Geodude",
+              "status": "None"
+            }
+          ],
+          "trainer_flag": true,
+          "battle_count": 1,
+          "shutdown": {
+            "exit_before_cleanup": null,
+            "shutdown_signals": [
+              "SIGTERM"
+            ],
+            "cleanup_not_natural_success": true,
+            "actual_process_returncode": -15,
+            "group_gone": true,
+            "direct_child_reaped": true
+          }
+        },
+        "after": {
+          "head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7",
+          "markers": {
+            "selfdestruct-used": 1973,
+            "both-active-zero": 1973,
+            "terminal-loss": 2229,
+            "blackout-text": 2336,
+            "pallet-arrival": 2383
+          },
+          "money": 500,
+          "map": "PalletTown",
+          "position": [
+            5,
+            6
+          ],
+          "party": [
+            {
+              "hp": 54,
+              "level": 21,
+              "max_hp": 54,
+              "moves": [
+                "Tackle",
+                "DefenseCurl",
+                "RockThrow",
+                "Selfdestruct"
+              ],
+              "pp": [
+                35,
+                40,
+                15,
+                5
+              ],
+              "species": "Geodude",
+              "status": "None"
+            }
+          ],
+          "trainer_flag": false,
+          "battle_count": 1,
+          "shutdown": {
+            "exit_before_cleanup": null,
+            "shutdown_signals": [
+              "SIGTERM"
+            ],
+            "cleanup_not_natural_success": true,
+            "actual_process_returncode": -15,
+            "group_gone": true,
+            "direct_child_reaped": true
+          }
+        }
+      }
+    },
+    {
+      "case": "healthy-reserve",
+      "result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-reserve-M5-fixed-pair-v1/result.json",
+        "sha256": "4ada6b8c4f5e627a7f0e03ddce6c879dbfd0e8a8f5e3234a913c49625f6f596a",
+        "bytes": 2603210
+      },
+      "session": 88628,
+      "actual_runner_exit": 0,
+      "frames_per_provider": 3572,
+      "actor_summary": {
+        "before": {
+          "head": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+          "markers": {
+            "selfdestruct-used": 1973,
+            "both-active-zero": 1973,
+            "terminal-win": 2229,
+            "prize": 2400
+          },
+          "money": 1090,
+          "map": "ViridianForest",
+          "position": [
+            2,
+            19
+          ],
+          "party": [
+            {
+              "hp": 0,
+              "level": 21,
+              "max_hp": 54,
+              "moves": [
+                "Tackle",
+                "DefenseCurl",
+                "RockThrow",
+                "Selfdestruct"
+              ],
+              "pp": [
+                35,
+                40,
+                15,
+                4
+              ],
+              "species": "Geodude",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            }
+          ],
+          "trainer_flag": true,
+          "battle_count": 1,
+          "shutdown": {
+            "exit_before_cleanup": null,
+            "shutdown_signals": [
+              "SIGTERM"
+            ],
+            "cleanup_not_natural_success": true,
+            "actual_process_returncode": -15,
+            "group_gone": true,
+            "direct_child_reaped": true
+          }
+        },
+        "after": {
+          "head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7",
+          "markers": {
+            "selfdestruct-used": 1973,
+            "both-active-zero": 1973,
+            "terminal-win": 2229,
+            "prize": 2400
+          },
+          "money": 1090,
+          "map": "ViridianForest",
+          "position": [
+            2,
+            19
+          ],
+          "party": [
+            {
+              "hp": 0,
+              "level": 21,
+              "max_hp": 54,
+              "moves": [
+                "Tackle",
+                "DefenseCurl",
+                "RockThrow",
+                "Selfdestruct"
+              ],
+              "pp": [
+                35,
+                40,
+                15,
+                4
+              ],
+              "species": "Geodude",
+              "status": "None"
+            },
+            {
+              "hp": 20,
+              "level": 5,
+              "max_hp": 20,
+              "moves": [
+                "Gust",
+                "SandAttack",
+                "None",
+                "None"
+              ],
+              "pp": [
+                35,
+                15,
+                0,
+                0
+              ],
+              "species": "Pidgey",
+              "status": "None"
+            }
+          ],
+          "trainer_flag": true,
+          "battle_count": 1,
+          "shutdown": {
+            "exit_before_cleanup": null,
+            "shutdown_signals": [
+              "SIGTERM"
+            ],
+            "cleanup_not_natural_success": true,
+            "actual_process_returncode": -15,
+            "group_gone": true,
+            "direct_child_reaped": true
+          }
+        }
+      }
+    }
+  ],
+  "independent_raw": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-two-pairs-independent-raw-v1.json",
+    "sha256": "706aeb01930c532975f37e22f3bd6eb2248cc82aa4a27e33e2ba798c34e87f00",
+    "bytes": 12458
+  },
+  "terminal_visual": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-M5-two-pairs-terminal-visual-v1.json",
+    "sha256": "9ab5c68abe13de736c9ffb85f784f3feb93cce073e22b6e7e587429f8535fe89",
+    "bytes": 11710
+  },
+  "raw_validation_counts": {
+    "state_rows": 14292,
+    "RPC_requests_with_matching_replies": 43356,
+    "original_PNGs_hash_dimension_fullstate_checked": 242,
+    "original_PNGs_actually_visually_inspected": 14
+  },
+  "source_baseline_closure": {
+    "actual_before_is_not_M5": true,
+    "M4_to_M5": "PayDay-only feature change plus its tests/docs. check_faint_after_turn and force_switch_player are byte-identical; App,Renderer,Data trees unchanged. Shared execute_turn receipt handling and settlement really changed; no whole-input or timing equivalence claim.",
+    "pot0_condition": "This fixture uses noPayDay, so no scatter success/pot accumulation. take_coins=0; pickup guard does not insert a page. Oldprize+pot0 equals newprize. Neworiginal_result writes do occur but do not choose faint winner; they only gatePayDay eligibility. Source closure, not a new M5-before runtime replay.",
+    "identical_M4_M5_trees": {
+      "crates/pokered-app": "9ea833f447e79bdf73f39669dd98ec13c6db834e",
+      "crates/pokered-renderer": "448fd7a177c8db79561bb76246318905c4020b48",
+      "crates/pokered-data": "223cb9cf46e8a2c41dfc46b4e69de852c8917b74"
+    }
+  },
+  "original_reference": {
+    "repository": "pret/pokered",
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "file": "engine/battle/core.asm",
+    "locators": [
+      "FaintEnemyPokemon732-817",
+      "HandlePlayerMonFainted969-998",
+      "RemoveFaintedPlayerMon1000-1040",
+      "AnyPartyAlive1455-1470",
+      "EnemySendOut1366-1377"
+    ],
+    "initial_audit": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1063-double-ko-readonly-v1/report.json",
+      "sha256": "5e01c271c87cf3de2bd8813be00f3837986bb5d5450b6ba0839a42cac4b2836a",
+      "bytes": 12875
+    },
+    "corrected_Shift_peer": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-double-ko-c687-shift-peer-v2/receipt.json",
+      "sha256": "09fa34804545ea8d308e180b0260010ec4237abeffd570eb8713438b01c3f13c",
+      "bytes": 3080
+    }
+  },
+  "retained_failures": [
+    {
+      "kind": "a59first44checks passed but independent sourcepeer found missing post-own-sendoutShift continuation",
+      "old_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-double-ko-tests-v1/result.json",
+        "sha256": "222576bbaeda38c896a65f09b59a7a72a6db0455047d695312f5e123dbefebd5",
+        "bytes": 47827
+      },
+      "blocking_peer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-double-ko-a59-source-peer-v1/receipt.json",
+        "sha256": "47a2671a0297280a930d1d0226b82bf5165dcc5bc02218abccfa92c39d555ebf",
+        "bytes": 6621
+      },
+      "corrected44_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1064-double-ko-tests-v2/result.json",
+        "sha256": "49c03f6172f6a7b272d9680471ab6dae6c27029b4ce3a9c65d4c8098837a5777",
+        "bytes": 47827
+      },
+      "scope": "Originala59PASS is never relabelled correctedc687 or8c3;8c3fullcore is a separate actual run."
+    },
+    {
+      "kind": "fixture codec first compile failed because Party has no len method; no fixture/Game produced",
+      "result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v1/result.json",
+        "sha256": "28875574e895336c45a539d47288e7b7a08b613938ca99c3e851976b6768d495",
+        "bytes": 3067
+      },
+      "stderr": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v1/rustc.stderr",
+        "sha256": "2fd5b65fc05f9d3b73ac6a68c82bb5e6341739e5b1da9af909c1e198c046e774",
+        "bytes": 950
+      },
+      "corrected_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v2/result.json",
+        "sha256": "c2419c806242f85de99351ef3bf6ddb5a5d7c6d36161a5cc0b4a12e3b9257ac2",
+        "bytes": 4059
+      }
+    }
+  ],
+  "limits": [
+    "Native covers only all-own-dead/finalenemy and healthyownreserve/finalenemy. Both-enemy-reserves Shift/Set continuation and Link have actualcore/originalsource evidence, no native replay here. A third both-reserves native scenario remains to be performed.",
+    "No originalROM execution, completeplaythrough, faint-animation or cycle timing parity claimed.",
+    "All four Games were deliberately TERM/reaped actual-15; both runner tools returned0; all6owned groups independently gone."
+  ],
+  "copied_assets": [
+    {
+      "path": "docs/screenshots/double-ko-1066/only-02336-before.png",
+      "sha256": "6ef66ef97fc935706cd433795f132bb93cbd15f919f477ddf2bdc16da9d42cbe",
+      "bytes": 3300,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-M5-fixed-pair-v1/before/frame-02336.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/only-02336-before.png",
+      "case": "only-geodude",
+      "absolute_frame": 2336,
+      "provider": "before",
+      "runtime_head": "062e76d91fdbf5109fcc02793b8a8064788e8700"
+    },
+    {
+      "path": "docs/screenshots/double-ko-1066/only-02336-after.png",
+      "sha256": "42ced9bea2f0e74b4c7cf7612f72be09b1b952fd0ae53eaf04a2fe1dc5e5fb05",
+      "bytes": 3258,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-M5-fixed-pair-v1/after/frame-02336.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/only-02336-after.png",
+      "case": "only-geodude",
+      "absolute_frame": 2336,
+      "provider": "after",
+      "runtime_head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7"
+    },
+    {
+      "path": "docs/screenshots/double-ko-1066/only-02400-before.png",
+      "sha256": "1ad82feba3a71e4db5ba88bb8edc8cb7b0a6c53f4f1e1d6fd99e72bd6dabbb13",
+      "bytes": 3420,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-M5-fixed-pair-v1/before/frame-02400.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/only-02400-before.png",
+      "case": "only-geodude",
+      "absolute_frame": 2400,
+      "provider": "before",
+      "runtime_head": "062e76d91fdbf5109fcc02793b8a8064788e8700"
+    },
+    {
+      "path": "docs/screenshots/double-ko-1066/only-02400-after.png",
+      "sha256": "15676e1921327002de390890fb322d540fb64aeb390644dcf602e6abdd214758",
+      "bytes": 20833,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-M5-fixed-pair-v1/after/frame-02400.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/only-02400-after.png",
+      "case": "only-geodude",
+      "absolute_frame": 2400,
+      "provider": "after",
+      "runtime_head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7"
+    },
+    {
+      "path": "docs/screenshots/double-ko-1066/reserve-02400-before.png",
+      "sha256": "f0e502f9986e4ebaeb25f16570057f9686258b8cd2e9766f5a9fdb13965cba49",
+      "bytes": 3376,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-reserve-M5-fixed-pair-v1/before/frame-02400.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/reserve-02400-before.png",
+      "case": "healthy-reserve",
+      "absolute_frame": 2400,
+      "provider": "before",
+      "runtime_head": "062e76d91fdbf5109fcc02793b8a8064788e8700"
+    },
+    {
+      "path": "docs/screenshots/double-ko-1066/reserve-02400-after.png",
+      "sha256": "f0e502f9986e4ebaeb25f16570057f9686258b8cd2e9766f5a9fdb13965cba49",
+      "bytes": 3376,
+      "kind": "original160x144 screenshot",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-reserve-M5-fixed-pair-v1/after/frame-02400.png",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/screenshots/double-ko-1066/reserve-02400-after.png",
+      "case": "healthy-reserve",
+      "absolute_frame": 2400,
+      "provider": "after",
+      "runtime_head": "8c3c6b02ff1baf9887ba8b21bad2d958fd3ac4e7"
+    },
+    {
+      "path": "docs/validation/double-ko-1066/only-geodude.sav",
+      "sha256": "bc768c940f2ad29408b99f546556edb48494d1454c8a5391a30e4431be836fa1",
+      "bytes": 32768,
+      "kind": "physical preboot SRAM",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v2/fixtures/only-geodude/fixture.sav",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/validation/double-ko-1066/only-geodude.sav",
+      "case": "only-geodude"
+    },
+    {
+      "path": "docs/validation/double-ko-1066/healthy-reserve.sav",
+      "sha256": "b718311bb11361d20aa79b05e5ba5b86a6086622f3656dc35c1fa4b90c1cc026",
+      "bytes": 32768,
+      "kind": "physical preboot SRAM",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-physical-fixture-v2/fixtures/healthy-reserve/fixture.sav",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/validation/double-ko-1066/healthy-reserve.sav",
+      "case": "healthy-reserve"
+    },
+    {
+      "path": "docs/validation/double-ko-1066/fixed-buttons.json",
+      "sha256": "081594cdc6be3f4ff1d4a8085d77204f82f2320fbb26d88fadb9eab840bdb39c",
+      "bytes": 23003,
+      "kind": "actual fixed literal input",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-only-base-discovery-v1/fixed-buttons.json",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/validation/double-ko-1066/fixed-buttons.json",
+      "frames": 3572,
+      "both_cases_same_bytes": true
+    },
+    {
+      "path": "docs/validation/double-ko-1066/recorded-controller.py",
+      "sha256": "9dae24c2af3d40a225f1462b56ea81a1dc189b9d4f312ec7f0721411fce59a08",
+      "bytes": 31918,
+      "kind": "actual unmodified executed controller",
+      "original": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1065-double-ko-native-M5-v1.py",
+      "branch_raw_url": "https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/double-ko-outcome-1064/docs/validation/double-ko-1066/recorded-controller.py"
+    }
+  ]
+}
