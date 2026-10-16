@@ -16,6 +16,13 @@ enum TextPart {
     Goodbye,
 }
 
+#[derive(Clone, Copy)]
+enum TextEntry {
+    Display,
+    Print,
+    ContinueParagraph,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum AfterPrompt {
     WelcomeParagraph,
@@ -67,7 +74,7 @@ impl BikeShopOfferState {
 }
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
-    fn bike_text(&mut self, state: &mut BikeShopOfferState, part: TextPart, outer: bool) {
+    fn bike_text(&mut self, state: &mut BikeShopOfferState, part: TextPart, entry: TextEntry) {
         let index = match part {
             TextPart::WelcomeFirst => 0,
             TextPart::WelcomeLast => 1,
@@ -77,7 +84,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         };
         let mut dialogue = BedroomDialogue::from_message(&state.texts[index]);
         dialogue.set_text_delay_frames(self.text_delay_frames);
-        dialogue.begin_field_display(outer);
+        match entry {
+            TextEntry::Display => dialogue.begin_field_display(true),
+            TextEntry::Print => dialogue.begin_field_display(false),
+            // PARA is inside this PlaceString. After clear+Delay20 it jumps
+            // NextChar; there is no second PrintText prologue/Delay3.
+            TextEntry::ContinueParagraph => {}
+        }
         self.pending_dialogue = Some(dialogue);
         self.last_script_dialogue = None;
         self.retain_field_text = true;
@@ -107,7 +120,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // real full-byte poll. A manually-started unsupported snapshot
                 // must not invent preceding history from physical prev_A.
                 self.begin_source_field();
-                self.bike_text(state, TextPart::WelcomeFirst, true);
+                self.bike_text(state, TextPart::WelcomeFirst, TextEntry::Display);
             }
             Phase::Text(part) => {
                 let no_delay = self.no_text_delay;
@@ -184,9 +197,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         choice.cursor_visible = false;
                         choice.input_enabled = false;
                         self.pending_choice = Some(choice);
-                        self.bike_text(state, TextPart::Question, false);
+                        self.bike_text(state, TextPart::Question, TextEntry::Print);
                     }
-                    AfterPrompt::Goodbye => self.bike_text(state, TextPart::Goodbye, false),
+                    AfterPrompt::Goodbye => {
+                        self.bike_text(state, TextPart::Goodbye, TextEntry::Print)
+                    }
                     AfterPrompt::NativePage(part) => {
                         if let Some(dialogue) = self.pending_dialogue.as_mut() {
                             dialogue.advance();
@@ -201,7 +216,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         remaining: remaining - 1,
                     };
                 } else {
-                    self.bike_text(state, TextPart::WelcomeLast, false);
+                    self.bike_text(state, TextPart::WelcomeLast, TextEntry::ContinueParagraph);
+                    // The twentieth successor VBlank returns to NextChar and
+                    // can print now, rather than adding a creation-only frame.
+                    return self.tick_bike_shop_offer(state);
                 }
             }
             Phase::MenuPreparation { remaining } => {
@@ -246,7 +264,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 // Test returned accepted B, not raw held B and not row==CANCEL.
                 if accepted & B != 0 {
-                    self.bike_text(state, TextPart::Goodbye, false);
+                    self.bike_text(state, TextPart::Goodbye, TextEntry::Print);
                 } else {
                     self.no_text_delay = false;
                     self.bike_text(
@@ -256,7 +274,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         } else {
                             TextPart::Goodbye
                         },
-                        false,
+                        TextEntry::Print,
                     );
                 }
             }
@@ -366,6 +384,67 @@ mod tests {
         assert_eq!(offer(field).unwrap().phase, Phase::Text(TextPart::Question));
         assert_eq!(field.source_foreground().unwrap().last(), Some(B));
         assert!(field.no_text_delay());
+    }
+
+    #[test]
+    fn welcome_para_continues_place_string_after_twenty_waits_without_another_printtext_delay() {
+        for speed in [1, 3, 5] {
+            for no_delay in [false, true] {
+                let mut field = normal_talk(no_delay, speed);
+                for _ in 0..8000 {
+                    if offer(&field).unwrap().phase == Phase::Prompt(AfterPrompt::WelcomeParagraph)
+                    {
+                        break;
+                    }
+                    step(&mut field, 0);
+                }
+                assert_eq!(
+                    offer(&field).unwrap().phase,
+                    Phase::Prompt(AfterPrompt::WelcomeParagraph)
+                );
+                step(&mut field, A);
+                assert_eq!(
+                    offer(&field).unwrap().phase,
+                    Phase::ParagraphClear { remaining: 20 }
+                );
+                assert_eq!(field.source_foreground().unwrap().last(), Some(A));
+                for elapsed in 1..20 {
+                    step(&mut field, 0);
+                    assert!(
+                        field.pending_dialogue.is_none(),
+                        "no next paragraph before wait20: {elapsed}"
+                    );
+                    assert_eq!(
+                        field.source_foreground().unwrap().last(),
+                        Some(A),
+                        "Delay20 never polls"
+                    );
+                    if elapsed == 10 {
+                        let saved =
+                            serde_json::to_string(&OverworldSnapshot::capture(&field)).unwrap();
+                        let saved: OverworldSnapshot = serde_json::from_str(&saved).unwrap();
+                        saved.restore_into(&mut field);
+                        assert_eq!(field.source_foreground().unwrap().last(), Some(A));
+                    }
+                }
+                step(&mut field, 0);
+                let dialogue = field
+                    .pending_dialogue
+                    .as_ref()
+                    .expect("wait20 resumes the next paragraph");
+                assert!(dialogue.current().unwrap().line1.starts_with("Have we got"));
+                assert_eq!(
+                    dialogue.char_index(),
+                    if no_delay { dialogue.total_chars() } else { 1 },
+                    "NextChar resumes in the same update, without another inner PrintText3"
+                );
+                assert_eq!(
+                    field.source_foreground().unwrap().last(),
+                    if no_delay { Some(A) } else { Some(0) },
+                    "only a real non-NoDelay glyph poll can change last"
+                );
+            }
+        }
     }
 
     #[test]
