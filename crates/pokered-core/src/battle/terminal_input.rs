@@ -8,7 +8,7 @@ impl BattleScreen {
     /// The renderer reads this work's cursor, never an independent full page.
     pub fn terminal_text_work(&self) -> Option<&TerminalTextWork> {
         match &self.phase {
-            BattlePhase::TerminalText { work, .. } => Some(work),
+            BattlePhase::TerminalText { work, .. } => Some(work.as_ref()),
             _ => None,
         }
     }
@@ -41,7 +41,7 @@ impl BattleScreen {
         BattlePhase::TerminalText {
             messages,
             current: 0,
-            work,
+            work: Box::new(work),
             next_phase: Box::new(next),
         }
     }
@@ -50,7 +50,7 @@ impl BattleScreen {
         &mut self,
         messages: Vec<String>,
         current: usize,
-        mut work: TerminalTextWork,
+        mut work: Box<TerminalTextWork>,
         next_phase: Box<BattlePhase>,
         owner: Option<&mut ForegroundJoypad>,
         receipt: &mut FightTextReceipt,
@@ -74,13 +74,13 @@ impl BattleScreen {
                 self.post_text_transition();
                 return ScreenAction::Continue;
             }
-            work = TerminalTextWork::new(
+            work = Box::new(TerminalTextWork::new(
                 work.kind,
                 messages[next].clone(),
                 TerminalTextEnd::Prompt,
                 work.options_delay(),
                 3,
-            );
+            ));
             self.phase = BattlePhase::TerminalText {
                 messages,
                 current: next,

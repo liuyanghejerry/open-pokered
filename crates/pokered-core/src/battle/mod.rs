@@ -484,7 +484,7 @@ pub enum BattlePhase {
     TerminalText {
         messages: Vec<String>,
         current: usize,
-        work: crate::text::terminal_input::TerminalTextWork,
+        work: Box<crate::text::terminal_input::TerminalTextWork>,
         next_phase: Box<BattlePhase>,
     },
     Intro {
