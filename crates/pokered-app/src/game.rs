@@ -2937,6 +2937,7 @@ impl PokemonGame {
     fn soft_reset(&mut self) {
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
+        self.overworld.clear_retained_field_text();
         self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
@@ -13434,4 +13435,50 @@ game_scene PokemonTower6F {
         assert!(game.overworld.pending_dialogue.is_some());
         assert!(!game.overworld.retain_field_text);
     }
+
+    #[test]
+    fn soft_reset_releases_owned_text_even_when_the_save_cannot_be_read() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        // A reset must release its RAM window even when load_from_path
+        // returns before clearing anything because the save does not exist.
+        let missing = std::env::temp_dir().join(format!(
+            "marowak-reset-missing-{}.sav", std::process::id()
+        ));
+        assert!(!missing.exists());
+        game.save_path = Some(missing);
+        game.overworld.reload_scene_with_config("PokemonTower6F", r#"
+game_scene PokemonTower6F {
+  @storyline("cryProbe") {
+    printFieldText("MOTHER", true)
+    playCry("MAROWAK")
+    waitSound()
+    delay(30)
+  }
+}
+        "#, Some(r#"{"onLoad":"cryProbe"}"#)).unwrap();
+        for _ in 0..800 {
+            if game.overworld.active_script_effect_label().as_deref() == Some("WaitSound") {
+                break;
+            }
+            game.update(&InputState::new());
+        }
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitSound"));
+        assert!(game.overworld.retain_field_text);
+        assert!(game.overworld.last_script_dialogue.is_some());
+        assert!(game.overworld.pending_dialogue.is_none());
+        assert!(game.overworld.displayed_field_dialogue().is_some());
+        // Call the real reset entry directly: clearing inside a successful
+        // save load alone would not satisfy this caller's lifetime.
+        game.soft_reset();
+        assert_eq!(game.state.screen, GameScreen::TitleScreen);
+        assert!(!game.overworld.retain_field_text);
+        assert!(game.overworld.last_script_dialogue.is_none());
+        assert!(game.overworld.displayed_field_dialogue().is_none());
+    }
+
 }
