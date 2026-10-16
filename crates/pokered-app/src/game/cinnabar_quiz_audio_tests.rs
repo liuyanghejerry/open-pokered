@@ -178,6 +178,25 @@ impl Session {
         value
     }
 
+    fn observe_boot_boundary(&self, phase: &str) {
+        // Read-only failure diagnosis: capture a copy and never restore it.
+        eprintln!(
+            "QUIZ_BOOT_OBSERVATION {}",
+            serde_json::json!({
+                "phase": phase,
+                "frame": self.game.frame_count,
+                "screen": format!("{:?}", self.game.state.screen),
+                "black_screen_frames": self.game.black_screen_frames,
+                "pending_screen": format!("{:?}", self.game.pending_screen),
+                "ow_ran_last_frame": self.game.ow_ran_last_frame,
+                "input_current": self.input.raw_current(),
+                "input_previous": self.input.raw_previous(),
+                "control_ready": self.game.debug_condition_met("control_ready"),
+                "overworld": OverworldSnapshot::capture(&self.game.overworld),
+            })
+        );
+    }
+
     fn boot_at_machine(open: bool) -> Self {
         let fixture = Fixture::new(open);
         let game = PokemonGame::new_with_options(
@@ -209,6 +228,7 @@ impl Session {
                 && session.game.overworld.script_engine_idle()
                 && session.effect().is_none()
             {
+                session.observe_boot_boundary("boot_break");
                 break;
             }
             session.step(if frame % 8 == 0 { &[GbButton::A] } else { &[] });
@@ -227,8 +247,11 @@ impl Session {
         session.step(&[]);
         session.step(&[]);
         // UP faces the adjacent solid machine; A interacts with its real tile.
+        session.observe_boot_boundary("before_up");
         session.step(&[GbButton::Up]);
+        session.observe_boot_boundary("after_up1");
         session.step(&[GbButton::Up]);
+        session.observe_boot_boundary("after_up2");
         session.step(&[]);
         session.step(&[]);
         assert_eq!(
