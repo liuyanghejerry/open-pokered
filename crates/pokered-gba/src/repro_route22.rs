@@ -33,6 +33,11 @@ impl Repro {
         if self.round == ROUNDS || frame < self.next_at {
             return;
         }
+        // Read-only anchors for the original first-round timeout. Keep these
+        // before setup/input so frame 4300 records the actual boot residue.
+        if self.round == 0 && [4300, 4333, 4360, 4399, 4428, 4500].contains(&frame) {
+            Self::log_anchor(game, frame);
+        }
         let (name, y, parcel, late) = CASES[self.round % CASES.len()];
         if self.started.is_none() {
             agb::println!("route22: START round={} case={}", self.round + 1, name);
@@ -116,5 +121,36 @@ impl Repro {
             }
         }
         assert!(elapsed < 16000, "Route22 encounter timed out");
+    }
+
+    fn log_anchor(game: &PokemonGame, frame: u32) {
+        let overworld = &game.overworld;
+        let dialogue = overworld.displayed_field_dialogue();
+        let effect = overworld.active_script_effect_label();
+        agb::println!(
+            "route22-anchor frame={} screen={:?} map={} x={} y={} facing={:?} dialogue={} page={} pages={} choice={} effect={} idle={} movement={:?} walk={}",
+            frame,
+            game.state.screen,
+            overworld.state.current_map as u8,
+            overworld.state.player.x,
+            overworld.state.player.y,
+            overworld.state.player.facing,
+            dialogue.is_some(),
+            dialogue.map_or(0, |text| text.current_page()),
+            dialogue.map_or(0, |text| text.pages().len()),
+            overworld.pending_choice.is_some(),
+            effect.as_deref().unwrap_or("none"),
+            overworld.script_engine_idle(),
+            overworld.state.player.movement_state,
+            overworld.state.walk_counter,
+        );
+        if let Some(dialogue) = dialogue {
+            for (page, text) in dialogue.pages().iter().enumerate() {
+                agb::println!(
+                    "route22-anchor-text frame={} page={} line1={} line2={}",
+                    frame, page, text.line1, text.line2,
+                );
+            }
+        }
     }
 }
