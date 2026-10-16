@@ -4946,6 +4946,13 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
+                // A real normal-delay terminal call, not generic battle entry,
+                // creates the one returning owner. NoDelay may skip all letter
+                // polls; its unmodeled battle tail retains the legacy path.
+                if !self.overworld.no_text_delay() && self.battle.returning_terminal_input_pending()
+                    && self.overworld.source_foreground().is_none() {
+                    self.overworld.begin_source_foreground().retire_history();
+                }
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
                 // Only FIGHT entry/selection and its continuation read this
                 // text input. Link polling may replace the canonical phase,
@@ -8401,10 +8408,11 @@ impl PokemonGame {
             })
             .collect();
         if !queue.is_empty() {
-            // Earlier IsEvolving/morph input remains an unmodeled owner.
-            if let Some(owner) = self.overworld.source_foreground_mut() {
-                owner.retire_history();
-            }
+            // This is the real AfterBattle producer, including wild wins with
+            // no prize/pickup. True NoDelay has no certified letter poll tail.
+            if !self.overworld.no_text_delay() {
+                self.overworld.begin_source_foreground().retire_history();
+            } else { self.overworld.suspend_source_foreground(); }
             self.evolution_anim = Some(EvolutionScreenState::new_after_battle(
                 queue, pre_text, is_zh,
             ));

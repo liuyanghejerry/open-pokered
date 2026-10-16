@@ -1,5 +1,5 @@
-//! Canonical Game caller tests. Only the forthcoming scene capability is
-//! opted in explicitly; no test supplies known input history or text phases.
+//! Canonical ordinary Game caller tests. Real returning producers activate
+//! their own capability; no test supplies input history or text phases.
 //! Boot, talk, battle, terminal glyph/PROMPT, GO and field use ordinary input.
 use super::cinnabar_victory_tests::Session;
 use super::*;
@@ -9,12 +9,10 @@ use pokered_core::text::terminal_input::TerminalTextKind;
 const LIMIT: usize = 12000; // stuck-test bound, not a timing oracle
 
 fn reach_prize_prompt(session: &mut Session) {
-    let mut opted_in = false;
+    let mut saw_unknown_producer = false;
     for frame in 0..LIMIT {
-        if !opted_in && session.game.state.screen == GameScreen::Battle {
-            let owner = session.game.overworld.begin_source_foreground();
-            assert_eq!(owner.last(), None, "never inject a preceding source sample");
-            opted_in = true;
+        if let Some(owner) = session.game.overworld.source_foreground() {
+            saw_unknown_producer |= owner.last().is_none();
         }
         if session
             .game
@@ -22,7 +20,7 @@ fn reach_prize_prompt(session: &mut Session) {
             .terminal_text_work()
             .is_some_and(|work| work.kind == TerminalTextKind::Prize && work.waiting_for_input())
         {
-            assert!(opted_in);
+            assert!(saw_unknown_producer, "ordinary producer must start Unknown before real letters");
             assert!(
                 session
                     .game
@@ -286,18 +284,14 @@ fn actual_pay_day_then_pickup_pcm_returns_held_or_new_start_with_the_pickup_last
         .unwrap();
         let mut session = Session::boot_with_party(0, false, vec![mon], false);
         let wallet_before = session.game.save_data.game_data.player_money;
-        let mut opted_in = false;
+        let mut saw_unknown_producer = false;
         let mut saw_prize = false;
         let mut ready = false;
         // Ordinary policy: use Pay Day until a real successful scatter, then
         // Surf. No pot/outcome/phase/history setter or seed search is used.
         for frame in 0..LIMIT {
-            if !opted_in && session.game.state.screen == GameScreen::Battle {
-                assert_eq!(
-                    session.game.overworld.begin_source_foreground().last(),
-                    None
-                );
-                opted_in = true;
+            if let Some(owner) = session.game.overworld.source_foreground() {
+                saw_unknown_producer |= owner.last().is_none();
             }
             if let Some(work) = session.game.battle.terminal_text_work() {
                 saw_prize |= work.kind == TerminalTextKind::Prize;
@@ -337,7 +331,7 @@ fn actual_pay_day_then_pickup_pcm_returns_held_or_new_start_with_the_pickup_last
                 &[]
             });
         }
-        assert!(opted_in && saw_prize && ready);
+        assert!(saw_unknown_producer && saw_prize && ready);
         assert!(session.game.overworld.source_foreground_error().is_none());
         let battle = &session.game.battle;
         let state = battle.battle_state.as_ref().unwrap();

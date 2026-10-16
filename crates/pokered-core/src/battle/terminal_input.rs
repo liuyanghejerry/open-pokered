@@ -5,6 +5,24 @@ use crate::foreground_input::ForegroundJoypad;
 use crate::text::terminal_input::{TerminalTextEnd, TerminalTextKind, TerminalTextWork};
 
 impl BattleScreen {
+    /// Actual returning PrintText producers, before their first glyph. This
+    /// does not enable every battle or infer a call from localized strings.
+    pub fn returning_terminal_input_pending(&self) -> bool {
+        if self.link_mode || self.is_old_man || self.captured_mon.is_some() { return false; }
+        match &self.phase {
+            BattlePhase::TerminalText { .. } => true,
+            BattlePhase::TrainerVictory { phase: VictoryPhase::EndBattleText, wait_frames: 60, player_won: true } => true,
+            BattlePhase::TrainerVictory { phase: VictoryPhase::EndBattleText, player_won, .. } => {
+                !self.payday_pickup_shown && self.payday_pickup_amount(if *player_won { BattleOutcome::Win } else { BattleOutcome::Loss }) > 0
+            }
+            BattlePhase::BattleOver { won, escaped, .. } => {
+                let outcome = if *won { BattleOutcome::Win } else if *escaped { BattleOutcome::Escaped } else { BattleOutcome::Loss };
+                !self.payday_pickup_shown && self.payday_pickup_amount(outcome) > 0
+            }
+            _ => false,
+        }
+    }
+
     /// The renderer reads this work's cursor, never an independent full page.
     pub fn terminal_text_work(&self) -> Option<&TerminalTextWork> {
         match &self.phase {
