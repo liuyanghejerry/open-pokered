@@ -2,7 +2,7 @@
 //! Metadata is attached before localization/pagination, never parsed from a page.
 use super::{
     pokered_rules::{runtime, PokeVolatile, PokeredRules},
-    BattleScreen, BattleSide,
+    BattleScreen, BattleSide, FaintCue,
 };
 use crate::alloc_prelude::*;
 use dotzuki_engine::battle::{
@@ -13,15 +13,26 @@ use pokered_data::{lang_data::move_name, moves::MoveId};
 use serde::{Deserialize, Serialize};
 
 /// The existing text publication owner, without transient move/VFX state.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextPagePublication {
     enabled: bool,
     page: Option<usize>,
+    #[serde(default)]
+    faints: Vec<Option<(FaintCue, bool, bool)>>,
+    #[serde(default)]
+    faint_serial: u32,
+    #[serde(default)]
+    active_faint: Option<(u32, FaintCue)>,
+    #[serde(default)]
+    faint_waiting: bool,
 }
 
 #[derive(Debug, Clone)]
 struct MoveStep {
     announcement: String,
+    faint: Option<FaintCue>,
+    faint_continuation: bool,
+    faint_text_published: bool,
     move_id: Option<MoveId>,
     leech_seed: bool,
     charge: Option<MoveId>,
@@ -29,6 +40,17 @@ struct MoveStep {
     player: bool,
     hp: [u16; 2],
     hits: Vec<[u16; 2]>,
+}
+
+impl MoveStep {
+    fn faint(cue: FaintCue, announcement: String, hp: [u16; 2]) -> Self {
+        Self {
+            announcement, faint: Some(cue), faint_continuation: false,
+            faint_text_published: false, move_id: None, leech_seed: false,
+            charge: None, missed: false, player: cue.side == super::FaintSide::Player,
+            hp, hits: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -43,22 +65,67 @@ pub struct BattlePresentation {
     current: Option<(u32, MoveId, bool)>,
     current_leech_seed: Option<(u32, bool)>,
     current_charge: Option<(u32, MoveId, bool)>,
+    current_faint: Option<(u32, FaintCue)>,
     hit_index: usize,
 }
 impl BattlePresentation {
     pub(crate) fn capture_text_publication(&self) -> TextPagePublication {
-        TextPagePublication { enabled: self.enabled, page: self.page }
+        TextPagePublication {
+            enabled: self.enabled, page: self.page,
+            faints: self.pages.iter().map(|step| step.as_ref().and_then(|step| {
+                step.faint.map(|cue| (cue, step.faint_continuation, step.faint_text_published))
+            })).collect(),
+            faint_serial: self.serial, active_faint: self.current_faint,
+            faint_waiting: self.current_faint.is_some() && self.waiting,
+        }
     }
 
     pub(crate) fn restore_text_publication(&mut self, saved: TextPagePublication) {
         self.enabled = saved.enabled;
         self.page = saved.page;
+        if self.current_faint.is_some() { self.waiting = false; }
+        self.current_faint = None;
+        self.queued.retain(|step| step.faint.is_none());
+        for page in &mut self.pages {
+            if page.as_ref().is_some_and(|step| step.faint.is_some()) { *page = None; }
+        }
+        if saved.faints.iter().any(Option::is_some) {
+            self.pages = saved.faints.into_iter().map(|faint| faint.map(|(cue, continuation, published)| {
+                let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
+                step.faint_continuation = continuation;
+                step.faint_text_published = published;
+                step
+            })).collect();
+            self.serial = saved.faint_serial;
+            self.current_faint = saved.active_faint;
+            self.waiting = saved.faint_waiting;
+        }
     }
 
     /// Old snapshots did not record publication. Preserve their prior ACK
     /// behavior only for this current page; future pages activate normally.
     pub(crate) fn restore_legacy_text_page(&mut self, page: usize) {
         self.page = Some(page);
+    }
+
+    pub fn current_faint(&self) -> Option<(u32, FaintCue)> {
+        self.current_faint
+    }
+
+    pub(super) fn faint_at(&self, page: usize) -> Option<FaintCue> {
+        self.pages.get(page).and_then(Option::as_ref).and_then(|step| step.faint)
+    }
+
+    pub(super) fn publish_faint_text(&mut self, page: usize) -> bool {
+        let Some(step) = self.pages.get_mut(page).and_then(Option::as_mut) else { return false; };
+        if step.faint.is_some_and(|cue| cue.text.is_some()) && !step.faint_text_published {
+            step.faint_text_published = true;
+            true
+        } else { false }
+    }
+
+    pub(super) fn has_silent_faint(&self) -> bool {
+        self.queued.iter().any(|step| step.faint.is_some_and(|cue| cue.text.is_none()))
     }
 
     pub fn current_leech_seed(&self) -> Option<(u32, bool)> {
@@ -139,6 +206,9 @@ impl BattlePresentation {
             step_index,
             MoveStep {
                 announcement,
+                faint: None,
+                faint_continuation: false,
+                faint_text_published: false,
                 move_id: Some(if label == "METRONOME" {
                     MoveId::Metronome
                 } else {
@@ -175,15 +245,21 @@ impl BattlePresentation {
         state: &BattleState<PokeredRules>,
         effects: &[EffectState<PokeredRules>],
         mut hp: [u16; 2],
+        faint_plan: Option<&super::faint::FaintPlan>,
+        names: Option<&runtime::BattleNameContext>,
     ) {
-        if !self.enabled {
-            return;
-        }
         self.queued.clear();
-        for event in &log.events {
+        for (event_index, event) in log.events.iter().enumerate() {
+            if let Some(cue) = faint_plan.and_then(|plan| plan.at(event_index)) {
+                self.queued.push(MoveStep::faint(cue, runtime::faint_caption(cue, state, names), hp));
+            }
+            if !self.enabled { continue; }
             if let Some(announcement) = runtime::presentation_hp_message(event, state, effects) {
                 self.queued.push(MoveStep {
                     announcement,
+                    faint: None,
+                    faint_continuation: false,
+                    faint_text_published: false,
                     hits: Vec::new(),
                     move_id: None,
                     charge: None,
@@ -220,6 +296,9 @@ impl BattlePresentation {
                         }
                         hits
                     },
+                    faint: None,
+                    faint_continuation: false,
+                    faint_text_published: false,
                     move_id: Some(*move_),
                     leech_seed: false,
                     charge: None,
@@ -245,7 +324,7 @@ impl BattlePresentation {
                 }
                 _ => {}
             }
-            if let Some(step) = self.queued.last_mut() {
+            if let Some(step) = self.queued.iter_mut().rev().find(|step| step.faint.is_none()) {
                 step.hp = hp;
             }
         }
@@ -257,6 +336,7 @@ impl BattlePresentation {
         self.current = None;
         self.current_leech_seed = None;
         self.current_charge = None;
+        self.current_faint = None;
         self.waiting = false;
     }
     pub(super) fn add_pages(&mut self, message: &str, count: usize) {
@@ -265,9 +345,18 @@ impl BattlePresentation {
             .iter()
             .position(|s| s.announcement == message)
             .map(|i| self.queued.remove(i));
-        self.pages.extend((0..count).map(|_| None));
-        if count > 0 {
-            *self.pages.last_mut().unwrap() = step;
+        if step.as_ref().is_some_and(|step| step.faint.is_some()) {
+            let step = step.unwrap();
+            // The slide/sound precedes the FIRST text page. Later localized
+            // pages retain the same typed identity without replaying it.
+            self.pages.extend((0..count).map(|page| {
+                let mut page_step = step.clone();
+                page_step.faint_continuation = page != 0;
+                Some(page_step)
+            }));
+        } else {
+            self.pages.extend((0..count).map(|_| None));
+            if count > 0 { *self.pages.last_mut().unwrap() = step; }
         }
     }
     /// Publish one page. A frontend must present a newly activated page
@@ -278,8 +367,14 @@ impl BattlePresentation {
         }
         self.page = Some(page);
         let step = self.pages.get(page).and_then(Option::as_ref);
-        self.waiting = step.is_some();
+        self.waiting = step.is_some_and(|step| !step.faint_continuation);
         self.hit_index = 0;
+        if !step.is_some_and(|step| step.faint_continuation) {
+            self.current_faint = step.and_then(|step| step.faint).map(|cue| {
+                self.serial = self.serial.wrapping_add(1);
+                (self.serial, cue)
+            });
+        }
         self.current_charge = step.and_then(|step| {
             step.charge.map(|move_id| {
                 self.serial = self.serial.wrapping_add(1);
@@ -348,6 +443,17 @@ impl BattleScreen {
         else {
             return;
         };
+        if let Some(cue) = step.faint {
+            // Explicit primary calls, using ShowingText's existing VBlank wait:
+            // PlayBattleVictoryMusic -> Delay3 (core.asm:959-967), and the
+            // visible faint PrintText -> Delay3 (home/window.asm:283-292).
+            // A silent remove does not run PrintText or acquire an ACK.
+            if let super::BattlePhase::ShowingText { wait_frames, .. } = &mut self.phase {
+                *wait_frames = if cue.sound == Some(super::FaintSound::WildVictory) { 3 } else { 0 }
+                    + if cue.text.is_some() { 3 } else { 0 };
+            }
+            return;
+        }
         let hp = step
             .hits
             .get(self.presentation.hit_index)

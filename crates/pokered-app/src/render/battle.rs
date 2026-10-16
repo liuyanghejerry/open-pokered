@@ -416,6 +416,9 @@ enum BattlePhaseKind {
 pub struct BattleVisualEffects {
     last_phase_kind: Option<BattlePhaseKind>,
     last_presented_move: Option<u32>,
+    last_presented_faint: Option<u32>,
+    faint_after_slide: Option<(pokered_core::battle::FaintSide, pokered_core::battle::FaintSound)>,
+    faint_sound_pending: Option<pokered_core::battle::FaintSound>,
     last_intro_phase: Option<IntroPhase>,
     last_message: Option<String>,
     player_visible: bool,
@@ -603,6 +606,7 @@ impl BattleVisualEffects {
             && self.enemy_entry.is_none()
             && self.player_exit.is_none()
             && self.enemy_exit.is_none()
+            && self.faint_sound_pending.is_none()
             && self.attack_lunge.is_none()
             && self.move_mon_h.is_none()
             && self.anim_player.is_finished()
@@ -788,6 +792,18 @@ impl BattleVisualEffects {
 }
 
 impl BattleVisualEffects {
+    /// The original plays these after SlideDownFaintedMonPic has returned.
+    /// Both shared Game and DirectBattle consume this same typed receipt.
+    pub(crate) fn take_faint_sound(&mut self) -> Option<pokered_core::battle::FaintSound> {
+        self.faint_sound_pending.take()
+    }
+
+    fn finish_faint_slide(&mut self, side: pokered_core::battle::FaintSide) {
+        if self.faint_after_slide.is_some_and(|(pending, _)| pending == side) {
+            self.faint_sound_pending = self.faint_after_slide.take().map(|(_, sound)| sound);
+        }
+    }
+
     pub fn take_cry_pending(&mut self) -> Option<pokered_data::species::Species> {
         self.cry_pending.take()
     }
@@ -876,6 +892,9 @@ impl Default for BattleVisualEffects {
         Self {
             last_phase_kind: None,
             last_presented_move: None,
+            last_presented_faint: None,
+            faint_after_slide: None,
+            faint_sound_pending: None,
             last_intro_phase: None,
             last_message: None,
             player_visible: true,
@@ -1404,7 +1423,7 @@ impl BattleVisualEffects {
             self.fx.clear_side(MonSide::Player);
         }
 
-        if normalized.ends_with("fainted!") {
+        if screen.presentation.current_faint().is_none() && normalized.ends_with("fainted!") {
             if normalized.starts_with("Enemy ") {
                 // SlideDownFaintedMonPic: enemy mon slides DOWN, not right.
                 self.enemy_exit = Some(SlideAnim {
@@ -2589,6 +2608,22 @@ impl BattleVisualEffects {
             }
         }
 
+        if let Some((serial, cue)) = screen.presentation.current_faint() {
+            if self.last_presented_faint != Some(serial) {
+                use pokered_core::battle::FaintSide;
+                let side = if cue.side == FaintSide::Player { MonSide::Player } else { MonSide::Enemy };
+                *self.slide_slot(side, false) = Some(SlideAnim { frame: 0, kind: SlideKind::Faint });
+                *self.slide_slot(side, true) = None;
+                match side {
+                    MonSide::Player => self.player_half_off = false,
+                    MonSide::Enemy => self.enemy_half_off = false,
+                }
+                self.fx.clear_side(side);
+                self.faint_after_slide = cue.sound.map(|sound| (cue.side, sound));
+                self.last_presented_faint = Some(serial);
+            }
+        }
+
         let presented_move = screen.presentation.current_move();
         let mut new_move = presented_move.is_some_and(|(serial, _, _)| self.last_presented_move != Some(serial));
         if new_move {
@@ -2699,6 +2734,7 @@ impl BattleVisualEffects {
             if anim.frame >= Self::slide_frames(anim.kind, false) {
                 let kind = anim.kind;
                 self.player_exit = None;
+                self.finish_faint_slide(pokered_core::battle::FaintSide::Player);
                 match kind {
                     // AnimationSlideMonHalfOff leaves the mon half-off screen.
                     SlideKind::SeHalfOff => self.player_half_off = true,
@@ -2716,6 +2752,7 @@ impl BattleVisualEffects {
             if anim.frame >= end_frame {
                 let kind = anim.kind;
                 self.enemy_exit = None;
+                self.finish_faint_slide(pokered_core::battle::FaintSide::Enemy);
                 match kind {
                     SlideKind::SeHalfOff => self.enemy_half_off = true,
                     SlideKind::Legacy => {
@@ -6331,3 +6368,7 @@ mod old_man_render_tests {
             "ordinary battle keeps its player HUD");
     }
 }
+
+#[cfg(test)]
+#[path = "battle_faint_tests.rs"]
+mod faint_tests;
