@@ -1,0 +1,310 @@
+{
+  "original_disassembly": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_contract": [
+    "home/window.asm:52-132 HandleMenuInput moves cursor and returns sampled mask",
+    "home/start_menu.asm:14-58 UP then DOWN returns to loop before A/B/START; only button-only path saves row"
+  ],
+  "actual_before": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+  "actual_after": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+  "docs_child_is_not_a_new_runtime_run": true,
+  "engine": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+  "source_freeze_counts_each_provider": {
+    "source": 2713,
+    "gfx": 702,
+    "engine": 981
+  },
+  "witness_program": {
+    "path": "witness.rs",
+    "sha256": "09810c3543cbf3a27b4c080be38cd21ec5bff32e8a6bf0d820961d2b5eaf9d11",
+    "api": "actual public PokemonGame::new_with_options/update/draw and physical InputState",
+    "source_same_for_both_compiled_ELFs": true,
+    "debug_RPC": 0,
+    "state_setters": 0,
+    "warp": false,
+    "snapshot_restore": false,
+    "skip_intro": false,
+    "seed_changes": 0,
+    "audio_clock": "normal Game.update audio.update_frame only; no external PCM pump"
+  },
+  "actual_ELFs": {
+    "before": {
+      "source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+      "sha256": "ec29802f53d39e9f0eca1605bef9660a825060fc9ecf1e8a5f68a5ebfdb4afad",
+      "bytes": 47040320,
+      "consumed_direct_externs": {
+        "pokered_app": {
+          "sha256": "6d25be4c144f620c55bd4e772d2aa8c240693fd40ae5d3911d0c332b3a2fcfbf",
+          "bytes": 40579734
+        },
+        "pokered_core": {
+          "sha256": "c23bd2e68a5f98a1aff7a921774a958e4f3233aa5d70d8ec4b99f84c77c645c8",
+          "bytes": 27155204
+        },
+        "pokered_renderer": {
+          "sha256": "cfbe1040b35d15cf958d59c1c2fe03baf05340bdff022fabc0dccaa8af6db286",
+          "bytes": 1765934
+        },
+        "dotzuki_engine": {
+          "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
+          "bytes": 4525360
+        },
+        "serde_json": {
+          "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
+          "bytes": 2459412
+        }
+      }
+    },
+    "after": {
+      "source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+      "sha256": "e4cb2a027c340e443cbe668342d8084e969cf658ff9b00ff0a96de746b32253b",
+      "bytes": 47565184,
+      "consumed_direct_externs": {
+        "pokered_app": {
+          "sha256": "fd739488985a369b657d9620d787c160bdb51b642749a734afaed266ceac4908",
+          "bytes": 40584174
+        },
+        "pokered_core": {
+          "sha256": "8bba7f9266ee8463297bb255df144b1728ac9f10d159be4dabb0339a94011e3e",
+          "bytes": 27172450
+        },
+        "pokered_renderer": {
+          "sha256": "6c89727495d022623edfea0cd1040f7c6ffe441a5f2e6b45198cc9a756189564",
+          "bytes": 1767782
+        },
+        "dotzuki_engine": {
+          "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
+          "bytes": 4525360
+        },
+        "serde_json": {
+          "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
+          "bytes": 2459412
+        }
+      }
+    }
+  },
+  "physical_SRAM": {
+    "path": "ordinary.sav",
+    "bytes": 32768,
+    "sha256": "bc768c940f2ad29408b99f546556edb48494d1454c8a5391a30e4431be836fa1",
+    "actual_codec_producer": "001baef21de4b1660a9c301adb57451cfeda5c68",
+    "fixture": "ViridianForest(2,19); only Geodude21 HP1; wallet1000. Ordinary Continue facesDown. No runtime monster/position/flag edits. Not an RNG or runtime snapshot."
+  },
+  "runtime": {
+    "actual_tool_session": 96091,
+    "actual_exit_code": 0,
+    "runner_pid": 3622455,
+    "Game_processes": [
+      {
+        "name": "before-up-a-process",
+        "pid": 3622985,
+        "pgid": 3622985,
+        "natural_exit_code": 0,
+        "PGgone": true
+      },
+      {
+        "name": "after-up-a-process",
+        "pid": 3623056,
+        "pgid": 3623056,
+        "natural_exit_code": 0,
+        "PGgone": true
+      },
+      {
+        "name": "before-up-b-process",
+        "pid": 3623097,
+        "pgid": 3623097,
+        "natural_exit_code": 0,
+        "PGgone": true
+      },
+      {
+        "name": "after-up-b-process",
+        "pid": 3623101,
+        "pgid": 3623101,
+        "natural_exit_code": 0,
+        "PGgone": true
+      }
+    ],
+    "cold_Games": 4,
+    "input_frames_each": 1556,
+    "input_frames_total": 6224,
+    "state_rows_each": 1557,
+    "state_rows_total": 6228,
+    "original_captures": 32,
+    "paired_capture_frames": [
+      1428,
+      1460,
+      1492,
+      1493,
+      1494,
+      1524,
+      1525,
+      1556
+    ],
+    "all_case_inputs_same_between_providers": true,
+    "complete_recorded_state_prefix0_through1492_equal": true,
+    "first_recorded_split1493": {
+      "UP+A": "before Overworld/EXIT/saved5; after StartMenu/EXIT/saved0",
+      "UP+B": "before Overworld/row0/saved0; after StartMenu/EXIT/saved0"
+    },
+    "fresh_B_frame1525": "candidate closes and savesEXIT; before remainsfield",
+    "money_party_bag_flags_map_position_unchanged_from_field_anchor": true,
+    "final_wallet_each": 1000,
+    "all_witness_and_runner_PGs_gone": true
+  },
+  "core_tests": {
+    "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+    "argv": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--offline",
+      "--locked",
+      "-j1",
+      "--lib",
+      "start_menu_tests",
+      "--",
+      "--test-threads=1"
+    ],
+    "passed": 29,
+    "failed": 0,
+    "new_required_names": [
+      "start_menu_tests::direction_with_confirm_or_cancel_only_moves_start_menu_cursor",
+      "start_menu_tests::start_menu_direction_wrap_does_not_dispatch_the_destination",
+      "start_menu_tests::start_menu_up_precedes_down_and_all_button_bits",
+      "start_menu_tests::later_button_only_poll_can_confirm_or_close_after_start_menu_direction"
+    ],
+    "full_core_not_claimed": true
+  },
+  "visual_limits": {
+    "precombo_frame1428_pixels_equal": true,
+    "precombo_frames1460_and1492_each_differing_pixels": 60,
+    "difference_bbox_exclusive": [
+      66,
+      47,
+      78,
+      59
+    ],
+    "source_mapped_NPC4_actor_box_exclusive": [
+      64,
+      44,
+      80,
+      60
+    ],
+    "pixels_outside_NPC4_box_at_these_precombo_frames": 0,
+    "source": "Unseeded separate coldGame Overworld RNG startsfrom_entropy. Forest NPC4 Stationary range2 maps to0xFD, randomly choosingLeft/Right anddelay. Renderer uses facing/flip.",
+    "NPC_runtime_presentation_and_rng_state_not_recorded": true,
+    "exact_random_bytes_or_orientation_pair_not_claimed": true,
+    "full_screen_pixel_difference_not_entirely_attributed_to_menu_fix": true,
+    "audio_fidelity_not_claimed": true
+  },
+  "selected_images": [
+    {
+      "path": "docs/screenshots/start-menu-direction-1066/up-a-before.png",
+      "case": "up-a",
+      "side": "before",
+      "absolute_frame": 1493,
+      "actual_source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+      "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5"
+    },
+    {
+      "path": "docs/screenshots/start-menu-direction-1066/up-a-after.png",
+      "case": "up-a",
+      "side": "after",
+      "absolute_frame": 1493,
+      "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+      "sha256": "e169a0cc257ce41dbc1c9911252bb7d1f245316b18bc81c4bf3b0b61b7ea71e4"
+    },
+    {
+      "path": "docs/screenshots/start-menu-direction-1066/up-b-before.png",
+      "case": "up-b",
+      "side": "before",
+      "absolute_frame": 1493,
+      "actual_source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+      "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5"
+    },
+    {
+      "path": "docs/screenshots/start-menu-direction-1066/up-b-after.png",
+      "case": "up-b",
+      "side": "after",
+      "absolute_frame": 1493,
+      "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+      "sha256": "e169a0cc257ce41dbc1c9911252bb7d1f245316b18bc81c4bf3b0b61b7ea71e4"
+    }
+  ],
+  "preserved_first_stops": [
+    {
+      "run": "audit-1066-start-menu-native-pairs-v1",
+      "runner": 3543384,
+      "exit": 1,
+      "stages": 0,
+      "Game_constructor_or_update_calls": 0,
+      "cause": "reader compared SHA(readlink) with existing literal symlink: prefix; reader-onlyv2 correction preservesoldresult"
+    },
+    {
+      "run": "audit-1066-start-menu-native-pairs-v2",
+      "tool_session": 70180,
+      "runner": 3559581,
+      "exit": 1,
+      "successful_rustc_compiles": 2,
+      "witness_processes": 1,
+      "Game_constructor_or_update_calls": 0,
+      "cause": "Vec<Option<String>> rejected original logical[]/[s] prefix before outputdir/constructor; losslesswireconversion proved inwire-equivalence.json; sameELFs reused"
+    },
+    {
+      "run": "audit-1066-start-menu-raw-review-v1",
+      "Game_calls": 0,
+      "cause": "independentreader stopped on unanticipated precomboNPC60px, keptoriginal thenclassifiedlimit inreader-v2"
+    }
+  ],
+  "local_raw_evidence": {
+    "native_run": {
+      "artifact": "audit-1066-start-menu-native-pairs-v3/result.json",
+      "sha256": "772343bd4df5da2aae9dcce45f37550a0d0f868b05f76d3dfede604701acf466"
+    },
+    "raw_review": {
+      "artifact": "audit-1066-start-menu-raw-review-v2/receipt.json",
+      "sha256": "9894c1cfb137c35abf5bfbc4ce351948a7680d7783b80181bda294b037c1bd9c"
+    },
+    "npc_background_source": {
+      "artifact": "audit-1066-start-menu-npc-background-source-receipt-v1.json",
+      "sha256": "57dd8465e06530ae3bd82b35a4a7389d5643a32132da6b38c117d41ec614bfe4"
+    },
+    "original_reader_pixel_stop": {
+      "artifact": "audit-1066-start-menu-raw-review-v1/reader-stop.json",
+      "sha256": "69441c11811b76cbe7d1d4c5509148c281aa6074730559d2515a99502249c521"
+    },
+    "core_tests": {
+      "artifact": "audit-1066-start-menu-core-v1/result.json",
+      "sha256": "8603b933daa632c392d9f30c5c79dd37a1d5faaaaeb9c4b8b0a9c4b17016d8f9"
+    },
+    "core_test_stdout": {
+      "artifact": "audit-1066-start-menu-core-v1/output.log",
+      "sha256": "b01068aaee0e23d2bb23e805c1ed70efd2a8491975695c250dce656db37deba5"
+    },
+    "actual_M5_app_build": {
+      "artifact": "audit-1066-start-menu-M5-app-before-build-v1/result.json",
+      "sha256": "a76eafa4bd4c77490a5072e46a380215b7bf450bde95f5fbc67719206b5d73fe"
+    },
+    "actual_candidate_app_build": {
+      "artifact": "audit-1066-start-menu-app-after-build-v1/result.json",
+      "sha256": "eaa99f5a04428ec6529c9e154461d64e6752e46c22dedd6a11fe6bca10f2f8a6"
+    },
+    "actual_M5_frozen_dependencies": {
+      "artifact": "audit-1066-start-menu-M5-frozen-app-deps-v1/result.json",
+      "sha256": "171891d61f9b1cdfb96334d072d300777fc73e9e842aeb999df3623b0370013e"
+    },
+    "compiled_witness_providers": {
+      "artifact": "audit-1066-start-menu-native-pairs-v2/providers.json",
+      "sha256": "cc085c1fb34a2d9ae2ad4e4fd14eda94f2a39c5b655e896b1f49552ec940c5e7"
+    },
+    "original_guard_stop": {
+      "artifact": "audit-1066-start-menu-native-pairs-v1/result.json",
+      "sha256": "e5a2ea89c2417e684620e4ca99e9aae7be07613a0e634002168c3ea893a6cce8"
+    },
+    "original_wire_parse_stop": {
+      "artifact": "audit-1066-start-menu-native-pairs-v2/result.json",
+      "sha256": "3914928603e5986166766780fcfe158f405800f1663d23ea65caa92152c06f88"
+    }
+  },
+  "scope": "Two actual simultaneous-press START cases and ordinary laterB on onephysicalfixture; not all menus, timing, audio, NPC, RNG or fullgame parity."
+}
