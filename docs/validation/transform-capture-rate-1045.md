@@ -1,0 +1,120 @@
+# Transform capture rate
+
+Ordinary ball throws now use the original wild encounter species' header catch
+rate. The original stores this in `wEnemyMonActualCatchRate`, separately from
+the catch byte in the battle/party record. Transform copies the latter byte;
+it does not replace the independent rate used by `ItemUseBall`.
+
+The caller reads the original party identity through `party_mon`, including
+while a different species is displayed after Transform, and uses the header
+rate with the existing fallback of 255. Transform still copies the working
+catch byte. Safari keeps its separate catch-rate path. The original bug that
+rebuilds any captured transformed wild Pokémon as Ditto, including a non-Ditto
+Mirror Move user, is retained. Save fields and the capture/RNG algorithms are
+unchanged.
+
+The original reference is `pret/pokered` revision
+`fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`: `ram/wram.asm:1196–1199`,
+`engine/battle/core.asm:6107–6121`,
+`engine/battle/move_effects/transform.asm:57–71`, and
+`engine/items/item_effects.asm:300–303,329` distinguish those two bytes.
+
+## Core caller coverage
+
+Validated integrated source: `a0c4040565f521b5da679d254ff01bfcce46597b`, based on
+actual master `e323f16e1de75fdd8b94dc347f70cfbd82fa7b4e`, using engine
+`e533a3d23a0cdbed1524a1ac91184733da4a6f7e`.
+
+Three tests in `battle/transform_capture_tests.rs` cover four fixtures:
+
+- A real canonical enemy Ditto Transform copies 255 from a Gyarados produced
+  by Magikarp evolution, which preserves Magikarp's stored catch byte.
+- A real canonical enemy Ditto Transform copies Snorlax's lower value, 25.
+- An untransformed wild Rattata supplies the ordinary rate-255 control.
+- A faster player Ditto actually uses Transform before a wild Pidgeot uses
+  Mirror Move in the same canonical turn. Capture uses Pidgeot's original
+  rate, 45, while a successful capture still produces Ditto.
+
+After the canonical effects and narration, each fixture uses the public battle
+menu and Bag caller to throw a ball. Every seed from 0 through 255 runs for
+Poké, Great, Ultra and Master Balls at full HP and at 1 HP: **8192 throws** in
+each complete three-test run. There is no search for a favorable seed or
+early successful-seed exit.
+
+The reference capture context uses literal original rates (Ditto 35, Pidgeot
+45 and Rattata 255), independently of the changed header lookup. Assertions
+compare the exact Ball outcome/shake event, full captured record or absence,
+one-item consumption, narration continuation, eight subsequent RNG bytes and
+the complete serialized RNG state. The copied working catch byte remains
+intact.
+
+## Actual results and negative control
+
+On the original source `e23eda5daf60a1455f19ee8f1f51ac1ffd4fe863`, based on
+`e6150de4cf06bfd8a8bbbaf3e65ceb8ecb6e0ce5`, the first focused run passed all
+three tests. The complete `pokered-core` suite then passed **3384 tests**:
+2972 unit tests and 412 integration tests, with zero failures and one ignored
+doctest.
+
+An uncommitted negative control replaced only the caller's rate expression
+with the exact old reader; tests, assertions and vectors stayed unchanged.
+That run exited 101 with two controls passing and the expected Ditto test
+failing at its first fixed vector: Poké Ball, seed 0, full HP, high-255 copied
+byte. Both results were `BrokeFree`, but the old reader produced **two shakes**
+against the literal rate-35 reference's **zero shakes**. This first assertion
+does not demonstrate an incorrect capture at that seed. It stopped the main
+negative test before the later high-value vectors or the low-25 fixture ran;
+the untransformed and Mirror Move controls completed successfully.
+
+Restoring the committed source byte-for-byte made the same three tests pass
+again, including the complete 8192-throw matrix. The earlier full-suite result
+was preserved without repeating that suite during the negative control and
+restoration. All source, engine and GFX freezes matched after restoration, and
+both negative and restored-source Cargo process groups exited. The initial
+documentation-only commit preserved that validated source.
+
+## Integration with actual master
+
+The integrated source above includes merged PR #279. Merging actual master
+changed no file from the already integrated candidate; the Transform patch
+still consists of the same caller change and unchanged three-test module.
+One additional complete `pokered-core` run passed **3404 tests**: 2992 unit
+tests and 412 integration tests, with zero failures and one ignored doctest.
+This includes the complete Transform matrix and the inherited FIGHT, capture
+and flinch regressions. The source, engine and GFX freezes matched before and
+after this run, and the runner and Cargo process groups exited. The documentation-only publication `eb67b46e` preserved these integrated
+non-document source bytes.
+
+These are deterministic core-caller tests with unit fixtures, including an
+explicit speed fixture for the Mirror Move turn. They are not a native Game
+playthrough, original-emulator replay, App/CLI/GBA build, or official CI run.
+The change is pure core logic, which falls under the repository's screenshot
+exception.
+
+## Update after PR282 merged
+
+The original publication `eb67b46e` passed all three original-attempt-1
+workflows on historical base `e323f16e`: [CI](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827949902),
+[GBA ROM](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827950063),
+and [GBA performance](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827950241).
+The repository requires an up-to-date branch (`strict=true`), so those old
+results cannot replace checks on the updated head.
+
+A normal merge of actual master `42b41f7c359c4b5cd8c0d3d1cec81a8639f70b32` produced
+`12d6826ea02102df7a2f85d0dae0305deb95f32c`, without conflicts or manual Rust changes.
+The Transform reader and its three-test module remain byte-identical to
+`eb67b46e`; the inherited confusion fix and already merged Day Care dialogue
+are now included. Every non-document byte equals the PR281+PR282+PR283 prefix
+`8cd4ea152b67679fe9e10d707fddecb768799f87` of the private four-PR combination
+`fb6f73dd79328c30dc345c214fa305498b4abc76`. That complete four-PR combination
+actually passed **3411 core tests** (2999 unit + 412 integration, zero failures,
+one ignored doctest), with unchanged source/engine/GFX freezes. It also
+contains the still-separate Day Care record fix; this combined result is not
+relabeled as a new run of this branch. Its raw result SHA-256 is
+`4434b19e6555d0233fe4a4c4413b4aacacf1ca499f9038b5cb7c73f1084a93d4`,
+and independent terminal review is
+`36c9a3226a66e4e7670a5d212ff1b80957ef9c3ec000b5b6581cc16e8edd5f17`.
+
+The following commit only updates this record. No local Cargo run was
+repeated for this base update; official CI evaluates the new published head
+separately. The historical 3404-test run keeps its actual source identity.
