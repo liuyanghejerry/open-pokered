@@ -1,13 +1,4 @@
 {
-  "actual_master_base": "f35d9f4de826a51b9e60a91333aae610b299e4f0",
-  "before_compiled_head": "a1efdac02d41946002e35051e4f8412264221afc",
-  "before_binary_sha256": "a8747aac9cd73ea64e855782e40353699b41070a69e7ca8f300e235c4e7154a2",
-  "before_runtime_maps_head": "f35d9f4de826a51b9e60a91333aae610b299e4f0",
-  "before_equivalence": "All Rust, engine and Tower.scene bytes equal f35. Full compiler roster differs only Daycare.scene; explicit frozen f35 --scripts-dir overrides that runtime input. The a1 compiled identity and cold-boot provenance are retained.",
-  "after_compiled_head": "e709eff5a853176f729c30a277adbb11654fb0b7",
-  "after_binary_sha256": "ecf5eecb11a6a0bec4b0addc4339197700d5fd0528c30c7c837628f67f07a640",
-  "after_runtime_maps_head": "c6a4c940a9e2cd7bea257709fffca84ef2abf8b4",
-  "after_runtime_equivalence": "e709 changes only whitespace in an App test scene literal; all production and runtime map bytes equal c6a4.",
   "engine_revision": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
   "gfx_files": 702,
   "seed": 42,
@@ -239,45 +230,488 @@
       "after": 30
     }
   ],
-  "runtime_source_provider_manifest_sha256": {
-    "before": "c63331fb09ec73dc91380508b2826a91fed01051cd9bdb064dffc2b1d60d7b98",
-    "after": "77db2830bcb06d5d7acebb6cf2afe6b506d79e0aa8694059a21e0d5519b390a1"
+  "actual_master_base": "0820a522ded9c9dd6a1958e372d60ccf2adb3940",
+  "before_compiled_head": "0820a522ded9c9dd6a1958e372d60ccf2adb3940",
+  "before_binary_sha256": "7c9b2d5e3dd4f4e18351f3f16aea47ac7f548847aecc9edac25b920a78a15ede",
+  "before_runtime_maps_head": "0820a522ded9c9dd6a1958e372d60ccf2adb3940",
+  "after_compiled_head": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d",
+  "after_binary_sha256": "5aec6adae768a0f9399a83849541121c2c33f4fcccc6576eb9e9f80ee9f90957",
+  "after_runtime_maps_head": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d",
+  "full_actual_source_rosters": [
+    {
+      "head": "0820a522ded9c9dd6a1958e372d60ccf2adb3940",
+      "source_freeze_sha256": "997bd2e4f82f909837e69e501831d4df91bf81753618adf060bea412e957a953",
+      "source_counts": {
+        "complete_non_docs": 2707,
+        "compiler": 2189,
+        "external_gfx": 702,
+        "engine_all_tracked": 981
+      },
+      "maps_manifest_sha256": "31d2dc8a51a35507f3192598450b83bb79493bcdd047ff372ca31dfb64f49584"
+    },
+    {
+      "head": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d",
+      "source_freeze_sha256": "4559f97113020bdb6337ecb69ed90c583dc4bb5bf7e5791d9bd69a5279a5c375",
+      "source_counts": {
+        "complete_non_docs": 2707,
+        "compiler": 2189,
+        "external_gfx": 702,
+        "engine_all_tracked": 981
+      },
+      "maps_manifest_sha256": "75dc4197e43c8a861bfd5828571c81e36e71d8794eefbcb906d18f058a7372f2"
+    }
+  ],
+  "native_before_result_sha256": "694323b3294eabd21d60ad05e8a6572cac4bbf5d25afc28976a2f6afcb20ae9a",
+  "native_after_result_sha256": "2b165997da8b2857241c142c78bfc7109acd1b5cd32a8c716de14b902324076f",
+  "pair_analysis": {
+    "path": "audit-1052-marowak-latest-pair-analysis-v1.json",
+    "sha256": "290760507748515bbbee32d796564a536ed776fbb317078fb81ccfe3938f1914"
   },
-  "native_before_result_sha256": "3b4d46692e5013319de759bb395f2b9d3c601396121f0466012e90c33176894f",
-  "native_after_result_sha256": "acdb1531843bf56ef9233b0dd2e6e318eb4ce0c142fa41f96b6bb9f1465b8495",
-  "pair_analysis_sha256": "96ed93496237d27811dd8a8a4eca82e80b261e37b6abb58664f71946418ecea3",
-  "source_core_validation_result_sha256": "ca068137b22a8a62e2345b78e5d484a8329bd284553a45d87965c94b04b19c17",
-  "source_pcm_cli_validation_result_sha256": "292c36955e0b638d1b073cccf86add7c82e13ca8b4cffefa8c76c289a57be505",
+  "baseline_cli_build": {
+    "path": "audit-1052-marowak-master-0820-cli-v1/result.json",
+    "sha256": "1ee6c5637e81aa76ce33fb44477318715fa4f95c5f878606925c0c6d9ab29b8f"
+  },
+  "candidate_app2_and_cli": {
+    "path": "audit-1052-marowak-0820-integration-app-cli-v1/result.json",
+    "sha256": "b50f03225c5d30e3cab8253155efa8eb85ed686a6583b747b0562b38eecd9933"
+  },
+  "source_merge": {
+    "path": "audit-1052-marowak-master0820-integration-v1.json",
+    "sha256": "2a6f18cb707953ffe3077880d0734cb5acb09d08b1d28b4ff1263da602a3d19e"
+  },
+  "transport": "Client TCP_NODELAY only. Same1945 frame-addressed ordinary buttons, captures, --speed0 and seed; no timing or RNG fitting.",
+  "public_state_result": {
+    "observations_per_run": 1946,
+    "full_public_equal_prefix_last_frame": 1597,
+    "first_intended_difference": 1598,
+    "all_other_public_fields_equal_all_frames": true,
+    "difference_fields": {
+      "active_script_effect": {
+        "count": 152,
+        "first": 1598,
+        "last": 1749
+      },
+      "script_effect": {
+        "count": 152,
+        "first": 1598,
+        "last": 1749
+      },
+      "dialogue": {
+        "count": 152,
+        "first": 1624,
+        "last": 1778
+      },
+      "dialogue_state": {
+        "count": 154,
+        "first": 1624,
+        "last": 1779
+      },
+      "audio_sfx": {
+        "count": 4,
+        "first": 1678,
+        "last": 1721
+      }
+    },
+    "changed_image_frames": [
+      1677,
+      1702,
+      1722,
+      1762
+    ],
+    "equal_image_frames": [
+      648,
+      720,
+      1169,
+      1802,
+      1904,
+      1945
+    ],
+    "final_script_idle_window_closed": true
+  },
+  "cry_wait_frames": [
+    1678,
+    1679,
+    1680,
+    1681,
+    1682,
+    1683,
+    1684,
+    1685,
+    1686,
+    1687,
+    1688,
+    1689,
+    1690,
+    1691,
+    1692,
+    1693,
+    1694,
+    1695,
+    1696,
+    1697,
+    1698,
+    1699,
+    1700,
+    1701,
+    1702,
+    1703,
+    1704,
+    1705,
+    1706,
+    1707,
+    1708,
+    1709,
+    1710,
+    1711,
+    1712,
+    1713,
+    1714,
+    1715,
+    1716,
+    1717,
+    1718,
+    1719
+  ],
+  "post_sound_delay_frames": [
+    1720,
+    1721,
+    1722,
+    1723,
+    1724,
+    1725,
+    1726,
+    1727,
+    1728,
+    1729,
+    1730,
+    1731,
+    1732,
+    1733,
+    1734,
+    1735,
+    1736,
+    1737,
+    1738,
+    1739,
+    1740,
+    1741,
+    1742,
+    1743,
+    1744,
+    1745,
+    1746,
+    1747,
+    1748,
+    1749
+  ],
+  "scope": "Actual latest master0820 versus actual candidate087e containing that base. No compiled-source equivalence substitution. Preboot fixture only; no physical SAVE, live setters, skip helpers, warp, injected encounter, runtime RNG changes, snapshot restore or retries. Public state equality does not prove direct RNG equality; native frame_count is not original hardware phase. Real logical sequencer observations, not a speaker recording. Current App2 tests independently exercise actual PCM and direct reset. Historical results retain their original source identity.",
+  "historical_development": {
+    "actual_master_base": "f35d9f4de826a51b9e60a91333aae610b299e4f0",
+    "before_compiled_head": "a1efdac02d41946002e35051e4f8412264221afc",
+    "before_binary_sha256": "a8747aac9cd73ea64e855782e40353699b41070a69e7ca8f300e235c4e7154a2",
+    "before_runtime_maps_head": "f35d9f4de826a51b9e60a91333aae610b299e4f0",
+    "before_equivalence": "All Rust, engine and Tower.scene bytes equal f35. Full compiler roster differs only Daycare.scene; explicit frozen f35 --scripts-dir overrides that runtime input. The a1 compiled identity and cold-boot provenance are retained.",
+    "after_compiled_head": "e709eff5a853176f729c30a277adbb11654fb0b7",
+    "after_binary_sha256": "ecf5eecb11a6a0bec4b0addc4339197700d5fd0528c30c7c837628f67f07a640",
+    "after_runtime_maps_head": "c6a4c940a9e2cd7bea257709fffca84ef2abf8b4",
+    "after_runtime_equivalence": "e709 changes only whitespace in an App test scene literal; all production and runtime map bytes equal c6a4.",
+    "engine_revision": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+    "gfx_files": 702,
+    "seed": 42,
+    "frames": 1945,
+    "inputs": {
+      "fixture.json": {
+        "sha256": "3880c70244c88aa015e374a50cd193b7301737c10d4ffd21778e16569eff253e",
+        "bytes": 7919
+      },
+      "buttons.json": {
+        "sha256": "f002f5d398fe951d5514acbde6e5cce330fc82e32b4835b9b813f9b807c28980",
+        "bytes": 15546
+      },
+      "captures.json": {
+        "sha256": "21dbaf6b8158f7ce7cdb4685e1b775e8a3c0bd54ac3e0ae74ad21cf053391a09",
+        "bytes": 241
+      }
+    },
+    "template_sha256": "11b2a5464ddcade60623b04f06e96e800d4813e3586d187988d1dae7435a1a7e",
+    "explicit_preboot_flags": {
+      "EVENT_BEAT_GHOST_MAROWAK": {
+        "bit": 271,
+        "value": false
+      },
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_0": {
+        "bit": 265,
+        "value": true
+      },
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_1": {
+        "bit": 266,
+        "value": true
+      },
+      "EVENT_BEAT_POKEMONTOWER_6_TRAINER_2": {
+        "bit": 267,
+        "value": true
+      }
+    },
+    "explicit_preboot_position": {
+      "map": "PokemonTower6F",
+      "map_id": 147,
+      "x": 10,
+      "y": 17
+    },
+    "explicit_preboot_party": "BulbasaurLv30 HP73/73 PP35/40/0/0, standard computed stats and DVs9A78; replaces template party.",
+    "explicit_preboot_bag": [
+      [
+        "PokeDoll",
+        1
+      ]
+    ],
+    "fixture_leaf_changes": [
+      {
+        "path": "/game_data/event_flags/33",
+        "before": 0,
+        "after": 14
+      },
+      {
+        "path": "/game_data/bag/items/0/0",
+        "before": "PokeBall",
+        "after": "PokeDoll"
+      },
+      {
+        "path": "/game_data/bag/items/0/1",
+        "before": 2,
+        "after": 1
+      },
+      {
+        "path": "/game_data/position/map_id",
+        "before": 178,
+        "after": 147
+      },
+      {
+        "path": "/game_data/position/y",
+        "before": 14,
+        "after": 17
+      },
+      {
+        "path": "/game_data/position/y_block",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "path": "/game_data/position/x",
+        "before": 16,
+        "after": 10
+      },
+      {
+        "path": "/party/0/nickname",
+        "before": [
+          80,
+          80,
+          80,
+          80,
+          80,
+          80,
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "after_missing": true
+      },
+      {
+        "path": "/party/0/attack",
+        "before": 124,
+        "after": 39
+      },
+      {
+        "path": "/party/0/max_hp",
+        "before": 230,
+        "after": 73
+      },
+      {
+        "path": "/party/0/pp/0",
+        "before": 0,
+        "after": 35
+      },
+      {
+        "path": "/party/0/pp/1",
+        "before": 32,
+        "after": 40
+      },
+      {
+        "path": "/party/0/pp/2",
+        "before": 10,
+        "after": 0
+      },
+      {
+        "path": "/party/0/pp/3",
+        "before": 15,
+        "after": 0
+      },
+      {
+        "path": "/party/0/speed",
+        "before": 42,
+        "after": 36
+      },
+      {
+        "path": "/party/0/catch_rate",
+        "before": 25,
+        "after_missing": true
+      },
+      {
+        "path": "/party/0/type2",
+        "before": "Normal",
+        "after": "Poison"
+      },
+      {
+        "path": "/party/0/species",
+        "before": "Snorlax",
+        "after": "Bulbasaur"
+      },
+      {
+        "path": "/party/0/moves/0",
+        "before": "Headbutt",
+        "after": "Tackle"
+      },
+      {
+        "path": "/party/0/moves/1",
+        "before": "Amnesia",
+        "after": "Growl"
+      },
+      {
+        "path": "/party/0/moves/2",
+        "before": "Rest",
+        "after": "None"
+      },
+      {
+        "path": "/party/0/moves/3",
+        "before": "BodySlam",
+        "after": "None"
+      },
+      {
+        "path": "/party/0/total_exp",
+        "before": 156250,
+        "after": 21760
+      },
+      {
+        "path": "/party/0/special",
+        "before": 78,
+        "after": 48
+      },
+      {
+        "path": "/party/0/ot_name",
+        "before": [
+          141,
+          136,
+          141,
+          147,
+          132,
+          141,
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "after_missing": true
+      },
+      {
+        "path": "/party/0/hp",
+        "before": 230,
+        "after": 73
+      },
+      {
+        "path": "/party/0/defense",
+        "before": 80,
+        "after": 40
+      },
+      {
+        "path": "/party/0/type1",
+        "before": "Normal",
+        "after": "Grass"
+      },
+      {
+        "path": "/party/0/pp_ups/0",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "path": "/party/0/pp_ups/1",
+        "before": 3,
+        "after": 0
+      },
+      {
+        "path": "/party/0/level",
+        "before": 50,
+        "after": 30
+      }
+    ],
+    "runtime_source_provider_manifest_sha256": {
+      "before": "c63331fb09ec73dc91380508b2826a91fed01051cd9bdb064dffc2b1d60d7b98",
+      "after": "77db2830bcb06d5d7acebb6cf2afe6b506d79e0aa8694059a21e0d5519b390a1"
+    },
+    "native_before_result_sha256": "3b4d46692e5013319de759bb395f2b9d3c601396121f0466012e90c33176894f",
+    "native_after_result_sha256": "acdb1531843bf56ef9233b0dd2e6e318eb4ce0c142fa41f96b6bb9f1465b8495",
+    "pair_analysis_sha256": "96ed93496237d27811dd8a8a4eca82e80b261e37b6abb58664f71946418ecea3",
+    "source_core_validation_result_sha256": "ca068137b22a8a62e2345b78e5d484a8329bd284553a45d87965c94b04b19c17",
+    "source_pcm_cli_validation_result_sha256": "292c36955e0b638d1b073cccf86add7c82e13ca8b4cffefa8c76c289a57be505",
+    "images": {
+      "docs/screenshots/marowak-departure-1048-cry-before.png": {
+        "frame": 1702,
+        "sha256": "2472514be420e3650bd1175d7aa10489a93ada6af24329ff9f3410b00db5437d"
+      },
+      "docs/screenshots/marowak-departure-1048-cry-after.png": {
+        "frame": 1702,
+        "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9"
+      },
+      "docs/screenshots/marowak-departure-1048-pause-before.png": {
+        "frame": 1722,
+        "sha256": "befb03c9ba583682a04c3c986173ab5817ee07ac2439b44dbd693e6b0c46703a"
+      },
+      "docs/screenshots/marowak-departure-1048-pause-after.png": {
+        "frame": 1722,
+        "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9"
+      }
+    },
+    "scope": "Development matched pair on isolated actual f35 baseline. Not relabeled as future updated master. No physical SAVE performed, no runtime setter/skip/warp/battle injection/retry. Public state equality is not direct RNG equality.",
+    "separate_reset_follow_up": {
+      "source_head": "be89c290148fd2f00c6f13ffb992e4b3370c1e3a",
+      "production_difference_from_e709": "One explicit retained-window cleanup at direct soft_reset entry. Normal Game update/core/scripts/audio/GFX unchanged.",
+      "tested_scope": "Actual App real PCM wait test and new direct-reset missing-save test both pass, followed by CLI build0. Original e709 native pair is not relabeled as be89 or as reset proof.",
+      "tests": [
+        "game::field_cry_wait_fidelity_tests::muted_game_waits_for_real_cry_completion_then_thirty_frames_with_text_visible",
+        "game::field_cry_wait_fidelity_tests::soft_reset_releases_owned_text_even_when_the_save_cannot_be_read"
+      ],
+      "result_sha256": "e0e550adea05fc6599e50b6849ecbfc17589378326bb6993fc00bccde2b18c68",
+      "source_freeze_sha256": "b2920b3362520009561c3b3ac124c574c5f86b1ad5700a61bdef4d1dff1775d9",
+      "cli_sha256": "6ba401d3ad8ef41ad67d2bd2f09c23d03698e7b5b4678f62a2a92de974f3f06a",
+      "scope_correction": "Earlier summary confused load_from_path cleanup with direct soft_reset. Actual method review corrected this and a dedicated direct-entry test now covers it."
+    }
+  },
+  "historical_a393_pair_peer": {
+    "path": "audit-1052-marowak-mainline-pair-peer-review-v1.json",
+    "sha256": "dcef088f5a49ac399c0c6dd90abb43b75f85066c874ef3373fc4ac1ded9dd633"
+  },
   "images": {
     "docs/screenshots/marowak-departure-1048-cry-before.png": {
       "frame": 1702,
-      "sha256": "2472514be420e3650bd1175d7aa10489a93ada6af24329ff9f3410b00db5437d"
+      "sha256": "2472514be420e3650bd1175d7aa10489a93ada6af24329ff9f3410b00db5437d",
+      "actual_source": "0820a522ded9c9dd6a1958e372d60ccf2adb3940"
     },
     "docs/screenshots/marowak-departure-1048-cry-after.png": {
       "frame": 1702,
-      "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9"
+      "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9",
+      "actual_source": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d"
     },
     "docs/screenshots/marowak-departure-1048-pause-before.png": {
       "frame": 1722,
-      "sha256": "befb03c9ba583682a04c3c986173ab5817ee07ac2439b44dbd693e6b0c46703a"
+      "sha256": "befb03c9ba583682a04c3c986173ab5817ee07ac2439b44dbd693e6b0c46703a",
+      "actual_source": "0820a522ded9c9dd6a1958e372d60ccf2adb3940"
     },
     "docs/screenshots/marowak-departure-1048-pause-after.png": {
       "frame": 1722,
-      "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9"
+      "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9",
+      "actual_source": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d"
     }
-  },
-  "scope": "Development matched pair on isolated actual f35 baseline. Not relabeled as future updated master. No physical SAVE performed, no runtime setter/skip/warp/battle injection/retry. Public state equality is not direct RNG equality.",
-  "separate_reset_follow_up": {
-    "source_head": "be89c290148fd2f00c6f13ffb992e4b3370c1e3a",
-    "production_difference_from_e709": "One explicit retained-window cleanup at direct soft_reset entry. Normal Game update/core/scripts/audio/GFX unchanged.",
-    "tested_scope": "Actual App real PCM wait test and new direct-reset missing-save test both pass, followed by CLI build0. Original e709 native pair is not relabeled as be89 or as reset proof.",
-    "tests": [
-      "game::field_cry_wait_fidelity_tests::muted_game_waits_for_real_cry_completion_then_thirty_frames_with_text_visible",
-      "game::field_cry_wait_fidelity_tests::soft_reset_releases_owned_text_even_when_the_save_cannot_be_read"
-    ],
-    "result_sha256": "e0e550adea05fc6599e50b6849ecbfc17589378326bb6993fc00bccde2b18c68",
-    "source_freeze_sha256": "b2920b3362520009561c3b3ac124c574c5f86b1ad5700a61bdef4d1dff1775d9",
-    "cli_sha256": "6ba401d3ad8ef41ad67d2bd2f09c23d03698e7b5b4678f62a2a92de974f3f06a",
-    "scope_correction": "Earlier summary confused load_from_path cleanup with direct soft_reset. Actual method review corrected this and a dedicated direct-entry test now covers it."
   }
 }
