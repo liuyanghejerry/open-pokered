@@ -638,3 +638,180 @@ fn fidelity_link_exchange_preserves_damage_status_and_pp() {
     let remote=b.screen().unwrap().battle_state.as_ref().unwrap().enemy.party[0];
     assert_eq!(remote.hp,1);assert_eq!(remote.pp[0],1);assert_eq!(remote.status,injured.status);
 }
+
+// Each peer runs AnyPartyAlive locally before enemy victory; simultaneous
+// exhaustion is Lose on both peers, not an invented complementary Win/Draw.
+fn simultaneous_ko_parties(alive_a: bool, alive_b: bool) -> (Party, Party) {
+    let mut source = mk(
+        Species::Electrode,
+        60,
+        [
+            MoveId::Selfdestruct,
+            MoveId::None,
+            MoveId::None,
+            MoveId::None,
+        ],
+    );
+    let mut target = mk(
+        Species::Magikarp,
+        5,
+        [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None],
+    );
+    source.hp = 1;
+    target.hp = 1;
+    let mut reserve_a = mk(
+        Species::Squirtle,
+        20,
+        [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+    );
+    let mut reserve_b = mk(
+        Species::Caterpie,
+        5,
+        [MoveId::Tackle, MoveId::None, MoveId::None, MoveId::None],
+    );
+    if !alive_a {
+        reserve_a.hp = 0;
+    }
+    if !alive_b {
+        reserve_b.hp = 0;
+    }
+    (
+        party_of(vec![source, reserve_a]),
+        party_of(vec![target, reserve_b]),
+    )
+}
+
+#[test]
+fn simultaneous_ko_driver_results_check_each_local_whole_party() {
+    for (alive_a, alive_b) in [(false, false), (false, true), (true, false)] {
+        let (pa, pb) = simultaneous_ko_parties(alive_a, alive_b);
+        let (mut a, mut b) = setup_battle(pa, pb);
+        pump_through_intro(&mut a, 500);
+        pump_through_intro(&mut b, 500);
+        do_move_turn(&mut a, 0, &mut b, 0);
+        a.poll();
+        b.poll();
+        let expected_a = if alive_a {
+            LinkBattleResult::Win
+        } else {
+            LinkBattleResult::Lose
+        };
+        let expected_b = if alive_b {
+            LinkBattleResult::Win
+        } else {
+            LinkBattleResult::Lose
+        };
+        assert_eq!(a.result(), Some(expected_a));
+        assert_eq!(b.result(), Some(expected_b));
+        assert_eq!(a.remote_result(), Some(expected_b));
+        assert_eq!(b.remote_result(), Some(expected_a));
+        assert_eq!(a.phase(), &LinkDriverPhase::Finished);
+        assert_eq!(b.phase(), &LinkDriverPhase::Finished);
+        assert_eq!(a.local_party().get(0).unwrap().hp, 0);
+        assert_eq!(b.local_party().get(0).unwrap().hp, 0);
+        assert_mirrored(&a, &b);
+    }
+}
+
+#[test]
+fn simultaneous_ko_driver_exchanges_both_mandatory_replacements() {
+    let (pa, pb) = simultaneous_ko_parties(true, true);
+    let (mut a, mut b) = setup_battle(pa, pb);
+    pump_through_intro(&mut a, 500);
+    pump_through_intro(&mut b, 500);
+    do_move_turn(&mut a, 0, &mut b, 0);
+    for d in [&a, &b] {
+        assert_eq!(d.screen().unwrap().phase, BattlePhase::PlayerFaintSwitch);
+        assert_eq!(d.result(), None);
+        assert_eq!(
+            d.screen()
+                .unwrap()
+                .battle_state
+                .as_ref()
+                .unwrap()
+                .player
+                .active_pokemon_index,
+            0
+        );
+        assert_eq!(
+            d.screen()
+                .unwrap()
+                .battle_state
+                .as_ref()
+                .unwrap()
+                .enemy
+                .active_pokemon_index,
+            0
+        );
+    }
+    assert_mirrored(&a, &b);
+    let before_a = a
+        .screen()
+        .unwrap()
+        .battle_state
+        .as_ref()
+        .unwrap()
+        .player
+        .party[1];
+    let before_b = b
+        .screen()
+        .unwrap()
+        .battle_state
+        .as_ref()
+        .unwrap()
+        .player
+        .party[1];
+    for d in [&mut a, &mut b] {
+        d.update(BattleInput {
+            b: true,
+            ..BattleInput::none()
+        });
+        assert_eq!(d.screen().unwrap().phase, BattlePhase::PlayerFaintSwitch);
+        d.update(input_down());
+        d.update(input_a());
+        assert_eq!(d.screen().unwrap().phase, BattlePhase::LinkWaiting);
+        // Picking a replacement defers it; no native auto-send on either side.
+        assert_eq!(
+            d.screen()
+                .unwrap()
+                .battle_state
+                .as_ref()
+                .unwrap()
+                .player
+                .active_pokemon_index,
+            0
+        );
+    }
+    resolve_turns(&mut a, &mut b);
+    assert_mirrored(&a, &b);
+    for d in [&a, &b] {
+        assert_eq!(d.result(), None);
+        assert_eq!(d.screen().unwrap().phase, BattlePhase::PlayerMenu);
+        let bs = d.screen().unwrap().battle_state.as_ref().unwrap();
+        assert_eq!(
+            (
+                bs.player.active_pokemon_index,
+                bs.enemy.active_pokemon_index
+            ),
+            (1, 1)
+        );
+    }
+    let after_a = a
+        .screen()
+        .unwrap()
+        .battle_state
+        .as_ref()
+        .unwrap()
+        .player
+        .active_mon();
+    let after_b = b
+        .screen()
+        .unwrap()
+        .battle_state
+        .as_ref()
+        .unwrap()
+        .player
+        .active_mon();
+    assert_eq!((after_a.hp, after_a.pp), (before_a.hp, before_a.pp));
+    assert_eq!((after_b.hp, after_b.pp), (before_b.hp, before_b.pp));
+}
