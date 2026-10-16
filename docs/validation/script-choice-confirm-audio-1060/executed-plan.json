@@ -1,0 +1,242 @@
+{
+  "stage": "SOURCE_READY_REQUIRES_ROOT_EXECUTION_APPROVAL",
+  "scope": "Actual M1 versus77db confirmation audio under unchanged physicalSAV/2012buttons. No15frame completion or A+B priority repair. Pure source prep; no Game run.",
+  "providers": {
+    "before": {
+      "head": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+      "identity": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1057-victory-native-preparation-execution-v1/CLI-identity.json",
+      "identity_sha256": "1d57a3d206e997106a5826779799b1c9828aec685497e723d7ce15df8e763ba5"
+    },
+    "after": {
+      "head": "77db4bcb3dc745a4b913c61301ff28852dd64e2e",
+      "identity": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1058-choice-confirm-after-identity-v1.json",
+      "identity_sha256": "8e0e9fc73b12795062920ca386106139996b47020a44aee91312f9a192eb4980"
+    }
+  },
+  "fixture": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1055-quiz-master-pair-preparation-v1/locked-preboot.sav",
+    "sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+    "bytes": 32768,
+    "assistance": "Physical SRAM constructed before Game in prior committed App fixture; reused byte-for-byte, not a snapshot, no sidecar."
+  },
+  "buttons": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1055-quiz-master-pair-preparation-v1/wrong-buttons.json",
+    "sha256": "15ba422b1f32fbd1f3943dfe3c695668d10d3c83cb4dbbc34522c74ab1c53764",
+    "frames": 2012,
+    "literal": "70 * (A1 + neutral7) + neutral32 + Up2 + neutral4 + A2 + neutral4 + 44 * (B1 + neutral31)",
+    "no_new_discovery_or_adjustment": true
+  },
+  "launch": {
+    "seed": 42,
+    "lang": "en",
+    "speed": 0,
+    "headless": true,
+    "no_audio": true,
+    "boot": "cold normal Continue via those fixed inputs",
+    "overrides": null,
+    "ports": [
+      23726,
+      23727
+    ],
+    "forbidden": [
+      "snapshot",
+      "restore",
+      "skip-intro",
+      "warp",
+      "scripts-dir",
+      "POKERED_MAPS_DIR",
+      "setters",
+      "battle injection",
+      "adaptive buttons",
+      "extra neutral padding",
+      "seed search",
+      "automatic retry"
+    ]
+  },
+  "allowed_rpc": [
+    "get_state",
+    "get_npcs",
+    "get_flags",
+    "get_bag",
+    "press_timeline",
+    "capture_frame"
+  ],
+  "every_frame": {
+    "range_inclusive": [
+      0,
+      2012
+    ],
+    "read_only": [
+      "get_state",
+      "get_npcs",
+      "get_flags"
+    ],
+    "input": "exactly one press_timeline button at frame f advances to f+1; exact zero padding receipt asserted",
+    "state_top_level_keys": [
+      "active_script_effect",
+      "audio_sfx",
+      "badges",
+      "battle_bag",
+      "battle_inventory",
+      "battle_live",
+      "battle_message",
+      "battle_moves",
+      "battle_party_cursor",
+      "battle_phase",
+      "capture_phase",
+      "choice",
+      "coins",
+      "credits_final_button",
+      "credits_phase",
+      "dialogue",
+      "dialogue_state",
+      "evaluation",
+      "field_menu",
+      "field_poison",
+      "frame_count",
+      "hall_of_fame_count",
+      "hof_phase",
+      "last_outside_map",
+      "link",
+      "map_blocks",
+      "map_id",
+      "map_name",
+      "money",
+      "party",
+      "party_count",
+      "pc_phase",
+      "player_facing",
+      "player_movement_state",
+      "player_name",
+      "player_transport",
+      "player_x",
+      "player_y",
+      "screen",
+      "script_awaiting_battle",
+      "script_effect",
+      "script_running",
+      "shop_message",
+      "shop_phase",
+      "text_speed_delay_frames",
+      "warp_fade"
+    ],
+    "npc_exact_keys": [
+      "facing",
+      "home_x",
+      "home_y",
+      "npc_index",
+      "scripted_path_remaining",
+      "sprite_id",
+      "text_id",
+      "visible",
+      "walk_counter",
+      "x",
+      "y"
+    ]
+  },
+  "fixed_capture_frames": [
+    604,
+    1023,
+    1057,
+    1064,
+    1087,
+    1090,
+    1100,
+    1110,
+    1120,
+    1140,
+    1160,
+    1200,
+    1240,
+    1280,
+    1340,
+    2012
+  ],
+  "prefix": {
+    "all_public_state_npcs_flags_equal_inclusive": [
+      0,
+      1020
+    ],
+    "first_confirmation_frame": 1021,
+    "expected_before_audio": {
+      "id": 0,
+      "playing": false
+    },
+    "expected_after_audio": {
+      "id": 63,
+      "playing": true
+    },
+    "expected_both_effect": "WaitSound",
+    "prior_Wrong_prefix_not_reused": true,
+    "boundary_source": "The unchanged previously preservedc974 same-byteCLI raw after states enterShowChoice995 and accept fixedB at1021; identical sourceM1 CLI actualbuild is separately pinned. Expected boundary only; not newM1 execution evidence.",
+    "historical_raw_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1056-wrong-trainer-current-master-pair-v1/after/states.jsonl",
+    "historical_raw_sha256": "380148e1f35761a6824aff03af9ca74ae7fad7d65223df2023c96787ba378484"
+  },
+  "expected_sequence": {
+    "npc_selector": {
+      "text_id": 3,
+      "unique_visible": true
+    },
+    "initial_xy": [
+      17,
+      8
+    ],
+    "after_route_xy": [
+      16,
+      8
+    ],
+    "after": "Same route/text/battle contract, new choice PressAB observed at acceptance before DENIED. No15framepadding is introduced.",
+    "prebattle_text": "I was a thief, but I became\nstraight as a trainer!",
+    "before": "M1 already contains WrongTrainer: both providers must walk17,8→16,8 with nonzero actual counter, prebattle text, ordinary fixedB, actualbattle; timing can differ through existing WaitSound.",
+    "observed_events_only": "First movement/completion/prebattle/final-page-ready/battle frames are derived from raw observations; never drive/change input or capture timing.",
+    "strict_assertions": [
+      "exact2012 literal vectors/no padding",
+      "full public prefix0..1020 equal",
+      "1021 bothWaitSound/beforeidle vsafterPressAB",
+      "both actual route/nonzero counter/completion/prebattle/fixedB/battle sequence",
+      "per-frame money/coins/badges/party identity/HP/PP conserved",
+      "gate/trainer flags stayunset",
+      "all captures160x144 and post-capture publicstate/NPC/flags unchanged",
+      "allownedGamePGgone/SAVunchanged/no sidecar"
+    ],
+    "unknown_schema": "Stop first failure; do not change expectations or inputs.",
+    "completion_failure": "If either provider does not reach the expected battle by fixed2012, preserve the full run as failure; no extra inputs, padding, seed change or automatic retry."
+  },
+  "conserved_public_fields": [
+    "money",
+    "coins",
+    "badges",
+    "party_count",
+    "party"
+  ],
+  "after_source_validation": {
+    "result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1058-choice-confirm-validation-v1/result.json",
+    "sha256": "16f1d2f472a3bf4a747d31fba4d76a6cb3255e22bd32d22454df90981896e00a",
+    "actual_tool_session": 80686,
+    "actual_terminal_exit": 0,
+    "scope": "4core+4Appnamed/7coldcase+CLI; no fullcore/Game"
+  },
+  "not_claimed": [
+    "directRNGidentity",
+    "rawnativePCMwaveform",
+    "new15framecompletion",
+    "A+Bpriorityfixed",
+    "hardwarefullframeparity",
+    "fullplaythrough",
+    "unassistedSAVEboot"
+  ],
+  "capture_addition": "Original14absolute captureframes retained;1057/1064 predeclared from before-only historical firstbadcallglyphs to catch indirect visual timing. No input/vector/seed/padding change; future aftercaptures not used to choose these frames.",
+  "execution_at_plan": {
+    "Game": 0,
+    "Cargo": 0
+  },
+  "final_ready_required": {
+    "root_approved_for_execution": true,
+    "plan_sha256": "pin exactbytes",
+    "controller_sha256": "pin exactbytes",
+    "identity_sha256": {
+      "before": "1d57a3d206e997106a5826779799b1c9828aec685497e723d7ce15df8e763ba5",
+      "after": "8e0e9fc73b12795062920ca386106139996b47020a44aee91312f9a192eb4980"
+    }
+  }
+}

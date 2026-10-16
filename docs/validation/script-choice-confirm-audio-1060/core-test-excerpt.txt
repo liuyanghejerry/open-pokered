@@ -1,0 +1,8 @@
+Selected actual stdout lines; full stdout SHA-256: 31a3aed26c7e81337aaace6c79e64e58fac5eb96c002109e7aab3bb950a81cc9
+
+running 4 tests
+test overworld::update::choice_confirm_audio_tests::choice_a_b_and_combined_confirmation_play_once_without_changing_the_result ... ok
+test overworld::update::choice_confirm_audio_tests::choice_idle_and_cursor_movement_do_not_play_confirmation ... ok
+test overworld::update::choice_confirm_audio_tests::nested_gift_choice_emits_the_common_confirmation_once ... ok
+test overworld::update::choice_confirm_audio_tests::nested_reading_choice_emits_the_common_confirmation_once ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 3011 filtered out; finished in 0.10s
