@@ -1,0 +1,127 @@
+{
+  "schema": "field-question-Admission-before-reading32-discovery-v3",
+  "state": "READY",
+  "root_authorized_before_only": true,
+  "before_head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+  "candidate_head_for_future_fixed_replay": "2c9b876e7983ea34852cafa249b0747068db9bac",
+  "controller_sha256": "0b4a83deb06c67f00b312d6e3b71bf0b2376735a70ee4b5aa9dcfcd65bd2c738",
+  "builder": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/build-fixtures.rs",
+    "sha256": "e14c6bed82d713dc8187905978505278025597ea2d1aa5be0eb8b2704a3e3f3b",
+    "bytes": 9356
+  },
+  "template": {
+    "path": "/home/jerry/develop/open-pokered/docs/validation/double-ko-1066/only-geodude.sav",
+    "sha256": "bc768c940f2ad29408b99f546556edb48494d1454c8a5391a30e4431be836fa1",
+    "bytes": 32768
+  },
+  "before_provider": {
+    "head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+    "kind": "normal-CLI-debug-server",
+    "binary": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/pokered-app",
+      "sha256": "d60505928f57a9eb74b2309eb2d4e11a32e3cf8cf90748df910cd07a084696d7",
+      "bytes": 78046680
+    },
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/CLI-identity.json",
+      "sha256": "90f4fdd240443baa0e1f012b422ca33ef571c23b67ffcc9df3b89fa909fec732",
+      "bytes": 3685
+    },
+    "identity_head_path": [
+      "head"
+    ],
+    "identity_binary_sha_path": [
+      "binary",
+      "sha256"
+    ],
+    "source_guard": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/M9-source-guard.json",
+      "sha256": "5e4aebd1c54cf41f49efc93cfdfacb510121b7db270c014faedaec3b411a998a",
+      "bytes": 1130704
+    }
+  },
+  "fixtures": {
+    "safari-admission": {
+      "map_name": "SafariZoneGate",
+      "map_id": 156,
+      "position": [
+        4,
+        3
+      ],
+      "last_map": "FuchsiaCity",
+      "active_hunt": false,
+      "safari_steps": 0,
+      "safari_balls": 0,
+      "ordinary_route": "Continue; hold Up at most180 frames until row4,2 starts existing coordinate script",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/codec-result.json",
+        "sha256": "9c71a8ce02520734f89d4f64af939d470f39f633cf5f679f651eafb91c8033f7",
+        "bytes": 392
+      }
+    }
+  },
+  "ports": {
+    "safari-admission": 19392
+  },
+  "runtime_environment": {
+    "LD_LIBRARY_PATH": "/tmp/pokered-build-lib"
+  },
+  "policy": {
+    "max_boot": 2500,
+    "max_route": 180,
+    "max_question": 4000,
+    "final_neutral": 64,
+    "probe_neutral": 32,
+    "seed": 42,
+    "earlier_page_reading_neutral": 32
+  },
+  "literal_prefix_policy": "Only before is adaptive under the frozen policy. For each case final-readyF then64neutral is saved as question-neutral-prefix.json before the baseline-only A1+N32 probe. Future candidate replays precisely the no-ACK prefix, with same physical SAV/seed/absolute capture frames. Candidate is never started by this tool.",
+  "command_template": [
+    "python3",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-reading32-protocol-source-v1/admission-before-discovery-v3.py",
+    "--plan",
+    "<root-approved separate READY plan>",
+    "--plan-sha256",
+    "<exactSHA>",
+    "--case",
+    "safari-admission",
+    "--output",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-admission-reading32-before-v1",
+    "--execute-reviewed-before-only"
+  ],
+  "not_ready_reasons": [],
+  "additional_games_not_planned": [
+    "499/500 separate Game runs",
+    "voucher/full-bag Game runs",
+    "duplicate EarlyRow cold-Continue path (covered by component caller; normal Continue first owns OnLoad)"
+  ],
+  "controller_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-reading32-protocol-source-v1/admission-before-discovery-v3.py",
+  "predecessor_draft": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/discovery-plan.draft.json",
+    "sha256": "f1bdc7e73906f14f1ba9ee570ec578e54c1657cf7b5c286745284c5c117d377e",
+    "bytes": 4191
+  },
+  "v2_change_scope": "Inherited prior normalboot/sourceguard/POKERED-environment hygiene retained; the new v3 input policy is the separately declared32neutral earlier-page reading pause only.",
+  "candidate_status_note": "Candidate H normalCLI de209bdf and first native2case attempt already exist; this new Admission-only M9 discovery is not executed. It will freeze a separate new literal vector before any candidate-v2 replay.",
+  "root_authorization": {
+    "timestamp": "2026-10-16T15:22:39.878564+00:00",
+    "scope": "One new Admission-only baseline Game, same immutable M9 normalCLI/SAV/seed42; predeclared32neutral reading pauses before legitimate earlier ACKs; finalzeroA+64neutral unchanged. Candidate not started.",
+    "previous_actual_failure_session": 93550,
+    "previous_actual_terminal_exit": 1,
+    "previous_failure_preserved": true,
+    "root_exact_source_delta_reviewed": true,
+    "source_scope": "M9 historical reference retained in local clean root; remote master now7d811775 contains independently merged Silph repair. No native result is relabeled as remote master."
+  },
+  "predecessor_frozen_plan": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/ready-plan.json",
+    "sha256": "347debe6b45e404a5f6155d356bc87c42385497388ac77d63450b8876a28e2c3",
+    "bytes": 7367
+  },
+  "new_protocol_scope": "Only Admission before discovery changes: before every legal nonfinal/Welcome ACK,32neutral same-page/nochoice reading pause then A1+oldN7.32 is an explicit test reading strategy, not an original instruction wait. Final still0A+64neutral; original post-prefixA1+N32 probe remains outside the frozen candidate tape. No original artifacts/vector changed."
+}

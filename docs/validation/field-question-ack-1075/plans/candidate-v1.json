@@ -1,0 +1,665 @@
+{
+  "schema": "field-question-three-candidate-fixed-prefix-plan-v1",
+  "state": "READY",
+  "root_authorized_candidate_execution": true,
+  "before_head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+  "candidate_head": "2c9b876e7983ea34852cafa249b0747068db9bac",
+  "controller_sha256": "6bf608da21761978517008219d4604ca92557aa2393f820716d5fabb15283af5",
+  "case_order": [
+    "bike-sale",
+    "safari-admission",
+    "safari-return"
+  ],
+  "before_discovery_plan": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/ready-plan.json",
+    "sha256": "347debe6b45e404a5f6155d356bc87c42385497388ac77d63450b8876a28e2c3",
+    "bytes": 7367
+  },
+  "baseline_controller": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-physical-preparation-v2/before-discovery.py",
+    "sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+    "bytes": 20321
+  },
+  "before_provider": {
+    "head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+    "kind": "normal-CLI-debug-server",
+    "binary": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/pokered-app",
+      "sha256": "d60505928f57a9eb74b2309eb2d4e11a32e3cf8cf90748df910cd07a084696d7",
+      "bytes": 78046680
+    },
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/CLI-identity.json",
+      "sha256": "90f4fdd240443baa0e1f012b422ca33ef571c23b67ffcc9df3b89fa909fec732",
+      "bytes": 3685
+    },
+    "identity_head_path": [
+      "head"
+    ],
+    "identity_binary_sha_path": [
+      "binary",
+      "sha256"
+    ],
+    "source_guard": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/M9-source-guard.json",
+      "sha256": "5e4aebd1c54cf41f49efc93cfdfacb510121b7db270c014faedaec3b411a998a",
+      "bytes": 1130704
+    }
+  },
+  "after_provider": {
+    "head": "2c9b876e7983ea34852cafa249b0747068db9bac",
+    "kind": "normal-CLI-debug-server",
+    "binary": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/pokered-app",
+      "sha256": "de209bdfaa7c653a027f6bf2d59ab57f633fe4a5a07f866def0149dc6b846687",
+      "bytes": 78464984
+    },
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/CLI-identity.json",
+      "sha256": "aaef1ffe752516bfbd75a68091dd202ad116c985e0cf91a79fec1caffebe65b5",
+      "bytes": 4491
+    },
+    "identity_head_path": [
+      "head"
+    ],
+    "identity_binary_sha_path": [
+      "binary",
+      "sha256"
+    ],
+    "source_guard": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-tools-v1/candidate-source-guard.json",
+      "sha256": "43dcf451506721f3ff13befd22e7c0ef4c9e5fb226ce030b68e7d159e6ab2120",
+      "bytes": 1461453
+    }
+  },
+  "candidate_source_guard_prepared": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-tools-v1/candidate-source-guard.json",
+    "sha256": "43dcf451506721f3ff13befd22e7c0ef4c9e5fb226ce030b68e7d159e6ab2120",
+    "bytes": 1461453
+  },
+  "before_discovery_fixtures": {
+    "bike-sale": {
+      "map_name": "BikeShop",
+      "map_id": 66,
+      "position": [
+        6,
+        4
+      ],
+      "last_map": "CeruleanCity",
+      "active_hunt": false,
+      "safari_steps": 0,
+      "safari_balls": 0,
+      "ordinary_route": "Continue Down; Up2/neutral18 to face counter, then one held A3 field press",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+        "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/codec-result.json",
+        "sha256": "b85348068857764be8d97bc3b492ae8d3cc694ebaab4b06d01c59e61c5c21f06",
+        "bytes": 385
+      }
+    },
+    "safari-admission": {
+      "map_name": "SafariZoneGate",
+      "map_id": 156,
+      "position": [
+        4,
+        3
+      ],
+      "last_map": "FuchsiaCity",
+      "active_hunt": false,
+      "safari_steps": 0,
+      "safari_balls": 0,
+      "ordinary_route": "Continue; hold Up at most180 frames until row4,2 starts existing coordinate script",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/codec-result.json",
+        "sha256": "9c71a8ce02520734f89d4f64af939d470f39f633cf5f679f651eafb91c8033f7",
+        "bytes": 392
+      }
+    },
+    "safari-return": {
+      "map_name": "SafariZoneCenter",
+      "map_id": 220,
+      "position": [
+        14,
+        24
+      ],
+      "last_map": "FuchsiaCity",
+      "active_hunt": true,
+      "safari_steps": 450,
+      "safari_balls": 20,
+      "ordinary_route": "Continue; hold Down at most180 frames to real warp14,25→Gate3,0; neutral while OnLoad takes existing down step and asks",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+        "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/codec-result.json",
+        "sha256": "fd968cf6a83d6ff773b9c7326d97cb270772187f712ac46506fb1db213418214",
+        "bytes": 389
+      }
+    }
+  },
+  "cases": {
+    "bike-sale": {
+      "status": "PINNED_COMPLETED_BASELINE",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+        "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+        "bytes": 32768
+      },
+      "pins": [
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+          "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+          "bytes": 32768
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/result.json",
+          "sha256": "73f8f808000dc8eb92fcc671bf45bf8a497de5d3b17af8cb9b0f347a7fe21b71",
+          "bytes": 77776
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/question-neutral-prefix.json",
+          "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+          "bytes": 8189
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/actual-discovery-buttons.json",
+          "sha256": "36d4102ee86f43c4b2b850a80de13e573dc1bfab07fd7f0f591f27df8492361d",
+          "bytes": 8452
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/states.jsonl",
+          "sha256": "8b9ce51ee52a5bb65d035307721b6f789425b2ff63a1c062a67fc8cc8645bf9f",
+          "bytes": 2016800
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/inputs.jsonl",
+          "sha256": "c8aa3b371b3e55d43995bb2ab8d0510a6b5d4699dec12001fa8871574b869926",
+          "bytes": 195418
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/rpc.jsonl",
+          "sha256": "9d52c12cda92b0fcd78d382ff909e948ce898add65100966c3d78feefb723d71",
+          "bytes": 2527914
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00000-cold-boot.png",
+          "sha256": "029eca81df576117373e2dc4e846b997b3178cdb73e039c7798f15d93068b6c6",
+          "bytes": 2483
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00670-route-handoff.png",
+          "sha256": "733394535533ef66b5f224ee72372447e4d8a796c6c929e897263505eca66325",
+          "bytes": 16830
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00955-final-question-ready.png",
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00956-neutral-Fplus1.png",
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00957-neutral-Fplus2.png",
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00967-neutral-Fplus12.png",
+          "sha256": "248c71168cb9ea8f302f1afb7d2143ac6358926130ef96850a257bb341b80d36",
+          "bytes": 17441
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/00987-neutral-Fplus32.png",
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/01019-neutral-Fplus64.png",
+          "sha256": "fe0f555da3873954b2a7379475505a0236160b676d8cb7df031fa8a493735978",
+          "bytes": 17437
+        }
+      ],
+      "baseline_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/result.json",
+        "sha256": "73f8f808000dc8eb92fcc671bf45bf8a497de5d3b17af8cb9b0f347a7fe21b71",
+        "bytes": 77776
+      },
+      "literal_prefix": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/question-neutral-prefix.json",
+        "sha256": "cd6ab154338a10e842da18fe2805e7742d78ff6e6c4c0713be3ec2aaa43c61ca",
+        "bytes": 8189
+      },
+      "baseline_actual_buttons": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/actual-discovery-buttons.json",
+        "sha256": "36d4102ee86f43c4b2b850a80de13e573dc1bfab07fd7f0f591f27df8492361d",
+        "bytes": 8452
+      },
+      "baseline_states": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/bike-sale/states.jsonl",
+        "sha256": "8b9ce51ee52a5bb65d035307721b6f789425b2ff63a1c062a67fc8cc8645bf9f",
+        "bytes": 2016800
+      },
+      "capture_frames": [
+        0,
+        670,
+        955,
+        956,
+        957,
+        967,
+        987,
+        1019
+      ]
+    },
+    "safari-admission": {
+      "status": "PINNED_COMPLETED_BASELINE",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "pins": [
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+          "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+          "bytes": 32768
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/result.json",
+          "sha256": "cfd151cc542ccdee6ff12e7a7aaf8bb11d0f1f0ea7a2a4e2934aeb29fdfeee20",
+          "bytes": 77369
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/question-neutral-prefix.json",
+          "sha256": "08684430e714bb0777b76f709af34efdeb316609639ab08bd7a7ecf152fd8ec9",
+          "bytes": 8864
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/actual-discovery-buttons.json",
+          "sha256": "1fcb47e62b9fcc16a365752bc6e5d6d062eb19d87fd4f45bebe9b6786f7c3874",
+          "bytes": 9127
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/states.jsonl",
+          "sha256": "dc8f396fdac6889b3dcfc7120cf37704194d76f529e4cf32aef6f9acc79f76c0",
+          "bytes": 2199793
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/inputs.jsonl",
+          "sha256": "4c839d890baa06f2c9362eb190d63f42a6a1f038f87950110438c331eda671a2",
+          "bytes": 211465
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/rpc.jsonl",
+          "sha256": "3f03805161d73524764c605f8ae3b9a887262ebd734ce287b47f253da6402873",
+          "bytes": 2752306
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/00000-cold-boot.png",
+          "sha256": "029eca81df576117373e2dc4e846b997b3178cdb73e039c7798f15d93068b6c6",
+          "bytes": 2483
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/00665-route-handoff.png",
+          "sha256": "1081006d90b8bbdfe460e29e379267ca6a4052bf0fb6677ab72ffd5cea603207",
+          "bytes": 19024
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01039-final-question-ready.png",
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01040-neutral-Fplus1.png",
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01041-neutral-Fplus2.png",
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01051-neutral-Fplus12.png",
+          "sha256": "ecf8ab7e85271ad57ea2634f09d21b0954943fa8959a504aa6f08e8170f5f58d",
+          "bytes": 13131
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01071-neutral-Fplus32.png",
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/01103-neutral-Fplus64.png",
+          "sha256": "45b00cb04a21eeff8d366ec3bd37df932728fc1e5050eb1025fd400c8cfd6b33",
+          "bytes": 13152
+        }
+      ],
+      "baseline_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/result.json",
+        "sha256": "cfd151cc542ccdee6ff12e7a7aaf8bb11d0f1f0ea7a2a4e2934aeb29fdfeee20",
+        "bytes": 77369
+      },
+      "literal_prefix": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/question-neutral-prefix.json",
+        "sha256": "08684430e714bb0777b76f709af34efdeb316609639ab08bd7a7ecf152fd8ec9",
+        "bytes": 8864
+      },
+      "baseline_actual_buttons": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/actual-discovery-buttons.json",
+        "sha256": "1fcb47e62b9fcc16a365752bc6e5d6d062eb19d87fd4f45bebe9b6786f7c3874",
+        "bytes": 9127
+      },
+      "baseline_states": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-admission/states.jsonl",
+        "sha256": "dc8f396fdac6889b3dcfc7120cf37704194d76f529e4cf32aef6f9acc79f76c0",
+        "bytes": 2199793
+      },
+      "capture_frames": [
+        0,
+        665,
+        1039,
+        1040,
+        1041,
+        1051,
+        1071,
+        1103
+      ]
+    },
+    "safari-return": {
+      "status": "PINNED_COMPLETED_BASELINE",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+        "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+        "bytes": 32768
+      },
+      "pins": [
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+          "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+          "bytes": 32768
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/result.json",
+          "sha256": "9c60fd1087a46db00b6731cdb270a37c62136c301f66d18fbfc1deda165483ef",
+          "bytes": 75967
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/question-neutral-prefix.json",
+          "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+          "bytes": 6865
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/actual-discovery-buttons.json",
+          "sha256": "05d02f4db71b17e92073b9018e07cab6ed732c2ce2ad9ac5e4ded97473a50476",
+          "bytes": 7128
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/states.jsonl",
+          "sha256": "29cc85416f01c1aee0e3de6b1dea2ac169fe110fe95b06ba8c440b7187b99d59",
+          "bytes": 1716616
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/inputs.jsonl",
+          "sha256": "5bea1b1a69daaee243b54e3b147079f46cc837ead2572155040c46323833f295",
+          "bytes": 161971
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/rpc.jsonl",
+          "sha256": "3233930546e1c455f78d99c5359f230410bd61b7c2c935bdee81d3d5c5524d43",
+          "bytes": 2145788
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00000-cold-boot.png",
+          "sha256": "029eca81df576117373e2dc4e846b997b3178cdb73e039c7798f15d93068b6c6",
+          "bytes": 2483
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00698-route-handoff.png",
+          "sha256": "f9b539e26fe5f57e1ec7fcc9e98726c05911e643e5aceb5a29f51aabe700ecc4",
+          "bytes": 3620
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00776-final-question-ready.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00777-neutral-Fplus1.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00778-neutral-Fplus2.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00788-neutral-Fplus12.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00808-neutral-Fplus32.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        },
+        {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/00840-neutral-Fplus64.png",
+          "sha256": "76d5895f3c051f0f5ac49a27bb191ae2e98706d77c06cf39610c99cd7436073f",
+          "bytes": 10045
+        }
+      ],
+      "baseline_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/result.json",
+        "sha256": "9c60fd1087a46db00b6731cdb270a37c62136c301f66d18fbfc1deda165483ef",
+        "bytes": 75967
+      },
+      "literal_prefix": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/question-neutral-prefix.json",
+        "sha256": "1655b453b97cce2c34918bbba707f60e1db6936900e3e08229c9e514d5aeec45",
+        "bytes": 6865
+      },
+      "baseline_actual_buttons": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/actual-discovery-buttons.json",
+        "sha256": "05d02f4db71b17e92073b9018e07cab6ed732c2ce2ad9ac5e4ded97473a50476",
+        "bytes": 7128
+      },
+      "baseline_states": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/safari-return/states.jsonl",
+        "sha256": "29cc85416f01c1aee0e3de6b1dea2ac169fe110fe95b06ba8c440b7187b99d59",
+        "bytes": 1716616
+      },
+      "capture_frames": [
+        0,
+        698,
+        776,
+        777,
+        778,
+        788,
+        808,
+        840
+      ]
+    }
+  },
+  "ports": {
+    "bike-sale": 19381,
+    "safari-admission": 19382,
+    "safari-return": 19383
+  },
+  "runtime_environment": {
+    "LD_LIBRARY_PATH": "/tmp/pokered-build-lib"
+  },
+  "output": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1",
+  "pins": [
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-before-discovery-v1/ready-plan.json",
+      "sha256": "347debe6b45e404a5f6155d356bc87c42385497388ac77d63450b8876a28e2c3",
+      "bytes": 7367
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-physical-preparation-v2/before-discovery.py",
+      "sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+      "bytes": 20321
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-tools-v1/candidate-source-guard.json",
+      "sha256": "43dcf451506721f3ff13befd22e7c0ef4c9e5fb226ce030b68e7d159e6ab2120",
+      "bytes": 1461453
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-cli-codec-independent-v1.json",
+      "sha256": "b67ea52bcb09ccc3c05608ec7ada722fae5b2c70c6ba4751eaf4c9b14b0be15b",
+      "bytes": 15528
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/result.json",
+      "sha256": "d1598f911651c8b8e5f1c33629335a1e56453df9020da0c21d4aa53ad3a5ce8b",
+      "bytes": 3495
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/pokered-app",
+      "sha256": "de209bdfaa7c653a027f6bf2d59ab57f633fe4a5a07f866def0149dc6b846687",
+      "bytes": 78464984
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/CLI-identity.json",
+      "sha256": "aaef1ffe752516bfbd75a68091dd202ad116c985e0cf91a79fec1caffebe65b5",
+      "bytes": 4491
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/actual-normal-cli-rustc.json",
+      "sha256": "a85e360f6f48049f2f71a84e25192cfca4d682dedc9b51ad18d644e0c59f8cff",
+      "bytes": 13391
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/frozen-cli/pokered-app.d",
+      "sha256": "3b8722641fb190cede9c91b3184af15fb9c0077d335cc019c5f47e112193c59d",
+      "bytes": 5971
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/actual-cli-depinfo-inputs.json",
+      "sha256": "d6c972fc81938fca3b82f7f05bc83323a79c077413ace05670d0eb876f9cabe7",
+      "bytes": 16661
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/actual-normal-bin-externs.json",
+      "sha256": "5ce0d9137c42178ad06414e1b59bba6878fcb967e141354b07e1578754dc6f47",
+      "bytes": 1081507
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/01-normal-cli-build/stdout.log",
+      "sha256": "b4ec9fb836dce7af1bf61cd377d918d53fa374742ef6785e1df37b482f1e322f",
+      "bytes": 247398
+    },
+    {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/01-normal-cli-build/stderr.log",
+      "sha256": "2b95151f56ed4f46478bd796b3474ad333f816ddc7e8bda69cdff8a74b46d8ac",
+      "bytes": 681727
+    }
+  ],
+  "not_ready_reasons": [],
+  "input_contract": "New normal cold Game per case; identical physicalSAV/one prebootCLIseed42; read every original question-neutral-prefix element literally once with zero timeline padding. No state-adaptive buttons, no baseline-onlyA1/N32 probe, no runtime setters/warp/restore/skipintro.",
+  "capture_contract": "Exactly baseline captures whose absolute frame<=prefix end; include frame0, route handoff, finalquestion-ready, F+1/+2/+12/+32/+64. No recapture based on candidate phase. Capture verifies state/flags/bag unchanged.",
+  "expected_end": "ShowChoice original options/selected0, retained exact question text, dialogue_state=None; wallet1000/bagempty/party+position+map/facing/flags match baseline end, without answering or paying.",
+  "failure_policy": "Single serial wrapper. Preserve first transport/state/assert/source/cleanup failure; no later case, retry, input extension or fitted seed. Owned Game group only TERM8/KILL2/reap; do not label diagnostic shutdown as natural Gameexit.",
+  "scope_limits": [
+    "NoSAVSAVE/run-through-originalROM/CPUorframeparity/devicePCM claims. CLI uses same before --no-audio.",
+    "Only three ordinary cold scenes; fourth EarlyRow duplicate is component-covered, no coldContinue double-handler claim.",
+    "NoNoDelay/A-B provenance/15VBlank/fulltwooption contract repair claim."
+  ],
+  "execution_command": [
+    "python3",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-candidate-fixed-replay-v1.py",
+    "--plan",
+    "<separate finalroot-approved READY path>",
+    "--plan-sha256",
+    "<exactSHA>",
+    "--execute-reviewed-candidate-fixed-replay"
+  ],
+  "candidate_actual_build_result": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1073-field-question-H-normal-cli-v1/result.json",
+    "sha256": "d1598f911651c8b8e5f1c33629335a1e56453df9020da0c21d4aa53ad3a5ce8b",
+    "bytes": 3495
+  },
+  "root_authorization": {
+    "timestamp": "2026-10-16T15:04:30.156788+00:00",
+    "full_exact_controller_and_actual_provider_plan_read": true,
+    "pure_preflight_no_Game": {
+      "before": {
+        "head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+        "tracked": 7223,
+        "engine": 981,
+        "gfx": 702,
+        "all_exact": true
+      },
+      "after": {
+        "head": "2c9b876e7983ea34852cafa249b0747068db9bac",
+        "tracked": 7224,
+        "engine": 981,
+        "gfx": 702,
+        "all_exact": true
+      },
+      "cases": {
+        "bike-sale": {
+          "frames": 1019,
+          "capture_frames": [
+            0,
+            670,
+            955,
+            956,
+            957,
+            967,
+            987,
+            1019
+          ],
+          "baseline_all_pass": true
+        },
+        "safari-admission": {
+          "frames": 1103,
+          "capture_frames": [
+            0,
+            665,
+            1039,
+            1040,
+            1041,
+            1051,
+            1071,
+            1103
+          ],
+          "baseline_all_pass": true
+        },
+        "safari-return": {
+          "frames": 840,
+          "capture_frames": [
+            0,
+            698,
+            776,
+            777,
+            778,
+            788,
+            808,
+            840
+          ],
+          "baseline_all_pass": true
+        }
+      }
+    },
+    "actual_after_build_session": 54256,
+    "actual_terminal_exit": 0,
+    "scope": "Exactly3 normal coldGames with frozen no-ACK prefixes; zero adaptive input/extraA/codec/Cargo/rustc. RootM9 and candidate2c9 stay fixed until all final guards complete."
+  }
+}

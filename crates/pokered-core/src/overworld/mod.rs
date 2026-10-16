@@ -38,6 +38,8 @@ pub mod update;
 mod tests;
 #[cfg(all(test, not(target_os = "none")))]
 mod tests_map_on_load;
+#[cfg(all(test, not(target_os = "none"), not(feature = "script-boa")))]
+mod tests_field_question_ack;
 #[cfg(test)]
 mod tests_bedroom_persistence;
 #[cfg(test)]

@@ -1,0 +1,168 @@
+{
+  "schema": "field-question-before-discovery-plan-v2",
+  "state": "READY",
+  "root_authorized_before_only": true,
+  "before_head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+  "candidate_head_for_future_fixed_replay": "2c9b876e7983ea34852cafa249b0747068db9bac",
+  "controller_sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+  "builder": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/build-fixtures.rs",
+    "sha256": "e14c6bed82d713dc8187905978505278025597ea2d1aa5be0eb8b2704a3e3f3b",
+    "bytes": 9356
+  },
+  "template": {
+    "path": "/home/jerry/develop/open-pokered/docs/validation/double-ko-1066/only-geodude.sav",
+    "sha256": "bc768c940f2ad29408b99f546556edb48494d1454c8a5391a30e4431be836fa1",
+    "bytes": 32768
+  },
+  "before_provider": {
+    "head": "25a9d8c6cac0aa4d662fcbac55aea718b637b038",
+    "kind": "normal-CLI-debug-server",
+    "binary": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/pokered-app",
+      "sha256": "d60505928f57a9eb74b2309eb2d4e11a32e3cf8cf90748df910cd07a084696d7",
+      "bytes": 78046680
+    },
+    "identity": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/frozen-cli/CLI-identity.json",
+      "sha256": "90f4fdd240443baa0e1f012b422ca33ef571c23b67ffcc9df3b89fa909fec732",
+      "bytes": 3685
+    },
+    "identity_head_path": [
+      "head"
+    ],
+    "identity_binary_sha_path": [
+      "binary",
+      "sha256"
+    ],
+    "source_guard": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/M9-source-guard.json",
+      "sha256": "5e4aebd1c54cf41f49efc93cfdfacb510121b7db270c014faedaec3b411a998a",
+      "bytes": 1130704
+    }
+  },
+  "fixtures": {
+    "bike-sale": {
+      "map_name": "BikeShop",
+      "map_id": 66,
+      "position": [
+        6,
+        4
+      ],
+      "last_map": "CeruleanCity",
+      "active_hunt": false,
+      "safari_steps": 0,
+      "safari_balls": 0,
+      "ordinary_route": "Continue Down; Up2/neutral18 to face counter, then one held A3 field press",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/fixture.sav",
+        "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/bike-sale/codec-result.json",
+        "sha256": "b85348068857764be8d97bc3b492ae8d3cc694ebaab4b06d01c59e61c5c21f06",
+        "bytes": 385
+      }
+    },
+    "safari-admission": {
+      "map_name": "SafariZoneGate",
+      "map_id": 156,
+      "position": [
+        4,
+        3
+      ],
+      "last_map": "FuchsiaCity",
+      "active_hunt": false,
+      "safari_steps": 0,
+      "safari_balls": 0,
+      "ordinary_route": "Continue; hold Up at most180 frames until row4,2 starts existing coordinate script",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/fixture.sav",
+        "sha256": "3c138f85c2738f6c5dbdebd61c6161c21667e3ac8ce38044f21051f36559504c",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-admission/codec-result.json",
+        "sha256": "9c71a8ce02520734f89d4f64af939d470f39f633cf5f679f651eafb91c8033f7",
+        "bytes": 392
+      }
+    },
+    "safari-return": {
+      "map_name": "SafariZoneCenter",
+      "map_id": 220,
+      "position": [
+        14,
+        24
+      ],
+      "last_map": "FuchsiaCity",
+      "active_hunt": true,
+      "safari_steps": 450,
+      "safari_balls": 20,
+      "ordinary_route": "Continue; hold Down at most180 frames to real warp14,25→Gate3,0; neutral while OnLoad takes existing down step and asks",
+      "sram": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/fixture.sav",
+        "sha256": "fb825660fd5d908a5d51f9ea06be08f196e98626d69ffb600236c877fe04bf24",
+        "bytes": 32768
+      },
+      "codec_result": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-M9-cli-fixtures-v2/fixtures/safari-return/codec-result.json",
+        "sha256": "fd968cf6a83d6ff773b9c7326d97cb270772187f712ac46506fb1db213418214",
+        "bytes": 389
+      }
+    }
+  },
+  "ports": {
+    "bike-sale": 19371,
+    "safari-admission": 19372,
+    "safari-return": 19373
+  },
+  "runtime_environment": {
+    "LD_LIBRARY_PATH": "/tmp/pokered-build-lib"
+  },
+  "policy": {
+    "max_boot": 2500,
+    "max_route": 180,
+    "max_question": 4000,
+    "final_neutral": 64,
+    "probe_neutral": 32,
+    "seed": 42
+  },
+  "literal_prefix_policy": "Only before is adaptive under the frozen policy. For each case final-readyF then64neutral is saved as question-neutral-prefix.json before the baseline-only A1+N32 probe. Future candidate replays precisely the no-ACK prefix, with same physical SAV/seed/absolute capture frames. Candidate is never started by this tool.",
+  "command_template": [
+    "python3",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-physical-preparation-v2/before-discovery.py",
+    "--plan",
+    "<new actual READY plan absolute path>",
+    "--plan-sha256",
+    "<actual READY SHA>",
+    "--case",
+    "<one predeclared case>",
+    "--output",
+    "<new absolute output>",
+    "--execute-reviewed-before-only"
+  ],
+  "not_ready_reasons": [],
+  "additional_games_not_planned": [
+    "499/500 separate Game runs",
+    "voucher/full-bag Game runs",
+    "duplicate EarlyRow cold-Continue path (covered by component caller; normal Continue first owns OnLoad)"
+  ],
+  "controller_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1072-field-question-physical-preparation-v2/before-discovery.py",
+  "predecessor_draft": {
+    "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1071-field-question-physical-preparation-v1/discovery-plan.draft.json",
+    "sha256": "f1bdc7e73906f14f1ba9ee570ec578e54c1657cf7b5c286745284c5c117d377e",
+    "bytes": 4191
+  },
+  "v2_change_scope": "source-only real boot screens + remove all inherited POKERED_*; fixture data,seed,budgets,targets,neutral stop and separateAprobe unchanged",
+  "candidate_status_note": "No candidate ELF/Game yet; future candidate must replay baseline frozen no-ACK prefixes exactly.",
+  "root_authorization": {
+    "timestamp": "2026-10-16T14:54:36.723757+00:00",
+    "codec_result_sha256": "b2b3ac1761f8bf26cf0434e9387d42d75f1a753a7637508311a51f82f6ed630e",
+    "actual_normal_CLI_session": 98065,
+    "actual_terminal_exit": 0,
+    "five_owned_groups_ESRCH": true,
+    "root_full_controller_v2_read": true,
+    "scope": "Three baseline ordinary cold-Continue discovery Games only; no candidate; no mutable target access; preserve first failure."
+  }
+}
