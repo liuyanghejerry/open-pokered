@@ -1271,6 +1271,7 @@ mod tests {
     }
     #[test]
     fn quoted_battle_awaits_the_real_result_and_invalid_payload_rejects_the_promise() {
+        use crate::script_command::PokemonScriptCommand;
         for outcome in ["win", "lose", "draw"] {
             let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
             engine.load_script(r#"export async function f() {
