@@ -171,7 +171,14 @@ mod tests {
         snapshot.restore_into(&mut overworld);
         assert_eq!(overworld.source_foreground_mut().unwrap().clone(), expected);
         let mut legacy = json;
-        legacy.as_object_mut().unwrap().remove("source_foreground");
+        for key in [
+            "source_foreground",
+            "source_foreground_mode",
+            "source_foreground_error",
+            "no_text_delay",
+        ] {
+            legacy.as_object_mut().unwrap().remove(key);
+        }
         let legacy: OverworldSnapshot = serde_json::from_value(legacy).unwrap();
         legacy.restore_into(&mut overworld);
         assert!(overworld.source_foreground_mut().is_none());

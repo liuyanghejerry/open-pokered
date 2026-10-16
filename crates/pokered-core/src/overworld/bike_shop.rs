@@ -385,6 +385,21 @@ mod tests {
             let mid: OverworldSnapshot =
                 serde_json::from_str(&serde_json::to_string(&mid).unwrap()).unwrap();
             mid.restore_into(&mut field);
+            assert!(
+                field.prev_a_pressed,
+                "physical A was held before the snapshot"
+            );
+            let restored = field.source_foreground().unwrap();
+            assert_eq!(
+                restored.raw(),
+                A | SELECT,
+                "raw changed during no-poll preparation"
+            );
+            assert_eq!(
+                restored.last(),
+                Some(B),
+                "snapshot must not rebase last to physical held A"
+            );
             step(&mut field, A | SELECT);
             let state = offer(&field).unwrap();
             assert_eq!(state.accepted_buttons, Some(A | SELECT));
