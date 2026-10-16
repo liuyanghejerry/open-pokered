@@ -335,6 +335,9 @@ pub enum ScriptEffect {
     PlayShipDeparture {
         started: bool,
     },
+    SilphRocketDeparture {
+        state: super::silph_departure::SilphRocketDepartureState,
+    },
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -646,6 +649,9 @@ impl ScriptEffect {
             }
             ScriptEffect::PlayShipDeparture { started } => {
                 json!({ "effect": "PlayShipDeparture", "started": started })
+            }
+            ScriptEffect::SilphRocketDeparture { state } => {
+                json!({ "effect": "SilphRocketDeparture", "state": state })
             }
             // Unit variants.
             ScriptEffect::Heal => json!({ "effect": "Heal" }),
@@ -989,6 +995,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             block_id,
         },
         PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
+        PokemonScriptCommand::SilphRocketDeparture => ScriptEffect::SilphRocketDeparture {
+            state: super::silph_departure::SilphRocketDepartureState::new(),
+        },
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
         PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
         PokemonScriptCommand::WaitSound => ScriptEffect::WaitSound,

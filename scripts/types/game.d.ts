@@ -117,6 +117,9 @@ interface GameAPI {
    */
   showObject(objectIndex: number): Promise<void>;
 
+  /** Silph victory caller: fade out, replace Rockets/citizens under black, fade in. */
+  silphRocketDeparture(): Promise<void>;
+
   /**
    * Hide a visible map object.
    *

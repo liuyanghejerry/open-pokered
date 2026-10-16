@@ -59,6 +59,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "showItemDialogue",
     "showMoneyBox",
     "showPokedexEntry",
+    "silphRocketDeparture",
     "startBattle",
     "startBattleSet",
     "startBattleWithText",
