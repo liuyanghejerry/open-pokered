@@ -213,6 +213,15 @@ fn both_reserves_force_own_replacement_before_enemy_send_out() {
                 assert_eq!(screen.phase, BattlePhase::PlayerFaintSwitch);
                 let pp = screen.battle_state.as_ref().unwrap().player.party[1].pp;
                 let enemy_pp = screen.battle_state.as_ref().unwrap().enemy.party[1].pp;
+                let exp_after_turn: Vec<_> = screen
+                    .battle_state
+                    .as_ref()
+                    .unwrap()
+                    .player
+                    .party
+                    .iter()
+                    .map(|mon| mon.total_exp)
+                    .collect();
                 screen.update_frame(BattleInput {
                     b: true,
                     ..BattleInput::none()
@@ -248,15 +257,46 @@ fn both_reserves_force_own_replacement_before_enemy_send_out() {
                     ),
                     (1, 0)
                 );
-                assert_eq!(
-                    continuation(&screen),
-                    &BattlePhase::EnemySendingNext { wait_frames: 30 }
-                );
-                finish_text(&mut screen);
-                assert_eq!(
-                    screen.phase,
+                let expected = if style == BattleStyle::Shift {
+                    BattlePhase::ShiftPrompt
+                } else {
                     BattlePhase::EnemySendingNext { wait_frames: 30 }
-                );
+                };
+                assert_eq!(continuation(&screen), &expected);
+                finish_text(&mut screen);
+                assert_eq!(screen.phase, expected);
+                if style == BattleStyle::Shift {
+                    let bs = screen.battle_state.as_ref().unwrap();
+                    assert_eq!(bs.player.party.iter().filter(|mon| mon.hp > 0).count(), 1,
+                        "only the current replacement is alive; original SHIFT still counts the dead lead");
+                    assert_eq!(
+                        bs.enemy.active_pokemon_index, 0,
+                        "the old enemy remains until the optional answer"
+                    );
+                    assert!(!screen.shift_prompt_yes, "original defaults to NO");
+                    assert!(screen
+                        .current_message
+                        .as_ref()
+                        .unwrap()
+                        .contains("is about to use"));
+                    // Exercise both original NO routes without another switch.
+                    let no = if player_attacks {
+                        BattleInput {
+                            b: true,
+                            ..BattleInput::none()
+                        }
+                    } else {
+                        BattleInput {
+                            a: true,
+                            ..BattleInput::none()
+                        }
+                    };
+                    screen.update_frame(no);
+                    assert_eq!(
+                        screen.phase,
+                        BattlePhase::EnemySendingNext { wait_frames: 30 }
+                    );
+                }
                 let bs = screen.battle_state.as_ref().unwrap();
                 assert_eq!(
                     (
@@ -265,12 +305,34 @@ fn both_reserves_force_own_replacement_before_enemy_send_out() {
                     ),
                     (1, 1)
                 );
+                // A second send_next_enemy would reset this live volatile.
+                // Waiting for the send-out cannot reset or act on the mon again.
+                let enemy = &mut screen.battle_state.as_mut().unwrap().enemy;
+                enemy.set_status1(state::status1::CONFUSED);
+                enemy.confused_turns_left = 2;
                 for _ in 0..31 {
-                    screen.update_frame(BattleInput::none());
+                    screen.update_frame(BattleInput {
+                        b: true,
+                        ..BattleInput::none()
+                    });
                 }
                 assert_eq!(screen.phase, BattlePhase::PlayerMenu);
                 let bs = screen.battle_state.as_ref().unwrap();
                 assert!(bs.player.active_mon().hp > 0 && bs.enemy.active_mon().hp > 0);
+                assert!(bs.enemy.has_status1(state::status1::CONFUSED));
+                assert_eq!(
+                    bs.enemy.confused_turns_left, 2,
+                    "enemy sent exactly once, no turn taken"
+                );
+                assert_eq!(
+                    bs.player
+                        .party
+                        .iter()
+                        .map(|mon| mon.total_exp)
+                        .collect::<Vec<_>>(),
+                    exp_after_turn,
+                    "continuations cannot distribute EXP a second time"
+                );
                 assert_eq!(bs.player.active_mon().pp, pp, "replacement is not a move");
                 assert_eq!(bs.enemy.active_mon().pp, enemy_pp, "no enemy free attack");
                 assert_eq!(

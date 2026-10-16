@@ -5261,10 +5261,19 @@ learn {learn_name}!")];
                 .as_ref()
                 .is_some_and(|bs| bs.enemy.active_mon().hp == 0)
             {
-                // A simultaneous faint leaves the old enemy in place until
-                // the player's mandatory send-out text returns. The existing
-                // post-text continuation then sends the next enemy once.
-                BattlePhase::EnemySendingNext { wait_frames: 30 }
+                // ChooseNextMon returns to ReplaceFaintedEnemyMon: even
+                // after a forced player replacement, the original still
+                // offers SHIFT by party count (including fainted slots).
+                // Resume directly, without repeating faint/EXP processing.
+                let bs = self.battle_state.as_ref().unwrap();
+                if bs.battle_type == BattleType::Trainer
+                    && self.battle_style == BattleStyle::Shift
+                    && bs.player.party.len() >= 2
+                {
+                    BattlePhase::ShiftPrompt
+                } else {
+                    BattlePhase::EnemySendingNext { wait_frames: 30 }
+                }
             } else {
                 BattlePhase::PlayerMenu
             };
