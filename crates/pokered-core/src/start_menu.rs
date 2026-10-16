@@ -151,15 +151,19 @@ impl StartMenuState {
     }
 
     pub fn update_frame(&mut self, input: StartMenuInput) -> StartMenuAction {
+        // DisplayStartMenu checks HandleMenuInput's UP/DOWN bits before
+        // A/B/START and returns to its loop after moving the cursor.
+        if input.up {
+            self.cursor_up();
+            return StartMenuAction::Redisplay;
+        } else if input.down {
+            self.cursor_down();
+            return StartMenuAction::Redisplay;
+        }
+
         if input.b || input.start {
             self.save_cursor();
             return StartMenuAction::Close;
-        }
-
-        if input.up {
-            self.cursor_up();
-        } else if input.down {
-            self.cursor_down();
         }
 
         if input.a {
