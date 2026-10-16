@@ -112,3 +112,28 @@ Current App2/CLI result SHA-256:
 Full raw RPC/state streams, immutable inputs, command argv, source freezes,
 terminal receipts and the initial failure remain in the session audit records.
 The committed provenance records their identities without relabeling old runs.
+
+## Official workspace coverage follow-up
+
+The first published head `35aa1734` naturally failed the official Coverage job
+`116780982858` in CI run `38841056832`. The actual failing test was
+`semantics::gen::tests::coverage_has_no_unbounded_unknowns`: the agent's event
+extractor did not recognize the new `waitSound` scene command. Its run reported
+54 agent tests passed and 1 failed. The original job log (SHA-256
+`6d0032322772a3d5e0cb00705b964592411176840e88583fa8c155e2b07e9b88`) is preserved.
+
+Source child `5c434c109da72d2710a8c7d137bccc1222f8d296` adds `waitSound` to the
+extractor's explicit no-event-state command classification, alongside
+`waitMusic`. Waiting changes presentation timing; flags and the event graph
+are still owned by the subsequent commands. The strict unknown-construct
+guard is unchanged. No core, App, map, engine or GFX source changes accompany
+this correction, so the above matched Game pair keeps its actual 0820/087e
+identity and is not represented as another native run.
+
+The complete `cargo test -p pokered-agent --lib` suite actually passed **55**
+tests at 5c434c, including the original coverage guard, deterministic generation
+and committed event-graph checks. Source/engine/GFX freezes before and after
+are identical. Actual result SHA-256:
+`c08b2c34ea6557f0a47263384723bbceaa0b465dc26c40ecfaa59f6fa1d18131`.
+The updated published head needs its own full official CI; none of the failed
+head's successful jobs are reused as that gate.

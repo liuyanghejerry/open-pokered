@@ -713,5 +713,20 @@
       "sha256": "f9e54633ec11a798fbe39d6a721ae4b5b4ae6a30c87b9be76b6dd551b730adf9",
       "actual_source": "087ebfd0cc7ae3a35b255c8d5f0795428101fc0d"
     }
+  },
+  "official_coverage_follow_up": {
+    "failed_published_head": "35aa1734dd8e4001e7e73c105a37a812b4e6fc9a",
+    "failed_run": 38841056832,
+    "failed_job": 116780982858,
+    "raw_failure_log_sha256": "6d0032322772a3d5e0cb00705b964592411176840e88583fa8c155e2b07e9b88",
+    "correction_source_head": "5c434c109da72d2710a8c7d137bccc1222f8d296",
+    "changed_non_docs": [
+      "crates/pokered-agent/src/semantics/extract.rs"
+    ],
+    "full_agent_lib_tests_passed": 55,
+    "actual_test_result_sha256": "c08b2c34ea6557f0a47263384723bbceaa0b465dc26c40ecfaa59f6fa1d18131",
+    "no_Game_core_App_data_engine_GFX_change": true,
+    "matched_pair_keeps_actual_0820_087e_identity": true,
+    "strict_unknown_guard_unchanged": true
   }
 }
