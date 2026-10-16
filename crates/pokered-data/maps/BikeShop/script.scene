@@ -30,9 +30,7 @@ game_scene BikeShop {
         }
         // BICYCLE sells for ¥1,000,000 — you can never afford it, so the
         // original always prints "can't afford" before saying goodbye.
-        @speaker("") {
-          @t("It's a cool BIKE! Do you\nwant it?", "这自行车很酷吧！你想要吗？")
-        }
+        printFieldText(@t("It's a cool BIKE! Do you\nwant it?", "这自行车很酷吧！你想要吗？"), true, false)
         @choice {
           @option(@t("BICYCLE ¥1000000", "自行车 ¥1000000")) {
             @speaker("") {
