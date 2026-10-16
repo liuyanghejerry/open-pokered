@@ -305,6 +305,7 @@ fn injected_scene_does_not_shadow_other_maps() {
 /// completion of MoveNpc from the test: its real path/counter must finish.
 #[test]
 fn cinnabar_wrong_answers_wait_for_each_real_trainer_route_before_text_and_battle() {
+    use crate::alloc_prelude::Vec;
     use super::native_script::{NativeScriptEngine, OverworldScriptEngine};
     use super::script_bridge::{dispatch_command, ScriptEffect};
     use dotzuki_engine_script::{CommandResult, ScriptCommand};
