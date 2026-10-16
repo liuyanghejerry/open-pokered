@@ -216,6 +216,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "playMusic",
     // Suspends the scene until CHAN1 finishes; no event-graph state changes.
     "waitMusic",
+    // Waits for the existing SFX sequencer; only presentation timing changes.
+    "waitSound",
     "playSound",
     "playCry",
     "stopMusic",

@@ -2359,6 +2359,7 @@ impl PokemonGame {
         pokered_core::log_save!("save loaded from {:?}", path);
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
+        self.overworld.clear_retained_field_text();
         self.battle.loaded_enemy_slots = 0;
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
@@ -2936,6 +2937,7 @@ impl PokemonGame {
     fn soft_reset(&mut self) {
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
+        self.overworld.clear_retained_field_text();
         self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
@@ -13371,4 +13373,112 @@ mod failure_fixture_tests {
         assert_eq!(std::fs::read(&path).unwrap(), owned_sram);
         std::fs::remove_file(path).unwrap();
     }
+}
+
+#[cfg(test)]
+mod field_cry_wait_fidelity_tests {
+    use super::*;
+
+    #[test]
+    fn muted_game_waits_for_real_cry_completion_then_thirty_frames_with_text_visible() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        // Exercise the normal Game audio-request drain and PCM sequencer,
+        // not a hand-set core sound flag. The ordinary Tower playthrough is
+        // requires a separate CLI capture and an immutable preboot save.
+        game.overworld.reload_scene_with_config("PokemonTower6F", r#"
+game_scene PokemonTower6F {
+  @storyline("cryProbe") {
+    printFieldText("MOTHER", true)
+    playCry("MAROWAK")
+    waitSound()
+    delay(30)
+    @speaker("") { @t("CALMED", "CALMED") }
+  }
+}
+        "#, Some(r#"{"onLoad":"cryProbe"}"#)).unwrap();
+        let idle = InputState::new();
+        let mut heard_cry = false;
+        let mut sound_wait_frames = 0;
+        let mut reached_delay = false;
+        for _ in 0..800 {
+            game.update(&idle);
+            let phase = game.overworld.active_script_effect_label();
+            if phase.as_deref() == Some("WaitSound") {
+                assert!(game.audio.as_ref().unwrap().is_sfx_playing());
+                assert!(game.overworld.displayed_field_dialogue().is_some());
+                assert!(game.overworld.pending_dialogue.is_none());
+                assert!(!game.overworld.dialogue_needs_button());
+                heard_cry = true;
+                sound_wait_frames += 1;
+            } else if heard_cry && phase.as_deref() == Some("Delay") {
+                assert!(!game.audio.as_ref().unwrap().is_sfx_playing());
+                assert_eq!(game.overworld.active_script_effect_value().unwrap()["frames_remaining"], 30);
+                reached_delay = true;
+                break;
+            }
+        }
+        assert!(heard_cry && sound_wait_frames > 0 && reached_delay,
+            "a muted device must retain the real logical cry, not use an estimated timeout");
+        for remaining in (1..30).rev() {
+            game.update(&idle);
+            assert_eq!(game.overworld.active_script_effect_value().unwrap()["frames_remaining"], remaining);
+            assert!(game.overworld.displayed_field_dialogue().is_some());
+        }
+        game.update(&idle);
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("ShowDialogue"));
+        game.update(&idle);
+        assert!(game.overworld.pending_dialogue.is_some());
+        assert!(!game.overworld.retain_field_text);
+    }
+
+    #[test]
+    fn soft_reset_releases_owned_text_even_when_the_save_cannot_be_read() {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red, None, None, None, false, None, false, true,
+            #[cfg(feature = "debug-server")] None,
+        );
+        game.state.screen = GameScreen::Overworld;
+        game.overworld = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        // A reset must release its RAM window even when load_from_path
+        // returns before clearing anything because the save does not exist.
+        let missing = std::env::temp_dir().join(format!(
+            "marowak-reset-missing-{}.sav", std::process::id()
+        ));
+        assert!(!missing.exists());
+        game.save_path = Some(missing);
+        game.overworld.reload_scene_with_config("PokemonTower6F", r#"
+game_scene PokemonTower6F {
+  @storyline("cryProbe") {
+    printFieldText("MOTHER", true)
+    playCry("MAROWAK")
+    waitSound()
+    delay(30)
+  }
+}
+        "#, Some(r#"{"onLoad":"cryProbe"}"#)).unwrap();
+        for _ in 0..800 {
+            if game.overworld.active_script_effect_label().as_deref() == Some("WaitSound") {
+                break;
+            }
+            game.update(&InputState::new());
+        }
+        assert_eq!(game.overworld.active_script_effect_label().as_deref(), Some("WaitSound"));
+        assert!(game.overworld.retain_field_text);
+        assert!(game.overworld.last_script_dialogue.is_some());
+        assert!(game.overworld.pending_dialogue.is_none());
+        assert!(game.overworld.displayed_field_dialogue().is_some());
+        // Call the real reset entry directly: clearing inside a successful
+        // save load alone would not satisfy this caller's lifetime.
+        game.soft_reset();
+        assert_eq!(game.state.screen, GameScreen::TitleScreen);
+        assert!(!game.overworld.retain_field_text);
+        assert!(game.overworld.last_script_dialogue.is_none());
+        assert!(game.overworld.displayed_field_dialogue().is_none());
+    }
+
 }

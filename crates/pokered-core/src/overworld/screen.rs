@@ -732,9 +732,12 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub player_presentation: super::npc_presentation::PlayerPresentation,
     pub npc_pokemon_data: Vec<PokemonNpcData>,
     pub pending_dialogue: Option<BedroomDialogue>,
-    /// Last completed script text, retained only for the following choice.
+    /// Last completed script text, available to an explicit window owner.
     pub last_script_dialogue: Option<BedroomDialogue>,
     pub retain_healing_text: bool,
+    /// An opt-in inner PrintText owns its window through the next commands.
+    /// The next text owner, script exit, or map reload releases this ownership.
+    pub retain_field_text: bool,
     /// Direct clerk-text closure; independent of START/submenu reloads.
     pub mart_text_restore: Option<presentation::MartTextRestoreState>,
     pub pending_choice: Option<crate::overworld::script_bridge::PendingChoice>,
@@ -1249,6 +1252,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_dialogue: None,
             last_script_dialogue: None,
             retain_healing_text: false,
+            retain_field_text: false,
             mart_text_restore: None,
             pending_choice: None,
             pending_pokedex_entry: None,
@@ -1529,7 +1533,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.pending_dialogue.as_ref()
             .or(self.cut_retained_dialogue.as_ref())
             .or_else(|| self.choice_question())
-            .or_else(|| if self.retain_healing_text {self.last_script_dialogue.as_ref()} else {None})
+            .or_else(|| if self.retain_healing_text || self.retain_field_text {self.last_script_dialogue.as_ref()} else {None})
     }
 
     pub(crate) fn choice_question(&self) -> Option<&BedroomDialogue> {
@@ -1548,8 +1552,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             other => other,
         };
         self.pending_choice.is_none()
+            && !(self.retain_field_text && self.pending_dialogue.is_none())
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+    }
+
+    /// Release only the explicitly retained inner-text window. Ordinary
+    /// dialogue/choice/healing owners keep their existing lifecycle.
+    pub fn clear_retained_field_text(&mut self) {
+        if self.retain_field_text {
+            self.retain_field_text = false;
+            self.last_script_dialogue = None;
+        }
     }
 
     /// Drop a suspended poison caller when ordinary save loading or reset

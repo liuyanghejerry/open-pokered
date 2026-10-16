@@ -380,6 +380,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         {
             self.last_script_dialogue = None;
             self.retain_healing_text = false;
+            self.retain_field_text = false;
+        }
+        if self.retain_field_text && (self.pending_warp.is_some() || self.pending_connection.is_some()) {
+            self.clear_retained_field_text();
         }
         action
     }
@@ -750,6 +754,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
+            let dialogue_was_open = self.pending_dialogue.is_some();
+            if !dialogue_was_open {
+                match effect {
+                    script_bridge::ScriptEffect::PrintFieldText { retain_window, .. } => {
+                        self.retain_field_text = *retain_window;
+                    }
+                    script_bridge::ScriptEffect::ShowDialogue { .. }
+                    | script_bridge::ScriptEffect::ShowItemDialogue { .. } => {
+                        self.retain_field_text = false;
+                    }
+                    _ => {}
+                }
+            }
+            let owns_print_window = matches!(effect,
+                script_bridge::ScriptEffect::PrintFieldText { retain_window: true, .. });
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
                     *flow = Some(super::script_interactions::GiftPokemonFlow::new(species, &self.player_name, self.party_count, self.box_count, self.gift_box_number, self.script_engine.script_lang() == Some("zh")));
@@ -796,6 +815,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.script_music_playing,
                 self.script_sfx_playing,
             );
+            // A nested text caller (for example a gift/menu flow) owns the
+            // window once it creates its dialogue, just like ShowDialogue.
+            if !dialogue_was_open && self.pending_dialogue.is_some() && !owns_print_window {
+                self.retain_field_text = false;
+            }
             if !naming_was_open && self.pending_naming_screen.is_some() {
                 // DisplayNamingScreen entry: GBPalWhiteOutWithDelay3 before the
                 // screen is drawn (naming_screen.asm:88).
@@ -2472,6 +2496,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn is_text_ui_active(&self) -> bool {
         self.pending_dialogue.is_some()
+            || (self.retain_field_text && self.last_script_dialogue.is_some())
             || self.pending_choice.is_some()
             || self.pending_pokedex_entry.is_some()
             || self.pending_naming_screen.is_some()
@@ -2832,7 +2857,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_sfx_playing,
                 ) {
                     let prompt = match flow.child.as_ref() {
-                        script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => Some(text.clone()),
+                        script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text, .. } => Some(text.clone()),
                         _ => None,
                     };
                     let was_choice = matches!(
@@ -2946,7 +2971,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 false
             }
-            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text } => {
+            script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text, .. } => {
                 if pending_dialogue.is_none() {
                     let needs_field_display = returns_after_print && last_script_dialogue.is_none();
                     *last_script_dialogue = None;
@@ -3355,6 +3380,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
             }
             script_bridge::ScriptEffect::WaitMusic => !script_music_playing,
+            // The app samples the actual SFX sequencer before each core tick.
+            // The preceding PlayCry was dispatched at the end of its own frame.
+            script_bridge::ScriptEffect::WaitSound => !script_sfx_playing,
             script_bridge::ScriptEffect::SetPartyNickname { .. } => true,
             script_bridge::ScriptEffect::ShowEmotionBubble {
                 npc_id,
@@ -4032,6 +4060,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// is authoritative; re-firing would double-apply its effects).
     pub(crate) fn load_map_script_ex(&mut self, map_id: MapId, fire_on_load: bool) {
         self.retain_healing_text = false;
+        self.clear_retained_field_text();
         self.wild_data_state.load_map(map_id);
         self.sync_flags_from_engine();
 
@@ -5230,7 +5259,7 @@ mod field_typing_input_fidelity_tests {
         ow.set_text_delay_frames(3);
         let text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234".to_string();
         ow.pending_dialogue = Some(BedroomDialogue::from_message(&text));
-        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text });
+        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text, retain_window: false });
         for _ in 0..120 {
             ow.update_frame(idle);
             if ow.pending_dialogue.as_ref().is_some_and(|d|d.char_index()==1) {break;}
@@ -5310,5 +5339,134 @@ impl<G: GameData<Tileset = pokered_data::tilesets::TilesetId>> OverworldScreen<G
         }
         if finished { self.mart_text_restore = None; }
         finished
+    }
+}
+
+#[cfg(test)]
+mod marowak_departure_wait_tests {
+    use super::*;
+    use crate::snapshot::OverworldSnapshot;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    fn input(a: bool, b: bool) -> OverworldInput {
+        OverworldInput::new(false, false, false, false, a, b, false, false)
+    }
+
+    fn tower_after_doll() -> OverworldScreen<PokemonRedData> {
+        let mut ow = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        let command = ow.script_engine.call_function_no_args("coordGhostMarowak").unwrap().unwrap();
+        ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+        for frame in 0..800 {
+            let advance = frame % 2 == 0 && ow.pending_dialogue.as_ref()
+                .is_some_and(|d| d.waiting_for_input());
+            ow.update_frame(input(advance, false));
+            if ow.script_awaiting_battle { break; }
+        }
+        assert!(ow.script_awaiting_battle);
+        assert!(ow.pending_wild_encounter.take().is_some());
+        // Unit seam used by the real Game battle caller; not runtime evidence
+        // of an injected battle or of the frontend's logical sound duration.
+        ow.resume_script_after_battle("fled");
+        ow.script_sfx_playing = true;
+        let mut cries = 0;
+        for frame in 0..800 {
+            let page = frame % 2 == 0 && ow.pending_dialogue.as_ref()
+                .is_some_and(|d| d.waiting_for_input() && d.has_more_pages());
+            ow.update_frame(input(page, false));
+            cries += ow.audio_requests.drain(..).filter(|r|
+                matches!(r, OverworldAudioRequest::PlayCry { species } if species == "MAROWAK")).count();
+            if matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)) {
+                assert_eq!(cries, 1);
+                assert!(ow.retain_field_text);
+                assert!(ow.pending_dialogue.is_none(), "DONE returns without a final A");
+                return ow;
+            }
+        }
+        panic!("the real Tower scene never reached its sound wait");
+    }
+
+    fn round_trip(ow: &OverworldScreen<PokemonRedData>) -> OverworldScreen<PokemonRedData> {
+        let snapshot = OverworldSnapshot::capture(ow);
+        let value = serde_json::to_value(&snapshot).unwrap();
+        let decoded: OverworldSnapshot = serde_json::from_value(value.clone()).unwrap();
+        let mut restored = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        decoded.restore_into(&mut restored);
+        assert!(restored.retain_field_text);
+        assert_eq!(serde_json::to_value(restored.displayed_field_dialogue()).unwrap(),
+            serde_json::to_value(ow.displayed_field_dialogue()).unwrap());
+        let mut legacy = value;
+        legacy.as_object_mut().unwrap().remove("retain_field_text");
+        assert!(!serde_json::from_value::<OverworldSnapshot>(legacy).unwrap().retain_field_text);
+        restored
+    }
+
+    #[test]
+    fn tower_done_window_waits_for_sound_then_exactly_thirty_frames_and_transfers() {
+        let mut ow = round_trip(&tower_after_doll());
+        let retained = serde_json::to_value(ow.displayed_field_dialogue()).unwrap();
+        assert!(!retained.is_null());
+        assert!(!ow.dialogue_needs_button(), "DONE has no final manual prompt");
+        ow.script_sfx_playing = true;
+        for frame in 0..97 {
+            ow.update_frame(input(frame % 2 == 0, frame % 3 == 0));
+            assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
+            assert!(ow.audio_requests.is_empty(), "waiting cannot restart the cry");
+            assert_eq!(serde_json::to_value(ow.displayed_field_dialogue()).unwrap(), retained);
+        }
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(false, false));
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::Delay { frames: 30, frames_remaining: 30 })));
+        for _ in 0..11 { ow.update_frame(input(false, false)); }
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::Delay { frames_remaining: 19, .. })));
+        ow = round_trip(&ow);
+        for remaining in (1..19).rev() {
+            ow.update_frame(input(true, true));
+            assert!(matches!(ow.active_script_effect,
+                Some(script_bridge::ScriptEffect::Delay { frames_remaining, .. }) if frames_remaining == remaining));
+            assert_eq!(serde_json::to_value(ow.displayed_field_dialogue()).unwrap(), retained);
+        }
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::ShowDialogue { text }) if text.contains("calmed")));
+        assert!(ow.retain_field_text, "old window stays until the next text owns it");
+        ow.update_frame(input(false, false));
+        assert!(!ow.retain_field_text);
+        assert!(ow.pending_dialogue.is_some());
+        assert!(ow.last_script_dialogue.is_none());
+        for frame in 0..1000 {
+            let advance = frame % 2 == 0 && ow.pending_dialogue.as_ref()
+                .is_some_and(|d| d.waiting_for_input());
+            ow.update_frame(input(advance, false));
+            if ow.script_engine.is_idle() && ow.active_script_effect.is_none() { break; }
+        }
+        assert!(ow.script_engine.is_idle());
+        assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
+    }
+
+    #[test]
+    fn retained_window_clears_on_script_reload_and_warp_and_is_opt_in() {
+        let mut ow = tower_after_doll();
+        ow.load_map_script_ex(MapId::PokemonTower6F, false);
+        assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
+        assert!(ow.active_script_effect.is_none());
+        let mut ow = tower_after_doll();
+        ow.apply_finished_effect(Some(script_bridge::ScriptEffect::WarpTo {
+            map: "LavenderTown".into(), x: 7, y: 7,
+        }));
+        ow.update_frame(input(false, false));
+        assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
+        let mut plain = OverworldScreen::new(MapId::PokemonTower6F, None, PokemonRedData);
+        plain.last_script_dialogue = Some(BedroomDialogue::from_message("old"));
+        plain.active_script_effect = Some(script_bridge::ScriptEffect::Delay { frames: 30, frames_remaining: 30 });
+        assert!(plain.displayed_field_dialogue().is_none());
+        plain.script_sfx_playing = true;
+        plain.active_script_effect = Some(script_bridge::ScriptEffect::PlayCry { species: "MAROWAK".into() });
+        plain.update_frame(input(false, false));
+        assert!(plain.active_script_effect.is_none(), "ordinary playCry remains nonblocking");
+        assert_eq!(plain.audio_requests.iter().filter(|r|
+            matches!(r, OverworldAudioRequest::PlayCry { .. })).count(), 1);
+        assert!(!plain.retain_field_text && plain.displayed_field_dialogue().is_none());
     }
 }
