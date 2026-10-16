@@ -103,6 +103,8 @@ pub struct OverworldSnapshot {
     pub last_script_dialogue: Option<BedroomDialogue>,
     #[serde(default)]
     pub retain_healing_text: bool,
+    #[serde(default)]
+    pub retain_field_text: bool,
     pub pending_choice: Option<PendingChoice>,
     #[serde(default)]
     pub script_money_box: Option<u32>,
@@ -274,6 +276,7 @@ impl OverworldSnapshot {
             pending_dialogue: None,
             last_script_dialogue: None,
             retain_healing_text: false,
+            retain_field_text: false,
             pending_choice: None,
             script_money_box: None,
             script_coin_box: None,
@@ -386,7 +389,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
             frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
-            last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
@@ -435,7 +438,7 @@ impl OverworldSnapshot {
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
             frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
-            last_script_dialogue, retain_healing_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,

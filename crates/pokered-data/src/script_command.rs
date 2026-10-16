@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
     /// Inner PrintText with DONE: return after printing, without an outer A/B wait.
-    PrintFieldText { text: String },
+    PrintFieldText { text: String, retain_window: bool },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -63,6 +63,7 @@ pub enum PokemonScriptCommand {
     PlayShipDeparture,
     EnterHallOfFame,
     WaitMusic,
+    WaitSound,
     ReadingMenu { options: Vec<String>, texts: Vec<String> },
     PokemonMenu { options: Vec<String>, species: Vec<String> },
     ShowMoneyBox { amount: i64 },
@@ -103,6 +104,7 @@ impl PokemonScriptCommand {
             Self::PlayShipDeparture => "playShipDeparture",
             Self::EnterHallOfFame => "enterHallOfFame",
             Self::WaitMusic => "waitMusic",
+            Self::WaitSound => "waitSound",
             Self::ReadingMenu { .. } => "readingMenu",
             Self::PokemonMenu { .. } => "pokemonMenu",
             Self::ShowMoneyBox { .. } => "showMoneyBox",
@@ -116,7 +118,11 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
-            Self::PrintFieldText { text } => vec![json!(text)],
+            Self::PrintFieldText { text, retain_window } => {
+                let mut args = vec![json!(text)];
+                if retain_window { args.push(json!(true)); }
+                args
+            },
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
             Self::ShowItemDialogue { text, sound_id } => {
@@ -163,6 +169,7 @@ impl PokemonScriptCommand {
             | Self::PlayShipDeparture
             | Self::EnterHallOfFame
             | Self::WaitMusic
+            | Self::WaitSound
             | Self::VendingDelivery => vec![],
         };
         ScriptCommand::Custom { name, args }
@@ -202,8 +209,16 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
-            "printFieldText" => Self::PrintFieldText { text: string(0)? },
+            "printFieldText" => Self::PrintFieldText {
+                text: string(0)?,
+                retain_window: match args.get(1) {
+                    None => false,
+                    Some(Value::Bool(retain)) => *retain,
+                    Some(_) => return Err("printFieldText: retainWindow must be a boolean".into()),
+                },
+            },
             "waitMusic" => Self::WaitMusic,
+            "waitSound" => Self::WaitSound,
             "vendingDelivery" => Self::VendingDelivery,
             "walkTogether" => {
                 let path: Vec<(u8, u8)> = serde_json::from_value(args.get(1).cloned().ok_or("walkTogether: missing NPC path")?)
@@ -370,4 +385,14 @@ mod tests {
         assert!(PokemonScriptCommand::from_custom("giveCoins", &[json!(70000)]).is_err());
         assert!(PokemonScriptCommand::from_custom("notRegistered", &[]).is_err());
     }
-}
+
+    #[test]
+    fn field_text_window_retention_is_explicit_and_old_commands_default_false() {
+        assert_eq!(PokemonScriptCommand::from_custom("printFieldText", &[json!("old")]).unwrap(),
+            PokemonScriptCommand::PrintFieldText { text: "old".into(), retain_window: false });
+        let retained = PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true };
+        let ScriptCommand::Custom { name, args } = retained.clone().into_script_command() else { panic!() };
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), retained);
+        assert!(PokemonScriptCommand::from_custom("printFieldText", &[json!("x"), json!(1)]).is_err());
+        assert_eq!(PokemonScriptCommand::from_custom("waitSound", &[]).unwrap(), PokemonScriptCommand::WaitSound);
+    }}
