@@ -657,13 +657,13 @@
   },
   "source_manifest": {
     "path": "docs/validation/cinnabar-trainer-victory-1056/source-manifest.json",
-    "sha256": "a092734f3edc9b22f3b11039269466f651c26128cff263d95faf3c601b60ba2d",
-    "bytes": 8907
+    "sha256": "3fcdcb5da8cd0f6c9a0994e42a6048c6a30930cf15808f769cd60cb4522262ea",
+    "bytes": 9328
   },
   "validation": {
     "path": "docs/validation/cinnabar-trainer-victory-1056/validation.json",
-    "sha256": "dd32b6dabade94ac45c0839a0f6cdc661dd42e53b537556395ef9b2cf01f010e",
-    "bytes": 7264
+    "sha256": "cdf7487063ac4f0ed32c8c7915a7c85d3f9fd8f64d90748a2a40f82170b37c87",
+    "bytes": 7496
   },
   "native_review_receipt_sha256": "d8700ccdf8210542418673960d99980cc7c12f66596228d46d0cad4807ac26f2",
   "fixed_pair_plan_sha256": "f34c21ce750cd23a4818e852c33b05f039cd3bfac9cb4e88542597814fbfc1e6",
@@ -693,5 +693,10 @@
   "old_test_first_failures": {
     "d96E0433": "7e5e6ae90e0edeaf7938b3028a6aec17e5a13efdfba390466bb866e8bd2b9ea4",
     "5acOldQuiz": "e460a874023275967d9ad4f1c6a6fea88a0571b02a9239437d5181cf0febcf77"
+  },
+  "M2_integration": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/M2-integration.json",
+    "sha256": "2c4f20e3c269cee368a077005613fbd7bfcb527cbb003e3f34ae98216767db9c",
+    "bytes": 3818
   }
 }

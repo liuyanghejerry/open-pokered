@@ -129,5 +129,6 @@
   "actual_912_combined_receipt_sha256": "10a719ede82276e5e38a678d303be5017d45641e445ee240dc7d91f5aee4c2d4",
   "AppVictory_scope": "One named Game test / three physical cold-SRAM cases; real audio sequencer, active SFX channel and nonzero muted PCM; no runtime battle/result setter. The same test also checks later defeated talk and no field-text/pending-battle leak.",
   "existing_quiz_scope": "Three named Game tests / five preboot scenarios; ordinary Continue and input.",
-  "new_merge_head_tests": "Not rerun or relabelled; M1 merge whole-tree equality is recorded in source-manifest.json."
+  "new_merge_head_tests": "Not rerun or relabelled; M1 merge whole-tree equality is recorded in source-manifest.json.",
+  "M2_integration_scope": "M2 production adds only4lines inside field ShowChoice. Source/complete-native-trace closure is in M2-integration.json; no inherited M2 test or final merged-head test count is claimed as a new local run."
 }

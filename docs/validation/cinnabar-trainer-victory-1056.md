@@ -52,6 +52,8 @@ App 胜利测试使用真实 Game、音频 sequencer、活跃声道和非零静�
 
 三组 Game 全终态之后才普通 merge M1，产生 `0a142ec43f1f1fe9252ed399192ded0064c1a4bf`，父提交精确为 `912a5931` 与 M1。预测及实际整棵 tree 都是 `1a563049ecee604dc51c71ee25c47899004d0d2e`，与实际验证的 `912a5931` 完全相同；源码、engine 981 文件、GFX 702 文件和原作 6 文件复核一致。文档附件提交不是新执行，历史测试和截图没有改标成合并头。
 
+随后普通合入当前 master **M2 `d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3`**，产生 `cd04a2cd80529847fa636029d054e5928dbcb74a`，无人工冲突处理。相对实际验证的 912，继承的生产改动仅为既有 field ShowChoice 分支内 4 行确认声，另有测试和文档；这时整棵树已不再与 912 相同。两条直接交谈 storyline 无 choice 调用，六份完整回放的 23,068 份状态均无 ShowChoice effect / 非空 choice，且 Game 战斗驱动未变，因此这项共享选择音改动不会进入所录路线。此为源码与记录闭环推断，不是 M2 整合头重跑；原 M1 / 912 截图和测试身份均保留。详见 [M2-integration.json](cinnabar-trainer-victory-1056/M2-integration.json)。
+
 ## 精简复现附件
 
 [provenance.json](cinnabar-trainer-victory-1056/provenance.json) 保存三组实际边界、按钮 / 存档 / 截图 / 原始日志 SHA-256；[source-manifest.json](cinnabar-trainer-victory-1056/source-manifest.json) 记录实际 Git、CLI、源码树与 engine 身份；[validation.json](cinnabar-trainer-victory-1056/validation.json) 保存各阶段原始摘要和必要测试名；[recorded-controller.py](cinnabar-trainer-victory-1056/recorded-controller.py) 是本次实际执行源码存档，保留当时本地证据路径。

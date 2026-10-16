@@ -1,13 +1,6 @@
 {
   "actual_before": "762fc5a32602d7dcee4da23a687ad42a7751384d",
   "actual_tested_after": "912a593109c13495d04968e0b12436de6b910508",
-  "ordinary_M1_merge_head": "0a142ec43f1f1fe9252ed399192ded0064c1a4bf",
-  "ordinary_merge_parents": [
-    "912a593109c13495d04968e0b12436de6b910508",
-    "762fc5a32602d7dcee4da23a687ad42a7751384d"
-  ],
-  "whole_tree_equal_after_M1_merge": "1a563049ecee604dc51c71ee25c47899004d0d2e",
-  "entire_tree_equals_tested_912": true,
   "scope": "This records actual tested source identities. Documentation/attachment commits are not new executions. Later base integration, if any, must be described separately.",
   "full_source_freeze_sha256": "6ece688a6e3a857088ce1b232a43f6a0e93534b7b9d0735ae9781412053aad50",
   "canonical_roster_digest_algorithm": "SHA256 of UTF-8 json.dumps(map,sort_keys=True,separators=(comma,colon)); roster records are the original source freeze, checked against every tracked blob and external file.",
@@ -209,5 +202,21 @@
       "identity_sha256": "6cb5e2a9935eb784ed671e7e37a9a5795756f7c5d12394d964c5852bcf80cb49"
     }
   },
-  "M1_merge_full_source_guard_receipt_sha256": "cbc67ae08a17d61a00c61fdac15374308e36b2be286855d4566c0a5cbf58d64a"
+  "M1_merge_full_source_guard_receipt_sha256": "cbc67ae08a17d61a00c61fdac15374308e36b2be286855d4566c0a5cbf58d64a",
+  "M1_merge_equivalence": {
+    "ordinary_M1_merge_head": "0a142ec43f1f1fe9252ed399192ded0064c1a4bf",
+    "ordinary_merge_parents": [
+      "912a593109c13495d04968e0b12436de6b910508",
+      "762fc5a32602d7dcee4da23a687ad42a7751384d"
+    ],
+    "whole_tree_equal_after_M1_merge": "1a563049ecee604dc51c71ee25c47899004d0d2e",
+    "entire_tree_equals_tested_912": true
+  },
+  "publication_base_integration": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/M2-integration.json",
+    "sha256": "2c4f20e3c269cee368a077005613fbd7bfcb527cbb003e3f34ae98216767db9c",
+    "actual_base": "d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3",
+    "actual_source_merge_head": "cd04a2cd80529847fa636029d054e5928dbcb74a",
+    "not_a_new_execution": true
+  }
 }
