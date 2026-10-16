@@ -47,7 +47,7 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 
 本次冻结覆盖 2706 个非文档文件（2188 个编译相关文件）、702 项 GFX，以及 dotzuki `e533a3d2` 的 981 个 tracked 文件；前后源码完全一致。该次测试来自本地私有集成，测试操作没有修改实际主分支，也没有新增 App、原生 Game、GBA 或截图执行；PR279 自身的历史验证保持原身份。
 
-随后 PR279 已实际合入主线 `e323f16e1de75fdd8b94dc347f70cfbd82fa7b4e`，该主线的整个文件树与已发布 `1d2911cf` 完全相同。本分支再用普通 merge 合入这个实际主线，生成 `15435de06749263d5099b21ff4ebc3f5fd2b34ce`；整个文件树与合并前文档版本 `4f9c8b8a` 完全相同，编译源码继续逐项等于实际跑过 3406 项测试的 `06d80d3d`。因此没有重跑 Cargo。后续文档提交只补充这一事实；当前实际基线为 `e323f16e`，测试证据仍明确标记为实际测试版本 `06d80d3d`，不把它重标成新的运行。
+随后 PR279 已实际合入主线 `e323f16e1de75fdd8b94dc347f70cfbd82fa7b4e`，该主线的整个文件树与已发布 `1d2911cf` 完全相同。本分支再用普通 merge 合入这个实际主线，生成 `15435de06749263d5099b21ff4ebc3f5fd2b34ce`；整个文件树与合并前文档版本 `4f9c8b8a` 完全相同，编译源码继续逐项等于实际跑过 3406 项测试的 `06d80d3d`。因此没有重跑 Cargo。后续文档提交只补充这一事实；该次集成的实际基线为 `e323f16e`，测试证据仍明确标记为实际测试版本 `06d80d3d`，不把它重标成新的运行。
 
 | 本次证据（同一本地证据目录） | SHA-256 |
 | --- | --- |
@@ -76,3 +76,11 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 首次完整回归的冻结覆盖 2700 个非文档文件（其中 2182 个编译相关文件）、702 项 GFX、锁定的 dotzuki `e533a3d2` 及其 981 个 tracked 文件。原文档提交 `6257efe2` 仅新增本文件，编译源码与当时实际测试版本 `2e76fe7d` 逐项等值；本次补充集成结果的提交也只修改文档，编译源码与 `06d80d3d` 等值。
 
 本次为纯游戏逻辑及测试修复，按 AGENTS.md 的 pure game logic 排除项无需截图。验证范围为 core；本次未新增原生 Game、GBA、真实 Link 联机或原 ROM 逐帧验证。最终官方 CI 以 PR 实际 head 的检查记录为准。
+
+## 更新至 PR281 合入后的主线
+
+原发布版本 `8a07f592` 的三项官方工作流均在原始 attempt 1 通过：[CI](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827650795)、[GBA ROM](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827650707)、[GBA performance](https://github.com/liuyanghejerry/open-pokered/actions/runs/38827650699)。这些运行的历史基线是 `e323f16e`。仓库启用了 required-status-checks `strict=true`；PR281 合入后，需要更新本分支并对新 head 运行官方 CI。
+
+普通 Git merge 合入实际主线 `f35d9f4de826a51b9e60a91333aae610b299e4f0`，生成 `5c42e1738acd581ac064c63f99b623132ea8f548`，无冲突或人工源码调整。合入前后唯一非文档差异是已合入的 `Daycare/script.scene`；混乱生产逻辑与全部 Rust 测试逐字节保留。该 merge 的完整 Git 树等于本地四项组合检出中 PR281＋PR282 的前缀 `c2abd3b85b0986e339f0451bea7c90a7b71df370`。四项完整组合 `fb6f73dd79328c30dc345c214fa305498b4abc76` 已实际运行完整 core：**3411 通过，0 失败**（2999 lib＋412 integration，1 个既有 doc test ignored），前后 2707 个非文档文件、2189 个编译相关文件、981 项引擎文件和 702 项 GFX 冻结一致。此结果来自明确包含另外两项修复的私有组合，不重标成当前分支单独执行；本次更新也没有重复本地 Cargo。组合原始结果 SHA-256 为 `4434b19e6555d0233fe4a4c4413b4aacacf1ca499f9038b5cb7c73f1084a93d4`，独立终态复核为 `36c9a3226a66e4e7670a5d212ff1b80957ef9c3ec000b5b6581cc16e8edd5f17`。
+
+随后提交只更新本记录；新 head 的官方 CI 将单独检查，不沿用原 head 的通过状态。
