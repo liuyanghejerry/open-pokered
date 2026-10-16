@@ -140,7 +140,7 @@ fn explicit_unknown_field_return_blocks_without_inventing_neutral_or_reemitting_
 
 #[test]
 fn actual_battle_levelups_evolve_then_finish_hm_retry_replace_or_abandon_before_next_mon() {
-    use crate::rare_candy::RareCandyPhase;
+    use super::rare_candy::RareCandyPhase;
     use pokered_core::party_screen::PartyScreenPhase;
     use pokered_core::pokemon::stats::create_pokemon_with_moves;
     use pokered_data::{moves::MoveId, species::Species};
