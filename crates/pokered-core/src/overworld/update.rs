@@ -814,6 +814,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &dialogue_names,
                 self.script_music_playing,
                 self.script_sfx_playing,
+                self.retain_field_text,
             );
             // A nested text caller (for example a gift/menu flow) owns the
             // window once it creates its dialogue, just like ShowDialogue.
@@ -2816,8 +2817,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         dialogue_names: &[&str],
         script_music_playing: bool,
         script_sfx_playing: bool,
+        retain_cached_window: bool,
     ) -> bool {
         let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
+        let prompts_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { prompt: pokered_data::script_command::FieldTextPrompt::Button | pokered_data::script_command::FieldTextPrompt::Protected, .. });
         match effect {
             script_bridge::ScriptEffect::GivePokemon {
                 species,
@@ -2855,6 +2858,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     dialogue_names,
                     script_music_playing,
                     script_sfx_playing,
+                    false, // Nested menu/gift callers keep their existing window lifecycle.
                 ) {
                     let prompt = match flow.child.as_ref() {
                         script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text, .. } => Some(text.clone()),
@@ -2919,6 +2923,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     dialogue_names,
                     script_music_playing,
                     script_sfx_playing,
+                    false, // Nested menu/gift callers keep their existing window lifecycle.
                 ) {
                     menu.advance()
                 } else {
@@ -2986,6 +2991,29 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     *pending_dialogue = None;
                     true
                 } else {
+                    if let script_bridge::ScriptEffect::PrintFieldText {
+                        leading_sound, leading_sound_started, ..
+                    } = effect {
+                        if let Some(sound_id) = leading_sound.as_ref() {
+                            let dialogue = pending_dialogue.as_mut().unwrap();
+                            if !*leading_sound_started {
+                                // PrintText clears/prepares its window before TX_SOUND.
+                                // This is the normal entry countdown, not an audio timer.
+                                if dialogue.tick_field_preparation() { return false; }
+                                audio_requests.push(OverworldAudioRequest::PlaySound {
+                                    sound_id: sound_id.clone(),
+                                });
+                                *leading_sound_started = true;
+                                return false;
+                            }
+                            if script_sfx_playing { return false; }
+                            // Consuming the optional phase prevents replay on subsequent
+                            // typewriter frames and after a snapshot restore.
+                            *leading_sound = None;
+                        }
+                    }
+                    let final_page_was_ready = pending_dialogue.as_ref()
+                        .is_some_and(|d| d.waiting_for_input() && d.is_last_page());
                     if let Some(ref mut dlg) = pending_dialogue {
                         if dlg.holding_open() {
                             if !a_pressed || b_just_pressed {
@@ -2994,6 +3022,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             }
                         } else if !dlg.waiting_for_input() {
                             dlg.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                        } else if dlg.is_last_page() && prompts_after_print {
+                            // Inner PROMPT ownership is handled below; it does not
+                            // perform the outer HoldTextDisplayOpen here.
                         } else if a_just_pressed || b_just_pressed {
                             if dlg.waiting_for_input() {
                                 if dlg.is_last_page() && a_just_pressed {
@@ -3008,7 +3039,44 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             *sfx_event = OverworldSfxEvent::TextAdvance;
                         }
                     }
-                    if returns_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
+                    if prompts_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
+                        let accepted = match effect {
+                            script_bridge::ScriptEffect::PrintFieldText {
+                                prompt, prompt_frames_remaining, prompt_last_buttons, ..
+                            } => match prompt {
+                                pokered_data::script_command::FieldTextPrompt::Button => {
+                                    final_page_was_ready && (a_just_pressed || b_just_pressed)
+                                }
+                                pokered_data::script_command::FieldTextPrompt::Protected => {
+                                    let buttons = u8::from(a_pressed) | (u8::from(b_pressed) << 1);
+                                    let Some(last) = prompt_last_buttons.as_mut() else {
+                                        // PROMPT's ProtectedDelay3 performs no Joypad poll.
+                                        // Keep its preceding sample until ManualTextScroll.
+                                        *prompt_last_buttons = Some(buttons);
+                                        *prompt_frames_remaining = 3;
+                                        return false;
+                                    };
+                                    if *prompt_frames_remaining > 0 {
+                                        *prompt_frames_remaining -= 1;
+                                        if *prompt_frames_remaining > 0 { return false; }
+                                    }
+                                    let pressed = buttons & !*last != 0;
+                                    *last = buttons;
+                                    pressed
+                                }
+                                pokered_data::script_command::FieldTextPrompt::Done => false,
+                            },
+                            _ => unreachable!(),
+                        };
+                        if accepted {
+                            // Both source ManualTextScroll callers emit PRESS_AB.
+                            *sfx_event = OverworldSfxEvent::TextAdvance;
+                            *last_script_dialogue = pending_dialogue.take();
+                            return true;
+                        }
+                        return false;
+                    }
+                    if returns_after_print && !prompts_after_print && pending_dialogue.as_ref().is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
                         *last_script_dialogue = pending_dialogue.take();
                         return true;
                     }
@@ -3035,20 +3103,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if a_just_pressed {
                         *selected = choice.selected;
                         *pending_choice = None;
-                        *last_script_dialogue = None;
+                        if !retain_cached_window { *last_script_dialogue = None; }
                         true
                     } else if b_just_pressed {
                         // B = cancel = last option (NO)
                         *selected = choice.options.len().saturating_sub(1) as u32;
                         *pending_choice = None;
-                        *last_script_dialogue = None;
+                        if !retain_cached_window { *last_script_dialogue = None; }
                         true
                     } else {
                         false
                     }
                 } else {
                     // pending_choice was cleared externally — treat as done
-                    *last_script_dialogue = None;
+                    if !retain_cached_window { *last_script_dialogue = None; }
                     true
                 }
             }
@@ -3383,6 +3451,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // The app samples the actual SFX sequencer before each core tick.
             // The preceding PlayCry was dispatched at the end of its own frame.
             script_bridge::ScriptEffect::WaitSound => !script_sfx_playing,
+            script_bridge::ScriptEffect::FinishFieldText => !a_pressed,
             script_bridge::ScriptEffect::SetPartyNickname { .. } => true,
             script_bridge::ScriptEffect::ShowEmotionBubble {
                 npc_id,
@@ -3968,6 +4037,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 script_bridge::ScriptEffect::PlayCry { species } => {
                     self.audio_requests
                         .push(OverworldAudioRequest::PlayCry { species });
+                }
+                script_bridge::ScriptEffect::FinishFieldText => {
+                    self.clear_retained_field_text();
                 }
                 script_bridge::ScriptEffect::GiveBadge { badge } => {
                     self.game_data_requests
@@ -5250,7 +5322,7 @@ mod field_typing_input_fidelity_tests {
         ow.set_text_delay_frames(3);
         let text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234".to_string();
         ow.pending_dialogue = Some(BedroomDialogue::from_message(&text));
-        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text, retain_window: false });
+        ow.active_script_effect = Some(script_bridge::ScriptEffect::PrintFieldText { text, retain_window: false, prompt: pokered_data::script_command::FieldTextPrompt::Done, prompt_frames_remaining: 0, prompt_last_buttons: None, leading_sound: None, leading_sound_started: false });
         for _ in 0..120 {
             ow.update_frame(idle);
             if ow.pending_dialogue.as_ref().is_some_and(|d|d.char_index()==1) {break;}
@@ -5459,5 +5531,303 @@ mod marowak_departure_wait_tests {
         assert_eq!(plain.audio_requests.iter().filter(|r|
             matches!(r, OverworldAudioRequest::PlayCry { .. })).count(), 1);
         assert!(!plain.retain_field_text && plain.displayed_field_dialogue().is_none());
+    }
+}
+
+
+#[cfg(test)]
+mod cinnabar_quiz_audio_tests {
+    use super::*;
+    use crate::snapshot::OverworldSnapshot;
+    use pokered_data::impl_traits::PokemonRedData;
+    use pokered_data::script_command::FieldTextPrompt;
+
+    type Field = OverworldScreen<PokemonRedData>;
+    const GATE: &str = "EVENT_CINNABAR_GYM_GATE1_UNLOCKED";
+
+    fn input(a: bool, b: bool) -> OverworldInput {
+        OverworldInput::new(false, false, false, false, a, b, false, false)
+    }
+
+    fn start(map: MapId, handler: &str) -> Field {
+        let mut ow = Field::new(map, None, PokemonRedData);
+        ow.script_engine.seed_text("playerFacing", "up");
+        let command = ow.script_engine.call_function_no_args(handler).unwrap().unwrap();
+        ow.active_script_effect = Some(script_bridge::dispatch_command(&command));
+        ow
+    }
+
+    fn wait_for_last_page(ow: &mut Field, prompt: FieldTextPrompt, hold_while_typing: bool) {
+        for frame in 0..4000 {
+            let matches_prompt = matches!(&ow.active_script_effect,
+                Some(script_bridge::ScriptEffect::PrintFieldText { prompt: actual, .. }) if *actual == prompt);
+            if matches_prompt && ow.pending_dialogue.as_ref()
+                .is_some_and(|d| d.waiting_for_input() && d.is_last_page()) {
+                return;
+            }
+            let press = ow.pending_dialogue.as_ref().is_some_and(|d| {
+                (d.waiting_for_input() && d.has_more_pages() && frame % 2 == 0)
+                    || (hold_while_typing && d.is_last_page() && !d.waiting_for_input())
+            });
+            ow.update_frame(input(press, false));
+        }
+        panic!("the actual scene never reached its {prompt:?} final page");
+    }
+
+    fn intro_at_protected_delay(hold: bool) -> Field {
+        let mut ow = start(MapId::CinnabarGym, "quizMachine1");
+        wait_for_last_page(&mut ow, FieldTextPrompt::Protected, hold);
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText {
+                prompt_frames_remaining: 3, prompt_last_buttons: Some(buttons), ..
+            }) if *buttons == u8::from(hold)));
+        assert!(ow.retain_field_text);
+        assert!(!ow.pending_dialogue.as_ref().unwrap().holding_open());
+        ow
+    }
+
+    fn at_choice(prior_open: bool) -> Field {
+        let mut ow = intro_at_protected_delay(false);
+        ow.set_flag_live(GATE, prior_open);
+        // PROMPT's three protected frames preserve its preceding joypad sample.
+        // The press begins inside that delay and is still held at ManualTextScroll.
+        for _ in 0..3 { ow.update_frame(input(true, false)); }
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+        assert!(ow.last_script_dialogue.is_some() && ow.pending_dialogue.is_none());
+        ow.update_frame(input(true, false));
+        assert!(ow.pending_dialogue.is_some(), "inner PROMPT must not hold for A release before the question");
+        assert!(!ow.pending_dialogue.as_ref().unwrap().holding_open());
+        // This real question is one page and ends DONE. No final-page A/B is sent.
+        for _ in 0..1000 {
+            ow.update_frame(input(false, false));
+            if ow.pending_choice.is_some() { break; }
+        }
+        assert!(ow.pending_choice.is_some(), "the question must reach YES/NO without an extra acknowledgement");
+        assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
+        ow
+    }
+
+    fn visible(ow: &Field) -> serde_json::Value {
+        let value = serde_json::to_value(ow.displayed_field_dialogue()).unwrap();
+        assert!(!value.is_null());
+        value
+    }
+
+    fn blocked_sound(ow: &mut Field, frames: usize) {
+        let retained = visible(ow);
+        ow.script_sfx_playing = true;
+        for frame in 0..frames {
+            ow.update_frame(input(frame % 2 == 0, frame % 3 == 0));
+            assert!(matches!(&ow.active_script_effect,
+                Some(script_bridge::ScriptEffect::WaitSound)
+                    | Some(script_bridge::ScriptEffect::PrintFieldText {
+                        leading_sound: Some(_), leading_sound_started: true, ..
+                    })));
+            assert!(ow.audio_requests.is_empty(), "waiting must not replay or dispatch the next sound");
+            assert!(ow.retain_field_text);
+            assert_eq!(visible(ow), retained);
+        }
+    }
+
+    fn at_correct_prompt(prior_open: bool) -> Field {
+        let mut ow = at_choice(prior_open);
+        let question = visible(&ow);
+        ow.update_frame(input(true, false));
+        assert_eq!(visible(&ow), question, "choice restores its question before entering inner PrintText");
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText {
+                prompt: FieldTextPrompt::Button, leading_sound: Some(sound), leading_sound_started: false, ..
+            }) if sound == "SFX_GET_ITEM_1"));
+        ow.update_frame(input(false, false));
+        assert!(ow.last_script_dialogue.is_none(), "PrintText clears old content before TX_SOUND");
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().get_display_text(), Some((String::new(), String::new())));
+        for _ in 0..3 {
+            ow.update_frame(input(true, true));
+            assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(), 0);
+            assert!(ow.audio_requests.is_empty(), "the normal three-frame PrintText prologue precedes TX_SOUND");
+        }
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.audio_requests[..],
+            [OverworldAudioRequest::PlaySound { sound_id }] if sound_id == "SFX_GET_ITEM_1"));
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(), 0);
+        blocked_sound(&mut ow, 37); // Core input contract only; no actual selection cue is implied.
+        assert_eq!(ow.script_engine.get_flag(GATE), prior_open);
+        let snapshot = OverworldSnapshot::capture(&ow);
+        let mut restored = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+        serde_json::from_value::<OverworldSnapshot>(serde_json::to_value(snapshot).unwrap()).unwrap()
+            .restore_into(&mut restored);
+        assert!(matches!(&restored.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText {
+                leading_sound: Some(sound), leading_sound_started: true, ..
+            }) if sound == "SFX_GET_ITEM_1"));
+        assert_eq!(visible(&restored), visible(&ow));
+        ow = restored;
+        blocked_sound(&mut ow, 19);
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(false, false));
+        assert!(ow.audio_requests.is_empty(), "restoring the waiting phase must not replay GET_ITEM_1");
+        assert_eq!(ow.pending_dialogue.as_ref().unwrap().char_index(), 1,
+            "the first glyph follows actual sound completion on the same dialogue");
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText {
+                prompt: FieldTextPrompt::Button, leading_sound: None, leading_sound_started: true, ..
+            })));
+        wait_for_last_page(&mut ow, FieldTextPrompt::Button, false);
+        assert!(ow.pending_dialogue.is_some() && ow.retain_field_text);
+        ow
+    }
+
+    #[test]
+    fn locked_quiz_waits_for_each_sound_and_opens_before_the_outer_a_release() {
+        let mut ow = at_correct_prompt(false);
+        // TX_PROMPT_BUTTON has no ProtectedDelay3. A fresh A acknowledges now,
+        // emits the actual ManualTextScroll sound event and retains the window.
+        ow.update_frame(input(true, false));
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
+        assert!(ow.pending_dialogue.is_none());
+        blocked_sound(&mut ow, 53); // Supplied sequencer input, not a claimed PCM duration.
+        assert!(!ow.script_engine.get_flag(GATE));
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PlaySound { sound_id }) if sound_id == "SFX_GO_INSIDE"));
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.audio_requests[..],
+            [OverworldAudioRequest::PlaySound { sound_id }] if sound_id == "SFX_GO_INSIDE"));
+        blocked_sound(&mut ow, 93);
+        assert!(!ow.script_engine.get_flag(GATE));
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(true, false));
+        assert!(ow.script_engine.get_flag(GATE));
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::ReplaceTileBlock { .. })));
+        let retained = visible(&ow);
+        ow.update_frame(input(true, false));
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)));
+        for _ in 0..17 {
+            ow.update_frame(input(true, false));
+            assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)));
+            assert_eq!(visible(&ow), retained);
+        }
+        ow.update_frame(input(false, true));
+        assert!(ow.active_script_effect.is_none() && ow.script_engine.is_idle());
+        assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
+        assert!(ow.displayed_field_dialogue().is_none());
+    }
+
+    #[test]
+    fn already_open_quiz_still_has_get_item_and_manual_b_prompt_but_no_door_sound() {
+        let mut ow = at_correct_prompt(true);
+        ow.update_frame(input(false, true));
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::ReplaceTileBlock { .. })),
+            "the prior-open branch skips only the door sound sequence");
+        assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
+        ow.update_frame(input(false, true));
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)));
+        ow.update_frame(input(false, true));
+        assert!(ow.active_script_effect.is_none() && ow.script_engine.is_idle());
+        assert!(ow.audio_requests.is_empty());
+        assert!(!ow.retain_field_text && ow.displayed_field_dialogue().is_none());
+    }
+
+    #[test]
+    fn wrong_quiz_waits_on_both_sides_of_denied_then_one_prompt_and_outer_release() {
+        let mut ow = at_choice(false);
+        let question = visible(&ow);
+        ow.update_frame(input(false, true)); // NO is the wrong answer for machine 1.
+        assert_eq!(visible(&ow), question);
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
+        blocked_sound(&mut ow, 41);
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PlaySound { sound_id }) if sound_id == "SFX_DENIED"));
+        ow.update_frame(input(false, false));
+        assert!(matches!(&ow.audio_requests[..],
+            [OverworldAudioRequest::PlaySound { sound_id }] if sound_id == "SFX_DENIED"));
+        blocked_sound(&mut ow, 79);
+        ow.script_sfx_playing = false;
+        ow.update_frame(input(false, false));
+        wait_for_last_page(&mut ow, FieldTextPrompt::Protected, false);
+        for _ in 0..83 {
+            ow.update_frame(input(false, false));
+            assert!(matches!(ow.active_script_effect,
+                Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Protected, .. })),
+                "the far PROMPT must wait for its one actual acknowledgement");
+        }
+        ow.update_frame(input(true, false));
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)));
+        for _ in 0..7 {
+            ow.update_frame(input(true, false));
+            assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)));
+            assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
+        }
+        ow.update_frame(input(false, false));
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::StartBattle { .. })),
+            "A release alone must finish the outer caller, without a second acknowledgement");
+        assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
+        assert!(!ow.script_engine.get_flag(GATE));
+    }
+
+    #[test]
+    fn protected_prompt_uses_three_frames_and_preserves_its_joypad_sample_across_snapshot() {
+        let mut ow = intro_at_protected_delay(false);
+        ow.update_frame(input(true, false));
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt_frames_remaining: 2, .. })));
+        let value = serde_json::to_value(OverworldSnapshot::capture(&ow)).unwrap();
+        let decoded: OverworldSnapshot = serde_json::from_value(value).unwrap();
+        let mut restored = Field::new(MapId::CinnabarGym, None, PokemonRedData);
+        decoded.restore_into(&mut restored);
+        ow = restored;
+        ow.update_frame(input(false, false));
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt_frames_remaining: 1, .. })));
+        ow.update_frame(input(false, false));
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt_frames_remaining: 0, .. })),
+            "a short tap released during ProtectedDelay3 is not polled");
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::None);
+        ow.update_frame(input(false, true));
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+        assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
+
+        let mut ow = intro_at_protected_delay(true);
+        for _ in 0..31 {
+            ow.update_frame(input(true, false));
+            assert!(matches!(ow.active_script_effect,
+                Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Protected, .. })),
+                "held A from printing is not a new prompt press");
+            assert_eq!(ow.sfx_event, OverworldSfxEvent::None);
+        }
+        ow.update_frame(input(false, false));
+        ow.update_frame(input(true, false));
+        assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+    }
+
+    #[test]
+    fn ordinary_bill_choice_keeps_its_existing_unowned_window_lifecycle() {
+        let mut ow = start(MapId::BillsHouse, "talkBillPokemon");
+        for frame in 0..4000 {
+            let press = frame % 2 == 0 && ow.pending_dialogue.as_ref()
+                .is_some_and(|d| d.waiting_for_input());
+            ow.update_frame(input(press, false));
+            if ow.pending_choice.is_some() { break; }
+        }
+        assert!(ow.pending_choice.is_some() && ow.last_script_dialogue.is_some());
+        assert!(!ow.retain_field_text);
+        ow.update_frame(input(false, false));
+        ow.update_frame(input(true, false));
+        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::ShowDialogue { .. })));
+        assert!(ow.last_script_dialogue.is_none());
+        assert!(!ow.retain_field_text);
     }
 }

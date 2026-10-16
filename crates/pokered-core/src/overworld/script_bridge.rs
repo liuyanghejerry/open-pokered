@@ -53,7 +53,18 @@ pub enum ScriptEffect {
         text: String,
         #[serde(default)]
         retain_window: bool,
+        #[serde(default)]
+        prompt: pokered_data::script_command::FieldTextPrompt,
+        #[serde(default)]
+        prompt_frames_remaining: u8,
+        #[serde(default)]
+        prompt_last_buttons: Option<u8>,
+        #[serde(default)]
+        leading_sound: Option<String>,
+        #[serde(default)]
+        leading_sound_started: bool,
     },
+    FinishFieldText,
     ShowDialogue {
         text: String,
     },
@@ -375,8 +386,8 @@ impl ScriptEffect {
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
-            ScriptEffect::PrintFieldText { text, retain_window } => {
-                json!({ "effect": "PrintFieldText", "text": text, "retain_window": retain_window })
+            ScriptEffect::PrintFieldText { text, retain_window, prompt, leading_sound, leading_sound_started, .. } => {
+                json!({ "effect": "PrintFieldText", "text": text, "retain_window": retain_window, "prompt": prompt, "leading_sound": leading_sound, "leading_sound_started": leading_sound_started })
             }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
@@ -474,6 +485,7 @@ impl ScriptEffect {
             }
             ScriptEffect::WaitMusic => json!({ "effect": "WaitMusic" }),
             ScriptEffect::WaitSound => json!({ "effect": "WaitSound" }),
+            ScriptEffect::FinishFieldText => json!({ "effect": "FinishFieldText" }),
             ScriptEffect::PlaySound { sound_id } => {
                 json!({ "effect": "PlaySound", "sound_id": sound_id })
             }
@@ -891,9 +903,14 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
             ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: None, phase: FollowNpcPhase::StartNpc }
         },
-        PokemonScriptCommand::PrintFieldText { text, retain_window } => ScriptEffect::PrintFieldText {
+        PokemonScriptCommand::PrintFieldText { text, retain_window, prompt, leading_sound } => ScriptEffect::PrintFieldText {
             text,
             retain_window,
+            prompt,
+            prompt_frames_remaining: 0,
+            prompt_last_buttons: None,
+            leading_sound,
+            leading_sound_started: false,
         },
         PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
         PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
@@ -960,6 +977,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
         PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
         PokemonScriptCommand::WaitSound => ScriptEffect::WaitSound,
+        PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText,
     }
 }
 
@@ -1134,13 +1152,13 @@ mod print_field_text_contract_tests {
     #[test]
     fn inner_print_uses_the_same_name_resolution_as_outer_text_and_restores_its_mode() {
         let text="<PLAYER> asks <RIVAL> about <STARTER>.".to_string();
-        let command=PokemonScriptCommand::PrintFieldText {text:text.clone(),retain_window:false}.into_script_command();
+        let command=PokemonScriptCommand::PrintFieldText {text:text.clone(),retain_window:false, prompt: pokered_data::script_command::FieldTextPrompt::Done, leading_sound: None}.into_script_command();
         let inner=dispatch_command_with_names(&command,"RED","BLUE","BULBASAUR");
         let outer=dispatch_command_with_names(&ScriptCommand::ShowText {text},"RED","BLUE","BULBASAUR");
         let ScriptEffect::ShowDialogue {text:expected}=outer else {panic!()};
         let raw=serde_json::to_string(&inner).unwrap();
         let restored:ScriptEffect=serde_json::from_str(&raw).unwrap();
-        let ScriptEffect::PrintFieldText {text:actual,retain_window:false}=restored else {panic!("lost inner return mode")};
+        let ScriptEffect::PrintFieldText {text:actual,retain_window:false, prompt: pokered_data::script_command::FieldTextPrompt::Done, ..}=restored else {panic!("lost inner return mode")};
         assert_eq!(actual,expected);
         assert_eq!(actual,"RED asks BLUE about BULBASAUR.");
     }
@@ -1154,9 +1172,47 @@ mod field_sound_window_snapshot_tests {
     fn legacy_inner_text_effect_does_not_acquire_window_ownership() {
         let old = serde_json::json!({"PrintFieldText": {"text": "old"}});
         let effect: ScriptEffect = serde_json::from_value(old).unwrap();
-        assert!(matches!(effect, ScriptEffect::PrintFieldText { retain_window: false, .. }));
+        assert!(matches!(effect, ScriptEffect::PrintFieldText {
+            retain_window: false,
+            prompt: pokered_data::script_command::FieldTextPrompt::Done,
+            prompt_frames_remaining: 0, prompt_last_buttons: None,
+            leading_sound: None, leading_sound_started: false, ..
+        }));
         let wait = dispatch_command(&PokemonScriptCommand::WaitSound.into_script_command());
         assert_eq!(wait.to_debug_json()["effect"], "WaitSound");
         assert!(matches!(serde_json::from_str::<ScriptEffect>(&serde_json::to_string(&wait).unwrap()).unwrap(), ScriptEffect::WaitSound));
+    }
+
+
+    #[test]
+    fn retained_prompt_snapshot_keeps_its_partial_protected_delay_and_button_sample() {
+        let original = ScriptEffect::PrintFieldText {
+            text: "last page".into(), retain_window: true,
+            prompt: pokered_data::script_command::FieldTextPrompt::Protected,
+            prompt_frames_remaining: 2, prompt_last_buttons: Some(1),
+            leading_sound: None, leading_sound_started: false,
+        };
+        for effect in [
+            original,
+            ScriptEffect::PrintFieldText {
+                text: "correct".into(), retain_window: true,
+                prompt: pokered_data::script_command::FieldTextPrompt::Button,
+                prompt_frames_remaining: 0, prompt_last_buttons: None,
+                leading_sound: Some("SFX_GET_ITEM_1".into()), leading_sound_started: false,
+            },
+            ScriptEffect::PrintFieldText {
+                text: "correct".into(), retain_window: true,
+                prompt: pokered_data::script_command::FieldTextPrompt::Button,
+                prompt_frames_remaining: 0, prompt_last_buttons: None,
+                leading_sound: Some("SFX_GET_ITEM_1".into()), leading_sound_started: true,
+            },
+        ] {
+            let value = serde_json::to_value(&effect).unwrap();
+            let restored: ScriptEffect = serde_json::from_value(value.clone()).unwrap();
+            assert_eq!(serde_json::to_value(restored).unwrap(), value);
+        }
+        let finish = dispatch_command(&PokemonScriptCommand::FinishFieldText.into_script_command());
+        assert!(matches!(finish, ScriptEffect::FinishFieldText));
+        assert_eq!(finish.to_debug_json()["effect"], "FinishFieldText");
     }
 }

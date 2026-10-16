@@ -4,10 +4,34 @@ use crate::alloc_prelude::*;
 use dotzuki_engine_script::ScriptCommand;
 use serde_json::{json, Value};
 
+/// Actual inner-text terminators; default preserves the existing DONE API.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum FieldTextPrompt {
+    #[default]
+    Done,
+    /// TX_PROMPT_BUTTON: ManualTextScroll, no ProtectedDelay3.
+    Button,
+    /// Far payload PROMPT: ProtectedDelay3, then ManualTextScroll.
+    Protected,
+}
+
+impl FieldTextPrompt {
+    pub fn from_argument(value: Option<&Value>) -> Result<Self, String> {
+        match value {
+            None | Some(Value::Bool(false)) => Ok(Self::Done),
+            Some(Value::Bool(true)) => Ok(Self::Button),
+            Some(Value::String(mode)) if mode == "prompt" => Ok(Self::Protected),
+            _ => Err("printFieldText: prompt must be false, true, or prompt".into()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
-    /// Inner PrintText with DONE: return after printing, without an outer A/B wait.
-    PrintFieldText { text: String, retain_window: bool },
+    /// Inner PrintText; optional text_promptbutton returns without closing its window.
+    PrintFieldText { text: String, retain_window: bool, prompt: FieldTextPrompt, leading_sound: Option<String> },
+    /// Outer HoldTextDisplayOpen: wait for A release and close only the retained owner.
+    FinishFieldText,
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -79,6 +103,7 @@ impl PokemonScriptCommand {
     pub const fn name(&self) -> &'static str {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
+            Self::FinishFieldText => "finishFieldText",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -118,9 +143,15 @@ impl PokemonScriptCommand {
     pub fn into_script_command(self) -> ScriptCommand {
         let name = self.name().to_string();
         let args = match self {
-            Self::PrintFieldText { text, retain_window } => {
+            Self::PrintFieldText { text, retain_window, prompt, leading_sound } => {
                 let mut args = vec![json!(text)];
-                if retain_window { args.push(json!(true)); }
+                if retain_window || prompt != FieldTextPrompt::Done || leading_sound.is_some() { args.push(json!(retain_window)); }
+                match prompt {
+                    FieldTextPrompt::Done => { if leading_sound.is_some() { args.push(json!(false)); } },
+                    FieldTextPrompt::Button => args.push(json!(true)),
+                    FieldTextPrompt::Protected => args.push(json!("prompt")),
+                }
+                if let Some(sound) = leading_sound { args.push(json!(sound)); }
                 args
             },
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
@@ -170,6 +201,7 @@ impl PokemonScriptCommand {
             | Self::EnterHallOfFame
             | Self::WaitMusic
             | Self::WaitSound
+            | Self::FinishFieldText
             | Self::VendingDelivery => vec![],
         };
         ScriptCommand::Custom { name, args }
@@ -216,7 +248,14 @@ impl PokemonScriptCommand {
                     Some(Value::Bool(retain)) => *retain,
                     Some(_) => return Err("printFieldText: retainWindow must be a boolean".into()),
                 },
+                prompt: FieldTextPrompt::from_argument(args.get(2))?,
+                leading_sound: match args.get(3) {
+                    None => None,
+                    Some(Value::String(sound)) => Some(sound.clone()),
+                    Some(_) => return Err("printFieldText: leadingSound must be a string".into()),
+                },
             },
+            "finishFieldText" => Self::FinishFieldText,
             "waitMusic" => Self::WaitMusic,
             "waitSound" => Self::WaitSound,
             "vendingDelivery" => Self::VendingDelivery,
@@ -389,10 +428,62 @@ mod tests {
     #[test]
     fn field_text_window_retention_is_explicit_and_old_commands_default_false() {
         assert_eq!(PokemonScriptCommand::from_custom("printFieldText", &[json!("old")]).unwrap(),
-            PokemonScriptCommand::PrintFieldText { text: "old".into(), retain_window: false });
-        let retained = PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true };
+            PokemonScriptCommand::PrintFieldText { text: "old".into(), retain_window: false, prompt: FieldTextPrompt::Done, leading_sound: None });
+        let retained = PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None };
         let ScriptCommand::Custom { name, args } = retained.clone().into_script_command() else { panic!() };
         assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), retained);
         assert!(PokemonScriptCommand::from_custom("printFieldText", &[json!("x"), json!(1)]).is_err());
         assert_eq!(PokemonScriptCommand::from_custom("waitSound", &[]).unwrap(), PokemonScriptCommand::WaitSound);
     }}
+
+
+#[cfg(test)]
+mod field_text_terminator_tests {
+    use super::*;
+
+    #[test]
+    fn inner_text_terminators_round_trip_without_changing_old_done_arguments() {
+        for (argument, prompt) in [
+            (json!(false), FieldTextPrompt::Done),
+            (json!(true), FieldTextPrompt::Button),
+            (json!("prompt"), FieldTextPrompt::Protected),
+        ] {
+            for retain_window in [false, true] {
+                let command = PokemonScriptCommand::from_custom(
+                    "printFieldText", &[json!("text"), json!(retain_window), argument.clone()],
+                ).unwrap();
+                assert_eq!(command, PokemonScriptCommand::PrintFieldText {
+                    text: "text".into(), retain_window, prompt, leading_sound: None,
+                });
+                let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else { panic!() };
+                assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
+                if prompt == FieldTextPrompt::Done {
+                    let expected = if retain_window { vec![json!("text"), json!(true)] } else { vec![json!("text")] };
+                    assert_eq!(args, expected, "legacy DONE command spelling");
+                }
+            }
+        }
+        for invalid in [json!(0), json!(null), json!("true"), json!("done"), json!([])] {
+            assert!(PokemonScriptCommand::from_custom(
+                "printFieldText", &[json!("text"), json!(true), invalid],
+            ).is_err());
+        }
+        for prompt in [FieldTextPrompt::Done, FieldTextPrompt::Button, FieldTextPrompt::Protected] {
+            let leading = PokemonScriptCommand::PrintFieldText {
+                text: "correct".into(), retain_window: true, prompt,
+                leading_sound: Some("SFX_GET_ITEM_1".into()),
+            };
+            let ScriptCommand::Custom { name, args } = leading.clone().into_script_command() else { panic!() };
+            assert_eq!(args.len(), 4);
+            assert_eq!(args[3], json!("SFX_GET_ITEM_1"));
+            assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), leading);
+        }
+        assert!(PokemonScriptCommand::from_custom("printFieldText",
+            &[json!("correct"), json!(true), json!(true), json!(1)]).is_err());
+        let finish = PokemonScriptCommand::FinishFieldText;
+        let ScriptCommand::Custom { name, args } = finish.clone().into_script_command() else { panic!() };
+        assert_eq!(name, "finishFieldText");
+        assert!(args.is_empty());
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), finish);
+    }
+}

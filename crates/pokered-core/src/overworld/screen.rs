@@ -589,6 +589,14 @@ impl BedroomDialogue {
         self.text_delay_frames
     }
 
+    /// Consume the existing PrintText prologue before an optional leading
+    /// sound. The ordinary typewriter uses this same countdown.
+    pub(crate) fn tick_field_preparation(&mut self) -> bool {
+        if self.field_entry_frames == 0 { return false; }
+        self.field_entry_frames -= 1;
+        true
+    }
+
     /// Advance the typewriter by one frame. Honors the configured text speed:
     /// after a character is revealed, `text_delay_frames - 1` frames pass
     /// before the next one (one character per `text_delay_frames` frames,
@@ -600,10 +608,7 @@ impl BedroomDialogue {
     /// PrintLetterDelay polls held A/B without a menu sound. A press ends the
     /// current letter's wait after one hardware frame; it never reveals a page.
     pub fn reveal_next_char_with_buttons(&mut self, fast_held: bool) {
-        if self.field_entry_frames != 0 {
-            self.field_entry_frames -= 1;
-            return;
-        }
+        if self.tick_field_preparation() { return; }
         if self.delay_counter > 0 {
             self.delay_counter = if fast_held { 0 } else { self.delay_counter - 1 };
             return;
