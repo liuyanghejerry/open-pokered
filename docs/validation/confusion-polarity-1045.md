@@ -43,7 +43,7 @@ cargo test -p pokered-core --offline --locked --target-dir "$TARGET" -j1
 
 在远端 PR279 的分支与 pull/head 均确认为 `1d2911cfe94c960385961e02ac2e9f5739e904df`、实际主分支仍为 `e6150de4` 后，将该固定版本用普通 merge 合入 `6257efe2`。实际集成版本为 `06d80d3dde1c2d7c9c9c5b5985cebd41397ff439`；没有冲突或人工源码调整，merge tree 与 Git 独立重算结果完全相同。相对 PR279 的差异仍仅为此前混乱修复及文档：除 `battle/mod.rs` 的两行测试模块注册外，各个混乱源码／测试文件与 `6257efe2` 字节一致；去掉该注册后，`battle/mod.rs` 与 PR279 字节一致。FIGHT receipt/API、等待、输入处理与混乱 `>= 128` 条件均保留。
 
-在同一混乱 WT 原有专属 target 上，使用同样离线、锁定依赖、单任务及 `opt-level=0`／`debug=0` 环境，只运行一次完整 `pokered-core`。结果为 **3406 项通过，0 失败**（2994 lib + 412 integration），另有 1 个已有 doc test ignored。实际 session `27214` 退出 0，runner `3227809` 与 Cargo `3228015` 的进程组均已结束。新增五项混乱、继承畏缩／捕获、FIGHT 文本／通知及 Link 空 receipt 等 35 项指定测试逐名通过；所有测试 summary 均为 0 failed。没有修改断言／fixture 或重跑同版本。
+在同一混乱 WT 原有专属 target 上，使用同样离线、锁定依赖、单任务及 `opt-level=0`／`debug=0` 环境，只运行一次完整 `pokered-core`。结果为 **3406 项通过，0 失败**（2994 lib + 412 integration），另有 1 个已有 doc test ignored。实际 session `27214` 退出 0，runner `3227809` 与 Cargo `3228015` 的进程组均已结束。新增五项混乱、继承畏缩／捕获、FIGHT 文本／通知及自伤伤害／蓄力清理等 34 项运行器指定测试逐名通过（5 + 28 + 1）；独立复核还核对了 1 项 Link 空 receipt 测试，因此原独立收据共列出 35 个实际通过的不同名称。所有测试 summary 均为 0 failed。没有修改断言／fixture 或重跑同版本。
 
 本次冻结覆盖 2706 个非文档文件（2188 个编译相关文件）、702 项 GFX，以及 dotzuki `e533a3d2` 的 981 个 tracked 文件；前后源码完全一致。该次测试来自本地私有集成，测试操作没有修改实际主分支，也没有新增 App、原生 Game、GBA 或截图执行；PR279 自身的历史验证保持原身份。
 
