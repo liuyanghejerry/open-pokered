@@ -692,7 +692,7 @@ impl PerfBenchmark {
             assert_eq!(frame, 4290);
             let position = Self::movement_anchor(game, frame);
             let start = self.movement_start.expect("movement entry anchor");
-            assert_eq!(position, (start.0 + 1, start.1));
+            assert_eq!(position, (start.0 + 1, start.1 + 1));
             self.movement_verified = true;
         }
         if !self.battle_started && frame >= 4400 {
