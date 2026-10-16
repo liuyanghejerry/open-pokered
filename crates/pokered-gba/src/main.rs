@@ -843,8 +843,8 @@ fn game_main() -> ! {
     let mut profile = ProfileSamples::default();
     #[cfg(feature = "perf-benchmark")]
     let mut benchmark = PerfBenchmark::default();
-    #[cfg(feature = "perf-benchmark")]
-    let mut benchmark_input = autopilot::BenchmarkInput::default();
+    #[cfg(feature = "autopilot")]
+    let mut autopilot_input = autopilot::AutopilotInput::default();
     // Retain input history across display frames so a held key produces one
     // edge instead of appearing newly pressed on every pass through the loop.
     let mut state = InputState::new();
@@ -862,13 +862,8 @@ fn game_main() -> ! {
         state.begin_frame();
         state.set_from_bitmask(0);
         #[cfg(feature = "autopilot")]
-        {
-            #[cfg(feature = "perf-benchmark")]
-            state.set_from_bitmask(benchmark_input.buttons_at(
-                frame, game.state.screen == pokered_core::game_state::GameScreen::Overworld));
-            #[cfg(not(feature = "perf-benchmark"))]
-            state.set_from_bitmask(autopilot::buttons_at(frame));
-        }
+        state.set_from_bitmask(autopilot_input.buttons_at(
+            frame, game.state.screen == pokered_core::game_state::GameScreen::Overworld));
         #[cfg(not(feature = "autopilot"))]
         {
             input.update();
