@@ -488,6 +488,50 @@ fn sram_flags_are_authoritative_and_only_old_native_recovers_companion_aliases()
 }
 
 #[test]
+fn original_bedroom_script_byte_is_authoritative_and_survives_sram() {
+    use pokered_core::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX;
+    const NOOP: &str = "SCRIPT_REDSHOUSE2F_NOOP";
+
+    for script in [0, 1] {
+        for legacy in [false, true] {
+            let mut save = import_sram(&original_sram()).unwrap();
+            save.imported_legacy_native = legacy;
+            save.game_data.game_progress_flags[REDS_HOUSE_2F_SCRIPT_INDEX] = script;
+            let original_progress = save.game_data.game_progress_flags.clone();
+            let mut stale_companion = pokered_core::hash_compat::HashMap::default();
+            stale_companion.insert(NOOP.to_string(), script == 0);
+            let mut screen = pokered_core::overworld::OverworldScreen::new(
+                pokered_data::maps::MapId::RedsHouse2F,
+                None,
+                pokered_data::impl_traits::PokemonRedData,
+            );
+            screen.restore_loaded_save_flags(&save, Some(stale_companion));
+            assert_eq!(screen.unified_flags().get_flag(NOOP), script == 1);
+            screen.write_system_save_state(&mut save.game_data);
+            assert_eq!(save.game_data.game_progress_flags, original_progress);
+
+            // A completed scene updates its one original byte, retaining
+            // every neighbouring map script and reserved byte.
+            screen.set_flag_live(NOOP, true);
+            screen.write_system_save_state(&mut save.game_data);
+            let mut expected = original_progress;
+            expected[REDS_HOUSE_2F_SCRIPT_INDEX] = 1;
+            assert_eq!(save.game_data.game_progress_flags, expected);
+            let reloaded = import_sram(&export_sram(&save)).unwrap();
+            assert_eq!(reloaded.game_data.game_progress_flags, expected);
+
+            let mut continued = pokered_core::overworld::OverworldScreen::new(
+                pokered_data::maps::MapId::RedsHouse2F,
+                None,
+                pokered_data::impl_traits::PokemonRedData,
+            );
+            continued.restore_loaded_save_flags(&reloaded, None);
+            assert!(continued.unified_flags().get_flag(NOOP));
+        }
+    }
+}
+
+#[test]
 fn full_party_capture_is_visible_in_pc_and_survives_save() {
     for active_box in 0..12 {
         let mut save = SaveData::new();

@@ -38,6 +38,8 @@ mod tests;
 #[cfg(all(test, not(target_os = "none")))]
 mod tests_map_on_load;
 #[cfg(test)]
+mod tests_bedroom_persistence;
+#[cfg(test)]
 mod tests_collision;
 #[cfg(test)]
 mod tests_slots_lucky;
