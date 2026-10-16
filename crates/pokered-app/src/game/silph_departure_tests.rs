@@ -2,15 +2,15 @@
 //! departure's publication boundaries, without synthesizing a second writer.
 use super::*;
 use pokered_core::overworld::OverworldInput;
-use pokered_data::toggleable_objects::{is_object_hidden, toggle_id_to_bit_index};
+use pokered_data::toggleable_objects::{
+    is_object_hidden, set_object_hidden, set_object_shown, toggle_id_to_bit_index,
+};
 
 #[test]
 fn silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_flag() {
     let mut screen = OverworldScreen::new(MapId::SilphCo11F, None, PokemonRedData);
     screen.state.player.x = 6;
     screen.state.player.y = 14;
-    screen.reload_scene_source("SilphCo11F", "game_scene SilphCo11F {\n  @load {\n    silphRocketDeparture()\n    setFlag(\"EVENT_BEAT_SILPH_CO_GIOVANNI\")\n  }\n}").unwrap();
-    screen.run_on_load();
     let golden: serde_json::Value = serde_json::from_str(include_str!(
         "../../../pokered-data/src/silph_liberation_golden.json"
     ))
@@ -26,6 +26,24 @@ fn silph_departure_game_save_writer_preserves_black_batch_and_delays_the_beat_fl
             .iter()
             .map(|case| case["toggle"].as_str().unwrap().to_owned()),
     );
+    // OverworldScreen::new has no loaded SRAM. Seed the original pre-win
+    // state explicitly; the independent31 golden plus Saffron literals own
+    // this fixture, not the new production roster constants.
+    let mut flags = *screen.toggleable_object_flags();
+    for id in &hides {
+        set_object_shown(&mut flags, toggle_id_to_bit_index(id).unwrap());
+        screen.set_flag_live(&format!("__OBJ_HIDDEN_{id}"), false);
+        screen.set_flag_live(&format!("__OBJ_SHOWN_{id}"), true);
+    }
+    for id in 8..=13 {
+        let toggle = format!("SAFFRON_CITY_OBJ_{id}");
+        set_object_hidden(&mut flags, toggle_id_to_bit_index(&toggle).unwrap());
+        screen.set_flag_live(&format!("__OBJ_HIDDEN_{toggle}"), true);
+        screen.set_flag_live(&format!("__OBJ_SHOWN_{toggle}"), false);
+    }
+    screen.set_toggleable_object_flags(flags);
+    screen.reload_scene_source("SilphCo11F", "game_scene SilphCo11F {\n  @load {\n    silphRocketDeparture()\n    setFlag(\"EVENT_BEAT_SILPH_CO_GIOVANNI\")\n  }\n}").unwrap();
+    screen.run_on_load();
     for elapsed in 0..=67 {
         if [31, 32, 59, 66, 67].contains(&elapsed) {
             let mut save = SaveData::new();
