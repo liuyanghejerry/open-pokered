@@ -3650,24 +3650,59 @@ mod tests {
     fn six_cinnabar_quizzes_preserve_original_inner_text_sound_and_gate_order() {
         use pokered_data::script_command::FieldTextPrompt;
         let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+        // Original CinnabarGymDefaultScript/CinnabarGymMove*Script routes,
+        // followed by the matching trainer's existing BattleText (not sight intro).
+        let trainers: [(&str, &[(u8, u8)], &str, &str, &str, &str); 6] = [
+            ("3", &[(16, 8)], "right", "OPP_BURGLAR4",
+                "I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！"),
+            ("4", &[(10, 4), (10, 3)], "down", "OPP_SUPER_NERD10",
+                "You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！"),
+            ("5", &[(10, 8)], "right", "OPP_BURGLAR5",
+                "I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！"),
+            ("6", &[(10, 14)], "right", "OPP_SUPER_NERD11",
+                "I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！"),
+            ("7", &[(2, 14)], "right", "OPP_BURGLAR6",
+                "I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！"),
+            ("8", &[(2, 8)], "right", "OPP_SUPER_NERD12",
+                "Fire is weak against H2O!", "火怕水，就是H2O！"),
+        ];
         for (index, correct) in [0, 1, 1, 1, 0, 1].into_iter().enumerate() {
             let number = index + 1;
             let gate = format!("EVENT_CINNABAR_GYM_GATE{number}_UNLOCKED");
+            let beaten = format!("EVENT_BEAT_CINNABAR_GYM_TRAINER_{number}");
+            let (npc_id, path, facing, trainer_id, before_en, before_zh) = trainers[index];
             for lang in ["en", "zh"] {
-                for prior_open in [false, true] {
+                for (prior_open, prior_beaten) in [(false, false), (false, true), (true, false), (true, true)] {
                     for answer in [0, 1] {
                         let mut engine = NativeScriptEngine::new();
                         engine.load_map("CinnabarGym", &scene);
                         engine.set_lang(lang);
                         engine.seed_text("playerFacing", "up");
                         engine.set_flag(&gate, prior_open);
+                        engine.set_flag(&beaten, prior_beaten);
                         let commands = drive_fidelity_scene(&mut engine, &format!("quizMachine{number}"), false, "lose", &[answer]);
                         let mut trace = Vec::new();
                         for command in &commands {
                             trace.push(match command {
                                 ScriptCommand::ShowChoice { .. } => "choice".to_string(),
                                 ScriptCommand::PlaySound { sound_id } => sound_id.clone(),
-                                ScriptCommand::StartBattle { .. } => "battle".into(),
+                                ScriptCommand::FacePlayer { direction } => {
+                                    assert_eq!(direction, facing);
+                                    "face".into()
+                                }
+                                ScriptCommand::MoveNpc { npc_id: actual_npc, path: actual_path } => {
+                                    assert_eq!(actual_npc, npc_id);
+                                    assert_eq!(actual_path.as_slice(), path);
+                                    "move".into()
+                                }
+                                ScriptCommand::ShowText { text } => {
+                                    assert_eq!(text, if lang == "zh" { before_zh } else { before_en });
+                                    "trainer-text".into()
+                                }
+                                ScriptCommand::StartBattle { trainer_id: actual_trainer } => {
+                                    assert_eq!(actual_trainer, trainer_id);
+                                    "battle".into()
+                                }
                                 ScriptCommand::Custom { name, args } => match PokemonScriptCommand::from_custom(name, args).unwrap() {
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Protected, leading_sound: None, .. } => "prompt".into(),
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None, .. } => "done".into(),
@@ -3680,15 +3715,18 @@ mod tests {
                                 other => panic!("unexpected quiz command {other:?}"),
                             });
                         }
-                        let expected: &[&str] = if answer != correct {
-                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish", "battle"]
+                        let expected: &[&str] = if answer != correct && !prior_beaten {
+                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish", "face", "move", "trainer-text", "battle"]
+                        } else if answer != correct {
+                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish"]
                         } else if prior_open {
                             &["prompt", "done", "choice", "leading-GET1-prompt-button", "block", "finish"]
                         } else {
                             &["prompt", "done", "choice", "leading-GET1-prompt-button", "wait", "SFX_GO_INSIDE", "wait", "block", "finish"]
                         };
-                        assert_eq!(trace, expected, "quiz={number},lang={lang},open={prior_open},answer={answer}");
+                        assert_eq!(trace, expected, "quiz={number},lang={lang},open={prior_open},beaten={prior_beaten},answer={answer}");
                         assert_eq!(engine.get_flag(&gate), prior_open || answer == correct);
+                        assert_eq!(engine.get_flag(&beaten), prior_beaten);
                         for other in 1..=6 {
                             if other != number {
                                 assert!(!engine.get_flag(&format!("EVENT_CINNABAR_GYM_GATE{other}_UNLOCKED")));
@@ -3698,9 +3736,14 @@ mod tests {
                 }
             }
         }
-        let mut engine = NativeScriptEngine::new();
-        engine.load_map("CinnabarGym", &scene);
-        engine.seed_text("playerFacing", "down");
-        assert!(drive_fidelity_scene(&mut engine, "quizMachine1", false, "", &[]).is_empty());
+        for number in 1..=6 {
+            for facing in ["down", "left", "right"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("CinnabarGym", &scene);
+                engine.seed_text("playerFacing", facing);
+                assert!(drive_fidelity_scene(&mut engine, &format!("quizMachine{number}"), false, "", &[]).is_empty(),
+                    "quiz={number},facing={facing}");
+            }
+        }
     }
 }
