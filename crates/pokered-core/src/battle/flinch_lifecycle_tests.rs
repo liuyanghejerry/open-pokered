@@ -294,9 +294,9 @@ fn actual_confusion_self_hit_keeps_its_gate_reason_even_when_paralyzed() {
     let player = &mut screen.battle_state.as_mut().unwrap().player;
     player.set_status1(state::status1::CONFUSED);
     player.confused_turns_left = 3;
-    // Zero selects the current native self-hit branch. This test concerns
-    // narration ownership, not original-ROM confusion roll polarity.
-    let turn = canonical_turn(&mut screen, MoveId::Amnesia, None, vec![0]);
+    // Original CP $80 / JR C: raw 128 selects the genuine self-hit branch.
+    // Its narration receipt owns the cause before any paralysis roll is read.
+    let turn = canonical_turn(&mut screen, MoveId::Amnesia, None, vec![128]);
     assert_eq!(
         turn.draws, 1,
         "self-hit blocks before the paralysis/attack rolls"

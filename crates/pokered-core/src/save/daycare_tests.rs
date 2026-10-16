@@ -2,6 +2,7 @@
 //! Game Corner coin balance, driven through [`SaveData`]/[`GameData`].
 
 use super::SaveData;
+use crate::alloc_prelude::*;
 use crate::battle::experience::growth::exp_for_level;
 use crate::pokemon::stats::create_pokemon;
 use pokered_data::moves::MoveId;
@@ -129,25 +130,111 @@ fn coins_credit_caps_at_9999_and_debit_saturates() {
     assert_eq!(save.game_data.player_coins, 0, "debit saturates at zero");
 }
 
-/// The famous Day-Care EV wipe: `wDayCareMon` is a box_struct with NO stat
-/// exp fields (ram/wram.asm:2221) — a deposit/withdraw round-trip resets
-/// effort to zero even though level/exp growth is preserved.
+/// Original wDayCareMon is a complete box_struct (ram/wram.asm:2221;
+/// macros/ram.asm:7-25), including all five stat-exp fields. _MoveMon copies
+/// the whole record and recalculates returning stats with effort enabled
+/// (engine/pokemon/add_mon.asm:409-413,496-514).
 #[test]
-fn withdraw_wipes_stat_exp() {
+fn withdraw_preserves_stat_exp_for_returned_pokemon() {
     let mut save = SaveData::new();
-    let mut m = mon(Species::Bulbasaur, 20);
-    m.stat_exp = [1000, 2000, 3000, 4000, 5000];
-    let _ = save.party.add(m);
-    let _ = save.party.add(mon(Species::Charmander, 7));
+    let deposited_effort = [1000, 2000, 3000, 4000, 5000];
+    let resident_effort = [6000, 7000, 8000, 9000, 10000];
+    let mut deposited = mon(Species::Bulbasaur, 20);
+    deposited.stat_exp = deposited_effort;
+    let deposited_exp = deposited.total_exp;
+    let mut resident = mon(Species::Charmander, 7);
+    resident.stat_exp = resident_effort;
+    save.party.add(deposited).unwrap();
+    save.party.add(resident).unwrap();
     save.deposit_daycare(0);
 
     // Growth while deposited (1 exp per step in the original).
     save.game_data.daycare.exp = save.game_data.daycare.exp.saturating_add(300);
 
     save.withdraw_daycare();
-    let back = save.party.get(0).expect("mon returned");
-    assert_eq!(back.stat_exp, [0, 0, 0, 0, 0], "stat exp is wiped by the box_struct round-trip");
-    assert!(back.total_exp > 0, "level/exp growth is kept");
+    assert_eq!(save.party.count(), 2);
+    let resident = save.party.get(0).expect("resident stayed in the party");
+    assert_eq!(resident.species, Species::Charmander);
+    assert_eq!(resident.stat_exp, resident_effort);
+    let back = save.party.get(1).expect("returned mon is appended to the party");
+    assert_eq!(back.species, Species::Bulbasaur);
+    assert_eq!(back.stat_exp, deposited_effort, "the full box record preserves stat exp");
+    assert_eq!(back.total_exp, deposited_exp + 300, "experience growth is kept");
+}
+
+#[test]
+fn daycare_evolved_magikarp_keeps_its_full_box_record_and_catch_byte_through_sram() {
+    use super::ser_pokemon::{serialize_box_mon, BOX_STRUCT_SIZE};
+    use super::sram_layout::{MAIN_DATA_OFFSET, SRAM_BANK_SIZE_LAYOUT};
+
+    let mut evolved = mon(Species::Magikarp, 20);
+    assert_eq!(evolved.catch_rate, Some(255));
+    evolved.stat_exp = [1000, 2000, 3000, 4000, 5000];
+    evolved.pp_ups[0] = 2;
+    evolved.pp[0] = 7;
+    crate::battle::settlement::evolution::apply_evolution(&mut evolved, Species::Gyarados);
+    assert_eq!(evolved.species, Species::Gyarados);
+    assert_eq!(get_base_stats(Species::Gyarados).unwrap().catch_rate, 45);
+    assert_eq!(evolved.catch_rate, Some(255));
+
+    let mut expected = Vec::new();
+    serialize_box_mon(&evolved, &mut expected);
+    assert_eq!(BOX_STRUCT_SIZE, 33);
+    assert_eq!(expected.len(), 33);
+    assert_eq!(expected[7], 255, "byte 7 belongs to this evolved instance");
+
+    let mut save = SaveData::new();
+    save.party.add(evolved).unwrap();
+    save.party.add(mon(Species::Charmander, 7)).unwrap();
+    save.deposit_daycare(0);
+    assert!(save.game_data.daycare.in_use);
+    assert_eq!(save.game_data.daycare.catch_rate, 255);
+
+    let mut main_data = Vec::new();
+    super::ser_game_data::serialize_game_data_into(&save.game_data, &mut main_data);
+    let record_start = main_data.len() - BOX_STRUCT_SIZE;
+    assert_eq!(&main_data[record_start..], expected.as_slice());
+    let sram = super::sram_export::export_sram(&save);
+    let sram_start = SRAM_BANK_SIZE_LAYOUT + MAIN_DATA_OFFSET + record_start;
+    assert_eq!(&sram[sram_start..sram_start + BOX_STRUCT_SIZE], expected.as_slice());
+
+    let mut restored = super::sram_import::import_sram(&sram).unwrap();
+    assert_eq!(restored.game_data.daycare.catch_rate, 255);
+    restored.withdraw_daycare();
+    assert!(!restored.game_data.daycare.in_use);
+    assert_eq!(restored.party.count(), 2);
+    assert_eq!(restored.party.get(0).unwrap().species, Species::Charmander);
+    let returned = restored.party.get(1).unwrap();
+    assert_eq!(returned.species, Species::Gyarados);
+    assert_eq!(returned.catch_rate, Some(255));
+    assert_eq!(returned.stat_exp, evolved.stat_exp);
+    assert_eq!(returned.pp_ups, evolved.pp_ups);
+    assert_eq!(returned.pp, evolved.pp);
+    let mut returned_bytes = Vec::new();
+    serialize_box_mon(returned, &mut returned_bytes);
+    assert_eq!(returned_bytes, expected);
+}
+
+#[test]
+fn daycare_preserves_explicit_catch_bytes_and_defaults_only_legacy_absence() {
+    for (saved, expected) in [(Some(0), 0), (Some(173), 173), (Some(45), 45), (None, 45)] {
+        let mut save = SaveData::new();
+        let mut deposited = mon(Species::Gyarados, 20);
+        deposited.catch_rate = saved;
+        assert_eq!(deposited.catch_rate, saved);
+        save.party.add(deposited).unwrap();
+        save.party.add(mon(Species::Charmander, 7)).unwrap();
+        save.deposit_daycare(0);
+        assert_eq!(save.game_data.daycare.catch_rate, expected, "saved={saved:?}");
+
+        let sram = super::sram_export::export_sram(&save);
+        let mut restored = super::sram_import::import_sram(&sram).unwrap();
+        assert_eq!(restored.game_data.daycare.catch_rate, expected, "saved={saved:?}");
+        restored.withdraw_daycare();
+        let returned = restored.party.get(1).unwrap();
+        assert_eq!(returned.species, Species::Gyarados);
+        assert_eq!(returned.catch_rate, Some(expected), "saved={saved:?}");
+    }
 }
 
 #[test]

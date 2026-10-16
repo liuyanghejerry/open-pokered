@@ -109,12 +109,14 @@ fn x_accuracy_bypasses_roll_but_not_dig() {
 #[test]
 fn confusion_uses_typeless_modified_own_stats_and_cancels_charge() {
     // core.asm 3672-3697: CalculateDamage only; no AdjustDamageForMoveType.
+    // The original CP $80 skips self-hit below 128. Both vectors deliberately
+    // enter self-hit, so these assertions exercise damage and charge cleanup.
     let mut bs = state(MoveId::Fly, 50);
     bs.player
         .set_status1(status1::CONFUSED | status1::CHARGING_UP | status1::INVULNERABLE);
     bs.player.confused_turns_left = 3;
     bs.player.selected_move = MoveId::Fly;
-    turn(&mut bs, MoveId::Fly, vec![0, 255, 255]);
+    turn(&mut bs, MoveId::Fly, vec![128, 255, 255]);
     assert_eq!(bs.player.active_mon().hp, 381); // (22*40/50)+2 = 19
     assert!(!bs.player.has_status1(status1::CHARGING_UP));
     assert!(
@@ -126,7 +128,7 @@ fn confusion_uses_typeless_modified_own_stats_and_cancels_charge() {
     bs.player.confused_turns_left = 3;
     bs.player.stat_stages.attack = 2;
     bs.player.active_mon_mut().status = StatusCondition::Burn;
-    turn(&mut bs, MoveId::Tackle, vec![0, 255]);
+    turn(&mut bs, MoveId::Tackle, vec![128, 255]);
     assert_eq!(bs.player.active_mon().hp, 356); // 19 self-hit plus burn 25
 }
 
