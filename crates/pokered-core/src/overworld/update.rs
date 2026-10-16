@@ -5776,8 +5776,11 @@ mod cinnabar_quiz_audio_tests {
             assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
         }
         ow.update_frame(input(false, false));
-        assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::StartBattle { .. })),
-            "A release alone must finish the outer caller, without a second acknowledgement");
+        assert!(matches!(ow.active_script_effect,
+            Some(script_bridge::ScriptEffect::FacePlayer { direction: Direction::Right })),
+            "A release alone must finish the outer caller and hand off to the trainer approach, without a second acknowledgement");
+        assert!(!ow.script_awaiting_battle,
+            "the trainer must finish approaching and speaking before battle");
         assert!(!ow.retain_field_text && ow.last_script_dialogue.is_none());
         assert!(!ow.script_engine.get_flag(GATE));
     }
