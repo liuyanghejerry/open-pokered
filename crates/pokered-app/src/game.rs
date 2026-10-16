@@ -11035,7 +11035,12 @@ mod link_stats_cry_fidelity_tests {
         game.overworld.run_on_load();
         let idle = InputState::new();
         for _ in 0..60 { game.update(&idle); }
-        game.update(&button(GbButton::Start));
+        // JoypadOverworld samples only on alternate foreground frames.
+        // Hold across both phases while retaining just one host input edge.
+        let mut start = button(GbButton::Start);
+        game.update(&start);
+        start.begin_frame();
+        game.update(&start);
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
         game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
