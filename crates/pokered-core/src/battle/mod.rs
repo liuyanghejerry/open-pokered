@@ -65,6 +65,8 @@ mod capture_outcome_tests;
 #[cfg(test)]
 mod payday_tests;
 #[cfg(test)]
+mod payday_scatter_tests;
+#[cfg(test)]
 mod confusion_polarity_tests;
 #[cfg(test)]
 mod flinch_lifecycle_tests;
@@ -4027,6 +4029,7 @@ learn {learn_name}!")];
                         });
                         next_effects.extend(effects.iter().filter(|entry| matches!(
                             entry.kind, pokered_rules::PokeVolatile::CalledMove { .. }
+                                | pokered_rules::PokeVolatile::PayDayScattered { .. }
                         )).cloned());
                         *state = next_state;
                         *effects = next_effects;
@@ -4058,17 +4061,6 @@ learn {learn_name}!")];
                         bs.enemy.last_move_used = *move_;
                     }
                 }
-            }
-            let enemy_connected = |mv: MoveId| {
-                log.events.iter().any(|ev| matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                    if *actor == BattlerRef::OPPONENT && *move_ == mv))
-                    && !log.events.iter().any(|ev| matches!(ev, TurnEvent::Missed { actor }
-                        if *actor == BattlerRef::OPPONENT))
-            };
-            // Enemy Pay Day scatters coins into the pot.
-            if enemy_connected(MoveId::PayDay) {
-                let lvl = bs.enemy.active_mon().level as u32;
-                bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2).min(999_999);
             }
             // A connecting enemy Whirlwind/Roar/Teleport flees a WILD battle.
             let escape = log.events.iter().any(|ev| {
@@ -4117,6 +4109,9 @@ learn {learn_name}!")];
                 m.insert(0, format!("{} must recharge!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
+            bs.total_payday_money = bs.total_payday_money
+                .saturating_add(pokered_rules::take_payday_coins(&mut effects, BattlerRef::OPPONENT))
+                .min(999_999);
             (m, escape)
         };
         msgs.append(&mut ai_msgs);
@@ -4704,7 +4699,7 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
-                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. })).cloned());
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. } | pokered_rules::PokeVolatile::PayDayScattered { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
                         }
@@ -4740,27 +4735,6 @@ learn {learn_name}!")];
                         } else {
                             bs.enemy.last_move_used = *move_;
                         }
-                    }
-                }
-                // Pay Day: each side that connected with Pay Day scatters coins = 2 ×
-                // its level into the battle-wide payday pot (read by settlement).
-                {
-                    use dotzuki_engine::battle::stack::TurnEvent;
-                    let used_payday = |who: BattlerRef| {
-                        log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                                if *actor == who && *move_ == pokered_data::moves::MoveId::PayDay)
-                        }) && !log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::Missed { actor } if *actor == who)
-                        })
-                    };
-                    if used_payday(BattlerRef::PLAYER) {
-                        let lvl = bs.player.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2).min(999_999);
-                    }
-                    if used_payday(BattlerRef::OPPONENT) {
-                        let lvl = bs.enemy.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2).min(999_999);
                     }
                 }
                 // Whirlwind / Roar / Teleport: a connecting switch/flee move ends a
@@ -4830,7 +4804,11 @@ learn {learn_name}!")];
                         if created {
                             m.push(format!("{} put in a SUBSTITUTE!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
-                        if (had || created) && !now {
+                        if (had || created) && !now
+                            && !pokered_rules::payday_scatter(&effects,
+                                if who.side == 0 { BattlerRef::OPPONENT } else { BattlerRef::PLAYER })
+                                .is_some_and(|(_, broke)| broke)
+                        {
                             m.push(format!("{}'s SUBSTITUTE broke!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
                     }
@@ -4881,6 +4859,13 @@ learn {learn_name}!")];
                         // status line (fast asleep / frozen) from the log leads.
                         m.extend(ghost_msgs);
                     }
+                }
+                // The same real effect receipt owns narration and the pool.
+                // Consume it only after all action-local text has been attached.
+                for actor in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
+                    bs.total_payday_money = bs.total_payday_money
+                        .saturating_add(pokered_rules::take_payday_coins(&mut effects, actor))
+                        .min(999_999);
                 }
                 (m, escape, result.first)
             };
