@@ -30,6 +30,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "giveBadge",
     "startBattle",
     "startBattleSet",
+    "startBattleWithText",
     "startWildBattle",
     "oldManTutorial",
     "warpTo",
@@ -109,7 +110,7 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
                 None => dynamic(),
             }
         }
-        "startBattle" | "startBattleSet" => match str_arg(0) {
+        "startBattle" | "startBattleSet" | "startBattleWithText" => match str_arg(0) {
             Some(trainer_id) => {
                 let (class, set) = trainer_parts(&trainer_id);
                 StateEffect::BattleStarted {
@@ -1002,4 +1003,14 @@ mod tests {
     }
 
     use dotzuki_engine_dsl::ast::SourceSpan;
+    #[test]
+    fn quoted_trainer_command_retains_the_same_battle_state_effect() {
+        let id = Expression::StringLit("OPP_BURGLAR4".into());
+        let quoted = command_effect("startBattleWithText", &[id.clone(), Expression::StringLit("I\nsurrender!".into())]);
+        assert!(matches!(&quoted, StateEffect::BattleStarted { battle: BattleKind::Trainer { .. } }));
+        assert_eq!(quoted, command_effect("startBattle", &[id]));
+        assert!(EFFECT_COMMANDS.contains(&"startBattleWithText"));
+        assert!(!NO_STATE_COMMANDS.contains(&"startBattleWithText"));
+    }
+
 }

@@ -1,0 +1,160 @@
+{
+  "scope": "Default-feature CI compile fix in test failure diagnostics only; no runtime change, no assertion/input change, no CLI/native rerun.",
+  "original_official_attempt1": {
+    "head": "4dcb0e2802246079ab43856a7415dd2bef8348da",
+    "base": "d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3",
+    "run_ids": {
+      "38866992918": "Build GBA ROM",
+      "38866992843": "CI",
+      "38866992459": "GBA performance"
+    },
+    "terminal_review_sha256": "c264cf54ba62d942364fdd957f9d1608433777b3d7ae25c0a408ae75783eb465",
+    "all3_terminal": true,
+    "checks": 22,
+    "successful": 19,
+    "editor_skipped": true,
+    "failed_jobs": [
+      {
+        "id": 116861997579,
+        "run_id": 38866992843,
+        "name": "Coverage (cargo-llvm-cov)",
+        "conclusion": "failure",
+        "html_url": "https://github.com/liuyanghejerry/open-pokered/actions/runs/38866992843/job/116861997579"
+      },
+      {
+        "id": 116862106533,
+        "run_id": 38866992843,
+        "name": "Build pokered-app",
+        "conclusion": "failure",
+        "html_url": "https://github.com/liuyanghejerry/open-pokered/actions/runs/38866992843/job/116862106533"
+      }
+    ],
+    "failure": "E0599: debug_state_snapshot is debug-server gated; referenced only by an assertion failure formatter in the new test.",
+    "all14_GBA_steps_success": true,
+    "original_log_archives": [
+      {
+        "run_id": 38866992918,
+        "sha256": "faa21d9ffd3b49f9a8da8f81d623119cc1be561f341ff59e04d3cdceef66eb9b",
+        "entries": 13,
+        "all_entries_bytes_sha_rechecked": true
+      },
+      {
+        "run_id": 38866992843,
+        "sha256": "1f8cac9ce3f481f99a9a9b1c8c74f30b5b638036a55f38cf704157d20d2db075",
+        "entries": 203,
+        "all_entries_bytes_sha_rechecked": true
+      },
+      {
+        "run_id": 38866992459,
+        "sha256": "4165ce912d92d8a04e8dd84ebe3f858a7e591e794090b2f1c4624afa418ed407",
+        "entries": 26,
+        "all_entries_bytes_sha_rechecked": true
+      }
+    ]
+  },
+  "test_only_fix": {
+    "actual_head": "adfacd861defb14be35e55c8ef6e9ee81f24d386",
+    "files": [
+      "crates/pokered-app/src/game/cinnabar_victory_tests.rs"
+    ],
+    "change": "Replace only the failing assertion diagnostic with always-available screen, battle.phase and active_script_effect_label read-only observations.",
+    "conditions_inputs_PCM_quote_flags_blocks_assertions_unchanged": true,
+    "runtime_bytes_unchanged": true
+  },
+  "actual_local_checks": {
+    "actual_head": "adfacd861defb14be35e55c8ef6e9ee81f24d386",
+    "exec_session": 68395,
+    "terminal_exit": 0,
+    "result_sha256": "89168117a9c5bd0741fff35a3f81a2e60de9a7bb53c2770140d89e09bd608aa7",
+    "source_before_after_equal": true,
+    "stages": [
+      {
+        "stage": "default-features-exact-App",
+        "argv": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "-vv",
+          "--offline",
+          "--locked",
+          "-j1",
+          "game::cinnabar_victory_tests::cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_go_inside",
+          "--",
+          "--exact",
+          "--test-threads=1"
+        ],
+        "summaries": [
+          {
+            "result": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 372
+          }
+        ],
+        "required_name": "game::cinnabar_victory_tests::cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_go_inside",
+        "required_name_pass": true,
+        "stdout": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1061-victory-diagnostic-test-execution-v1/01-default-features-exact-App/stdout.log",
+          "sha256": "ec1a75b3e51a6c45b60ef6b5c343a0769a043c2d1dabd31403a652d6e89ab8e2",
+          "bytes": 244706
+        },
+        "stderr": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1061-victory-diagnostic-test-execution-v1/01-default-features-exact-App/stderr.log",
+          "sha256": "731f34dc23b9ec5fcbd47461a91eb07aaa9ceeb509571a8773be2c5ce7e44dfb",
+          "bytes": 2563467
+        }
+      },
+      {
+        "stage": "debug-server-exact-App",
+        "argv": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "-vv",
+          "--offline",
+          "--locked",
+          "-j1",
+          "--features",
+          "debug-server",
+          "game::cinnabar_victory_tests::cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_go_inside",
+          "--",
+          "--exact",
+          "--test-threads=1"
+        ],
+        "summaries": [
+          {
+            "result": "ok",
+            "passed": 1,
+            "failed": 0,
+            "ignored": 0,
+            "measured": 0,
+            "filtered": 385
+          }
+        ],
+        "required_name": "game::cinnabar_victory_tests::cold_saved_game_trainer_victory_shows_quote_before_money_then_waits_for_real_go_inside",
+        "required_name_pass": true,
+        "stdout": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1061-victory-diagnostic-test-execution-v1/02-debug-server-exact-App/stdout.log",
+          "sha256": "172aa02edd66babbb7a086fa632194b9794871b5c3fa23fac5723de35892b7d3",
+          "bytes": 244706
+        },
+        "stderr": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1061-victory-diagnostic-test-execution-v1/02-debug-server-exact-App/stderr.log",
+          "sha256": "19b609f9e9ca0a0a961aba55bdf243f81234ec1631df643d94f49604e163ec0b",
+          "bytes": 2560744
+        }
+      }
+    ],
+    "named_executions": 2,
+    "physical_cold_cases_per_execution": 3,
+    "physical_cold_cases_total": 6,
+    "all3_owned_PGs_gone": true
+  },
+  "historical_scope": "Core/agent/CLI and matched native pair retain actual912 and M1 identities recorded in validation.json and provenance.json. These are not relabelled as adfacd or a later docs commit."
+}
