@@ -67,6 +67,19 @@ fn canonical_selfdestruct_slides_both_pictures_once_and_only_then_queues_the_typ
                     last = Some(serial);
                 }
             }
+            if battle
+                .current_message
+                .as_ref()
+                .is_some_and(|text| text.ends_with("fainted!"))
+            {
+                assert!(reserve, "no reserve returns before either faint caption");
+                assert!(
+                    !vfx.player_visible && !vfx.enemy_visible,
+                    "EnemyFaintedText must follow BOTH completed structural slides"
+                );
+                assert_eq!(cues, vec![FaintSide::Enemy, FaintSide::Player]);
+                assert!(vfx.player_exit.is_none() && vfx.enemy_exit.is_none());
+            }
             if let Some(sound) = vfx.take_faint_sound() {
                 assert_eq!(sound, FaintSound::EnemyFall);
                 assert!(!vfx.enemy_visible);

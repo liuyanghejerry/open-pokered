@@ -54,6 +54,23 @@ impl Session {
             .filter(|m| m.ends_with("fainted!"))
         {
             if self.captions.last() != Some(message) {
+                if self
+                    .game
+                    .battle
+                    .presentation
+                    .current_faint()
+                    .is_some_and(|(_, cue)| {
+                        cue.side == FaintSide::Player && cue.text == Some(FaintSide::Enemy)
+                    })
+                {
+                    assert_eq!(
+                        self.cues.len(),
+                        2,
+                        "enemy caption follows both typed structural actions"
+                    );
+                    assert!(!self.game.battle.presentation.waiting);
+                    assert!(self.game.battle_vfx.is_frame_stable());
+                }
                 self.captions.push(message.clone());
             }
         }
