@@ -1,0 +1,130 @@
+{
+  "original_disassembly": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "actual_before": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+  "actual_after": "2ed00e00f949c3ab4f5181ebf7b2e86ab957b8cb",
+  "engine": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+  "source_engine_gfx_counts": {
+    "before": [
+      2711,
+      981,
+      702
+    ],
+    "after": [
+      2713,
+      981,
+      702
+    ]
+  },
+  "binary_sha256": {
+    "before": "0046c0c06c45f9baea25b92b01cd84c66f6ff3ff6dd3430d1fc5745d0ab66a1e",
+    "after": "1a77f546eaf308f92711282462ceb78e52d7e03c2937e6b8f49a1c4ddce4a066"
+  },
+  "physical_SRAM": {
+    "path": "before.sav",
+    "bytes": 32768,
+    "sha256": "5425fe5ca858a23f5da649be6c61ebc044d7b02b9eb75608386d27f47b2d1f14",
+    "fixture": "Meowth50 firstmovePayDay, Forest(2,19), wallet1000; ordinaryContinue thenUP thenA, oneBugCatcher set3 Weedle9"
+  },
+  "fixed_vector": {
+    "path": "fixed-buttons.json",
+    "frames": 2882,
+    "sha256": "87b9f7d15d69afb927216cb2bbf6582cfacfe7881af5ca7b2cc5e27c5c434520",
+    "origin": "Successful master-only2306frames plus predeclared16*(B2+neutral30)+neutral64, frozen before any candidate Game"
+  },
+  "validation": {
+    "tool_session": 49424,
+    "actual_exit": 0,
+    "raw_states_per_actor": 2883,
+    "matched_capture_pairs": 33,
+    "images_checked": 66,
+    "first_current_message_split": 2028,
+    "markers": {
+      "before": {
+        "prize": 2252
+      },
+      "after": {
+        "scatter": 2028,
+        "prize": 2284,
+        "pickup": 2308
+      }
+    },
+    "return_frames": {
+      "before": 2274,
+      "after": 2340
+    },
+    "final_wallet": {
+      "before": 1190,
+      "after": 1190
+    },
+    "only_new_flag": "EVENT_BEAT_VIRIDIAN_FOREST_TRAINER_2",
+    "all_inputs_unchanged": true,
+    "game_process_codes": {
+      "before": -15,
+      "after": -15
+    },
+    "owned_cleanup_not_natural_exit": true,
+    "all_groups_gone": true,
+    "tests_at_actual_after": {
+      "focused": 13,
+      "full_core": 3041,
+      "failures": 0,
+      "CLI_build_exit": 0
+    }
+  },
+  "selected_images": [
+    {
+      "path": "docs/screenshots/payday-1064/coins-before.png",
+      "actual_source": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+      "actor": "before",
+      "absolute_frame": 2028,
+      "sha256": "7b6e61eac2cdaa3c850603cff95bb439c84b9fe3f1253ed80d4d29d18a1f1780"
+    },
+    {
+      "path": "docs/screenshots/payday-1064/coins-after.png",
+      "actual_source": "2ed00e00f949c3ab4f5181ebf7b2e86ab957b8cb",
+      "actor": "after",
+      "absolute_frame": 2028,
+      "sha256": "0ab9a3b6992b152e9d2a6202a7e639669d85e3bdaeeba024f1003beb560749d1"
+    },
+    {
+      "path": "docs/screenshots/payday-1064/prize-before.png",
+      "actual_source": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+      "actor": "before",
+      "absolute_frame": 2252,
+      "sha256": "fdb897c91c63f1cfaab2d30438993aeab911ca2ab96e21019c0d81006e96421b"
+    },
+    {
+      "path": "docs/screenshots/payday-1064/prize-after.png",
+      "actual_source": "2ed00e00f949c3ab4f5181ebf7b2e86ab957b8cb",
+      "actor": "after",
+      "absolute_frame": 2284,
+      "sha256": "0a7aa7d68540acfeae32b928525a09a47ee88679d34e027b439fc41a43c9b5ea"
+    },
+    {
+      "path": "docs/screenshots/payday-1064/pickup-before.png",
+      "actual_source": "062e76d91fdbf5109fcc02793b8a8064788e8700",
+      "actor": "before",
+      "absolute_frame": 2308,
+      "sha256": "92d44c58a012ae38811b6609cf9cb3066b077bf42996e1f0465bb4b064f88c9d"
+    },
+    {
+      "path": "docs/screenshots/payday-1064/pickup-after.png",
+      "actual_source": "2ed00e00f949c3ab4f5181ebf7b2e86ab957b8cb",
+      "actor": "after",
+      "absolute_frame": 2308,
+      "sha256": "d9f9592bafc3b3216b5203715ea0bcc81af21b3a5be55469fb72e2c6bcbcf776"
+    }
+  ],
+  "local_raw_evidence_sha256": {
+    "audit-1064-payday-native-fixed-pair-v1/result.json": "2411a78306bc2e3bdd30982afcd1b23473bdd8087a87b6db43d4ad0d8bc3fcd3",
+    "audit-1064-payday-fixed-pair-independent-review-v1/receipt.json": "235257f0c325d68c47ed78f3ffddc69b72fc87ff99a7245d239a1527d4640623",
+    "audit-1064-payday-native-root-terminal-review-v1.json": "87e4e6a130d610ed11654a7bbac74d452cf6260b6ebcef4e70febc0abe849617",
+    "audit-1064-payday-2ed-focused-v1/result.json": "77450e957156479121645e3b5b1cd6176898225cf0dbe49f73d4a371b035e304",
+    "audit-1064-payday-2ed-core-full-v1/result.json": "b504ffb52503fa63a47a95a5a7f7168881abb3a040803222b3558f13b2fb9e86",
+    "audit-1064-payday-2ed-cli-build-v1/result.json": "2cb88169999352bc7c702f31425fbe76d7bb9262f1e8377eb7ffb5689d2a61e9",
+    "audit-1064-payday-c18-focused-v1/result.json": "b1cdc12d82aa1895b9d1554bc6b1a38e04bf5c48d1d9fcae5ebc3a5a0cd107a9",
+    "audit-1064-payday-substitute-fixture-correction-v1/result.json": "408a08971f8d73a9cf107e29fc4085c13fff680d6c6eaed0b48044cb2e011e47"
+  },
+  "historical_diagnostics": "Initial c18 focused run12pass1fail: test let enemy legitimately recreate broken Substitute; test-only2ed chooses Splash after actualdollcreation. Original101/log preserved. Baseline recorder partialv1(language confirmation) andv2(Continue facesDown) preserved; v3 succeeds with ordinary language confirmation/UP, no candidate input adaptation.",
+  "scope": "One normal trainer cold-SRAM native witness. OtherPayDay histories/immune/substitute/copy/AI/snapshot branches are core caller coverage. No hidden Joypad-poll, audio PCM, RNG stream or fullplaythrough equality claimed."
+}
