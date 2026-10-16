@@ -115,8 +115,12 @@ game_scene PokemonTower6F {
       result = startWildBattle("MAROWAK", 30)
       @if (result == "win" || result == "fled") {
         setFlag("EVENT_BEAT_GHOST_MAROWAK")
-        @speaker("") { @t("The GHOST was the restless\nsoul of CUBONE's mother!", "这个幽灵是卡拉卡拉的母亲未安\n息的灵魂！") }
+        // Inner PrintText returns on DONE, retaining this window while the
+        // original caller waits for the cry and then DelayFrames(30).
+        printFieldText(@t("The GHOST was the restless\nsoul of CUBONE's mother!", "这个幽灵是卡拉卡拉的母亲未安\n息的灵魂！"), true)
         playCry("MAROWAK")
+        waitSound()
+        delay(30)
         @speaker("") {
           @t("The mother's soul was\ncalmed.\n\nIt departed to the\nafterlife!", "母亲的灵魂得到了安息。\n\n她去了另一个世界！")
         }

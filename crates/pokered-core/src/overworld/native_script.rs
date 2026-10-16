@@ -426,6 +426,7 @@ impl ScriptHost for NativeHost {
             "withdrawDaycare" => Ok(pokemon(PokemonScriptCommand::WithdrawDaycare)),
 
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
+            "waitSound" => Ok(pokemon(PokemonScriptCommand::WaitSound)),
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
             "walkTogether" => {
                 let npc_id = args::text(v.first().ok_or("walkTogether: missing NPC")?, "walkTogether")?;
@@ -483,7 +484,12 @@ impl ScriptHost for NativeHost {
             }
             "printFieldText" => {
                 let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
-                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text }))
+                let retain_window = match v.get(1) {
+                    None => false,
+                    Some(Value::Bool(retain)) => *retain,
+                    Some(_) => return Err("printFieldText: retainWindow must be a boolean".into()),
+                };
+                Ok(pokemon(PokemonScriptCommand::PrintFieldText { text, retain_window }))
             }
             "readingMenu" => {
                 let options = args::string_array(v.first().ok_or("readingMenu: missing options")?, "readingMenu")?;
@@ -3602,4 +3608,28 @@ mod tests {
         assert!(!engine.get_flag("EVENT_LAB_STILL_REVIVING_FOSSIL"));
     }
 
-}
+    #[test]
+    fn tower_departure_has_original_done_cry_wait_and_thirty_frame_order() {
+        for lang in ["en", "zh"] {
+            for outcome in ["win", "fled", "lose", "ran", "caught"] {
+                let mut engine = NativeScriptEngine::new();
+                engine.load_map("PokemonTower6F", &pokered_data::embedded_scenes::get_scene_ast("PokemonTower6F").unwrap());
+                engine.set_lang(lang);
+                let commands = drive_fidelity_scene(&mut engine, "coordGhostMarowak", false, outcome, &[]);
+                let cry = commands.iter().position(|c| matches!(c, ScriptCommand::PlayCry { species } if species == "MAROWAK"));
+                let departed = outcome == "win" || outcome == "fled";
+                assert_eq!(cry.is_some(), departed, "{lang}/{outcome}");
+                assert_eq!(engine.get_flag("EVENT_BEAT_GHOST_MAROWAK"), departed);
+                if let Some(cry) = cry {
+                    let ScriptCommand::Custom { name, args } = &commands[cry-1] else { panic!("mother text must be inner PrintText"); };
+                    assert!(matches!(PokemonScriptCommand::from_custom(name, args).unwrap(),
+                        PokemonScriptCommand::PrintFieldText { retain_window: true, .. }));
+                    assert_eq!(commands[cry+1], PokemonScriptCommand::WaitSound.into_script_command());
+                    assert_eq!(commands[cry+2], ScriptCommand::Delay { frames: 30 });
+                    assert!(matches!(commands[cry+3], ScriptCommand::ShowText { .. }));
+                } else {
+                    assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "waitSound")));
+                }
+            }
+        }
+    }}

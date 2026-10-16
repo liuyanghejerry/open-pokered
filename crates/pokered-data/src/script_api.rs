@@ -52,7 +52,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "printFieldText",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let text = args.get_or_undefined(0).to_string(ctx)?.to_std_string_lossy();
-                Ok(PokemonScriptCommand::PrintFieldText { text }.into_script_command())
+                let retain_window = if args.get_or_undefined(1).is_undefined() {
+                    false
+                } else {
+                    args.get_or_undefined(1).as_boolean().ok_or_else(|| {
+                        boa_engine::JsNativeError::typ()
+                            .with_message("printFieldText: retainWindow must be a boolean")
+                    })?
+                };
+                Ok(PokemonScriptCommand::PrintFieldText { text, retain_window }.into_script_command())
             },
         );
 
@@ -416,6 +424,14 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             "waitMusic",
             |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
                 Ok(PokemonScriptCommand::WaitMusic.into_script_command())
+            },
+        );
+
+        // WaitForSoundToFinish uses logical SFX completion even without a device.
+        engine.register_async_fn(
+            "waitSound",
+            |_args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                Ok(PokemonScriptCommand::WaitSound.into_script_command())
             },
         );
 
@@ -1142,4 +1158,29 @@ mod tests {
             })
         );
     }
-}
+
+    #[test]
+    fn scoped_field_text_and_wait_sound_suspend_with_typed_commands_in_boa() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function verifyCryWait() {
+                await game.printFieldText("mother", true);
+                await game.waitSound();
+                await game.printFieldText("ordinary");
+            }
+        "#).unwrap();
+        let expected = [
+            PokemonScriptCommand::PrintFieldText { text: "mother".into(), retain_window: true },
+            PokemonScriptCommand::WaitSound,
+            PokemonScriptCommand::PrintFieldText { text: "ordinary".into(), retain_window: false },
+        ];
+        let mut next = engine.call_function("verifyCryWait", &[]).unwrap();
+        for expected in expected {
+            let Some(ScriptCommand::Custom { name, args }) = &next else { panic!("missing command: {next:?}"); };
+            assert_eq!(PokemonScriptCommand::from_custom(name, args).unwrap(), expected);
+            assert_eq!(engine.tick(), next);
+            next = engine.signal_done(CommandResult::Void).unwrap();
+        }
+        assert!(next.is_none());
+    }}

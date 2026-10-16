@@ -49,7 +49,11 @@ impl PendingChoice {
 pub enum ScriptEffect {
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
     /// return after the final letter wait instead of waiting for a new press.
-    PrintFieldText { text: String },
+    PrintFieldText {
+        text: String,
+        #[serde(default)]
+        retain_window: bool,
+    },
     ShowDialogue {
         text: String,
     },
@@ -147,6 +151,7 @@ pub enum ScriptEffect {
     },
     /// Block until the frontend sequencer reports the current jingle ended.
     WaitMusic,
+    WaitSound,
     StopMusic,
     FadeOutMusic,
     StartBattle {
@@ -370,8 +375,8 @@ impl ScriptEffect {
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
-            ScriptEffect::PrintFieldText { text } => {
-                json!({ "effect": "PrintFieldText", "text": text })
+            ScriptEffect::PrintFieldText { text, retain_window } => {
+                json!({ "effect": "PrintFieldText", "text": text, "retain_window": retain_window })
             }
             ScriptEffect::ShowDialogue { text } => {
                 json!({ "effect": "ShowDialogue", "text": text })
@@ -468,6 +473,7 @@ impl ScriptEffect {
                 json!({ "effect": "PlayMusic", "music_id": music_id })
             }
             ScriptEffect::WaitMusic => json!({ "effect": "WaitMusic" }),
+            ScriptEffect::WaitSound => json!({ "effect": "WaitSound" }),
             ScriptEffect::PlaySound { sound_id } => {
                 json!({ "effect": "PlaySound", "sound_id": sound_id })
             }
@@ -795,7 +801,7 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
-            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text } = &mut effect {
+            if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text, .. } = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
             effect
@@ -885,8 +891,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
             ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: None, phase: FollowNpcPhase::StartNpc }
         },
-        PokemonScriptCommand::PrintFieldText { text } => ScriptEffect::PrintFieldText {
+        PokemonScriptCommand::PrintFieldText { text, retain_window } => ScriptEffect::PrintFieldText {
             text,
+            retain_window,
         },
         PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
         PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
@@ -952,6 +959,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::PlayShipDeparture => ScriptEffect::PlayShipDeparture { started: false },
         PokemonScriptCommand::EnterHallOfFame => ScriptEffect::HallOfFameCeremony,
         PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
+        PokemonScriptCommand::WaitSound => ScriptEffect::WaitSound,
     }
 }
 
@@ -1126,14 +1134,29 @@ mod print_field_text_contract_tests {
     #[test]
     fn inner_print_uses_the_same_name_resolution_as_outer_text_and_restores_its_mode() {
         let text="<PLAYER> asks <RIVAL> about <STARTER>.".to_string();
-        let command=PokemonScriptCommand::PrintFieldText {text:text.clone()}.into_script_command();
+        let command=PokemonScriptCommand::PrintFieldText {text:text.clone(),retain_window:false}.into_script_command();
         let inner=dispatch_command_with_names(&command,"RED","BLUE","BULBASAUR");
         let outer=dispatch_command_with_names(&ScriptCommand::ShowText {text},"RED","BLUE","BULBASAUR");
         let ScriptEffect::ShowDialogue {text:expected}=outer else {panic!()};
         let raw=serde_json::to_string(&inner).unwrap();
         let restored:ScriptEffect=serde_json::from_str(&raw).unwrap();
-        let ScriptEffect::PrintFieldText {text:actual}=restored else {panic!("lost inner return mode")};
+        let ScriptEffect::PrintFieldText {text:actual,retain_window:false}=restored else {panic!("lost inner return mode")};
         assert_eq!(actual,expected);
         assert_eq!(actual,"RED asks BLUE about BULBASAUR.");
+    }
+}
+
+#[cfg(test)]
+mod field_sound_window_snapshot_tests {
+    use super::*;
+
+    #[test]
+    fn legacy_inner_text_effect_does_not_acquire_window_ownership() {
+        let old = serde_json::json!({"PrintFieldText": {"text": "old"}});
+        let effect: ScriptEffect = serde_json::from_value(old).unwrap();
+        assert!(matches!(effect, ScriptEffect::PrintFieldText { retain_window: false, .. }));
+        let wait = dispatch_command(&PokemonScriptCommand::WaitSound.into_script_command());
+        assert_eq!(wait.to_debug_json()["effect"], "WaitSound");
+        assert!(matches!(serde_json::from_str::<ScriptEffect>(&serde_json::to_string(&wait).unwrap()).unwrap(), ScriptEffect::WaitSound));
     }
 }
