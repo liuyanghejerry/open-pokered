@@ -13390,15 +13390,15 @@ mod field_cry_wait_fidelity_tests {
         // not a hand-set core sound flag. The ordinary Tower playthrough is
         // requires a separate CLI capture and an immutable preboot save.
         game.overworld.reload_scene_with_config("PokemonTower6F", r#"
-            game_scene PokemonTower6F {
-                @storyline("cryProbe") {
-                    printFieldText("MOTHER", true)
-                    playCry("MAROWAK")
-                    waitSound()
-                    delay(30)
-                    @speaker("") { @t("CALMED", "CALMED") }
-                }
-            }
+game_scene PokemonTower6F {
+  @storyline("cryProbe") {
+    printFieldText("MOTHER", true)
+    playCry("MAROWAK")
+    waitSound()
+    delay(30)
+    @speaker("") { @t("CALMED", "CALMED") }
+  }
+}
         "#, Some(r#"{"onLoad":"cryProbe"}"#)).unwrap();
         let idle = InputState::new();
         let mut heard_cry = false;
