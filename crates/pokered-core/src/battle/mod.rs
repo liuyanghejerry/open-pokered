@@ -63,6 +63,8 @@ mod transform_capture_tests;
 #[cfg(test)]
 mod capture_outcome_tests;
 #[cfg(test)]
+mod confusion_polarity_tests;
+#[cfg(test)]
 mod flinch_lifecycle_tests;
 
 /// Reusable effect-stack **parity harness** (strangler slice 1) — additive,
