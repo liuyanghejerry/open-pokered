@@ -1,0 +1,62 @@
+{
+  "scope": "Source-only applicability proof after ordinary M2 merge. This is not a new Game/test execution or a claim of whole-tree equality with912 after M2.",
+  "actual_publication_base": "d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3",
+  "actual_M2_merge_head": "cd04a2cd80529847fa636029d054e5928dbcb74a",
+  "parents": [
+    "5cfea01973200cc4420447100ef1be75c410f3ec",
+    "d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3"
+  ],
+  "actual_tree": "373b7405e095b88ffde469fd3f4b3874afb725af",
+  "algorithmic_parent_merge_tree": "373b7405e095b88ffde469fd3f4b3874afb725af",
+  "ordinary_merge_no_manual_resolution": true,
+  "incoming_paths_exactly_M1_to_M2": [
+    "crates/pokered-app/src/game/cinnabar_quiz_audio_tests.rs",
+    "crates/pokered-core/src/overworld/choice_confirm_audio_tests.rs",
+    "crates/pokered-core/src/overworld/update.rs",
+    "docs/screenshots/script-choice-confirm-audio-1060/frame-1064-after.png",
+    "docs/screenshots/script-choice-confirm-audio-1060/frame-1064-before.png",
+    "docs/validation/script-choice-confirm-audio-1060.md",
+    "docs/validation/script-choice-confirm-audio-1060/app-test-excerpt.txt",
+    "docs/validation/script-choice-confirm-audio-1060/buttons.json",
+    "docs/validation/script-choice-confirm-audio-1060/core-test-excerpt.txt",
+    "docs/validation/script-choice-confirm-audio-1060/evidence.json",
+    "docs/validation/script-choice-confirm-audio-1060/executed-controller.py",
+    "docs/validation/script-choice-confirm-audio-1060/executed-plan.json",
+    "docs/validation/script-choice-confirm-audio-1060/locked-preboot.sav"
+  ],
+  "incoming_path_bytes_equal_M2_except_merged_update": true,
+  "non_docs_delta_vs_actual912": [
+    "crates/pokered-app/src/game/cinnabar_quiz_audio_tests.rs",
+    "crates/pokered-core/src/overworld/choice_confirm_audio_tests.rs",
+    "crates/pokered-core/src/overworld/update.rs"
+  ],
+  "runtime_production_delta_vs_actual912": {
+    "path": "crates/pokered-core/src/overworld/update.rs",
+    "added_lines": 4,
+    "scope": "Only inside the existing ScriptEffect::ShowChoice match arm after choice initialization; no additional caller, clock or global state.",
+    "exact_added_source": "                    // HandleMenuInput plays PRESS_AB once for accepted A/B.\n                    if a_just_pressed || b_just_pressed {\n                        *sfx_event = OverworldSfxEvent::TextAdvance;\n                    }\n",
+    "all_other_runtime_bytes_equal_actual912": true,
+    "test_only_module_addition": "#[cfg(test)]\n#[path = \"choice_confirm_audio_tests.rs\"]\nmod choice_confirm_audio_tests;\n\n"
+  },
+  "actual_M1_912_native_recorded_frames": 23068,
+  "no_ShowChoice_effect_and_no_pending_choice_in_all_six_traces": true,
+  "scene_routes": [
+    {
+      "storyline": "talkSuperNerd1",
+      "source_path": "crates/pokered-data/maps/CinnabarGym/script.scene",
+      "source_unchanged_from_actual912": true,
+      "contains_choice_call": false,
+      "route_sha256": "2bd5381ff40b53a92cac29a6980d74a93cee1982fe9ac785221dcd608e35de8a"
+    },
+    {
+      "storyline": "talkSuperNerd2",
+      "source_path": "crates/pokered-data/maps/CinnabarGym/script.scene",
+      "source_unchanged_from_actual912": true,
+      "contains_choice_call": false,
+      "route_sha256": "97257f3e47fb5de313e6025b363a363c8a2b128f86e3ea75b66ffee954c964a4"
+    }
+  ],
+  "scene_and_Game_battle_driver_unchanged_from_actual912": true,
+  "applicability_inference": "The recorded fixture/input routes never invoke field ShowChoice. M2 runtime change is confined to that absent arm; its test additions do not compile into production. Therefore the same recorded direct-trainer screens remain attributable to Victory alone. The original screenshots still identify their actual M1/912 source, never the new merged head.",
+  "tests_and_Game_rerun_on_M2_merge": false
+}

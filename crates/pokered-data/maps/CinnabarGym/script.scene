@@ -148,12 +148,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！")
             }
-            result = startBattle("OPP_BURGLAR4")
+            result = startBattleWithText("OPP_BURGLAR4", @t("I\nsurrender!", "我\n投降！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
               setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
               replaceTileBlock(9, 3, 14)
-              @speaker("") { @t("I can't help stealing other\npeople's POKeMON!", "我忍不住想偷别人的宝可梦！") }
             }
           }
         }
@@ -181,12 +185,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！")
             }
-            result = startBattle("OPP_SUPER_NERD10")
+            result = startBattleWithText("OPP_SUPER_NERD10", @t("Waah!\nMy studies!", "哇！\n我的研究！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
               setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
               replaceTileBlock(6, 3, 14)
-              @speaker("") { @t("My theories are too\ncomplicated for you!", "我的理论太复杂，你听不懂！") }
             }
           }
         }
@@ -227,12 +235,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！")
             }
-            result = startBattle("OPP_BURGLAR5")
+            result = startBattleWithText("OPP_BURGLAR5", @t("Too hot\nto handle!", "太烫了，\n受不了了！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
               setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
               replaceTileBlock(6, 6, 14)
-              @speaker("") { @t("I wish there was a thief\nPOKeMON! I'd use that!", "真希望有小偷宝可梦！我一定\n用！") }
             }
           }
         }
@@ -273,12 +285,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！")
             }
-            result = startBattle("OPP_SUPER_NERD11")
+            result = startBattleWithText("OPP_SUPER_NERD11", @t("Ow!", "哎哟！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
               setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
               replaceTileBlock(3, 8, 14)
-              @speaker("") { @t("BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!", "夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！") }
             }
           }
         }
@@ -332,12 +348,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！")
             }
-            result = startBattle("OPP_BURGLAR6")
+            result = startBattleWithText("OPP_BURGLAR6", @t("Yowza!\nToo hot!", "哎呀！\n太烫了！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
               setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
               replaceTileBlock(2, 6, 14)
-              @speaker("") { @t("Us fire POKeMON fans like\nPONYTA and NINETALES!", "我们火系宝可梦迷喜欢小火马和\n九尾！") }
             }
           }
         }
@@ -365,12 +385,16 @@ game_scene CinnabarGym {
             @speaker("") {
               @t("Fire is weak against H2O!", "火怕水，就是H2O！")
             }
-            result = startBattle("OPP_SUPER_NERD12")
+            result = startBattleWithText("OPP_SUPER_NERD12", @t("Oh!\nSnuffed out!", "哦！\n熄火了！"))
             @if (result == "win") {
+              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+                waitSound()
+                playSound("SFX_GO_INSIDE")
+                waitSound()
+              }
               setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
               setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
               replaceTileBlock(2, 3, 14)
-              @speaker("") { @t("Water beats fire! But, fire\nmelts ice POKeMON!", "水能克火！但火能融化冰系宝可\n梦！") }
             }
           }
         }
@@ -402,13 +426,15 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("Do you know how hot POKeMON\nfire breath can get?", "你知道宝可梦的火焰温度有多高\n吗？")
       }
-      result = startBattle("OPP_SUPER_NERD9")
+      result = startBattleWithText("OPP_SUPER_NERD9", @t("Yow!\nHot, hot, hot!", "哎哟！\n烫、烫、烫！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_0")
         setFlag("EVENT_CINNABAR_GYM_GATE0_UNLOCKED")
-        @speaker("") {
-          @t("Fire, or to be more precise,\ncombustion...\n\nBlah, blah, blah, blah...", "火，或者说更准确地说，燃\n烧……\n\n啰嗦，啰嗦，啰嗦……")
-        }
       }
     }
   }
@@ -424,14 +450,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！")
       }
-      result = startBattle("OPP_BURGLAR4")
+      result = startBattleWithText("OPP_BURGLAR4", @t("I\nsurrender!", "我\n投降！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
         setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
         replaceTileBlock(9, 3, 14)
-        @speaker("") {
-          @t("I can't help stealing other\npeople's POKeMON!", "我忍不住想偷别人的宝可梦！")
-        }
       }
     }
   }
@@ -447,14 +475,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！")
       }
-      result = startBattle("OPP_SUPER_NERD10")
+      result = startBattleWithText("OPP_SUPER_NERD10", @t("Waah!\nMy studies!", "哇！\n我的研究！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
         setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
         replaceTileBlock(6, 3, 14)
-        @speaker("") {
-          @t("My theories are too\ncomplicated for you!", "我的理论太复杂，你听不懂！")
-        }
       }
     }
   }
@@ -470,14 +500,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！")
       }
-      result = startBattle("OPP_BURGLAR5")
+      result = startBattleWithText("OPP_BURGLAR5", @t("Too hot\nto handle!", "太烫了，\n受不了了！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
         setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
         replaceTileBlock(6, 6, 14)
-        @speaker("") {
-          @t("I wish there was a thief\nPOKeMON! I'd use that!", "真希望有小偷宝可梦！我一定\n用！")
-        }
       }
     }
   }
@@ -493,14 +525,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！")
       }
-      result = startBattle("OPP_SUPER_NERD11")
+      result = startBattleWithText("OPP_SUPER_NERD11", @t("Ow!", "哎哟！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
         setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
         replaceTileBlock(3, 8, 14)
-        @speaker("") {
-          @t("BLAINE was lost in the\nmountains when a fiery bird\nPOKeMON appeared.\n\nIts light enabled BLAINE to\nfind his way down!", "夏伯在山上迷了路，这时一只火\n鸟宝可梦出现了。\n\n它的光芒指引夏伯下了山！")
-        }
       }
     }
   }
@@ -516,14 +550,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！")
       }
-      result = startBattle("OPP_BURGLAR6")
+      result = startBattleWithText("OPP_BURGLAR6", @t("Yowza!\nToo hot!", "哎呀！\n太烫了！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
         setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
         replaceTileBlock(2, 6, 14)
-        @speaker("") {
-          @t("Us fire POKeMON fans like\nPONYTA and NINETALES!", "我们火系宝可梦迷喜欢小火马和\n九尾！")
-        }
       }
     }
   }
@@ -539,14 +575,16 @@ game_scene CinnabarGym {
       @speaker("") {
         @t("Fire is weak against H2O!", "火怕水，就是H2O！")
       }
-      result = startBattle("OPP_SUPER_NERD12")
+      result = startBattleWithText("OPP_SUPER_NERD12", @t("Oh!\nSnuffed out!", "哦！\n熄火了！"))
       @if (result == "win") {
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
+        }
         setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
         setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
         replaceTileBlock(2, 3, 14)
-        @speaker("") {
-          @t("Water beats fire! But, fire\nmelts ice POKeMON!", "水能克火！但火能融化冰系宝可\n梦！")
-        }
       }
     }
   }

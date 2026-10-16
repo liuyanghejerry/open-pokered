@@ -341,6 +341,11 @@ impl ScriptHost for NativeHost {
                     rival_triplet_base: base,
                 }))
             }
+            "startBattleWithText" => {
+                let trainer_id = args::text(v.first().ok_or("startBattleWithText: missing trainer")?, "startBattleWithText")?;
+                let end_battle_text = args::text(v.get(1).ok_or("startBattleWithText: missing text")?, "startBattleWithText")?;
+                Ok(pokemon(PokemonScriptCommand::StartBattleWithText { trainer_id, end_battle_text }))
+            }
             "startWildBattle" => {
                 let species = args::text(v.first().ok_or("startWildBattle: missing species")?, "startWildBattle")?;
                 let level = args::u8(v.get(1).ok_or("startWildBattle: missing level")?, "startWildBattle")?;
@@ -2069,7 +2074,7 @@ mod tests {
                 let mut battles = 0;
                 for _ in 0..100 {
                     let Some(cmd) = next else { break };
-                    let result = if matches!(cmd, ScriptCommand::StartBattle { .. }) {
+                    let result = if matches!(&cmd, ScriptCommand::Custom { name, .. } if name == "startBattleWithText") {
                         battles += 1;
                         CommandResult::Text(if won { "win" } else { "loss" }.into())
                     } else { CommandResult::Void };
@@ -2990,6 +2995,7 @@ mod tests {
                 ScriptCommand::StartBattle { .. } | ScriptCommand::StartWildBattle { .. } => {
                     CommandResult::Text(outcome.into())
                 }
+                ScriptCommand::Custom { name, .. } if name == "startBattleWithText" => CommandResult::Text(outcome.into()),
                 ScriptCommand::ShowChoice { .. } => {
                     CommandResult::Number(*choices.next().expect("menu response") as f64)
                 }
@@ -3699,14 +3705,14 @@ mod tests {
                                     assert_eq!(text, if lang == "zh" { before_zh } else { before_en });
                                     "trainer-text".into()
                                 }
-                                ScriptCommand::StartBattle { trainer_id: actual_trainer } => {
-                                    assert_eq!(actual_trainer, trainer_id);
-                                    "battle".into()
-                                }
                                 ScriptCommand::Custom { name, args } => match PokemonScriptCommand::from_custom(name, args).unwrap() {
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Protected, leading_sound: None, .. } => "prompt".into(),
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None, .. } => "done".into(),
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Button, leading_sound: Some(sound), .. } if sound == "SFX_GET_ITEM_1" => "leading-GET1-prompt-button".into(),
+                                    PokemonScriptCommand::StartBattleWithText { trainer_id: actual_trainer, .. } => {
+                                        assert_eq!(&actual_trainer, trainer_id);
+                                        "battle".into()
+                                    }
                                     PokemonScriptCommand::WaitSound => "wait".into(),
                                     PokemonScriptCommand::ReplaceTileBlock { .. } => "block".into(),
                                     PokemonScriptCommand::FinishFieldText => "finish".into(),
@@ -3746,4 +3752,68 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn cinnabar_thirteen_victory_callers_carry_original_quotes_before_sound_and_flags() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+        let ids = ["OPP_SUPER_NERD9", "OPP_BURGLAR4", "OPP_SUPER_NERD10", "OPP_BURGLAR5", "OPP_SUPER_NERD11", "OPP_BURGLAR6", "OPP_SUPER_NERD12"];
+        let quotes = ["Yow!\nHot, hot, hot!", "I\nsurrender!", "Waah!\nMy studies!", "Too hot\nto handle!", "Ow!", "Yowza!\nToo hot!", "Oh!\nSnuffed out!"];
+        let translated = ["哎哟！\n烫、烫、烫！", "我\n投降！", "哇！\n我的研究！", "太烫了，\n受不了了！", "哎哟！", "哎呀！\n太烫了！", "哦！\n熄火了！"];
+        let after = ["combustion...", "I can't help stealing", "My theories", "I wish there was", "BLAINE was lost", "Us fire POKeMON fans", "Water beats fire!"];
+        for n in 0..7 {
+            for quiz in [false, true] {
+                if quiz && n == 0 { continue; }
+                for lang in ["en", "zh"] {
+                    for open in [false, true] {
+                        for outcome in ["win", "lose", "draw"] {
+                            let mut engine = NativeScriptEngine::new();
+                            engine.load_map("CinnabarGym", &scene); engine.set_lang(lang);
+                            engine.seed_text("playerFacing", "up");
+                            let gate = format!("EVENT_CINNABAR_GYM_GATE{n}_UNLOCKED");
+                            let beaten = format!("EVENT_BEAT_CINNABAR_GYM_TRAINER_{n}");
+                            engine.set_flag(&gate, open);
+                            let handler = if quiz { format!("quizMachine{n}") } else { format!("talkSuperNerd{}", n+1) };
+                            let answer = if quiz { vec![1 - [0,1,1,1,0,1][n-1]] } else { vec![] };
+                            let commands = drive_fidelity_scene(&mut engine, &handler, false, outcome, &answer);
+                            let battles: Vec<_> = commands.iter().enumerate().filter_map(|(i,c)| {
+                                if let ScriptCommand::Custom { name, args } = c {
+                                    if name == "startBattleWithText" {
+                                        assert_eq!(args[0].as_str(), Some(ids[n]));
+                                        assert_eq!(args[1].as_str(), Some(if lang == "en" { quotes[n] } else { translated[n] }));
+                                        return Some(i);
+                                    }
+                                }
+                                None
+                            }).collect();
+                            assert_eq!(battles.len(), 1, "{handler}/{lang}/{open}/{outcome}");
+                            let tail = &commands[battles[0]+1..];
+                            let expected = if outcome != "win" { vec![] } else {
+                                let mut expected = vec![PokemonScriptCommand::WaitSound.into_script_command(),
+                                    ScriptCommand::PlaySound { sound_id: "SFX_GO_INSIDE".into() },
+                                    PokemonScriptCommand::WaitSound.into_script_command()];
+                                if n != 0 {
+                                    let (x,y) = [(9,3),(6,3),(6,6),(3,8),(2,6),(2,3)][n-1];
+                                    expected.push(PokemonScriptCommand::ReplaceTileBlock { x, y, block_id: 14 }.into_script_command());
+                                }
+                                expected
+                            };
+                            assert_eq!(tail, expected, "no AfterBattleText belongs to the win continuation");
+                            assert_eq!(engine.get_flag(&beaten), outcome == "win");
+                            assert_eq!(engine.get_flag(&gate), open || outcome == "win");
+                            for other in 0..7 {
+                                if other != n {
+                                    assert!(!engine.get_flag(&format!("EVENT_BEAT_CINNABAR_GYM_TRAINER_{other}")));
+                                    assert!(!engine.get_flag(&format!("EVENT_CINNABAR_GYM_GATE{other}_UNLOCKED")));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            let mut engine = NativeScriptEngine::new(); engine.load_map("CinnabarGym", &scene);
+            engine.set_flag(&format!("EVENT_BEAT_CINNABAR_GYM_TRAINER_{n}"), true);
+            let commands = drive_fidelity_scene(&mut engine, &format!("talkSuperNerd{}", n+1), false, "", &[]);
+            assert!(matches!(&commands[..], [ScriptCommand::ShowText { text }] if text.contains(after[n])));
+        }
+    }
+
 }

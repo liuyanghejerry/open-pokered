@@ -1,0 +1,222 @@
+{
+  "actual_before": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+  "actual_tested_after": "912a593109c13495d04968e0b12436de6b910508",
+  "scope": "This records actual tested source identities. Documentation/attachment commits are not new executions. Later base integration, if any, must be described separately.",
+  "full_source_freeze_sha256": "6ece688a6e3a857088ce1b232a43f6a0e93534b7b9d0735ae9781412053aad50",
+  "canonical_roster_digest_algorithm": "SHA256 of UTF-8 json.dumps(map,sort_keys=True,separators=(comma,colon)); roster records are the original source freeze, checked against every tracked blob and external file.",
+  "tested_source_rosters": {
+    "all_tracked": {
+      "entries": 7130,
+      "canonical_map_sha256": "d5cb3263b4a1231c79e4fb45f109abd9f2cd29b490a8ba18c025327689488184"
+    },
+    "complete_non_docs": {
+      "entries": 2709,
+      "canonical_map_sha256": "33df57678588c9a793601741808071e6631ee47f6f4a01dba54049c28f166288"
+    },
+    "compiler": {
+      "entries": 2191,
+      "canonical_map_sha256": "893f442f0055e7a3a577fa05fdc3ce1a2aeca287c92f48c3d5f35dbb567f26ca"
+    },
+    "engine_all_tracked": {
+      "entries": 981,
+      "canonical_map_sha256": "9107d97f0192cfa886443f3957ef0a3e6316b602e62b77adb3c41025f665f3ba"
+    },
+    "external_gfx": {
+      "entries": 702,
+      "canonical_map_sha256": "9cd5124f3d297f4b415ce3ccb57a78405f0178144f307596c53cb95776862ad6"
+    }
+  },
+  "engine_pin": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
+  "original_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_sources": [
+    {
+      "path": "engine/battle/core.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/battle/core.asm",
+      "sha256": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f"
+    },
+    {
+      "path": "home/trainers.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/trainers.asm",
+      "sha256": "5bf4068dd99a370f0aff48e7030e2b1ab48ef6538746572c8e868e8c64d11b27"
+    },
+    {
+      "path": "scripts/CinnabarGym.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/CinnabarGym.asm",
+      "sha256": "e15ede627f76f4b9f79ac24193a28ca8f59aefab4b4a52addef2760a5dd60479"
+    },
+    {
+      "path": "engine/events/hidden_events/cinnabar_gym_quiz.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/events/hidden_events/cinnabar_gym_quiz.asm",
+      "sha256": "666674243deff1cad12ed1354d558a31b8706524a5fe0354172ec76c609974b0"
+    },
+    {
+      "path": "text/CinnabarGym.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/text/CinnabarGym.asm",
+      "sha256": "986ee4ca8ce4ce3ce8c9edf4a38417744515a6b428f9505857ab4b95e286a844"
+    },
+    {
+      "path": "data/maps/objects/CinnabarGym.asm",
+      "url": "https://raw.githubusercontent.com/pret/pokered/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/data/maps/objects/CinnabarGym.asm",
+      "sha256": "40cf155b13b481e74b29094117b0b21f465b27c8a69629c69304f690d47797c4"
+    }
+  ],
+  "changed_source_files": [
+    {
+      "path": "crates/pokered-agent/src/semantics/extract.rs",
+      "before": {
+        "git_blob": "f712cc2f1e3413ca3548249de05e658f9333739b",
+        "sha256": "99ca70d55702ecbf17e2fc8f662f161134a00603520cd6ad9acd6fac9d72e304",
+        "bytes": 34680
+      },
+      "tested_after": {
+        "git_blob": "9627817a112a923276ea105caf95d3d0ad113cb5",
+        "sha256": "5bb930af861ee8666722e9f214f926aa2481d4fb376a6452cc23cf69f6ea4319",
+        "bytes": 35312
+      }
+    },
+    {
+      "path": "crates/pokered-app/src/game.rs",
+      "before": {
+        "git_blob": "f5d328f814c73bf6835401646f7e642c4ff4951d",
+        "sha256": "af333d33d1af7b700883f96f4032ebc8aef1998d15eb12e529a077ed12b35ce8",
+        "bytes": 727549
+      },
+      "tested_after": {
+        "git_blob": "eb5c4e3e16650337592792e3e2a793a7914348af",
+        "sha256": "a78057d1c5ce31e4b71d012424e17a6773df292944c4ceb859479ce83ce03ab1",
+        "bytes": 727693
+      }
+    },
+    {
+      "path": "crates/pokered-app/src/game/cinnabar_victory_tests.rs",
+      "before": null,
+      "tested_after": {
+        "git_blob": "9579e90615abdbe7c7b7a5fd5998d8c9b9ba1792",
+        "sha256": "e03178ab37f2e390435c1dba78e50164aef6e5f6237683b4d994894f01fa74f2",
+        "bytes": 11871
+      }
+    },
+    {
+      "path": "crates/pokered-core/src/overworld/native_script.rs",
+      "before": {
+        "git_blob": "170f401426abf5b54199bcfaa2181ef15415e671",
+        "sha256": "7da0df7e5c0c6adcc411eb29d623eed7381b3fc01a4ba0c114bc1df0317bab11",
+        "bytes": 181601
+      },
+      "tested_after": {
+        "git_blob": "350f136744c8a8191a227944bd56a92303173636",
+        "sha256": "ce33ec3f78c31a1f9d5a9620a03b98107e982d5c14dde7c7da7089fec8526d01",
+        "bytes": 186904
+      }
+    },
+    {
+      "path": "crates/pokered-core/src/overworld/script_bridge.rs",
+      "before": {
+        "git_blob": "c11f30a2b75a534d9cdd8ba9468b9139066a6ebb",
+        "sha256": "6d08c482ba4ebcbe3390a61bd1e7d2c291ab96b4c960cfba326f8be5036a2d72",
+        "bytes": 46576
+      },
+      "tested_after": {
+        "git_blob": "31ebc66a11608e05896be3fd1eceab0e2e98d4dd",
+        "sha256": "87cc7f67a6b7f3028b8a26fc4bdd5902fcf9f1c977d80f47d81e831fd2273251",
+        "bytes": 48880
+      }
+    },
+    {
+      "path": "crates/pokered-core/src/overworld/update.rs",
+      "before": {
+        "git_blob": "4a9d8498f91b52817fa5fd02c99635b9d92d045b",
+        "sha256": "c6110d5068f75ce48ad8b69933cdc094b9861e4bdb4717ba88c0ac801162b68f",
+        "bytes": 284092
+      },
+      "tested_after": {
+        "git_blob": "7811de21ff019522e1af7f694ae101e80c329d77",
+        "sha256": "d4de59180a7193fbbdfc29075970e64225ea190879e5672cb63936d4bbc6cfcb",
+        "bytes": 288697
+      }
+    },
+    {
+      "path": "crates/pokered-data/maps/CinnabarGym/script.scene",
+      "before": {
+        "git_blob": "c0036e7cec9487ebf72f8cba6ed76d273787dc20",
+        "sha256": "c2f79220fa2d2062090fb50d836b4a755b299fb2548ac2b9b1c42a6d8f2b40af",
+        "bytes": 29383
+      },
+      "tested_after": {
+        "git_blob": "43a55079f3a855ea4261e2ab712d866cfd997f77",
+        "sha256": "60bed5a41a5f5088d8e136f71c3b1c187d85c7aecd8dff94b14fd0eacb191243",
+        "bytes": 30112
+      }
+    },
+    {
+      "path": "crates/pokered-data/src/script_api.rs",
+      "before": {
+        "git_blob": "8979cf91daf4a865bd0bffe62507c2229d5f1f32",
+        "sha256": "a9fe51681adf42966459f73cb9bcb17fecdd84017211796be3d690ceda52eddd",
+        "bytes": 54593
+      },
+      "tested_after": {
+        "git_blob": "aef647f26df386333769a33d89ffd97ab1cf6b1f",
+        "sha256": "c1f1fb22633a238122637a287331a9e715078b85a894832d86ddda2092bc5b03",
+        "bytes": 57352
+      }
+    },
+    {
+      "path": "crates/pokered-data/src/script_command.rs",
+      "before": {
+        "git_blob": "cc9b1c4769aade2a69cdb99351249a9bd559a612",
+        "sha256": "00c1a3e1ee82a0942c1eb91d7053c9e1d1e1db2854e288a3ee65fcbf12875f53",
+        "bytes": 22361
+      },
+      "tested_after": {
+        "git_blob": "c767e858726f84fdc7ec3af6cfbd9d11849b0af7",
+        "sha256": "9451a1b8fa1db73393d6a0f85a5053f95d22749f40b0dafe19d0f006da3ebeb1",
+        "bytes": 23677
+      }
+    },
+    {
+      "path": "crates/pokered-data/src/script_function_catalog.rs",
+      "before": {
+        "git_blob": "43e201c190697e943559febbacd1f859fae698c9",
+        "sha256": "fbf1fcede06fcda4d29ab547fbbb078c0c285ec9c35f017adba2491f35f8556d",
+        "bytes": 2063
+      },
+      "tested_after": {
+        "git_blob": "9c38bc019186e281148e46b3109d3a805ddeb8b2",
+        "sha256": "de5fe494e96435047e47978cd55a95bdb7a85c70a585d972f15d7d2ac20b9fe2",
+        "bytes": 2090
+      }
+    }
+  ],
+  "CLI": {
+    "before": {
+      "actual_source": "762fc5a32602d7dcee4da23a687ad42a7751384d",
+      "sha256": "c13fd2f3cba4cbf4878a7a3497a35af39b210becf0e006f03554d1bf8549911c",
+      "bytes": 78206864,
+      "identity_sha256": "1d57a3d206e997106a5826779799b1c9828aec685497e723d7ce15df8e763ba5"
+    },
+    "after": {
+      "actual_source": "912a593109c13495d04968e0b12436de6b910508",
+      "sha256": "5318db30212aaea216aa05225cec043e4c11859ee5956a2d506bc14c473999fd",
+      "bytes": 78177416,
+      "identity_sha256": "6cb5e2a9935eb784ed671e7e37a9a5795756f7c5d12394d964c5852bcf80cb49"
+    }
+  },
+  "M1_merge_full_source_guard_receipt_sha256": "cbc67ae08a17d61a00c61fdac15374308e36b2be286855d4566c0a5cbf58d64a",
+  "M1_merge_equivalence": {
+    "ordinary_M1_merge_head": "0a142ec43f1f1fe9252ed399192ded0064c1a4bf",
+    "ordinary_merge_parents": [
+      "912a593109c13495d04968e0b12436de6b910508",
+      "762fc5a32602d7dcee4da23a687ad42a7751384d"
+    ],
+    "whole_tree_equal_after_M1_merge": "1a563049ecee604dc51c71ee25c47899004d0d2e",
+    "entire_tree_equals_tested_912": true
+  },
+  "publication_base_integration": {
+    "path": "docs/validation/cinnabar-trainer-victory-1056/M2-integration.json",
+    "sha256": "2c4f20e3c269cee368a077005613fbd7bfcb527cbb003e3f34ae98216767db9c",
+    "actual_base": "d6ebb68d5c4475ce65e46f06b669ac6b2efa27e3",
+    "actual_source_merge_head": "cd04a2cd80529847fa636029d054e5928dbcb74a",
+    "not_a_new_execution": true
+  }
+}
