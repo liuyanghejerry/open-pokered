@@ -53,6 +53,8 @@ mod pp_restore_caller_tests;
 #[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
+mod simultaneous_faint_tests;
+#[cfg(test)]
 mod exp_award_notice_tests;
 #[cfg(test)]
 mod link_battle_driver_tests;
@@ -4919,6 +4921,32 @@ learn {learn_name}!")];
             // when both mons faint. Preserve fought history for a later Revive.
             if player_fainted {
                 bs.party_gain_exp_flags[bs.player.active_pokemon_index] = false;
+                let alive_player = bs
+                    .player
+                    .party
+                    .iter()
+                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.player.active_mon()));
+                if !alive_player {
+                    // AnyPartyAlive precedes victory, even when both active
+                    // mons faint. Each Link peer also checks its own party: a
+                    // double final KO returns Lose on BOTH sides (core.asm
+                    // FaintEnemyPokemon / HandlePlayerBlackOut).
+                    if self.link_mode {
+                        self.link_result = Some(crate::link::protocol::LinkBattleResult::Lose);
+                    }
+                    if bs.battle_type == BattleType::Trainer {
+                        return BattlePhase::TrainerVictory {
+                            phase: VictoryPhase::TrainerPicScrollIn,
+                            wait_frames: 50,
+                            player_won: false,
+                        };
+                    }
+                    return BattlePhase::BattleOver {
+                        won: false,
+                        escaped: false,
+                        wait_frames: 60,
+                    };
+                }
             }
 
             if enemy_fainted {
@@ -4951,6 +4979,12 @@ learn {learn_name}!")];
                 }
                 self.show_player_pokeballs = false;
                 self.show_enemy_pokeballs = false;
+                if player_fainted {
+                    // Both parties can continue: ChooseNextMon runs before
+                    // ReplaceFaintedEnemyMon. Link replacements still use the
+                    // existing exchange of the two players' Switch actions.
+                    return BattlePhase::PlayerFaintSwitch;
+                }
                 if self.link_mode {
                     // No SHIFT prompt / auto send-out in link battles: the
                     // enemy trainer's replacement is the remote player's
@@ -4976,31 +5010,6 @@ learn {learn_name}!")];
             }
 
             if player_fainted {
-                let alive_player = bs
-                    .player
-                    .party
-                    .iter()
-                    .any(|p| p.hp > 0 && !core::ptr::eq(p, bs.player.active_mon()));
-                if !alive_player {
-                    // We're out of mons: battle over, we lose (the original's
-                    // HandlePlayerBlackOut → LinkBattleLostText; the remote
-                    // side resolves the mirror and wins).
-                    if self.link_mode {
-                        self.link_result = Some(crate::link::protocol::LinkBattleResult::Lose);
-                    }
-                    if bs.battle_type == BattleType::Trainer {
-                        return BattlePhase::TrainerVictory {
-                            phase: VictoryPhase::TrainerPicScrollIn,
-                            wait_frames: 50,
-                            player_won: false,
-                        };
-                    }
-                    return BattlePhase::BattleOver {
-                        won: false,
-                        escaped: false,
-                        wait_frames: 60,
-                    };
-                }
                 self.show_player_pokeballs = false;
                 self.show_enemy_pokeballs = false;
                 return BattlePhase::PlayerFaintSwitch;
@@ -5247,7 +5256,19 @@ learn {learn_name}!")];
             self.record_switch_in_enemy_hp();
             self.show_player_pokeballs = true;
             self.show_enemy_pokeballs = !self.is_wild;
-            self.show_text_then(vec![send_out], BattlePhase::PlayerMenu);
+            let next = if self
+                .battle_state
+                .as_ref()
+                .is_some_and(|bs| bs.enemy.active_mon().hp == 0)
+            {
+                // A simultaneous faint leaves the old enemy in place until
+                // the player's mandatory send-out text returns. The existing
+                // post-text continuation then sends the next enemy once.
+                BattlePhase::EnemySendingNext { wait_frames: 30 }
+            } else {
+                BattlePhase::PlayerMenu
+            };
+            self.show_text_then(vec![send_out], next);
         }
     }
 
