@@ -7301,8 +7301,6 @@ impl PokemonGame {
                 })
                 .collect::<Vec<_>>(),
             "dialogue": dialogue,
-            "foreground_input": self.overworld.source_foreground(),
-            "foreground_input_error": self.overworld.source_foreground_error(),
             "dialogue_state": dialogue_state,
             "choice": choice,
             // Link (Cable Club) session and in-room flow phase. The flow's
@@ -7448,7 +7446,11 @@ impl PokemonGame {
             // driver knows when a warp is still settling.
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
         });
-        // Keep this separate from the large snapshot macro's recursion budget.
+        // Keep these separate from the large snapshot macro's recursion budget.
+        snapshot["foreground_input"] = serde_json::to_value(self.overworld.source_foreground())
+            .unwrap_or(serde_json::Value::Null);
+        snapshot["foreground_input_error"] = serde_json::to_value(self.overworld.source_foreground_error())
+            .unwrap_or(serde_json::Value::Null);
         snapshot["field_poison"] =
             serde_json::to_value(self.overworld.poison_flow).unwrap_or(serde_json::Value::Null);
         snapshot["capture_phase"] = serde_json::json!(self.post_capture_flow.as_ref().map(|flow| format!("{:?}", flow.phase)));
