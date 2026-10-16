@@ -585,25 +585,37 @@ mod tests {
         assert!(field.no_text_delay());
         assert!(
             field.source_foreground().is_some(),
-            "Bike field continuation must outlive the one-shot terminal borrow"
+            "ordinary Bike owner must persist after its display closes"
         );
-        // Ordinary walking reaches the stationary youngster at (1,3).
-        // Row4 is the shop floor; the clerk counter is above (6,4), and the
-        // wandering woman's range stays on rows5..7. No private script call
-        // or runtime position/history setter starts this next conversation.
+        // Ordinary walking reaches the youngster from (2,3), facing left.
+        // Row4 x2..6 and row3 x2 are floor0x1f. Column1 on row4 is a
+        // displayed bike0x1c, so approach from the right, not from below.
+        // No private script call or runtime position/history setter is used.
         for _ in 0..400 {
             step(&mut field, LEFT);
-            if field.state.player.x == 1
+            if field.state.player.x == 2
                 && field.state.player.movement_state == crate::overworld::MovementState::Idle
             {
                 break;
             }
         }
-        assert_eq!((field.state.player.x, field.state.player.y), (1, 4));
+        assert_eq!((field.state.player.x, field.state.player.y), (2, 4));
         for _ in 0..8 {
             step(&mut field, 0);
         }
-        for buttons in [UP, UP, 0, 0, A, A] {
+        for _ in 0..120 {
+            step(&mut field, UP);
+            if field.state.player.y == 3
+                && field.state.player.movement_state == crate::overworld::MovementState::Idle
+            {
+                break;
+            }
+        }
+        assert_eq!((field.state.player.x, field.state.player.y), (2, 3));
+        for _ in 0..8 {
+            step(&mut field, 0);
+        }
+        for buttons in [LEFT, LEFT, 0, 0, A, A] {
             step(&mut field, buttons);
         }
         assert!(
