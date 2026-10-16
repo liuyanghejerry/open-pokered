@@ -21,8 +21,8 @@ The original reference is `pret/pokered` revision
 
 ## Core caller coverage
 
-Validated source: `e23eda5daf60a1455f19ee8f1f51ac1ffd4fe863`, based on
-`e6150de4cf06bfd8a8bbbaf3e65ceb8ecb6e0ce5`, using engine
+Validated integrated source: `a0c4040565f521b5da679d254ff01bfcce46597b`, based on
+actual master `e323f16e1de75fdd8b94dc347f70cfbd82fa7b4e`, using engine
 `e533a3d23a0cdbed1524a1ac91184733da4a6f7e`.
 
 Three tests in `battle/transform_capture_tests.rs` cover four fixtures:
@@ -50,9 +50,11 @@ intact.
 
 ## Actual results and negative control
 
-The first focused run passed all three tests. The complete `pokered-core`
-suite then passed **3384 tests**: 2972 unit tests and 412 integration tests,
-with zero failures and one ignored doctest.
+On the original source `e23eda5daf60a1455f19ee8f1f51ac1ffd4fe863`, based on
+`e6150de4cf06bfd8a8bbbaf3e65ceb8ecb6e0ce5`, the first focused run passed all
+three tests. The complete `pokered-core` suite then passed **3384 tests**:
+2972 unit tests and 412 integration tests, with zero failures and one ignored
+doctest.
 
 An uncommitted negative control replaced only the caller's rate expression
 with the exact old reader; tests, assertions and vectors stayed unchanged.
@@ -66,10 +68,22 @@ the untransformed and Mirror Move controls completed successfully.
 
 Restoring the committed source byte-for-byte made the same three tests pass
 again, including the complete 8192-throw matrix. The earlier full-suite result
-was preserved without repeating that suite. All source, engine and GFX
-freezes matched after restoration, and both negative and restored-source Cargo
-process groups exited. A later documentation-only commit preserves these exact
-validated non-document source bytes.
+was preserved without repeating that suite during the negative control and
+restoration. All source, engine and GFX freezes matched after restoration, and
+both negative and restored-source Cargo process groups exited. The initial
+documentation-only commit preserved that validated source.
+
+## Integration with actual master
+
+The integrated source above includes merged PR #279. Merging actual master
+changed no file from the already integrated candidate; the Transform patch
+still consists of the same caller change and unchanged three-test module.
+One additional complete `pokered-core` run passed **3404 tests**: 2992 unit
+tests and 412 integration tests, with zero failures and one ignored doctest.
+This includes the complete Transform matrix and the inherited FIGHT, capture
+and flinch regressions. The source, engine and GFX freezes matched before and
+after this run, and the runner and Cargo process groups exited. Subsequent
+documentation changes preserve these integrated non-document source bytes.
 
 These are deterministic core-caller tests with unit fixtures, including an
 explicit speed fixture for the Mirror Move turn. They are not a native Game
