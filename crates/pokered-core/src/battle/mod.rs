@@ -65,6 +65,10 @@ mod transform_capture_tests;
 #[cfg(test)]
 mod capture_outcome_tests;
 #[cfg(test)]
+mod payday_tests;
+#[cfg(test)]
+mod payday_scatter_tests;
+#[cfg(test)]
 mod confusion_polarity_tests;
 #[cfg(test)]
 mod flinch_lifecycle_tests;
@@ -206,7 +210,7 @@ pub fn prepare_battle_rules() {
 // ── BattleScreen (frame-loop adapter) ─────────────────────────────
 
 use crate::battle::experience::gain::gain_experience;
-use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, trainer_winnings_messages};
+use crate::battle::settlement::money::{calc_prize_money, calc_total_winnings, payday_pickup_message, trainer_winnings_messages};
 use crate::battle::settlement::settle::settle_battle;
 use crate::battle::settlement::{BattleOutcome, BattleSettlement};
 use crate::game_state::{BattleStyle, GameScreen, ScreenAction};
@@ -1021,12 +1025,19 @@ pub struct BattleScreen {
     /// into the party (or a PC box if full) and registers it in the Pokédex.
     pub captured_mon: Option<state::Pokemon>,
     /// True when the battle was escaped with a POKé DOLL (`wEscapedFromBattle`
-    /// in the original, set ONLY by ItemUsePokeDoll). The original keeps
-    /// `wBattleResult` at 0 for a Doll escape but writes $2 for a menu run
+    /// in the original, set ONLY by ItemUsePokeDoll). It preserves the earlier
+    /// `wBattleResult` for a Doll escape but writes $2 for a menu run
     /// (core.asm:1600-1602) and for a capture (core.asm:2293) — scripts that
     /// branch on `wBattleResult` (the Pokémon Tower ghost) treat a Doll skip
     /// as a defeat but a menu run / capture as NOT defeating it.
     pub escaped_via_poke_doll: bool,
+    /// Actual writes to Gen-1 wBattleResult: 0 at entry/enemy faint, 1 at
+    /// player faint, 2 on RUN/capture. Doll and escape moves preserve it.
+    /// None denotes an old snapshot whose earlier writes cannot be recovered.
+    pub original_battle_result: Option<u8>,
+    /// The pickup prompt has been queued. Persisted so resuming its text does
+    /// not print it twice or settle money before its confirmation.
+    pub payday_pickup_shown: bool,
     /// Current map ID (for dungeon transition detection)
     pub map_id: u8,
     /// Selected battle transition type
@@ -1307,6 +1318,8 @@ impl BattleScreen {
             end_battle_text: None,
             captured_mon: None,
             escaped_via_poke_doll: false,
+            original_battle_result: Some(0),
+            payday_pickup_shown: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
@@ -1409,6 +1422,8 @@ impl BattleScreen {
             end_battle_text: None,
             captured_mon: None,
             escaped_via_poke_doll: false,
+            original_battle_result: Some(0),
+            payday_pickup_shown: false,
             pending_learn_moves: Vec::new(),
             map_id: 0,
             battle_transition: transition,
@@ -2834,18 +2849,12 @@ learn {learn_name}!")];
                             }
                             if player_won {
                                 let prize = self.calc_prize_money();
-                                let payday = self
-                                    .battle_state
-                                    .as_ref()
-                                    .map(|bs| bs.total_payday_money)
-                                    .unwrap_or(0);
-                                let total = calc_total_winnings(prize, payday);
                                 let player_name = self
                                     .player_name
                                     .clone()
                                     .unwrap_or_else(|| "RED".to_string());
                                 let money_msgs =
-                                    trainer_winnings_messages(&player_name, total);
+                                    trainer_winnings_messages(&player_name, prize);
                                 // Prepend the trainer's one-shot victory quip
                                 // (original PrintEndBattleText, shown before the
                                 // prize-money text) for sight/talk battles.
@@ -2882,6 +2891,9 @@ learn {learn_name}!")];
                             } else {
                                 BattleOutcome::Loss
                             };
+                            if self.defer_payday_pickup(outcome, self.phase.clone()) {
+                                return ScreenAction::Continue;
+                            }
                             self.finalize_settlement(outcome);
                             ScreenAction::Transition(GameScreen::Overworld)
                         } else {
@@ -2918,6 +2930,11 @@ learn {learn_name}!")];
                 } else {
                     BattleOutcome::Loss
                 };
+                if self.defer_payday_pickup(outcome, BattlePhase::BattleOver {
+                    won, escaped, wait_frames: 0,
+                }) {
+                    return ScreenAction::Continue;
+                }
                 self.finalize_settlement(outcome);
                 ScreenAction::Transition(GameScreen::Overworld)
             }
@@ -3376,6 +3393,7 @@ learn {learn_name}!")];
 
         // RUN always escapes a Safari battle.
         if matches!(action, SafariMenuAction::Run) {
+            self.original_battle_result = Some(2);
             self.show_text_then(vec!["Got away safely!".to_string()], escaped_over);
             return;
         }
@@ -3423,6 +3441,7 @@ learn {learn_name}!")];
                 match result {
                     Some(CaptureResult::Captured) => {
                         caught = true;
+                        self.original_battle_result = Some(2);
                         // $43: caught — toss, poof, hide pic, 3 shakes.
                         self.pending_anim_events.push_back(BattleAnimEvent::Ball {
                             ball: ItemId::SafariBall,
@@ -3655,6 +3674,7 @@ learn {learn_name}!")];
             });
             let (msg, next) = match result {
                 CaptureResult::Captured => {
+                    self.original_battle_result = Some(2);
                     self.captured_mon = Some(caught_candidate);
                     // A catch ENDS the battle (the app adds the caught mon on
                     // settle) — previously the BattleOver phase set here was
@@ -3826,6 +3846,7 @@ learn {learn_name}!")];
         // (Pokémon Tower without the SILPH SCOPE) ALWAYS allows escape
         // (`call IsGhostBattle / jp z, .canEscape`).
         if self.is_ghost && self.battle_state.is_some() {
+            self.original_battle_result = Some(2);
             self.show_text_then(
                 vec!["Got away safely!".to_string()],
                 BattlePhase::BattleOver {
@@ -3840,6 +3861,7 @@ learn {learn_name}!")];
             let result = try_run_from_battle_with_rng(bs, || self.rng.next_u8());
             match result {
                 RunResult::Escaped => {
+                    self.original_battle_result = Some(2);
                     self.show_text_then(
                         vec!["Got away safely!".to_string()],
                         BattlePhase::BattleOver {
@@ -4009,6 +4031,7 @@ learn {learn_name}!")];
                         });
                         next_effects.extend(effects.iter().filter(|entry| matches!(
                             entry.kind, pokered_rules::PokeVolatile::CalledMove { .. }
+                                | pokered_rules::PokeVolatile::PayDayScattered { .. }
                         )).cloned());
                         *state = next_state;
                         *effects = next_effects;
@@ -4026,6 +4049,11 @@ learn {learn_name}!")];
             }
             self.presentation.record_turn(&log, &state, &effects, turn_start_hp);
             pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+            self.original_battle_result = Self::result_after_faint_receipts(
+                self.original_battle_result,
+                &log,
+                bs.player.party.iter().any(|mon| mon.hp > 0),
+            );
 
             for ev in &log.events {
                 if let TurnEvent::MoveUsed { actor, move_ } = ev {
@@ -4035,17 +4063,6 @@ learn {learn_name}!")];
                         bs.enemy.last_move_used = *move_;
                     }
                 }
-            }
-            let enemy_connected = |mv: MoveId| {
-                log.events.iter().any(|ev| matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                    if *actor == BattlerRef::OPPONENT && *move_ == mv))
-                    && !log.events.iter().any(|ev| matches!(ev, TurnEvent::Missed { actor }
-                        if *actor == BattlerRef::OPPONENT))
-            };
-            // Enemy Pay Day scatters coins into the pot.
-            if enemy_connected(MoveId::PayDay) {
-                let lvl = bs.enemy.active_mon().level as u32;
-                bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
             }
             // A connecting enemy Whirlwind/Roar/Teleport flees a WILD battle.
             let escape = log.events.iter().any(|ev| {
@@ -4094,6 +4111,9 @@ learn {learn_name}!")];
                 m.insert(0, format!("{} must recharge!",
                     pokered_rules::runtime::display_name_named(&state, BattlerRef::OPPONENT, Some(&battle_names))));
             }
+            bs.total_payday_money = bs.total_payday_money
+                .saturating_add(pokered_rules::take_payday_coins(&mut effects, BattlerRef::OPPONENT))
+                .min(999_999);
             (m, escape)
         };
         msgs.append(&mut ai_msgs);
@@ -4681,7 +4701,7 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
-                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. })).cloned());
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. } | pokered_rules::PokeVolatile::PayDayScattered { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
                         }
@@ -4700,6 +4720,11 @@ learn {learn_name}!")];
                 self.presentation
                     .record_turn(&log, &state, &effects, turn_start_hp);
                 pokered_rules::runtime::apply_engine_to_legacy(bs, &state, &effects);
+                self.original_battle_result = Self::result_after_faint_receipts(
+                    self.original_battle_result,
+                    &log,
+                    bs.player.party.iter().any(|mon| mon.hp > 0),
+                );
                 Self::consume_player_pp_charge(bs, &mut state, &mut effects, entry_pp, gather);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
                 // Move). The driver logs MoveUsed only for a move that passed the
@@ -4712,27 +4737,6 @@ learn {learn_name}!")];
                         } else {
                             bs.enemy.last_move_used = *move_;
                         }
-                    }
-                }
-                // Pay Day: each side that connected with Pay Day scatters coins = 2 ×
-                // its level into the battle-wide payday pot (read by settlement).
-                {
-                    use dotzuki_engine::battle::stack::TurnEvent;
-                    let used_payday = |who: BattlerRef| {
-                        log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::MoveUsed { actor, move_ }
-                                if *actor == who && *move_ == pokered_data::moves::MoveId::PayDay)
-                        }) && !log.events.iter().any(|ev| {
-                            matches!(ev, TurnEvent::Missed { actor } if *actor == who)
-                        })
-                    };
-                    if used_payday(BattlerRef::PLAYER) {
-                        let lvl = bs.player.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
-                    }
-                    if used_payday(BattlerRef::OPPONENT) {
-                        let lvl = bs.enemy.active_mon().level as u32;
-                        bs.total_payday_money = bs.total_payday_money.saturating_add(lvl * 2);
                     }
                 }
                 // Whirlwind / Roar / Teleport: a connecting switch/flee move ends a
@@ -4802,7 +4806,11 @@ learn {learn_name}!")];
                         if created {
                             m.push(format!("{} put in a SUBSTITUTE!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
-                        if (had || created) && !now {
+                        if (had || created) && !now
+                            && !pokered_rules::payday_scatter(&effects,
+                                if who.side == 0 { BattlerRef::OPPONENT } else { BattlerRef::PLAYER })
+                                .is_some_and(|(_, broke)| broke)
+                        {
                             m.push(format!("{}'s SUBSTITUTE broke!", pokered_rules::runtime::display_name_named(&state, who, Some(&battle_names))));
                         }
                     }
@@ -4853,6 +4861,13 @@ learn {learn_name}!")];
                         // status line (fast asleep / frozen) from the log leads.
                         m.extend(ghost_msgs);
                     }
+                }
+                // The same real effect receipt owns narration and the pool.
+                // Consume it only after all action-local text has been attached.
+                for actor in [BattlerRef::PLAYER, BattlerRef::OPPONENT] {
+                    bs.total_payday_money = bs.total_payday_money
+                        .saturating_add(pokered_rules::take_payday_coins(&mut effects, actor))
+                        .min(999_999);
                 }
                 (m, escape, result.first)
             };
@@ -5448,7 +5463,58 @@ learn {learn_name}!")];
         0
     }
 
+    fn result_after_faint_receipts(
+        current: Option<u8>,
+        log: &dotzuki_engine::battle::stack::TurnLog<pokered_rules::PokeredRules>,
+        has_live_player: bool,
+    ) -> Option<u8> {
+        use dotzuki_engine::battle::stack::TurnEvent;
+        let player_fainted = log.events.iter().any(|event| matches!(event,
+            TurnEvent::Fainted { who } if who.side == 0));
+        let enemy_fainted = log.events.iter().any(|event| matches!(event,
+            TurnEvent::Fainted { who } if who.side == 1));
+        // RemoveFaintedPlayerMon writes 1 first. FaintEnemyPokemon only writes
+        // 0 if AnyPartyAlive succeeds, including simultaneous recoil KOs. The
+        // engine's target/actor event order is not the original handler order.
+        let current = if player_fainted { Some(1) } else { current };
+        if enemy_fainted && has_live_player { Some(0) } else { current }
+    }
+
+    fn payday_pickup_amount(&self, outcome: BattleOutcome) -> u32 {
+        if self.link_mode || self.captured_mon.is_some()
+            || !matches!(outcome, BattleOutcome::Win | BattleOutcome::Escaped)
+        {
+            return 0;
+        }
+        // Legacy snapshots never stored the result's earlier writes. Preserve
+        // their old victory eligibility rather than inventing an escape win.
+        let eligible = self.original_battle_result
+            .map_or(outcome == BattleOutcome::Win, |result| result == 0);
+        if !eligible { return 0; }
+        self.battle_state.as_ref().map_or(0, |bs| bs.total_payday_money.min(999_999))
+    }
+
+    fn defer_payday_pickup(&mut self, outcome: BattleOutcome, next: BattlePhase) -> bool {
+        let payday = self.payday_pickup_amount(outcome);
+        if self.payday_pickup_shown || payday == 0 { return false; }
+        self.payday_pickup_shown = true;
+        self.show_payday_pickup_then(payday, next);
+        true
+    }
+
+    /// Explicit source printing call, after prize text and before settlement /
+    /// evolution. Future source text owners can attach here without guessing
+    /// the identity of a localized/paginated string.
+    fn show_payday_pickup_then(&mut self, payday: u32, next: BattlePhase) {
+        self.show_text_then(
+            vec![payday_pickup_message(self.player_name.as_deref().unwrap_or("RED"), payday)],
+            next,
+        );
+    }
+
     fn finalize_settlement(&mut self, outcome: BattleOutcome) {
+        let payday = self.payday_pickup_amount(outcome);
+        let prize = self.calc_prize_money();
         if let Some(ref mut bs) = self.battle_state {
             // A real catch returns wBattleResult = 2, not a victory (core.asm:
             // .returnAfterCapturingMon). The captured mon is still owned here;
@@ -5461,6 +5527,12 @@ learn {learn_name}!")];
             };
             let mut settlement =
                 settle_battle(bs, outcome, self.trainer_class, self.player_money);
+            settlement.payday_bonus = payday;
+            settlement.money_gained = match outcome {
+                BattleOutcome::Win => calc_total_winnings(prize, payday),
+                BattleOutcome::Escaped => calc_total_winnings(0, payday),
+                _ => 0,
+            };
             if self.link_mode {
                 // Link battles neither pay nor lose money: the original's
                 // TrainerBattleVictory skips the prize flow for

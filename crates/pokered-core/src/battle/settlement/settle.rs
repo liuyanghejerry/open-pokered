@@ -23,7 +23,7 @@ pub fn settle_battle(
     };
 
     match outcome {
-        BattleOutcome::Win | BattleOutcome::Captured => {
+        BattleOutcome::Win => {
             let prize = if state.battle_type == BattleType::Trainer {
                 if let Some(class) = trainer_class {
                     let last_level = last_enemy_level(state);
@@ -44,7 +44,7 @@ pub fn settle_battle(
         BattleOutcome::Loss => {
             settlement.money_lost = calc_blackout_penalty(player_money);
         }
-        BattleOutcome::Escaped | BattleOutcome::Draw => {
+        BattleOutcome::Captured | BattleOutcome::Escaped | BattleOutcome::Draw => {
             collect_exp_entries(state, &mut settlement.exp_entries);
         }
     }

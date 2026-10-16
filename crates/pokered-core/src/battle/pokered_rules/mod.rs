@@ -143,6 +143,9 @@ pub enum PokeVolatile {
     TurnSuppressed,
     /// A successful wild flee move ends actions and residual ticks immediately.
     Escaped { actor: BattlerRef, move_: MoveId },
+    /// Actual positive Pay Day hit, including damage absorbed by a Substitute.
+    /// This turn-local receipt is consumed by the production caller.
+    PayDayScattered { coins: u16, substitute_broke: bool },
     /// Original wPlayerUsedMove/wEnemyUsedMove, updated when move text prints.
     UsedMove { move_: MoveId },
     /// Per-turn receipt: the player's action passed the pre-move gates. The
@@ -1522,6 +1525,31 @@ pub fn sub_created_this_turn(who: BattlerRef) -> bool {
     SUB_CREATED.with(|c| c.borrow()[who.side as usize])
 }
 
+/// The actual damage hook owns success; neither MoveUsed nor a real-HP delta
+/// distinguishes type immunity from a hit absorbed by a Substitute.
+pub(super) fn payday_scatter(
+    effects: &[EffectState<PokeredRules>],
+    actor: BattlerRef,
+) -> Option<(u16, bool)> {
+    effects.iter().find_map(|entry| match entry.kind {
+        PokeVolatile::PayDayScattered { coins, substitute_broke } if entry.host == actor =>
+            Some((coins, substitute_broke)),
+        _ => None,
+    })
+}
+
+/// Consume once after narration has attached the same typed success receipt.
+/// A new turn rebuilds the arena without this transient effect.
+pub(super) fn take_payday_coins(
+    effects: &mut Vec<EffectState<PokeredRules>>,
+    actor: BattlerRef,
+) -> u32 {
+    let coins = payday_scatter(effects, actor).map_or(0, |(coins, _)| u32::from(coins));
+    effects.retain(|entry| !(entry.host == actor
+        && matches!(entry.kind, PokeVolatile::PayDayScattered { .. })));
+    coins
+}
+
 /// Live wPlayerUsedMove/wEnemyUsedMove for Mirror Move.
 fn used_move_for(effects: &[EffectState<PokeredRules>], who: BattlerRef) -> MoveId {
     effects.iter().find_map(|e| match e.kind {
@@ -2829,6 +2857,20 @@ fn substitute_absorb(
     }
     let absorbed=absorb_into_substitute(ctx,target,dmg);
     record_presented_hit(ctx,source,target,dmg,absorbed);
+    if current_move_for(source).effect == MoveEffect::PayDayEffect
+        && payday_scatter(ctx.effects, source).is_none()
+    {
+        let substitute_broke = absorbed && !ctx.effects.iter().any(|entry|
+            entry.host == target && matches!(entry.kind, PokeVolatile::SubstituteHp { .. }));
+        let coins = u16::from(ctx.battler(source).level) * 2;
+        // One action owns one receipt even if its damage hook is visited again.
+        ctx.effects.push(EffectState {
+            id: EffectId(0x50_fe0 + u32::from(source.side)),
+            host: source,
+            effect_order: 0,
+            kind: PokeVolatile::PayDayScattered { coins, substitute_broke },
+        });
+    }
     if absorbed {
         HandlerResult::Set(RelayVar::Damage(0)) // the mon takes nothing
     } else {
