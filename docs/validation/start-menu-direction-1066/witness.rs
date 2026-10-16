@@ -1,5 +1,5 @@
 //! External, ordinary-input witness; never edits PokemonGame runtime state.
-//! Link this exact file separately to actual M5 and the candidate App libraries.
+//! Link this exact file separately to actual M6 and the integrated candidate App libraries.
 //! Usage: witness FIXTURE_SAV BOOT_PREFIX_JSON NEW_OUTPUT_DIR before|after up-a|up-b
 //! Requires App built with debug-server (constructor's final None argument).
 
@@ -158,6 +158,8 @@ fn run() -> Result<(), String> {
         true,  // actual no-device PCM sequencer
         None,  // no debug queue/handle
     );
+    // Same one-time preboot configuration as normal CLI --seed 42.
+    game.set_seed(42);
     let mut input = InputState::new();
     let mut boot_anchor = None;
     line(&mut states, &observation(&game))?;
@@ -356,7 +358,9 @@ fn run() -> Result<(), String> {
             "case": args[4], "expected_behavior": args[3],
             "fixture_source": fixture, "boot_prefix_source": prefix_file,
             "constructor": "ordinary physical save / cold boot / no_audio PCM",
-            "state_setters": 0, "seed_changes": 0, "debug_RPC": 0,
+            "state_setters": 1, "seed_changes": 1, "debug_RPC": 0,
+            "preboot_seed": 42, "preboot_seed_configuration_calls": 1,
+            "runtime_seed_changes": 0, "other_state_setters": 0,
             "hidden_RNG_parity_claim": false,
         }))
         .map_err(|e| e.to_string())?,

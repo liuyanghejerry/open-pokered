@@ -4,82 +4,140 @@
     "home/window.asm:52-132 HandleMenuInput moves cursor and returns sampled mask",
     "home/start_menu.asm:14-58 UP then DOWN returns to loop before A/B/START; only button-only path saves row"
   ],
-  "actual_before": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
-  "actual_after": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+  "actual_before": "5aa829718f5f900703ae8c1950bc6a4e420cdf66",
+  "actual_after": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
+  "runtime_parent": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
   "docs_child_is_not_a_new_runtime_run": true,
   "engine": "e533a3d23a0cdbed1524a1ac91184733da4a6f7e",
   "source_freeze_counts_each_provider": {
-    "source": 2713,
+    "non_docs_source_inputs": 2714,
     "gfx": 702,
     "engine": 981
   },
   "witness_program": {
     "path": "witness.rs",
-    "sha256": "09810c3543cbf3a27b4c080be38cd21ec5bff32e8a6bf0d820961d2b5eaf9d11",
-    "api": "actual public PokemonGame::new_with_options/update/draw and physical InputState",
+    "source_origin": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-seed42-witness-source-v1/start-menu-witness.rs",
+      "sha256": "5d3fe2a8504a89c1b7c4049b6e74308c23b46546bc0bf85d25c0c9dff765b54f",
+      "bytes": 14102
+    },
+    "api": "actual public PokemonGame::new_with_options/update/draw, persistent physical InputState, one normal public set_seed(42) configuration before first observation/update",
     "source_same_for_both_compiled_ELFs": true,
     "debug_RPC": 0,
-    "state_setters": 0,
+    "state_setters": 1,
+    "preboot_seed": 42,
+    "preboot_seed_configuration_calls": 1,
+    "runtime_seed_changes": 0,
+    "other_state_setters": 0,
+    "debug_handle": null,
     "warp": false,
     "snapshot_restore": false,
     "skip_intro": false,
-    "seed_changes": 0,
+    "seed_search": false,
     "audio_clock": "normal Game.update audio.update_frame only; no external PCM pump"
   },
   "actual_ELFs": {
     "before": {
-      "source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
-      "sha256": "ec29802f53d39e9f0eca1605bef9660a825060fc9ecf1e8a5f68a5ebfdb4afad",
-      "bytes": 47040320,
-      "consumed_direct_externs": {
+      "source": "5aa829718f5f900703ae8c1950bc6a4e420cdf66",
+      "binary": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-witness",
+        "sha256": "012de53608e1cc275ae3374f4a08ae4319c92e4c9662b5fa8c214a0786e944e7",
+        "bytes": 47042624
+      },
+      "actual_externs": {
         "pokered_app": {
-          "sha256": "6d25be4c144f620c55bd4e772d2aa8c240693fd40ae5d3911d0c332b3a2fcfbf",
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps/libpokered_app-a033ddfe954130fb.rlib",
+          "sha256": "8eedf0a5636d36a3bd3108960204921f97d5a20aaa8a1c952d6f8bb79ad887f5",
           "bytes": 40579734
         },
         "pokered_core": {
-          "sha256": "c23bd2e68a5f98a1aff7a921774a958e4f3233aa5d70d8ec4b99f84c77c645c8",
-          "bytes": 27155204
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps/libpokered_core-e07ae5bfb6097161.rlib",
+          "sha256": "1b6b2dccc0a3a2f9cb6a74d8efe7abb4b18fcaf6fe1d452653f74768f60f20e1",
+          "bytes": 27158522
         },
         "pokered_renderer": {
-          "sha256": "cfbe1040b35d15cf958d59c1c2fe03baf05340bdff022fabc0dccaa8af6db286",
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps/libpokered_renderer-db429ded8bfb8bae.rlib",
+          "sha256": "92e0969c6341492250cc1afc8d2a2d62f92dd702abee0451cc96d6ae02d953bf",
           "bytes": 1765934
         },
         "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps/libdotzuki_engine-dd0c57d22d9f030e.rlib",
           "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
           "bytes": 4525360
         },
         "serde_json": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps/libserde_json-2e61534cb1deef90.rlib",
           "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
           "bytes": 2459412
         }
-      }
+      },
+      "full_dependency_manifest": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-deps-manifest.json",
+        "sha256": "b5c8e17072a57aa0ae522f02c39a8874d0ad89964f8f89de2a0ff2b429f80106",
+        "bytes": 308274
+      },
+      "actual_App_rustc": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/actual-App-before-rustc.json",
+        "sha256": "b4c2e957a3a9faeef1021f3754b206a1bf9232b24f0c15b4d31fd0fd5a5d9aad",
+        "bytes": 13822
+      },
+      "same_witness_source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-seed42-witness-source-v1/start-menu-witness.rs",
+        "sha256": "5d3fe2a8504a89c1b7c4049b6e74308c23b46546bc0bf85d25c0c9dff765b54f",
+        "bytes": 14102
+      },
+      "preboot_seed": 42
     },
     "after": {
-      "source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
-      "sha256": "e4cb2a027c340e443cbe668342d8084e969cf658ff9b00ff0a96de746b32253b",
-      "bytes": 47565184,
-      "consumed_direct_externs": {
+      "source": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
+      "binary": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-witness",
+        "sha256": "0679e17486e59ff9b237529146a37359f69e907ac4bcab6d13ae0a4e274d4d7f",
+        "bytes": 47567488
+      },
+      "actual_externs": {
         "pokered_app": {
-          "sha256": "fd739488985a369b657d9620d787c160bdb51b642749a734afaed266ceac4908",
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps/libpokered_app-a033ddfe954130fb.rlib",
+          "sha256": "57b955e1d0ebe86f13975a08969c128ebdeac60281b58af93a7ac0b7b8a5de51",
           "bytes": 40584174
         },
         "pokered_core": {
-          "sha256": "8bba7f9266ee8463297bb255df144b1728ac9f10d159be4dabb0339a94011e3e",
-          "bytes": 27172450
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps/libpokered_core-e07ae5bfb6097161.rlib",
+          "sha256": "12f72289d507c575a233b954133768d7e8e7723ae8cdc0948045516d6cafa809",
+          "bytes": 27173826
         },
         "pokered_renderer": {
-          "sha256": "6c89727495d022623edfea0cd1040f7c6ffe441a5f2e6b45198cc9a756189564",
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps/libpokered_renderer-db429ded8bfb8bae.rlib",
+          "sha256": "c81237bd749481b011634cd2f51a6ef8c45fca164f10ca4504fbab1c699c8f22",
           "bytes": 1767782
         },
         "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps/libdotzuki_engine-dd0c57d22d9f030e.rlib",
           "sha256": "6d78f6ffac5c6a149cba293d39b2958f56b88d8b2f9ed78a720962b00229408c",
           "bytes": 4525360
         },
         "serde_json": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps/libserde_json-2e61534cb1deef90.rlib",
           "sha256": "6d470f58f2676ffa6800bca4e4c040bbf9e3c38bd336d92c794656b91d48d163",
           "bytes": 2459412
         }
-      }
+      },
+      "full_dependency_manifest": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-deps-manifest.json",
+        "sha256": "4c9ff80bc6acd8be4021aafb8c6da83eeb3acea6719e5a8a406893530d7a89d3",
+        "bytes": 308485
+      },
+      "actual_App_rustc": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/actual-App-after-rustc.json",
+        "sha256": "4a1d87d93f039a8f35511055d2a0873b59bb7694f6b14db7dc32cebd1d95f534",
+        "bytes": 14038
+      },
+      "same_witness_source": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-seed42-witness-source-v1/start-menu-witness.rs",
+        "sha256": "5d3fe2a8504a89c1b7c4049b6e74308c23b46546bc0bf85d25c0c9dff765b54f",
+        "bytes": 14102
+      },
+      "preboot_seed": 42
     }
   },
   "physical_SRAM": {
@@ -90,35 +148,35 @@
     "fixture": "ViridianForest(2,19); only Geodude21 HP1; wallet1000. Ordinary Continue facesDown. No runtime monster/position/flag edits. Not an RNG or runtime snapshot."
   },
   "runtime": {
-    "actual_tool_session": 96091,
+    "actual_tool_session": 34737,
     "actual_exit_code": 0,
-    "runner_pid": 3622455,
+    "runner_pid": 225550,
     "Game_processes": [
       {
         "name": "before-up-a-process",
-        "pid": 3622985,
-        "pgid": 3622985,
+        "pid": 270667,
+        "pgid": 270667,
         "natural_exit_code": 0,
         "PGgone": true
       },
       {
         "name": "after-up-a-process",
-        "pid": 3623056,
-        "pgid": 3623056,
+        "pid": 270891,
+        "pgid": 270891,
         "natural_exit_code": 0,
         "PGgone": true
       },
       {
         "name": "before-up-b-process",
-        "pid": 3623097,
-        "pgid": 3623097,
+        "pid": 271056,
+        "pgid": 271056,
         "natural_exit_code": 0,
         "PGgone": true
       },
       {
         "name": "after-up-b-process",
-        "pid": 3623101,
-        "pgid": 3623101,
+        "pid": 271766,
+        "pgid": 271766,
         "natural_exit_code": 0,
         "PGgone": true
       }
@@ -151,7 +209,7 @@
     "all_witness_and_runner_PGs_gone": true
   },
   "core_tests": {
-    "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+    "actual_source": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
     "argv": [
       "cargo",
       "test",
@@ -167,34 +225,63 @@
     ],
     "passed": 29,
     "failed": 0,
-    "new_required_names": [
+    "actual_test_names": [
+      "start_menu_tests::b_button_closes_menu",
+      "start_menu_tests::battle_reset_clears_current_and_remembered_row_without_changing_items",
+      "start_menu_tests::cursor_wraps_down_from_bottom",
+      "start_menu_tests::cursor_wraps_up_from_top",
       "start_menu_tests::direction_with_confirm_or_cancel_only_moves_start_menu_cursor",
+      "start_menu_tests::empty_party_keeps_pokemon_entry_and_redisplays_when_selected",
+      "start_menu_tests::item_labels_with_pokedex",
+      "start_menu_tests::item_labels_without_pokedex",
+      "start_menu_tests::later_button_only_poll_can_confirm_or_close_after_start_menu_direction",
+      "start_menu_tests::link_mode_shows_reset_instead_of_save",
+      "start_menu_tests::link_mode_without_pokedex",
+      "start_menu_tests::no_input_returns_redisplay",
+      "start_menu_tests::redisplay_restores_saved_cursor",
+      "start_menu_tests::saved_cursor_clamped_when_pokedex_lost",
+      "start_menu_tests::saved_cursor_persists_across_close_and_reopen",
+      "start_menu_tests::select_all_items_with_pokedex",
+      "start_menu_tests::select_exit_closes_menu",
+      "start_menu_tests::select_pokedex",
+      "start_menu_tests::select_pokemon_without_pokedex",
+      "start_menu_tests::select_reset_in_link_mode",
+      "start_menu_tests::select_save_in_normal_mode",
+      "start_menu_tests::start_button_closes_menu",
       "start_menu_tests::start_menu_direction_wrap_does_not_dispatch_the_destination",
       "start_menu_tests::start_menu_up_precedes_down_and_all_button_bits",
-      "start_menu_tests::later_button_only_poll_can_confirm_or_close_after_start_menu_direction"
+      "start_menu_tests::with_pokedex_has_seven_items",
+      "start_menu_tests::without_pokedex_has_six_items",
+      "start_menu_tests::without_pokemon_first_item_redisplays_and_second_opens_item",
+      "start_menu_tests::without_pokemon_keeps_pokemon_item",
+      "start_menu_tests::without_pokemon_with_pokedex"
     ],
     "full_core_not_claimed": true
   },
-  "visual_limits": {
-    "precombo_frame1428_pixels_equal": true,
-    "precombo_frames1460_and1492_each_differing_pixels": 60,
-    "difference_bbox_exclusive": [
+  "visual_checks": {
+    "precombo_frames1428_1460_1492_each_differing_pixels": 0,
+    "frame1493_differing_pixels_each_pair": 6213,
+    "frame1493_difference_bbox_exclusive": [
+      80,
+      0,
+      160,
+      120
+    ],
+    "frame1493_pixels_outside_menu_box": 0,
+    "frame1524_differing_pixels_each_pair": 6273,
+    "frame1524_pixels_outside_menu_box": 60,
+    "frame1525_differing_pixels_each_pair": 60,
+    "late_NPC_difference_bbox_exclusive": [
       66,
       47,
       78,
       59
     ],
-    "source_mapped_NPC4_actor_box_exclusive": [
-      64,
-      44,
-      80,
-      60
-    ],
-    "pixels_outside_NPC4_box_at_these_precombo_frames": 0,
-    "source": "Unseeded separate coldGame Overworld RNG startsfrom_entropy. Forest NPC4 Stationary range2 maps to0xFD, randomly choosingLeft/Right anddelay. Renderer uses facing/flip.",
-    "NPC_runtime_presentation_and_rng_state_not_recorded": true,
-    "exact_random_bytes_or_orientation_pair_not_claimed": true,
-    "full_screen_pixel_difference_not_entirely_attributed_to_menu_fix": true,
+    "frame1556_differing_pixels": 0,
+    "source_interpretation": "After the actual split M6 is Overworld while candidate is StartMenu, so subsequent foreground ticks differ. Late NPC pixels are not a pre-combination mismatch.",
+    "full_NPC_runtime_presentation_and_rng_state_not_recorded": true,
+    "hidden_state_equality_not_claimed": true,
+    "original_hardware_first_visible_frame_not_claimed": true,
     "audio_fidelity_not_claimed": true
   },
   "selected_images": [
@@ -203,34 +290,75 @@
       "case": "up-a",
       "side": "before",
       "absolute_frame": 1493,
-      "actual_source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
-      "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5"
+      "actual_source": "5aa829718f5f900703ae8c1950bc6a4e420cdf66",
+      "actual_raw_origin": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-up-a/frame-1493.png",
+        "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5",
+        "bytes": 50246
+      },
+      "raw_bytes_unchanged": true
     },
     {
       "path": "docs/screenshots/start-menu-direction-1066/up-a-after.png",
       "case": "up-a",
       "side": "after",
       "absolute_frame": 1493,
-      "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
-      "sha256": "e169a0cc257ce41dbc1c9911252bb7d1f245316b18bc81c4bf3b0b61b7ea71e4"
+      "actual_source": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
+      "actual_raw_origin": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-up-a/frame-1493.png",
+        "sha256": "5c98cfae06f9207b791c010cb6ee6f90135e6b8855f955241acbbfd741bc7f62",
+        "bytes": 26400
+      },
+      "raw_bytes_unchanged": true
     },
     {
       "path": "docs/screenshots/start-menu-direction-1066/up-b-before.png",
       "case": "up-b",
       "side": "before",
       "absolute_frame": 1493,
-      "actual_source": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
-      "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5"
+      "actual_source": "5aa829718f5f900703ae8c1950bc6a4e420cdf66",
+      "actual_raw_origin": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/before-up-b/frame-1493.png",
+        "sha256": "1c5db9e7768c03d506a6dfbcee9dd61a423f931329b318feb594c2faf5fbe8a5",
+        "bytes": 50246
+      },
+      "raw_bytes_unchanged": true
     },
     {
       "path": "docs/screenshots/start-menu-direction-1066/up-b-after.png",
       "case": "up-b",
       "side": "after",
       "absolute_frame": 1493,
-      "actual_source": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
-      "sha256": "e169a0cc257ce41dbc1c9911252bb7d1f245316b18bc81c4bf3b0b61b7ea71e4"
+      "actual_source": "fc8ca2438a8e5f73b18f00c0b349fad789b938be",
+      "actual_raw_origin": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/after-up-b/frame-1493.png",
+        "sha256": "5c98cfae06f9207b791c010cb6ee6f90135e6b8855f955241acbbfd741bc7f62",
+        "bytes": 26400
+      },
+      "raw_bytes_unchanged": true
     }
   ],
+  "historical_M5_None_run": {
+    "actual_before": "e6efc43c40567712350dc0958c11d71e34d2dc4f",
+    "actual_after": "fabd39746c642287a10f5182aa680dd70f3e7ac9",
+    "archived_docs_head": "efa16ccd8edcfce627e1e0bed228081ccd7e3e72",
+    "seed_configuration_calls": 0,
+    "precombo_1460_1492_pixel_difference": 60,
+    "not_relabelled_as_current_run": true,
+    "local_provenance_original": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-docs-ready-v1/historical-M5-None-provenance.json",
+      "sha256": "ad5ec8f09e858af1ed8de409540b1f928119988f958135af16f49bc76d886562",
+      "bytes": 11481
+    },
+    "actual_old_run": {
+      "artifact": "audit-1066-start-menu-native-pairs-v3/result.json",
+      "sha256": "772343bd4df5da2aae9dcce45f37550a0d0f868b05f76d3dfede604701acf466"
+    },
+    "actual_old_review": {
+      "artifact": "audit-1066-start-menu-raw-review-v2/receipt.json",
+      "sha256": "9894c1cfb137c35abf5bfbc4ce351948a7680d7783b80181bda294b037c1bd9c"
+    }
+  },
   "preserved_first_stops": [
     {
       "run": "audit-1066-start-menu-native-pairs-v1",
@@ -257,54 +385,46 @@
     }
   ],
   "local_raw_evidence": {
-    "native_run": {
-      "artifact": "audit-1066-start-menu-native-pairs-v3/result.json",
-      "sha256": "772343bd4df5da2aae9dcce45f37550a0d0f868b05f76d3dfede604701acf466"
+    "pipeline": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/result.json",
+      "sha256": "6b0f50019d7607357fda69c80fe663b4381a6ca7a387056dc8de57d832024d76",
+      "bytes": 22584
     },
-    "raw_review": {
-      "artifact": "audit-1066-start-menu-raw-review-v2/receipt.json",
-      "sha256": "9894c1cfb137c35abf5bfbc4ce351948a7680d7783b80181bda294b037c1bd9c"
+    "source_before": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/source-before.json",
+      "sha256": "ab7c8965d207ee2001f1b784675b2c4419da2654a9159d24e579221bc4df9f32",
+      "bytes": 1081230
     },
-    "npc_background_source": {
-      "artifact": "audit-1066-start-menu-npc-background-source-receipt-v1.json",
-      "sha256": "57dd8465e06530ae3bd82b35a4a7389d5643a32132da6b38c117d41ec614bfe4"
+    "source_after": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/source-after.json",
+      "sha256": "ab7c8965d207ee2001f1b784675b2c4419da2654a9159d24e579221bc4df9f32",
+      "bytes": 1081230
     },
-    "original_reader_pixel_stop": {
-      "artifact": "audit-1066-start-menu-raw-review-v1/reader-stop.json",
-      "sha256": "69441c11811b76cbe7d1d4c5509148c281aa6074730559d2515a99502249c521"
+    "providers": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-validation-v1/providers.json",
+      "sha256": "74eefc66704a8c859b877cf19e63347137ca4d9d31b479b3c9fcbd29005e83c1",
+      "bytes": 5632
     },
-    "core_tests": {
-      "artifact": "audit-1066-start-menu-core-v1/result.json",
-      "sha256": "8603b933daa632c392d9f30c5c79dd37a1d5faaaaeb9c4b8b0a9c4b17016d8f9"
+    "independent_raw": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-independent-raw-v1.json",
+      "sha256": "11f44fbf8279ce83ba1c66b4b0a5cce98780e34861fe5ea8f9921d6efd3661ea",
+      "bytes": 24873
     },
-    "core_test_stdout": {
-      "artifact": "audit-1066-start-menu-core-v1/output.log",
-      "sha256": "b01068aaee0e23d2bb23e805c1ed70efd2a8491975695c250dce656db37deba5"
+    "terminal_visual": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-terminal-visual-v1.json",
+      "sha256": "c3ff51dad7e118216a0cf2275ad46b27cecedb8e597fd1724946c32ccc07b301",
+      "bytes": 9135
     },
-    "actual_M5_app_build": {
-      "artifact": "audit-1066-start-menu-M5-app-before-build-v1/result.json",
-      "sha256": "a76eafa4bd4c77490a5072e46a380215b7bf450bde95f5fbc67719206b5d73fe"
+    "Cargo_release": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-Cargo-release-v1.json",
+      "sha256": "ff4a0fa6411ecb762de82bc5c564a5b31ef97dfb74d4f9f16714e57bc8807e46",
+      "bytes": 1860
     },
-    "actual_candidate_app_build": {
-      "artifact": "audit-1066-start-menu-app-after-build-v1/result.json",
-      "sha256": "eaa99f5a04428ec6529c9e154461d64e6752e46c22dedd6a11fe6bca10f2f8a6"
-    },
-    "actual_M5_frozen_dependencies": {
-      "artifact": "audit-1066-start-menu-M5-frozen-app-deps-v1/result.json",
-      "sha256": "171891d61f9b1cdfb96334d072d300777fc73e9e842aeb999df3623b0370013e"
-    },
-    "compiled_witness_providers": {
-      "artifact": "audit-1066-start-menu-native-pairs-v2/providers.json",
-      "sha256": "cc085c1fb34a2d9ae2ad4e4fd14eda94f2a39c5b655e896b1f49552ec940c5e7"
-    },
-    "original_guard_stop": {
-      "artifact": "audit-1066-start-menu-native-pairs-v1/result.json",
-      "sha256": "e5a2ea89c2417e684620e4ca99e9aae7be07613a0e634002168c3ea893a6cce8"
-    },
-    "original_wire_parse_stop": {
-      "artifact": "audit-1066-start-menu-native-pairs-v2/result.json",
-      "sha256": "3914928603e5986166766780fcfe158f405800f1663d23ea65caa92152c06f88"
+    "source_API_peer": {
+      "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1067-start-menu-M6-independent-source-peer-v1/receipt.json",
+      "sha256": "069578938a3645e483c4e9d93e37f5c4ce4822c663f131ea8ee5be49f2262c4f",
+      "bytes": 2661
     }
   },
-  "scope": "Two actual simultaneous-press START cases and ordinary laterB on onephysicalfixture; not all menus, timing, audio, NPC, RNG or fullgame parity."
+  "scope": "Two actual simultaneous-press START cases and ordinary laterB on one physical fixture; not all menus, timing, audio, hidden NPC/RNG or fullgame parity."
 }
