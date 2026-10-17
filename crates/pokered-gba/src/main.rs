@@ -3,6 +3,8 @@
 
 extern crate alloc;
 
+mod soft_reset;
+
 #[cfg(feature = "autopilot")]
 mod autopilot;
 
@@ -952,6 +954,11 @@ fn game_main() -> ! {
             #[cfg(feature = "perf-benchmark")]
             let um0 = profile_now();
             game.update(&state);
+            // Consume before a pending transition, save/menu continuation,
+            // render or audio tick can touch the abandoned RAM session.
+            if game.platform_reset_requested() {
+                soft_reset::restart_after_white(&mut fb, &mut presenter);
+            }
             #[cfg(feature = "perf-benchmark")]
             let um1 = profile_now();
             game.flush_deferred_transition();
