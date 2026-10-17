@@ -55,6 +55,21 @@ impl NpcPresentation {
         camera: (i32, i32),
         player_walking: bool,
     ) {
+        self.publish_with_image_override(map, npcs, player, camera, player_walking, None);
+    }
+
+    /// An effect may write the displayed ImageIndex without changing the
+    /// NPC's FacingDirection. Keep this in the shadow-OAM pose only: dropping
+    /// the effect cannot leave a persistent image or logical-facing override.
+    pub(super) fn publish_with_image_override(
+        &mut self,
+        map: MapId,
+        npcs: &[NpcRuntimeState],
+        player: (u16, u16),
+        camera: (i32, i32),
+        player_walking: bool,
+        image_override: Option<(usize, Direction)>,
+    ) {
         if self.map != Some(map) || self.images.len() != npcs.len() {
             self.map = Some(map);
             self.images = npcs
@@ -79,6 +94,14 @@ impl NpcPresentation {
             self.origin_adjustments = vec![(0, 0); npcs.len()];
         }
         for (slot, (n, image)) in npcs.iter().zip(&self.images).enumerate() {
+            let mut image = *image;
+            if let Some((target, facing)) = image_override {
+                if slot == target {
+                    image.facing = facing;
+                    image.phase = 0;
+                    image.scripted_frame = None;
+                }
+            }
             let px = super::presentation::npc_walk_pixel_offset(n.walk_counter);
             let (dx, dy) = match n.walking_direction() {
                 Direction::Down => (0, px),
@@ -92,7 +115,7 @@ impl NpcPresentation {
                 y: 60 + (i32::from(n.y) - i32::from(player.1)) * 16 + dy - camera.1
                     + self.origin_adjustments[slot].1,
                 visible: n.visible && image.visible,
-                image: *image,
+                image,
             });
         }
         if self.poses.is_empty() {

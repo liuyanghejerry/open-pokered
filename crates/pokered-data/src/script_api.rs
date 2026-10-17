@@ -92,6 +92,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::BikeShopOffer { texts }.into_script_command())
         });
 
+        engine.register_async_fn("jigglypuffSong", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            if args.len() != 2 {
+                return Err(boa_engine::JsNativeError::typ().with_message("jigglypuffSong: text and npcId expected").into());
+            }
+            let string = |index: usize| args[index].as_string().map(|value| value.to_std_string_lossy())
+                .ok_or_else(|| boa_engine::JsNativeError::typ().with_message(format!("jigglypuffSong: argument {index} must be a string")));
+            Ok(PokemonScriptCommand::JigglypuffSong { text: string(0)?, npc_id: string(1)? }.into_script_command())
+        });
+
         engine.register_async_fn("fieldCry", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
             if args.len() != 2 {
                 return Err(boa_engine::JsNativeError::typ().with_message("fieldCry: text and species expected").into());
@@ -1526,6 +1535,22 @@ mod field_cry_boa_tests {
             );
             assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
         }
+    }
+
+    #[test]
+    fn jigglypuff_song_boa_await_does_not_return_before_do_not_wait_close() {
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"export async function song() {
+          await game.jigglypuffSong("JIGGLYPUFF: Puu pupuu!", "3");
+          await game.showText("returned");
+        }"#).unwrap();
+        let expected = Some(PokemonScriptCommand::JigglypuffSong {
+            text: "JIGGLYPUFF: Puu pupuu!".into(), npc_id: "3".into(),
+        }.into_script_command());
+        assert_eq!(engine.call_function("song", &[]).unwrap(), expected);
+        assert_eq!(engine.tick(), expected);
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText { text: "returned".into() }));
     }
     #[test]
     fn print_text_cry_boa_await_returns_only_after_the_shared_outer_close() {

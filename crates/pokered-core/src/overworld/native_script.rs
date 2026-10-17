@@ -488,6 +488,14 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "jigglypuffSong" => {
+                if v.len() != 2 { return Err("jigglypuffSong: text and npcId expected".into()); }
+                let string = |index: usize| match &v[index] {
+                    Value::Text(text) => Ok(text.clone()),
+                    _ => Err(format!("jigglypuffSong: argument {index} must be a string")),
+                };
+                Ok(pokemon(PokemonScriptCommand::JigglypuffSong { text: string(0)?, npc_id: string(1)? }))
+            },
             "fieldCry" | "printTextCry" => {
                 if v.len() != 2 { return Err(format!("{name}: text and species expected")); }
                 let string = |index: usize| match &v[index] {
@@ -1797,6 +1805,17 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn jigglypuff_song_native_host_has_the_same_strict_text_npc_payload() {
+        let mut host = NativeHost::new();
+        let args = [Value::Text("JIGGLYPUFF: Puu pupuu!".into()), Value::Text("3".into())];
+        assert!(matches!(host.call("jigglypuffSong", &args).unwrap(), HostCall::Command(
+            ScriptCommand::Custom { name, args }) if name == "jigglypuffSong" && args.len() == 2));
+        assert!(host.call("jigglypuffSong", &args[..1]).is_err());
+        assert!(host.call("jigglypuffSong", &[Value::Bool(false), args[1].clone()]).is_err());
+        assert!(host.call("jigglypuffSong", &[args[0].clone(), Value::Number(3.)]).is_err());
     }
 
     #[test]

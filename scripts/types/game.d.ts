@@ -54,6 +54,9 @@ interface GameAPI {
   /** DisplayTextID far@ text and cry/wait, followed in the same window by an
    * authored PARA paragraph and CONT continuation, then the outer A/B ACK. */
   fieldCryContinuation(text: string, species: string, paragraph: string, continuation: string): Promise<void>;
+  /** Pewter's inner DONE text and actual two-channel song, with image-only
+   * 24-frame turns, tail 48, then A-release/close without a final ACK. */
+  jigglypuffSong(text: string, npcId: string): Promise<void>;
   /** Inner PrintText(DONE) pet: include its preparation/Delay3, then retain
    * the window through cry completion, silent outer confirmation and A release. */
   printTextCry(text: string, species: string): Promise<void>;

@@ -39,7 +39,7 @@ fn new_rm() -> Option<ResourceManager> {
     Some(ResourceManager::new(root))
 }
 
-fn render_and_save(screen: &mut OverworldScreen, rm: &mut Option<ResourceManager>, path: &str) {
+fn render_and_save(screen: &mut OverworldScreen, rm: &mut Option<ResourceManager>, path: &str) -> FrameBuffer {
     let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
     draw_overworld(screen, rm, &mut fb, Lang::default());
     let mut img = image::RgbaImage::new(fb.width(), fb.height());
@@ -53,6 +53,7 @@ fn render_and_save(screen: &mut OverworldScreen, rm: &mut Option<ResourceManager
     }
     img.save(path).expect("failed to save PNG");
     eprintln!("saved: {path}");
+    fb
 }
 
 fn npc_by_text_id(screen: &OverworldScreen, text_id: u8) -> &pokered_core::overworld::npc_movement::NpcRuntimeState {
@@ -141,11 +142,14 @@ fn render_giovanni_hidden_after_farewell() {
     );
 }
 
-/// While MUSIC_JIGGLYPUFF_SONG plays, the Jigglypuff must be mid-spin. Both
-/// runs step the exact same frame count after the intro box closes, so the
-/// before/after captures are phase-identical.
+/// Drive the real scene, audio sequencer and renderer together. Jigglypuff
+/// changes its displayed ImageIndex during the song, not its logical facing.
+/// This is an OverworldScreen/audio/render integration, not a CLI playthrough.
 #[test]
 fn render_jigglypuff_mid_spin() {
+    use pokered_audio::{music_data::MusicId, output::AudioOutput};
+    use pokered_core::overworld::screen::OverworldAudioRequest;
+
     let mut rm = new_rm();
     let mut screen =
         OverworldScreen::new(MapId::PewterPokecenter, Some(maps_dir()), PokemonRedData);
@@ -154,37 +158,99 @@ fn render_jigglypuff_mid_spin() {
     screen.state.player.y = 3;
     screen.state.player.facing = Direction::Left;
 
-    let mut dialogue_opened = false;
-    let mut closed_frame: Option<u32> = None;
-    let mut facing_at = std::collections::HashMap::new();
+    // The core alone has no music device. Feed its sample from the same real,
+    // unmodified sequencer used by App; never force the song-playing boolean.
+    let audio = AudioOutput::new_pcm();
+    audio.play_music(MusicId::POKECENTER);
+    let mut pcm = vec![0.; 1470];
+    let mut audible_song = false;
+    let mut stop_requests = 0;
+    let mut song_requests = 0;
+    let mut restore_requests = 0;
+    let mut song_start = None;
+    let mut captures = Vec::new();
+    let mut finished = false;
     for frame in 0..6000u32 {
-        let a = frame % 40 == 0;
-        screen.update_frame(input(a));
-
-        if screen.pending_dialogue.is_some() {
-            dialogue_opened = true;
-        } else if dialogue_opened && closed_frame.is_none() {
-            closed_frame = Some(frame);
+        audio.update_frame();
+        screen.script_sfx_playing = audio.is_sfx_playing();
+        screen.jigglypuff_song_playing = audio.last_music_id() == Some(MusicId::JIGGLYPUFF_SONG)
+            && (audio.is_music_channel_playing(0) || audio.is_music_channel_playing(1));
+        // One ordinary interaction after settling; no ACK is needed to finish
+        // this caller's inner DONE or its final DoNotWait text close.
+        screen.update_frame(input(frame == 2 || frame == 3));
+        for request in screen.audio_requests.drain(..) {
+            match request {
+                OverworldAudioRequest::PlaySound { sound_id } => {
+                    assert_eq!(sound_id, "SFX_STOP_ALL_MUSIC");
+                    stop_requests += 1;
+                    audio.stop_all();
+                }
+                OverworldAudioRequest::PlayMusic { music_id } => {
+                    assert_eq!(music_id, "MUSIC_JIGGLYPUFF_SONG");
+                    song_requests += 1;
+                    audio.clear_saved_music_states();
+                    audio.play_music(MusicId::JIGGLYPUFF_SONG);
+                }
+                OverworldAudioRequest::RestoreMapMusic { map } => {
+                    assert_eq!(map, MapId::PewterPokecenter);
+                    restore_requests += 1;
+                    audio.clear_saved_music_states();
+                    audio.play_music(MusicId::POKECENTER);
+                }
+                other => panic!("unexpected Jigglypuff audio request: {other:?}"),
+            }
         }
-        if let Some(closed) = closed_frame {
-            let offset = frame - closed;
-            if offset == 100 || offset == 160 {
-                facing_at.insert(offset, npc_by_text_id(&screen, 3).facing);
+
+        let effect = screen.active_script_effect_value();
+        let phase = effect.as_ref().and_then(|effect| {
+            assert_eq!(effect["effect"], "JigglypuffSong");
+            effect["state"]["phase"].as_str()
+        });
+        if phase == Some("SongSpin") {
+            let offset = frame - *song_start.get_or_insert(frame);
+            assert_eq!(audio.last_music_id(), Some(MusicId::JIGGLYPUFF_SONG));
+            assert_eq!(npc_by_text_id(&screen, 3).facing, Direction::Right);
+            assert!(screen.retain_field_text);
+            assert!(screen.displayed_field_dialogue().is_some());
+            audio.render_pcm(&mut pcm);
+            audible_song |= pcm.iter().any(|sample| sample.abs() > 1e-7);
+
+            // Full 24-frame rotations, plus two frames for shadow/hardware OAM
+            // publication. Both captures must still be inside the actual song.
+            if offset == 26 || offset == 50 {
+                assert!(audio.is_music_channel_playing(0) || audio.is_music_channel_playing(1));
+                assert_eq!(effect.as_ref().unwrap()["state"]["frames_remaining"], 22);
+                let slot = screen.npc_states.iter().position(|npc| npc.text_id == 3).unwrap();
+                let pose = screen.npc_presentation.pose(MapId::PewterPokecenter, slot).unwrap();
+                assert!(pose.visible);
+                assert_eq!(pose.image.facing, if offset == 26 { Direction::Down } else { Direction::Left });
                 let path = format!("jigglypuff_mid_song_frame{offset}.png");
-                render_and_save(&mut screen, &mut rm, &path);
+                let rendered = render_and_save(&mut screen, &mut rm, &path);
+                let mut pixels = Vec::new();
+                for y in pose.y..pose.y + 16 {
+                    for x in pose.x..pose.x + 16 {
+                        pixels.push(rendered.get_pixel(x as u32, y as u32).unwrap());
+                    }
+                }
+                assert!(pixels.iter().any(|pixel| *pixel != pixels[0]), "NPC crop must not be blank");
+                captures.push((pose.x, pose.y, pixels));
             }
-            if offset == 160 {
-                break;
-            }
+        }
+        if phase == Some("PostSongWait") {
+            assert!(!audio.is_music_channel_playing(0) && !audio.is_music_channel_playing(1));
+            assert!(screen.retain_field_text);
+        }
+        if restore_requests == 1 && screen.script_engine_idle() && effect.is_none() {
+            assert!(screen.displayed_field_dialogue().is_none());
+            assert_eq!(audio.last_music_id(), Some(MusicId::POKECENTER));
+            finished = true;
+            break;
         }
     }
-    assert!(closed_frame.is_some(), "intro dialogue never closed");
-
-    // Mid-song the spin must have progressed between the two captures. On a
-    // broken build the sprite stays frozen facing the player at both.
-    assert_ne!(
-        facing_at[&100], facing_at[&160],
-        "Jigglypuff must be mid-spin (facing changes) during its song, got {:?} at both captures",
-        facing_at[&100]
-    );
+    assert!(finished, "real song must finish and close automatically");
+    assert!(audible_song, "unmodified song must emit PCM");
+    assert_eq!((stop_requests, song_requests, restore_requests), (1, 1, 1));
+    assert_eq!(captures.len(), 2, "both rotating song frames must be rendered");
+    assert_eq!((captures[0].0, captures[0].1), (captures[1].0, captures[1].1));
+    assert_ne!(captures[0].2, captures[1].2, "displayed NPC pixels must rotate");
 }

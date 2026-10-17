@@ -41,6 +41,8 @@ pub enum PokemonScriptCommand {
     /// Explicit far@ text, cry/wait, PARA paragraph, CONT tail and one outer ACK.
     /// `texts` contains exactly the first, paragraph and continuation segments.
     FieldCryContinuation { texts: Vec<String>, species: String },
+    /// Pewter's inner PrintText/DONE, Jigglypuff song/spin, DoNotWait and close.
+    JigglypuffSong { text: String, npc_id: String },
     /// Inner PrintText(DONE), preserving its preparation before the shared cry/outer close.
     PrintTextCry { text: String, species: String },
     ShowItemDialogue { text: String, sound_id: Option<String> },
@@ -122,6 +124,7 @@ impl PokemonScriptCommand {
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
             Self::FieldCryContinuation { .. } => "fieldCryContinuation",
+            Self::JigglypuffSong { .. } => "jigglypuffSong",
             Self::PrintTextCry { .. } => "printTextCry",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
@@ -181,6 +184,7 @@ impl PokemonScriptCommand {
                 texts.insert(1, species);
                 texts.into_iter().map(Value::String).collect()
             }
+            Self::JigglypuffSong { text, npc_id } => vec![json!(text), json!(npc_id)],
             Self::FieldCry { text, species } | Self::PrintTextCry { text, species } => vec![json!(text), json!(species)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
@@ -301,6 +305,10 @@ impl PokemonScriptCommand {
                     species: string(1)?,
                 }
             }
+            "jigglypuffSong" => {
+                if args.len() != 2 { return Err("jigglypuffSong: text and npcId expected".into()); }
+                Self::JigglypuffSong { text: string(0)?, npc_id: string(1)? }
+            },
             "printTextCry" => {
                 if args.len() != 2 { return Err("printTextCry: text and species expected".into()); }
                 Self::PrintTextCry { text: string(0)?, species: string(1)? }
@@ -690,4 +698,23 @@ mod field_cry_command_tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod jigglypuff_song_command_tests {
+    use super::*;
+    #[test]
+    fn jigglypuff_song_roundtrips_exact_payload_and_rejects_invalid_arguments() {
+        let command = PokemonScriptCommand::JigglypuffSong {
+            text: "JIGGLYPUFF: Puu pupuu!".into(), npc_id: "3".into(),
+        };
+        let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else { panic!() };
+        assert_eq!(name, "jigglypuffSong");
+        assert_eq!(args, vec![json!("JIGGLYPUFF: Puu pupuu!"), json!("3")]);
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
+        for invalid in [vec![], vec![json!("text")], vec![json!(true), json!("3")],
+            vec![json!("text"), json!(3)], vec![json!("text"), json!("3"), json!(null)]] {
+            assert!(PokemonScriptCommand::from_custom(&name, &invalid).is_err());
+        }
+    }
 }

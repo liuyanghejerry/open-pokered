@@ -13,6 +13,7 @@ pub mod event_flags;
 pub mod field_moves;
 pub mod field_cry;
 pub mod field_cry_continuation;
+pub mod jigglypuff_song;
 mod field_text;
 pub mod fishing;
 pub mod forced_bike;
