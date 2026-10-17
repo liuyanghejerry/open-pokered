@@ -1590,5 +1590,12 @@
     "receipt_sha256": "8a3d4d7f809a22adb8fb4e7a16522c26d1eb1ce872022aec2c417f9256ec41fd",
     "additional_Game_calls": 0,
     "original_labels_preserved": true
+  },
+  "M18_integration": {
+    "base": "75caea6488c03933cb32f33c2d737a7504ff82c0",
+    "tested_product": "97c203f1722b3be3626b5024ed52149790da0a70",
+    "named_tests_passed": 36,
+    "desktop_app_check_passed": true,
+    "additional_Game_processes": 0
   }
 }

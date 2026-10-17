@@ -54,3 +54,11 @@ python3 docs/validation/vermilion-machop-1084/replay.py --binary /path/to/after/
 普通合并 PR #304 后的 master `074b91b47d713b88bffded1ab0ae0be2bb503a7a`，产品提交为 `66ad1d7b9c2bae69c88e333c8c9241b31df17a20`。相邻接口冲突保留两套显式命令及各自校验和测试；怪力状态机、其测试、VermilionCity脚本及App滚行renderer四个文件与正常录制源码逐字节相同。该组合源码另完成26个命名Core/Data/Boa测试以及正常桌面App的renderer类型检查，均通过。它与前述25项属于不同验证组，不能相加当作51个不同测试。新主分支上的原有宠物调用也在这组中。
 
 正常CLI前后仍标注M16 / 130ee87，本次组合验证没有增加Game；后续文档提交不改变产品源码。
+
+
+### 合入胖丁修复后的集成回归
+
+在主分支 `75caea6488c03933cb32f33c2d737a7504ff82c0` 上正常合并，
+产品提交 `97c203f1722b3be3626b5024ed52149790da0a70` 通过 36 项具名测试
+（怪力、通用叫声、胖丁及 Native/Boa 协议），并通过桌面 App 编译检查。
+本轮未新增游戏进程；上文实机前后对照仍对应其明确记录的源提交。
