@@ -1,6 +1,6 @@
 # 普通宠物：同一文本窗内播放叫声并等待确认
 
-旧版必须先按键关闭全文窗口，才播放宠物叫声。修正版在全文显示完后直接播放叫声，保留同一窗口；声音完成后才接受静默的外层确认，再执行 A 松开等待并关闭窗口。本次迁移 **14 个普通 Far 文本宠物调用点**，共同使用一个 `FieldCry` continuation。胖丁、腕力施工 NPC、传说宝可梦和卡比兽等不同流程不在本次迁移范围。
+旧版部分宠物必须先按键关闭全文窗口，才播放叫声；另有 3 个调用点先播放叫声、再显示文字。修正版在全文显示完后直接播放叫声，保留同一窗口；声音完成后才接受静默的外层确认，再执行 A 松开等待并关闭窗口。本次迁移 **14 个普通 Far 文本宠物调用点**，共同使用一个 `FieldCry` continuation。胖丁、腕力施工 NPC、传说宝可梦和卡比兽等不同流程不在本次迁移范围。
 
 原作依据是固定版本 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c` 的 [VermilionPidgeyHouse.asm](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/VermilionPidgeyHouse.asm) 和 [text_script.asm](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/text_script.asm)：literal `@` 返回后播放并等待叫声，随后才由外层显示调用等待确认、A 松开和关闭。
 
