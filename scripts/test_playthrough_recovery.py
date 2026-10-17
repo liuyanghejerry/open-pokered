@@ -364,3 +364,43 @@ class BagSelectionTests(unittest.TestCase):
             late.use_item(game, "Tm24", party_index=2)
         self.assertEqual(game.cursor, 7)
         open_start.assert_called_once_with(game, "Item")
+
+
+class CeladonExitTreeTests(unittest.TestCase):
+    def run_exit(self, block, expect_cut):
+        class ExitReached(Exception):
+            pass
+        gym = dict(pt.MAPS["CeladonGym"])
+        blocks = list((pt.ROOT / "crates/pokered-data/maps/CeladonGym/map.blk").read_bytes())
+        blocks[17] = block
+        gym["blocks"] = blocks.copy()
+        game = pt.Game.__new__(pt.Game)
+        game.d = Mock()
+        game.d.cmd.return_value = {"data": {
+            "screen": "overworld", "map_name": "CeladonGym",
+            "player_x": 5, "player_y": 6, "player_facing": "Down",
+            "map_blocks": blocks,
+        }}
+        game.last_map = "CeladonCity"
+        game.nav_to = Mock()
+        game.face = Mock()
+        game.nav_warp = Mock(side_effect=ExitReached)
+        with patch.dict(pt.MAPS, {"CeladonGym": gym}), patch.object(late, "field_move") as move:
+            if expect_cut is None:
+                with self.assertRaisesRegex(AssertionError, "unexpected CeladonGym exit tile"):
+                    late.m22_lift_key(game)
+                game.nav_warp.assert_not_called()
+            else:
+                with self.assertRaises(ExitReached):
+                    late.m22_lift_key(game)
+            self.assertEqual(move.call_count, int(bool(expect_cut)))
+
+    def test_reloaded_gym_tree_is_cut(self):
+        self.run_exit(63, True)
+
+    def test_already_cut_gym_exit_does_not_open_a_refusal(self):
+        # Actual fresh m22 failure: block17 changed63->53, tile50->2b.
+        self.run_exit(53, False)
+
+    def test_unexpected_wall_still_fails(self):
+        self.run_exit(1, None)

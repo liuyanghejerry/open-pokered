@@ -661,10 +661,17 @@ def talk_npc(g, map_name, text_id, completion_flag=None):
 
 
 def m22_lift_key(g):
-    # A checkpoint reload restores the gym's original CUT tree as well.
+    from playthrough import tile_at
+    # Fresh m21 already cut this tree. A checkpoint reload restores it;
+    # observe the real block bytes before choosing the field move again.
     g.nav_to(5, 6, "CeladonGym")
     g.face("down")
-    field_move(g, "Cut")
+    state = g.st()  # Refresh the planner from the actual overworld blocks.
+    assert state["screen"] == "overworld" and state["map_name"] == "CeladonGym", state
+    exit_tile = tile_at("CeladonGym", 5, 7)
+    assert exit_tile in (0x50, 0x2B), ("unexpected CeladonGym exit tile", exit_tile)
+    if exit_tile == 0x50:
+        field_move(g, "Cut")
     g.nav_warp(4, 17, "CeladonGym", "CeladonCity", approach="down")
     g.nav_to(35, 33, "CeladonCity")
     g.face("up")
