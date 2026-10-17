@@ -319,15 +319,40 @@ fn poke_flute_starts_snorlax_after_text_without_another_interaction() {
         screen.state.player.facing = Direction::Left;
         screen.run_on_load();
         let input = |a| OverworldInput::new(false, false, false, false, a, false, false, false);
-        for _ in 0..100 { screen.update_frame(input(false)); }
+        for _ in 0..100 {
+            screen.update_frame(input(false));
+        }
         screen.use_field_item(ItemId::PokeFlute, MapId::PalletTown);
         for frame in 0..400 {
-            if screen.pending_wild_encounter.is_some() { break; }
+            if screen.pending_wild_encounter.is_some() {
+                break;
+            }
             let a = screen.pending_dialogue.is_some() && frame % 2 == 1;
-            if let Some(text) = screen.pending_dialogue.as_mut() { text.skip_to_full_page(); }
+            if let Some(text) = screen.pending_dialogue.as_mut() {
+                text.skip_to_full_page();
+            }
             screen.update_frame(input(a));
+            // Both real map wake handlers go straight from narration into the
+            // static battle. Its normal intro owns Snorlax's only initial cry.
+            assert!(
+                !screen.audio_requests.iter().any(|request| matches!(
+                    request,
+                    super::screen::OverworldAudioRequest::PlayCry { species }
+                        if species == "SNORLAX"
+                )),
+                "{map:?}: wake narration must not dispatch an early field cry"
+            );
         }
-        assert!(screen.pending_wild_encounter.is_some(), "{map:?}");
+        let encounter = screen
+            .pending_wild_encounter
+            .as_ref()
+            .expect("wake battle queued");
+        assert_eq!(
+            encounter.species,
+            pokered_data::species::Species::Snorlax,
+            "{map:?}"
+        );
+        assert_eq!(encounter.level, 30, "{map:?}");
         assert!(!flag_set(&screen, flag));
     }
 }
