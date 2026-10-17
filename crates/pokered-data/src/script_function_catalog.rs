@@ -40,6 +40,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "hasItem",
     "hasMoney",
     "isDaycareInUse",
+    "jigglypuffSong",
     "linkStart",
     "oldManTutorial",
     "openBillsPC",

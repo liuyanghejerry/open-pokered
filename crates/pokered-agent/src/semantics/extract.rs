@@ -202,6 +202,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "printFieldText",
     "bikeShopOffer",
     "fieldCry",
+    "jigglypuffSong",
     "printTextCry",
     // Closes the owned field window; event flags/inventory remain unchanged.
     "finishFieldText",
