@@ -57,6 +57,7 @@ impl PendingChoice {
 pub enum ScriptEffect {
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
+    StaticEncounter { state: Box<super::static_encounter::StaticEncounterState> },
     FieldCryContinuation { state: Box<super::field_cry_continuation::FieldCryContinuationState> },
     JigglypuffSong { state: super::jigglypuff_song::JigglypuffSongState },
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
@@ -426,6 +427,7 @@ impl ScriptEffect {
             }
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
+            ScriptEffect::StaticEncounter { state } => json!({ "effect": "StaticEncounter", "state": state }),
             ScriptEffect::FieldCryContinuation { state } => json!({ "effect": "FieldCryContinuation", "state": state }),
             ScriptEffect::JigglypuffSong { state } => json!({ "effect": "JigglypuffSong", "state": state }),
             ScriptEffect::PrintFieldText { text, retain_window, prompt, leading_sound, leading_sound_started, .. } => {
@@ -953,6 +955,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::FollowNpcPath { npc_id, path } => {
             let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
             ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: None, phase: FollowNpcPhase::StartNpc }
+        },
+        PokemonScriptCommand::StaticEncounter { text, species, level } => ScriptEffect::StaticEncounter {
+            state: Box::new(super::static_encounter::StaticEncounterState::new(text, species, level)),
         },
         PokemonScriptCommand::FieldCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::new(text, species),

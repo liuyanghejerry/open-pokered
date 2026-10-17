@@ -40,6 +40,8 @@ pub struct FieldCryState {
 }
 
 impl FieldCryState {
+    pub(super) fn at_outer_ack(&self) -> bool { self.phase == Phase::OuterAck }
+
     pub fn new(text: String, species: String) -> Self {
         Self {
             text,
@@ -59,6 +61,16 @@ impl FieldCryState {
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     pub(super) fn tick_field_cry(&mut self, state: &mut FieldCryState) -> bool {
+        self.tick_field_cry_boundary(state, false)
+    }
+
+    /// A text_asm caller may finish its header/music continuation before
+    /// the outer ACK. Ordinary pet callers keep their original contract.
+    pub(super) fn tick_field_cry_before_ack(&mut self, state: &mut FieldCryState) -> bool {
+        self.tick_field_cry_boundary(state, true)
+    }
+
+    fn tick_field_cry_boundary(&mut self, state: &mut FieldCryState, pause_before_ack: bool) -> bool {
         match state.phase {
             Phase::Start => {
                 // Ordinary npc talk already executed JoypadOverworld. Borrow
@@ -142,9 +154,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     return false;
                 }
                 state.phase = Phase::OuterAck;
-                return self.tick_field_cry(state);
+                return self.tick_field_cry_boundary(state, pause_before_ack);
             }
             Phase::OuterAck => {
+                if pause_before_ack { return false; }
                 if self.tick_retained_field_outer_ack() {
                     self.clear_retained_field_text();
                     // CloseTextDisplay moves the window offscreen, then its

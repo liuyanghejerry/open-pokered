@@ -353,6 +353,9 @@ impl PokemonGame {
         if keep {
             self.post_capture_flow = Some(flow);
         } else {
+            // InitBattle returns only after AddPartyMon/SendNewMonToBox and
+            // their dex/naming UI. EndTrainerBattle's flag/hide comes later.
+            self.overworld.resume_script_after_battle("caught");
             self.prepare_gba_screen_resources(&GameScreen::Overworld);
             self.state.transition_to(GameScreen::Overworld);
             self.battle_vfx = BattleVisualEffects::default();

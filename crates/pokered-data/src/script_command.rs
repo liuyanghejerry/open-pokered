@@ -38,6 +38,7 @@ pub enum PokemonScriptCommand {
     BikeShopOffer { texts: Vec<String> },
     /// DisplayTextID far@ text, one cry/wait, then its silent outer ACK and A release.
     FieldCry { text: String, species: String },
+    StaticEncounter { text: String, species: crate::species::Species, level: u8 },
     /// Explicit far@ text, cry/wait, PARA paragraph, CONT tail and one outer ACK.
     /// `texts` contains exactly the first, paragraph and continuation segments.
     FieldCryContinuation { texts: Vec<String>, species: String },
@@ -123,6 +124,7 @@ impl PokemonScriptCommand {
             Self::FinishFieldText => "finishFieldText",
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
+            Self::StaticEncounter { .. } => "staticEncounter",
             Self::FieldCryContinuation { .. } => "fieldCryContinuation",
             Self::JigglypuffSong { .. } => "jigglypuffSong",
             Self::PrintTextCry { .. } => "printTextCry",
@@ -185,6 +187,7 @@ impl PokemonScriptCommand {
                 texts.into_iter().map(Value::String).collect()
             }
             Self::JigglypuffSong { text, npc_id } => vec![json!(text), json!(npc_id)],
+            Self::StaticEncounter { text, species, level } => vec![json!(text), json!(species.to_string()), json!(level)],
             Self::FieldCry { text, species } | Self::PrintTextCry { text, species } => vec![json!(text), json!(species)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
@@ -357,6 +360,15 @@ impl PokemonScriptCommand {
                 }
                 filtered_options.push(options[8].clone());
                 Self::ReadingMenu { options: filtered_options, texts: filtered_texts }
+            },
+            "staticEncounter" => {
+                if args.len()!=3 { return Err("staticEncounter: text, species and level expected".into()); }
+                let name=string(1)?;
+                let normalized=name.chars().enumerate().map(|(i,c)| if i==0 {c.to_ascii_uppercase()} else {c.to_ascii_lowercase()}).collect::<String>();
+                let species=normalized.parse::<crate::species::Species>().map_err(|_| "staticEncounter: unknown species")?;
+                if !species.is_valid() { return Err("staticEncounter: unknown species".into()); }
+                let level=args[2].as_u64().filter(|n| (1..=100).contains(n)).ok_or("staticEncounter: level must be an integer from 1 to 100")? as u8;
+                Self::StaticEncounter { text: string(0)?, species, level }
             },
             "pokemonMenu" => {
                 let options = strings(0)?;
@@ -715,6 +727,22 @@ mod jigglypuff_song_command_tests {
         for invalid in [vec![], vec![json!("text")], vec![json!(true), json!("3")],
             vec![json!("text"), json!(3)], vec![json!("text"), json!("3"), json!(null)]] {
             assert!(PokemonScriptCommand::from_custom(&name, &invalid).is_err());
+        }
+    }
+}
+
+#[cfg(test)]
+mod static_encounter_protocol_tests {
+    use super::*;
+    #[test]
+    fn static_encounter_command_roundtrips_and_rejects_invalid_enemy_parameters() {
+        for species in [crate::species::Species::Mewtwo,crate::species::Species::Zapdos,crate::species::Species::Articuno,crate::species::Species::Moltres] {
+            let command=PokemonScriptCommand::StaticEncounter{text:"Gyaoo!".into(),species,level:50};
+            let ScriptCommand::Custom{name,args}=command.clone().into_script_command() else {panic!()};
+            assert_eq!(PokemonScriptCommand::from_custom(&name,&args).unwrap(),command);
+        }
+        for args in [vec![],vec![json!("cry"),json!("MEWTWO")],vec![json!(false),json!("MEWTWO"),json!(70)],vec![json!("cry"),json!("None"),json!(70)],vec![json!("cry"),json!("MEWTWO"),json!(0)],vec![json!("cry"),json!("MEWTWO"),json!(101)],vec![json!("cry"),json!("MEWTWO"),json!(70.5)]] {
+            assert!(PokemonScriptCommand::from_custom("staticEncounter",&args).is_err());
         }
     }
 }

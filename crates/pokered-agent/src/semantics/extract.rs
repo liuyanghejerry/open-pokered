@@ -32,6 +32,7 @@ const EFFECT_COMMANDS: &[&str] = &[
     "startBattleSet",
     "startBattleWithText",
     "startWildBattle",
+    "staticEncounter",
     "oldManTutorial",
     "warpTo",
     "moveNpc",
@@ -122,6 +123,10 @@ fn command_effect(name: &str, args: &[Expression]) -> StateEffect {
                     },
                 }
             }
+            None => dynamic(),
+        },
+        "staticEncounter" => match str_arg(1) {
+            Some(species) => StateEffect::BattleStarted { battle: BattleKind::Wild { species, level: num_arg(2).map(|n|n as u8) } },
             None => dynamic(),
         },
         "startWildBattle" => match str_arg(0) {
@@ -1184,4 +1189,16 @@ mod tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod static_encounter_effect_tests {
+    use super::*;
+    #[test]
+    fn static_encounter_records_enemy_parameters_without_treating_text_as_species() {
+        let args=[Expression::StringLit("Gyaoo!".into()),Expression::StringLit("ZAPDOS".into()),Expression::NumberLit(50.)];
+        assert_eq!(command_effect("staticEncounter",&args),StateEffect::BattleStarted{battle:BattleKind::Wild{species:"ZAPDOS".into(),level:Some(50)}});
+        assert!(EFFECT_COMMANDS.contains(&"staticEncounter"));
+        assert!(!NO_STATE_COMMANDS.contains(&"staticEncounter"));
+    }
 }

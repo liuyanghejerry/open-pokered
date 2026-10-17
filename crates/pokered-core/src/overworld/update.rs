@@ -871,6 +871,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect = Some(script_bridge::ScriptEffect::JigglypuffSong { state });
             Some(done)
         } else { None };
+        let static_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::StaticEncounter { .. })) {
+            let Some(script_bridge::ScriptEffect::StaticEncounter { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done=self.tick_static_encounter(&mut state);
+            self.active_script_effect=Some(script_bridge::ScriptEffect::StaticEncounter { state });
+            Some(done)
+        } else { None };
         let field_cry_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::FieldCry { .. })) {
             let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -947,7 +953,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = jigglypuff_tick_done.or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = static_tick_done.or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {
@@ -1024,6 +1030,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     effect,
                     script_bridge::ScriptEffect::StartBattle { .. }
                         | script_bridge::ScriptEffect::StartWildBattle { .. }
+                        | script_bridge::ScriptEffect::StaticEncounter { .. }
                         | script_bridge::ScriptEffect::OldManTutorial
                 );
                 // ElevatorMenu also suspends: the app opens the floor menu and
@@ -3884,6 +3891,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 &self.starter_display_name(),
             ));
         }
+        // EndTrainerBattle hides a consumed static actor synchronously,
+        // before the returning map's fade-in. Drain only these atomic hides;
+        // do not tick the field, poll input, or advance any text/movement.
+        while self.active_script_effect.as_ref().is_some_and(|effect| matches!(effect,
+            script_bridge::ScriptEffect::HideObject { .. }
+                | script_bridge::ScriptEffect::HideObjectByName { .. })) {
+            let effect=self.active_script_effect.take();
+            self.apply_finished_effect(effect);
+            self.active_script_effect=self.script_engine.signal_done(CommandResult::Void)
+                .ok().flatten().map(|command| script_bridge::dispatch_command_with_names(
+                    &command, &self.player_name, &self.rival_name, &self.starter_display_name()));
+        }
         self.sync_flags_from_engine();
     }
 
@@ -4069,6 +4088,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         end_battle_text,
                         rival_triplet_base,
                     });
+                }
+                script_bridge::ScriptEffect::StaticEncounter { state } => {
+                    self.pending_wild_encounter=Some(state.encounter());
                 }
                 script_bridge::ScriptEffect::StartWildBattle { species, level } => {
                     // Static/legendary battle: queue a catchable wild encounter

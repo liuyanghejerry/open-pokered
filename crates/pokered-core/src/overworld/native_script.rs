@@ -496,6 +496,14 @@ impl ScriptHost for NativeHost {
                 };
                 Ok(pokemon(PokemonScriptCommand::JigglypuffSong { text: string(0)?, npc_id: string(1)? }))
             },
+            "staticEncounter" => {
+                if v.len()!=3 { return Err("staticEncounter: text, species and level expected".into()); }
+                let Value::Text(text)=&v[0] else { return Err("staticEncounter: text must be a string".into()); };
+                let Value::Text(species)=&v[1] else { return Err("staticEncounter: species must be a string".into()); };
+                let Value::Number(level)=v[2] else { return Err("staticEncounter: level must be an integer from 1 to 100".into()); };
+                if !level.is_finite() || !(1. ..=100.).contains(&level) || level != level as u8 as f64 { return Err("staticEncounter: level must be an integer from 1 to 100".into()); }
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(text),serde_json::json!(species),serde_json::json!(level as u8)])?))
+            },
             "fieldCry" | "printTextCry" => {
                 if v.len() != 2 { return Err(format!("{name}: text and species expected")); }
                 let string = |index: usize| match &v[index] {
@@ -3245,7 +3253,7 @@ mod tests {
                 ScriptCommand::StartBattle { .. } | ScriptCommand::StartWildBattle { .. } => {
                     CommandResult::Text(outcome.into())
                 }
-                ScriptCommand::Custom { name, .. } if name == "startBattleWithText" => CommandResult::Text(outcome.into()),
+                ScriptCommand::Custom { name, .. } if name == "startBattleWithText" || name == "staticEncounter" => CommandResult::Text(outcome.into()),
                 ScriptCommand::ShowChoice { .. } => {
                     CommandResult::Number(*choices.next().expect("menu response") as f64)
                 }
@@ -4072,4 +4080,23 @@ mod tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod static_encounter_protocol_tests {
+    use super::*;
+    #[test]
+    fn static_encounter_native_validates_species_level_and_keeps_await_payload() {
+        let mut host=NativeHost::new();
+        for (name,species,level)in[("MEWTWO",pokered_data::species::Species::Mewtwo,70),("ZAPDOS",pokered_data::species::Species::Zapdos,50)] {
+            assert_eq!(host.call("staticEncounter",&[Value::Text("call".into()),Value::Text(name.into()),Value::Number(level as f64)]).unwrap(),
+                HostCall::Command(PokemonScriptCommand::StaticEncounter{text:"call".into(),species,level}.into_script_command()));
+        }
+        for n in [-1.,0.,0.5,50.5,101.,f64::NAN,f64::INFINITY] {
+            assert!(host.call("staticEncounter",&[Value::Text("call".into()),Value::Text("MEWTWO".into()),Value::Number(n)]).is_err());
+        }
+        for args in [vec![],vec![Value::Text("call".into())],vec![Value::Bool(false),Value::Text("MEWTWO".into()),Value::Number(70.)],vec![Value::Text("call".into()),Value::Text("NOT_A_SPECIES".into()),Value::Number(70.)]] {
+            assert!(host.call("staticEncounter",&args).is_err());
+        }
+    }
 }
