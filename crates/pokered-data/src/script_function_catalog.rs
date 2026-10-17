@@ -53,6 +53,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "playShipDeparture",
     "pokemonMenu",
     "printFieldText",
+    "printTextCry",
     "readingMenu",
     "replaceTileBlock",
     "setPartyNickname",

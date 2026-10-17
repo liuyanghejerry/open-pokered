@@ -1,7 +1,7 @@
-//! DisplayTextID far@ -> PlayCry/WaitForSoundToFinish -> silent outer ACK.
-//! Far-entry producers: VermilionPidgeyHouse npc2 and the audited plain pets.
-//! Inner PrintText callers, multi-part text and battle entrances keep their
-//! separate continuations; sharing a cry species is not enough to use this flow.
+//! Plain pet text -> PlayCry/WaitForSoundToFinish -> silent outer ACK.
+//! Far and inner PrintText entries retain their distinct preparation. Both
+//! return from the final text without an inner ACK, then share the cry/close.
+//! Multi-part text and battle entrances need their own continuations.
 use super::screen::OverworldAudioRequest;
 use super::{BedroomDialogue, OverworldScreen};
 use crate::alloc_prelude::*;
@@ -20,12 +20,22 @@ enum Phase {
     Done,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+enum Entry {
+    #[default]
+    Far,
+    InnerPrintText,
+}
+
 /// Only the caller's continuation and payload live here. Raw/last/edges and
 /// the completed display cursor remain in the existing Overworld owner.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FieldCryState {
     text: String,
     species: String,
+    // Already-published Far snapshots predate the explicit entry selector.
+    #[serde(default)]
+    entry: Entry,
     phase: Phase,
 }
 
@@ -34,7 +44,15 @@ impl FieldCryState {
         Self {
             text,
             species,
+            entry: Entry::Far,
             phase: Phase::Start,
+        }
+    }
+
+    pub fn inner_print_text(text: String, species: String) -> Self {
+        Self {
+            entry: Entry::InnerPrintText,
+            ..Self::new(text, species)
         }
     }
 }
@@ -53,7 +71,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 let mut dialogue =
                     super::script_bridge::text_to_dialogue_with_names(&state.text, &names);
                 dialogue.set_text_delay_frames(self.text_delay_frames);
-                dialogue.begin_far_field_display();
+                match state.entry {
+                    Entry::Far => dialogue.begin_far_field_display(),
+                    // These text_asm callers perform PrintText's own Delay3
+                    // after DisplayTextIDInit's background/font transfers.
+                    Entry::InnerPrintText => dialogue.begin_field_display(true),
+                }
                 self.pending_dialogue = Some(dialogue);
                 self.last_script_dialogue = None;
                 self.retain_field_text = true;
@@ -80,8 +103,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Extra native layout pages retain their explicit ACK.
                     state.phase = Phase::NativePagePrompt;
                 } else {
-                    // Literal @ returns without an inner ACK. Dispatch once,
-                    // then yield so App can start its real SFX sequencer.
+                    // Literal @ / inner DONE returns without an inner ACK.
+                    // Dispatch once, then yield so App starts its real SFX.
                     self.audio_requests.push(OverworldAudioRequest::PlayCry {
                         species: state.species.clone(),
                     });
