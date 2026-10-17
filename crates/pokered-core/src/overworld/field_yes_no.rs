@@ -49,6 +49,18 @@ impl FieldYesNoState {
             started: false,
         }
     }
+    /// The caller already printed the parent text. Do not print or ACK it again.
+    pub(super) fn preprinted(labels: [String; 2]) -> Self {
+        let mut state = Self::new(String::new(), labels);
+        state.phase = Phase::CursorDelay(3);
+        state
+    }
+    pub(super) fn open_preprinted<G: GameData<Tileset = TilesetId>>(&self, field: &mut OverworldScreen<G>) {
+        field.set_no_text_delay(false);
+        let mut choice = PendingChoice::new(self.labels.to_vec());
+        choice.input_enabled = false;
+        field.pending_choice = Some(choice);
+    }
     pub fn accepts_input(&self) -> bool {
         self.phase == Phase::Poll
     }

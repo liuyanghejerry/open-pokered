@@ -217,27 +217,31 @@ def use_item(g, name, party_index=None, forget=None):
                 g.tap("a", 12)
                 break
             g.tap("down", 8)
-        if forget is not None:
-            for _ in range(8):
-                menu = g.st()["field_menu"]
-                if menu is None or menu.get("phase", "").startswith("ItemUseNotice"):
-                    break  # A free slot did not require replacement.
-                assert menu["phase"].startswith("ChooseMove"), menu
-                target = menu["known_moves"].index(forget)
-                cur = int(re.search(r"cursor: (\d+)", menu["phase"])[1])
-                if cur == target:
-                    g.tap("a", 12)
-                    break
-                g.tap("down", 8)
     # Item results can return to party/bag menus instead of the overworld.
     # Close only the expected notice/browsing states, retaining assertions
     # for an unresolved move replacement or any unexpected menu.
-    for _ in range(20):
+    for _ in range(64):
         menu = g.st().get("field_menu")
         if menu is None:
             break
         phase = menu.get("phase", "")
-        if phase == "ItemHpRestore":
+        learning = menu.get("machine_learning_phase")
+        if learning == "ChooseMove":
+            assert forget is not None, ("unexpected move replacement", menu)
+            assert phase.startswith("ChooseMove"), menu
+            target = menu["known_moves"].index(forget)
+            cur = int(re.search(r"cursor: (\d+)", phase)[1])
+            g.tap("a" if cur == target else "down", 12)
+        elif learning and learning.startswith("ReplaceConfirm"):
+            assert forget is not None, ("unexpected move replacement", menu)
+            # The full-slot LearnMove continuation prints two notices, then
+            # asks permission before opening the actual move cursor.
+            assert "yes: true" in learning, menu
+            g.tap("a", 12)
+        elif learning:
+            assert learning.startswith(("TryingToLearn", "Forgot", "Learned")), menu
+            g.tap("a", 12)
+        elif phase == "ItemHpRestore":
             g.step(16)
         elif phase.startswith("ItemUseNotice"):
             g.tap("a", 12)
@@ -657,10 +661,17 @@ def talk_npc(g, map_name, text_id, completion_flag=None):
 
 
 def m22_lift_key(g):
-    # A checkpoint reload restores the gym's original CUT tree as well.
+    from playthrough import tile_at
+    # Fresh m21 already cut this tree. A checkpoint reload restores it;
+    # observe the real block bytes before choosing the field move again.
     g.nav_to(5, 6, "CeladonGym")
     g.face("down")
-    field_move(g, "Cut")
+    state = g.st()  # Refresh the planner from the actual overworld blocks.
+    assert state["screen"] == "overworld" and state["map_name"] == "CeladonGym", state
+    exit_tile = tile_at("CeladonGym", 5, 7)
+    assert exit_tile in (0x50, 0x2B), ("unexpected CeladonGym exit tile", exit_tile)
+    if exit_tile == 0x50:
+        field_move(g, "Cut")
     g.nav_warp(4, 17, "CeladonGym", "CeladonCity", approach="down")
     g.nav_to(35, 33, "CeladonCity")
     g.face("up")

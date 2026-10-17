@@ -107,7 +107,12 @@ fn nurse_bows_after_fighting_fit_and_restores_pose_after_farewell() {
                 let text=text.split_whitespace().collect::<Vec<_>>().join(" ");
                 if text.contains("fighting fit") {fit=true;assert_ne!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: bow must follow fighting-fit text");}
                 if text.contains("hope to see") {
-                    farewell=true;assert_eq!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: keep bow through farewell");
+                    farewell=true;
+                    // UpdateSprites restores the ordinary pose after inner
+                    // farewell/DONE, before the separate outer ACK.
+                    if !dialogue.waiting_for_input() || dialogue.has_more_pages() {
+                        assert_eq!(screen.npc_states[0].scripted_frame,Some(1),"{map:?}: keep bow while farewell prints");
+                    }
                 }
             }
             if screen.npc_states[0].scripted_frame==Some(1) {

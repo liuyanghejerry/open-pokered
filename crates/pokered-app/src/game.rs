@@ -848,6 +848,7 @@ pub struct PokemonGame {
 /// comparing two snapshots is a fixed-size memcmp with no allocation.
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 struct QuerySeedSnapshot {
+    pokecenter_used: bool,
     money: u32,
     coins: u16,
     dex_owned: u8,
@@ -921,6 +922,7 @@ impl PokemonGame {
         use dotzuki_engine::overworld::Direction;
         let gd = &self.save_data.game_data;
         let mut snap = QuerySeedSnapshot {
+            pokecenter_used: gd.used_pokecenter(),
             money: gd.player_money,
             coins: gd.player_coins,
             dex_owned: gd.pokedex.owned_count() as u8,
@@ -4362,6 +4364,7 @@ impl PokemonGame {
                             .iter()
                             .map(|s| s.pascal_name())
                             .collect();
+                        self.overworld.seed_pokecenter_used(self.save_data.game_data.used_pokecenter());
                         self.overworld.seed_script_bag_quantities(&self.save_data.game_data.bag);
                         self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
                         self.overworld.seed_script_query_state(
@@ -6864,8 +6867,11 @@ impl PokemonGame {
                                 self.save_data.game_data.mark_town_visited(map);
                             }
                             // SetLastBlackoutMap (engine/events/set_blackout_map.asm):
-                            // a script-driven heal records the blackout/Teleport
-                            // target.
+                            // nurse acceptance records the blackout/Teleport
+                            // target before NeedYourPokemonText and HealParty.
+                            OverworldGameDataRequest::MarkPokecenterUsed => {
+                                self.save_data.game_data.mark_pokecenter_used();
+                            }
                             OverworldGameDataRequest::SetBlackoutMap { map } => {
                                 self.save_data.game_data.last_blackout_map = map as u8;
                             }
@@ -13801,3 +13807,7 @@ mod jigglypuff_song_audio_tests;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod static_encounter_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "game/pokecenter_nurse_tests.rs"]
+mod pokecenter_nurse_tests;

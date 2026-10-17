@@ -518,6 +518,10 @@ impl GameData {
             .collect()
     }
 
+    /// Compacted status_flags[4] is original wStatusFlags4 (not flags3).
+    pub fn used_pokecenter(&self) -> bool { self.status_flags[4] & 0x04 != 0 }
+    pub fn mark_pokecenter_used(&mut self) { self.status_flags[4] |= 0x06; }
+
     pub fn serialize_into(&self, buf: &mut Vec<u8>) {
         crate::save::ser_game_data::serialize_game_data_into(self, buf);
     }
@@ -526,5 +530,31 @@ impl GameData {
 impl Default for GameData {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod pokecenter_used_tests {
+    use super::*;
+    #[test]
+    fn nurse_used_flag_survives_original_sram_without_touching_other_status_bytes() {
+        let mut save = crate::save::SaveData::new();
+        save.game_data.status_flags = [0xa1; 12];
+        save.game_data.status_flags[4] = 0x89;
+        assert!(!save.game_data.used_pokecenter());
+        let before = save.game_data.status_flags;
+        save.game_data.mark_pokecenter_used();
+        assert_eq!(save.game_data.status_flags[4], 0x8f);
+        for (i, value) in before.iter().enumerate() {
+            if i != 4 { assert_eq!(save.game_data.status_flags[i], *value); }
+        }
+        let bytes = crate::save::sram_export::export_sram(&save);
+        let imported = crate::save::sram_import::import_sram(&bytes).unwrap();
+        assert!(imported.game_data.used_pokecenter());
+        assert_eq!(imported.game_data.status_flags[4], 0x8f);
+        let once = imported.game_data.status_flags;
+        let mut again = imported.game_data;
+        again.mark_pokecenter_used();
+        assert_eq!(again.status_flags, once);
     }
 }

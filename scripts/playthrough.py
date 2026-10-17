@@ -1402,7 +1402,7 @@ class Game:
         return self.st()["party"][0]
 
     def heal_pokecenter(self, door, city, pc):
-        """Enter the Pokecenter, heal at the nurse (YES), verify full HP,
+        """Enter the Pokecenter, select the original HEAL option, verify full HP,
         walk back out. `door` is the city-side warp tile. The post-exit
         door-pocket escape drives Viridian's south lane; for any other
         city the caller finds the player on the door tile and routes
@@ -1416,7 +1416,15 @@ class Game:
         for _ in range(40):
             s = self.st()
             if s["choice"] is not None:
-                self.choose("YES")
+                # The original HEAL/CANCEL menu draws before its Delay3 input
+                # poll. Do not spend the confirmation edge inside that wait.
+                for _ in range(10):
+                    choice = self.st()["choice"]
+                    if choice is not None and choice.get("input_enabled", True):
+                        break
+                    self.step(1)
+                assert choice is not None and choice.get("input_enabled", True), choice
+                self.choose("HEAL")
                 break
             if s["dialogue_state"] is not None:
                 self.skip()

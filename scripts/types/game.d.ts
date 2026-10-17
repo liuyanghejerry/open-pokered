@@ -44,6 +44,9 @@ interface GameAPI {
   showText(text: string): Promise<void>;
 
   /** Field question/DONE then YES/NO: 0 for YES, 1 for NO/B. */
+  getPokecenterUsed(): boolean;
+  pokecenterNurseOffer(used: boolean, welcomeFirst: string, welcomeLast: string, question: string, heal: string, cancel: string): Promise<number>;
+  pokecenterFarewell(text: string): Promise<void>;
   askFieldYesNo(question: string, yesLabel: string, noLabel: string): Promise<number>;
 
   /** BikeShop no-voucher text_asm: two explicit Welcome paragraphs, then its
