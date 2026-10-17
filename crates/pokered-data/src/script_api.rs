@@ -92,6 +92,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::BikeShopOffer { texts }.into_script_command())
         });
 
+        engine.register_async_fn("fieldCry", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            if args.len() != 2 {
+                return Err(boa_engine::JsNativeError::typ().with_message("fieldCry: text and species expected").into());
+            }
+            let string = |index: usize| args[index].as_string().map(|value| value.to_std_string_lossy())
+                .ok_or_else(|| boa_engine::JsNativeError::typ().with_message(format!("fieldCry: argument {index} must be a string")));
+            Ok(PokemonScriptCommand::FieldCry { text: string(0)?, species: string(1)? }.into_script_command())
+        });
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -1385,5 +1394,25 @@ mod bike_offer_boa_tests {
         assert_eq!(engine.call_function("offer",&[]).unwrap(),expected);
         assert_eq!(engine.tick(),expected,"idle ticking is not an outer textbox close");
         assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),Some(ScriptCommand::ShowText{text:"returned".into()}));
+    }
+}
+
+#[cfg(test)]
+mod field_cry_boa_tests {
+    use super::*;
+    use dotzuki_engine_script::{ScriptEngine, CommandResult};
+    #[test]
+    fn field_cry_boa_await_does_not_return_before_outer_close() {
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"export async function bird() {
+          await game.fieldCry("PIDGEY: Kurukkoo!", "PIDGEY");
+          await game.showText("returned");
+        }"#).unwrap();
+        let expected = Some(PokemonScriptCommand::FieldCry {
+            text: "PIDGEY: Kurukkoo!".into(), species: "PIDGEY".into(),
+        }.into_script_command());
+        assert_eq!(engine.call_function("bird", &[]).unwrap(), expected);
+        assert_eq!(engine.tick(), expected);
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), Some(ScriptCommand::ShowText { text: "returned".into() }));
     }
 }

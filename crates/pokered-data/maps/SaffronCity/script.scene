@@ -111,8 +111,7 @@ game_scene SaffronCity {
   // Pidgeot — the gentleman's bird; in the original its text plays its cry.
   @storyline("talkPidgeot") {
     @trigger(map = "SaffronCity", npc = 12, toggle = "SAFFRON_CITY_OBJ_12", hidden = true)
-    @speaker("") { @t("PIDGEOT: Bi bibii!", "大比鸟：Bi bibii！") }
-    playCry("PIDGEOT")
+    fieldCry(@t("PIDGEOT: Bi bibii!", "大比鸟：Bi bibii！"), "PIDGEOT")
   }
 
   @storyline("talkRocker") {

@@ -402,6 +402,9 @@ pub struct BedroomDialogue {
     /// Outer field display preparation, separate from per-letter waits.
     #[serde(default)]
     field_entry_frames: u8,
+    /// Far DisplayTextID enters without inner PrintText's final Delay3.
+    #[serde(default)]
+    far_field_entry: bool,
     #[serde(default)]
     source_letter_wait: SourceLetterWait,
     #[serde(default)]
@@ -417,9 +420,18 @@ impl BedroomDialogue {
     /// with CopyVideoDataDouble, and PrintText then waits Delay3. A/B cannot
     /// skip these transfers; only the following per-letter waits accelerate.
     pub(crate) fn begin_field_display(&mut self, outer_display: bool) {
+        self.far_field_entry = false;
         self.field_entry_frames = if outer_display {
             Self::FIELD_BG_TRANSFER_FRAMES + Self::FIELD_FONT_AND_PRINT_FRAMES
         } else { 3 }; // Inner PrintText still performs Delay3.
+    }
+
+    /// DisplayTextID calls PrintText_NoCreatingTextBox: background/font
+    /// transfer only, without the inner PrintText Delay3.
+    pub(crate) fn begin_far_field_display(&mut self) {
+        self.far_field_entry = true;
+        self.field_entry_frames = Self::FIELD_BG_TRANSFER_FRAMES
+            + Self::FIELD_FONT_AND_PRINT_FRAMES - 3;
     }
 
     pub fn new(player_name: &str) -> Self {
@@ -441,6 +453,7 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
         }
@@ -468,6 +481,7 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
         }
@@ -527,6 +541,7 @@ impl BedroomDialogue {
             text_delay_frames: DEFAULT_TEXT_DELAY_FRAMES,
             delay_counter: 0,
             field_entry_frames: 0,
+            far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
         }
@@ -572,7 +587,8 @@ impl BedroomDialogue {
 
     pub fn get_display_text(&self) -> Option<(String, String)> {
         // WY moves on-screen after the three background transfers.
-        if self.field_entry_frames > Self::FIELD_FONT_AND_PRINT_FRAMES { return None; }
+        let font_frames = Self::FIELD_FONT_AND_PRINT_FRAMES - if self.far_field_entry { 3 } else { 0 };
+        if self.field_entry_frames > font_frames { return None; }
         let page = self.pages.get(self.current_page)?;
         let idx = self.char_index as usize;
         let l1_chars: Vec<char> = page.line1.chars().collect();

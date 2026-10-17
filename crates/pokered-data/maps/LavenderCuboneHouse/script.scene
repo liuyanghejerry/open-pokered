@@ -4,11 +4,10 @@
 // the brunette girl branches on whether Mr. Fuji has been rescued.
 
 game_scene LavenderCuboneHouse {
-  // ── CUBONE (npc 1) — plays its cry, then a one-line bark ───────────────
+  // ── CUBONE (npc 1) — prints its call, then waits for its cry ───────────────
   @storyline("talkCubone") {
     @trigger(map = "LavenderCuboneHouse", npc = 1)
-    playCry("CUBONE")
-    @speaker("") { @t("CUBONE: Kyarugoo!", "卡拉卡拉：咔噜咕！") }
+    fieldCry(@t("CUBONE: Kyarugoo!", "卡拉卡拉：咔噜咕！"), "CUBONE")
   }
 
   // ── Brunette girl (npc 2) — branches on EVENT_RESCUED_MR_FUJI ───────────
