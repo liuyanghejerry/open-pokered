@@ -92,6 +92,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::BikeShopOffer { texts }.into_script_command())
         });
 
+        engine.register_async_fn("pokedexRating", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let error = |message: &'static str| boa_engine::JsNativeError::typ().with_message(message);
+            if args.len() != 2 { return Err(error("pokedexRating: text and owned count expected").into()); }
+            let text = args[0].as_string().ok_or_else(|| error("pokedexRating: argument 0 must be a string"))?.to_std_string_lossy();
+            let owned = args[1].as_number().filter(|n| n.is_finite() && n.fract() == 0. && (0. ..=151.).contains(n))
+                .ok_or_else(|| error("pokedexRating: owned count must be an integer from 0 to 151"))?;
+            Ok(PokemonScriptCommand::PokedexRating { text, owned: owned as u32 }.into_script_command())
+        });
+
         engine.register_async_fn("jigglypuffSong", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
             if args.len() != 2 {
                 return Err(boa_engine::JsNativeError::typ().with_message("jigglypuffSong: text and npcId expected").into());
@@ -1617,6 +1626,33 @@ mod static_encounter_protocol_tests {
             let mut e=ScriptEngine::with_api(&PokemonScriptApi);
             e.load_script(&format!(r#"export async function bad() {{try {{ await game.staticEncounter({args});await game.showText("accepted");}}catch(error){{await game.showText(error.name);}}}}"#)).unwrap();
             assert_eq!(e.call_function("bad",&[]).unwrap(),Some(ScriptCommand::ShowText{text:"TypeError".into()}));
+        }
+    }
+}
+
+#[cfg(test)]
+mod pokedex_rating_protocol_tests {
+    use super::*;
+    use dotzuki_engine_script::{ScriptEngine,CommandResult};
+    #[test]
+    fn rating_boa_await_preserves_payload_and_rejects_invalid_types() {
+        let mut engine=ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"export async function rating() {
+          await game.pokedexRating("rating", 151);
+          await game.showText("returned");
+        }"#).unwrap();
+        let expected=Some(PokemonScriptCommand::PokedexRating{text:"rating".into(),owned:151}.into_script_command());
+        assert_eq!(engine.call_function("rating",&[]).unwrap(),expected);
+        assert_eq!(engine.tick(),expected);
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),Some(ScriptCommand::ShowText{text:"returned".into()}));
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),None);
+        for args in ["",r#""text""#,r#""text", -1"#,r#""text", 152"#,r#""text", 0.5"#,r#""text", NaN"#,r#""text", Infinity"#,r#""text", "1""#,r#"false, 1"#,r#""text", 1, 2"#] {
+            let mut engine=ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(&format!(r#"export async function bad() {{
+              try {{ await game.pokedexRating({args}); await game.showText("accepted"); }}
+              catch (error) {{ await game.showText(error.name); }}
+            }}"#)).unwrap();
+            assert_eq!(engine.call_function("bad",&[]).unwrap(),Some(ScriptCommand::ShowText{text:"TypeError".into()}),"args={args}");
         }
     }
 }

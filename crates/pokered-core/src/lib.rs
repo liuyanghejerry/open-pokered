@@ -92,3 +92,5 @@ mod start_menu_tests;
 
 #[cfg(test)]
 mod title_screen_tests;
+
+pub mod pokedex_rating;

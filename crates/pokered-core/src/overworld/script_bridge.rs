@@ -58,6 +58,8 @@ pub enum ScriptEffect {
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
     StaticEncounter { state: Box<super::static_encounter::StaticEncounterState> },
+    PokedexRating { state: Box<super::pokedex_rating::PokedexRatingState> },
+
     FieldCryContinuation { state: Box<super::field_cry_continuation::FieldCryContinuationState> },
     JigglypuffSong { state: super::jigglypuff_song::JigglypuffSongState },
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
@@ -426,6 +428,7 @@ impl ScriptEffect {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
+            ScriptEffect::PokedexRating { state } => json!({ "effect": "PokedexRating", "state": state }),
             ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
             ScriptEffect::StaticEncounter { state } => json!({ "effect": "StaticEncounter", "state": state }),
             ScriptEffect::FieldCryContinuation { state } => json!({ "effect": "FieldCryContinuation", "state": state }),
@@ -958,6 +961,10 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::StaticEncounter { text, species, level } => ScriptEffect::StaticEncounter {
             state: Box::new(super::static_encounter::StaticEncounterState::new(text, species, level)),
+        },
+        PokemonScriptCommand::PokedexRating { text, owned } => ScriptEffect::PokedexRating {
+            state: Box::new(super::pokedex_rating::PokedexRatingState::new(text, owned)),
+
         },
         PokemonScriptCommand::FieldCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::new(text, species),

@@ -100,7 +100,12 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             50 => assert!(expected.contains("学习装置")),
             _ => {}
         }
-        pc.update_frame(a, &mut ctx);
+        // The rating owns its typewriter and sound completion before the
+        // silent fresh ACK. Preserve the localized text/layout assertions.
+        for frame in 0..4000 {
+            if pc.message_lines().concat() == "已断开与大木博士电脑的连线。" { break; }
+            pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
+        }
         assert_eq!(pc.message_lines().concat(), "已断开与大木博士电脑的连线。");
     }
 }

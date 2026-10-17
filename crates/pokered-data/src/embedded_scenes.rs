@@ -222,14 +222,14 @@ mod tests {
             // Greeting, counts, and exactly one rating. The corrected scene
             // cannot fall through to an earlier story branch.
             assert_eq!(statements.len(), 3);
-            assert!(matches!(&statements[1],
-                dotzuki_engine_dsl::ast::StoryStmt::Command { name, .. } if name == "showText"));
-            for statement in [&statements[0], &statements[2]] {
-                assert!(matches!(
-                    statement,
-                    dotzuki_engine_dsl::ast::StoryStmt::Speaker { .. }
-                ));
+            for (statement, expected) in statements.iter().zip(["printFieldText", "printFieldText", "pokedexRating"]) {
+                assert!(matches!(statement,
+                    dotzuki_engine_dsl::ast::StoryStmt::Command { name, .. } if name == expected));
             }
+            let dotzuki_engine_dsl::ast::StoryStmt::Command { args, .. } = &statements[2] else { unreachable!() };
+            assert_eq!(args.len(), 2);
+            assert!(matches!(&args[1], dotzuki_engine_dsl::ast::Expression::Call { callee, args }
+                if callee == "getPokedexOwnedCount" && args.is_empty()));
         }
         for name in ["__native_talkOak1_parcel", "__native_talkOak1_parcel_y1",
             "__native_talkOak1_parcel_y3", "__native_talkOak1_dex_other"] {

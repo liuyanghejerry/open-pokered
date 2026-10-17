@@ -1,0 +1,440 @@
+{
+  "scope": "normal ordinary CLI physical SRAM Continue / PC owned40; no runtime setters. PCM/seven bands/lab caller checked separately in App tests",
+  "frames": 1645,
+  "fixture_sha256": "3cee547e2a1a785533481578d8b1f9cd0c8f176fc711b325b0071f0c5b77a2fc",
+  "input_tape_sha256": "8cc74872818e8d24819fc440e400911d3004345a2f30baad7375c8f2224b5244",
+  "product_before": "75caea6488c03933cb32f33c2d737a7504ff82c0",
+  "product_after": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+  "original_reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/events/pokedex_rating.asm; audio/pokedex_rating_sfx.asm; engine/menus/oaks_pc.asm; scripts/OaksLab.asm",
+  "GetItem1_before_frames": [],
+  "GetItem1_after_frames": [
+    846,
+    847,
+    848,
+    849,
+    850,
+    851,
+    852,
+    853,
+    854,
+    855,
+    856,
+    857,
+    858,
+    859,
+    860,
+    861,
+    862,
+    863,
+    864,
+    865,
+    866,
+    867,
+    868,
+    869,
+    870,
+    871,
+    872,
+    873,
+    874,
+    875,
+    876,
+    877,
+    878,
+    879,
+    880,
+    881,
+    882,
+    883,
+    884,
+    885,
+    886,
+    887,
+    888,
+    889,
+    890,
+    891,
+    892,
+    893,
+    894,
+    895,
+    896,
+    897,
+    898,
+    899,
+    900,
+    901,
+    902,
+    903,
+    904,
+    905,
+    906,
+    907,
+    908,
+    909,
+    910,
+    911,
+    912,
+    913,
+    914,
+    915,
+    916,
+    917,
+    918
+  ],
+  "roles": {
+    "before": {
+      "source": "75caea6488c03933cb32f33c2d737a7504ff82c0",
+      "normal_CLI_calls": 1,
+      "save_unchanged": true,
+      "source_guards_passed": true,
+      "owned_exit": {
+        "pid": 992759,
+        "pgid": 992759,
+        "signals": [
+          "SIGTERM"
+        ],
+        "scope": "owned shutdown after diagnostic boundary, not natural success exit",
+        "exit_code": -15,
+        "group_gone": true
+      },
+      "samples": [
+        {
+          "frame": 727,
+          "capture": "before-rating-early.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 846,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 882,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 895,
+          "capture": "before-rating-audio.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 918,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1515,
+          "capture": "before-rating-ready.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1516,
+          "capture": "before-closed-link-entry.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1636,
+          "capture": "before-closed-link-held.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1645,
+          "capture": "before-returned-main-menu.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "MainMenu",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        }
+      ]
+    },
+    "after": {
+      "source": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+      "normal_CLI_calls": 1,
+      "save_unchanged": true,
+      "source_guards_passed": true,
+      "owned_exit": {
+        "pid": 993766,
+        "pgid": 993766,
+        "signals": [
+          "SIGTERM"
+        ],
+        "scope": "owned shutdown after diagnostic boundary, not natural success exit",
+        "exit_code": -15,
+        "group_gone": true
+      },
+      "samples": [
+        {
+          "frame": 727,
+          "capture": "after-rating-early.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 846,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 57,
+              "playing": true
+            }
+          }
+        },
+        {
+          "frame": 882,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 57,
+              "playing": true
+            }
+          }
+        },
+        {
+          "frame": 895,
+          "capture": "after-rating-audio.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 57,
+              "playing": true
+            }
+          }
+        },
+        {
+          "frame": 918,
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 57,
+              "playing": true
+            }
+          }
+        },
+        {
+          "frame": 1515,
+          "capture": "after-rating-ready.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1516,
+          "capture": "after-closed-link-entry.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1636,
+          "capture": "after-closed-link-held.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "Message",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 0,
+              "playing": false
+            }
+          }
+        },
+        {
+          "frame": 1645,
+          "capture": "after-returned-main-menu.png",
+          "state": {
+            "screen": "pc",
+            "pc_phase": "MainMenu",
+            "map_name": "ViridianPokecenter",
+            "player_x": 13,
+            "player_y": 4,
+            "audio_sfx": {
+              "id": 63,
+              "playing": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "component_checks": [
+    {
+      "log_name": "pc-suite.log",
+      "source": "3cd01ccac9d4b1d43bffb2c4396c3cce40c9304e",
+      "passed": 64,
+      "raw_log_sha256": "7e3c3375f1d88a7750046997d7d9012936ed6dec7113a3fc711f280fa0d42fe5"
+    },
+    {
+      "log_name": "oak-dialogue.log",
+      "source": "3cd01ccac9d4b1d43bffb2c4396c3cce40c9304e",
+      "passed": 1,
+      "raw_log_sha256": "55a7115f896f4905dffe92d266b2808a719e5b1f01f40431824fc33bb96ffd50"
+    },
+    {
+      "log_name": "M18-cold-rating-audio-render.log",
+      "source": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+      "passed": 3,
+      "raw_log_sha256": "b6f86e1b4d78b16ff5f8456c768aa22bc621626ceaee085240219964cae9900d"
+    },
+    {
+      "log_name": "M18-core-rating.log",
+      "source": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+      "passed": 4,
+      "raw_log_sha256": "b61a1486be4b265a183ef98c0f9e2f9e93edebb525026a6314dcd66274d77f99"
+    },
+    {
+      "log_name": "M18-data-boa-rating.log",
+      "source": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+      "passed": 2,
+      "raw_log_sha256": "c4c0d6000ee238036c83f56ee8737e0e13c263d940682351acd4ab102ce89d87"
+    },
+    {
+      "log_name": "M18-jiggly-app-regression.log",
+      "source": "75686526660ac0e1cdfc63fe9f9303dc405412e0",
+      "passed": 3,
+      "raw_log_sha256": "c338fab2750d8374821e6da6ab1dc3c0bf4871966eb0a4dd3830a3118a017f8c"
+    }
+  ],
+  "English_source_preservation": {
+    "all_English_localized_literals_byte_equal_in_order": true,
+    "literal_count": 81,
+    "English_sequence_sha256": "aab34e12dbe66bd6c6b7057a55651b367b3f24c88df0464d0067d1fc79715715",
+    "base": "75caea6488c03933cb32f33c2d737a7504ff82c0",
+    "product": "75686526660ac0e1cdfc63fe9f9303dc405412e0"
+  },
+  "normal_native_passes": 2,
+  "retained_initial_failed_before_attempt": {
+    "frames": 701,
+    "reason": "controller did not release A between entering OaksConfirm and confirming; fixed by four neutral frames",
+    "game_shutdown_exit": -15,
+    "group_gone": true
+  },
+  "screenshot_claim": "early and closed-link entry prove visible progression. Identical rating-audio PNGs do not prove audio; raw sequencer samples and PCM tests provide that evidence."
+}
