@@ -40,7 +40,7 @@ use alloc::collections::VecDeque;
 
 // ── Free helper functions ─────────────────────────────────────────
 
-fn resolve_npc_index(
+pub(super) fn resolve_npc_index(
     npc_id: &str,
     npc_states: &[npc_movement::NpcRuntimeState],
     config: &MapScriptConfig,
@@ -441,8 +441,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.player_presentation.publish(self.state.current_map, self.state.player.facing,
             self.state.walk_counter != 0 || self.player_moving_direction != 0,
             font_loaded && self.state.walk_counter == 0);
-        self.npc_presentation.publish(self.state.current_map, &self.npc_states,
-            (self.state.player.x, self.state.player.y), camera, self.state.walk_counter != 0);
+        let image_override = match &self.active_script_effect {
+            Some(script_bridge::ScriptEffect::JigglypuffSong { state }) =>
+                state.image_override(self.state.current_map),
+            _ => None,
+        };
+        self.npc_presentation.publish_with_image_override(self.state.current_map, &self.npc_states,
+            (self.state.player.x, self.state.player.y), camera, self.state.walk_counter != 0,
+            image_override);
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
@@ -858,6 +864,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A concrete typed caller borrows the same field ledger and display
         // cursor. Take it temporarily so its state machine may touch the live
         // bit/choice/window atomically, then retain the ordinary await owner.
+        let jigglypuff_tick_done = if matches!(self.active_script_effect,
+            Some(script_bridge::ScriptEffect::JigglypuffSong { .. })) {
+            let Some(script_bridge::ScriptEffect::JigglypuffSong { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_jigglypuff_song(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::JigglypuffSong { state });
+            Some(done)
+        } else { None };
         let field_cry_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::FieldCry { .. })) {
             let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -927,7 +940,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = field_cry_tick_done.or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = jigglypuff_tick_done.or(field_cry_tick_done).or(bike_tick_done).or(owned_text_done) { done }
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {

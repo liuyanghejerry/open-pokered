@@ -57,6 +57,7 @@ impl PendingChoice {
 pub enum ScriptEffect {
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
+    JigglypuffSong { state: super::jigglypuff_song::JigglypuffSongState },
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
     /// return after the final letter wait instead of waiting for a new press.
     PrintFieldText {
@@ -424,6 +425,7 @@ impl ScriptEffect {
             }
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
+            ScriptEffect::JigglypuffSong { state } => json!({ "effect": "JigglypuffSong", "state": state }),
             ScriptEffect::PrintFieldText { text, retain_window, prompt, leading_sound, leading_sound_started, .. } => {
                 json!({ "effect": "PrintFieldText", "text": text, "retain_window": retain_window, "prompt": prompt, "leading_sound": leading_sound, "leading_sound_started": leading_sound_started })
             }
@@ -952,6 +954,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::FieldCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::new(text, species),
+        },
+        PokemonScriptCommand::JigglypuffSong { text, npc_id } => ScriptEffect::JigglypuffSong {
+            state: super::jigglypuff_song::JigglypuffSongState::new(text, npc_id),
         },
         PokemonScriptCommand::BikeShopOffer { texts } => ScriptEffect::BikeShopOffer {
             state: super::bike_shop::BikeShopOfferState::new(texts),

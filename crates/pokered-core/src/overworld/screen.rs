@@ -877,6 +877,9 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub pending_emotion_bubble: Option<EmotionBubbleState>,
     /// Frontend sequencer status for blocking script jingles.
     pub script_music_playing: bool,
+    /// Actual JIGGLYPUFF_SONG track with either music CH1 or CH2 active.
+    /// Separate from CH1-only waitMusic/healing; not an estimated duration.
+    pub jigglypuff_song_playing: bool,
     pub pending_healing_machine: Option<HealingMachineState>,
     pub last_map: Option<MapId>,
     pub first_lock_trash_can: u8,
@@ -1377,6 +1380,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             pending_set_nickname: None,
             pending_emotion_bubble: None,
             script_music_playing: false,
+            jigglypuff_song_playing: false,
             pending_healing_machine: None,
             first_lock_trash_can: 0,
             second_lock_trash_can: 0,

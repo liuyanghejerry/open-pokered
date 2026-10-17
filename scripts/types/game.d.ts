@@ -51,6 +51,10 @@ interface GameAPI {
    * then wait for the actual outer A/B confirmation and A release. */
   fieldCry(text: string, species: string): Promise<void>;
 
+  /** Pewter's inner DONE text and actual two-channel song, with image-only
+   * 24-frame turns, tail 48, then A-release/close without a final ACK. */
+  jigglypuffSong(text: string, npcId: string): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.
