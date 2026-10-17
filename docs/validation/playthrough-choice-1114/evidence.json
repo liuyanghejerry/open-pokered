@@ -1,0 +1,79 @@
+{
+  "scope": "persistent failure export and ordinary CLI Continue/buttons, not full fresh or ordinary SAVE proof",
+  "fixture_sha256": "68e13c29f6d6b2d474dbda847af7ebab757b40434c3597de39dfa094ef898e90",
+  "product_binary_source": "dc5c28eca9a2822e89ba9dbd8ca542c99f8c5902",
+  "product_binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+  "product_Rust_and_data_equal_master": "fac5afa42ce3034ef3eb31a143b2e074edd76741",
+  "before": {
+    "driver_source": "dc5c28eca9a2822e89ba9dbd8ca542c99f8c5902",
+    "input_enabled_before_confirm": false,
+    "after_confirm": {
+      "cursor_visible": true,
+      "input_enabled": true,
+      "options": [
+        "YES",
+        "NO"
+      ],
+      "selected": 0
+    },
+    "expected_driver_error": "cutscene blocked on choice ['YES', 'NO'] (cursor 0)",
+    "gate1_unlocked": false
+  },
+  "after": {
+    "driver_source": "1183ba87a6b803b374760dde0a5d18999085709d",
+    "driver_file_sha256": "2f3df9d35523708d06a3090022657d21d052487b7caec5426e7c9878de9e2783",
+    "quizzes": [
+      {
+        "number": 1,
+        "answer": "YES",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      },
+      {
+        "number": 2,
+        "answer": "NO",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      },
+      {
+        "number": 3,
+        "answer": "NO",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      },
+      {
+        "number": 4,
+        "answer": "NO",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      },
+      {
+        "number": 5,
+        "answer": "YES",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      },
+      {
+        "number": 6,
+        "answer": "NO",
+        "input_enabled_on_first_observation": false,
+        "gate_unlocked": true,
+        "trainer_unbeaten": true
+      }
+    ]
+  },
+  "owned_Game_shutdown": "both Games terminated by diagnostic owner after assertions; not natural game completion",
+  "portable_replay": {
+    "all_pass": true,
+    "quizzes": 6,
+    "controller_sha256": "7c5f5b40e7493305b1f7cdea5c53d96643fc68451521bd4c2ad41701f900b33e",
+    "driver_file_sha256": "2f3df9d35523708d06a3090022657d21d052487b7caec5426e7c9878de9e2783",
+    "only_observation_and_input_commands": true,
+    "Game_exit": -15
+  }
+}

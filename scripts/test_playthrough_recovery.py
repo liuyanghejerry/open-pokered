@@ -302,7 +302,6 @@ class ShipDepartureTests(unittest.TestCase):
                     late.leave_ss_anne(game)
 
 
-if __name__=='__main__':unittest.main()
 
 
 class BattleCompletionBudgetTests(unittest.TestCase):
@@ -461,3 +460,7 @@ class ChoiceInputReadinessTests(unittest.TestCase):
         self.assertEqual(game.step.call_count, 120)
         game.tap.assert_not_called()
         game.d.drive.assert_not_called()
+
+
+if __name__ == "__main__":
+    unittest.main()
