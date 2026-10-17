@@ -1,0 +1,265 @@
+{
+  "source_before": "d475146762149870bf73e99e9b648a37478ed9d0",
+  "source_after": "b5731e382a6ce3408b59e314e2a00bab334c9edc",
+  "fixture_sha256": "9ef3b73513826cc10d616ab8ffee7f1e7994faea152ed4a45955a34a10d8aab2",
+  "saved_sram_sha256": "76a266adf04f032cb73124eacd356a9f148feee12e54208f5d0ea65392b04594",
+  "inputs": {
+    "pair-inputs.json": {
+      "sha256": "1035102c4da7e39085c51879ea42c0f5d5da4fc99add6225134f96a5881d058e",
+      "frames": 1069
+    },
+    "save-inputs.json": {
+      "sha256": "557e058b93033fc64d2de837802af7c1b92a62b48808ec2375c90a1ed4802870",
+      "frames": 1477
+    },
+    "continue-inputs.json": {
+      "sha256": "0e912011736b3452b907085cfe9a7493d189e6f1aaf6cf513eb3bbf4bccf71c1",
+      "frames": 955
+    },
+    "heal-inputs.json": {
+      "sha256": "07fe69c4559db1b17560282c2ffcef9ecf9ce856196b0091d5ccd081f8dad3ef",
+      "frames": 1973
+    }
+  },
+  "same_input_pair": true,
+  "same_input_pair_frame": 1069,
+  "independent_Continue": "fresh process; only actual normal SAVE SRAM copied, no sidecar",
+  "ordinary_input_only": true,
+  "runtime_setters": false,
+  "layout_font_and_localization_claims": false,
+  "source_tests": {
+    "core_unit": 3126,
+    "data_boa_unit": 308,
+    "agent": 61,
+    "App_cold_SRAM_test": 1,
+    "App_cases": 4
+  },
+  "replay_sha256": "090cfe1bc5321112dcb5d1dd683959e247ca16fa2f26d8accacc3f5c4ff20523",
+  "driver_source": "b5731e382a6ce3408b59e314e2a00bab334c9edc",
+  "driver_tests": 98,
+  "public_replay_verified": true,
+  "normal_saved_sram_sha256": "76a266adf04f032cb73124eacd356a9f148feee12e54208f5d0ea65392b04594",
+  "observations": {
+    "pair-before": {
+      "all_pass": true,
+      "frames": 1069,
+      "binary_sha256": "84bc4065ce8d0ee03b250d1f3ecdac9e9c7f210791f5d1b6e3b9d5420c0afbe0",
+      "input_sha256": "1035102c4da7e39085c51879ea42c0f5d5da4fc99add6225134f96a5881d058e",
+      "final_sram_sha256": "9ef3b73513826cc10d616ab8ffee7f1e7994faea152ed4a45955a34a10d8aab2",
+      "capture_sha256": "1335913728283439e2ad56c9b13c654576ea7ec5b095941d27a6e5d21faf7db2",
+      "owned_shutdown": {
+        "exit_code": -15,
+        "group_gone": true,
+        "scope": "owned termination at diagnostic boundary; not natural game completion"
+      },
+      "screen": "overworld",
+      "map_name": "ViridianPokecenter",
+      "xy": [
+        3,
+        3
+      ],
+      "choice": null,
+      "active_script_effect": "ShowDialogue",
+      "dialogue": "perfect health!",
+      "checked_frames": []
+    },
+    "pair-after": {
+      "all_pass": true,
+      "frames": 1069,
+      "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+      "input_sha256": "1035102c4da7e39085c51879ea42c0f5d5da4fc99add6225134f96a5881d058e",
+      "final_sram_sha256": "9ef3b73513826cc10d616ab8ffee7f1e7994faea152ed4a45955a34a10d8aab2",
+      "capture_sha256": "19054ceace1deb59ad99a45e61092d9d81173b4b6bbbc9b7fb289901cb48b19b",
+      "owned_shutdown": {
+        "exit_code": -15,
+        "group_gone": true,
+        "scope": "owned termination at diagnostic boundary; not natural game completion"
+      },
+      "screen": "overworld",
+      "map_name": "ViridianPokecenter",
+      "xy": [
+        3,
+        3
+      ],
+      "choice": {
+        "cursor_visible": true,
+        "input_enabled": true,
+        "options": [
+          "HEAL",
+          "CANCEL"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "PokecenterNurseOffer",
+      "dialogue": "Shall we heal your POKeMON?",
+      "checked_frames": []
+    },
+    "save": {
+      "all_pass": true,
+      "frames": 1477,
+      "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+      "input_sha256": "557e058b93033fc64d2de837802af7c1b92a62b48808ec2375c90a1ed4802870",
+      "final_sram_sha256": "76a266adf04f032cb73124eacd356a9f148feee12e54208f5d0ea65392b04594",
+      "capture_sha256": "25adcba0bcd486ab54fe1198deef4e33794f10ac75f96da8ec1d95c0b9c72938",
+      "owned_shutdown": {
+        "exit_code": -15,
+        "group_gone": true,
+        "scope": "owned termination at diagnostic boundary; not natural game completion"
+      },
+      "screen": "overworld",
+      "map_name": "ViridianPokecenter",
+      "xy": [
+        3,
+        3
+      ],
+      "choice": null,
+      "active_script_effect": null,
+      "dialogue": null,
+      "checked_frames": []
+    },
+    "continue": {
+      "all_pass": true,
+      "frames": 955,
+      "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+      "input_sha256": "0e912011736b3452b907085cfe9a7493d189e6f1aaf6cf513eb3bbf4bccf71c1",
+      "final_sram_sha256": "76a266adf04f032cb73124eacd356a9f148feee12e54208f5d0ea65392b04594",
+      "capture_sha256": "a8cf1b8fba2ffaece3dd24e24992357c224bdc42dec051fedd705b74176812ef",
+      "owned_shutdown": {
+        "exit_code": -15,
+        "group_gone": true,
+        "scope": "owned termination at diagnostic boundary; not natural game completion"
+      },
+      "screen": "overworld",
+      "map_name": "ViridianPokecenter",
+      "xy": [
+        3,
+        3
+      ],
+      "choice": {
+        "cursor_visible": true,
+        "input_enabled": true,
+        "options": [
+          "HEAL",
+          "CANCEL"
+        ],
+        "selected": 0
+      },
+      "active_script_effect": "PokecenterNurseOffer",
+      "dialogue": "We heal your POKeMON back to perfect health!",
+      "checked_frames": []
+    },
+    "heal": {
+      "all_pass": true,
+      "frames": 1973,
+      "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+      "input_sha256": "07fe69c4559db1b17560282c2ffcef9ecf9ce856196b0091d5ccd081f8dad3ef",
+      "final_sram_sha256": "2f81f5712b1d83e8e1ccf6798b10de2936fd6f9a850b4a92186aae31bdacb6a3",
+      "capture_sha256": "25adcba0bcd486ab54fe1198deef4e33794f10ac75f96da8ec1d95c0b9c72938",
+      "owned_shutdown": {
+        "exit_code": -15,
+        "group_gone": true,
+        "scope": "owned termination at diagnostic boundary; not natural game completion"
+      },
+      "screen": "overworld",
+      "map_name": "ViridianPokecenter",
+      "xy": [
+        3,
+        3
+      ],
+      "choice": null,
+      "active_script_effect": null,
+      "dialogue": null,
+      "checked_frames": [
+        1080,
+        1172,
+        1545
+      ]
+    }
+  },
+  "tested_source_hashes": {
+    "crates/pokered-agent/src/semantics/extract.rs": "90f42d3dcf0705a9ec6dbd22fa47e2fb6d26847a6a8186170210faaa6b2ab312",
+    "crates/pokered-app/src/game.rs": "f9a80de4a9cc2855c22c9e4d80f2aaf097b35c6cb688c89b939cb9baeca15328",
+    "crates/pokered-core/src/overworld/field_yes_no.rs": "4370198d3d81c5ff0419c0237e6c59147fda5385de9c1553a51a36c33f082184",
+    "crates/pokered-core/src/overworld/mod.rs": "78eac5da10d88afa9da9d4ada7faabe6b829f98f21e95d2460e54763d64531dd",
+    "crates/pokered-core/src/overworld/native_script.rs": "dbb363085a33117022a8de2c2e3f41f371f98d20d0d56037cbe9accbfe5c302e",
+    "crates/pokered-core/src/overworld/screen.rs": "bdae546fc41861669b24a6429718e964573e87852fc18897375afeeedf7e9ddf",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "110d59a82ecf069bbc011a92fe3dca33146f4e4b8da4e129b3617f486a14576a",
+    "crates/pokered-core/src/overworld/tests_pokecenter_heal.rs": "a0769458986db5c6f89aec2359ab99b2f6ab7f04efc26b922455dd3204081f87",
+    "crates/pokered-core/src/overworld/update.rs": "45e6d423cf7cb6e45020213460a0140d93eeefccea3ad8b2c8bd3e648806036e",
+    "crates/pokered-core/src/save/game_data.rs": "eeafa9d60917f374fe3f343b31b453cc556829068743a548a429852e5de67506",
+    "crates/pokered-data/maps/CeladonPokecenter/script.scene": "935022216bc09e006ffdc613925ed70402e25dea2aa9921e6d7e9735fd092323",
+    "crates/pokered-data/maps/CeruleanPokecenter/script.scene": "9e53b60f6f564926481577aea7d9eda157ac7c181d41f33663b0bec0cc29e8d2",
+    "crates/pokered-data/maps/CinnabarPokecenter/script.scene": "99a93e0d82f7fe9802a1c9e403ed8e7b5ad5a272bbd1a99bb322bb4f01809dac",
+    "crates/pokered-data/maps/FuchsiaPokecenter/script.scene": "304c041235bc261b6c44ba04a5540b5662ea2eca64cb952bb4104aac6604fe9d",
+    "crates/pokered-data/maps/IndigoPlateauLobby/script.scene": "c706d7baea4edc4de604a12553491e7f7e84564dd6d755886816f5fc443d244d",
+    "crates/pokered-data/maps/LavenderPokecenter/script.scene": "619fe7c4537f6fe4ed9006370cd58e695a1344cd65a1c35856ff5ae460cef217",
+    "crates/pokered-data/maps/MtMoonPokecenter/script.scene": "52be69bc7f7c37a0dfe4788fd0d5cb65556d8ea7111880d21385db6962f08b4f",
+    "crates/pokered-data/maps/PewterPokecenter/script.scene": "62c5b83d4464ee06b6c25e5370708fece70d6ce7ab2196f57fc413702fbcfb72",
+    "crates/pokered-data/maps/RockTunnelPokecenter/script.scene": "cf4ddbaf7f01ea41e1f5a5fe7c9017a52e80640b529402f9be0b2788833d8d60",
+    "crates/pokered-data/maps/SaffronPokecenter/script.scene": "1eb047514011a48282098a49da8f647e68da4b35d83677ac912d4afdb7f1a147",
+    "crates/pokered-data/maps/VermilionPokecenter/script.scene": "c077ea7f3cad99f8ca3ddef5ef4bbbf22c1a765b82a668d11d5b132c7d9df80e",
+    "crates/pokered-data/maps/ViridianPokecenter/script.scene": "ad223484f0ef1f8d13d7b9338fe0b571b3514aa113f1284e03b4daf4829379e2",
+    "crates/pokered-data/maps/shared/pokecenter.js": "4b5b5a8241369d640b493007109d016b64cb43d493dab2b4ed48c2b2df45c230",
+    "crates/pokered-data/maps/shared/pokecenter.scene": "a8beb6b305cb1b1a237dc18f17cbb95de011e2903d71f8cf626b582d2947dff8",
+    "crates/pokered-data/src/script_api.rs": "4c02ea43dbae716d667dbc8473c226ae327ec60018858b9c0a7e7f9b092d8fb6",
+    "crates/pokered-data/src/script_command.rs": "2f1a1c94c8d5ed0c5fd87482039d831d2757dc62ef43f696468ef3959287bb19",
+    "crates/pokered-data/src/script_function_catalog.rs": "a438613d0de74017b0020db73a067fdda2eab0ab6f7f991ffe7eca4450a20830",
+    "scripts/types/game.d.ts": "6bb707152fb4c7407d5735f5f50d537344caa3fbfbaea64a175f64263cc7af4d",
+    "crates/pokered-app/src/game/pokecenter_nurse_tests.rs": "43adeb0c96a57814d89003e62a1e48ce8dbcb5cf7812ae8fe2e15dc4cf072b5e",
+    "crates/pokered-core/src/overworld/pokecenter_nurse.rs": "2d2fc8ae7f46ad9c51ce86e8e27cf3413ff387e371c512cf2166c8e22915f1bf"
+  },
+  "runtime_source_equivalence_to_driver_commit": [
+    "scripts/playthrough.py"
+  ],
+  "normal_SAVE_decoded_assertions": {
+    "initial_status_flags4": 0,
+    "saved_status_flags4": 6,
+    "used_mask": 4,
+    "unchanged_blackout_map_on_decline": 3,
+    "party_hp": [
+      1
+    ],
+    "party_pp": [
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "runtime_binary_sha256_identical_to_driver_commit": true,
+  "driver_commit_normal_binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+  "runtime_fix_source": "03bdd6c7f6187e0d0e1a5a8b51728148cd2508e0",
+  "healed_saved_sram_sha256": "2f81f5712b1d83e8e1ccf6798b10de2936fd6f9a850b4a92186aae31bdacb6a3",
+  "heal_confirmation_frame": 1064,
+  "first_healed_frame": 1172,
+  "heal_checkpoints": {
+    "1080": {
+      "hp": 1,
+      "active_script_effect": "PrintFieldText",
+      "prompt": "Done"
+    },
+    "1172": {
+      "full_party": true,
+      "active_script_effect": "AnimateHealingMachine"
+    },
+    "1545": {
+      "full_party": true,
+      "active_script_effect": "PrintFieldText",
+      "prompt": "Protected",
+      "waiting_last_page": true
+    }
+  },
+  "healed_saved_assertions": {
+    "status_flags4": 6,
+    "blackout_map": 1,
+    "party_hp": 342,
+    "party_pp": [
+      10,
+      20,
+      20,
+      30
+    ]
+  }
+}
