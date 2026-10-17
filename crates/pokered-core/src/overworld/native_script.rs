@@ -488,6 +488,14 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "bikeShopOffer" => {
+                if v.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
+                let texts = v.iter().map(|value| match value {
+                    Value::Text(text) => Ok(text.clone()),
+                    _ => Err("bikeShopOffer: text arguments must be strings".to_string()),
+                }).collect::<Result<Vec<_>, _>>()?;
+                Ok(pokemon(PokemonScriptCommand::BikeShopOffer { texts }))
+            },
             "printFieldText" => {
                 let text = args::text(v.first().ok_or("printFieldText: missing text")?, "printFieldText")?;
                 let retain_window = match v.get(1) {
@@ -1705,6 +1713,17 @@ mod tests {
     use super::*;
 
     #[test]
+    fn bike_offer_native_host_has_the_same_strict_seven_text_payload() {
+        let mut host = NativeHost::new();
+        let mut args = vec![Value::Text("payload".into()); 7];
+        assert!(matches!(host.call("bikeShopOffer", &args).unwrap(), HostCall::Command(
+            ScriptCommand::Custom { name, args }) if name == "bikeShopOffer" && args.len() == 7));
+        assert_eq!(host.call("bikeShopOffer", &args[..6]).unwrap_err(), "bikeShopOffer: seven text arguments expected");
+        args[3] = Value::Bool(false);
+        assert_eq!(host.call("bikeShopOffer", &args).unwrap_err(), "bikeShopOffer: text arguments must be strings");
+    }
+
+    #[test]
     fn silph_departure_native_host_rejects_extra_arguments() {
         let mut host = NativeHost::new();
         assert!(
@@ -2822,7 +2841,9 @@ mod tests {
             e = NativeScriptEngine::new();
             e.load_map("BikeShop", &scene);
             let cmds = drive_fidelity_scene(&mut e, "talkBikeShopClerk", false, "", &[choice]);
-            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { options } if options == &["BICYCLE ¥1000000", "CANCEL"])));
+            assert!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, args }
+                if name == "bikeShopOffer" && args.len() == 7 && args[5] == "BICYCLE ¥1000000" && args[6] == "CANCEL")));
+            assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { .. })), "Bike is not a generic numeric choice");
             assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::GiveItem { .. } | ScriptCommand::TakeMoney { .. })));
         }
     }

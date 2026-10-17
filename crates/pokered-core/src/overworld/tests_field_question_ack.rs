@@ -19,12 +19,11 @@ enum Caller {
     EarlyRow,
 }
 
-const CALLERS: [Caller; 4] = [
-    Caller::Bike,
-    Caller::Admission,
-    Caller::EarlyLoad,
-    Caller::EarlyRow,
-];
+// Bike's genuine NO_TEXT_DELAY question has no glyph poll: an A pressed
+// during preparation is fresh at the first menu poll. Its distinct input
+// contract and snapshots are covered in bike_shop::tests. Safari keeps the
+// ordinary typing/held-A contract below; Bike business controls stay here.
+const CALLERS: [Caller; 3] = [Caller::Admission, Caller::EarlyLoad, Caller::EarlyRow];
 
 fn input(a: bool, b: bool) -> OverworldInput {
     OverworldInput::new(false, false, false, false, a, b, false, false)
@@ -35,6 +34,11 @@ fn text(field: &Field) -> Option<&str> {
         Some(ScriptEffect::ShowDialogue { text } | ScriptEffect::PrintFieldText { text, .. }) => {
             Some(text)
         }
+        Some(ScriptEffect::BikeShopOffer { .. }) => field
+            .pending_dialogue
+            .as_ref()
+            .and_then(|dialogue| dialogue.current())
+            .map(|page| page.line1.as_ref()),
         _ => None,
     }
 }
@@ -136,6 +140,26 @@ fn restore(field: &mut Field) {
 }
 
 fn open_question(field: &mut Field, caller: Caller, hold: bool, roundtrip: bool) {
+    if matches!(caller, Caller::Bike) {
+        // No final ACK is supplied here. DONE plus cursor preparation reaches
+        // the real HandleMenuInput owner; visible labels alone are not input.
+        for _ in 0..4000 {
+            if field.choice_accepts_input() {
+                assert!(field.pending_dialogue.is_none());
+                assert_eq!(field.pending_choice.as_ref().unwrap().selected, 0);
+                let (top, bottom) = field
+                    .displayed_field_dialogue()
+                    .unwrap()
+                    .get_display_text()
+                    .unwrap();
+                assert!(format!("{top} {bottom}").contains("want it?"));
+                assert!(!field.dialogue_needs_button());
+                return;
+            }
+            field.update_frame(input(false, false));
+        }
+        panic!("Bike DONE incorrectly waited for an extra final-page ACK");
+    }
     let mut restored_final_delay = false;
     let mut intermediate_pages = 0;
     for frame in 0..4000 {
@@ -227,7 +251,7 @@ fn next_move(field: &mut Field) -> Vec<(i16, i16)> {
 }
 
 #[test]
-fn four_questions_open_without_final_ack_at_each_speed_and_restore() {
+fn three_safari_questions_open_without_final_ack_at_each_speed_and_restore() {
     for caller in CALLERS {
         for delay in [1, 3, 5] {
             let mut field = at_question(caller, delay, 1000);
@@ -370,7 +394,7 @@ fn both_early_exit_callers_preserve_or_clear_allowance_before_the_return_path() 
 #[test]
 fn bike_sale_and_both_cancel_inputs_keep_money_items_and_final_response_owner() {
     for answer in [0, 1, 2] {
-        // A/B/Down+A; B provenance/instant text is a separate gap.
+        // A/B/Down+A; the typed caller now also keeps accepted B provenance.
         let mut field = at_question(Caller::Bike, 1, 1000);
         open_question(&mut field, Caller::Bike, false, false);
         field.update_frame(input(false, false));
@@ -378,7 +402,11 @@ fn bike_sale_and_both_cancel_inputs_keep_money_items_and_final_response_owner() 
             field.update_frame(OverworldInput::new(
                 false, true, false, false, false, false, false, false,
             ));
-            field.update_frame(input(false, false));
+            // Direction-only HandleMenuInput redraws the cursor and waits3;
+            // no Joypad poll may swallow the later fresh answer during it.
+            for _ in 0..3 {
+                field.update_frame(input(false, false));
+            }
         }
         field.update_frame(input(answer != 1, answer == 1));
         let mut unaffordable = false;

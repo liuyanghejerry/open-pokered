@@ -1,0 +1,82 @@
+{
+  "fixture": {
+    "path": "docs/validation/field-question-ack-1075/fixtures/bike-sale.sav",
+    "sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+    "bytes": 32768
+  },
+  "seed": 42,
+  "cases": {
+    "before": {
+      "source": "3ada1c5272bce1a402d020380fec40bf092e6af5",
+      "frozen_binary_sha256": "3a86d94b5096b2f864342d387e5924eddd37343170f8fe488c2e06f2db6cc0be",
+      "inputs": "before-inputs.json",
+      "input_sha256": "4b87285ffda55c12ba18117d2821ee42c93917a30c9edfd3851f7f5e0ac6c025",
+      "frames": 1109,
+      "welcome_suffix_origin": 1043,
+      "final_result": "ShowChoice row0; money1000/no bike/flags unchanged",
+      "screenshot": "docs/screenshots/bike-no-delay-1078/before.png",
+      "screenshot_sha256": "84d99b4df6a8f34e421283bb32fc2cd5abe8f2d2ff5015056cef39c497909d1b",
+      "raw_result_sha256": "66e1d17665129a0a0fdc6304d84e30ff09fc0455b039ef48b64e009671012b4d"
+    },
+    "after": {
+      "source": "63faa0f91bd4011c2247ea2729106d84047ca7fc",
+      "frozen_binary_sha256": "e00d0c428c51d8482485b80236a10c92520c237ff7ca306ddbb23ace89cc1141",
+      "inputs": "after-inputs.json",
+      "input_sha256": "f8623abf2477ca086fb12f8d1adb5a4f1d3f6d77d2a65fd7281b57abfd03d4b8",
+      "frames": 1096,
+      "welcome_suffix_origin": 1030,
+      "first_menu_accept_relative": 7,
+      "final_result": "accepted_buttons1/selected0; CantAfford PROMPT; money1000/no bike/flags unchanged",
+      "screenshot": "docs/screenshots/bike-no-delay-1078/after.png",
+      "screenshot_sha256": "79b4e14666fb31b5464373637bdcfd8f503427f231a8d8ae642804c9ae3c8ccb",
+      "raw_result_sha256": "202ebaa83ee74e95ef9fa70e44a2d889ad3676d010cae0023574db345af4a2ed"
+    }
+  },
+  "comparison": "Same physical SRAM, language, preboot seed42, literal670 boot/talk inputs. Normal Welcome ACK prefix differs because legacy3layoutpages versus source2paragraphs. Exactly equal B2+A64 suffix aligned at finalWelcome semantic milestone; screenshots both relative+66, not same absolute frame/full vector.",
+  "local_validation": [
+    {
+      "source": "53aad5a835047406e4fefbd79fa3593a4ad4b299",
+      "scope": "Data strict seven-text protocol and Boa await host",
+      "passed": 2
+    },
+    {
+      "source": "63faa0f91bd4011c2247ea2729106d84047ca7fc",
+      "scope": "Bike core module",
+      "passed": 7
+    },
+    {
+      "source": "63faa0f91bd4011c2247ea2729106d84047ca7fc",
+      "scope": "Agent library including strict semantic coverage/graph",
+      "passed": 58
+    },
+    {
+      "source": "63faa0f91bd4011c2247ea2729106d84047ca7fc",
+      "scope": "App Bike module default/debug-server",
+      "named_passes": 2,
+      "constructed_cold_cases_per_named_test": 6,
+      "includes": "accepted mask A/B/AB, MainMenu clear, next ordinary NPC, actual sequencer/PCM, real START clear"
+    },
+    {
+      "source": "b0d687a2616019358ce12716e208aa54f32b5d0a",
+      "scope": "Historical complete core run before test fixture/driver corrections",
+      "passed": 3078,
+      "failed": 2,
+      "subsequent": "Both failed names pass in current seven Bike tests; no claim of a later local complete-core pass."
+    }
+  ],
+  "integration": {
+    "source": "b1439b38ff83b7eeddaeb08dbdafa1b3a8a59eec",
+    "base_master": "e28f59bfe255eb3d7ab1318c240596f95c736438",
+    "bike_added_removed_lines_identical_to_63faa": true,
+    "same_20_changed_source_paths": true,
+    "conflict": "One adjacent-insertion conflict in write_system_save_state; preserve independent bedroom game_progress_flags[28] and Bike status_flags[5].bit6 writes.",
+    "new_local_compiles_or_Game_runs": 0,
+    "integrated_full_CI": "pending; do not relabel earlier evidence"
+  },
+  "limits": [
+    "One normal CLI run per side, no runtime setters/warp/skip/restore/SAVE; owned diagnostic shutdown, not natural exit.",
+    "No CPU/frame-total parity claim against the original ROM.",
+    "CLI --no-audio does not assert PCM; PCM covered by the separate App tests.",
+    "Public literal-replay helper is syntax-checked only; these captures came from the original recorded runs."
+  ]
+}

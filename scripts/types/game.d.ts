@@ -43,6 +43,10 @@ interface GameAPI {
    */
   showText(text: string): Promise<void>;
 
+  /** BikeShop no-voucher text_asm: two explicit Welcome paragraphs, then its
+   * DONE question, PROMPT refusal, DONE goodbye and two manual-list labels. */
+  bikeShopOffer(welcomeFirst: string, welcomeLast: string, question: string, cantAfford: string, goodbye: string, bicycle: string, cancel: string): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.

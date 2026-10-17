@@ -2368,6 +2368,7 @@ impl PokemonGame {
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
+        self.overworld.suspend_source_foreground();
         self.battle.loaded_enemy_slots = 0;
         if self.post_capture_active() {
             // The old BattleOver caller must not settle its party into the
@@ -2381,6 +2382,7 @@ impl PokemonGame {
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
+            self.overworld.suspend_source_foreground();
             self.pending_softboiled_user = None;
             self.clear_post_capture_continuation();
         }
@@ -2426,6 +2428,9 @@ impl PokemonGame {
                 self.prev_title_phase = Some(self.title_screen.phase);
             }
             GameScreen::MainMenu => {
+                // MainMenu draws its instant labels, then unconditionally
+                // clears BIT_NO_TEXT_DELAY before accepting input.
+                self.overworld.set_no_text_delay(false);
                 self.main_menu = MainMenuState::new(self.state.save_summary.clone());
             }
             GameScreen::OakSpeech => {
@@ -2514,6 +2519,9 @@ impl PokemonGame {
                         overworld.restore_loaded_save_flags(&self.save_data, self.companion_flags());
                         #[cfg(target_os = "none")]
                         overworld.restore_loaded_save_flags(&self.save_data, None);
+                        // SRAM was loaded before MainMenu's bit6 clear in the
+                        // original; retain that writer when projecting it here.
+                        overworld.set_no_text_delay(false);
                         overworld.set_toggleable_object_flags(
                             self.save_data.game_data.toggleable_object_flags,
                         );
@@ -2658,6 +2666,7 @@ impl PokemonGame {
                                 );
                             let battle_outcome = writeback.outcome;
                             if let Some(receipt) = writeback.captured {
+                                self.overworld.suspend_source_foreground();
                                 self.begin_post_capture(receipt);
                             }
                             // EvolutionAfterBattle (engine/pokemon/evos_moves.asm):
@@ -2737,6 +2746,8 @@ impl PokemonGame {
                 }
             }
             GameScreen::StartMenu => {
+                self.overworld.set_no_text_delay(false);
+                self.overworld.suspend_source_foreground();
                 // Read the LIVE overworld flag store (unified_flags), not
                 // the `save_data` snapshot which is only synced at save time.
                 let has_pokedex = self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX");
@@ -2990,6 +3001,7 @@ impl PokemonGame {
         self.pending_softboiled_user = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
+        self.overworld.suspend_source_foreground();
         self.battle.loaded_enemy_slots = 0;
         self.clear_rare_candy_continuation();
         self.clear_post_capture_continuation();
@@ -4454,7 +4466,7 @@ impl PokemonGame {
                     // Original DisplayPokedex records the species as seen after viewing.
                     let viewed_species = self.overworld.pending_pokedex_entry.as_ref()
                         .and_then(|entry| pokered_data::species::Species::from_scene_name(&entry.species));
-                    let action = self.overworld.update_frame(ow_input);
+                    let action = self.overworld.update_frame_with_physical_buttons(ow_input, input.raw_current());
                     if self.overworld.take_escape_rope_consumption() {
                         let _ = self.save_data.game_data.bag.remove_item(pokered_data::items::ItemId::EscapeRope, 1);
                     }
@@ -4750,12 +4762,13 @@ impl PokemonGame {
                     BattlePhase::PlayerMenu | BattlePhase::MoveSelect | BattlePhase::ShowingText {
                         backdrop: pokered_core::battle::BattleTextBackdrop::FightMoveNotice { .. }, ..
                     }) {
-                    // These callers are outside temporary NoTextDelay scopes;
-                    // a continuation retains its own captured live options.
-                    let settings = pokered_core::battle::BattleTextSettings::fight_menu(
+                    // Read the live canonical bit; a battle is not itself a
+                    // proven NO_TEXT_DELAY clear writer.
+                    let mut settings = pokered_core::battle::BattleTextSettings::fight_menu(
                         self.state.config.text_speed.delay_frames() as u8,
                         self.battle.link_mode,
                     );
+                    settings.no_text_delay = self.overworld.no_text_delay();
                     crate::battle_text_input::frame(input, Some(settings))
                 } else {
                     pokered_core::battle::BattleTextFrame { held_buttons: 0, settings: None }
@@ -6939,7 +6952,7 @@ impl PokemonGame {
         let choice = self
             .post_capture_choice()
             .or(self.overworld.pending_choice.as_ref())
-            .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected }));
+            .map(|c| serde_json::json!({ "options": c.options, "selected": c.selected, "cursor_visible": c.cursor_visible, "input_enabled": c.input_enabled }));
         let mut snapshot = serde_json::json!({
             "screen": crate::cli::screen_name(&self.state.screen).to_string(),
             "map_id": map_id as u8,
@@ -7190,7 +7203,7 @@ impl PokemonGame {
             player_facing: self.overworld.state.player.facing,
             overworld: OverworldObs {
                 dialogue_open: self.post_capture_dialogue().is_some() || self.overworld.pending_dialogue.is_some(),
-                choice_open: self.post_capture_choice().is_some() || self.overworld.pending_choice.is_some(),
+                choice_open: self.post_capture_choice().is_some() || self.overworld.choice_accepts_input(),
                 script_running: !self.overworld.script_engine_idle()
                     || self.overworld.active_script_effect_label().is_some()
                     || self.overworld.script_awaiting_battle,
@@ -7252,8 +7265,8 @@ impl PokemonGame {
             "dialogue_done" => self.post_capture_dialogue().is_none() && self.overworld.pending_dialogue.is_none(),
             "dialogue_ready" => self.post_capture_dialogue().or(self.overworld.pending_dialogue.as_ref())
                 .map_or(false, |d| d.waiting_for_input()),
-            "choice_open" => self.post_capture_choice().is_some() || self.overworld.pending_choice.is_some(),
-            "choice_closed" => self.post_capture_choice().is_none() && self.overworld.pending_choice.is_none(),
+            "choice_open" => self.post_capture_choice().is_some() || self.overworld.choice_accepts_input(),
+            "choice_closed" => self.post_capture_choice().is_none() && !self.overworld.choice_accepts_input(),
             "script_idle" => self.overworld.script_engine_idle(),
             "not_battle" => self.state.screen != pokered_core::game_state::GameScreen::Battle,
             // Player control back after a cutscene: overworld, no dialogue /
@@ -13734,3 +13747,7 @@ mod platform_soft_reset_tests;
 #[path = "game/reset_counter.rs"]
 mod reset_counter;
 use reset_counter::SoftResetCounter;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/bike_shop_no_delay_tests.rs"]
+mod bike_shop_no_delay_tests;

@@ -107,6 +107,14 @@ pub struct OverworldSnapshot {
     pub retain_field_text: bool,
     pub pending_choice: Option<PendingChoice>,
     #[serde(default)]
+    pub source_foreground: Option<crate::foreground_input::ForegroundJoypad>,
+    #[serde(default)]
+    pub source_foreground_mode: crate::foreground_input::ForegroundMode,
+    #[serde(default)]
+    pub no_text_delay: Option<bool>,
+    #[serde(default)]
+    pub source_foreground_error: Option<crate::foreground_input::ForegroundInputError>,
+    #[serde(default)]
     pub script_money_box: Option<u32>,
     #[serde(default)]
     pub script_coin_box: Option<u16>,
@@ -278,6 +286,10 @@ impl OverworldSnapshot {
             retain_healing_text: false,
             retain_field_text: false,
             pending_choice: None,
+            source_foreground: None,
+            source_foreground_mode: crate::foreground_input::ForegroundMode::Observed,
+            no_text_delay: Some(screen.no_text_delay),
+            source_foreground_error: None,
             script_money_box: None,
             script_coin_box: None,
             gift_box_number: 1,
@@ -389,7 +401,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
             frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
-            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, source_foreground, source_foreground_mode, source_foreground_error, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
@@ -414,6 +426,7 @@ impl OverworldSnapshot {
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
             post_dialogue_battle, fishing_anim, pending_fishing, ship_departure,
         );
+        snap.no_text_delay = Some(screen.no_text_delay);
         snap.script_engine = screen.script_engine.snapshot();
         snap
     }
@@ -426,6 +439,9 @@ impl OverworldSnapshot {
         screen: &mut OverworldScreen<G>,
     ) {
         screen.load_map_script_ex(self.state.current_map, false);
+        // Legacy sidecars have no authority to clear the canonical saved bit.
+        if let Some(no_delay) = self.no_text_delay { screen.no_text_delay = no_delay; }
+
         // Older snapshots already preserve these button edges. Retain them
         // when migrating so a held A does not become a fresh field press.
         screen.sampled_player_input = self.sampled_player_input.unwrap_or_else(|| {
@@ -438,7 +454,7 @@ impl OverworldSnapshot {
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
             frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
-            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
+            last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, source_foreground, source_foreground_mode, source_foreground_error, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
             warp_fade_state, pending_warp, pending_connection, connection_npc_preview,
