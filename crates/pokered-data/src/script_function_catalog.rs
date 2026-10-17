@@ -11,6 +11,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "depositDaycare",
     "elevatorMenu",
     "enterHallOfFame",
+    "fieldCry",
     "filterBag",
     "finishFieldText",
     "followNpcPath",

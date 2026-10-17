@@ -858,6 +858,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A concrete typed caller borrows the same field ledger and display
         // cursor. Take it temporarily so its state machine may touch the live
         // bit/choice/window atomically, then retain the ordinary await owner.
+        let field_cry_tick_done = if matches!(self.active_script_effect,
+            Some(script_bridge::ScriptEffect::FieldCry { .. })) {
+            let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_field_cry(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::FieldCry { state });
+            Some(done)
+        } else { None };
         let bike_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::BikeShopOffer { .. })) {
             let Some(script_bridge::ScriptEffect::BikeShopOffer { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -920,7 +927,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = bike_tick_done.or(owned_text_done) { done }
+            let done = if let Some(done) = field_cry_tick_done.or(bike_tick_done).or(owned_text_done) { done }
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {
@@ -3648,7 +3655,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             script_bridge::ScriptEffect::WaitMusic => !script_music_playing,
             // The app samples the actual SFX sequencer before each core tick.
             // The preceding PlayCry was dispatched at the end of its own frame.
-            script_bridge::ScriptEffect::WaitSound => !script_sfx_playing,
+            script_bridge::ScriptEffect::WaitSound => script_bridge::ScriptEffect::sound_wait_complete(script_sfx_playing),
             script_bridge::ScriptEffect::FinishFieldText => !a_pressed,
             script_bridge::ScriptEffect::SetPartyNickname { .. } => true,
             script_bridge::ScriptEffect::ShowEmotionBubble {

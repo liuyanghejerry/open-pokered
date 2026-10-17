@@ -56,6 +56,7 @@ impl PendingChoice {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
+    FieldCry { state: super::field_cry::FieldCryState },
     /// Inner PrintText ending in DONE. Keep the window for its caller, and
     /// return after the final letter wait instead of waiting for a new press.
     PrintFieldText {
@@ -376,6 +377,10 @@ pub enum HealingMachinePhase {
 }
 
 impl ScriptEffect {
+    /// Both waitSound and a typed text_asm cry caller consume the actual
+    /// sequencer completion sampled by App, never a guessed cry duration.
+    pub(super) fn sound_wait_complete(sfx_playing: bool) -> bool { !sfx_playing }
+
     /// These actual controls have no source Joypad implementation yet. Do not
     /// carry a field last across them and call it verified history.
     pub fn has_unmodeled_input_owner(&self) -> bool {
@@ -418,6 +423,7 @@ impl ScriptEffect {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
+            ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
             ScriptEffect::PrintFieldText { text, retain_window, prompt, leading_sound, leading_sound_started, .. } => {
                 json!({ "effect": "PrintFieldText", "text": text, "retain_window": retain_window, "prompt": prompt, "leading_sound": leading_sound, "leading_sound_started": leading_sound_started })
             }
@@ -943,6 +949,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::FollowNpcPath { npc_id, path } => {
             let (target_x, target_y) = *path.last().expect("validated nonempty escort route");
             ScriptEffect::FollowNpc { npc_id, target_x, target_y, path: Some(path), player_steps: None, phase: FollowNpcPhase::StartNpc }
+        },
+        PokemonScriptCommand::FieldCry { text, species } => ScriptEffect::FieldCry {
+            state: super::field_cry::FieldCryState::new(text, species),
         },
         PokemonScriptCommand::BikeShopOffer { texts } => ScriptEffect::BikeShopOffer {
             state: super::bike_shop::BikeShopOfferState::new(texts),

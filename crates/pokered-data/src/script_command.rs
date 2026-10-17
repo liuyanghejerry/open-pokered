@@ -36,6 +36,8 @@ pub enum PokemonScriptCommand {
     /// Seven localized strings: two Welcome paragraphs, question, refusal,
     /// goodbye, bicycle label, cancel label. Returns only after outer close.
     BikeShopOffer { texts: Vec<String> },
+    /// DisplayTextID far@ text, one cry/wait, then its silent outer ACK and A release.
+    FieldCry { text: String, species: String },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -113,6 +115,7 @@ impl PokemonScriptCommand {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
             Self::BikeShopOffer { .. } => "bikeShopOffer",
+            Self::FieldCry { .. } => "fieldCry",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -166,6 +169,7 @@ impl PokemonScriptCommand {
                 args
             },
             Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
+            Self::FieldCry { text, species } => vec![json!(text), json!(species)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
             Self::ShowItemDialogue { text, sound_id } => {
@@ -268,6 +272,10 @@ impl PokemonScriptCommand {
                     Some(Value::String(sound)) => Some(sound.clone()),
                     Some(_) => return Err("printFieldText: leadingSound must be a string".into()),
                 },
+            },
+            "fieldCry" => {
+                if args.len() != 2 { return Err("fieldCry: text and species expected".into()); }
+                Self::FieldCry { text: string(0)?, species: string(1)? }
             },
             "finishFieldText" => Self::FinishFieldText,
             "bikeShopOffer" => {
@@ -566,5 +574,21 @@ mod bike_offer_protocol_tests {
         }
         let mut invalid=args;invalid[3]=json!(false);
         assert_eq!(PokemonScriptCommand::from_custom("bikeShopOffer", &invalid).unwrap_err(),"bikeShopOffer: argument 3 must be a string");
+    }
+}
+
+#[cfg(test)]
+mod field_cry_command_tests {
+    use super::*;
+    #[test]
+    fn field_cry_roundtrips_exact_payload_and_rejects_invalid_arguments() {
+        let command = PokemonScriptCommand::FieldCry {
+            text: "PIDGEY: Kurukkoo!".into(), species: "PIDGEY".into(),
+        };
+        let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else { panic!("typed custom command"); };
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
+        for invalid in [vec![], vec![json!("text")], vec![json!("text"), json!("PIDGEY"), json!(false)], vec![json!(false), json!("PIDGEY")], vec![json!("text"), json!(1)]] {
+            assert!(PokemonScriptCommand::from_custom("fieldCry", &invalid).is_err());
+        }
     }
 }

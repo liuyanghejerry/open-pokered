@@ -47,6 +47,10 @@ interface GameAPI {
    * DONE question, PROMPT refusal, DONE goodbye and two manual-list labels. */
   bikeShopOffer(welcomeFirst: string, welcomeLast: string, question: string, cantAfford: string, goodbye: string, bicycle: string, cancel: string): Promise<void>;
 
+  /** DisplayTextID far@ payload: retain its completed window during the cry,
+   * then wait for the actual outer A/B confirmation and A release. */
+  fieldCry(text: string, species: string): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.
