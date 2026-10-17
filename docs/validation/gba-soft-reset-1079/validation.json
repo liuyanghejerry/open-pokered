@@ -1,0 +1,74 @@
+{
+  "status": "ACTUAL_RUNTIME_VALIDATED_AT_RECORDED_HEADS; ordinary M13 integration source delta verified; PR CI pending",
+  "source": {
+    "before_commit": "e28f59bfe255eb3d7ab1318c240596f95c736438",
+    "before_rom_sha256": "46aa3b974f1dddb5d86d84878afda595d7a9ad8ec81c4ec337cf57b86345e206",
+    "before_artifact_run": 38938598662,
+    "before_artifact_checkout_tree_equals_before_commit": true,
+    "after_commit": "20cfac9fd08fc4e965a19041b47edd50722789c6",
+    "after_rom_sha256": "843649da3af87deeff96932f10c3fda35b3bad7ca05ea0b85de3951a1e285178",
+    "normal_release_no_opt_in_features": true
+  },
+  "environment": "libmGBA 0.10.5, built-in HLE BIOS. Normal release ROM, physical setKeys inputs, one initial cold core.reset only. Runtime bus/register/state writes and emulator reset shortcuts absent. Not physical hardware or dumped Nintendo BIOS validation.",
+  "host_tests": {
+    "actual_named_executions": 28,
+    "actual_terminal_session": 89084,
+    "exit_code": 0,
+    "counts": [
+      3,
+      4,
+      3,
+      4,
+      14
+    ],
+    "source_head": "20cfac9fd08fc4e965a19041b47edd50722789c6"
+  },
+  "continue_visual_pair": {
+    "same_physical_sav_sha256": "5622d21964e3146f145fbaf686d87c280060f181e8e744238d9b71189420333a",
+    "same_all_63_hardware_frame_commands": true,
+    "hardware_frames": 9369,
+    "both_bag_captures_frame": 9369,
+    "pre_reset_frame_5740_pixels_exact": true,
+    "before": "Normal Continue returns to saved Mart position, but unsaved purchase remains: money800 and Poké Ball x1. Constructor marker remains1.",
+    "after": "Normal Continue reloads money1000 and empty bag; constructor marker2.",
+    "SRAM_all32768_bytes_equal_mother_before_and_after": true,
+    "CPU_instruction_timing_identity_claimed": false,
+    "visual_after_wrapper": "The completed image/money/SRAM observations precede an invalid extra bag-len probe. Wrapper exit1 is preserved; child exit0. The probe read Option discriminant as length, proven by ELF DWARF. No actual product failure inferred."
+  },
+  "newgame_visual_pair": {
+    "before": "After second physical reset, normal NEW GAME completes at old Mart map56 with fresh player coordinates3,6 and money3000.",
+    "after": "After second physical reset, normal NEW GAME completes at RedsHouse2F map38 coordinates3,6 and money3000.",
+    "both_final_settle": "400 neutral hardware frames after the same 21 ordinary A-button progression taps; absolute frame differs (before18650, after18530).",
+    "SRAM_all32768_bytes_unchanged": true,
+    "reset_trigger_surface": "Before from bag screen, after from field; same NEW GAME logical endpoint; no absolute-frame or identical full-history claim."
+  },
+  "additional_runtime_controls": {
+    "main_candidate_constructed_count": 4,
+    "main_candidate": "field unsaved purchase reset/Continue; second field reset/NewGame; START-menu reset; full SRAM stable",
+    "no_valid_SRAM": "all FF image, physical reset, ordinary menu remains NEW GAME; constructor2",
+    "battle": "Actual rival Pidgey level9 battle screen, sustained physical combo. At 32 hardware frames counter16->2; continued held input reaches counter0 and actual ROM trampoline, then BIOS ROM startup, constructor2, cold boot screen, full SRAM unchanged.",
+    "white_prelude": "Second field reset complete trace and battle complete trace each show32 consecutive distinct hardware VBlanks, all four Mode4 palette entries7fff, SOUNDCNT_X=0, IME1 during wait. Battle white frames7699..7730.",
+    "BIOS_ABI": "Final normal ELF has ROM Thumb trampoline and ROM literals, SP03007f00, IME/DMA disabled, SWI1, flag03007ffa=0, SWI0; actual trace reaches ROM startup PC080000c4 with BIOS SP03007f00, IME0, sound0. Reinitializes constructor without allocating another whole live Overworld."
+  },
+  "preserved_controls_and_limits": [
+    "First battle32-hardware-frame control did not reset because only14 App updates had polled. Driver exit0 was not gameplay PASS. Continued-hold control passes without changing product threshold.",
+    "Initial baseline stdin EOF and insufficient Title settling controls are preserved as partial, not completed Continue proof.",
+    "First field trace tool output was truncated; exact32-VBlank evidence comes from complete second field trace and complete battle trace.",
+    "General original Joypad-owner poll cadence is not covered by this change. App reset check remains once per App update.",
+    "No claim of complete story/gameplay parity, all hardware configurations, physical GBA hardware, or future synchronization/CI."
+  ],
+  "evidence_root_relative": "audit-1078-gba-soft-reset-validation-v1",
+  "pending": [
+    "Open focused PR with these committed screenshots/docs.",
+    "Wait for all applicable original CI green before normal merge."
+  ],
+  "integration": {
+    "head": "f728dcad9f5d8a888363691fa5b83b5abfde02b1",
+    "master": "a494d727c46c49a88e6d4e91d7fb250d363404d9",
+    "source_paths_and_nonblank_patch_lines_exact_to_original_delta": true,
+    "product_logic_conflicts": false,
+    "resolution": "Preserved both EOF test modules with separate cfg; reset_counter remains unconditional.",
+    "local_retests_after_integration": 0,
+    "reason": "Six source paths including shared_runtime_regressions fixture/test adjustment remain unchanged; prior host28/native evidence retains actual20cf label; full original CI required at final PR head."
+  }
+}
