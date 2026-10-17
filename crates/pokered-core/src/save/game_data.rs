@@ -13,6 +13,8 @@ pub const MAX_OBJECT_EVENTS: usize = 16;
 pub const SPRITE_SET_LENGTH: usize = 11;
 pub const NUM_EVENTS_BYTES: usize = (0xA00 + 7) / 8;
 pub const GAME_PROGRESS_FLAGS_SIZE: usize = 0x78;
+/// `wRedsHouse2FCurScript` within the original saved `wGameProgressFlags`.
+pub const REDS_HOUSE_2F_SCRIPT_INDEX: usize = 28;
 pub const GAME_PROGRESS_TAIL_SIZE: usize = 80;
 fn default_game_progress_tail() -> Vec<u8> { vec![0; GAME_PROGRESS_TAIL_SIZE] }
 pub const HIDDEN_ITEMS_BYTES: usize = (112 + 7) / 8;

@@ -1,14 +1,14 @@
 // RedsHouse2F — translated from the original disassembly
 // (scripts/RedsHouse2F.asm, text/RedsHouse2F.asm, data/maps/objects/RedsHouse2F.asm).
-// This is the player's upstairs bedroom: no NPCs, no signs, no items, no dialogue.
-// The original's only logic is RedsHouse2FDefaultScript, a one-shot on-enter
-// initializer that faces the player UP (toward the stairs/window) and then
-// transitions to a permanent noop script. We reproduce that single behavior in @load.
+// RedsHouse2FDefaultScript faces UP once, then stores SCRIPT_REDSHOUSE2F_NOOP
+// in its original saved script byte. Later entries leave the arrival facing alone.
 
 game_scene RedsHouse2F {
   @load {
-    // RedsHouse2FDefaultScript: PLAYER_DIR_UP, then noop forever.
-    facePlayer("up")
+    @if (!getFlag("SCRIPT_REDSHOUSE2F_NOOP")) {
+      facePlayer("up")
+      setFlag("SCRIPT_REDSHOUSE2F_NOOP")
+    }
   }
 
   // ── Red's bedroom PC (sign 1 at 0,1) ─────────────────────────────────

@@ -2785,6 +2785,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(mut extras)=extras {
             extras.retain(|name,value| {
                 if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
+                // This script byte has always lived in the original SRAM.
+                if name == "SCRIPT_REDSHOUSE2F_NOOP" { return false; }
                 let system_alias=name.starts_with("EVENT_TRADED_FOR_")
                     || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
                     || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
@@ -2828,6 +2830,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
+        self.set_flag_live(
+            "SCRIPT_REDSHOUSE2F_NOOP",
+            data.game_progress_flags
+                .get(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)
+                .copied().unwrap_or(0) != 0,
+        );
         self.forced_bike.active = data.status_flags[5] & (1 << 5) != 0;
         self.no_text_delay = data.status_flags[5] & (1 << 6) != 0;
         self.player_last_stop_direction = data.player_last_stop_direction;
@@ -2849,6 +2857,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        if let Some(script) = data.game_progress_flags
+            .get_mut(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)
+        {
+            *script = u8::from(self.unified_flags.get_flag("SCRIPT_REDSHOUSE2F_NOOP"));
+        }
         // Read/modify/write only the original live bit, preserving every
         // unrelated status flag (including ALWAYS_ON_BIKE in the same byte).
         if self.no_text_delay { data.status_flags[5] |= 1 << 6; }
