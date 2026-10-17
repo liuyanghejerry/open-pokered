@@ -51,6 +51,10 @@ interface GameAPI {
    * then wait for the actual outer A/B confirmation and A release. */
   fieldCry(text: string, species: string): Promise<void>;
 
+  /** Inner PrintText(DONE) pet: include its preparation/Delay3, then retain
+   * the window through cry completion, silent outer confirmation and A release. */
+  printTextCry(text: string, species: string): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.

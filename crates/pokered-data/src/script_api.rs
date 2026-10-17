@@ -101,6 +101,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::FieldCry { text: string(0)?, species: string(1)? }.into_script_command())
         });
 
+        engine.register_async_fn("printTextCry", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            if args.len() != 2 {
+                return Err(boa_engine::JsNativeError::typ().with_message("printTextCry: text and species expected").into());
+            }
+            let string = |index: usize| args[index].as_string().map(|value| value.to_std_string_lossy())
+                .ok_or_else(|| boa_engine::JsNativeError::typ().with_message(format!("printTextCry: argument {index} must be a string")));
+            Ok(PokemonScriptCommand::PrintTextCry { text: string(0)?, species: string(1)? }.into_script_command())
+        });
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -1415,4 +1424,39 @@ mod field_cry_boa_tests {
         assert_eq!(engine.tick(), expected);
         assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), Some(ScriptCommand::ShowText { text: "returned".into() }));
     }
+    #[test]
+    fn print_text_cry_boa_await_returns_only_after_the_shared_outer_close() {
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"export async function pet() {
+          await game.printTextCry("SEEL: Kyuoo!", "SEEL");
+          await game.showText("returned");
+        }"#).unwrap();
+        let expected = Some(PokemonScriptCommand::PrintTextCry {
+            text: "SEEL: Kyuoo!".into(), species: "SEEL".into(),
+        }.into_script_command());
+        assert_eq!(engine.call_function("pet", &[]).unwrap(), expected);
+        assert_eq!(engine.tick(), expected);
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), Some(ScriptCommand::ShowText { text: "returned".into() }));
+    }
+
+    #[test]
+    fn print_text_cry_boa_rejects_wrong_arity_and_non_string_payloads() {
+        for (arguments, message) in [
+            ("", "text and species expected"),
+            (r#""text""#, "text and species expected"),
+            (r#""text", "SEEL", false"#, "text and species expected"),
+            (r#"false, "SEEL""#, "argument 0 must be a string"),
+            (r#""text", 1"#, "argument 1 must be a string"),
+        ] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine.load_script(&format!(r#"export async function pet() {{
+              try {{ await game.printTextCry({arguments}); await game.showText("INVALID_PAYLOAD_ACCEPTED"); }}
+              catch (e) {{ await game.showText(String(e)); }}
+            }}"#)).unwrap();
+            assert_eq!(engine.call_function("pet", &[]).unwrap(), Some(ScriptCommand::ShowText {
+                text: format!("TypeError: printTextCry: {message}"),
+            }));
+        }
+    }
+
 }
