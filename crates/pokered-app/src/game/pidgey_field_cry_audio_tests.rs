@@ -73,9 +73,9 @@ impl Session {
         save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
         save.game_data.player_id = 1234;
         save.game_data.position.map_id = MapId::VermilionPidgeyHouse as u8;
-        save.game_data.position.x = 3;
+        save.game_data.position.x = 4;
         save.game_data.position.y = 6;
-        save.game_data.position.x_block = 1;
+        save.game_data.position.x_block = 2;
         save.game_data.position.y_block = 3;
         save.game_data.last_map = MapId::VermilionCity as u8;
         save.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Medium;
@@ -139,7 +139,7 @@ impl Session {
             }
             session.step(if frame % 8 < 2 { A } else { 0 });
         }
-        for _ in 0..16 {
+        for _ in 0..32 {
             session.step(0);
         }
         assert_eq!(session.game.state.screen, GameScreen::Overworld);
@@ -148,8 +148,9 @@ impl Session {
                 session.game.overworld.state.player.x,
                 session.game.overworld.state.player.y
             ),
-            (3, 6)
+            (4, 6)
         );
+        // The seed-42 Bird takes its real initial right stride to (4,5).
         // The actual Bird keeps its normal Wander/range2 behavior. These are
         // ordinary facing/talk inputs; no NPC freeze, position or VM setter.
         for buttons in [UP, UP, 0, 0, A, A, 0, 0] {
