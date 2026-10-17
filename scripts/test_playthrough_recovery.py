@@ -404,3 +404,60 @@ class CeladonExitTreeTests(unittest.TestCase):
 
     def test_unexpected_wall_still_fails(self):
         self.run_exit(1, None)
+
+
+class ChoiceInputReadinessTests(unittest.TestCase):
+    def game(self, selected=0, delay=3, legacy=False):
+        game = pt.Game.__new__(pt.Game)
+        menu = {"selected": selected, "delay": delay}
+        def state():
+            choice = {"options": ["YES", "NO"], "selected": menu["selected"]}
+            if not legacy:
+                choice["input_enabled"] = menu["delay"] == 0
+            return {"choice": choice}
+        game.st = Mock(side_effect=state)
+        def step(_):
+            menu["delay"] = max(0, menu["delay"] - 1)
+        game.step = Mock(side_effect=step)
+        def move(buttons, frames):
+            self.assertEqual(menu["delay"], 0)
+            self.assertEqual(frames, 12)
+            menu["selected"] = min(1, max(0, menu["selected"] + (1 if buttons == ["down"] else -1)))
+            menu["delay"] = 0 if legacy else 3
+        game.d = Mock()
+        game.d.drive.side_effect = move
+        def tap(button, gap):
+            self.assertEqual(menu["delay"], 0)
+            self.assertEqual((button, gap), ("a", 10))
+        game.tap = Mock(side_effect=tap)
+        return game, menu
+
+    def test_visible_quiz_menu_waits_for_input_before_confirming(self):
+        game, _ = self.game()
+        game.choose("YES")
+        self.assertEqual(game.step.call_count, 3)
+        game.d.drive.assert_not_called()
+        game.tap.assert_called_once_with("a", 10)
+
+    def test_clamped_no_to_yes_moves_up_and_waits_after_cursor_change(self):
+        game, menu = self.game(selected=1)
+        game.choose("yes")
+        game.d.drive.assert_called_once_with(["up"], frames=12)
+        self.assertEqual(game.step.call_count, 6)
+        self.assertEqual(menu["selected"], 0)
+        game.tap.assert_called_once_with("a", 10)
+
+    def test_legacy_menu_without_readiness_metadata_still_selects(self):
+        game, menu = self.game(delay=0, legacy=True)
+        game.choose("NO")
+        self.assertEqual(menu["selected"], 1)
+        game.step.assert_not_called()
+        game.d.drive.assert_called_once_with(["down"], frames=12)
+
+    def test_disabled_menu_has_bounded_wait_and_never_spends_confirmation(self):
+        game, _ = self.game(delay=1000)
+        with self.assertRaisesRegex(pt.NavError, "never enabled input"):
+            game.choose("YES")
+        self.assertEqual(game.step.call_count, 120)
+        game.tap.assert_not_called()
+        game.d.drive.assert_not_called()
