@@ -82,7 +82,7 @@ fn platform_request_is_sticky_and_freezes_the_old_session_without_saving() {
     let mut game = game();
     game.state.screen = GameScreen::Overworld;
     game.overworld = OverworldScreen::new(MapId::SaffronCity, None, PokemonRedData);
-    game.save_data.game_data.money = 4567;
+    game.save_data.game_data.player_money = 4567;
     game.pending_screen = Some(GameScreen::MainMenu);
     let frame = game.frame_count;
     game.request_platform_soft_reset();
@@ -95,7 +95,7 @@ fn platform_request_is_sticky_and_freezes_the_old_session_without_saving() {
     assert_eq!(game.frame_count, frame);
     assert_eq!(game.state.screen, GameScreen::Overworld);
     assert_eq!(game.overworld.state.current_map, MapId::SaffronCity);
-    assert_eq!(game.save_data.game_data.money, 4567);
+    assert_eq!(game.save_data.game_data.player_money, 4567);
     assert_eq!(game.pending_screen, Some(GameScreen::MainMenu));
 }
 
