@@ -279,6 +279,9 @@ interface GameAPI {
    * @param trainerId - Trainer identifier string (e.g. `"RIVAL_1"`, `"BROCK"`).
    * @returns A result string indicating the battle outcome (e.g. `"win"`, `"lose"`).
    */
+  /** Inner text/cry and encounter preparation precede the outer ACK.
+   * Returns the battle result after capture dex/naming UI has finished. */
+  staticEncounter(text: string, species: string, level: number): Promise<string>;
   startBattle(trainerId: string): Promise<string>;
 
   // -----------------------------------------------------------------------

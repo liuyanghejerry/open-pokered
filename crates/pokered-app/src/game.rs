@@ -2717,8 +2717,12 @@ impl PokemonGame {
                             // outcome. No-op for non-script (sight-engaged)
                             // battles. Safe on a loss: the win-branch is skipped
                             // and the subsequent map load clears the script.
-                            if let Some(outcome) = battle_outcome {
-                                self.overworld.resume_script_after_battle(outcome);
+                            // InitBattle has not returned while capture dex/naming
+                            // UI owns the screen. Resume that script at its real exit.
+                            if self.post_capture_flow.is_none() {
+                                if let Some(outcome) = battle_outcome {
+                                    self.overworld.resume_script_after_battle(outcome);
+                                }
                             }
                             // MapEntryAfterBattle (home/overworld.asm): the
                             // overworld fades back in from white after a battle.
@@ -13794,3 +13798,6 @@ mod pokedex_rating_audio_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/jigglypuff_song_audio_tests.rs"]
 mod jigglypuff_song_audio_tests;
+
+#[cfg(all(test, not(target_os = "none")))]
+mod static_encounter_tests;

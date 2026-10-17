@@ -1,0 +1,208 @@
+{
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "providers": {
+    "before": {
+      "source": "e33d4af3199b9ef3e9b5823a2001ed0a6ca55509",
+      "binary_sha256": "093bfc973e6bfe7da9ab2d7bd17fa26a1a4779a6b49790faeb9a9d4350f45172"
+    },
+    "after": {
+      "source": "50a96d1f9841aed3e6ba2661b29e35dc41f8e349",
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671"
+    }
+  },
+  "local_tests": [
+    {
+      "name": "core",
+      "result": "test result: ok. 3114 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.04s",
+      "log_sha256": "6edb65613e1983338ffb6356b49a4726f56677f52a3afa53d0a90998d67c3e8a"
+    },
+    {
+      "name": "app-static",
+      "result": "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 414 filtered out; finished in 0.33s",
+      "log_sha256": "72f469ccccd95d09e405c376bc599cd05178860d4f2dc94fd0972ec162faa601"
+    },
+    {
+      "name": "app-capture",
+      "result": "test result: ok. 13 passed; 0 failed; 1 ignored; 0 measured; 402 filtered out; finished in 5.88s",
+      "log_sha256": "bfd02ddef9e42533eff56b9bc035ad0047baefa1c5089eab9a9de73da40482b5"
+    },
+    {
+      "name": "data",
+      "result": "test result: ok. 305 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s",
+      "log_sha256": "4ead5b4dcaf2e879ffe124b8dd70dfc8eb2f3f762b0f0ce32e494042838f1da8"
+    },
+    {
+      "name": "agent",
+      "result": "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.00s",
+      "log_sha256": "63fe8773d8d140087649e4727d257b1df58195e92cc4b5ea407b04baff99666a"
+    }
+  ],
+  "ordinary_replays": [
+    {
+      "case": "capture",
+      "frames": 2685,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "5ff2abd008ab79e2670944969d5295de6d819f53515f9d9748591b9bd99c63e5",
+      "runtime_setters": 0
+    },
+    {
+      "case": "intro",
+      "frames": 1831,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "1ae6b39e97da87383255962bc7f1464f0fbf93a16b5ace33b137c60b81d1bceb",
+      "runtime_setters": 0
+    },
+    {
+      "case": "win",
+      "frames": 2305,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "aa2874159391bc2e771622cc18ffdcd8eb1e5ca192cb34784ba7b376153af90f",
+      "runtime_setters": 0
+    },
+    {
+      "case": "run",
+      "frames": 1959,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "d897737094b754a964911d4b56a89d5c232527ddf6d09c9f78b5d0ac81d9f297",
+      "runtime_setters": 0
+    },
+    {
+      "case": "doll",
+      "frames": 1964,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "e9ab0d03c3d041474b803f0fec4fee9685eb40e1043872dc0a2dca8cc96dcbba",
+      "runtime_setters": 0
+    },
+    {
+      "case": "blackout",
+      "frames": 2216,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "f7828af879963d2fc28a363201952c00cde6dbe354f6771409d26b405653ac11",
+      "runtime_setters": 0
+    },
+    {
+      "case": "save",
+      "frames": 2605,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "9590173ed648850d8be66c1612cab0c4ed18f07057240f0f41a1c9dad59e4d45",
+      "runtime_setters": 0
+    },
+    {
+      "case": "continue",
+      "frames": 679,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "a85b30010e8f7496622cff6e9e790d79241f4e650849337b956ca19a27abf430",
+      "runtime_setters": 0
+    },
+    {
+      "case": "mewtwo",
+      "frames": 837,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "4706c39011cc28989d962d20fbe35c0494cce7eb59862d47877ad4dc5e9d5166",
+      "runtime_setters": 0
+    },
+    {
+      "case": "articuno",
+      "frames": 818,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "c53bca788c5117efc42eaa4eec1fdfe3136ae89d365ef8b6e89c25fb89021601",
+      "runtime_setters": 0
+    },
+    {
+      "case": "moltres",
+      "frames": 786,
+      "all_pass": true,
+      "binary_sha256": "968ecb2d51b4cd3177e5b679d4c674e3d9cce2c7dad41f008b5c21a5c4bb7671",
+      "result_sha256": "418bd0682ff11a50d1405a789026e7e171a7f5cfbdb722b5478ab03f102681fd",
+      "runtime_setters": 0
+    }
+  ],
+  "capture_mid_UI": {
+    "before": [
+      {
+        "frame": 2341,
+        "phase": "NewDexMessage",
+        "consumed": true,
+        "script_awaiting_battle": false
+      },
+      {
+        "frame": 2458,
+        "phase": "NewDexSound",
+        "consumed": true,
+        "script_awaiting_battle": false
+      },
+      {
+        "frame": 2497,
+        "phase": "NewDexConfirm",
+        "consumed": true,
+        "script_awaiting_battle": false
+      },
+      {
+        "frame": 2510,
+        "phase": "Entry",
+        "consumed": true,
+        "script_awaiting_battle": false
+      },
+      {
+        "frame": 2575,
+        "phase": "Question",
+        "consumed": true,
+        "script_awaiting_battle": false
+      },
+      {
+        "frame": 2640,
+        "phase": "Choice",
+        "consumed": true,
+        "script_awaiting_battle": false
+      }
+    ],
+    "after": [
+      {
+        "frame": 2341,
+        "phase": "NewDexMessage",
+        "consumed": false,
+        "script_awaiting_battle": true
+      },
+      {
+        "frame": 2458,
+        "phase": "NewDexSound",
+        "consumed": false,
+        "script_awaiting_battle": true
+      },
+      {
+        "frame": 2497,
+        "phase": "NewDexConfirm",
+        "consumed": false,
+        "script_awaiting_battle": true
+      },
+      {
+        "frame": 2510,
+        "phase": "Entry",
+        "consumed": false,
+        "script_awaiting_battle": true
+      },
+      {
+        "frame": 2575,
+        "phase": "Question",
+        "consumed": false,
+        "script_awaiting_battle": true
+      },
+      {
+        "frame": 2640,
+        "phase": "Choice",
+        "consumed": false,
+        "script_awaiting_battle": true
+      }
+    ]
+  }
+}

@@ -70,6 +70,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "startBattleSet",
     "startBattleWithText",
     "startWildBattle",
+    "staticEncounter",
     "takeCoins",
     "takeItem",
     "takeMoney",
