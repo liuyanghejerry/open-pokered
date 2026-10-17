@@ -16,11 +16,11 @@
 
 前：
 
-![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/jigglypuff-song-1081/docs/screenshots/jigglypuff-song-before.png)
+![前](../../screenshots/jigglypuff-song-before.png)
 
 后：
 
-![后](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/fix/jigglypuff-song-1081/docs/screenshots/jigglypuff-song-after.png)
+![后](../../screenshots/jigglypuff-song-after.png)
 
 原始 pair receipt 的 SHA-256 为 `7aa4475d609038db5edaa11caa9da298562c01ac977dcd8ebed99c747ad79045`。它记录了 2 次正常冷启动、相同完整输入和截图帧、两份运行存档不变及进程清理。两个 Game 都在录制边界由所属录制器发送 SIGTERM 结束，退出码为 -15；这不是游戏自然退出。公开 `validation.json` 摘录来源、二进制、原始结果及图片散列。
 
