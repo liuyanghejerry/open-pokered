@@ -264,3 +264,146 @@ fn legacy_missing_owner_cannot_manufacture_an_ack_after_sound_wait() {
     assert_eq!(phase(&field), Some(Phase::OuterAck));
     assert!(field.pending_dialogue.is_some() && field.retain_field_text);
 }
+
+/// These are component fixtures at the actual map's live NPC position, not
+/// physical-SAV traversal evidence. The embedded map bindings and ScriptVM
+/// must produce FieldCry; the test never installs a synthetic effect/script.
+fn normal_far_pet_talk(map: MapId, npc_text_id: u8) -> Field {
+    let mut field = Field::new(map, None, PokemonRedData);
+    field.set_text_delay_frames(3);
+    if map == MapId::SaffronCity {
+        // Real liberation precondition: use the map's @load show/hide writers,
+        // not a forced visible NPC or a bypass of the hidden/toggle trigger.
+        field.set_flag_live("EVENT_BEAT_SILPH_CO_GIOVANNI", true);
+        field.run_on_load();
+    }
+    for _ in 0..512 {
+        step(&mut field, 0);
+        let npc = field
+            .npc_states
+            .iter()
+            .find(|npc| npc.text_id == npc_text_id)
+            .expect("the production map must contain the audited NPC");
+        if field.active_script_effect.is_none()
+            && npc.visible
+            && npc.walk_counter == 0
+            && field
+                .foreground_observation()
+                .is_some_and(|owner| owner.last().is_some())
+        {
+            break;
+        }
+    }
+    let npc = field
+        .npc_states
+        .iter()
+        .find(|npc| npc.text_id == npc_text_id)
+        .unwrap();
+    assert!(
+        npc.visible && npc.walk_counter == 0,
+        "map precondition must make the real pet available"
+    );
+    assert!(
+        field
+            .foreground_observation()
+            .is_some_and(|owner| owner.last().is_some()),
+        "the ordinary field must establish actual neutral input history"
+    );
+    field.state.player.x = npc.x;
+    field.state.player.y = npc.y + 1;
+    field.state.player.facing = Direction::Up;
+    for _ in 0..8 {
+        far_pet_step(&mut field, A);
+        if phase(&field).is_some() {
+            break;
+        }
+    }
+    assert!(
+        phase(&field).is_some(),
+        "ordinary A must enter the embedded pet consumer: {map:?} npc{npc_text_id}"
+    );
+    field
+}
+
+fn far_pet_step(field: &mut Field, buttons: u8) -> Vec<String> {
+    field.update_frame(ForegroundJoypad::as_field_input(buttons));
+    assert_eq!(field.source_foreground_error(), None);
+    field
+        .audio_requests
+        .iter()
+        .filter_map(|request| match request {
+            OverworldAudioRequest::PlayCry { species } => Some(species.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn audited_far_pet_npc_consumers_print_then_cry_once_and_wait_before_outer_ack() {
+    let cases = [
+        (MapId::CeladonCity, 7, "POLIWRATH"),
+        (MapId::CeladonMansion1F, 1, "MEOWTH"),
+        (MapId::CeladonMansion1F, 3, "CLEFAIRY"),
+        (MapId::CeladonMansion1F, 4, "NIDORAN_F"),
+        (MapId::CopycatsHouse1F, 3, "CHANSEY"),
+        (MapId::LavenderCuboneHouse, 1, "CUBONE"),
+        (MapId::MrFujisHouse, 3, "PSYDUCK"),
+        (MapId::MrFujisHouse, 4, "NIDORINO"),
+        (MapId::PewterNidoranHouse, 1, "NIDORAN_M"),
+        (MapId::SSAnne1FRooms, 8, "WIGGLYTUFF"),
+        (MapId::SSAnneB1FRooms, 8, "MACHOKE"),
+        (MapId::SaffronCity, 12, "PIDGEOT"),
+        (MapId::SaffronPidgeyHouse, 2, "PIDGEY"),
+    ];
+    for (map, npc, species) in cases {
+        let mut field = normal_far_pet_talk(map, npc);
+        let Some(ScriptEffect::FieldCry { state }) = &field.active_script_effect else {
+            panic!("{map:?} npc{npc} did not dispatch the real typed consumer");
+        };
+        assert_eq!(state.species, species, "{map:?} npc{npc}");
+        let mut cries = Vec::new();
+        for _ in 0..2000 {
+            if phase(&field) == Some(Phase::SoundWait) {
+                break;
+            }
+            cries.extend(far_pet_step(&mut field, 0));
+        }
+        assert_eq!(
+            phase(&field),
+            Some(Phase::SoundWait),
+            "{map:?} npc{npc} requires no final text ACK before cry"
+        );
+        assert_eq!(
+            cries.len(),
+            1,
+            "{map:?} npc{npc} must request its cry exactly once"
+        );
+        assert_eq!(
+            cries[0], species,
+            "{map:?} npc{npc} must request the right species"
+        );
+        assert!(field.pending_dialogue.as_ref().unwrap().waiting_for_input());
+        assert!(field.retain_field_text);
+        let cursor = serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap();
+        let last = field.source_foreground().unwrap().last();
+        field.script_sfx_playing = true; // Component sequencer input, not a guessed cry duration.
+        for buttons in [A, B, A | B, 0] {
+            assert!(far_pet_step(&mut field, buttons).is_empty());
+            assert_eq!(phase(&field), Some(Phase::SoundWait));
+            assert_eq!(field.source_foreground().unwrap().last(), last);
+            assert_eq!(
+                serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap(),
+                cursor
+            );
+        }
+        field.script_sfx_playing = false;
+        assert!(far_pet_step(&mut field, 0).is_empty());
+        assert_eq!(phase(&field), Some(Phase::OuterAck));
+        assert!(field.pending_dialogue.is_some() && field.retain_field_text);
+        assert!(far_pet_step(&mut field, B).is_empty());
+        assert_eq!(phase(&field), Some(Phase::CloseWait));
+        assert!(field.displayed_field_dialogue().is_none());
+        assert!(far_pet_step(&mut field, 0).is_empty());
+        assert!(phase(&field).is_none());
+    }
+}

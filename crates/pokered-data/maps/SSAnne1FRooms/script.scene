@@ -89,10 +89,7 @@ game_scene SSAnne1FRooms {
   // ── Wigglytuff (npc 8) — text then play its cry ─────────────────────────
   @storyline("talkWigglytuff") {
     @trigger(map = "SSAnne1FRooms", npc = 8)
-    @speaker("") {
-      @t("WIGGLYTUFF: Puup pupuu!", "胖丁：噗噗噗噗！")
-    }
-    playCry("WIGGLYTUFF")
+    fieldCry(@t("WIGGLYTUFF: Puup pupuu!", "胖丁：噗噗噗噗！"), "WIGGLYTUFF")
   }
 
   // ── Girl 2 (npc 9) ──────────────────────────────────────────────────────

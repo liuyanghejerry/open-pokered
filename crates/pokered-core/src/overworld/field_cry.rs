@@ -1,6 +1,7 @@
 //! DisplayTextID far@ -> PlayCry/WaitForSoundToFinish -> silent outer ACK.
-//! One current producer: VermilionPidgeyHouse npc2. Other pets/legendaries are
-//! not migrated merely because they also play a cry.
+//! Far-entry producers: VermilionPidgeyHouse npc2 and the audited plain pets.
+//! Inner PrintText callers, multi-part text and battle entrances keep their
+//! separate continuations; sharing a cry species is not enough to use this flow.
 use super::screen::OverworldAudioRequest;
 use super::{BedroomDialogue, OverworldScreen};
 use crate::alloc_prelude::*;
