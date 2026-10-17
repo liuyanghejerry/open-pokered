@@ -305,6 +305,14 @@ fn default_overworld_music(map: MapId, transport: dotzuki_engine::overworld::typ
     }
 }
 
+/// Pewter's wait is scoped to its actual song and both pulse channels.
+/// A GameSnapshot restores no audio sequencer/PCM cursor; looping map music
+/// in the receiving App must neither hold this wait nor restart the song.
+fn sample_jigglypuff_song(audio: Option<&AudioOutput>) -> bool {
+    audio.is_some_and(|audio| audio.last_music_id() == Some(MusicId::JIGGLYPUFF_SONG)
+        && (audio.is_music_channel_playing(0) || audio.is_music_channel_playing(1)))
+}
+
 fn hof_team_records(save: &SaveData) -> Vec<pokered_core::pc_screen::HofTeamRecord> {
     use pokered_core::pc_screen::{HofMonView, HofTeamRecord};
     let count = save.hall_of_fame.team_count();
@@ -4463,6 +4471,11 @@ impl PokemonGame {
                     }
                     self.overworld.script_music_playing = self.audio.as_ref()
                         .is_some_and(|audio| audio.is_music_channel_playing(0));
+                    // Pewter's Jigglypuff checks CH1 OR CH2 after each full
+                    // 24-frame spin block. Scope to the actual song: Game JSON
+                    // snapshots omit the sequencer/PCM cursor, and restoring
+                    // into looping map BGM must not wait forever or restart it.
+                    self.overworld.jigglypuff_song_playing = sample_jigglypuff_song(self.audio.as_ref());
                     // Original DisplayPokedex records the species as seen after viewing.
                     let viewed_species = self.overworld.pending_pokedex_entry.as_ref()
                         .and_then(|entry| pokered_data::species::Species::from_scene_name(&entry.species));
@@ -13778,3 +13791,6 @@ mod pidgey_field_cry_audio_tests;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod pokedex_rating_audio_tests;
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/jigglypuff_song_audio_tests.rs"]
+mod jigglypuff_song_audio_tests;
