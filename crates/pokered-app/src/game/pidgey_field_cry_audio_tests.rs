@@ -252,7 +252,8 @@ fn cold_pidgey_talk_keeps_window_through_real_cry_then_silent_ack_and_a_release(
                 assert_eq!(session.game.overworld.sfx_event, OverworldSfxEvent::None);
                 assert!(
                     !session.sound().1,
-                    "silent outer ACK must not play PressAB or restart the cry"
+                    "silent outer ACK must not play PressAB or restart the cry; sound={:?}; phase={:?}; cry_starts={}",
+                    session.sound(), session.phase(), session.cry_starts
                 );
             }
             session.step(B);
