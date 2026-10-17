@@ -38,6 +38,9 @@ pub enum PokemonScriptCommand {
     BikeShopOffer { texts: Vec<String> },
     /// DisplayTextID far@ text, one cry/wait, then its silent outer ACK and A release.
     FieldCry { text: String, species: String },
+    /// Explicit far@ text, cry/wait, PARA paragraph, CONT tail and one outer ACK.
+    /// `texts` contains exactly the first, paragraph and continuation segments.
+    FieldCryContinuation { texts: Vec<String>, species: String },
     /// Pewter's inner PrintText/DONE, Jigglypuff song/spin, DoNotWait and close.
     JigglypuffSong { text: String, npc_id: String },
     /// Inner PrintText(DONE), preserving its preparation before the shared cry/outer close.
@@ -120,6 +123,7 @@ impl PokemonScriptCommand {
             Self::FinishFieldText => "finishFieldText",
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
+            Self::FieldCryContinuation { .. } => "fieldCryContinuation",
             Self::JigglypuffSong { .. } => "jigglypuffSong",
             Self::PrintTextCry { .. } => "printTextCry",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
@@ -175,6 +179,11 @@ impl PokemonScriptCommand {
                 args
             },
             Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
+            Self::FieldCryContinuation { mut texts, species } => {
+                assert_eq!(texts.len(), 3, "validated far/PARA/CONT payload");
+                texts.insert(1, species);
+                texts.into_iter().map(Value::String).collect()
+            }
             Self::JigglypuffSong { text, npc_id } => vec![json!(text), json!(npc_id)],
             Self::FieldCry { text, species } | Self::PrintTextCry { text, species } => vec![json!(text), json!(species)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
@@ -284,6 +293,18 @@ impl PokemonScriptCommand {
                 if args.len() != 2 { return Err("fieldCry: text and species expected".into()); }
                 Self::FieldCry { text: string(0)?, species: string(1)? }
             },
+            "fieldCryContinuation" => {
+                if args.len() != 4 {
+                    return Err(
+                        "fieldCryContinuation: text, species, paragraph and continuation expected"
+                            .into(),
+                    );
+                }
+                Self::FieldCryContinuation {
+                    texts: vec![string(0)?, string(2)?, string(3)?],
+                    species: string(1)?,
+                }
+            }
             "jigglypuffSong" => {
                 if args.len() != 2 { return Err("jigglypuffSong: text and npcId expected".into()); }
                 Self::JigglypuffSong { text: string(0)?, npc_id: string(1)? }
@@ -604,6 +625,63 @@ mod field_cry_command_tests {
         assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
         for invalid in [vec![], vec![json!("text")], vec![json!("text"), json!("PIDGEY"), json!(false)], vec![json!(false), json!("PIDGEY")], vec![json!("text"), json!(1)]] {
             assert!(PokemonScriptCommand::from_custom("fieldCry", &invalid).is_err());
+        }
+    }
+
+    #[test]
+    fn field_cry_continuation_roundtrips_the_explicit_four_argument_order() {
+        let args = vec![
+            json!("MACHOP: Guoh! Gogogoh!"),
+            json!("MACHOP"),
+            json!("A MACHOP is stomping"),
+            json!("the land flat."),
+        ];
+        let command = PokemonScriptCommand::FieldCryContinuation {
+            texts: vec![
+                "MACHOP: Guoh! Gogogoh!".into(),
+                "A MACHOP is stomping".into(),
+                "the land flat.".into(),
+            ],
+            species: "MACHOP".into(),
+        };
+        assert_eq!(
+            PokemonScriptCommand::from_custom("fieldCryContinuation", &args),
+            Ok(command.clone())
+        );
+        assert_eq!(
+            command.into_script_command(),
+            ScriptCommand::Custom {
+                name: "fieldCryContinuation".into(),
+                args,
+            }
+        );
+    }
+
+    #[test]
+    fn field_cry_continuation_rejects_wrong_arity_and_each_non_string_argument() {
+        let args = vec![
+            json!("first"),
+            json!("MACHOP"),
+            json!("paragraph"),
+            json!("tail"),
+        ];
+        for count in [0, 1, 2, 3, 5] {
+            let invalid = vec![json!("text"); count];
+            assert_eq!(
+                PokemonScriptCommand::from_custom("fieldCryContinuation", &invalid).unwrap_err(),
+                "fieldCryContinuation: text, species, paragraph and continuation expected"
+            );
+        }
+        for index in 0..args.len() {
+            for invalid_value in [json!(false), json!(17), json!(null), json!([]), json!({})] {
+                let mut invalid = args.clone();
+                invalid[index] = invalid_value;
+                assert_eq!(
+                    PokemonScriptCommand::from_custom("fieldCryContinuation", &invalid)
+                        .unwrap_err(),
+                    format!("fieldCryContinuation: argument {index} must be a string")
+                );
+            }
         }
     }
     #[test]
