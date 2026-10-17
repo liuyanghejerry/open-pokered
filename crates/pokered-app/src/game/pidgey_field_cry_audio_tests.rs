@@ -159,7 +159,7 @@ impl Session {
             session.phase().is_some(),
             "normal npc2 interaction must reach embedded fieldCry; player={:?}; npcs={:?}; effect={:?}; warp={:?}",
             session.game.overworld.state.player,
-            session.game.overworld.npcs,
+            session.game.overworld.npc_states,
             session.game.overworld.active_script_effect_value(),
             session.game.overworld.warp_fade_state
         );
