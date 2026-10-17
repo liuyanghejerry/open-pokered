@@ -1,5 +1,6 @@
 use dotzuki_engine_script::{CommandResult, ScriptCommand};
 use pokered_core::overworld::native_script::NativeScriptEngine;
+use pokered_data::script_command::{PokemonScriptCommand, FieldTextPrompt};
 
 // DexRatingsTable from pret/pokered engine/events/pokedex_rating.asm.
 const RATINGS: [&str; 16] = [
@@ -42,8 +43,20 @@ fn oak_selects_exactly_one_original_rating_and_no_earlier_story_dialogue() {
             let Some(cmd) = next else {
                 break;
             };
-            if let ScriptCommand::ShowText { text: message } = cmd {
-                text.push(message);
+            let ScriptCommand::Custom { name, args } = cmd else { panic!("unexpected non-custom Oak command") };
+            let typed = PokemonScriptCommand::from_custom(&name, &args).unwrap();
+            match typed {
+                PokemonScriptCommand::PrintFieldText { text: message, retain_window, prompt, .. } => {
+                    assert!(retain_window);
+                    assert_eq!(prompt, if text.is_empty() { FieldTextPrompt::Done } else { FieldTextPrompt::Protected });
+                    text.push(message);
+                }
+                PokemonScriptCommand::PokedexRating { text: message, owned: actual } => {
+                    assert_eq!(actual, owned as u32);
+                    assert_eq!(text.len(), 2);
+                    text.push(message);
+                }
+                other => panic!("unexpected Oak rating command: {other:?}"),
             }
             next = engine.signal_done(CommandResult::Void).unwrap();
         }

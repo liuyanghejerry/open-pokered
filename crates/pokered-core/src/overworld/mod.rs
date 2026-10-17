@@ -110,3 +110,5 @@ pub use screen::*;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod tests_silph_departure;
+
+mod pokedex_rating;

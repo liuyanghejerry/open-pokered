@@ -53,6 +53,8 @@ pub enum PokemonScriptCommand {
         nickname: String,
     },
     AnimateHealingMachine,
+    /// DisplayDexRating body DONE, fanfare and caller-specific final confirmation.
+    PokedexRating { text: String, owned: u32 },
     ShowPokedexEntry {
         species: String,
     },
@@ -130,6 +132,7 @@ impl PokemonScriptCommand {
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
             Self::AnimateHealingMachine => "animateHealingMachine",
+            Self::PokedexRating { .. } => "pokedexRating",
             Self::ShowPokedexEntry { .. } => "showPokedexEntry",
             Self::OpenNamingScreen { .. } => "openNamingScreen",
             Self::ChoosePartyPokemon => "choosePartyPokemon",
@@ -204,6 +207,7 @@ impl PokemonScriptCommand {
             } => {
                 vec![json!(offered), json!(received), json!(nickname)]
             }
+            Self::PokedexRating { text, owned } => vec![json!(text), json!(owned)],
             Self::ShowPokedexEntry { species } | Self::OpenNamingScreen { species } => {
                 vec![json!(species)]
             }
@@ -387,6 +391,12 @@ impl PokemonScriptCommand {
                 nickname: string(2)?,
             },
             "animateHealingMachine" => Self::AnimateHealingMachine,
+            "pokedexRating" => {
+                if args.len() != 2 { return Err("pokedexRating: text and owned count expected".into()); }
+                let owned = args[1].as_u64().filter(|n| *n <= 151)
+                    .ok_or("pokedexRating: owned count must be an integer from 0 to 151")?;
+                Self::PokedexRating { text: string(0)?, owned: owned as u32 }
+            },
             "showPokedexEntry" => Self::ShowPokedexEntry {
                 species: string(0)?,
             },
@@ -698,6 +708,25 @@ mod field_cry_command_tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod pokedex_rating_protocol_tests {
+    use super::*;
+    #[test]
+    fn rating_command_keeps_owned_count_and_rejects_invalid_payloads() {
+        for owned in 0..=151 {
+            let typed=PokemonScriptCommand::PokedexRating{text:"rating".into(),owned};
+            let ScriptCommand::Custom{name,args}=typed.clone().into_script_command() else {panic!("custom continuation")};
+            assert_eq!(PokemonScriptCommand::from_custom(&name,&args).unwrap(),typed);
+        }
+        for invalid in [json!(-1),json!(0.5),json!(152),json!("1"),json!(null),json!(false)] {
+            assert!(PokemonScriptCommand::from_custom("pokedexRating",&[json!("text"),invalid]).is_err());
+        }
+        for args in [vec![],vec![json!("text")],vec![json!("text"),json!(0),json!(0)],vec![json!(false),json!(0)]] {
+            assert!(PokemonScriptCommand::from_custom("pokedexRating",&args).is_err());
+        }
+    }
 }
 
 #[cfg(test)]

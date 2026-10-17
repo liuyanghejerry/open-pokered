@@ -2095,7 +2095,9 @@ fn write_oaks_lab_native_branches(
                         owned,
                     ));
                 }
-                StoryStmt::Speaker { .. } => selected.push(statement.clone()),
+                StoryStmt::Command { name, args, .. }
+                    if name == "pokedexRating" && args.len() == 2 =>
+                    selected.push(statement.clone()),
                 _ => panic!("unexpected statement in Oak rating tail"),
             }
         }

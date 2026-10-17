@@ -53,6 +53,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "partyMonKnowsHm",
     "playCry",
     "playShipDeparture",
+    "pokedexRating",
     "pokemonMenu",
     "printFieldText",
     "printTextCry",

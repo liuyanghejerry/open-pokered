@@ -4518,7 +4518,8 @@ impl PokemonGame {
                             OverworldSfxEvent::None => {}
                         }
                         for req in self.overworld.audio_requests.drain(..) {
-                            let restore_immediately = matches!(&req, OverworldAudioRequest::RestoreMapMusic { .. });
+                            let restore_immediately = matches!(&req, OverworldAudioRequest::RestoreMapMusic { .. } | OverworldAudioRequest::RestartMapMusic { .. });
+                            let force_restart = matches!(&req, OverworldAudioRequest::RestartMapMusic { .. });
                             match req {
                                 OverworldAudioRequest::PlayMusic { music_id } => {
                                     // Alternate tempo/start variants
@@ -4551,7 +4552,8 @@ impl PokemonGame {
                                     audio.fade_out(4);
                                 }
                                 OverworldAudioRequest::PlayMapMusic { map }
-                                | OverworldAudioRequest::RestoreMapMusic { map } => {
+                                | OverworldAudioRequest::RestoreMapMusic { map }
+                                | OverworldAudioRequest::RestartMapMusic { map } => {
                                     use pokered_core::overworld::TransportMode;
                                     let data_id = match self.overworld.state.player.transport {
                                         TransportMode::Biking => 32,  // MUSIC_BIKE_RIDING
@@ -4562,7 +4564,7 @@ impl PokemonGame {
                                         }
                                     };
                                     if let Some(id) = MusicId::from_u8(data_id) {
-                                        if audio.last_music_id() != Some(id) {
+                                        if force_restart || audio.last_music_id() != Some(id) {
                                             if restore_immediately {
                                                 audio.clear_saved_music_states();
                                                 audio.play_music(id);
@@ -6100,6 +6102,24 @@ impl PokemonGame {
                     for sfx in pc.take_sfx() {
                         if let Some(ref audio) = self.audio {
                             let id = match sfx {
+                                PcSfx::PokedexRating(sound) => {
+                                    audio.stop_all();
+                                    audio.play_sfx(parse_sfx_id(sound.script_id()).expect("rating sound catalog"));
+                                    continue;
+                                }
+                                PcSfx::RestartMapMusic => {
+                                    use pokered_core::overworld::TransportMode;
+                                    let id = match self.overworld.state.player.transport {
+                                        TransportMode::Biking => 32,
+                                        TransportMode::Surfing => 33,
+                                        TransportMode::Walking => pokered_core::overworld::map_loading::get_map_music(self.overworld.state.current_map) as u8,
+                                    };
+                                    if let Some(id) = MusicId::from_u8(id) {
+                                        audio.clear_saved_music_states(); audio.play_music(id);
+                                    }
+                                    continue;
+                                }
+                                PcSfx::TextAdvance => SfxId::PressAB,
                                 PcSfx::TurnOn => SfxId::TurnOnPC,
                                 PcSfx::TurnOff => SfxId::TurnOffPC,
                                 PcSfx::Enter => SfxId::EnterPC,
@@ -13769,6 +13789,8 @@ mod bike_shop_no_delay_tests;
 #[path = "game/pidgey_field_cry_audio_tests.rs"]
 mod pidgey_field_cry_audio_tests;
 
+#[cfg(all(test, not(target_os = "none")))]
+mod pokedex_rating_audio_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/jigglypuff_song_audio_tests.rs"]
 mod jigglypuff_song_audio_tests;

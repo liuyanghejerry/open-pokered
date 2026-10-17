@@ -488,6 +488,15 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "pokedexRating" => {
+                if v.len() != 2 { return Err("pokedexRating: text and owned count expected".into()); }
+                let Value::Text(text) = &v[0] else { return Err("pokedexRating: argument 0 must be a string".into()); };
+                let Value::Number(owned) = v[1] else { return Err("pokedexRating: owned count must be an integer from 0 to 151".into()); };
+                if !owned.is_finite() || !(0. ..=151.).contains(&owned) || owned != owned as u32 as f64 {
+                    return Err("pokedexRating: owned count must be an integer from 0 to 151".into());
+                }
+                Ok(pokemon(PokemonScriptCommand::PokedexRating { text: text.clone(), owned: owned as u32 }))
+            }
             "jigglypuffSong" => {
                 if v.len() != 2 { return Err("jigglypuffSong: text and npcId expected".into()); }
                 let string = |index: usize| match &v[index] {
@@ -4072,4 +4081,24 @@ mod tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod pokedex_rating_protocol_tests {
+    use super::*;
+    #[test]
+    fn rating_native_rejects_nonintegral_and_out_of_range_counts_and_roundtrips_payload() {
+        let mut host=NativeHost::new();
+        for owned in [0.,9.,10.,39.,40.,59.,60.,89.,90.,119.,120.,149.,150.,151.] {
+            let value=host.call("pokedexRating", &[Value::Text("rating".into()),Value::Number(owned)]).unwrap();
+            let HostCall::Command(command)=value else {panic!("rating must await its continuation")};
+            assert_eq!(command,PokemonScriptCommand::PokedexRating{text:"rating".into(),owned:owned as u32}.into_script_command());
+        }
+        for count in [-1.,0.5,151.5,152.,f64::NAN,f64::INFINITY] {
+            assert!(host.call("pokedexRating", &[Value::Text("rating".into()),Value::Number(count)]).is_err());
+        }
+        assert!(host.call("pokedexRating", &[Value::Text("rating".into())]).is_err());
+        assert!(host.call("pokedexRating", &[Value::Bool(false),Value::Number(1.)]).is_err());
+        assert!(host.call("pokedexRating", &[Value::Text("rating".into()),Value::Text("1".into())]).is_err());
+    }
 }
