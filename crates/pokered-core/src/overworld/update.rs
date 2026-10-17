@@ -864,6 +864,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A concrete typed caller borrows the same field ledger and display
         // cursor. Take it temporarily so its state machine may touch the live
         // bit/choice/window atomically, then retain the ordinary await owner.
+        let yes_no_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::AskFieldYesNo { .. })) {
+            let Some(script_bridge::ScriptEffect::AskFieldYesNo { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_field_yes_no(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::AskFieldYesNo { state });
+            Some(done)
+        } else { None };
         let rating_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::PokedexRating { .. })) {
             let Some(script_bridge::ScriptEffect::PokedexRating { mut state }) = self.active_script_effect.take() else { unreachable!() };
             let done = self.tick_pokedex_rating(&mut state);
@@ -959,7 +965,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = static_tick_done.or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = static_tick_done.or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
 
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
@@ -3985,6 +3991,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn finish_effect(effect: &script_bridge::ScriptEffect) -> CommandResult {
         match effect {
+            script_bridge::ScriptEffect::AskFieldYesNo { state } => CommandResult::Number(f64::from(state.result())),
             script_bridge::ScriptEffect::ShowChoice { selected, .. } => {
                 CommandResult::Number(*selected as f64)
             }
@@ -5820,7 +5827,7 @@ mod cinnabar_quiz_audio_tests {
         for _ in 0..3 { ow.update_frame(input(true, false)); }
         assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
         assert!(matches!(&ow.active_script_effect,
-            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+            Some(script_bridge::ScriptEffect::AskFieldYesNo { .. })));
         assert!(ow.last_script_dialogue.is_some() && ow.pending_dialogue.is_none());
         ow.update_frame(input(true, false));
         assert!(ow.pending_dialogue.is_some(), "inner PROMPT must not hold for A release before the question");
@@ -5832,6 +5839,9 @@ mod cinnabar_quiz_audio_tests {
         }
         assert!(ow.pending_choice.is_some(), "the question must reach YES/NO without an extra acknowledgement");
         assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
+        // PlaceMenuCursor waits three VBlanks before its first Joypad poll.
+        for _ in 0..3 { ow.update_frame(input(false, false)); }
+        assert!(ow.choice_accepts_input());
         ow
     }
 
@@ -5861,6 +5871,7 @@ mod cinnabar_quiz_audio_tests {
         let mut ow = at_choice(prior_open);
         let question = visible(&ow);
         ow.update_frame(input(true, false));
+        for _ in 0..15 { ow.update_frame(input(false, false)); }
         assert_eq!(visible(&ow), question, "choice restores its question before entering inner PrintText");
         assert!(matches!(&ow.active_script_effect,
             Some(script_bridge::ScriptEffect::PrintFieldText {
@@ -5964,6 +5975,7 @@ mod cinnabar_quiz_audio_tests {
         let mut ow = at_choice(false);
         let question = visible(&ow);
         ow.update_frame(input(false, true)); // NO is the wrong answer for machine 1.
+        for _ in 0..15 { ow.update_frame(input(false, false)); }
         assert_eq!(visible(&ow), question);
         assert!(matches!(ow.active_script_effect, Some(script_bridge::ScriptEffect::WaitSound)));
         blocked_sound(&mut ow, 41);
@@ -6024,7 +6036,7 @@ mod cinnabar_quiz_audio_tests {
         ow.update_frame(input(false, true));
         assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
         assert!(matches!(ow.active_script_effect,
-            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+            Some(script_bridge::ScriptEffect::AskFieldYesNo { .. })));
         assert!(ow.retain_field_text && ow.last_script_dialogue.is_some());
 
         let mut ow = intro_at_protected_delay(true);
@@ -6039,7 +6051,7 @@ mod cinnabar_quiz_audio_tests {
         ow.update_frame(input(true, false));
         assert_eq!(ow.sfx_event, OverworldSfxEvent::TextAdvance);
         assert!(matches!(ow.active_script_effect,
-            Some(script_bridge::ScriptEffect::PrintFieldText { prompt: FieldTextPrompt::Done, .. })));
+            Some(script_bridge::ScriptEffect::AskFieldYesNo { .. })));
     }
 
     #[test]

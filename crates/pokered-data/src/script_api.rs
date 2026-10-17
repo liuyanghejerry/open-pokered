@@ -48,6 +48,19 @@ fn badge_index(name: &str) -> Option<u8> {
 
 impl ScriptApiRegistrar for PokemonScriptApi {
     fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
+        engine.register_async_fn("askFieldYesNo", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            if args.len() != 3 {
+                return Err(boa_engine::JsNativeError::typ().with_message("askFieldYesNo: expected exactly three strings").into());
+            }
+            let values = args.iter().map(|arg| arg.as_string()
+                .map(|text| serde_json::Value::String(text.to_std_string_lossy()))
+                .ok_or_else(|| boa_engine::JsNativeError::typ().with_message("askFieldYesNo: expected exactly three strings")))
+                .collect::<Result<Vec<_>, _>>()?;
+            PokemonScriptCommand::from_custom("askFieldYesNo", &values)
+                .map(PokemonScriptCommand::into_script_command)
+                .map_err(|error| boa_engine::JsNativeError::typ().with_message(error).into())
+        });
+
         engine.register_async_fn(
             "printFieldText",
             |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
@@ -1653,6 +1666,63 @@ mod pokedex_rating_protocol_tests {
               catch (error) {{ await game.showText(error.name); }}
             }}"#)).unwrap();
             assert_eq!(engine.call_function("bad",&[]).unwrap(),Some(ScriptCommand::ShowText{text:"TypeError".into()}),"args={args}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod field_yes_no_protocol_tests {
+    use super::*;
+    use dotzuki_engine_script::{ScriptEngine, CommandResult};
+    #[test]
+    fn boa_explicit_yes_no_suspends_assigns_numeric_result_and_rejects_coercion() {
+        use crate::script_command::PokemonScriptCommand;
+        for answer in [0.0, 1.0] {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine
+                .load_script(
+                    r#"
+                export async function question() {
+                    const answer = await game.askFieldYesNo("Question?", "YES", "NO");
+                    await game.showText(answer === 0 ? "YES branch" : "NO branch");
+                }
+                export async function invalid() {
+                    try { await game.askFieldYesNo("Q", true, "NO"); }
+                    catch (error) { await game.showText(error.name); }
+                }
+            "#,
+                )
+                .unwrap();
+            let first = engine.call_function("question", &[]).unwrap();
+            assert_eq!(
+                first,
+                Some(
+                    PokemonScriptCommand::AskFieldYesNo {
+                        question: "Question?".into(),
+                        labels: ["YES".into(), "NO".into()],
+                    }
+                    .into_script_command()
+                )
+            );
+            assert_eq!(engine.tick(), first, "the async owner remains suspended");
+            assert_eq!(
+                engine.signal_done(CommandResult::Number(answer)).unwrap(),
+                Some(ScriptCommand::ShowText {
+                    text: if answer == 0.0 {
+                        "YES branch"
+                    } else {
+                        "NO branch"
+                    }
+                    .into()
+                })
+            );
+            assert!(engine.signal_done(CommandResult::Void).unwrap().is_none());
+            assert_eq!(
+                engine.call_function("invalid", &[]).unwrap(),
+                Some(ScriptCommand::ShowText {
+                    text: "TypeError".into()
+                })
+            );
         }
     }
 }

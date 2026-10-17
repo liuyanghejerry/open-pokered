@@ -16,6 +16,7 @@ pub mod static_encounter;
 pub mod field_cry_continuation;
 pub mod jigglypuff_song;
 mod field_text;
+mod field_yes_no;
 pub mod fishing;
 pub mod forced_bike;
 pub mod hidden_items;

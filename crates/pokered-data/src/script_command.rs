@@ -28,6 +28,8 @@ impl FieldTextPrompt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
+    /// Nonempty field question/DONE followed by original YesNoChoice.
+    AskFieldYesNo { question: String, labels: [String; 2] },
     /// Inner PrintText; optional text_promptbutton returns without closing its window.
     PrintFieldText { text: String, retain_window: bool, prompt: FieldTextPrompt, leading_sound: Option<String> },
     /// Outer HoldTextDisplayOpen: wait for A release and close only the retained owner.
@@ -124,6 +126,7 @@ impl PokemonScriptCommand {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
+            Self::AskFieldYesNo { .. } => "askFieldYesNo",
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
             Self::StaticEncounter { .. } => "staticEncounter",
@@ -189,6 +192,7 @@ impl PokemonScriptCommand {
                 texts.insert(1, species);
                 texts.into_iter().map(Value::String).collect()
             }
+            Self::AskFieldYesNo { question, labels } => vec![json!(question), json!(labels[0]), json!(labels[1])],
             Self::JigglypuffSong { text, npc_id } => vec![json!(text), json!(npc_id)],
             Self::StaticEncounter { text, species, level } => vec![json!(text), json!(species.to_string()), json!(level)],
             Self::FieldCry { text, species } | Self::PrintTextCry { text, species } => vec![json!(text), json!(species)],
@@ -282,6 +286,12 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "askFieldYesNo" => {
+                if args.len() != 3 { return Err("askFieldYesNo: expected exactly three strings".into()); }
+                let question = string(0)?;
+                if question.is_empty() { return Err("askFieldYesNo: question must not be empty".into()); }
+                Self::AskFieldYesNo { question, labels: [string(1)?, string(2)?] }
+            },
             "printFieldText" => Self::PrintFieldText {
                 text: string(0)?,
                 retain_window: match args.get(1) {
@@ -757,6 +767,42 @@ mod jigglypuff_song_command_tests {
             vec![json!("text"), json!(3)], vec![json!("text"), json!("3"), json!(null)]] {
             assert!(PokemonScriptCommand::from_custom(&name, &invalid).is_err());
         }
+    }
+}
+
+#[cfg(test)]
+mod field_yes_no_protocol_tests {
+    use super::*;
+
+    #[test]
+    fn explicit_field_yes_no_codec_requires_three_strings_and_nonempty_question() {
+        let command = PokemonScriptCommand::AskFieldYesNo {
+            question: "CATERPIE evolves into BUTTERFREE?".into(),
+            labels: ["YES".into(), "NO".into()],
+        };
+        let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else {
+            panic!()
+        };
+        assert_eq!(name, "askFieldYesNo");
+        assert_eq!(
+            PokemonScriptCommand::from_custom(&name, &args).unwrap(),
+            command
+        );
+        for invalid in [
+            vec![],
+            vec![json!("Q"), json!("YES")],
+            vec![json!("Q"), json!("YES"), json!("NO"), json!("extra")],
+            vec![json!(1), json!("YES"), json!("NO")],
+            vec![json!("Q"), json!(true), json!("NO")],
+            vec![json!("Q"), json!("YES"), json!(["NO"])],
+            vec![json!(""), json!("YES"), json!("NO")],
+        ] {
+            assert!(
+                PokemonScriptCommand::from_custom("askFieldYesNo", &invalid).is_err(),
+                "{invalid:?}"
+            );
+        }
+        assert!(PokemonScriptCommand::from_custom("ordinaryUnknownTwoOption", &args).is_err());
     }
 }
 

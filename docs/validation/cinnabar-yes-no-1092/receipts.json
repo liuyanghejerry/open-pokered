@@ -1,0 +1,142 @@
+{
+  "all_pass": true,
+  "integrated_source": "af97cf205476d1ad0d188cc80fdfa16822806f2d",
+  "base": "841cf6ecdc8c5197a5744221ff62e263660dee60",
+  "native": [
+    {
+      "role": "before",
+      "source": "e33d4af3199b9ef3e9b5823a2001ed0a6ca55509",
+      "binary_sha256": "093bfc973e6bfe7da9ab2d7bd17fa26a1a4779a6b49790faeb9a9d4350f45172",
+      "same_frames": 1308,
+      "runtime_setters": 0,
+      "checkpoint_assertions": [
+        {
+          "frame": 1087,
+          "path": "choice.selected",
+          "observed": 0
+        },
+        {
+          "frame": 1088,
+          "path": "choice.selected",
+          "observed": 1
+        },
+        {
+          "frame": 1092,
+          "path": "choice.selected",
+          "observed": 1
+        }
+      ],
+      "result_sha256": "2afa8087190f1e7bb8b485d615ce2bd4dcd36f0199878d89641b514343715875",
+      "fixture_sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+      "saved_sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+      "gate_open": false
+    },
+    {
+      "role": "after",
+      "source": "af97cf205476d1ad0d188cc80fdfa16822806f2d",
+      "binary_sha256": "1a592b627991dba109947dca7c01492ce9eb87dd014d7ece6187f834c68f1bd4",
+      "same_frames": 1308,
+      "runtime_setters": 0,
+      "checkpoint_assertions": [
+        {
+          "frame": 1087,
+          "path": "choice.selected",
+          "observed": 0
+        },
+        {
+          "frame": 1087,
+          "path": "script_effect.state.phase",
+          "observed": "Poll"
+        },
+        {
+          "frame": 1088,
+          "path": "choice.selected",
+          "observed": 0
+        },
+        {
+          "frame": 1088,
+          "path": "script_effect.state.phase",
+          "observed": {
+            "CursorDelay": 3
+          }
+        },
+        {
+          "frame": 1092,
+          "path": "choice.selected",
+          "observed": 0
+        }
+      ],
+      "result_sha256": "ff186dc726d331e1671a322013e823b6bfa44445bc2e319137567f9ace387aa3",
+      "fixture_sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+      "saved_sha256": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+      "gate_open": true
+    }
+  ],
+  "local_tests": [
+    {
+      "name": "core-all",
+      "result": "test result: ok. 3119 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.03s",
+      "sha256": "1ae5d9e6b845fe18d61330124d132f07086f27e513a027fdd3874c45a809d6f9"
+    },
+    {
+      "name": "agent-all",
+      "result": "test result: ok. 61 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s",
+      "sha256": "39957f441e18f24a0af341e31f8e6a808f9dcb37c158351de7ade5b81521bb76"
+    },
+    {
+      "name": "app-quiz",
+      "result": "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 412 filtered out; finished in 2.37s",
+      "sha256": "dc7ab4e603b0001b874871bc8da4e458614d3db8fe511637a3fefda6c0809383"
+    },
+    {
+      "name": "data-boa",
+      "result": "test result: ok. 307 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s",
+      "sha256": "adcad60a929675115f2adb81dd3e14d2e54e95ff0a95d0893d585e5b50c6352b"
+    }
+  ],
+  "original_pair_review": {
+    "all_pass": true,
+    "before_source": "e33d4af3199b9ef3e9b5823a2001ed0a6ca55509",
+    "after_source": "4270547424c214a5b5ceac53b92d551b461db69c",
+    "same_frames": 1308,
+    "same_tape_sha256": "a0a3ae5e5364863a6341ab01c3736607883bb28dff951f1d7802291c0b52a325",
+    "UP_frame": 1092,
+    "before_UP_choice": {
+      "cursor_visible": true,
+      "input_enabled": true,
+      "options": [
+        "YES",
+        "NO"
+      ],
+      "selected": 1
+    },
+    "after_UP_choice": {
+      "cursor_visible": true,
+      "input_enabled": true,
+      "options": [
+        "YES",
+        "NO"
+      ],
+      "selected": 0
+    },
+    "before_gate_open": false,
+    "after_gate_open": true,
+    "before_final_screen": "overworld",
+    "after_final_screen": "overworld",
+    "both_groups_gone": true,
+    "no_runtime_setters": true,
+    "native_SFX_scope": "logical sequencer observations, with real PCM covered by App tests; no original-emulator execution in this pair"
+  },
+  "literal_preservation": {
+    "all_pass": true,
+    "base": "e33d4af3199b9ef3e9b5823a2001ed0a6ca55509",
+    "head": "4270547424c214a5b5ceac53b92d551b461db69c",
+    "all_bilingual_t_literal_counts_equal": true,
+    "nonlabel_literal_order_equal": true,
+    "literal_count": 83,
+    "original_scene_sha256": "60bed5a41a5f5088d8e136f71c3b1c187d85c7aecd8dff94b14fd0eacb191243",
+    "candidate_scene_sha256": "e818dabcc76049b9198d7ffb34291ca2852a4b34b2c30e469c14c4c607127739",
+    "label_movement": "NO moves beside YES into explicit menu arguments, before both branch bodies; initial all-literals-order check was invalid for that transformation",
+    "native_trace_scope": "existing six-question en/zh x both answers x prior door/trainer flags test passed, all command branches/gate/trainer identities retained"
+  }
+}

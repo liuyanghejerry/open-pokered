@@ -341,7 +341,8 @@ fn cinnabar_wrong_answers_wait_for_each_real_trainer_route_before_text_and_battl
                 break;
             }
             assert!(!matches!(command, ScriptCommand::MoveNpc { .. } | ScriptCommand::ShowText { .. } | ScriptCommand::StartBattle { .. }));
-            let result = if matches!(command, ScriptCommand::ShowChoice { .. }) {
+            let result = if matches!(command, ScriptCommand::ShowChoice { .. })
+                || matches!(&command, ScriptCommand::Custom { name, .. } if name == "askFieldYesNo") {
                 CommandResult::Number(wrong_answer as f64)
             } else {
                 CommandResult::Void

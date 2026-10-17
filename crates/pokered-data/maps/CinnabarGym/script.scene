@@ -121,44 +121,41 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("CATERPIE evolves into\nBUTTERFREE?", "绿毛虫会进化成巴大蝶？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
-          replaceTileBlock(9, 3, 14)
-          finishFieldText()
+      answer = askFieldYesNo(@t("CATERPIE evolves into\nBUTTERFREE?", "绿毛虫会进化成巴大蝶？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
-        @option(@t("NO", "否")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
-            facePlayer("right")
-            moveNpc("3", [[16, 8]])
-            @speaker("") {
-              @t("I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！")
+        setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+        replaceTileBlock(9, 3, 14)
+        finishFieldText()
+      } @else {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+          facePlayer("right")
+          moveNpc("3", [[16, 8]])
+          @speaker("") {
+            @t("I was a thief, but I became\nstraight as a trainer!", "我以前是小偷，但现在改邪归正\n了！")
+          }
+          result = startBattleWithText("OPP_BURGLAR4", @t("I\nsurrender!", "我\n投降！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_BURGLAR4", @t("I\nsurrender!", "我\n投降！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
-              setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
-              replaceTileBlock(9, 3, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_1")
+            setFlag("EVENT_CINNABAR_GYM_GATE1_UNLOCKED")
+            replaceTileBlock(9, 3, 14)
           }
         }
       }
@@ -171,46 +168,43 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("There are 9 certified POKéMON\nLEAGUE BADGEs?", "宝可梦联盟的认证徽章有 9枚？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
-            facePlayer("down")
-            moveNpc("4", [[10, 4], [10, 3]])
-            @speaker("") {
-              @t("You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！")
+      answer = askFieldYesNo(@t("There are 9 certified POKéMON\nLEAGUE BADGEs?", "宝可梦联盟的认证徽章有 9枚？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+          facePlayer("down")
+          moveNpc("4", [[10, 4], [10, 3]])
+          @speaker("") {
+            @t("You can't win! I have\nstudied POKeMON totally!", "你赢不了的！我已经把宝可梦研\n究透了！")
+          }
+          result = startBattleWithText("OPP_SUPER_NERD10", @t("Waah!\nMy studies!", "哇！\n我的研究！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_SUPER_NERD10", @t("Waah!\nMy studies!", "哇！\n我的研究！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
-              setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
-              replaceTileBlock(6, 3, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_2")
+            setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
+            replaceTileBlock(6, 3, 14)
           }
         }
-        @option(@t("NO", "否")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
-          replaceTileBlock(6, 3, 14)
-          finishFieldText()
+      } @else {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
+        setFlag("EVENT_CINNABAR_GYM_GATE2_UNLOCKED")
+        replaceTileBlock(6, 3, 14)
+        finishFieldText()
       }
     }
   }
@@ -221,46 +215,43 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("POLIWAG evolves 3 times?", "蚊香蝌蚪会进化 3次？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
-            facePlayer("right")
-            moveNpc("5", [[10, 8]])
-            @speaker("") {
-              @t("I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！")
+      answer = askFieldYesNo(@t("POLIWAG evolves 3 times?", "蚊香蝌蚪会进化 3次？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+          facePlayer("right")
+          moveNpc("5", [[10, 8]])
+          @speaker("") {
+            @t("I just like using fire\nPOKeMON!", "我就是喜欢用火系宝可梦！")
+          }
+          result = startBattleWithText("OPP_BURGLAR5", @t("Too hot\nto handle!", "太烫了，\n受不了了！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_BURGLAR5", @t("Too hot\nto handle!", "太烫了，\n受不了了！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
-              setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
-              replaceTileBlock(6, 6, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_3")
+            setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
+            replaceTileBlock(6, 6, 14)
           }
         }
-        @option(@t("NO", "否")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
-          replaceTileBlock(6, 6, 14)
-          finishFieldText()
+      } @else {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
+        setFlag("EVENT_CINNABAR_GYM_GATE3_UNLOCKED")
+        replaceTileBlock(6, 6, 14)
+        finishFieldText()
       }
     }
   }
@@ -271,46 +262,43 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("Are thunder moves effective\nagainst ground element-\ntype POKéMON?", "电系招式对地面系宝可梦有效\n吗？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
-            facePlayer("right")
-            moveNpc("6", [[10, 14]])
-            @speaker("") {
-              @t("I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！")
+      answer = askFieldYesNo(@t("Are thunder moves effective\nagainst ground element-\ntype POKéMON?", "电系招式对地面系宝可梦有效\n吗？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+          facePlayer("right")
+          moveNpc("6", [[10, 14]])
+          @speaker("") {
+            @t("I know why BLAINE became a\ntrainer!", "我知道夏伯为何成为训练家！")
+          }
+          result = startBattleWithText("OPP_SUPER_NERD11", @t("Ow!", "哎哟！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_SUPER_NERD11", @t("Ow!", "哎哟！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
-              setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
-              replaceTileBlock(3, 8, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_4")
+            setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
+            replaceTileBlock(3, 8, 14)
           }
         }
-        @option(@t("NO", "否")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
-          replaceTileBlock(3, 8, 14)
-          finishFieldText()
+      } @else {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
+        setFlag("EVENT_CINNABAR_GYM_GATE4_UNLOCKED")
+        replaceTileBlock(3, 8, 14)
+        finishFieldText()
       }
     }
   }
@@ -321,44 +309,41 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("POKéMON of the same kind and\nlevel are not identical?", "同种类同等级的宝可梦并不完\n全相同？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
-          replaceTileBlock(2, 6, 14)
-          finishFieldText()
+      answer = askFieldYesNo(@t("POKéMON of the same kind and\nlevel are not identical?", "同种类同等级的宝可梦并不完\n全相同？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
-        @option(@t("NO", "否")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
-            facePlayer("right")
-            moveNpc("7", [[2, 14]])
-            @speaker("") {
-              @t("I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！")
+        setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
+        replaceTileBlock(2, 6, 14)
+        finishFieldText()
+      } @else {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+          facePlayer("right")
+          moveNpc("7", [[2, 14]])
+          @speaker("") {
+            @t("I've been to many GYMs, but\nthis is my favorite!", "我去过很多道馆，这里最棒！")
+          }
+          result = startBattleWithText("OPP_BURGLAR6", @t("Yowza!\nToo hot!", "哎呀！\n太烫了！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_BURGLAR6", @t("Yowza!\nToo hot!", "哎呀！\n太烫了！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
-              setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
-              replaceTileBlock(2, 6, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_5")
+            setFlag("EVENT_CINNABAR_GYM_GATE5_UNLOCKED")
+            replaceTileBlock(2, 6, 14)
           }
         }
       }
@@ -371,46 +356,43 @@ game_scene CinnabarGym {
     @if (getPlayerFacing() == "up") {
       printFieldText(@t("POKéMON Quiz!\n\nGet it right and the door\nopens to the next room!\n\nGet it wrong and face a\ntrainer!\n\nIf you want to conserve\nyour POKéMON for the GYM\nLEADER...\n\nThen get it right! Here we\ngo!", "宝可梦问答！\n\n答对了，通往下一个房间的大\n门就会打开！\n\n答错了，就要面对训练家！\n\n如果想为挑战馆主保存宝可梦\n的实力……\n\n那就答对吧！开始！"), true, "prompt")
       // The question far payload ends DONE: enter YES/NO without an extra acknowledgement.
-      printFieldText(@t("TM28 contains TOMBSTONER?", "TM28里装的是大坟墓？"), true)
-      @choice {
-        @option(@t("YES", "是")) {
-          waitSound()
-          playSound("SFX_DENIED")
-          waitSound()
-          printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
-          finishFieldText()
-          @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
-            facePlayer("right")
-            moveNpc("8", [[2, 8]])
-            @speaker("") {
-              @t("Fire is weak against H2O!", "火怕水，就是H2O！")
+      answer = askFieldYesNo(@t("TM28 contains TOMBSTONER?", "TM28里装的是大坟墓？"), @t("YES", "是"), @t("NO", "否"))
+      @if (answer == 0) {
+        waitSound()
+        playSound("SFX_DENIED")
+        waitSound()
+        printFieldText(@t("Sorry! Bad call!", "抱歉，答错了！"), true, "prompt")
+        finishFieldText()
+        @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+          facePlayer("right")
+          moveNpc("8", [[2, 8]])
+          @speaker("") {
+            @t("Fire is weak against H2O!", "火怕水，就是H2O！")
+          }
+          result = startBattleWithText("OPP_SUPER_NERD12", @t("Oh!\nSnuffed out!", "哦！\n熄火了！"))
+          @if (result == "win") {
+            @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
+              waitSound()
+              playSound("SFX_GO_INSIDE")
+              waitSound()
             }
-            result = startBattleWithText("OPP_SUPER_NERD12", @t("Oh!\nSnuffed out!", "哦！\n熄火了！"))
-            @if (result == "win") {
-              @if (!getFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")) {
-                waitSound()
-                playSound("SFX_GO_INSIDE")
-                waitSound()
-              }
-              setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
-              setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
-              replaceTileBlock(2, 3, 14)
-            }
+            setFlag("EVENT_BEAT_CINNABAR_GYM_TRAINER_6")
+            setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
+            replaceTileBlock(2, 3, 14)
           }
         }
-        @option(@t("NO", "否")) {
-          // PrintText clears/prepares the window before its leading TX_SOUND.
-          // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
-          printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
-          @if (!getFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")) {
-            waitSound()
-            playSound("SFX_GO_INSIDE")
-            waitSound()
-          }
-          setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
-          replaceTileBlock(2, 3, 14)
-          finishFieldText()
+      } @else {
+        // PrintText clears/prepares the window before its leading TX_SOUND.
+        // GET_ITEM_1 completes before the first glyph; TX_PROMPT_BUTTON keeps ownership.
+        printFieldText(@t("You're absolutely correct!\n\nGo on through!", "完全正确！\n\n请通过吧！"), true, true, "SFX_GET_ITEM_1")
+        @if (!getFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")) {
+          waitSound()
+          playSound("SFX_GO_INSIDE")
+          waitSound()
         }
+        setFlag("EVENT_CINNABAR_GYM_GATE6_UNLOCKED")
+        replaceTileBlock(2, 3, 14)
+        finishFieldText()
       }
     }
   }

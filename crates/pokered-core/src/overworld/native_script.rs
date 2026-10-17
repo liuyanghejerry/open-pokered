@@ -171,6 +171,18 @@ impl ScriptHost for NativeHost {
         }
 
         match name {
+            "askFieldYesNo" => {
+                let values = v
+                    .iter()
+                    .map(|value| match value {
+                        Value::Text(text) => Ok(serde_json::Value::String(text.clone())),
+                        _ => Err("askFieldYesNo: expected exactly three strings".to_string()),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
+            }
+
+
             // ── sync flag queries/mutations ──────────────────────────────
             "getFlag" => {
                 let flag = args::text(v.first().ok_or("getFlag: missing flag")?, "getFlag")?;
@@ -3263,6 +3275,8 @@ mod tests {
                     CommandResult::Text(outcome.into())
                 }
                 ScriptCommand::Custom { name, .. } if name == "startBattleWithText" || name == "staticEncounter" => CommandResult::Text(outcome.into()),
+                ScriptCommand::Custom { name, .. } if name == "askFieldYesNo" => CommandResult::Number(*choices.next().expect("menu response") as f64),
+
                 ScriptCommand::ShowChoice { .. } => {
                     CommandResult::Number(*choices.next().expect("menu response") as f64)
                 }
@@ -3980,7 +3994,11 @@ mod tests {
                                 }
                                 ScriptCommand::Custom { name, args } => match PokemonScriptCommand::from_custom(name, args).unwrap() {
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Protected, leading_sound: None, .. } => "prompt".into(),
-                                    PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Done, leading_sound: None, .. } => "done".into(),
+                                    PokemonScriptCommand::AskFieldYesNo { question, labels } => {
+                                        assert!(!question.is_empty());
+                                        assert_eq!(labels, if lang == "zh" { ["是".to_string(), "否".to_string()] } else { ["YES".to_string(), "NO".to_string()] });
+                                        "question-yes-no".into()
+                                    },
                                     PokemonScriptCommand::PrintFieldText { retain_window: true, prompt: FieldTextPrompt::Button, leading_sound: Some(sound), .. } if sound == "SFX_GET_ITEM_1" => "leading-GET1-prompt-button".into(),
                                     PokemonScriptCommand::StartBattleWithText { trainer_id: actual_trainer, .. } => {
                                         assert_eq!(&actual_trainer, trainer_id);
@@ -3995,13 +4013,13 @@ mod tests {
                             });
                         }
                         let expected: &[&str] = if answer != correct && !prior_beaten {
-                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish", "face", "move", "trainer-text", "battle"]
+                            &["prompt", "question-yes-no", "wait", "SFX_DENIED", "wait", "prompt", "finish", "face", "move", "trainer-text", "battle"]
                         } else if answer != correct {
-                            &["prompt", "done", "choice", "wait", "SFX_DENIED", "wait", "prompt", "finish"]
+                            &["prompt", "question-yes-no", "wait", "SFX_DENIED", "wait", "prompt", "finish"]
                         } else if prior_open {
-                            &["prompt", "done", "choice", "leading-GET1-prompt-button", "block", "finish"]
+                            &["prompt", "question-yes-no", "leading-GET1-prompt-button", "block", "finish"]
                         } else {
-                            &["prompt", "done", "choice", "leading-GET1-prompt-button", "wait", "SFX_GO_INSIDE", "wait", "block", "finish"]
+                            &["prompt", "question-yes-no", "leading-GET1-prompt-button", "wait", "SFX_GO_INSIDE", "wait", "block", "finish"]
                         };
                         assert_eq!(trace, expected, "quiz={number},lang={lang},open={prior_open},beaten={prior_beaten},answer={answer}");
                         assert_eq!(engine.get_flag(&gate), prior_open || answer == correct);
@@ -4128,4 +4146,59 @@ mod pokedex_rating_protocol_tests {
         assert!(host.call("pokedexRating", &[Value::Bool(false),Value::Number(1.)]).is_err());
         assert!(host.call("pokedexRating", &[Value::Text("rating".into()),Value::Text("1".into())]).is_err());
     }
+}
+
+#[cfg(test)]
+mod field_yes_no_protocol_tests {
+    use super::*;
+
+    #[test]
+    fn native_explicit_yes_no_suspends_assigns_both_numeric_branches_and_rejects_other_types() {
+        let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+            r#"game_scene Test {
+  @storyline("question") {
+    answer = askFieldYesNo("Question?", "YES", "NO")
+    @if (answer == 0) { setFlag("YES_BRANCH") } @else { setFlag("NO_BRANCH") }
+  }
+}"#,
+            "Test",
+        )
+        .unwrap();
+        for answer in [0, 1] {
+            let mut engine = NativeScriptEngine::new();
+            engine.load_map("Test", &scene);
+            let expected = Some(
+                PokemonScriptCommand::AskFieldYesNo {
+                    question: "Question?".into(),
+                    labels: ["YES".into(), "NO".into()],
+                }
+                .into_script_command(),
+            );
+            assert_eq!(engine.call_function_no_args("question").unwrap(), expected);
+            assert_eq!(engine.tick(), expected);
+            assert!(!engine.get_flag("YES_BRANCH") && !engine.get_flag("NO_BRANCH"));
+            engine
+                .signal_done(CommandResult::Number(f64::from(answer)))
+                .unwrap();
+            assert_eq!(engine.get_flag("YES_BRANCH"), answer == 0);
+            assert_eq!(engine.get_flag("NO_BRANCH"), answer == 1);
+        }
+        let mut host = NativeHost::new();
+        for args in [
+            vec![],
+            vec![
+                Value::Text("Q".into()),
+                Value::Bool(true),
+                Value::Text("NO".into()),
+            ],
+            vec![
+                Value::Text("".into()),
+                Value::Text("YES".into()),
+                Value::Text("NO".into()),
+            ],
+        ] {
+            assert!(host.call("askFieldYesNo", &args).is_err());
+        }
+    }
+
 }

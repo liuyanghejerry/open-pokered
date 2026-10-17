@@ -43,6 +43,9 @@ interface GameAPI {
    */
   showText(text: string): Promise<void>;
 
+  /** Field question/DONE then YES/NO: 0 for YES, 1 for NO/B. */
+  askFieldYesNo(question: string, yesLabel: string, noLabel: string): Promise<number>;
+
   /** BikeShop no-voucher text_asm: two explicit Welcome paragraphs, then its
    * DONE question, PROMPT refusal, DONE goodbye and two manual-list labels. */
   bikeShopOffer(welcomeFirst: string, welcomeLast: string, question: string, cantAfford: string, goodbye: string, bicycle: string, cancel: string): Promise<void>;

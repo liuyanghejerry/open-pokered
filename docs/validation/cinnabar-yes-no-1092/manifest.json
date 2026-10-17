@@ -1,0 +1,115 @@
+{
+  "cases": {
+    "before": {
+      "fixture": "quiz.sav",
+      "tape": "inputs.json",
+      "recorded_source": "e33d4af3199b9ef3e9b5823a2001ed0a6ca55509",
+      "capture_frames": [
+        1092,
+        1308
+      ],
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "CinnabarGym",
+        "party": [
+          {
+            "hp": 73,
+            "level": 30,
+            "max_hp": 73,
+            "moves": [
+              "LeechSeed",
+              "VineWhip",
+              "Poisonpowder",
+              "RazorLeaf"
+            ],
+            "pp": [
+              10,
+              10,
+              35,
+              25
+            ],
+            "species": "Bulbasaur",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_CINNABAR_GYM_GATE1_UNLOCKED": false
+      },
+      "expected_bag": [],
+      "checkpoint_state": {
+        "1087": {
+          "choice.selected": 0
+        },
+        "1088": {
+          "choice.selected": 1
+        },
+        "1092": {
+          "choice.selected": 1
+        }
+      }
+    },
+    "after": {
+      "fixture": "quiz.sav",
+      "tape": "inputs.json",
+      "recorded_source": "af97cf205476d1ad0d188cc80fdfa16822806f2d",
+      "capture_frames": [
+        1092,
+        1308
+      ],
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "CinnabarGym",
+        "party": [
+          {
+            "hp": 73,
+            "level": 30,
+            "max_hp": 73,
+            "moves": [
+              "LeechSeed",
+              "VineWhip",
+              "Poisonpowder",
+              "RazorLeaf"
+            ],
+            "pp": [
+              10,
+              10,
+              35,
+              25
+            ],
+            "species": "Bulbasaur",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_CINNABAR_GYM_GATE1_UNLOCKED": true
+      },
+      "expected_bag": [],
+      "checkpoint_state": {
+        "1087": {
+          "choice.selected": 0,
+          "script_effect.state.phase": "Poll"
+        },
+        "1088": {
+          "choice.selected": 0,
+          "script_effect.state.phase": {
+            "CursorDelay": 3
+          }
+        },
+        "1092": {
+          "choice.selected": 0
+        }
+      }
+    }
+  },
+  "files": {
+    "replay.py": "6dfa4046b172deb13392109812941ebaff573e980655eacdf9f97ec69f03436e",
+    "quiz.sav": "3ba371397364373ad31483fc341e9cf2f3d3720e8edd0e2ba9c106a9b906f358",
+    "inputs.json": "ccae904ec7389ec369e321e1fce5c1880092798b469da07facf127fbede2691d"
+  }
+}
