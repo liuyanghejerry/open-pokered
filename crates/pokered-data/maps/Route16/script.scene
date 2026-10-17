@@ -79,7 +79,6 @@ game_scene Route16 {
       hideObjectByName("ROUTE_16_OBJ_7")
     } @else @if (getFlag("EVENT_FIGHT_ROUTE16_SNORLAX")) {
       // Only USE from the bag wakes Snorlax; carrying the flute is insufficient.
-      playCry("SNORLAX")
       @speaker("") { @t("SNORLAX woke up!\n\nIt attacked in a grumpy\nrage!", "卡比兽醒过来了！\n\n它气呼呼地发起了攻击！") }
       // Route16DefaultScript resets FIGHT and hides the sprite before battle.
       resetFlag("EVENT_FIGHT_ROUTE16_SNORLAX")

@@ -1,0 +1,235 @@
+{
+  "scope": "One Route12 physical-SAV normal-CLI pair; exact same 1905 literal inputs. Route16 covered by parameterized real core consumer test only. Logical audio ID/phase, not PCM capture.",
+  "fixtures": {
+    "sram": {
+      "file": "fixture.sav",
+      "sha256": "b62564cf4e067183ea6990b78fe2fcb93f6f3375a663299e3c2a808059769d29",
+      "bytes": 32768,
+      "map": "Route12",
+      "xy": [
+        9,
+        62
+      ],
+      "snorlax_xy": [
+        10,
+        62
+      ],
+      "party": "Pidgey20 HP50/50",
+      "bag": [
+        {
+          "item": "PokeFlute",
+          "qty": 1
+        }
+      ],
+      "money": 1000,
+      "pokedex_event": true
+    },
+    "construction": {
+      "source_sav": "docs/validation/field-question-ack-1075/fixtures/bike-sale.sav",
+      "source_sav_sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+      "codec_actual_core_source": "077034dbe197af52423eb02dc9dafbb8e7c0c76b",
+      "codec_binary_sha256": "0dee93d8fb3c5c79610f35bc0cc677810d7f0fe75b10dd0222533fb8440f02c4",
+      "codec_source_sha256": "5ffe68e5413389009360e617956b5da4bab3cbfaded8b352c63adbd4f23d0e49",
+      "main_checksum_offset": "0x3523",
+      "checksum_stored_and_computed": "0xD8",
+      "canonical_import_passed": true,
+      "typed_json_exact_roundtrip": true,
+      "reexport_bytes_equal": true,
+      "changes": "Route12 position/map metadata and one PokeFlute; other serialized source-SAV fields retained. Constructed offline SRAM, not a natural playthrough or runtime snapshot.",
+      "standing_legality": "Original Route12 flute coordinate (9,62); current block(4,31)=0x61 collision tile0x39 passable, no NPC/warp on standing tile."
+    }
+  },
+  "inputs": {
+    "file": "inputs.rle.json",
+    "sha256": "2d1bb3e84da5441036669f837eee9f6e75055053af3097b7392832a038d5d188",
+    "frames": 1905,
+    "runs": 62,
+    "expanded_json_sha256": "c2e9784f1246e4d15ef057b1b8c1bc7aeb816629c182e23c1b2b5ebdae21b193",
+    "seed": 42,
+    "runtime_setters": 0,
+    "ordinary_intro_ACK_input_frames": [
+      1870,
+      1904
+    ],
+    "ordinary_field_ACKs": 3
+  },
+  "capture_frame": 1269,
+  "capture_scope": "Same absolute frame and full tape; before S, after SN. Wake text begins one update earlier after deleting the extra script effect. Screenshot is visual evidence only.",
+  "initial_flags": {
+    "EVENT_GOT_GOOD_ROD": false,
+    "EVENT_GOT_LICKITUNG_FROM_TRADE": false,
+    "EVENT_GOT_OLD_ROD": false,
+    "EVENT_GOT_POKEDEX": true,
+    "EVENT_GOT_STARTER": true,
+    "EVENT_GOT_SUPER_ROD": false,
+    "EVENT_TRADED_FOR_CHIKUCHIKU": false,
+    "EVENT_TRADED_FOR_CRINKLES": false,
+    "EVENT_TRADED_FOR_DORIS": false,
+    "EVENT_TRADED_FOR_DUX": false,
+    "EVENT_TRADED_FOR_LOLA": false,
+    "EVENT_TRADED_FOR_MARC": false,
+    "EVENT_TRADED_FOR_MARCEL": false,
+    "EVENT_TRADED_FOR_SAILOR": false,
+    "EVENT_TRADED_FOR_SPOT": false,
+    "EVENT_TRADED_FOR_TERRY": false,
+    "SCRIPT_REDSHOUSE2F_NOOP": false
+  },
+  "final_flags": {
+    "EVENT_GOT_GOOD_ROD": false,
+    "EVENT_GOT_LICKITUNG_FROM_TRADE": false,
+    "EVENT_GOT_OLD_ROD": false,
+    "EVENT_GOT_POKEDEX": true,
+    "EVENT_GOT_STARTER": true,
+    "EVENT_GOT_SUPER_ROD": false,
+    "EVENT_TRADED_FOR_CHIKUCHIKU": false,
+    "EVENT_TRADED_FOR_CRINKLES": false,
+    "EVENT_TRADED_FOR_DORIS": false,
+    "EVENT_TRADED_FOR_DUX": false,
+    "EVENT_TRADED_FOR_LOLA": false,
+    "EVENT_TRADED_FOR_MARC": false,
+    "EVENT_TRADED_FOR_MARCEL": false,
+    "EVENT_TRADED_FOR_SAILOR": false,
+    "EVENT_TRADED_FOR_SPOT": false,
+    "EVENT_TRADED_FOR_TERRY": false,
+    "SCRIPT_REDSHOUSE2F_NOOP": false,
+    "__OBJ_HIDDEN_ROUTE_12_OBJ_1": true,
+    "__OBJ_SHOWN_ROUTE_12_OBJ_1": false
+  },
+  "cases": {
+    "before": {
+      "recorded_source": "f6dd110e5f2a4f24d6a40d6794eda63ec3789bdf",
+      "recorded_binary_sha256": "2472672f3529e5c3f23b04e92297c510e81d5d74f3af54e06018e3f67e896460",
+      "features": [
+        "default",
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0, CARGO_INCREMENTAL=0",
+      "frames": 1905,
+      "field_cry_frames": [
+        1265,
+        1266,
+        1267,
+        1268,
+        1269,
+        1270,
+        1271,
+        1272,
+        1273,
+        1274,
+        1275,
+        1276,
+        1277,
+        1278,
+        1279,
+        1280
+      ],
+      "field_PlayCry_effect_frames": [
+        1264
+      ],
+      "battle_cry_frames": [
+        1735,
+        1736,
+        1737,
+        1738,
+        1739,
+        1740,
+        1741,
+        1742,
+        1743,
+        1744,
+        1745,
+        1746,
+        1747,
+        1748,
+        1749,
+        1750
+      ],
+      "battle_cry_phase": "WildReveal",
+      "flute_id93_playing_range": [
+        699,
+        1227
+      ],
+      "capture_repo_path": "docs/screenshots/snorlax-wake-no-field-cry-before.png",
+      "capture_sha256": "955c7167729432624791244dc170ba3946a284b0ea96c965d9e41467d4d00207",
+      "capture_visible_text": "S",
+      "final_phase": "PlayerMenu",
+      "all_pass": true,
+      "owned_groups_gone": true,
+      "actual_result_sha256": "0de8a5c341d5ae05c3f925c500ef13f456a390f8e3c10a668ed3d3201e2957cd",
+      "actual_state_log_sha256": "07840551f6703d97826a2aaf3c3fcf2259420dc4d2a5de226bf4c67916f6fd90",
+      "actual_accepted_buttons_equal_fulltape": true
+    },
+    "after": {
+      "recorded_source": "b5fb543f8ff120247d33c6c11aab75deb3018284",
+      "recorded_binary_sha256": "69968283b6bc6c8dfa1e83a9025b2160ca4ae688905f715f62bba441c2cbd4ee",
+      "features": [
+        "default",
+        "debug-server"
+      ],
+      "profile": "dev opt0/debug0, CARGO_INCREMENTAL=0",
+      "frames": 1905,
+      "field_cry_frames": [],
+      "field_PlayCry_effect_frames": [],
+      "battle_cry_frames": [
+        1735,
+        1736,
+        1737,
+        1738,
+        1739,
+        1740,
+        1741,
+        1742,
+        1743,
+        1744,
+        1745,
+        1746,
+        1747,
+        1748,
+        1749,
+        1750
+      ],
+      "battle_cry_phase": "WildReveal",
+      "flute_id93_playing_range": [
+        699,
+        1227
+      ],
+      "capture_repo_path": "docs/screenshots/snorlax-wake-no-field-cry-after.png",
+      "capture_sha256": "aec3ee9b867a882014719dce2eb79166555d8ca5c2fb722f442c31958e70c1db",
+      "capture_visible_text": "SN",
+      "final_phase": "PlayerMenu",
+      "all_pass": true,
+      "owned_groups_gone": true,
+      "actual_result_sha256": "291c73b113913e26d6bda7981c3059f441448a55d0f10d165791e181637ab548",
+      "actual_state_log_sha256": "38c78deddac0010d833f0e088d5cffce5d21fc6b851aeba978038066e6100491",
+      "actual_accepted_buttons_equal_fulltape": true
+    }
+  },
+  "local_core": {
+    "source": "b5fb543f8ff120247d33c6c11aab75deb3018284",
+    "command": "cargo test --offline --locked -j1 -p pokered-core --lib overworld::tests_field_items::poke_flute -- --test-threads=1",
+    "passed": 5,
+    "failed": 0,
+    "parameterized_real_consumer_maps": [
+      "Route12",
+      "Route16"
+    ],
+    "tests": [
+      "overworld::tests_field_items::poke_flute_accepts_both_route16_flank_coordinates",
+      "overworld::tests_field_items::poke_flute_does_nothing_off_route",
+      "overworld::tests_field_items::poke_flute_requires_an_adjacent_snorlax_coordinate",
+      "overworld::tests_field_items::poke_flute_sets_snorlax_fight_flag_on_route12",
+      "overworld::tests_field_items::poke_flute_starts_snorlax_after_text_without_another_interaction"
+    ],
+    "raw_log_sha256": "1249b31b7c6638fd147562d26472b6e78a9476696fa0db4b317ea16257d3e688"
+  },
+  "run_accounting": {
+    "failed_prior_v2_before_games": 1,
+    "final_v3_successful_before_games": 1,
+    "final_v3_successful_after_games": 1,
+    "total_games": 3,
+    "prior_failure": "Recorder only supplied neutral battle frames, omitted ordinary intro ACK, and timed out at WildReveal wait_frames0. Original failure retained as failure.",
+    "prior_failed_result_sha256": "37e7708fff2104c233d6f183ce16ecba2ce746000d3c803b5d8074d028cf419d"
+  },
+  "public_replay_status": "Prepared only; AST and lossless input expansion checked, no additional Game executed using this public script.",
+  "pair_receipt_sha256": "b6d4b77419640c824a0d199f5bad6d31033297d73a6109b5f61249d6c3bf6b22"
+}
