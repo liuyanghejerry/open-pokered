@@ -250,10 +250,19 @@ fn cold_pidgey_talk_keeps_window_through_real_cry_then_silent_ack_and_a_release(
                     .unwrap()
                     .holding_open());
                 assert_eq!(session.game.overworld.sfx_event, OverworldSfxEvent::None);
+                // Background music drums use CHAN8 and legitimately set the
+                // broad sfx_playing flag. Silence here excludes the caller's
+                // cry and PressAB, not ordinary continuing map percussion.
+                let manager = session.game.audio.as_ref().unwrap().manager.lock().unwrap();
                 assert!(
-                    !session.sound().1,
-                    "silent outer ACK must not play PressAB or restart the cry; sound={:?}; phase={:?}; cry_starts={}",
-                    session.sound(), session.phase(), session.cry_starts
+                    (4..8).all(|index| {
+                        let channel = &manager.sequencer.channels[index];
+                        !channel.active
+                            || (channel.sound_id != SfxId::PressAB as u8
+                                && channel.sound_id
+                                    != pokered_data::cries::cry_data(Species::Pidgey).sfx)
+                    }),
+                    "silent outer ACK must not play PressAB or restart the cry"
                 );
             }
             session.step(B);
