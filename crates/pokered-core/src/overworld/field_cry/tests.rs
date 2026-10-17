@@ -77,7 +77,8 @@ fn far_entry_keeps_background_three_frames_and_omits_inner_print_delay() {
     let mut owner = ForegroundJoypad::default();
     owner.read_raw(0);
     owner.poll();
-    // CopyScreenTileBuffer3 + LoadFont128/8+1 =20 source VBlanks.
+    owner.read_raw(A); // Any accidental preparation poll would now change last.
+                       // CopyScreenTileBuffer3 + LoadFont128/8+1 =20 source VBlanks.
     for frame in 1..20 {
         assert_eq!(dialogue.get_display_text().is_none(), frame <= 3);
         dialogue.reveal_next_char_with_source(false, &mut owner);
@@ -89,6 +90,11 @@ fn far_entry_keeps_background_three_frames_and_omits_inner_print_delay() {
         dialogue.char_index(),
         1,
         "far entry has no additional inner PrintText3"
+    );
+    assert_eq!(
+        owner.last(),
+        Some(A),
+        "the first glyph performs its real poll"
     );
 }
 
