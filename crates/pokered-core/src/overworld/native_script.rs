@@ -1798,12 +1798,12 @@ mod tests {
     fn field_cry_continuation_native_dsl_keeps_the_caller_suspended_until_completion() {
         let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
             r#"game_scene Test {
-              @storyline("machop") {
-                fieldCryContinuation("first", "MACHOP", "paragraph", "tail")
-                setFlag("CONTINUATION_RETURNED")
-                showText("returned")
-              }
-            }"#,
+  @storyline("machop") {
+    fieldCryContinuation("first", "MACHOP", "paragraph", "tail")
+    setFlag("CONTINUATION_RETURNED")
+    showText("returned")
+  }
+}"#,
             "Test",
         )
         .expect("continuation scene compiles");
