@@ -884,6 +884,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect = Some(script_bridge::ScriptEffect::FieldCry { state });
             Some(done)
         } else { None };
+        let cry_continuation_tick_done = if matches!(self.active_script_effect,
+            Some(script_bridge::ScriptEffect::FieldCryContinuation { .. })) {
+            let Some(script_bridge::ScriptEffect::FieldCryContinuation { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_field_cry_continuation(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::FieldCryContinuation { state });
+            Some(done)
+        } else { None };
         let bike_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::BikeShopOffer { .. })) {
             let Some(script_bridge::ScriptEffect::BikeShopOffer { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -946,7 +953,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = rating_tick_done.or(jigglypuff_tick_done).or(field_cry_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = rating_tick_done.or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {

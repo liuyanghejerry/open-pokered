@@ -518,6 +518,24 @@ impl ScriptHost for NativeHost {
                     PokemonScriptCommand::PrintTextCry { text, species }
                 }))
             },
+            "fieldCryContinuation" => {
+                if v.len() != 4 {
+                    return Err(
+                        "fieldCryContinuation: text, species, paragraph and continuation expected"
+                            .into(),
+                    );
+                }
+                let string = |index: usize| match &v[index] {
+                    Value::Text(text) => Ok(text.clone()),
+                    _ => Err(format!(
+                        "fieldCryContinuation: argument {index} must be a string"
+                    )),
+                };
+                Ok(pokemon(PokemonScriptCommand::FieldCryContinuation {
+                    texts: vec![string(0)?, string(2)?, string(3)?],
+                    species: string(1)?,
+                }))
+            }
             "bikeShopOffer" => {
                 if v.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
                 let texts = v.iter().map(|value| match value {
@@ -1754,6 +1772,51 @@ mod tests {
     }
 
     #[test]
+    fn field_cry_continuation_native_host_preserves_order_and_rejects_invalid_arguments() {
+        let mut host = NativeHost::new();
+        let args: Vec<Value> = ["first", "MACHOP", "paragraph", "tail"]
+            .into_iter()
+            .map(|text| Value::Text(text.into()))
+            .collect();
+        assert_eq!(
+            host.call("fieldCryContinuation", &args).unwrap(),
+            HostCall::Command(custom(
+                "fieldCryContinuation",
+                vec![
+                    json!("first"),
+                    json!("MACHOP"),
+                    json!("paragraph"),
+                    json!("tail"),
+                ]
+            ))
+        );
+        for count in [0, 1, 2, 3, 5] {
+            assert_eq!(
+                host.call(
+                    "fieldCryContinuation",
+                    &vec![Value::Text("text".into()); count]
+                )
+                .unwrap_err(),
+                "fieldCryContinuation: text, species, paragraph and continuation expected"
+            );
+        }
+        for index in 0..args.len() {
+            for invalid_value in [
+                Value::Bool(false),
+                Value::Number(17.0),
+                Value::Array(vec![]),
+            ] {
+                let mut invalid = args.clone();
+                invalid[index] = invalid_value;
+                assert_eq!(
+                    host.call("fieldCryContinuation", &invalid).unwrap_err(),
+                    format!("fieldCryContinuation: argument {index} must be a string")
+                );
+            }
+        }
+    }
+
+    #[test]
     fn jigglypuff_song_native_host_has_the_same_strict_text_npc_payload() {
         let mut host = NativeHost::new();
         let args = [Value::Text("JIGGLYPUFF: Puu pupuu!".into()), Value::Text("3".into())];
@@ -1779,6 +1842,43 @@ mod tests {
             vec![Value::Bool(false), args[1].clone()], vec![args[0].clone(), Value::Bool(false)]] {
             assert!(host.call("printTextCry", &invalid).is_err());
         }
+    }
+
+    #[test]
+    fn field_cry_continuation_native_dsl_keeps_the_caller_suspended_until_completion() {
+        let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+            r#"game_scene Test {
+  @storyline("machop") {
+    fieldCryContinuation("first", "MACHOP", "paragraph", "tail")
+    setFlag("CONTINUATION_RETURNED")
+    showText("returned")
+  }
+}"#,
+            "Test",
+        )
+        .expect("continuation scene compiles");
+        let mut engine = NativeScriptEngine::new();
+        engine.load_map("Test", &scene);
+        let expected = Some(custom(
+            "fieldCryContinuation",
+            vec![
+                json!("first"),
+                json!("MACHOP"),
+                json!("paragraph"),
+                json!("tail"),
+            ],
+        ));
+        assert_eq!(engine.call_function_no_args("machop").unwrap(), expected);
+        assert_eq!(engine.tick(), expected);
+        assert!(!engine.get_flag("CONTINUATION_RETURNED"));
+        assert_eq!(
+            engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "returned".into(),
+            })
+        );
+        assert!(engine.get_flag("CONTINUATION_RETURNED"));
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
     }
 
     #[test]
