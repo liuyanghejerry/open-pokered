@@ -287,7 +287,7 @@ fn diploma_a_closes_to_overworld() {
 }
 
 #[test]
-fn soft_reset_needs_16_frame_hold_then_title() {
+fn soft_reset_needs_16_raw_combo_samples_then_title() {
     let mut game = game_at_overworld();
     let combo = hold_all(&[GbButton::A, GbButton::B, GbButton::Start, GbButton::Select]);
 
@@ -302,7 +302,6 @@ fn soft_reset_needs_16_frame_hold_then_title() {
         GameScreen::TitleScreen,
         "a short hold must not soft reset"
     );
-    assert_eq!(game.soft_reset_frames, 15);
     // The 16th frame triggers the reset → title screen.
     game.update(&combo);
     assert_eq!(
@@ -310,20 +309,14 @@ fn soft_reset_needs_16_frame_hold_then_title() {
         GameScreen::TitleScreen,
         "a 16-frame hold soft-resets to the title"
     );
-    assert_eq!(
-        game.soft_reset_frames, 0,
-        "the hold counter clears on reset"
-    );
-
-    // Releasing the combo resets the hold counter: a fresh 15-frame hold
-    // after a release must not reset again.
+    // A fresh Init seeds a fresh counter. Neutral input does not consume
+    // a reset poll; the pure counter controls also cover interrupted holds.
     let mut game2 = game_at_overworld();
     let released = InputState::new();
     game2.update(&released);
     for _ in 0..15 {
         game2.update(&combo);
     }
-    assert_eq!(game2.soft_reset_frames, 15);
     assert_ne!(game2.state.screen, GameScreen::TitleScreen);
 }
 // ── Language pipeline sync ───────────────────────────────────────────
