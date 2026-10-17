@@ -958,6 +958,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::JigglypuffSong { text, npc_id } => ScriptEffect::JigglypuffSong {
             state: super::jigglypuff_song::JigglypuffSongState::new(text, npc_id),
         },
+        PokemonScriptCommand::PrintTextCry { text, species } => ScriptEffect::FieldCry {
+            state: super::field_cry::FieldCryState::inner_print_text(text, species),
+        },
         PokemonScriptCommand::BikeShopOffer { texts } => ScriptEffect::BikeShopOffer {
             state: super::bike_shop::BikeShopOfferState::new(texts),
         },

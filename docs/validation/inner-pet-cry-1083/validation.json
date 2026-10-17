@@ -1,0 +1,340 @@
+{
+  "scope": "Four ordinary inner PrintText pet callers; retained complete window during actual cry, silent outer ACK and A-release close",
+  "original_source_head": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "migrated_callers": [
+    {
+      "map": "PokemonFanClub",
+      "npc_id": 3,
+      "species": "PIKACHU"
+    },
+    {
+      "map": "PokemonFanClub",
+      "npc_id": 4,
+      "species": "SEEL"
+    },
+    {
+      "map": "Route16FlyHouse",
+      "npc_id": 2,
+      "species": "FEAROW"
+    },
+    {
+      "map": "ViridianNicknameHouse",
+      "npc_id": 3,
+      "species": "SPEAROW"
+    }
+  ],
+  "local_tests": {
+    "actual_source_head": "cce512062fab7ff17d60f033c552efed2ebb95fb",
+    "actual_named_pass_executions": 14,
+    "actual_test_names": {
+      "core-field-cry": [
+        "overworld::field_cry::tests::a_already_polled_while_typing_cannot_be_a_fresh_ack_after_cry",
+        "overworld::field_cry::tests::audited_far_pet_npc_consumers_print_then_cry_once_and_wait_before_outer_ack",
+        "overworld::field_cry::tests::audited_inner_print_text_pet_consumers_share_cry_wait_outer_ack_and_close",
+        "overworld::field_cry::tests::embedded_pidgey_keeps_same_window_and_last_poll_until_actual_sound_completion",
+        "overworld::field_cry::tests::far_entry_keeps_background_three_frames_and_omits_inner_print_delay",
+        "overworld::field_cry::tests::field_cry_entries_keep_their_distinct_preparation_frames_without_polling",
+        "overworld::field_cry::tests::legacy_missing_owner_cannot_manufacture_an_ack_after_sound_wait",
+        "overworld::field_cry::tests::newly_held_a_during_cry_is_fresh_outer_ack_then_waits_for_a_release",
+        "overworld::field_cry::tests::no_delay_keeps_the_real_talk_poll_and_still_waits_for_cry_then_outer_ack",
+        "overworld::field_cry::tests::published_field_cry_snapshots_without_entry_default_to_far_in_each_live_phase",
+        "overworld::field_cry::tests::snapshot_preserves_print_sound_outer_ack_and_a_hold_without_recry"
+      ],
+      "core-native-host": [
+        "overworld::native_script::tests::print_text_cry_native_host_keeps_exact_strings_and_rejects_invalid_arguments"
+      ],
+      "data-protocol": [
+        "script_command::field_cry_command_tests::print_text_cry_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      ],
+      "data-boa-await": [
+        "script_api::field_cry_boa_tests::print_text_cry_boa_await_returns_only_after_the_shared_outer_close"
+      ]
+    },
+    "subcases": "One new named test covers four real embedded map/NPC consumers; existing Far test covers13; these are component fixtures, not normal CLI/PCM recordings.",
+    "wrapper_actual_exit": 0,
+    "receipt_sha256": "fa6be452e8f64b30b4a534eb1abb1d4cde846bb1061b10959a624aae99adb50f",
+    "normal_CLI_boots": 0,
+    "PCM_instances": 0,
+    "source_labels_not_rewritten_after_merges": true
+  },
+  "normal_cli": {
+    "Game_calls": 2,
+    "actual_scope": "One representative PokemonFanClub npc3 Pikachu from the same physical SAV via normal boot/CONTINUE/ordinary inputs",
+    "seed": 42,
+    "seed_configured_once_before_first_update": true,
+    "runtime_setters": 0,
+    "same_physical_SAV": true,
+    "full_input_vectors_identical": true,
+    "full_input_frames_each": 700,
+    "shared_boot_talk_prefix_frames": 543,
+    "neutral_after_prefix": 87,
+    "first_B_input_offset": 630,
+    "same_suffix": [
+      [
+        "b",
+        2
+      ],
+      [
+        null,
+        64
+      ],
+      [
+        "b",
+        2
+      ],
+      [
+        null,
+        2
+      ]
+    ],
+    "same_absolute_capture_frame": true,
+    "capture_frame_each": 696,
+    "actual_recording_controller_sha256": "9b3bb0c78700f2eb6d9c58ce2253d508b21598d819f56575509c32755d98ede5",
+    "actual_before_ready_plan_sha256": "efff33d919ed0aa68140ce5288515e442c39c6908a3406005b94d2b25e3d4844",
+    "actual_after_ready_plan_sha256": "01ce49a0aff4bd136381a037c7e9215706fd70de0b7ada55aeb57a67f87901b2",
+    "actual_pair_root_review_sha256": "e2f72f66d515d5aad875a3e64059e88528c358f911256314dd2c192524dace54",
+    "both_SAVs_byte_unchanged_no_sidecar": true,
+    "actual_rpc_request_counts": {
+      "get_state": 1404,
+      "press_timeline": 1400,
+      "get_bag": 6,
+      "get_flags": 6,
+      "capture_frame": 2
+    },
+    "cases": {
+      "before": {
+        "actual_source_head": "2b1db12a5781425758386343662aea26b5196988",
+        "binary_sha256": "e8c42045bb99b06b43e4f33f3257d239444cc6884e383f4ff29484bb4b7c3506",
+        "binary_bytes": 329418088,
+        "identity_sha256": "30b2b56c327161384cef69d894108d887d355f68465ed6082f3c35b69c58e345",
+        "build_receipt_sha256": "a81d2a1442ddcf7908c62e0fd531b7db033437c012e8ab7f62c452c7522356d5",
+        "profile": "dev, unoptimized",
+        "debug_info": 2,
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ],
+        "first_overworld_frame": 503,
+        "first_full_text_frame": 608,
+        "anchor_frame": 630,
+        "after_first_B2_frame": 632,
+        "comparison_frame": 696,
+        "final_frame": 700,
+        "cry_active_frames": [
+          632,
+          679
+        ],
+        "observed_cry_id": 34,
+        "capture_path": "../../screenshots/inner-pet-cry-1083/before.png",
+        "capture_sha256": "20723a7c37596fb13579539c7e92aed1159033fcd7e170a8472229ea88b984b9",
+        "recorded_full_tape_sha256": "ebfffa4c035b85e3da62adfb17098255c5a302f878442fbe73a9eead01dc9a6a",
+        "actual_result_sha256": "ee4f2880a39738fad5cfa95718f3cc539fa5b8481a64f60dce8ae5c36a0264d9",
+        "raw_frames_sha256": "fe0dadd2e234b62d80f42f24d23b2b024529d37025f3b33ccbfe1defbfc06a48",
+        "raw_rpc_sha256": "11cb29a7f731dc68db23a115d19b7787fd90f6bf256476d610d011c3521f75b7",
+        "wrapper_actual_session": 3022,
+        "wrapper_actual_exit": 0,
+        "Game_actual_exit": -15,
+        "Game_exit_scope": "owned diagnostic SIGTERM after successful boundary",
+        "all_owned_PID_and_PG_ESRCH": true
+      },
+      "after": {
+        "actual_source_head": "a3f4593e2d3416bada2367e1c80001a3eb198a97",
+        "binary_sha256": "0c14ed0884fc78cc628971654f0513fa4c688b3e5968050664cd8c7ff5ce1bb6",
+        "binary_bytes": 78867624,
+        "identity_sha256": "cd1a354bd247c2c80ea3dba5f071deded311bccdef0eb04cc6f479b5bb171e9f",
+        "build_receipt_sha256": "a1b779c67c31ff2d4b3da80132d5b8fd84d28d840430404ab8d0f030e903910d",
+        "profile": "dev, unoptimized",
+        "debug_info": 0,
+        "features": [
+          "debug-server",
+          "default",
+          "desktop",
+          "pokered-debug-server"
+        ],
+        "first_overworld_frame": 503,
+        "first_full_text_frame": 630,
+        "anchor_frame": 630,
+        "after_first_B2_frame": 632,
+        "comparison_frame": 696,
+        "final_frame": 700,
+        "cry_active_frames": [
+          630,
+          677
+        ],
+        "observed_cry_id": 34,
+        "capture_path": "../../screenshots/inner-pet-cry-1083/after.png",
+        "capture_sha256": "61b7bdb84ac7008d07dd8dcc9b512f81f7bf85b394472ef5c0674fab813b92ad",
+        "recorded_full_tape_sha256": "ebfffa4c035b85e3da62adfb17098255c5a302f878442fbe73a9eead01dc9a6a",
+        "actual_result_sha256": "20a24c0a1252ae40cfa69b7c61d2966261cdefab7ab0f8c05d13433acdd889bb",
+        "raw_frames_sha256": "059d706dfb54a9770975507dda2e81d6f75da58e70ea536903321a508cc2fa84",
+        "raw_rpc_sha256": "13f27aa3b3572a2ddc5727ab4a1265e36a04b186098cb67ab718a27a0f9a165a",
+        "wrapper_actual_session": 74350,
+        "wrapper_actual_exit": 0,
+        "Game_actual_exit": -15,
+        "Game_exit_scope": "owned diagnostic SIGTERM after successful boundary",
+        "all_owned_PID_and_PG_ESRCH": true
+      }
+    }
+  },
+  "fixture": {
+    "bytes": 32768,
+    "sha256": "0655c9f3e724501951046daf6681ba024582ea488d7d478b745abd18d3330519",
+    "initial_map": "PokemonFanClub",
+    "initial_position": [
+      6,
+      5
+    ],
+    "initial_facing": "Down",
+    "npc3_position": [
+      6,
+      4
+    ],
+    "npc3_movement": "Stationary",
+    "initial_money": 1000,
+    "initial_bag": [],
+    "initial_party": [
+      {
+        "species": "Pidgey",
+        "level": 20,
+        "hp": 50,
+        "max_hp": 50
+      }
+    ],
+    "passable_unoccupied_nonwarp_saved_tile": true,
+    "source_SAV_sha256": "a80a9eae8420e7b3ab240ca5a260e8b8515b41a832f1ba208b4a71d85fe0c0e7",
+    "offline_only_modified_fields": [
+      {
+        "path": "/game_data/last_map",
+        "before": 3,
+        "after": 5
+      },
+      {
+        "path": "/game_data/map_header/tileset",
+        "before": 21,
+        "after": 16
+      },
+      {
+        "path": "/game_data/position/map_id",
+        "before": 66,
+        "after": 90
+      },
+      {
+        "path": "/game_data/position/y",
+        "before": 4,
+        "after": 5
+      },
+      {
+        "path": "/game_data/position/y_block",
+        "before": 0,
+        "after": 1
+      }
+    ],
+    "main_checksum_stored_and_computed": 212,
+    "canonical_typed_JSON_and_SAV_exact_roundtrip": true,
+    "pure_codec_actual_Core_source": "077034dbe197af52423eb02dc9dafbb8e7c0c76b",
+    "pure_codec_sha256": "0dee93d8fb3c5c79610f35bc0cc677810d7f0fe75b10dd0222533fb8440f02c4",
+    "offline_receipt_sha256": "fbc881ed1c0b1d212a40c1f9dc43229bdd7f9af44f18579669bb5797f953fff4"
+  },
+  "tool_attempts_excluded_from_Game_counts": [
+    {
+      "kind": "Initial component test runner parser error",
+      "Game_calls": 0,
+      "cause": "Cargo -vv stdout includes build-script prefix lines; initial parser assumed every line JSON. Clean/native compilation both actually0, no test had run.",
+      "actual_wrapper_exit": 1,
+      "failure_receipt_sha256": "6eab9b2e0035068559df40ad12a64dd231b81741682addbc5b5a81148bc9e92d",
+      "raw_preserved": true,
+      "resumed_without_repeating_native_build": true
+    },
+    {
+      "kind": "Initial CLI build missing sparse debug-server modules",
+      "Game_calls": 0,
+      "actual_wrapper_exit": 1,
+      "actual_cargo_exit": 101,
+      "failure_receipt_sha256": "165281ca3a74d57de0a17fe9b31151d448ad90c9e6cc34c4d279e73672a90f8d",
+      "raw_build_log_sha256": "164bbae9a4a99ff948f6f9722411b38092c46135abfc7b94d6fa245236ac8a8c",
+      "raw_preserved": true
+    },
+    {
+      "kind": "Successful but ineligible workspace feature union build",
+      "Game_calls": 0,
+      "actual_wrapper_exit": 0,
+      "actual_cargo_exit": 0,
+      "selected_for_comparison": false,
+      "append_only_ineligible_note_sha256": "d6ee4c8bb66333bf1409dbfbbe414f56b72c5c9ec05f78399cc9d14c4a340d36",
+      "identity_sha256": "e20fc3c4a81fd6a993931cb9067af3e8b116f3ca6458fc1ac2bf4e1fb92cfa61",
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "embedded-map-data",
+        "embedded-scripts",
+        "mobile",
+        "pokered-debug-server"
+      ],
+      "ELF_and_raw_receipts_preserved": true
+    },
+    {
+      "kind": "Relative output path rejected by recorder pre-Game guard",
+      "Game_calls": 0,
+      "output_directory_created": false,
+      "reported_in_root_pair_review_sha256": "e2f72f66d515d5aad875a3e64059e88528c358f911256314dd2c192524dace54"
+    }
+  ],
+  "publication_integration": {
+    "master": "611ecf6448c12668510586a2ee41817bea06dd48",
+    "product_head": "e6075f3864743752e2dad66b96974ac9005e40e7",
+    "product_tree": "98f22b36ce3d1d203534ff73e3227885dedc8272",
+    "ordinary_merge_conflicts": 0,
+    "source_product_file_count": 12,
+    "all12_source_blobs_identical_to_actual_native_candidate": true,
+    "binary_diff_against_new_master_identical_to_old_master_delta": true,
+    "binary_diff_sha256": "b3affd5987f1a1808e5c658d02643ab9a660840e22e6e4dc27e43eddbd765aa7",
+    "integration_receipt_sha256": "8882cf7395ea7404d19a6a3509bc16aa4fd7436009d90995807f07a30f5a2ce0",
+    "actual_component_test_source_kept": "cce512062fab7ff17d60f033c552efed2ebb95fb",
+    "actual_normal_cli_sources_kept": {
+      "before": "2b1db12a5781425758386343662aea26b5196988",
+      "after": "a3f4593e2d3416bada2367e1c80001a3eb198a97"
+    },
+    "merged_head_not_relabelled_as_retested": true
+  },
+  "public_replay_entry": {
+    "status": "Python syntax and exact RLE expansion checked only; not executed as an additional Game recording",
+    "stdlib_only": true,
+    "private_session_imports_or_paths_required": false
+  },
+  "limits": [
+    "Only Pikachu had two physical-SAV normal CLI runs; four callers have component coverage, not four native recordings.",
+    "No PCM or physical speaker verification in this focused change.",
+    "No original-ROM emulator frame comparison.",
+    "No fresh full playthrough on this merged candidate.",
+    "New Boa wrong-arity/non-string named test was not executed in this local14 group; default typed Data/Native argument tests did run."
+  ],
+  "assets": {
+    "pikachu.sav": {
+      "bytes": 32768,
+      "sha256": "0655c9f3e724501951046daf6681ba024582ea488d7d478b745abd18d3330519"
+    },
+    "inputs.json": {
+      "bytes": 1196,
+      "sha256": "bb33d1e18567020c3d6aa0e5e5fc9e572eb92bc175192b636e214d0b2c6e4a65"
+    },
+    "replay.py": {
+      "bytes": 11725,
+      "sha256": "c8167b9b0481611f5ab526a49216c6369f0f8da544e8862e2f49c8043f10a714"
+    },
+    "README.md": {
+      "bytes": 5604,
+      "sha256": "88c054381e757c6feef16a6babd680c73e98bf03501a1124f86103cfda37a7f0"
+    },
+    "../../screenshots/inner-pet-cry-1083/before.png": {
+      "bytes": 15218,
+      "sha256": "20723a7c37596fb13579539c7e92aed1159033fcd7e170a8472229ea88b984b9"
+    },
+    "../../screenshots/inner-pet-cry-1083/after.png": {
+      "bytes": 13835,
+      "sha256": "61b7bdb84ac7008d07dd8dcc9b512f81f7bf85b394472ef5c0674fab813b92ad"
+    }
+  }
+}

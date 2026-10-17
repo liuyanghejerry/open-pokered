@@ -496,13 +496,18 @@ impl ScriptHost for NativeHost {
                 };
                 Ok(pokemon(PokemonScriptCommand::JigglypuffSong { text: string(0)?, npc_id: string(1)? }))
             },
-            "fieldCry" => {
-                if v.len() != 2 { return Err("fieldCry: text and species expected".into()); }
+            "fieldCry" | "printTextCry" => {
+                if v.len() != 2 { return Err(format!("{name}: text and species expected")); }
                 let string = |index: usize| match &v[index] {
                     Value::Text(text) => Ok(text.clone()),
-                    _ => Err(format!("fieldCry: argument {index} must be a string")),
+                    _ => Err(format!("{name}: argument {index} must be a string")),
                 };
-                Ok(pokemon(PokemonScriptCommand::FieldCry { text: string(0)?, species: string(1)? }))
+                let (text, species) = (string(0)?, string(1)?);
+                Ok(pokemon(if name == "fieldCry" {
+                    PokemonScriptCommand::FieldCry { text, species }
+                } else {
+                    PokemonScriptCommand::PrintTextCry { text, species }
+                }))
             },
             "bikeShopOffer" => {
                 if v.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
@@ -1748,6 +1753,23 @@ mod tests {
         assert!(host.call("jigglypuffSong", &args[..1]).is_err());
         assert!(host.call("jigglypuffSong", &[Value::Bool(false), args[1].clone()]).is_err());
         assert!(host.call("jigglypuffSong", &[args[0].clone(), Value::Number(3.)]).is_err());
+    }
+
+    #[test]
+    fn print_text_cry_native_host_keeps_exact_strings_and_rejects_invalid_arguments() {
+        let mut host = NativeHost::new();
+        let args = [Value::Text("SEEL: Kyuoo!".into()), Value::Text("SEEL".into())];
+        let expected = PokemonScriptCommand::PrintTextCry {
+            text: "SEEL: Kyuoo!".into(), species: "SEEL".into(),
+        }.into_script_command();
+        let HostCall::Command(actual) = host.call("printTextCry", &args).unwrap() else {
+            panic!("inner pet must emit an awaited command");
+        };
+        assert_eq!(actual, expected);
+        for invalid in [vec![], args[..1].to_vec(), vec![args[0].clone(), args[1].clone(), Value::Bool(false)],
+            vec![Value::Bool(false), args[1].clone()], vec![args[0].clone(), Value::Bool(false)]] {
+            assert!(host.call("printTextCry", &invalid).is_err());
+        }
     }
 
     #[test]
