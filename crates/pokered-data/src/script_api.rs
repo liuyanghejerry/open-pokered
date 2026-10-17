@@ -101,6 +101,32 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::FieldCry { text: string(0)?, species: string(1)? }.into_script_command())
         });
 
+        engine.register_async_fn(
+            "fieldCryContinuation",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                if args.len() != 4 {
+                    return Err(boa_engine::JsNativeError::typ()
+                        .with_message("fieldCryContinuation: text, species, paragraph and continuation expected")
+                        .into());
+                }
+                let string = |index: usize| {
+                    args[index]
+                        .as_string()
+                        .map(|value| value.to_std_string_lossy())
+                        .ok_or_else(|| {
+                            boa_engine::JsNativeError::typ().with_message(format!(
+                                "fieldCryContinuation: argument {index} must be a string"
+                            ))
+                        })
+                };
+                Ok(PokemonScriptCommand::FieldCryContinuation {
+                    texts: vec![string(0)?, string(2)?, string(3)?],
+                    species: string(1)?,
+                }
+                .into_script_command())
+            },
+        );
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -1414,5 +1440,83 @@ mod field_cry_boa_tests {
         assert_eq!(engine.call_function("bird", &[]).unwrap(), expected);
         assert_eq!(engine.tick(), expected);
         assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), Some(ScriptCommand::ShowText { text: "returned".into() }));
+    }
+
+    #[test]
+    fn field_cry_continuation_boa_await_retains_all_segments_until_outer_close() {
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine
+            .load_script(
+                r#"export async function machop() {
+          await game.fieldCryContinuation("first", "MACHOP", "paragraph", "tail");
+          await game.showText("returned");
+        }"#,
+            )
+            .unwrap();
+        let expected = Some(
+            PokemonScriptCommand::FieldCryContinuation {
+                texts: vec!["first".into(), "paragraph".into(), "tail".into()],
+                species: "MACHOP".into(),
+            }
+            .into_script_command(),
+        );
+        assert_eq!(engine.call_function("machop", &[]).unwrap(), expected);
+        assert_eq!(
+            engine.tick(),
+            expected,
+            "idle ticking cannot complete the continuation"
+        );
+        assert_eq!(
+            engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText {
+                text: "returned".into(),
+            })
+        );
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+    }
+
+    #[test]
+    fn field_cry_continuation_boa_rejects_wrong_arity_and_each_non_string_argument() {
+        let mut invalid_calls = Vec::new();
+        for count in [0, 1, 2, 3, 5] {
+            invalid_calls.push((
+                vec![r#""text""#; count].join(", "),
+                "fieldCryContinuation: text, species, paragraph and continuation expected"
+                    .to_string(),
+            ));
+        }
+        for index in 0..4 {
+            for invalid_value in ["false", "17", "null", "[]", "{}"] {
+                let mut args = vec![r#""first""#, r#""MACHOP""#, r#""paragraph""#, r#""tail""#];
+                args[index] = invalid_value;
+                invalid_calls.push((
+                    args.join(", "),
+                    format!("fieldCryContinuation: argument {index} must be a string"),
+                ));
+            }
+        }
+        for (arguments, message) in invalid_calls {
+            let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+            engine
+                .load_script(&format!(
+                    r#"export async function invalid() {{
+              try {{
+                await game.fieldCryContinuation({arguments});
+                await game.showText("INVALID_PAYLOAD_ACCEPTED");
+              }} catch (error) {{
+                await game.showText(error.name + ":" + error.message);
+              }}
+            }}"#
+                ))
+                .unwrap();
+            assert_eq!(
+                engine.call_function("invalid", &[]).unwrap(),
+                Some(ScriptCommand::ShowText {
+                    text: format!("TypeError:{message}"),
+                }),
+                "arguments: {arguments}"
+            );
+            assert_eq!(engine.signal_done(CommandResult::Void).unwrap(), None);
+        }
     }
 }

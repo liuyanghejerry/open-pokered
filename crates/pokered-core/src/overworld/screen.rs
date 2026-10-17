@@ -718,6 +718,13 @@ impl BedroomDialogue {
         }
     }
 
+    /// Authored CONT has moved the existing bottom row into the top slot.
+    /// A fresh cursor prints only its new lower row, without a PrintText
+    /// prologue or polling/rewriting the already displayed leading glyphs.
+    pub(crate) fn retain_first_row_for_continuation(&mut self) {
+        self.char_index = self.pages.first().map_or(0, |page| page.line1.chars().count() as u16);
+    }
+
     pub fn skip_to_full_page(&mut self) {
         self.char_index = self.total_chars();
         self.waiting_for_input = true;
@@ -1664,6 +1671,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn dialogue_needs_button(&self) -> bool {
+        if let Some(super::script_bridge::ScriptEffect::FieldCryContinuation { state }) = &self.active_script_effect {
+            return state.needs_button();
+        }
         let effect = match self.active_script_effect.as_ref() {
             Some(super::script_bridge::ScriptEffect::GivePokemon { flow: Some(flow), .. }) => Some(flow.child.as_ref()),
             other => other,
@@ -1672,6 +1682,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && !(self.retain_field_text && self.pending_dialogue.is_none())
             && !self.active_script_effect.as_ref().is_some_and(|effect| effect.is_choice())
             && !matches!(effect, Some(super::script_bridge::ScriptEffect::ShowItemDialogue { .. }))
+    }
+
+    /// The Machop continuation has authored PARA/CONT cursor writes; its
+    /// final DONE returns to an outer ACK without drawing another arrow.
+    /// Other text callers keep their existing cursor presentation policy.
+    pub fn dialogue_shows_prompt_arrow(&self) -> bool {
+        if let Some(super::script_bridge::ScriptEffect::FieldCryContinuation { state }) = &self.active_script_effect {
+            state.shows_prompt_arrow()
+        } else {
+            self.dialogue_needs_button()
+        }
     }
 
     /// Release only the explicitly retained inner-text window. Ordinary

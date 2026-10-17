@@ -12,6 +12,7 @@ pub mod doors_elevators;
 pub mod event_flags;
 pub mod field_moves;
 pub mod field_cry;
+pub mod field_cry_continuation;
 mod field_text;
 pub mod fishing;
 pub mod forced_bike;

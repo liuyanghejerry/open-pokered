@@ -37,6 +37,27 @@ const PLAYER_SCREEN_X: i32 = 0x40;
 const PLAYER_SCREEN_Y: i32 = 0x3c;
 const ACTOR_CELL_Y_OFFSET: i32 = -4;
 
+// CONT's first ScrollTextUpOneLine is an intermediate half-row image. The
+// existing Fusion dialogue renderer spaces rows by twelve pixels; its second
+// Scroll5 already supplies the retained lower row in the normal top slot.
+fn scroll_field_dialog_half_row(fb: &mut FrameBuffer) {
+    let rect = &DIALOG_DEFAULT_LAYOUT.box_0.rect;
+    let left = (rect.tx + 1) * 8;
+    let right = (rect.tx + rect.tw - 1) * 8;
+    let top = (rect.ty + 1) * 8;
+    let bottom = (rect.ty + rect.th - 1) * 8;
+    for y in top..bottom {
+        for x in left..right {
+            let color = if y + 6 < bottom {
+                fb.get_pixel(x, y + 6).unwrap_or(Rgba::WHITE)
+            } else {
+                Rgba::WHITE
+            };
+            fb.set_pixel(x, y, color);
+        }
+    }
+}
+
 // Script reading/vending menus need more room than the two-entry YES/NO box.
 fn draw_script_choice(
     screen: &OverworldScreen,
@@ -2235,7 +2256,7 @@ fn draw_overworld_impl(
             } else {
                 format!("{}\n{}", d1, d2)
             };
-            let show_arrow = screen.dialogue_needs_button() && dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
+            let show_arrow = screen.dialogue_shows_prompt_arrow() && dlg.waiting_for_input() && (screen.frame_counter / 16) % 2 == 0;
             let mut painter = FrameBufferPainter::new(fb);
             let mut ui = Ui::new(&mut painter);
             menus::dialog::draw_paginated(
@@ -2245,6 +2266,9 @@ fn draw_overworld_impl(
                 &mut ui,
                 language,
             );
+            if screen.field_text_half_scroll() {
+                scroll_field_dialog_half_row(fb);
+            }
         }
 
         if let Some(ref choice) = screen.pending_choice {

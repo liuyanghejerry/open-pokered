@@ -51,6 +51,10 @@ interface GameAPI {
    * then wait for the actual outer A/B confirmation and A release. */
   fieldCry(text: string, species: string): Promise<void>;
 
+  /** DisplayTextID far@ text and cry/wait, followed in the same window by an
+   * authored PARA paragraph and CONT continuation, then the outer A/B ACK. */
+  fieldCryContinuation(text: string, species: string, paragraph: string, continuation: string): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.

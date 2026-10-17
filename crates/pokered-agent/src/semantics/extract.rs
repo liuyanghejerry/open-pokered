@@ -202,6 +202,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "printFieldText",
     "bikeShopOffer",
     "fieldCry",
+    "fieldCryContinuation",
     // Closes the owned field window; event flags/inventory remain unchanged.
     "finishFieldText",
     // The found-item text and jingle only present a completed pickup;
@@ -1142,6 +1143,43 @@ mod tests {
         assert_eq!(quoted, command_effect("startBattle", &[id]));
         assert!(EFFECT_COMMANDS.contains(&"startBattleWithText"));
         assert!(!NO_STATE_COMMANDS.contains(&"startBattleWithText"));
+    }
+
+    #[test]
+    fn field_cry_continuation_is_recognized_as_presentation_in_statements_and_calls() {
+        for name in ["fieldCryContinuation", "game.fieldCryContinuation"] {
+            for expression in [false, true] {
+                let mut coverage = CoverageAccum::default();
+                let mut extractor = Extractor {
+                    map: "Test",
+                    reads: Vec::new(),
+                    effects: Vec::new(),
+                    coverage: &mut coverage,
+                };
+                let args = ["first", "MACHOP", "paragraph", "tail"]
+                    .into_iter()
+                    .map(|text| Expression::StringLit(text.into()))
+                    .collect();
+                if expression {
+                    extractor.walk_expression(&Expression::Call {
+                        callee: name.into(),
+                        args,
+                    });
+                } else {
+                    extractor.walk_statements(&[StoryStmt::Command {
+                        name: name.into(),
+                        args,
+                        span: SourceSpan::point("test", 1, 1),
+                    }]);
+                }
+                assert!(extractor.effects.is_empty());
+                assert!(extractor.reads.is_empty());
+                assert_eq!(coverage.commands_recognized, 1);
+                assert_eq!(coverage.commands_unknown, 0);
+                assert_eq!(coverage.calls_unknown, 0);
+                assert!(coverage.unknown.is_empty());
+            }
+        }
     }
 
 }
