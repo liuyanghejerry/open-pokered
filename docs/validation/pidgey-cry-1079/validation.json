@@ -1,0 +1,307 @@
+{
+  "scope": "14 ordinary Far pet callers: field text -> actual cry wait -> silent outer ACK -> A-release -> close",
+  "original_source_head": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "migrated_callers": [
+    {
+      "map": "VermilionPidgeyHouse",
+      "npc_id": 2,
+      "species": "PIDGEY"
+    },
+    {
+      "map": "CeladonCity",
+      "npc_id": 7,
+      "species": "POLIWRATH"
+    },
+    {
+      "map": "CeladonMansion1F",
+      "npc_id": 1,
+      "species": "MEOWTH"
+    },
+    {
+      "map": "CeladonMansion1F",
+      "npc_id": 3,
+      "species": "CLEFAIRY"
+    },
+    {
+      "map": "CeladonMansion1F",
+      "npc_id": 4,
+      "species": "NIDORAN_F"
+    },
+    {
+      "map": "CopycatsHouse1F",
+      "npc_id": 3,
+      "species": "CHANSEY"
+    },
+    {
+      "map": "LavenderCuboneHouse",
+      "npc_id": 1,
+      "species": "CUBONE"
+    },
+    {
+      "map": "MrFujisHouse",
+      "npc_id": 3,
+      "species": "PSYDUCK"
+    },
+    {
+      "map": "MrFujisHouse",
+      "npc_id": 4,
+      "species": "NIDORINO"
+    },
+    {
+      "map": "PewterNidoranHouse",
+      "npc_id": 1,
+      "species": "NIDORAN_M"
+    },
+    {
+      "map": "SSAnne1FRooms",
+      "npc_id": 8,
+      "species": "WIGGLYTUFF"
+    },
+    {
+      "map": "SSAnneB1FRooms",
+      "npc_id": 8,
+      "species": "MACHOKE"
+    },
+    {
+      "map": "SaffronCity",
+      "npc_id": 12,
+      "species": "PIDGEOT"
+    },
+    {
+      "map": "SaffronPidgeyHouse",
+      "npc_id": 2,
+      "species": "PIDGEY"
+    }
+  ],
+  "local_tests": {
+    "actual_named_pass_executions": 104,
+    "earlier_named_pass_executions": 95,
+    "latest_named_pass_executions": 9,
+    "counts_are_executions_not_unique_or_new_tests": true,
+    "groups": [
+      {
+        "actual_source_head": "6f2efcb1cd7033af93a521ed749c150eae8ed82d",
+        "actual_named_pass_executions": 93,
+        "counts": {
+          "data_protocol_prior": 1,
+          "data_boa": 1,
+          "core_field_cry_native": 8,
+          "core_foreground": 2,
+          "core_field_typing": 2,
+          "core_marowak": 2,
+          "core_quiz_audio": 5,
+          "core_quiz_victory": 2,
+          "core_ordinary_questions": 5,
+          "core_bike": 7,
+          "agent_lib": 58
+        },
+        "wrapper_actual_exit": 0,
+        "receipt_sha256": "d50df5716f15795008a750066ae5f5737856def276a01ab2cfcd1f4e5ec93b87"
+      },
+      {
+        "actual_source_head": "d14736cfdac42d80ead999ebce944495557ac954",
+        "actual_named_pass_executions": 2,
+        "commands": [
+          "cargo test --locked -p pokered-app --lib pidgey_field_cry_audio_tests:: -- --test-threads=1",
+          "cargo test --locked -p pokered-app --lib --features debug-server pidgey_field_cry_audio_tests:: -- --test-threads=1"
+        ],
+        "actual_cold_SRAM_Game_component_instances": 2,
+        "normal_CLI_boots": 0,
+        "production_unchanged_from": "6f2efcb1cd7033af93a521ed749c150eae8ed82d",
+        "wrapper_actual_exit": 0,
+        "receipt_sha256": "1916ac9aa5e9cb0b6a1c3ec5d9ce9f30ddffd17d58011e464c6a2d6ee184b0b4"
+      },
+      {
+        "actual_source_head": "4c03d1e26c0ca752bec31cb0ee7c6dcd31ce1877",
+        "actual_named_pass_executions": 9,
+        "counts": {
+          "core_field_cry": 8,
+          "data_protocol": 1
+        },
+        "new_parameterized_test_actual_NPC_subcases": 13,
+        "normal_CLI_boots": 0,
+        "actual_App_PCM_instances": 0,
+        "component_fixture": "Actual embedded scenes/ScriptVM; component player placement and liberation precondition; simulated sound-busy input",
+        "wrapper_actual_exit": 0,
+        "receipt_sha256": "c6b9ea38ca8802fd1cd54e8a92568839f148d2aabc29ac23beff8501fc5f9799"
+      }
+    ],
+    "failed_or_interrupted_attempts_excluded": true
+  },
+  "normal_cli": {
+    "Game_calls": 2,
+    "seed": 42,
+    "seed_configured_once_before_first_update": true,
+    "runtime_setters": 0,
+    "same_physical_SAV": true,
+    "full_input_vectors_identical": true,
+    "full_input_frames_each": 682,
+    "same_absolute_capture_frame": true,
+    "capture_frame_each": 678,
+    "same_boot_talk_prefix": true,
+    "shared_prefix_frames": 543,
+    "shared_prefix_original_json_sha256": "a89fa3fe7d446b24903246ec74510166843a0504d31cc5f0a316262892c7643c",
+    "neutral_after_shared_prefix": 69,
+    "same_suffix": [
+      [
+        "b",
+        2
+      ],
+      [
+        null,
+        64
+      ],
+      [
+        "b",
+        2
+      ],
+      [
+        null,
+        2
+      ]
+    ],
+    "shared_suffix_frames": 70,
+    "first_B_input_offset": 612,
+    "both_SAVs_byte_unchanged_no_sidecar": true,
+    "actual_rpc_request_counts": {
+      "get_state": 1368,
+      "press_timeline": 1364,
+      "get_bag": 6,
+      "get_flags": 6,
+      "capture_frame": 2
+    },
+    "actual_recording_controller_sha256": "73a3b8181635d6baf90fb0d1ade99d239aa66b9f43e0590cdc0c18c8d0045858",
+    "actual_recording_transport_sha256": "ef3880be887e10be740aec86717e1267cb21a74cb3c1c491764610873c221a7d",
+    "raw_result_controller_metadata_caveat": "Transport finish() overwrote the generic controller_sha256 with transport SHA. Raw results are preserved. Ready plan controller pin and pre/post unchanged file establish the actual fixed controller above.",
+    "actual_ready_plan_sha256": "19d89926924a823bc1124057ebb35b16e51fb93a3d9dd64637100925c42ae431",
+    "actual_after_ready_plan_sha256": "0892b4410570ff722bba113b1e50fe511d9fecb94b4093840d273baec0a1e8a3",
+    "actual_pair_receipt_sha256": "b7caffc944e44a91b71d0ff677c3ba8d21cec4a79a0154a186a1645275bd8578",
+    "actual_build_receipt_sha256": "6520e114249b255674a86fe263deb5e0d098feae2ca649ab76ac2812674bc105",
+    "cases": {
+      "before": {
+        "actual_source_head": "f6dd110e5f2a4f24d6a40d6794eda63ec3789bdf",
+        "binary_sha256": "2472672f3529e5c3f23b04e92297c510e81d5d74f3af54e06018e3f67e896460",
+        "profile": "dev",
+        "features": [
+          "default",
+          "debug-server"
+        ],
+        "first_overworld_frame": 503,
+        "shared_route_prefix_frames": 543,
+        "neutral_after_prefix": 69,
+        "first_full_text_frame": 593,
+        "anchor_frame": 612,
+        "anchor_kind": "common pre-B state; baseline full Prompt / corrected full text with actual cry SoundWait",
+        "first_B_input_offset": 612,
+        "after_first_B2_frame": 614,
+        "comparison_frame": 678,
+        "final_frame": 682,
+        "cry_active_frames": [
+          614,
+          629
+        ],
+        "capture_path": "../../screenshots/pidgey-cry-1079/before.png",
+        "capture_sha256": "78e7c59a003e244a5088a8dccd2fe48652ed831e873322e960cb08ce136404ec",
+        "recorded_full_tape_sha256": "8b92b4d06e1493a796d82afaac96abffa8a35a9cef3c72c5efe6fe46f16d63cc",
+        "actual_result_sha256": "0049656539448c227583b415475fbc71aaf483854589ed5f5f3f12f2eac7c27a",
+        "wrapper_actual_exit": 0,
+        "Game_actual_exit": -15,
+        "Game_exit_scope": "owned diagnostic SIGTERM after successful boundary",
+        "all_owned_PID_and_PG_ESRCH": true
+      },
+      "after": {
+        "actual_source_head": "a750fc9b353a49fcdede57d465c2faffde820cc5",
+        "binary_sha256": "2170aa23231303347d8e9187db76a33e4cf46c8d26a2950b5b0399ef537d5b0f",
+        "profile": "dev",
+        "features": [
+          "default",
+          "debug-server"
+        ],
+        "first_overworld_frame": 503,
+        "shared_route_prefix_frames": 543,
+        "neutral_after_prefix": 69,
+        "first_full_text_frame": 612,
+        "anchor_frame": 612,
+        "anchor_kind": "common pre-B state; baseline full Prompt / corrected full text with actual cry SoundWait",
+        "first_B_input_offset": 612,
+        "after_first_B2_frame": 614,
+        "comparison_frame": 678,
+        "final_frame": 682,
+        "cry_active_frames": [
+          612,
+          627
+        ],
+        "capture_path": "../../screenshots/pidgey-cry-1079/after.png",
+        "capture_sha256": "37a926221a6d29be9d823559b63b44a701af48f8e7773fd1af8e7c28be407f8b",
+        "recorded_full_tape_sha256": "8b92b4d06e1493a796d82afaac96abffa8a35a9cef3c72c5efe6fe46f16d63cc",
+        "actual_result_sha256": "0963faac7085a19f566d9089e2fe435645e73911c0db917296c273fa8c74d72c",
+        "wrapper_actual_exit": 0,
+        "Game_actual_exit": -15,
+        "Game_exit_scope": "owned diagnostic SIGTERM after successful boundary",
+        "all_owned_PID_and_PG_ESRCH": true
+      }
+    }
+  },
+  "historical_semantic_anchor_pair": {
+    "kept_unchanged": true,
+    "not_used_for_final_screenshots": true,
+    "before_source": "a494d727c46c49a88e6d4e91d7fb250d363404d9",
+    "after_source": "08fb44fc3af8cb7be3e9fa5e41af7697af9ca7aa",
+    "full_input_frames": [
+      663,
+      682
+    ],
+    "capture_absolute_frames": [
+      659,
+      678
+    ],
+    "same_full_input_vector": false,
+    "actual_pair_receipt_sha256": "368fc9ebc16b59ec48879c720f53ad2cf8e4a4871e1ad4cf1e1c9c25b9f34c7a"
+  },
+  "public_replay_entry": {
+    "status": "syntax checked and one shared682 RLE tape losslessly reconstructed; not executed as an additional Game recording",
+    "private_session_paths_or_imports": false
+  },
+  "publication_integration": {
+    "master": "f6dd110e5f2a4f24d6a40d6794eda63ec3789bdf",
+    "product_head": "a750fc9b353a49fcdede57d465c2faffde820cc5",
+    "ordinary_merge_conflicts": 0,
+    "product_tree": "76065a06fbd3f6d455919ad591a40d05cd2b0f7e",
+    "product_entire_tree_identical_to_actual_tested_far_head": "4c03d1e26c0ca752bec31cb0ee7c6dcd31ce1877",
+    "actual_tests_keep_original_source_labels": true,
+    "combined_integration_review_sha256": "84ecdffeae240658f0d72d65cf0a49de230db173d4e987247e4da06ad720ec08"
+  },
+  "limits": [
+    "13 added callers have real embedded scene component coverage, not 13 physical SAV/normal CLI/PCM runs.",
+    "Jigglypuff, Machop, legendary and Snorlax special callers are not migrated here.",
+    "No fresh full playthrough on this candidate.",
+    "No original-ROM emulator frame comparison.",
+    "Muted logical audio/PCM validation does not certify physical GBA speaker output."
+  ],
+  "assets": {
+    "pidgey.sav": {
+      "bytes": 32768,
+      "sha256": "bde3dc163f1fb00267a815275c1898b198fa417325c088dd5400c0b8b2cdafc3"
+    },
+    "inputs.json": {
+      "bytes": 1196,
+      "sha256": "b30fa671176d60f49a99c1f5e1a78d855356e4175e1a600de2d204e9b56879cf"
+    },
+    "replay.py": {
+      "bytes": 10494,
+      "sha256": "e4deeb90e5c4933c7899678fc734c8bf2de607c6135720ea9e70d5d979a490fb"
+    },
+    "README.md": {
+      "bytes": 5754,
+      "sha256": "fc65902ddce83092ff3a6470674647f163b1c7c5c01e46a5612dbd0afd852c06"
+    },
+    "../../screenshots/pidgey-cry-1079/before.png": {
+      "bytes": 21275,
+      "sha256": "78e7c59a003e244a5088a8dccd2fe48652ed831e873322e960cb08ce136404ec"
+    },
+    "../../screenshots/pidgey-cry-1079/after.png": {
+      "bytes": 21793,
+      "sha256": "37a926221a6d29be9d823559b63b44a701af48f8e7773fd1af8e7c28be407f8b"
+    }
+  }
+}
