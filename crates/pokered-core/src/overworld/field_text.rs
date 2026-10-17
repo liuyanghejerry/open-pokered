@@ -70,12 +70,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         };
         let dialogue = self.pending_dialogue.as_mut().unwrap();
         if dialogue.holding_open() {
-            // This outer loop really executes Joypad, including A release.
-            if owner.poll().held & A != 0 {
-                return false;
-            }
-            self.last_script_dialogue = self.pending_dialogue.take();
-            return true;
+            return self.tick_retained_field_outer_ack();
         }
         if !dialogue.waiting_for_input() {
             dialogue.reveal_next_char_with_source(self.no_text_delay, owner);
@@ -86,6 +81,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if dialogue.is_last_page() && prompt == Some(FieldTextPrompt::Done) {
             self.last_script_dialogue = self.pending_dialogue.take();
             return true;
+        }
+        if dialogue.is_last_page() && prompt.is_none() {
+            return self.tick_retained_field_outer_ack();
         }
         // Native layout page breaks keep their existing ACK boundary. The
         // explicit Bike PARA and its20 waits belong to BikeShopOfferState;
@@ -113,8 +111,32 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.last_script_dialogue = self.pending_dialogue.take();
             return true;
         }
-        // DisplayTextID's final WaitForTextScrollButtonPress is silent; its
-        // following HoldTextDisplayOpen is a separate real foreground poll.
+        unreachable!("final outer ACK was handled before inner page prompts")
+    }
+
+    /// Resume DisplayTextID after an ASM caller returns with its completed
+    /// cursor still visible. This is the same silent ACK/hold used by normal
+    /// ShowDialogue, without printing again or performing another Delay3.
+    pub(super) fn tick_retained_field_outer_ack(&mut self) -> bool {
+        if self.source_foreground().is_none() {
+            self.block_source_foreground(
+                crate::foreground_input::ForegroundInputError::MissingFieldOwner,
+            );
+            return false;
+        }
+        let owner = self.source_foreground.as_mut().unwrap();
+        let Some(dialogue) = self.pending_dialogue.as_mut() else { return false; };
+        if !dialogue.holding_open() {
+            let Some(pressed) = owner.poll().pressed else {
+                self.block_source_foreground(
+                    crate::foreground_input::ForegroundInputError::UnknownBeforePrompt,
+                );
+                return false;
+            };
+            if pressed & (A | B) == 0 { return false; }
+        }
+        // HoldTextDisplayOpen itself executes Joypad. Only held A delays it;
+        // B ACK closes immediately, and both paths preserve the full byte.
         if owner.poll().held & A != 0 {
             dialogue.start_holding_open();
             false

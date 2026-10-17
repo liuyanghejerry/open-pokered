@@ -488,6 +488,14 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "fieldCry" => {
+                if v.len() != 2 { return Err("fieldCry: text and species expected".into()); }
+                let string = |index: usize| match &v[index] {
+                    Value::Text(text) => Ok(text.clone()),
+                    _ => Err(format!("fieldCry: argument {index} must be a string")),
+                };
+                Ok(pokemon(PokemonScriptCommand::FieldCry { text: string(0)?, species: string(1)? }))
+            },
             "bikeShopOffer" => {
                 if v.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
                 let texts = v.iter().map(|value| match value {
@@ -1711,6 +1719,17 @@ impl Default for OverworldScriptEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn field_cry_native_host_has_the_same_strict_text_species_payload() {
+        let mut host = NativeHost::new();
+        let args = [Value::Text("PIDGEY: Kurukkoo!".into()), Value::Text("PIDGEY".into())];
+        assert!(matches!(host.call("fieldCry", &args).unwrap(), HostCall::Command(
+            ScriptCommand::Custom { name, args }) if name == "fieldCry" && args.len() == 2));
+        assert!(host.call("fieldCry", &args[..1]).is_err());
+        assert!(host.call("fieldCry", &[Value::Bool(false), args[1].clone()]).is_err());
+        assert!(host.call("fieldCry", &[args[0].clone(), Value::Bool(false)]).is_err());
+    }
 
     #[test]
     fn bike_offer_native_host_has_the_same_strict_seven_text_payload() {
