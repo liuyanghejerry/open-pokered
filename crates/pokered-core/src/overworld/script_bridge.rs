@@ -55,6 +55,7 @@ impl PendingChoice {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
+    AskFieldYesNo { state: Box<super::field_yes_no::FieldYesNoState> },
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
     PokedexRating { state: Box<super::pokedex_rating::PokedexRatingState> },
@@ -402,6 +403,7 @@ impl ScriptEffect {
     /// Nested gift/reading flows use the same text-window choice handoff.
     pub fn is_choice(&self) -> bool {
         match self {
+            Self::AskFieldYesNo { state } => state.accepts_input(),
             Self::BikeShopOffer { state } => state.accepts_input(),
             Self::ShowChoice { .. } => true,
             Self::GivePokemon { flow: Some(flow), .. } => flow.child.is_choice(),
@@ -425,6 +427,7 @@ impl ScriptEffect {
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
+            ScriptEffect::AskFieldYesNo { state } => json!({ "effect": "AskFieldYesNo", "state": state }),
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::PokedexRating { state } => json!({ "effect": "PokedexRating", "state": state }),
             ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
@@ -970,6 +973,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::PrintTextCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::inner_print_text(text, species),
+        },
+        PokemonScriptCommand::AskFieldYesNo { question, labels } => ScriptEffect::AskFieldYesNo {
+            state: Box::new(super::field_yes_no::FieldYesNoState::new(question, labels)),
         },
         PokemonScriptCommand::BikeShopOffer { texts } => ScriptEffect::BikeShopOffer {
             state: super::bike_shop::BikeShopOfferState::new(texts),

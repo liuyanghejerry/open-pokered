@@ -213,6 +213,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showItemDialogue",
     "showRandomText",
     "showChoice",
+    "askFieldYesNo",
     // Blocking presentation only; giveItem / takeMoney own vending state.
     "pokemonMenu",
     "readingMenu",
@@ -1137,6 +1138,38 @@ mod tests {
         assert!(decoded.program.is_empty());
     }
 
+    #[test]
+    fn explicit_six_quiz_questions_keep_all_gate_trainer_and_route_effects() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("CinnabarGym").unwrap();
+        let mut coverage = CoverageAccum::default();
+        let map = extract_map_with_coverage(&scene, &mut coverage);
+        assert!(coverage.unknown.is_empty(), "{:?}", coverage.unknown);
+        for number in 1..=6 {
+            let quiz = map
+                .storylines
+                .iter()
+                .find(|s| s.storyline == format!("quizMachine{number}"))
+                .unwrap();
+            for flag in [
+                format!("EVENT_CINNABAR_GYM_GATE{number}_UNLOCKED"),
+                format!("EVENT_BEAT_CINNABAR_GYM_TRAINER_{number}"),
+            ] {
+                assert!(quiz.effects.contains(&StateEffect::FlagSet { flag }));
+            }
+            assert!(quiz
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, StateEffect::BattleStarted { .. })));
+            assert!(quiz
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, StateEffect::NpcMoved { .. })));
+            assert!(!quiz
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, StateEffect::Unknown { .. })));
+        }
+    }
     use dotzuki_engine_dsl::ast::SourceSpan;
     #[test]
     fn quoted_trainer_command_retains_the_same_battle_state_effect() {

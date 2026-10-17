@@ -5,6 +5,7 @@
 
 pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "animateHealingMachine",
+    "askFieldYesNo",
     "badgeMenu",
     "bikeShopOffer",
     "choosePartyPokemon",

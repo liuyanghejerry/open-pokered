@@ -300,20 +300,28 @@ impl Session {
     }
 
     fn protected_ack(&mut self, button: GbButton) {
-        assert!(matches!(
-            self.effect(),
-            Some(ScriptEffect::PrintFieldText {
-                prompt: FieldTextPrompt::Protected,
-                prompt_frames_remaining: 3,
-                prompt_last_buttons: Some(0),
-                ..
-            })
-        ));
-        for remaining in [2, 1] {
+        let owned = self.game.overworld.source_foreground().is_some();
+        let remaining = |session: &Self| -> u64 {
+            if owned {
+                serde_json::to_value(session.game.overworld.pending_dialogue.as_ref().unwrap())
+                    .unwrap()["source_prompt_remaining"]
+                    .as_u64()
+                    .unwrap()
+            } else {
+                match session.effect().unwrap() {
+                    ScriptEffect::PrintFieldText {
+                        prompt: FieldTextPrompt::Protected,
+                        prompt_frames_remaining,
+                        ..
+                    } => u64::from(prompt_frames_remaining),
+                    other => panic!("expected protected prompt, got {other:?}"),
+                }
+            }
+        };
+        assert_eq!(remaining(self), 3);
+        for expected in [2, 1] {
             self.step(&[button]);
-            assert!(matches!(self.effect(), Some(ScriptEffect::PrintFieldText {
-                prompt: FieldTextPrompt::Protected, prompt_frames_remaining, ..
-            }) if prompt_frames_remaining == remaining));
+            assert_eq!(remaining(self), expected);
             assert_eq!(self.game.overworld.sfx_event, OverworldSfxEvent::None);
         }
         self.step(&[button]);
@@ -332,10 +340,7 @@ impl Session {
         self.protected_ack(intro_button);
         assert!(matches!(
             self.effect(),
-            Some(ScriptEffect::PrintFieldText {
-                prompt: FieldTextPrompt::Done,
-                ..
-            })
+            Some(ScriptEffect::AskFieldYesNo { .. })
         ));
         self.step(&[intro_button]);
         assert!(
@@ -351,16 +356,55 @@ impl Session {
         }
         assert!(self.game.overworld.pending_choice.is_some());
         assert!(self.game.overworld.retain_field_text);
+        for _ in 0..3 {
+            self.step(&[]);
+        }
+        assert!(self.game.overworld.choice_accepts_input());
     }
 
-    fn correct_text(&mut self) {
+    fn complete_yes_no(&mut self, buttons: &[GbButton]) {
         let question = self.visible();
-        self.step(&[GbButton::A]); // YES: the actual selected option, not a VM result injection.
+        let cursor = self
+            .game
+            .overworld
+            .pending_choice
+            .as_ref()
+            .unwrap()
+            .selected;
+        self.step(buttons);
         assert_eq!(
             self.game.overworld.sfx_event,
             OverworldSfxEvent::TextAdvance
         );
         assert_eq!(self.sound(), (SfxId::PressAB as u8, true));
+        assert!(self.pcm_sfx_ids.contains(&(SfxId::PressAB as u8)));
+        for remaining in (1..15).rev() {
+            self.step(buttons);
+            assert_eq!(
+                self.game.overworld.active_script_effect_value().unwrap()["state"]["phase"]
+                    ["Completion"],
+                remaining
+            );
+            assert_eq!(
+                self.game
+                    .overworld
+                    .pending_choice
+                    .as_ref()
+                    .unwrap()
+                    .selected,
+                cursor
+            );
+            assert_eq!(self.visible(), question);
+            assert!(!self.game.overworld.choice_accepts_input());
+            assert_eq!(self.game.overworld.sfx_event, OverworldSfxEvent::None);
+        }
+        self.step(buttons);
+        assert!(self.game.overworld.pending_choice.is_none());
+    }
+
+    fn correct_text(&mut self) {
+        let question = self.visible();
+        self.complete_yes_no(&[GbButton::A]); // Actual YES plus its fifteen VBlanks.
         assert_eq!(self.visible(), question);
         assert!(matches!(self.effect(), Some(ScriptEffect::PrintFieldText {
             leading_sound: Some(sound), leading_sound_started: false, ..
@@ -542,12 +586,7 @@ fn muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_
         let mut session = Session::boot_at_machine(false);
         session.question(GbButton::A);
         let question = session.visible();
-        session.step(&[GbButton::B]); // Ordinary NO; the common choice supplies its sound.
-        assert_eq!(
-            session.game.overworld.sfx_event,
-            OverworldSfxEvent::TextAdvance
-        );
-        assert_eq!(session.sound(), (SfxId::PressAB as u8, true));
+        session.complete_yes_no(&[GbButton::B]); // Actual NO plus its fifteen VBlanks.
         assert!(matches!(session.effect(), Some(ScriptEffect::WaitSound)));
         for _ in 0..WATCHDOG {
             if session.sound() == (SfxId::Denied as u8, true) {
@@ -596,7 +635,9 @@ fn muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_
                 .char_index(),
             0
         );
-        for _ in 0..3 {
+        // Owned PrintText resumes and writes the first glyph on Delay3's
+        // third returning VBlank (home/window.asm PrintText).
+        for _ in 0..2 {
             session.step(&[]);
             assert_eq!(
                 session
@@ -640,8 +681,7 @@ fn muted_quiz_wrong_keeps_question_during_real_denied_then_one_protected_a_or_b_
         assert!(!session.game.overworld.retain_field_text);
         assert!(session.game.overworld.displayed_field_dialogue().is_none());
         assert!(!session.gate_open());
-        // Stop here: trainer approach/prebattle text and shared menu15 are
-        // separate outstanding fixes, and are not claimed covered by this test.
+        // Stop here: this audio test does not cover the subsequent trainer battle.
         session.fixture.assert_unchanged();
         println!("quiz wrong {button:?}: actual Denied gate={denied_waited}; one protected prompt + release passed");
     }
@@ -686,10 +726,7 @@ fn muted_quiz_already_open_still_plays_get_item_and_accepts_b_without_replaying_
 
 #[test]
 fn muted_choice_confirmation_starts_real_press_ab_once_while_held() {
-    for (button, following) in [
-        (GbButton::A, SfxId::GetItem1),
-        (GbButton::B, SfxId::Denied),
-    ] {
+    for (button, following) in [(GbButton::A, SfxId::GetItem1), (GbButton::B, SfxId::Denied)] {
         let mut session = Session::boot_at_machine(false);
         session.question(GbButton::A);
         assert!(

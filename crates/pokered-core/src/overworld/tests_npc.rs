@@ -1347,13 +1347,15 @@ fn cinnabar_quiz_machine_correct_answer_opens_gate_only() {
         screen.update_frame(input(frame % 2 == 1));
     }
     assert!(screen.pending_choice.is_some(), "machine 1 must offer YES/NO");
+    for _ in 0..3 { screen.update_frame(input(false)); }
+    assert!(screen.choice_accepts_input());
     if no {
         screen.update_frame(input(false));
         screen.update_frame(super::OverworldInput::new(false,true,false,false,false,false,false,false));
     }
     // Original answer byte is 0: YES (FALSE is the menu index, not the answer).
     screen.update_frame(input(false));
-    screen.update_frame(input(false));
+    for _ in 0..3 { screen.update_frame(input(false)); }
     screen.update_frame(input(true));
     for frame in 0..300 {
         if screen.script_flags().get(&flag) == Some(&true) {
@@ -1420,9 +1422,11 @@ fn cinnabar_quiz_wrong_answer_sends_gate_trainer() {
         screen.update_frame(input(frame % 2 == 1));
     }
     assert!(screen.pending_choice.is_some());
+    for _ in 0..3 { screen.update_frame(input(false)); }
+    assert!(screen.choice_accepts_input());
     // NO is wrong: choose the second row.
     screen.update_frame(super::OverworldInput::new(false, true, false, false, false, false, false, false));
-    screen.update_frame(input(false));
+    for _ in 0..3 { screen.update_frame(input(false)); }
     screen.update_frame(input(true));
     for frame in 0..300 {
         if screen.pending_trainer_battle.is_some() {
