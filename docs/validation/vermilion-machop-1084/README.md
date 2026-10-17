@@ -48,3 +48,9 @@ python3 docs/validation/vermilion-machop-1084/replay.py --binary /path/to/after/
 ```
 
 脚本仅依赖Python标准库、本目录存档/输入/清单，按固定输入逐帧复放，检查真实叫声区间、关键状态、四组同帧截图与最终存档保持；输出记录实际所给binary的SHA，调用者需选择正确源码。公开脚本只做语法和RLE展开核对，未额外启动Game；原始正常验证使用另一个已固定SHA的录制器，其标识与实际来源记录在 `validation.json`。图片字节匹配结果仅记录，不替代流程/状态断言。
+
+## 发布前整合最新主分支
+
+普通合并 PR #304 后的 master `074b91b47d713b88bffded1ab0ae0be2bb503a7a`，产品提交为 `66ad1d7b9c2bae69c88e333c8c9241b31df17a20`。相邻接口冲突保留两套显式命令及各自校验和测试；怪力状态机、其测试、VermilionCity脚本及App滚行renderer四个文件与正常录制源码逐字节相同。该组合源码另完成26个命名Core/Data/Boa测试以及正常桌面App的renderer类型检查，均通过。它与前述25项属于不同验证组，不能相加当作51个不同测试。新主分支上的原有宠物调用也在这组中。
+
+正常CLI前后仍标注M16 / 130ee87，本次组合验证没有增加Game；后续文档提交不改变产品源码。

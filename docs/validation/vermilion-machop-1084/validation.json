@@ -1430,8 +1430,8 @@
       "bytes": 32768
     },
     "README.md": {
-      "sha256": "7f66922655155f54526ed7c4ca59c38ed4bed48995221ce2139c755368791d77",
-      "bytes": 5654
+      "bytes": 6388,
+      "sha256": "250d6a04cb866cdfd7f08b64199fc012f97d199165b9cf835f62aac4653562e4"
     },
     "../../screenshots/vermilion-machop-1084/before-cry-window.png": {
       "sha256": "3ed39062c69873e6d183c43ec43cf7fc214728781db793f94b38a24004983c67",
@@ -1465,5 +1465,130 @@
       "sha256": "ef59747528b4b351a92a7410e5fe9d5ff43ce2842d1ea14c874ea0dae968acc7",
       "bytes": 14902
     }
+  },
+  "publication_base_integration": {
+    "base_master": "074b91b47d713b88bffded1ab0ae0be2bb503a7a",
+    "actual_integrated_product_test_source": "66ad1d7b9c2bae69c88e333c8c9241b31df17a20",
+    "source_files_byte_equal_to_normal_candidate": [
+      "crates/pokered-core/src/overworld/field_cry_continuation.rs",
+      "crates/pokered-core/src/overworld/field_cry_continuation/tests.rs",
+      "crates/pokered-app/src/render/overworld.rs",
+      "crates/pokered-data/maps/VermilionCity/script.scene"
+    ],
+    "component_named_PASS": 26,
+    "actual_group_counts": {
+      "core": 17,
+      "data-boa": 9
+    },
+    "actual_names": [
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::a_already_polled_while_typing_cannot_be_a_fresh_ack_after_cry"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::audited_far_pet_npc_consumers_print_then_cry_once_and_wait_before_outer_ack"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::audited_inner_print_text_pet_consumers_share_cry_wait_outer_ack_and_close"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::embedded_pidgey_keeps_same_window_and_last_poll_until_actual_sound_completion"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::far_entry_keeps_background_three_frames_and_omits_inner_print_delay"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::field_cry_entries_keep_their_distinct_preparation_frames_without_polling"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::legacy_missing_owner_cannot_manufacture_an_ack_after_sound_wait"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::newly_held_a_during_cry_is_fresh_outer_ack_then_waits_for_a_release"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::no_delay_keeps_the_real_talk_poll_and_still_waits_for_cry_then_outer_ack"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::published_field_cry_snapshots_without_entry_default_to_far_in_each_live_phase"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::snapshot_preserves_print_sound_outer_ack_and_a_hold_without_recry"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry_continuation::tests::embedded_machop_far_cry_para_cont_done_keeps_one_display_owner"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry_continuation::tests::typing_held_a_is_not_reused_after_sound_or_as_continuation_ack"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::field_cry_continuation_native_dsl_keeps_the_caller_suspended_until_completion"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::field_cry_continuation_native_host_preserves_order_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::field_cry_native_host_has_the_same_strict_text_species_payload"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::print_text_cry_native_host_keeps_exact_strings_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::field_cry_boa_await_does_not_return_before_outer_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::field_cry_continuation_boa_await_retains_all_segments_until_outer_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::field_cry_continuation_boa_rejects_wrong_arity_and_each_non_string_argument"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::print_text_cry_boa_await_returns_only_after_the_shared_outer_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::print_text_cry_boa_rejects_wrong_arity_and_non_string_payloads"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::field_cry_continuation_rejects_wrong_arity_and_each_non_string_argument"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::field_cry_continuation_roundtrips_the_explicit_four_argument_order"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::field_cry_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::print_text_cry_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      }
+    ],
+    "App_renderer_check_exit": 0,
+    "receipt_sha256": "8a3d4d7f809a22adb8fb4e7a16522c26d1eb1ce872022aec2c417f9256ec41fd",
+    "additional_Game_calls": 0,
+    "original_labels_preserved": true
   }
 }
