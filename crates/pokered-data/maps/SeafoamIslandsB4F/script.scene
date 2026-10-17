@@ -91,12 +91,8 @@ game_scene SeafoamIslandsB4F {
   @storyline("talkArticuno") {
     @trigger(map = "SeafoamIslandsB4F", npc = 3, toggle = "SEAFOAM_ISLANDS_B4F_OBJ_3")
     @if (!getFlag("EVENT_BEAT_ARTICUNO")) {
-      playCry("ARTICUNO")
-      @speaker("") {
-        @t("Gyaoo!", "嘎呜！")
-      }
-      // Static wild Lv50 ARTICUNO battle (catchable); flag set only on win/catch.
-      result = startWildBattle("ARTICUNO", 50)
+      // Static wild Lv50 ARTICUNO battle (catchable); removed after every non-blackout result.
+      result = staticEncounter(@t("Gyaoo!", "嘎呜！"), "ARTICUNO", 50)
       @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_ARTICUNO")
         hideObjectByName("SEAFOAM_ISLANDS_B4F_OBJ_3")

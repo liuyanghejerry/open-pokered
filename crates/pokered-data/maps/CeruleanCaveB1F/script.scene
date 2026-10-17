@@ -25,12 +25,8 @@ game_scene CeruleanCaveB1F {
   @storyline("talkMewtwo") {
     @trigger(map = "CeruleanCaveB1F", npc = 1, toggle = "CERULEANCAVEB1F_MEWTWO")
     @if (!getFlag("EVENT_BEAT_MEWTWO")) {
-      playCry("MEWTWO")
-      @speaker("") {
-        @t("Mew!", "梦幻！")
-      }
       // EndTrainerBattle removes static monsters after every non-blackout end.
-      result = startWildBattle("MEWTWO", 70)
+      result = staticEncounter(@t("Mew!", "梦幻！"), "MEWTWO", 70)
       @if (result == "win" || result == "caught" || result == "ran" || result == "fled") {
         setFlag("EVENT_BEAT_MEWTWO")
         hideObjectByName("CERULEANCAVEB1F_MEWTWO")

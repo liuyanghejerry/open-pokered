@@ -123,6 +123,16 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::JigglypuffSong { text: string(0)?, npc_id: string(1)? }.into_script_command())
         });
 
+        engine.register_async_fn("staticEncounter", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let error=|message: String| boa_engine::JsNativeError::typ().with_message(message);
+            if args.len()!=3 { return Err(error("staticEncounter: text, species and level expected".into()).into()); }
+            let text=args[0].as_string().ok_or_else(||error("staticEncounter: text must be a string".into()))?.to_std_string_lossy();
+            let species=args[1].as_string().ok_or_else(||error("staticEncounter: species must be a string".into()))?.to_std_string_lossy();
+            let level=args[2].as_number().filter(|n|n.is_finite() && (1. ..=100.).contains(n) && *n==*n as u8 as f64).ok_or_else(||error("staticEncounter: level must be an integer from 1 to 100".into()))? as u8;
+            let typed=PokemonScriptCommand::from_custom("staticEncounter", &[serde_json::json!(text),serde_json::json!(species),serde_json::json!(level)]).map_err(error)?;
+            Ok(typed.into_script_command())
+        });
+
         engine.register_async_fn("fieldCry", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
             if args.len() != 2 {
                 return Err(boa_engine::JsNativeError::typ().with_message("fieldCry: text and species expected").into());
@@ -1609,6 +1619,28 @@ mod field_cry_boa_tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod static_encounter_protocol_tests {
+    use super::*;
+    use dotzuki_engine_script::{ScriptEngine,CommandResult};
+    #[test]
+    fn static_encounter_boa_await_returns_the_actual_battle_outcome() {
+        let mut e=ScriptEngine::with_api(&PokemonScriptApi);
+        e.load_script(r#"export async function encounter() {
+          const result=await game.staticEncounter("Gyaoo!", "ZAPDOS", 50);
+          await game.showText(result);
+        }"#).unwrap();
+        let expected=Some(PokemonScriptCommand::StaticEncounter{text:"Gyaoo!".into(),species:crate::species::Species::Zapdos,level:50}.into_script_command());
+        assert_eq!(e.call_function("encounter",&[]).unwrap(),expected);assert_eq!(e.tick(),expected);
+        assert_eq!(e.signal_done(CommandResult::Text("caught".into())).unwrap(),Some(ScriptCommand::ShowText{text:"caught".into()}));
+        for args in ["",r#""cry", "MEWTWO", 0"#,r#""cry", "MEWTWO", 70.5"#,r#""cry", "BAD", 70"#,r#""cry", "MEWTWO", NaN"#,r#"false, "MEWTWO", 70"#] {
+            let mut e=ScriptEngine::with_api(&PokemonScriptApi);
+            e.load_script(&format!(r#"export async function bad() {{try {{ await game.staticEncounter({args});await game.showText("accepted");}}catch(error){{await game.showText(error.name);}}}}"#)).unwrap();
+            assert_eq!(e.call_function("bad",&[]).unwrap(),Some(ScriptCommand::ShowText{text:"TypeError".into()}));
+        }
+    }
 }
 
 #[cfg(test)]
