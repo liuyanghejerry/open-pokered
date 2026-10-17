@@ -19,8 +19,8 @@
       "bytes": 4639
     },
     "README.md": {
-      "sha256": "ef35e0e5924f69c808788fca83ece7c9350ed482362608354e17a1556ae66518",
-      "bytes": 5360
+      "bytes": 6327,
+      "sha256": "b3f7f24391b66e13e5669e11787db28da544954f750f6bed4271564055f81012"
     },
     "replay.py": {
       "sha256": "26c7f3fd0c7398577e5700e67c83bb711ff44975bb14dfebda88c61e95ce2b7a",
@@ -347,5 +347,144 @@
     "Actual song completion, PCM and snapshot behavior were tested separately in App components.",
     "Two native Game processes were stopped by owned SIGTERM at the recording boundary (exit -15), not natural exits.",
     "Only the PewterPokecenter Jigglypuff scenario is covered by the normal CLI pair; no entire-game parity claim."
-  ]
+  ],
+  "subsequent_integrated_regression": {
+    "base_master": "074b91b47d713b88bffded1ab0ae0be2bb503a7a",
+    "actual_product_test_source": "bdf80626e5b548166811c8562e83ced4414ac623",
+    "distinct_named_PASS": 31,
+    "core_PASS": 21,
+    "Data_Boa_PASS": 7,
+    "App_integration_PASS": 3,
+    "names": [
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::a_already_polled_while_typing_cannot_be_a_fresh_ack_after_cry"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::audited_far_pet_npc_consumers_print_then_cry_once_and_wait_before_outer_ack"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::audited_inner_print_text_pet_consumers_share_cry_wait_outer_ack_and_close"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::embedded_pidgey_keeps_same_window_and_last_poll_until_actual_sound_completion"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::far_entry_keeps_background_three_frames_and_omits_inner_print_delay"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::field_cry_entries_keep_their_distinct_preparation_frames_without_polling"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::legacy_missing_owner_cannot_manufacture_an_ack_after_sound_wait"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::newly_held_a_during_cry_is_fresh_outer_ack_then_waits_for_a_release"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::no_delay_keeps_the_real_talk_poll_and_still_waits_for_cry_then_outer_ack"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::published_field_cry_snapshots_without_entry_default_to_far_in_each_live_phase"
+      },
+      {
+        "group": "core",
+        "name": "overworld::field_cry::tests::snapshot_preserves_print_sound_outer_ack_and_a_hold_without_recry"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::done_has_no_ack_stop_wait_is_32_song_completion_is_24_and_tail_is_48"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::four_real_talk_sides_spin_from_the_initial_image_in_24_blocks_without_logical_turns"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::image_override_does_not_survive_close_map_script_replacement_or_new_game"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::inner_print_keeps_bg3_font_transfer_and_inner_delay3_without_joypad"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::missing_owner_snapshot_defaults_song_sample_but_cannot_manufacture_release_history"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::snapshot_keeps_continuation_window_owner_and_rotation_without_restarting_audio"
+      },
+      {
+        "group": "core",
+        "name": "overworld::jigglypuff_song::tests::text_speed_no_delay_and_old_or_new_held_a_preserve_the_window_until_release"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::field_cry_native_host_has_the_same_strict_text_species_payload"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::jigglypuff_song_native_host_has_the_same_strict_text_npc_payload"
+      },
+      {
+        "group": "core",
+        "name": "overworld::native_script::tests::print_text_cry_native_host_keeps_exact_strings_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::field_cry_boa_await_does_not_return_before_outer_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::jigglypuff_song_boa_await_does_not_return_before_do_not_wait_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::print_text_cry_boa_await_returns_only_after_the_shared_outer_close"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_api::field_cry_boa_tests::print_text_cry_boa_rejects_wrong_arity_and_non_string_payloads"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::field_cry_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::field_cry_command_tests::print_text_cry_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "data-boa",
+        "name": "script_command::jigglypuff_song_command_tests::jigglypuff_song_roundtrips_exact_payload_and_rejects_invalid_arguments"
+      },
+      {
+        "group": "app-story",
+        "name": "render_fossils_hidden_after_pickup"
+      },
+      {
+        "group": "app-story",
+        "name": "render_giovanni_hidden_after_farewell"
+      },
+      {
+        "group": "app-story",
+        "name": "render_jigglypuff_mid_spin"
+      }
+    ],
+    "new_normal_CLI_Games": 0,
+    "receipt_sha256": "12e8be2bfc840dc2a06b72cb8f81b06f8698b540e6a2eb11c5f587237f276b49",
+    "original_sources_not_relabelled": true,
+    "tool_parser_failure_preserved": true,
+    "no_repeated_App_build": true
+  }
 }
