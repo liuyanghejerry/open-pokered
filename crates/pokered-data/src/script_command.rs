@@ -623,3 +623,22 @@ mod field_cry_command_tests {
     }
 
 }
+
+#[cfg(test)]
+mod pokedex_rating_protocol_tests {
+    use super::*;
+    #[test]
+    fn rating_command_keeps_owned_count_and_rejects_invalid_payloads() {
+        for owned in 0..=151 {
+            let typed=PokemonScriptCommand::PokedexRating{text:"rating".into(),owned};
+            let ScriptCommand::Custom{name,args}=typed.clone().into_script_command() else {panic!("custom continuation")};
+            assert_eq!(PokemonScriptCommand::from_custom(&name,&args).unwrap(),typed);
+        }
+        for invalid in [json!(-1),json!(0.5),json!(152),json!("1"),json!(null),json!(false)] {
+            assert!(PokemonScriptCommand::from_custom("pokedexRating",&[json!("text"),invalid]).is_err());
+        }
+        for args in [vec![],vec![json!("text")],vec![json!("text"),json!(0),json!(0)],vec![json!(false),json!(0)]] {
+            assert!(PokemonScriptCommand::from_custom("pokedexRating",&args).is_err());
+        }
+    }
+}

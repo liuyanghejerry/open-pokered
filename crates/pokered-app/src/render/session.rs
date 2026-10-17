@@ -1327,6 +1327,7 @@ impl PcVisualKey {
         hash_byte(&mut visual_hash, game.pc_stats_return_frame.unwrap_or(8).min(8));
         match phase {
             PcPhase::Message => {
+                hash_u32(&mut visual_hash, pc.rating_visible_chars().map_or(u32::MAX, |n| n as u32));
                 hash_u32(&mut visual_hash, pc.message_page() as u32);
                 let start = pc.message_page() * 4;
                 for line in pc.message_lines().iter().skip(start).take(4) {

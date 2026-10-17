@@ -87,7 +87,10 @@ impl<G: GameData<Tileset=TilesetId>> OverworldScreen<G> {
                     self.block_source_foreground(crate::foreground_input::ForegroundInputError::MissingFieldOwner);
                     return false;
                 };
-                if owner.poll().held & A == 0 { self.clear_retained_field_text(); state.phase = Phase::CloseWait; }
+                if owner.poll().held & A == 0 {
+                    self.last_script_dialogue = self.pending_dialogue.take();
+                    self.clear_retained_field_text(); state.phase = Phase::CloseWait;
+                }
             }
             Phase::CloseWait => state.phase = Phase::Done,
             Phase::Done => {},

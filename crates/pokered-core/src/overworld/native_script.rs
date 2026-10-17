@@ -3963,3 +3963,23 @@ mod tests {
     }
 
 }
+
+#[cfg(test)]
+mod pokedex_rating_protocol_tests {
+    use super::*;
+    #[test]
+    fn rating_native_rejects_nonintegral_and_out_of_range_counts_and_roundtrips_payload() {
+        let mut host=NativeHost::new();
+        for owned in [0.,9.,10.,39.,40.,59.,60.,89.,90.,119.,120.,149.,150.,151.] {
+            let value=host.call("pokedexRating", &[Value::Text("rating".into()),Value::Number(owned)]).unwrap();
+            let HostCall::Command(command)=value else {panic!("rating must await its continuation")};
+            assert_eq!(command,PokemonScriptCommand::PokedexRating{text:"rating".into(),owned:owned as u32}.into_script_command());
+        }
+        for count in [-1.,0.5,151.5,152.,f64::NAN,f64::INFINITY] {
+            assert!(host.call("pokedexRating", &[Value::Text("rating".into()),Value::Number(count)]).is_err());
+        }
+        assert!(host.call("pokedexRating", &[Value::Text("rating".into())]).is_err());
+        assert!(host.call("pokedexRating", &[Value::Bool(false),Value::Number(1.)]).is_err());
+        assert!(host.call("pokedexRating", &[Value::Text("rating".into()),Value::Text("1".into())]).is_err());
+    }
+}
