@@ -1,0 +1,507 @@
+{
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "cases": {
+    "intro": {
+      "fixture": "fixtures/zapdos.sav",
+      "tape": "inputs/intro.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 1831,
+      "expected_state": {
+        "screen": "battle",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": true,
+        "capture_phase": null
+      },
+      "expected_flags": {},
+      "capture_frames": [
+        647,
+        657,
+        701,
+        1201,
+        1226,
+        1231,
+        1831
+      ]
+    },
+    "capture": {
+      "fixture": "fixtures/zapdos.sav",
+      "tape": "inputs/capture.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 2685,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          },
+          {
+            "hp": 152,
+            "level": 50,
+            "max_hp": 152,
+            "moves": [
+              "Thundershock",
+              "DrillPeck",
+              "None",
+              "None"
+            ],
+            "pp": [
+              30,
+              20,
+              0,
+              0
+            ],
+            "species": "Zapdos",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        701,
+        1201,
+        1873,
+        1883,
+        2341,
+        2458,
+        2497,
+        2510,
+        2575,
+        2640,
+        2653,
+        2685
+      ],
+      "hidden_npc": 9
+    },
+    "win": {
+      "fixture": "fixtures/fast.sav",
+      "tape": "inputs/win.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 2305,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 342,
+            "level": 100,
+            "max_hp": 342,
+            "moves": [
+              "PsychicM",
+              "Swift",
+              "Recover",
+              "Barrier"
+            ],
+            "pp": [
+              9,
+              20,
+              20,
+              30
+            ],
+            "species": "Mewtwo",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        1873,
+        1878,
+        2273,
+        2305
+      ],
+      "hidden_npc": 9
+    },
+    "run": {
+      "fixture": "fixtures/fast.sav",
+      "tape": "inputs/run.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 1959,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 342,
+            "level": 100,
+            "max_hp": 342,
+            "moves": [
+              "PsychicM",
+              "Swift",
+              "Recover",
+              "Barrier"
+            ],
+            "pp": [
+              10,
+              20,
+              20,
+              30
+            ],
+            "species": "Mewtwo",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        1873,
+        1883,
+        1927,
+        1959
+      ],
+      "hidden_npc": 9
+    },
+    "doll": {
+      "fixture": "fixtures/zapdos.sav",
+      "tape": "inputs/doll.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 1964,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        1888,
+        1932,
+        1964
+      ],
+      "hidden_npc": 9
+    },
+    "blackout": {
+      "fixture": "fixtures/zapdos.sav",
+      "tape": "inputs/blackout.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 2216,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "CeruleanCity",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {},
+      "capture_frames": [
+        1873,
+        1878,
+        2156,
+        2216
+      ]
+    },
+    "save": {
+      "fixture": "fixtures/fast.sav",
+      "tape": "inputs/save.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 2605,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 342,
+            "level": 100,
+            "max_hp": 342,
+            "moves": [
+              "PsychicM",
+              "Swift",
+              "Recover",
+              "Barrier"
+            ],
+            "pp": [
+              9,
+              20,
+              20,
+              30
+            ],
+            "species": "Mewtwo",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        2305,
+        2365,
+        2374,
+        2605
+      ],
+      "hidden_npc": 9,
+      "save_output": true
+    },
+    "continue": {
+      "fixture": "fixtures/saved.sav",
+      "tape": "inputs/continue.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 679,
+      "expected_state": {
+        "screen": "overworld",
+        "map_name": "PowerPlant",
+        "party": [
+          {
+            "hp": 342,
+            "level": 100,
+            "max_hp": 342,
+            "moves": [
+              "PsychicM",
+              "Swift",
+              "Recover",
+              "Barrier"
+            ],
+            "pp": [
+              9,
+              20,
+              20,
+              30
+            ],
+            "species": "Mewtwo",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": false,
+        "capture_phase": null
+      },
+      "expected_flags": {
+        "EVENT_BEAT_ZAPDOS": true
+      },
+      "capture_frames": [
+        679
+      ],
+      "hidden_npc": 9
+    },
+    "mewtwo": {
+      "fixture": "fixtures/CeruleanCaveB1F.sav",
+      "tape": "inputs/mewtwo.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 837,
+      "expected_state": {
+        "screen": "battle",
+        "map_name": "CeruleanCaveB1F",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": true,
+        "capture_phase": null
+      },
+      "expected_flags": {},
+      "capture_frames": [
+        647,
+        809,
+        837
+      ]
+    },
+    "articuno": {
+      "fixture": "fixtures/SeafoamIslandsB4F.sav",
+      "tape": "inputs/articuno.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 818,
+      "expected_state": {
+        "screen": "battle",
+        "map_name": "SeafoamIslandsB4F",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": true,
+        "capture_phase": null
+      },
+      "expected_flags": {},
+      "capture_frames": [
+        647,
+        790,
+        818
+      ]
+    },
+    "moltres": {
+      "fixture": "fixtures/VictoryRoad2F.sav",
+      "tape": "inputs/moltres.json",
+      "recorded_source": "a7a665a4aa8083ac1aa8c24476d60a9e6a4caf91",
+      "frames": 786,
+      "expected_state": {
+        "screen": "battle",
+        "map_name": "VictoryRoad2F",
+        "party": [
+          {
+            "hp": 50,
+            "level": 20,
+            "max_hp": 50,
+            "moves": [
+              "Gust",
+              "SandAttack",
+              "QuickAttack",
+              "Whirlwind"
+            ],
+            "pp": [
+              35,
+              15,
+              30,
+              20
+            ],
+            "species": "Pidgey",
+            "status": "None"
+          }
+        ],
+        "script_awaiting_battle": true,
+        "capture_phase": null
+      },
+      "expected_flags": {},
+      "capture_frames": [
+        647,
+        758,
+        786
+      ]
+    }
+  },
+  "files": {
+    "replay.py": "440368fc4ca1bc8f584a7479617c31610d5a7ea19a7df77c377535c39f3a0044",
+    "inputs/blackout.json": "660b81dc2d44a4162eb15eff632e5a6a0563b276ccd0bbb90c17777a06ec3476",
+    "inputs/win.json": "d66c3fb4d86805a17494311629eda7ed8dfef9a284b1754df90e3b522bc8f616",
+    "inputs/continue.json": "96692a77e942d1ae2817584bbadb3f747761f59804e4dc9bc6bca79975b90343",
+    "inputs/mewtwo.json": "43415188d9277487714c686c16923b0717cf2e99cd3fe834d54d20791c68d31b",
+    "inputs/articuno.json": "b6a10c8e34ff27b822828290a436880fa1d8fbce4493ed6581e660bff68b28f0",
+    "inputs/save.json": "110675b04d7817a5ff8b06cab20dbf36bcb59293ab0e129e7a607bd3f8d083a7",
+    "inputs/capture.json": "f47e36d8a84acecffd0b3e8df793fa438534ec92fbd6e5efe21d3af8203f1b65",
+    "inputs/intro.json": "064c7a204c95037579e99e33d916a1eee2334dad93b8d01b70097b1e906e1f6f",
+    "inputs/moltres.json": "15b64722e8dcf0aa87392f2707b543bfff8bc7a8297c62e27e033cdfa3884f76",
+    "inputs/run.json": "e75d174edd6e02076921262ee4fde9cd9c02cb86f52986b61854b087f12afc10",
+    "inputs/doll.json": "d87eef7e9bd54c07a8d83f0caf00bf6ac880ae9f69e4eab84b771b8e3da67c54",
+    "fixtures/saved.sav": "4719c19394ead839461077bbb73ec9a4b18b099dd53aa36a8032b9f5e921cc2f",
+    "fixtures/SeafoamIslandsB4F.sav": "1690f1c7c96d193100ce7a98325b8bc60a0f6bc224b578e77cda16c01f72c7c3",
+    "fixtures/fast.sav": "be7379f2b744bf20b251a654b7b6d90ae8a67bba1177e4cb6c90fd00a68e43f7",
+    "fixtures/VictoryRoad2F.sav": "b4a40b0dc9c4062730506edc53aadda093951ebf7f1b1c3a00bac9577ae65f4d",
+    "fixtures/CeruleanCaveB1F.sav": "c3232b80a67fa04cc45ba96bdf330c538ede7f56ebba046327323225183cd7b9",
+    "fixtures/zapdos.sav": "9f816e9587aa067384d6cd64e7ab86a40522d068860ae10364bdf2c321692643"
+  }
+}
