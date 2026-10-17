@@ -289,6 +289,59 @@ pub(crate) fn execute_warp(
 // ── OverworldScreen game-loop methods ─────────────────────────────
 
 impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
+    /// The ordinary Bike talk consumer borrows the actual field-poll history.
+    /// It never manufactures a neutral/physical-prev predecessor.
+    pub fn begin_source_field(&mut self) -> &mut crate::foreground_input::ForegroundJoypad {
+        self.source_foreground_error = None;
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Field;
+        self.source_foreground.get_or_insert_with(Default::default)
+    }
+
+    pub fn no_text_delay(&self) -> bool { self.no_text_delay }
+
+    /// Only original status-bit writers call this; closing a textbox does not.
+    pub fn set_no_text_delay(&mut self, enabled: bool) { self.no_text_delay = enabled; }
+
+    pub fn foreground_observation(&self) -> Option<&crate::foreground_input::ForegroundJoypad> {
+        self.source_foreground.as_ref()
+    }
+
+    /// A real unmodeled owner invalidates knowledge without fabricating a poll.
+    /// The next ordinary field poll may record a new real observation while
+    /// the unsupported caller retains its legacy edge API.
+    pub fn suspend_source_foreground(&mut self) {
+        if let Some(owner) = self.source_foreground.as_mut() { owner.retire_history(); }
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
+        self.source_foreground_error = None;
+    }
+
+    /// Lend the single serialized ledger to the actual canonical owner.
+    pub fn source_foreground_mut(
+        &mut self,
+    ) -> Option<&mut crate::foreground_input::ForegroundJoypad> {
+        if self.source_foreground_mode == crate::foreground_input::ForegroundMode::Observed { None }
+        else { self.source_foreground.as_mut() }
+    }
+
+    pub fn source_foreground(&self) -> Option<&crate::foreground_input::ForegroundJoypad> {
+        if self.source_foreground_mode == crate::foreground_input::ForegroundMode::Observed { None }
+        else { self.source_foreground.as_ref() }
+    }
+
+    /// A missing real poll must remain visible rather than fabricating an edge.
+    pub fn block_source_foreground(
+        &mut self,
+        error: crate::foreground_input::ForegroundInputError,
+    ) {
+        self.source_foreground_error = Some(error);
+    }
+
+    pub fn source_foreground_error(
+        &self,
+    ) -> Option<crate::foreground_input::ForegroundInputError> {
+        self.source_foreground_error
+    }
+
     /// Re-baseline the button edge detectors (`prev_*_pressed`) to the
     /// buttons currently held. Frontends must call this whenever control
     /// returns to the overworld from a sub-screen (START menu, bag, save…):
@@ -310,22 +363,52 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     // Keep the small sampler inline so the field loop can share its state
     // checks and avoid a per-frame call on the GBA.
     #[inline(always)]
-    fn sample_idle_field_buttons(&mut self, input: OverworldInput) -> (bool, bool) {
+    fn sample_idle_field_buttons(
+        &mut self,
+        input: OverworldInput,
+        physical_buttons: u8,
+    ) -> Result<(bool, bool), crate::foreground_input::ForegroundInputError> {
         if self.state.player.movement_state != MovementState::Idle {
-            return (false, false);
+            return Ok((false, false));
         }
         let sample = super::screen::FieldInputSample::from(input);
-        if sample == self.sampled_player_input
-            || self.state.walk_counter != 0
+        if self.state.walk_counter != 0
             || self.pending_connection.is_some()
             || self.cutscene_manager.is_blocking()
         {
-            return (false, false);
+            return Ok((false, false));
+        }
+        if self.source_foreground_mode != crate::foreground_input::ForegroundMode::Observed {
+          if let Some(owner) = self.source_foreground.as_mut() {
+            if owner.last().is_none() {
+                return Err(crate::foreground_input::ForegroundInputError::UnknownReturningField);
+            }
+            owner.read_raw(physical_buttons);
+            let Some(pressed) = owner.poll().pressed else {
+                return Err(crate::foreground_input::ForegroundInputError::UnknownReturningField);
+            };
+            self.sampled_player_input = sample;
+            return Ok((
+                input.start && pressed & crate::foreground_input::START != 0,
+                input.a && pressed & crate::foreground_input::A != 0,
+            ));
+          }
+        }
+        // This is the actual JoypadOverworld instruction, not the per-VBlank
+        // raw refresh. Keep one canonical record even before a typed talk
+        // consumer borrows it; unsupported legacy callers do not certify its
+        // preceding edge. sampled_player_input remains a compatibility mirror.
+        let owner = self.source_foreground.get_or_insert_with(Default::default);
+        owner.read_raw(physical_buttons);
+        owner.poll();
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
+        if sample == self.sampled_player_input {
+            return Ok((false, false));
         }
         let start = input.start && !self.sampled_player_input.start();
         let a = input.a && !self.sampled_player_input.a();
         self.sampled_player_input = sample;
-        (start, a)
+        Ok((start, a))
     }
 
     fn runtime_camera_residual(&self) -> (i32, i32) {
@@ -363,13 +446,24 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn update_frame(&mut self, input: OverworldInput) -> ScreenAction {
+        self.update_frame_with_physical_buttons(
+            input, crate::foreground_input::ForegroundJoypad::field_buttons(input),
+        )
+    }
+
+    /// Keep the physical HRAM byte separate from frontend control filtering
+    /// (for example START suppressed by the soft-reset combination). Only an
+    /// actual foreground instruction polls it; refreshing raw is not a poll.
+    pub fn update_frame_with_physical_buttons(
+        &mut self, input: OverworldInput, physical_buttons: u8,
+    ) -> ScreenAction {
         // DelayFrames in the poison flash performs no UpdateSprites. Keep
         // the published OAM pose; a palette blink is not FontLoaded text.
         if !matches!(self.poison_flow, Some(super::poison::FieldPoisonFlow::Flash { .. })) {
             self.publish_npc_frame(self.is_text_ui_active());
         }
         let was_idle = self.state.player.movement_state == MovementState::Idle;
-        let action = self.update_frame_inner(input);
+        let action = self.update_frame_inner(input, physical_buttons);
         let camera = self.runtime_camera_residual();
         self.field_viewport.finish(self.state.current_map,
             (i32::from(self.state.player.x)*16+camera.0, i32::from(self.state.player.y)*16+camera.1),
@@ -388,13 +482,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         action
     }
 
-    fn update_frame_inner(&mut self, input: OverworldInput) -> ScreenAction {
+    fn update_frame_inner(&mut self, input: OverworldInput, physical_buttons: u8) -> ScreenAction {
         self.frame_counter = self.frame_counter.wrapping_add(1);
+        if let Some(owner) = self.source_foreground.as_mut() {
+            owner.read_raw(physical_buttons);
+        }
         self.sfx_event = OverworldSfxEvent::None;
         if self.preserve_audio_requests_next_frame {
             self.preserve_audio_requests_next_frame = false;
         } else {
             self.audio_requests.clear();
+        }
+        if self.source_foreground_error.is_some() {
+            return ScreenAction::Continue;
         }
 
         // Push the configured text speed into any active dialogue (the frontend
@@ -752,6 +852,40 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             self.field_loop_wait = 1;
         }
+        if self.active_script_effect.as_ref().is_some_and(|effect| effect.has_unmodeled_input_owner()) {
+            self.suspend_source_foreground();
+        }
+        // A concrete typed caller borrows the same field ledger and display
+        // cursor. Take it temporarily so its state machine may touch the live
+        // bit/choice/window atomically, then retain the ordinary await owner.
+        let bike_tick_done = if matches!(self.active_script_effect,
+            Some(script_bridge::ScriptEffect::BikeShopOffer { .. })) {
+            let Some(script_bridge::ScriptEffect::BikeShopOffer { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_bike_shop_offer(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::BikeShopOffer { state });
+            Some(done)
+        } else { None };
+        // A restored true bit also affects the next ordinary talk. Its actual
+        // preceding JoypadOverworld poll, not a constructor/physical edge,
+        // makes that normal source consumer eligible to borrow the ledger.
+        if self.no_text_delay && self.source_foreground().is_none()
+            && self.foreground_observation().is_some_and(|owner| owner.last().is_some())
+            && matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::ShowDialogue { .. }
+                | script_bridge::ScriptEffect::PrintFieldText { .. })) {
+            self.begin_source_field();
+        }
+        let owned_text_done = if self.source_foreground().is_some()
+            && matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::ShowDialogue { .. }
+                | script_bridge::ScriptEffect::PrintFieldText { .. })) {
+            let mut effect = self.active_script_effect.take().unwrap();
+            let done = self.tick_owned_field_text(&mut effect);
+            self.active_script_effect = Some(effect);
+            Some(done)
+        } else if self.source_foreground().is_some()
+            && matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::FinishFieldText)) {
+            // This API is HoldTextDisplayOpen only; it is not the outer ACK.
+            Some(self.source_foreground_mut().unwrap().poll().held & crate::foreground_input::A == 0)
+        } else { None };
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
             let dialogue_was_open = self.pending_dialogue.is_some();
@@ -786,7 +920,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
+            let done = if let Some(done) = bike_tick_done.or(owned_text_done) { done }
+            else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {
                     DepartureTick::ApplyObjects => {
@@ -827,6 +962,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.script_music_playing,
                     self.script_sfx_playing,
                     self.retain_field_text,
+                    self.no_text_delay,
                 )
             };
             // A nested text caller (for example a gift/menu flow) owns the
@@ -1534,7 +1670,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // JoypadOverworld is not sampled while a step is in progress.
         // A short START pulse during the step is discarded; a held START
         // becomes a fresh press at the next idle sample. START precedes A.
-        let (control_start_just_pressed, control_a_just_pressed) = self.sample_idle_field_buttons(input);
+        let (control_start_just_pressed, control_a_just_pressed) =
+            match self.sample_idle_field_buttons(input, physical_buttons) {
+                Ok(buttons) => buttons,
+                Err(error) => {
+                    self.source_foreground_error = Some(error);
+                    return ScreenAction::Continue;
+                }
+            };
 
         // SafariZoneCheck runs after JoypadOverworld, before START and A.
         // A last ball used in battle ends the hunt on returning to the idle
@@ -2862,6 +3005,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         script_music_playing: bool,
         script_sfx_playing: bool,
         retain_cached_window: bool,
+        no_text_delay: bool,
     ) -> bool {
         let returns_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { .. });
         let prompts_after_print = matches!(effect, script_bridge::ScriptEffect::PrintFieldText { prompt: pokered_data::script_command::FieldTextPrompt::Button | pokered_data::script_command::FieldTextPrompt::Protected, .. });
@@ -2903,6 +3047,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_music_playing,
                     script_sfx_playing,
                     false, // Nested menu/gift callers keep their existing window lifecycle.
+                    no_text_delay,
                 ) {
                     let prompt = match flow.child.as_ref() {
                         script_bridge::ScriptEffect::ShowDialogue { text } | script_bridge::ScriptEffect::PrintFieldText { text, .. } => Some(text.clone()),
@@ -2968,6 +3113,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     script_music_playing,
                     script_sfx_playing,
                     false, // Nested menu/gift callers keep their existing window lifecycle.
+                    no_text_delay,
                 ) {
                     menu.advance()
                 } else {
@@ -3003,7 +3149,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 let dialogue = pending_dialogue.as_mut().unwrap();
                 if !dialogue.waiting_for_input() {
-                    dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                    if no_text_delay {
+                        if !dialogue.tick_field_preparation() { dialogue.skip_to_full_page(); }
+                    } else { dialogue.reveal_next_char_with_buttons(a_pressed || b_pressed); }
                 }
                 if dialogue.waiting_for_input() {
                     if dialogue.has_more_pages() {
@@ -3065,7 +3213,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                                 return true;
                             }
                         } else if !dlg.waiting_for_input() {
-                            dlg.reveal_next_char_with_buttons(a_pressed || b_pressed);
+                            if no_text_delay {
+                                if !dlg.tick_field_preparation() { dlg.skip_to_full_page(); }
+                            } else { dlg.reveal_next_char_with_buttons(a_pressed || b_pressed); }
                         } else if dlg.is_last_page() && prompts_after_print {
                             // Inner PROMPT ownership is handled below; it does not
                             // perform the outer HoldTextDisplayOpen here.
@@ -3809,6 +3959,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(eff) = effect {
             match eff {
                 script_bridge::ScriptEffect::ShowMoneyBox { amount } => {
+                    if amount >= 0 { self.no_text_delay = false; }
+
                     self.script_money_box = if amount < 0 { None } else { Some(amount as u32) };
                 }
                 script_bridge::ScriptEffect::ShowCoinBox { amount } => {

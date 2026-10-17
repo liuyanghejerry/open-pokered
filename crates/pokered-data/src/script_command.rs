@@ -32,6 +32,10 @@ pub enum PokemonScriptCommand {
     PrintFieldText { text: String, retain_window: bool, prompt: FieldTextPrompt, leading_sound: Option<String> },
     /// Outer HoldTextDisplayOpen: wait for A release and close only the retained owner.
     FinishFieldText,
+    /// Ordinary no-voucher Bike clerk: explicit PARA/PROMPT/menu provenance.
+    /// Seven localized strings: two Welcome paragraphs, question, refusal,
+    /// goodbye, bicycle label, cancel label. Returns only after outer close.
+    BikeShopOffer { texts: Vec<String> },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -108,6 +112,7 @@ impl PokemonScriptCommand {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
+            Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -160,6 +165,7 @@ impl PokemonScriptCommand {
                 if let Some(sound) = leading_sound { args.push(json!(sound)); }
                 args
             },
+            Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
             Self::ShowItemDialogue { text, sound_id } => {
@@ -264,6 +270,10 @@ impl PokemonScriptCommand {
                 },
             },
             "finishFieldText" => Self::FinishFieldText,
+            "bikeShopOffer" => {
+                if args.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
+                Self::BikeShopOffer { texts: (0..7).map(string).collect::<Result<Vec<_>, _>>()? }
+            },
             "waitMusic" => Self::WaitMusic,
             "waitSound" => Self::WaitSound,
             "vendingDelivery" => Self::VendingDelivery,
@@ -540,4 +550,21 @@ mod field_text_terminator_tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod bike_offer_protocol_tests {
+    use super::*;
+    #[test]
+    fn bike_offer_requires_seven_strings_and_round_trips_the_explicit_payload() {
+        let args: Vec<Value> = ["welcome first","welcome last","question","refusal","goodbye","BICYCLE ¥1000000","CANCEL"]
+            .into_iter().map(|text| json!(text)).collect();
+        let command = PokemonScriptCommand::from_custom("bikeShopOffer", &args).unwrap();
+        assert_eq!(command.clone().into_script_command(), ScriptCommand::Custom { name:"bikeShopOffer".into(),args:args.clone() });
+        for invalid in [args[..6].to_vec(), [args.clone(),vec![json!("extra")]].concat()] {
+            assert_eq!(PokemonScriptCommand::from_custom("bikeShopOffer", &invalid).unwrap_err(),"bikeShopOffer: seven text arguments expected");
+        }
+        let mut invalid=args;invalid[3]=json!(false);
+        assert_eq!(PokemonScriptCommand::from_custom("bikeShopOffer", &invalid).unwrap_err(),"bikeShopOffer: argument 3 must be a string");
+    }
 }
