@@ -268,7 +268,7 @@ fn legacy_missing_owner_cannot_manufacture_an_ack_after_sound_wait() {
 /// These are component fixtures at the actual map's live NPC position, not
 /// physical-SAV traversal evidence. The embedded map bindings and ScriptVM
 /// must produce FieldCry; the test never installs a synthetic effect/script.
-fn normal_far_pet_talk(map: MapId, npc_text_id: u8) -> Field {
+fn normal_pet_talk(map: MapId, npc_text_id: u8) -> Field {
     let mut field = Field::new(map, None, PokemonRedData);
     field.set_text_delay_frames(3);
     if map == MapId::SaffronCity {
@@ -313,7 +313,7 @@ fn normal_far_pet_talk(map: MapId, npc_text_id: u8) -> Field {
     field.state.player.y = npc.y + 1;
     field.state.player.facing = Direction::Up;
     for _ in 0..8 {
-        far_pet_step(&mut field, A);
+        pet_step(&mut field, A);
         if phase(&field).is_some() {
             break;
         }
@@ -325,7 +325,7 @@ fn normal_far_pet_talk(map: MapId, npc_text_id: u8) -> Field {
     field
 }
 
-fn far_pet_step(field: &mut Field, buttons: u8) -> Vec<String> {
+fn pet_step(field: &mut Field, buttons: u8) -> Vec<String> {
     field.update_frame(ForegroundJoypad::as_field_input(buttons));
     assert_eq!(field.source_foreground_error(), None);
     field
@@ -356,54 +356,123 @@ fn audited_far_pet_npc_consumers_print_then_cry_once_and_wait_before_outer_ack()
         (MapId::SaffronPidgeyHouse, 2, "PIDGEY"),
     ];
     for (map, npc, species) in cases {
-        let mut field = normal_far_pet_talk(map, npc);
+        let field = normal_pet_talk(map, npc);
         let Some(ScriptEffect::FieldCry { state }) = &field.active_script_effect else {
             panic!("{map:?} npc{npc} did not dispatch the real typed consumer");
         };
         assert_eq!(state.species, species, "{map:?} npc{npc}");
-        let mut cries = Vec::new();
-        for _ in 0..2000 {
-            if phase(&field) == Some(Phase::SoundWait) {
-                break;
-            }
-            cries.extend(far_pet_step(&mut field, 0));
+        assert_eq!(state.entry, Entry::Far);
+        assert_pet_lifecycle(field, species);
+    }
+}
+
+fn assert_pet_lifecycle(mut field: Field, species: &str) {
+    let mut cries = Vec::new();
+    for _ in 0..2000 {
+        if phase(&field) == Some(Phase::SoundWait) {
+            break;
         }
+        cries.extend(pet_step(&mut field, 0));
+    }
+    assert_eq!(
+        phase(&field),
+        Some(Phase::SoundWait),
+        "the final text terminator requires no ACK before cry"
+    );
+    assert_eq!(
+        cries.len(),
+        1,
+        "the pet must request its cry exactly once"
+    );
+    assert_eq!(
+        cries[0], species,
+        "the pet must request the right species"
+    );
+    assert!(field.pending_dialogue.as_ref().unwrap().waiting_for_input());
+    assert!(field.retain_field_text);
+    let cursor = serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap();
+    let last = field.source_foreground().unwrap().last();
+    field.script_sfx_playing = true; // Component sequencer input, not a guessed cry duration.
+    for buttons in [A, B, A | B, 0] {
+        assert!(pet_step(&mut field, buttons).is_empty());
+        assert_eq!(phase(&field), Some(Phase::SoundWait));
+        assert_eq!(field.source_foreground().unwrap().last(), last);
         assert_eq!(
-            phase(&field),
-            Some(Phase::SoundWait),
-            "{map:?} npc{npc} requires no final text ACK before cry"
+            serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap(),
+            cursor
         );
-        assert_eq!(
-            cries.len(),
-            1,
-            "{map:?} npc{npc} must request its cry exactly once"
-        );
-        assert_eq!(
-            cries[0], species,
-            "{map:?} npc{npc} must request the right species"
-        );
-        assert!(field.pending_dialogue.as_ref().unwrap().waiting_for_input());
-        assert!(field.retain_field_text);
-        let cursor = serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap();
-        let last = field.source_foreground().unwrap().last();
-        field.script_sfx_playing = true; // Component sequencer input, not a guessed cry duration.
-        for buttons in [A, B, A | B, 0] {
-            assert!(far_pet_step(&mut field, buttons).is_empty());
-            assert_eq!(phase(&field), Some(Phase::SoundWait));
-            assert_eq!(field.source_foreground().unwrap().last(), last);
-            assert_eq!(
-                serde_json::to_value(field.pending_dialogue.as_ref().unwrap()).unwrap(),
-                cursor
-            );
+    }
+    field.script_sfx_playing = false;
+    assert!(pet_step(&mut field, 0).is_empty());
+    assert_eq!(phase(&field), Some(Phase::OuterAck));
+    assert!(field.pending_dialogue.is_some() && field.retain_field_text);
+    assert!(pet_step(&mut field, B).is_empty());
+    assert_eq!(phase(&field), Some(Phase::CloseWait));
+    assert!(field.displayed_field_dialogue().is_none());
+    assert!(pet_step(&mut field, 0).is_empty());
+    assert!(phase(&field).is_none());
+}
+
+#[test]
+fn field_cry_entries_keep_their_distinct_preparation_frames_without_polling() {
+    for (entry, first_glyph_frame) in [(Entry::Far, 20), (Entry::InnerPrintText, 23)] {
+        let mut field = Field::new(MapId::VermilionPidgeyHouse, None, PokemonRedData);
+        let mut state = match entry {
+            Entry::Far => FieldCryState::new("x".into(), "PIDGEY".into()),
+            Entry::InnerPrintText => FieldCryState::inner_print_text("x".into(), "PIDGEY".into()),
+        };
+        assert!(!field.tick_field_cry(&mut state)); // Exercise the real entry selector.
+        assert_eq!(state.phase, Phase::Printing);
+        let dialogue = field.pending_dialogue.as_mut().unwrap();
+        let mut owner = ForegroundJoypad::default();
+        owner.read_raw(0);
+        owner.poll();
+        owner.read_raw(A);
+        // Inner PrintText adds Delay3. Held A cannot poll or skip preparation.
+        for frame in 1..first_glyph_frame {
+            assert_eq!(dialogue.get_display_text().is_none(), frame <= 3);
+            dialogue.reveal_next_char_with_source(false, &mut owner);
+            assert_eq!(dialogue.char_index(), 0);
+            assert_eq!(owner.last(), Some(0));
         }
-        field.script_sfx_playing = false;
-        assert!(far_pet_step(&mut field, 0).is_empty());
-        assert_eq!(phase(&field), Some(Phase::OuterAck));
-        assert!(field.pending_dialogue.is_some() && field.retain_field_text);
-        assert!(far_pet_step(&mut field, B).is_empty());
-        assert_eq!(phase(&field), Some(Phase::CloseWait));
-        assert!(field.displayed_field_dialogue().is_none());
-        assert!(far_pet_step(&mut field, 0).is_empty());
-        assert!(phase(&field).is_none());
+        dialogue.reveal_next_char_with_source(false, &mut owner);
+        assert_eq!(dialogue.char_index(), 1);
+        assert_eq!(owner.last(), Some(A), "first glyph is the first real poll");
+    }
+}
+
+#[test]
+fn published_field_cry_snapshots_without_entry_default_to_far_in_each_live_phase() {
+    for phase in [Phase::Start, Phase::Printing, Phase::SoundWait, Phase::OuterAck] {
+        let mut state = FieldCryState::new("PIDGEY: Kurukkoo!".into(), "PIDGEY".into());
+        state.phase = phase;
+        let mut old = serde_json::to_value(&state).unwrap();
+        old.as_object_mut().unwrap().remove("entry");
+        let restored: FieldCryState = serde_json::from_value(old).unwrap();
+        assert_eq!(restored.entry, Entry::Far);
+        assert_eq!(restored.phase, phase);
+        assert_eq!(restored.text, state.text);
+        assert_eq!(restored.species, state.species);
+    }
+}
+
+#[test]
+fn audited_inner_print_text_pet_consumers_share_cry_wait_outer_ack_and_close() {
+    let cases = [
+        (MapId::PokemonFanClub, 3, "PIKACHU", "PIKACHU: Chu! Pikachu!"),
+        (MapId::PokemonFanClub, 4, "SEEL", "SEEL: Kyuoo!"),
+        (MapId::Route16FlyHouse, 2, "FEAROW", "FEAROW: Kyueen!"),
+        (MapId::ViridianNicknameHouse, 3, "SPEAROW", "SPEARY: Tetweet!"),
+    ];
+    for (map, npc, species, text) in cases {
+        let mut field = normal_pet_talk(map, npc);
+        let Some(ScriptEffect::FieldCry { state }) = &field.active_script_effect else {
+            panic!("{map:?} npc{npc} did not dispatch the actual inner PrintText consumer");
+        };
+        assert_eq!(state.entry, Entry::InnerPrintText);
+        assert_eq!(state.species, species);
+        assert_eq!(state.text, text);
+        roundtrip(&mut field); // The explicit inner entry survives a real snapshot restore.
+        assert_pet_lifecycle(field, species);
     }
 }

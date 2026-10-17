@@ -958,6 +958,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::FieldCryContinuation { texts, species } => ScriptEffect::FieldCryContinuation {
             state: Box::new(super::field_cry_continuation::FieldCryContinuationState::new(texts, species)),
         },
+        PokemonScriptCommand::PrintTextCry { text, species } => ScriptEffect::FieldCry {
+            state: super::field_cry::FieldCryState::inner_print_text(text, species),
+        },
         PokemonScriptCommand::BikeShopOffer { texts } => ScriptEffect::BikeShopOffer {
             state: super::bike_shop::BikeShopOfferState::new(texts),
         },

@@ -41,6 +41,8 @@ pub enum PokemonScriptCommand {
     /// Explicit far@ text, cry/wait, PARA paragraph, CONT tail and one outer ACK.
     /// `texts` contains exactly the first, paragraph and continuation segments.
     FieldCryContinuation { texts: Vec<String>, species: String },
+    /// Inner PrintText(DONE), preserving its preparation before the shared cry/outer close.
+    PrintTextCry { text: String, species: String },
     ShowItemDialogue { text: String, sound_id: Option<String> },
     OldManTutorial,
     TradePokemon {
@@ -120,6 +122,7 @@ impl PokemonScriptCommand {
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
             Self::FieldCryContinuation { .. } => "fieldCryContinuation",
+            Self::PrintTextCry { .. } => "printTextCry",
             Self::ShowItemDialogue { .. } => "showItemDialogue",
             Self::OldManTutorial => "oldManTutorial",
             Self::TradePokemon { .. } => "tradePokemon",
@@ -173,12 +176,12 @@ impl PokemonScriptCommand {
                 args
             },
             Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
-            Self::FieldCry { text, species } => vec![json!(text), json!(species)],
             Self::FieldCryContinuation { mut texts, species } => {
                 assert_eq!(texts.len(), 3, "validated far/PARA/CONT payload");
                 texts.insert(1, species);
                 texts.into_iter().map(Value::String).collect()
             }
+            Self::FieldCry { text, species } | Self::PrintTextCry { text, species } => vec![json!(text), json!(species)],
             Self::FollowNpcPath { npc_id, path } => vec![json!(npc_id), json!(path)],
             Self::WalkTogether { npc_id, path, player_steps } => vec![json!(npc_id), json!(path), json!(player_steps)],
             Self::ShowItemDialogue { text, sound_id } => {
@@ -298,6 +301,10 @@ impl PokemonScriptCommand {
                     species: string(1)?,
                 }
             }
+            "printTextCry" => {
+                if args.len() != 2 { return Err("printTextCry: text and species expected".into()); }
+                Self::PrintTextCry { text: string(0)?, species: string(1)? }
+            },
             "finishFieldText" => Self::FinishFieldText,
             "bikeShopOffer" => {
                 if args.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
@@ -669,4 +676,18 @@ mod field_cry_command_tests {
             }
         }
     }
+    #[test]
+    fn print_text_cry_roundtrips_exact_payload_and_rejects_invalid_arguments() {
+        let command = PokemonScriptCommand::PrintTextCry {
+            text: "SEEL: Kyuoo!".into(), species: "SEEL".into(),
+        };
+        let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else { panic!("typed custom command"); };
+        assert_eq!(name, "printTextCry");
+        assert_eq!(args, vec![json!("SEEL: Kyuoo!"), json!("SEEL")]);
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
+        for invalid in [vec![], vec![json!("text")], vec![json!("text"), json!("SEEL"), json!(false)], vec![json!(false), json!("SEEL")], vec![json!("text"), json!(1)]] {
+            assert!(PokemonScriptCommand::from_custom("printTextCry", &invalid).is_err());
+        }
+    }
+
 }
