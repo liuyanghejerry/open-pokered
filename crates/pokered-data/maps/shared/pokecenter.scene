@@ -13,24 +13,19 @@
 // English-only and is not updated by the localization.
 game_scene pokecenter {
   @storyline("talkNurse") {
-    @speaker("") { @t("Welcome to our\n#MON CENTER!\n\nWe heal your\n#MON back to\nperfect health!", "欢迎来到我们的\n宝可梦中心！\n\n我们把您的宝可梦\n恢复得\n健健康康！") }
-    @speaker("") { @t("Shall we heal\nyour #MON?", "要为您的宝可梦\n恢复吗？") }
-    @choice {
-      @option(@t("Yes", "是")) {
-        @speaker("") { @t("OK. We'll need\nyour #MON.", "好的。\n请把宝可梦\n交给我们。") }
-        faceNpc("1", "left")
-        delay(3)
-        heal()
-        animateHealingMachine()
-        @speaker("") { @t("Thank you!\nYour #MON are\nfighting fit!", "谢谢！\n您的宝可梦\n已经精神饱满！") }
-        // Original nurse image $14 is the bow frame after fighting-fit text.
-        setNpcFrame("1", 1)
-        delay(20)
-      }
-      @option(@t("No", "否")) {
-      }
+    // DisplayPokemonCenterDialogue_: inner PROMPT, optional paused DONE, HEAL/CANCEL.
+    answer = pokecenterNurseOffer(getPokecenterUsed(), @t("Welcome to our\n#MON CENTER!", "欢迎来到我们的\n宝可梦中心！"), @t("We heal your\n#MON back to\nperfect health!", "我们把您的宝可梦\n恢复得\n健健康康！"), @t("Shall we heal\nyour #MON?", "要为您的宝可梦\n恢复吗？"), @t("HEAL", "治疗"), @t("CANCEL", "取消"))
+    @if (answer == 0) {
+      printFieldText(@t("OK. We'll need\nyour #MON.", "好的。\n请把宝可梦\n交给我们。"), true)
+      faceNpc("1", "left")
+      delay(3)
+      heal()
+      animateHealingMachine()
+      printFieldText(@t("Thank you!\nYour #MON are\nfighting fit!", "谢谢！\n您的宝可梦\n已经精神饱满！"), true, "prompt")
+      setNpcFrame("1", 1)
+      delay(20)
     }
-    @speaker("") { @t("We hope to see\nyou again!", "欢迎再次\n光临！") }
+    pokecenterFarewell(@t("We hope to see\nyou again!", "欢迎再次\n光临！"))
     faceNpc("1", "down")
   }
 

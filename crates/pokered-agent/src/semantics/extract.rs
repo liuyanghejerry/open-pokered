@@ -219,6 +219,10 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showRandomText",
     "showChoice",
     "askFieldYesNo",
+    // Like heal(), this owns recovery state outside the quest event graph:
+    // canonical used-center status and the accepted blackout destination.
+    "pokecenterNurseOffer",
+    "pokecenterFarewell",
     // Blocking presentation only; giveItem / takeMoney own vending state.
     "pokemonMenu",
     "readingMenu",
@@ -326,6 +330,7 @@ fn call_predicate(callee: &str, args: &[Expression]) -> StatePredicate {
 
 /// Recognized query functions with no typed predicate form.
 const KNOWN_QUERIES: &[&str] = &[
+    "getPokecenterUsed",
     "getMoney",
     "getCoins",
     "getPokedexOwnedCount",

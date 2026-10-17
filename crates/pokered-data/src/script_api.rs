@@ -48,6 +48,21 @@ fn badge_index(name: &str) -> Option<u8> {
 
 impl ScriptApiRegistrar for PokemonScriptApi {
     fn register_api(&self, engine: &mut dotzuki_engine_script::ScriptEngine) {
+        engine.register_sync_fn("getPokecenterUsed", |_args: &[JsValue], _ctx: &mut Context, view: &BridgeView| -> JsResult<JsValue> {
+            Ok(JsValue::from(view.number("pokecenterUsed") != 0.0))
+        });
+        for name in ["pokecenterNurseOffer", "pokecenterFarewell"] {
+            engine.register_async_fn(name, move |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let values = args.iter().map(|value| {
+                    if let Some(text) = value.as_string() { Ok(serde_json::Value::String(text.to_std_string_lossy())) }
+                    else if let Some(value) = value.as_boolean() { Ok(serde_json::Value::Bool(value)) }
+                    else { Err(boa_engine::JsNativeError::typ().with_message(format!("{name}: invalid argument type"))) }
+                }).collect::<Result<Vec<_>, _>>()?;
+                PokemonScriptCommand::from_custom(name, &values)
+                    .map(PokemonScriptCommand::into_script_command)
+                    .map_err(|error| boa_engine::JsNativeError::typ().with_message(error).into())
+            });
+        }
         engine.register_async_fn("askFieldYesNo", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
             if args.len() != 3 {
                 return Err(boa_engine::JsNativeError::typ().with_message("askFieldYesNo: expected exactly three strings").into());
@@ -1723,6 +1738,41 @@ mod field_yes_no_protocol_tests {
                     text: "TypeError".into()
                 })
             );
+        }
+    }
+}
+
+#[cfg(test)]
+mod nurse_protocol_tests {
+    use super::*;
+    use dotzuki_engine_script::{CommandResult, ScriptEngine};
+    #[test]
+    fn boa_nurse_queries_canonical_seed_and_retains_numeric_await_then_farewell() {
+        for used in [false, true] { for answer in [0., 1.] {
+            let mut e = ScriptEngine::with_api(&PokemonScriptApi);
+            e.seed_number("pokecenterUsed", if used { 1. } else { 0. });
+            e.load_script(r#"export async function nurse() {
+                const answer = await game.pokecenterNurseOffer(game.getPokecenterUsed(), "Welcome", "We heal", "Heal?", "HEAL", "CANCEL");
+                await game.pokecenterFarewell(answer === 0 ? "Healed" : "Declined");
+            }"#).unwrap();
+            let first = Some(PokemonScriptCommand::PokecenterNurseOffer { used,
+                texts: ["Welcome".into(), "We heal".into(), "Heal?".into(), "HEAL".into(), "CANCEL".into()] }.into_script_command());
+            assert_eq!(e.call_function("nurse", &[]).unwrap(), first);
+            assert_eq!(e.tick(), first);
+            assert_eq!(e.signal_done(CommandResult::Number(answer)).unwrap(), Some(PokemonScriptCommand::PokecenterFarewell {
+                text: if answer == 0. { "Healed" } else { "Declined" }.into()
+            }.into_script_command()));
+            assert!(e.signal_done(CommandResult::Void).unwrap().is_none());
+        }}
+        for (name, args) in [("pokecenterNurseOffer", r#"0, "Welcome", "We heal", "Heal?", "HEAL", "CANCEL""#),
+            ("pokecenterNurseOffer", r#"false, "Welcome", "We heal", "Heal?", "HEAL""#),
+            ("pokecenterFarewell", "false"), ("pokecenterFarewell", r#""Bye", "extra""#)] {
+            let mut e = ScriptEngine::with_api(&PokemonScriptApi);
+            e.load_script(&format!(r#"export async function bad() {{
+                try {{ await game.{name}({args}); await game.showText("accepted"); }}
+                catch (error) {{ await game.showText(error.name); }}
+            }}"#)).unwrap();
+            assert_eq!(e.call_function("bad", &[]).unwrap(), Some(ScriptCommand::ShowText { text: "TypeError".into() }));
         }
     }
 }

@@ -171,6 +171,17 @@ impl ScriptHost for NativeHost {
         }
 
         match name {
+            "getPokecenterUsed" => Ok(HostCall::Value(Value::Bool(
+                self.numbers.get("pokecenterUsed").copied().unwrap_or(0.0) != 0.0,
+            ))),
+            "pokecenterNurseOffer" | "pokecenterFarewell" => {
+                let values = v.iter().map(|value| match value {
+                    Value::Text(text) => Ok(serde_json::Value::String(text.clone())),
+                    Value::Bool(value) => Ok(serde_json::Value::Bool(*value)),
+                    _ => Err(format!("{name}: invalid argument type")),
+                }).collect::<Result<Vec<_>, _>>()?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
+            }
             "askFieldYesNo" => {
                 let values = v
                     .iter()
@@ -4201,4 +4212,35 @@ mod field_yes_no_protocol_tests {
         }
     }
 
+}
+
+#[cfg(test)]
+mod nurse_protocol_tests {
+    use super::*;
+    #[test]
+    fn native_nurse_queries_used_suspends_and_resumes_numeric_result() {
+        let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(r#"game_scene Nurse {
+  @storyline("nurse") {
+    answer = pokecenterNurseOffer(getPokecenterUsed(), "Welcome", "We heal", "Heal?", "HEAL", "CANCEL")
+    @if (answer == 0) { setFlag("HEALED") }
+    pokecenterFarewell("Bye")
+  }
+}"#, "Nurse").unwrap();
+        for used in [false, true] { for answer in [0., 1.] {
+            let mut e = NativeScriptEngine::new(); e.load_map("Nurse", &scene);
+            e.seed_number("pokecenterUsed", if used { 1. } else { 0. });
+            let first = Some(PokemonScriptCommand::PokecenterNurseOffer { used,
+                texts: ["Welcome".into(), "We heal".into(), "Heal?".into(), "HEAL".into(), "CANCEL".into()] }.into_script_command());
+            assert_eq!(e.call_function_no_args("nurse").unwrap(), first);
+            assert_eq!(e.tick(), first);
+            assert_eq!(e.signal_done(CommandResult::Number(answer)).unwrap(), Some(PokemonScriptCommand::PokecenterFarewell { text: "Bye".into() }.into_script_command()));
+            assert_eq!(e.get_flag("HEALED"), answer == 0.);
+            assert!(e.signal_done(CommandResult::Void).unwrap().is_none());
+        }}
+        let mut host = NativeHost::new();
+        for (name, args) in [("pokecenterNurseOffer", vec![]), ("pokecenterFarewell", vec![Value::Bool(false)]),
+            ("pokecenterFarewell", vec![Value::Text("Bye".into()),Value::Text("extra".into())])] {
+            assert!(host.call(name, &args).is_err());
+        }
+    }
 }

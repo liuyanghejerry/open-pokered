@@ -1,18 +1,19 @@
 export async function talkNurse() {
-  await game.showText("Welcome to our\n#MON CENTER!\n\nWe heal your\n#MON back to\nperfect health!");
-  await game.showText("Shall we heal\nyour #MON?");
-  var choice = await game.showChoice(["Yes", "No"]);
-  if (choice == 0) {
-    await game.showText("OK. We'll need\nyour #MON.");
+  const answer = await game.pokecenterNurseOffer(game.getPokecenterUsed(),
+    "Welcome to our\n#MON CENTER!", "We heal your\n#MON back to\nperfect health!",
+    "Shall we heal\nyour #MON?", "HEAL", "CANCEL");
+  if (answer == 0) {
+    await game.printFieldText("OK. We'll need\nyour #MON.", true);
     await game.faceNpc("1", "left");
     await game.delay(3);
     await game.heal();
     await game.animateHealingMachine();
-    await game.faceNpc("1", "down");
-    await game.delay(8);
-    await game.showText("Thank you!\nYour #MON are\nfighting fit!");
+    await game.printFieldText("Thank you!\nYour #MON are\nfighting fit!", true, "prompt");
+    await game.setNpcFrame("1", 1);
+    await game.delay(20);
   }
-  await game.showText("We hope to see\nyou again!");
+  await game.pokecenterFarewell("We hope to see\nyou again!");
+  await game.faceNpc("1", "down");
 }
 
 export async function talkLinkReceptionist() {

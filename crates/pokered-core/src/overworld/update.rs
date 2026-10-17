@@ -864,6 +864,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A concrete typed caller borrows the same field ledger and display
         // cursor. Take it temporarily so its state machine may touch the live
         // bit/choice/window atomically, then retain the ordinary await owner.
+        let nurse_tick_done = match self.active_script_effect.take() {
+            Some(script_bridge::ScriptEffect::PokecenterNurseOffer { mut state }) => {
+                let done = self.tick_nurse_offer(&mut state);
+                self.active_script_effect = Some(script_bridge::ScriptEffect::PokecenterNurseOffer { state });
+                Some(done)
+            }
+            Some(script_bridge::ScriptEffect::PokecenterFarewell { mut state }) => {
+                let done = self.tick_nurse_farewell(&mut state);
+                self.active_script_effect = Some(script_bridge::ScriptEffect::PokecenterFarewell { state });
+                Some(done)
+            }
+            other => { self.active_script_effect = other; None }
+        };
         let yes_no_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::AskFieldYesNo { .. })) {
             let Some(script_bridge::ScriptEffect::AskFieldYesNo { mut state }) = self.active_script_effect.take() else { unreachable!() };
             let done = self.tick_field_yes_no(&mut state);
@@ -947,7 +960,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
             }
             let owns_print_window = matches!(effect,
-                script_bridge::ScriptEffect::PrintFieldText { retain_window: true, .. });
+                script_bridge::ScriptEffect::PrintFieldText { retain_window: true, .. }
+                | script_bridge::ScriptEffect::PokecenterNurseOffer { .. }
+                | script_bridge::ScriptEffect::PokecenterFarewell { .. });
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
                     *flow = Some(super::script_interactions::GiftPokemonFlow::new(species, &self.player_name, self.party_count, self.box_count, self.gift_box_number, self.script_engine.script_lang() == Some("zh")));
@@ -965,7 +980,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = static_tick_done.or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = nurse_tick_done.or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
 
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
@@ -3991,6 +4006,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     fn finish_effect(effect: &script_bridge::ScriptEffect) -> CommandResult {
         match effect {
+            script_bridge::ScriptEffect::PokecenterNurseOffer { state } => CommandResult::Number(f64::from(state.result())),
             script_bridge::ScriptEffect::AskFieldYesNo { state } => CommandResult::Number(f64::from(state.result())),
             script_bridge::ScriptEffect::ShowChoice { selected, .. } => {
                 CommandResult::Number(*selected as f64)
@@ -4165,20 +4181,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             frames_remaining: WARP_FADE_OUT_WHITE_FRAMES,
                         };
                     }
-                    // Only the nurse records the recovery destination.
-                    // Mom, Tower purification and Silph beds only call HealParty.
-                    let is_center = matches!(self.state.current_map,
-                        MapId::ViridianPokecenter | MapId::PewterPokecenter
-                        | MapId::CeruleanPokecenter | MapId::MtMoonPokecenter
-                        | MapId::RockTunnelPokecenter | MapId::VermilionPokecenter
-                        | MapId::CeladonPokecenter | MapId::LavenderPokecenter
-                        | MapId::FuchsiaPokecenter | MapId::CinnabarPokecenter
-                        | MapId::SaffronPokecenter | MapId::IndigoPlateauLobby);
-                    if is_center {
-                        if let Some(map) = self.last_map {
-                            self.game_data_requests.push(OverworldGameDataRequest::SetBlackoutMap { map });
-                        }
-                    }
+
                 }
                 script_bridge::ScriptEffect::GivePokemon {
                     species,
@@ -5483,12 +5486,12 @@ mod fidelity_systems_healing_tests {
         assert!(ow.unified_flags.get_flag("EVENT_TRADED_FOR_MARCEL"));
     }
     #[test]
-    fn nurses_alone_record_blackout_destination() {
+    fn heal_party_does_not_own_nurse_blackout_destination() {
         for map in [MapId::ViridianPokecenter,MapId::PewterPokecenter,MapId::CeruleanPokecenter,MapId::MtMoonPokecenter,MapId::RockTunnelPokecenter,MapId::VermilionPokecenter,MapId::CeladonPokecenter,MapId::LavenderPokecenter,MapId::FuchsiaPokecenter,MapId::CinnabarPokecenter,MapId::SaffronPokecenter,MapId::IndigoPlateauLobby] {
             let mut ow=OverworldScreen::new(map,None,PokemonRedData); ow.last_map=Some(MapId::CeruleanCity);
             ow.apply_finished_effect(Some(script_bridge::ScriptEffect::Heal));
             assert!(ow.heal_requested,"{map:?}");
-            assert!(ow.game_data_requests.iter().any(|r| matches!(r,OverworldGameDataRequest::SetBlackoutMap { map:MapId::CeruleanCity })),"{map:?}");
+            assert!(!ow.game_data_requests.iter().any(|r| matches!(r,OverworldGameDataRequest::SetBlackoutMap { .. })),"{map:?}: nurse offer now owns SetLastBlackoutMap before Need text");
         }
         for map in [MapId::RedsHouse1F,MapId::PokemonTower5F,MapId::SilphCo9F,MapId::SafariZoneEastRestHouse,MapId::SafariZoneWestRestHouse,MapId::SafariZoneNorthRestHouse] {
             let mut ow=OverworldScreen::new(map,None,PokemonRedData); ow.last_map=Some(MapId::SaffronCity);

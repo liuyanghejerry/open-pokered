@@ -1,40 +1,22 @@
 // Refactored from FuchsiaPokecenter/script.js to dotzuki-engine-dsl.
-// Follows the CeladonPokecenter pattern (Pokecenter nurse dialog
-// with @choice + @option). See docs/MIGRATION_NOTES.md §A.
+// Nurse continuation follows engine/events/pokecenter.asm.
 
 game_scene FuchsiaPokecenter {
   @storyline("talkNurse") {
     @trigger(map = "FuchsiaPokecenter", npc = 1)
-    @speaker("") {
-      @t("Welcome to our POKeMON
-CENTER!\n\nWe heal your POKeMON back to
-perfect health!\n\nShall we heal your POKeMON?", "欢迎光临宝可梦中心！\n\n我们会把你的宝可梦恢复到最佳\n状态！\n\n要为你治疗宝可梦吗？")
+    // DisplayPokemonCenterDialogue_: inner PROMPT, optional paused DONE, HEAL/CANCEL.
+    answer = pokecenterNurseOffer(getPokecenterUsed(), @t("Welcome to our POKeMON\nCENTER!", "欢迎光临宝可梦中心！"), @t("We heal your POKeMON back to\nperfect health!", "我们会把你的宝可梦恢复到最佳\n状态！"), @t("Shall we heal your POKeMON?", "要为你治疗宝可梦吗？"), @t("HEAL", "治疗"), @t("CANCEL", "取消"))
+    @if (answer == 0) {
+      printFieldText(@t("OK. We'll need your\nPOKeMON.", "OK，请把你的宝可梦交给我。"), true)
+      faceNpc("1", "left")
+      delay(3)
+      heal()
+      animateHealingMachine()
+      printFieldText(@t("Thank you!\nYour POKeMON are\nfighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！"), true, "prompt")
+      setNpcFrame("1", 1)
+      delay(20)
     }
-    @choice {
-      @option(@t("Yes", "是")) {
-        @speaker("") {
-          @t("OK. We'll need your
-POKeMON.", "OK，请把你的宝可梦交给我。")
-        }
-        faceNpc("1", "left")
-        delay(3)
-        heal()
-        animateHealingMachine()
-        @speaker("") {
-          @t("Thank you!
-Your POKeMON are
-fighting fit!", "感谢您的耐心等待。\n\n你的宝可梦已完全治愈！")
-        }
-        // Original nurse image $14 is the bow frame after fighting-fit text.
-        setNpcFrame("1", 1)
-        delay(20)
-      }
-      @option(@t("No", "否")) {
-      }
-    }
-    @speaker("") {
-      @t("We hope to see you again!", "欢迎下次再来！")
-    }
+    pokecenterFarewell(@t("We hope to see you again!", "欢迎下次再来！"))
     faceNpc("1", "down")
   }
 

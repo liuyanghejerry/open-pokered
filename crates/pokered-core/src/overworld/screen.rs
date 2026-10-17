@@ -203,12 +203,14 @@ pub enum OverworldGameDataRequest {
     /// mirroring MarkTownVisitedAndLoadToggleableObjects.
     MarkTownVisited { map: MapId },
     /// Record the map blackout/Teleport returns to (`wLastBlackoutMap`).
-    /// Pushed when a script heals the party (`SetLastBlackoutMap`,
-    /// engine/events/set_blackout_map.asm: the original stores `wLastMap`,
-    /// the outdoor map the player entered the healing map from), except in
-    /// Safari Zone rest houses. The app writes it to
+    /// Pushed on nurse menu acceptance before NeedYourPokemonText
+    /// (`SetLastBlackoutMap`, engine/events/set_blackout_map.asm stores
+    /// `wLastMap`, the outdoor map the player entered the center from).
+    /// The app writes it to
     /// `game_data.last_blackout_map`.
     SetBlackoutMap { map: MapId },
+    /// wStatusFlags4 BIT_USED_POKECENTER, set even when treatment is declined.
+    MarkPokecenterUsed,
 }
 
 // ── Wild Encounter ─────────────────────────────────────────────────
@@ -627,6 +629,11 @@ impl BedroomDialogue {
 
     /// Consume the existing PrintText prologue before an optional leading
     /// sound. The ordinary typewriter uses this same countdown.
+    /// Source execution resumes on the VBlank that returns from Delay3.
+    pub(crate) fn source_field_preparation_ready(&mut self) -> bool {
+        if self.field_entry_frames > 0 { self.field_entry_frames -= 1; }
+        self.field_entry_frames == 0
+    }
     pub(crate) fn tick_field_preparation(&mut self) -> bool {
         if self.field_entry_frames == 0 { return false; }
         self.field_entry_frames -= 1;
@@ -669,10 +676,7 @@ impl BedroomDialogue {
         no_text_delay: bool,
         owner: &mut crate::foreground_input::ForegroundJoypad,
     ) {
-        if self.field_entry_frames > 0 {
-            self.field_entry_frames -= 1;
-            if self.field_entry_frames > 0 { return; }
-        }
+        if !self.source_field_preparation_ready() { return; }
         if no_text_delay {
             self.char_index = self.total_chars();
             self.waiting_for_input = true;
@@ -1654,6 +1658,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// YesNoChoice leaves the question in the text window. It is display
     /// state, not an active ShowDialogue that may consume the choice input.
+    /// Canonical nurse query, refreshed with the ordinary seeded query inputs.
+    pub fn seed_pokecenter_used(&mut self, used: bool) {
+        self.script_engine.seed_number("pokecenterUsed", if used { 1.0 } else { 0.0 });
+    }
     pub fn displayed_field_dialogue(&self) -> Option<&BedroomDialogue> {
         self.pending_dialogue.as_ref()
             .or(self.cut_retained_dialogue.as_ref())
@@ -1677,6 +1685,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn dialogue_needs_button(&self) -> bool {
+        let native_page = self.pending_dialogue.as_ref().is_some_and(|d| d.has_more_pages());
+        match self.active_script_effect.as_ref() {
+            Some(super::script_bridge::ScriptEffect::PokecenterNurseOffer { state }) => return state.needs_button(native_page),
+            Some(super::script_bridge::ScriptEffect::PokecenterFarewell { state }) => return state.needs_button(native_page),
+            _ => {},
+        }
         if let Some(super::script_bridge::ScriptEffect::FieldCryContinuation { state }) = &self.active_script_effect {
             return state.needs_button();
         }
@@ -1694,6 +1708,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// final DONE returns to an outer ACK without drawing another arrow.
     /// Other text callers keep their existing cursor presentation policy.
     pub fn dialogue_shows_prompt_arrow(&self) -> bool {
+        if let Some(super::script_bridge::ScriptEffect::PokecenterFarewell { state }) = &self.active_script_effect {
+            return state.shows_arrow(self.pending_dialogue.as_ref().is_some_and(|d| d.has_more_pages()));
+        }
         if let Some(super::script_bridge::ScriptEffect::FieldCryContinuation { state }) = &self.active_script_effect {
             state.shows_prompt_arrow()
         } else {

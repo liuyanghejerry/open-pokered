@@ -55,6 +55,8 @@ impl PendingChoice {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptEffect {
+    PokecenterNurseOffer { state: Box<super::pokecenter_nurse::NurseOfferState> },
+    PokecenterFarewell { state: Box<super::pokecenter_nurse::NurseFarewellState> },
     AskFieldYesNo { state: Box<super::field_yes_no::FieldYesNoState> },
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
@@ -405,6 +407,7 @@ impl ScriptEffect {
     /// Nested gift/reading flows use the same text-window choice handoff.
     pub fn is_choice(&self) -> bool {
         match self {
+            Self::PokecenterNurseOffer { state } => state.accepts_input(),
             Self::AskFieldYesNo { state } => state.accepts_input(),
             Self::BikeShopOffer { state } => state.accepts_input(),
             Self::ShowChoice { .. } => true,
@@ -429,6 +432,8 @@ impl ScriptEffect {
             ScriptEffect::ShowItemDialogue { text, sound_id, sound_started } => {
                 json!({ "effect": "ShowItemDialogue", "text": text, "sound_id": sound_id, "sound_started": sound_started })
             }
+            ScriptEffect::PokecenterNurseOffer { state } => json!({ "effect": "PokecenterNurseOffer", "state": state }),
+            ScriptEffect::PokecenterFarewell { state } => json!({ "effect": "PokecenterFarewell", "state": state }),
             ScriptEffect::AskFieldYesNo { state } => json!({ "effect": "AskFieldYesNo", "state": state }),
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::PokedexRating { state } => json!({ "effect": "PokedexRating", "state": state }),
@@ -980,6 +985,12 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         },
         PokemonScriptCommand::PrintTextCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::inner_print_text(text, species),
+        },
+        PokemonScriptCommand::PokecenterNurseOffer { used, texts } => ScriptEffect::PokecenterNurseOffer {
+            state: Box::new(super::pokecenter_nurse::NurseOfferState::new(used, texts)),
+        },
+        PokemonScriptCommand::PokecenterFarewell { text } => ScriptEffect::PokecenterFarewell {
+            state: Box::new(super::pokecenter_nurse::NurseFarewellState::new(text)),
         },
         PokemonScriptCommand::AskFieldYesNo { question, labels } => ScriptEffect::AskFieldYesNo {
             state: Box::new(super::field_yes_no::FieldYesNoState::new(question, labels)),

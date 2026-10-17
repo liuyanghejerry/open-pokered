@@ -28,6 +28,11 @@ impl FieldTextPrompt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PokemonScriptCommand {
+    /// Original center nurse: welcome/PROMPT, canonical used flag, optional
+    /// paused question/DONE and HEAL/CANCEL. Numeric 0 heals, 1 cancels.
+    PokecenterNurseOffer { used: bool, texts: [String; 5] },
+    /// Paused farewell/DONE followed by DisplayTextID's outer ACK and close.
+    PokecenterFarewell { text: String },
     /// Nonempty field question/DONE followed by original YesNoChoice.
     AskFieldYesNo { question: String, labels: [String; 2] },
     /// Inner PrintText; optional text_promptbutton returns without closing its window.
@@ -127,6 +132,8 @@ impl PokemonScriptCommand {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
             Self::AskFieldYesNo { .. } => "askFieldYesNo",
+            Self::PokecenterNurseOffer { .. } => "pokecenterNurseOffer",
+            Self::PokecenterFarewell { .. } => "pokecenterFarewell",
             Self::BikeShopOffer { .. } => "bikeShopOffer",
             Self::FieldCry { .. } => "fieldCry",
             Self::StaticEncounter { .. } => "staticEncounter",
@@ -192,6 +199,8 @@ impl PokemonScriptCommand {
                 texts.insert(1, species);
                 texts.into_iter().map(Value::String).collect()
             }
+            Self::PokecenterNurseOffer { used, texts } => vec![json!(used), json!(texts[0]), json!(texts[1]), json!(texts[2]), json!(texts[3]), json!(texts[4])],
+            Self::PokecenterFarewell { text } => vec![json!(text)],
             Self::AskFieldYesNo { question, labels } => vec![json!(question), json!(labels[0]), json!(labels[1])],
             Self::JigglypuffSong { text, npc_id } => vec![json!(text), json!(npc_id)],
             Self::StaticEncounter { text, species, level } => vec![json!(text), json!(species.to_string()), json!(level)],
@@ -286,6 +295,15 @@ impl PokemonScriptCommand {
                 .collect::<Result<Vec<_>, _>>()
         };
         Ok(match name {
+            "pokecenterNurseOffer" => {
+                if args.len() != 6 { return Err("pokecenterNurseOffer: expected a boolean and five strings".into()); }
+                let used = args[0].as_bool().ok_or("pokecenterNurseOffer: used must be a boolean")?;
+                Self::PokecenterNurseOffer { used, texts: [string(1)?, string(2)?, string(3)?, string(4)?, string(5)?] }
+            },
+            "pokecenterFarewell" => {
+                if args.len() != 1 { return Err("pokecenterFarewell: expected one string".into()); }
+                Self::PokecenterFarewell { text: string(0)? }
+            },
             "askFieldYesNo" => {
                 if args.len() != 3 { return Err("askFieldYesNo: expected exactly three strings".into()); }
                 let question = string(0)?;
