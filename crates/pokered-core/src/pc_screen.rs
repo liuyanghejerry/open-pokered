@@ -32,6 +32,9 @@ use crate::pokemon::pc_menu::{BillsPcAction, BillsPcMenuState, PcMainMenuState, 
 use crate::pokemon::pokedex::Pokedex;
 use pokered_data::items::ItemId;
 
+mod rating;
+use rating::RatingPhase;
+
 /// How the PC was opened (which original entry point).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PcEntry {
@@ -90,6 +93,10 @@ pub struct PcOpenContext {
 pub enum PcSfx {
     /// SFX_TURN_ON_PC — PC booted.
     TurnOn,
+    /// Stop all music and start the owned-count fanfare after the prior wait.
+    PokedexRating(crate::pokedex_rating::DexRatingSound),
+    RestartMapMusic,
+    TextAdvance,
     /// SFX_TURN_OFF_PC — logged off.
     TurnOff,
     /// SFX_ENTER_PC — entered a sub-PC (pc.asm:54,62,68,74).
@@ -280,6 +287,9 @@ pub struct PcScreen {
     msg_lines: Vec<String>,
     msg_page: usize,
     msg_next: AfterMessage,
+    rating_phase: Option<RatingPhase>,
+    rating_text: Option<Box<crate::overworld::BedroomDialogue>>,
+    rating_input: crate::foreground_input::ForegroundJoypad,
 
     // Menu states (reused from pokemon::pc_menu, which mirrors the original
     // menu code 1:1).
@@ -357,6 +367,9 @@ impl PcScreen {
             msg_lines: Vec::new(),
             msg_page: 0,
             msg_next: AfterMessage::Exit,
+            rating_phase: None,
+            rating_text: None,
+            rating_input: crate::foreground_input::ForegroundJoypad::default(),
             main_menu: PcMainMenuState::new(open.has_pokedex, open.beaten_league, open.met_bill),
             bills_menu: BillsPcMenuState::new(0),
             players_menu: PlayersPcMenuState::new(),
@@ -552,6 +565,7 @@ impl PcScreen {
     // ── Internals ─────────────────────────────────────────────────────────
 
     fn set_message(&mut self, lines: Vec<String>, next: AfterMessage) {
+        self.rating_phase = None; self.rating_text = None;
         self.msg_lines = if self.language == crate::game_state::Lang::Zh {
             chinese_message_lines(&lines, &[&self.player_name])
         } else {
@@ -580,22 +594,12 @@ impl PcScreen {
             AfterMessage::OaksConfirmPage => self.enter_oaks_confirm(),
             // "#DEX completion is: ..." → the rating itself.
             AfterMessage::OaksRating => {
-                let owned = self.dex_owned;
-                let rating = DEX_RATINGS
-                    .iter()
-                    .find(|(threshold, _)| owned < *threshold)
-                    .map(|(_, text)| *text)
-                    .unwrap_or(DEX_RATINGS[DEX_RATINGS.len() - 1].1);
-                let lines = rating.split('\n').map(|s| s.to_string()).collect();
+                let lines = dex_rating_text(self.dex_owned).split('\n').map(|s| s.to_string()).collect();
                 self.set_message(lines, AfterMessage::OaksClosed);
+                self.start_rating_text(false, true);
             }
             // Rating text → "Closed link to PROF.OAK's PC." (_ClosedOaksPCText)
-            AfterMessage::OaksClosed => {
-                self.set_message(
-                    vec!["Closed link to".into(), "PROF.OAK's PC.".into()],
-                    AfterMessage::MainMenu,
-                );
-            }
+            AfterMessage::OaksClosed => self.close_oaks_link(),
             // "Accessed the HALL OF FAME List." → the HoF team viewer
             // (PKMNLeaguePC's display loop, league_pc.asm:29-46). With no
             // recorded teams (unreachable through the menu, which gates on
@@ -707,7 +711,7 @@ impl PcScreen {
         } else { action }
     }
 
-    pub fn waiting_for_sound(&self) -> bool { self.waiting_for_cry }
+    pub fn waiting_for_sound(&self) -> bool { self.waiting_for_cry || self.rating_waiting_for_audio() }
 
     fn start_mon_cry(&mut self, species: pokered_data::species::Species) -> bool {
         if self.finishing_cry { return false; }
@@ -735,6 +739,7 @@ impl PcScreen {
         let ordinary = matches!(self.phase, PcPhase::MainMenu | PcPhase::BillsMenu | PcPhase::ItemMenu);
         let before = self.phase;
         let buttons = held.bits();
+        self.observe_rating_input(buttons);
         // hFrameCounter advances even while Delay20/list redraw protects input.
         self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
         if before == PcPhase::ItemList {
@@ -790,9 +795,10 @@ impl PcScreen {
         };
         let held_ab = held.a || held.b;
         let action = if let Some(playing) = sound_playing {
-            self.update_frame_with_text_input(used, ctx, playing, held_ab)
+            self.update_frame_sampled(used, ctx, playing, held_ab)
         } else {
-            self.update_frame_without_audio_with_text_input(used, ctx, held_ab)
+            let action = self.update_frame_sampled(used, ctx, false, held_ab);
+            if self.waiting_for_cry { self.update_frame_sampled(MenuInput { up:false, down:false, a:false, b:false }, ctx, false, held_ab) } else { action }
         };
         if self.phase != before { self.ordinary_menu_poll_wait = 0; }
         (action, used)
@@ -800,6 +806,14 @@ impl PcScreen {
 
     /// Separate held typing input from newly pressed menu/transaction input.
     pub fn update_frame_with_text_input(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool, held_ab: bool) -> PcScreenAction {
+        let buttons = if held_ab { if input.b { crate::foreground_input::B } else { crate::foreground_input::A } } else { 0 };
+        self.observe_rating_input(buttons);
+        self.update_frame_sampled(input, ctx, sound_playing, held_ab)
+    }
+
+    fn update_frame_sampled(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool, held_ab: bool) -> PcScreenAction {
+        if self.rating_phase.is_some() { self.tick_rating(sound_playing); return PcScreenAction::Continue; }
+
         // DisplayTwoOptionMenu holds its drawn cursor and ignores all input
         // for 15 frames before restoring the screen and returning the choice.
         if self.confirm_wait_frames > 0 {
@@ -1747,10 +1761,7 @@ impl PcScreen {
         }
         if input.b {
             // B on the YES/NO counts as NO (YesNoChoice) → close the link.
-            self.set_message(
-                vec!["Closed link to".into(), "PROF.OAK's PC.".into()],
-                AfterMessage::MainMenu,
-            );
+            self.close_oaks_link();
             return PcScreenAction::Continue;
         }
         if input.a {
@@ -1773,10 +1784,7 @@ impl PcScreen {
                     AfterMessage::OaksRating,
                 );
             } else {
-                self.set_message(
-                    vec!["Closed link to".into(), "PROF.OAK's PC.".into()],
-                    AfterMessage::MainMenu,
-                );
+                self.close_oaks_link();
             }
         }
         PcScreenAction::Continue
@@ -2588,12 +2596,12 @@ mod tests {
 
     /// Advance through every page of the current message.
     fn skip_message(screen: &mut PcScreen, w: &mut World) {
-        while screen.phase() == PcPhase::Message {
-            assert_eq!(
-                screen.update_frame(A, &mut w.ctx()),
-                PcScreenAction::Continue
-            );
+        for frame in 0..4000 {
+            if screen.phase() != PcPhase::Message { break; }
+            let input = if screen.rating_phase.is_some() && frame % 8 != 0 { NONE } else { A };
+            assert_eq!(screen.update_frame(input, &mut w.ctx()), PcScreenAction::Continue);
         }
+        assert_ne!(screen.phase(), PcPhase::Message, "message did not finish with fresh presses");
         finish_item_question(screen, w);
     }
 
@@ -3349,13 +3357,29 @@ mod tests {
                 "other species!".to_string(),
             ]
         );
-        s.update_frame(A, &mut w.ctx()); // → closed link
-        assert_eq!(
-            s.message_lines(),
-            &["Closed link to".to_string(), "PROF.OAK's PC.".to_string()]
-        );
-        s.update_frame(A, &mut w.ctx()); // → main menu
+        // Printing owns the window; prior audio and the selected fanfare
+        // must both finish before a fresh silent rating confirmation.
+        s.take_sfx();
+        for _ in 0..2000 {
+            s.update_frame_with_sound(NONE, &mut w.ctx(), true);
+            if s.rating_waiting_for_audio() { break; }
+        }
+        assert!(s.rating_waiting_for_audio());
+        for _ in 0..60 { s.update_frame_with_sound(A, &mut w.ctx(), true); }
+        assert!(s.take_sfx().is_empty(), "prior SFX must finish first");
+        s.update_frame_with_sound(NONE, &mut w.ctx(), false);
+        assert_eq!(s.take_sfx(), vec![PcSfx::PokedexRating(crate::pokedex_rating::DexRatingSound::PokedexRating)]);
+        for _ in 0..60 { s.update_frame_with_sound(NONE, &mut w.ctx(), true); }
+        assert!(s.take_sfx().is_empty());
+        s.update_frame_with_sound(NONE, &mut w.ctx(), false);
+        assert_eq!(s.take_sfx(), vec![PcSfx::RestartMapMusic]);
+        assert!(matches!(s.rating_phase, Some(rating::RatingPhase::Ack)));
+        s.update_frame(A, &mut w.ctx());
+        assert_eq!(s.message_lines(), &["Closed link to".to_string(), "PROF.OAK's PC.".to_string()]);
+        assert!(s.take_sfx().is_empty(), "rating ACK is silent");
+        skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::MainMenu);
+        assert_eq!(s.take_sfx(), vec![PcSfx::TextAdvance]);
     }
 
     #[test]

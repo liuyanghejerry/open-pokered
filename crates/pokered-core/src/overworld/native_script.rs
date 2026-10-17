@@ -488,6 +488,15 @@ impl ScriptHost for NativeHost {
                 }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &values)?))
             }
+            "pokedexRating" => {
+                if v.len() != 2 { return Err("pokedexRating: text and owned count expected".into()); }
+                let Value::Text(text) = &v[0] else { return Err("pokedexRating: argument 0 must be a string".into()); };
+                let Value::Number(owned) = v[1] else { return Err("pokedexRating: owned count must be an integer from 0 to 151".into()); };
+                if !owned.is_finite() || owned.fract() != 0. || !(0. ..=151.).contains(&owned) {
+                    return Err("pokedexRating: owned count must be an integer from 0 to 151".into());
+                }
+                Ok(pokemon(PokemonScriptCommand::PokedexRating { text: text.clone(), owned: owned as u32 }))
+            },
             "fieldCry" | "printTextCry" => {
                 if v.len() != 2 { return Err(format!("{name}: text and species expected")); }
                 let string = |index: usize| match &v[index] {

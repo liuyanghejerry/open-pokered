@@ -148,6 +148,8 @@ pub enum OverworldAudioRequest {
     PlayMapMusic { map: MapId },
     /// Nurse routine restores map music immediately after the healing hold.
     RestoreMapMusic { map: MapId },
+    /// PlayDefaultMusic clears the remembered ID and restarts from the beginning.
+    RestartMapMusic { map: MapId },
     /// Play a Pokémon cry by species name (script `game.playCry(...)`).
     PlayCry { species: String },
     /// ItemUsePokeFlute: stop map music, play the full channel-3 jingle, then

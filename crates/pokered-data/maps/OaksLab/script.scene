@@ -313,56 +313,54 @@ game_scene OaksLab {
       @if (getFlag("EVENT_PALLET_AFTER_GETTING_POKEBALLS") || getPokedexOwnedCount() >= 2) {
         // DisplayDexRating: Oak rates the dex by owned-species count
         // (engine/events/pokedex_rating.asm DexRatingsTable thresholds).
-        @speaker("") {
-          @t("OAK: Good to see you! How is\nyour POKeDEX coming? Here,\nlet me take a look!", "大木博士：见到你真好！你的图\n鉴进展如何？让我看看吧！")
-        }
-        showText(@t("POKeDEX completion is:\n\n", "图鉴完成度：\n\n") + getPokedexSeenCount() + @t(" POKeMON seen ", "只宝可梦见过") + getPokedexOwnedCount() + @t(" POKeMON owned\n\nPROF.OAK's Rating:", "只宝可梦拥有\n\n大木博士的评价："))
+        printFieldText(@t("OAK: Good to see you! How is\nyour POKeDEX coming? Here,\nlet me take a look!", "大木博士：见到你真好！你的图\n鉴进展如何？让我看看吧！"), true)
+        printFieldText(@t("POKeDEX completion is:\n\n", "图鉴完成度：\n\n") + getPokedexSeenCount() + @t(" POKeMON seen ", "只宝可梦见过") + getPokedexOwnedCount() + @t(" POKeMON owned\n\nPROF.OAK's Rating:", "只宝可梦拥有\n\n大木博士的评价："), true, "prompt")
         @if (getPokedexOwnedCount() < 10) {
-          @speaker("") { @t("You still have lots to do.\nLook for POKeMON in grassy\nareas!", "你还有很多事要做。去草丛里找\n宝可梦吧！") }
+          pokedexRating(@t("You still have lots to do.\nLook for POKeMON in grassy\nareas!", "你还有很多事要做。去草丛里找\n宝可梦吧！"), getPokedexOwnedCount())
         } @else {
           @if (getPokedexOwnedCount() < 20) {
-            @speaker("") { @t("You're on the right track!\nGet a FLASH HM from my AIDE!", "你方向是对的！去找我的助手拿\n闪光秘传招式吧！") }
+            pokedexRating(@t("You're on the right track!\nGet a FLASH HM from my AIDE!", "你方向是对的！去找我的助手拿\n闪光秘传招式吧！"), getPokedexOwnedCount())
           } @else {
             @if (getPokedexOwnedCount() < 30) {
-              @speaker("") { @t("You still need more POKeMON!\nTry to catch other species!", "你还需要更多的宝可梦！试着捕\n捉其他种类吧！") }
+              pokedexRating(@t("You still need more POKeMON!\nTry to catch other species!", "你还需要更多的宝可梦！试着捕\n捉其他种类吧！"), getPokedexOwnedCount())
             } @else {
               @if (getPokedexOwnedCount() < 40) {
-                @speaker("") { @t("Good, you're trying hard!\nGet an ITEMFINDER from my\nAIDE!", "很好，你很努力！去助手那里拿\n探宝器吧！") }
+                pokedexRating(@t("Good, you're trying hard!\nGet an ITEMFINDER from my\nAIDE!", "很好，你很努力！去助手那里拿\n探宝器吧！"), getPokedexOwnedCount())
               } @else {
                 @if (getPokedexOwnedCount() < 50) {
-                  @speaker("") { @t("Looking good! Go find my\nAIDE when you get 50!", "不错嘛！集齐50只后去找我的助\n手！") }
+                  pokedexRating(@t("Looking good! Go find my\nAIDE when you get 50!", "不错嘛！集齐50只后去找我的助\n手！"), getPokedexOwnedCount())
                 } @else {
                   @if (getPokedexOwnedCount() < 60) {
-                    @speaker("") { @t("You finally got at least 50\nspecies! Be sure to get\nEXP.ALL from my AIDE!", "你终于集齐了至少50种！记得从\n我助手那里拿学习装置！") }
+                    pokedexRating(@t("You finally got at least 50\nspecies! Be sure to get\nEXP.ALL from my AIDE!", "你终于集齐了至少50种！记得从\n我助手那里拿学习装置！"), getPokedexOwnedCount())
                   } @else {
                     @if (getPokedexOwnedCount() < 70) {
-                      @speaker("") { @t("Ho! This is geting even\nbetter!", "嚯！越来越厉害了！") }
+                      pokedexRating(@t("Ho! This is geting even\nbetter!", "嚯！越来越厉害了！"), getPokedexOwnedCount())
                     } @else {
                       @if (getPokedexOwnedCount() < 80) {
-                        @speaker("") { @t("Very good! Go fish for some\nmarine POKeMON!", "非常好！去钓一些水里的宝可梦\n吧！") }
+                        pokedexRating(@t("Very good! Go fish for some\nmarine POKeMON!", "非常好！去钓一些水里的宝可梦\n吧！"), getPokedexOwnedCount())
                       } @else {
                         @if (getPokedexOwnedCount() < 90) {
-                          @speaker("") { @t("Wonderful! Do you like to\ncollect things?", "太棒了！你喜欢收集东西吗？") }
+                          pokedexRating(@t("Wonderful! Do you like to\ncollect things?", "太棒了！你喜欢收集东西吗？"), getPokedexOwnedCount())
                         } @else {
                           @if (getPokedexOwnedCount() < 100) {
-                            @speaker("") { @t("I'm impressed! It must have\nbeen difficult to do!", "我很佩服！这一定很不容易吧！") }
+                            pokedexRating(@t("I'm impressed! It must have\nbeen difficult to do!", "我很佩服！这一定很不容易吧！"), getPokedexOwnedCount())
                           } @else {
                             @if (getPokedexOwnedCount() < 110) {
-                              @speaker("") { @t("You finally got at least 100\nspecies! I can't believe how\ngood you are!", "你终于集齐了至少100种！真不\n敢相信你太厉害了！") }
+                              pokedexRating(@t("You finally got at least 100\nspecies! I can't believe how\ngood you are!", "你终于集齐了至少100种！真不\n敢相信你太厉害了！"), getPokedexOwnedCount())
                             } @else {
                               @if (getPokedexOwnedCount() < 120) {
-                                @speaker("") { @t("You even have the evolved\nforms of POKeMON! Super!", "你连宝可梦的进化形态都有！太\n棒了！") }
+                                pokedexRating(@t("You even have the evolved\nforms of POKeMON! Super!", "你连宝可梦的进化形态都有！太\n棒了！"), getPokedexOwnedCount())
                               } @else {
                                 @if (getPokedexOwnedCount() < 130) {
-                                  @speaker("") { @t("Excellent! Trade with\nfriends to get some more!", "太棒了！和朋友交换来收集更多\n吧！") }
+                                  pokedexRating(@t("Excellent! Trade with\nfriends to get some more!", "太棒了！和朋友交换来收集更多\n吧！"), getPokedexOwnedCount())
                                 } @else {
                                   @if (getPokedexOwnedCount() < 140) {
-                                    @speaker("") { @t("Outstanding! You've become a\nreal pro at this!", "真出色！你已经成了真正的行\n家！") }
+                                    pokedexRating(@t("Outstanding! You've become a\nreal pro at this!", "真出色！你已经成了真正的行\n家！"), getPokedexOwnedCount())
                                   } @else {
                                     @if (getPokedexOwnedCount() < 150) {
-                                      @speaker("") { @t("I have nothing left to say!\nYou're the authority now!", "我已经无话可说了！你现在是权\n威了！") }
+                                      pokedexRating(@t("I have nothing left to say!\nYou're the authority now!", "我已经无话可说了！你现在是权\n威了！"), getPokedexOwnedCount())
                                     } @else {
-                                      @speaker("") { @t("Your POKeDEX is entirely\ncomplete! Congratulations!", "你的图鉴完全集齐了！恭喜！") }
+                                      pokedexRating(@t("Your POKeDEX is entirely\ncomplete! Congratulations!", "你的图鉴完全集齐了！恭喜！"), getPokedexOwnedCount())
                                     }
                                   }
                                 }

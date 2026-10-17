@@ -858,6 +858,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A concrete typed caller borrows the same field ledger and display
         // cursor. Take it temporarily so its state machine may touch the live
         // bit/choice/window atomically, then retain the ordinary await owner.
+        let rating_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::PokedexRating { .. })) {
+            let Some(script_bridge::ScriptEffect::PokedexRating { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_pokedex_rating(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::PokedexRating { state });
+            Some(done)
+        } else { None };
         let field_cry_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::FieldCry { .. })) {
             let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -927,7 +933,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = field_cry_tick_done.or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = rating_tick_done.or(field_cry_tick_done).or(bike_tick_done).or(owned_text_done) { done }
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
                 match state.advance() {

@@ -55,6 +55,9 @@ interface GameAPI {
    * the window through cry completion, silent outer confirmation and A release. */
   printTextCry(text: string, species: string): Promise<void>;
 
+  /** Inner rating DONE, owned-count fanfare, fresh default music, silent ACK and Oak outer close. */
+  pokedexRating(text: string, owned: number): Promise<void>;
+
   /**
    * Show a multiple-choice prompt and return the 0-based index of the
    * option the player selected.

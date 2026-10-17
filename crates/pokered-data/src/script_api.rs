@@ -92,6 +92,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::BikeShopOffer { texts }.into_script_command())
         });
 
+        engine.register_async_fn("pokedexRating", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+            let error = |message: &str| boa_engine::JsNativeError::typ().with_message(message);
+            if args.len() != 2 { return Err(error("pokedexRating: text and owned count expected").into()); }
+            let text = args[0].as_string().ok_or_else(|| error("pokedexRating: argument 0 must be a string"))?.to_std_string_lossy();
+            let owned = args[1].as_number().filter(|n| n.is_finite() && n.fract() == 0. && (0. ..=151.).contains(n))
+                .ok_or_else(|| error("pokedexRating: owned count must be an integer from 0 to 151"))?;
+            Ok(PokemonScriptCommand::PokedexRating { text, owned: owned as u32 }.into_script_command())
+        });
+
         engine.register_async_fn("fieldCry", |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
             if args.len() != 2 {
                 return Err(boa_engine::JsNativeError::typ().with_message("fieldCry: text and species expected").into());
