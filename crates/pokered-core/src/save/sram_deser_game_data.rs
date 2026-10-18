@@ -172,7 +172,7 @@ pub fn deserialize_game_data(reader: &mut SramReader) -> Result<GameData, SaveEr
 
     // WRAM status flags region is 15 bytes with padding:
     // [flags1, ds1, beatGym, ds1, flags2, flags3, flags4, ds1, flags5, ds1, flags6, flags7, elite4, ds1, movement]
-    // We extract the 12 meaningful bytes into status_flags[0..12], skipping padding.
+    // Ten non-padding bytes occupy status_flags[0..10]; slots10/11 stay spare.
     data.status_flags[0] = reader.read_u8()?;
     reader.skip(1)?;
     data.status_flags[1] = reader.read_u8()?;

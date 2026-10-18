@@ -1,0 +1,103 @@
+{
+  "source": ".task-tmp/fidelity-39-plus/audit-1096-flash-pair-qEIgEW/fixture.sav",
+  "source_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+  "fixture": ".task-tmp/fidelity-39-plus/audit-1145-bike-fixture.sav",
+  "fixture_sha256": "c083f7f97888a161b6373b9738832a772c5a83a563e1603f396687a69e95b402",
+  "scope": "Offline controlled ordinary SRAM, Route18 west of gate at30,8, already riding with originalFlags6 ALWAYS_ON_BIKE and inputFlags5 clear; oneBicycle; not freshplaythrough",
+  "original_wram_to_sram": {
+    "wCurMap": {
+      "wram": "0xd35e",
+      "sram_offset": "0x260a"
+    },
+    "wYCoord": {
+      "wram": "0xd361",
+      "sram_offset": "0x260d"
+    },
+    "wXCoord": {
+      "wram": "0xd362",
+      "sram_offset": "0x260e"
+    },
+    "wStatusFlags5": {
+      "wram": "0xd730",
+      "sram_offset": "0x29dc"
+    },
+    "wStatusFlags6": {
+      "wram": "0xd732",
+      "sram_offset": "0x29de"
+    },
+    "wWalkBikeSurfState": {
+      "wram": "0xd700",
+      "sram_offset": "0x29ac"
+    },
+    "wNumBagItems": {
+      "wram": "0xd31d",
+      "sram_offset": "0x25c9"
+    },
+    "wBagItems": {
+      "wram": "0xd31e",
+      "sram_offset": "0x25ca"
+    }
+  },
+  "changes": [
+    {
+      "offset": "0x25c9",
+      "before": 0,
+      "after": 1
+    },
+    {
+      "offset": "0x25ca",
+      "before": 255,
+      "after": 6
+    },
+    {
+      "offset": "0x25cb",
+      "before": 0,
+      "after": 1
+    },
+    {
+      "offset": "0x25cc",
+      "before": 0,
+      "after": 255
+    },
+    {
+      "offset": "0x260a",
+      "before": 82,
+      "after": 29
+    },
+    {
+      "offset": "0x260d",
+      "before": 3,
+      "after": 8
+    },
+    {
+      "offset": "0x260e",
+      "before": 15,
+      "after": 30
+    },
+    {
+      "offset": "0x260f",
+      "before": 1,
+      "after": 0
+    },
+    {
+      "offset": "0x2610",
+      "before": 1,
+      "after": 0
+    },
+    {
+      "offset": "0x29ac",
+      "before": 0,
+      "after": 1
+    },
+    {
+      "offset": "0x29de",
+      "before": 3,
+      "after": 35
+    },
+    {
+      "offset": "0x3523",
+      "before": 241,
+      "after": 235
+    }
+  ]
+}

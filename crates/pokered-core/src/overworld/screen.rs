@@ -2896,7 +2896,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .get(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)
                 .copied().unwrap_or(0) != 0,
         );
-        self.forced_bike.active = data.status_flags[5] & (1 << 5) != 0;
+        self.forced_bike.active = data.status_flags[6] & (1 << 5) != 0;
         self.no_text_delay = data.status_flags[5] & (1 << 6) != 0;
         self.player_last_stop_direction = data.player_last_stop_direction;
         self.player_moving_direction = data.player_moving_direction;
@@ -2923,12 +2923,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             *script = u8::from(self.unified_flags.get_flag("SCRIPT_REDSHOUSE2F_NOOP"));
         }
         // Read/modify/write only the original live bit, preserving every
-        // unrelated status flag (including ALWAYS_ON_BIKE in the same byte).
+        // unrelated status flag, including DISABLE_JOYPAD in this byte.
         if self.no_text_delay { data.status_flags[5] |= 1 << 6; }
         else { data.status_flags[5] &= !(1 << 6); }
         // Preserve BIT_ALWAYS_ON_BIKE separately from the player sprite/mode.
-        if self.forced_bike.active { data.status_flags[5] |= 1 << 5; }
-        else { data.status_flags[5] &= !(1 << 5); }
+        if self.forced_bike.active { data.status_flags[6] |= 1 << 5; }
+        else { data.status_flags[6] &= !(1 << 5); }
         data.player_last_stop_direction = self.player_last_stop_direction;
         data.player_moving_direction = self.player_moving_direction;
         data.first_lock_trash_can = self.first_lock_trash_can;
