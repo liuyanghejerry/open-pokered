@@ -96,6 +96,60 @@ impl DisplayDevice {
             (None, None) => None,
         }
     }
+    /// Passive distance to the next VBlank request for an unchanged, empty
+    /// raster. The owner still advances the real device through every event.
+    /// Dynamic OBJ/window/DMA and malformed states use ordinary event waits.
+    pub fn tcycles_until_vblank(&self) -> Option<u32> {
+        if self.validate().is_err()
+            || self.lcdc & 0xa2 != 0x80
+            || self.dma.is_some()
+            || self.stat_irq_line
+            || self.mode3_length != 172 + u16::from(self.scx & 7)
+        {
+            return None;
+        }
+        use RasterPhase::*;
+        let r = u32::from(self.phase_remaining);
+        let ly = u32::from(self.ly);
+        if self.phase == VBlank {
+            if !(144..=153).contains(&self.ly) {
+                return None;
+            }
+            return Some(
+                r + (153 - ly) * 456 + if self.first_frame && ly < 153 { 8 } else { 0 } + 144 * 456,
+            );
+        }
+        if ly > 143 {
+            return None;
+        }
+        let future = (143 - ly) * 456;
+        let startup_short = if self.first_frame { 4 } else { 0 };
+        Some(match self.phase {
+            EnableStore => r + 76 + 376 + future - startup_short,
+            StartupMode0 | Mode2 => r + 376 + future - startup_short,
+            Mode3 => r + 376 - u32::from(self.mode3_length) + future - startup_short,
+            HBlank => {
+                let limit = if ly < 143 || self.first_frame {
+                    372
+                } else {
+                    376
+                } - u32::from(self.mode3_length);
+                if r > limit {
+                    return None;
+                }
+                r + if ly < 143 { 4 } else { 0 } + future
+                    - if self.first_frame && ly < 143 { 4 } else { 0 }
+            }
+            AdvanceLy => {
+                if ly == 0 {
+                    return None;
+                }
+                r + (144 - ly) * 456 - startup_short
+            }
+            Off | VBlank => return None,
+        })
+    }
+
     pub fn observed_tcycles(&self) -> u64 {
         self.observed_tcycles
     }
@@ -717,6 +771,73 @@ mod tests {
         let period = CheckedFramePeriod::new(2 * 70224 + 4, 3 * 70224 + 4).unwrap();
         assert!(!device.try_idle_checked_period(period));
         assert_eq!(device, before);
+    }
+
+    #[test]
+    fn passive_vblank_forecast_matches_single_cycle_event_runner() {
+        for scx in [0, 3, 7] {
+            let mut device = DisplayDevice::powered_off(0);
+            device.write_port(0xff40, 0x91, 0xc3).unwrap();
+            device.write_port(0xff43, scx, 0xc3).unwrap();
+            let mut samples = Vec::new();
+            let mut entries = Vec::new();
+            let mut epoch = 0;
+            for at in 0..4 * 70224u64 {
+                device.observe_time(at, &[0; 160]).unwrap();
+                if device.vblank_epoch() != epoch {
+                    entries.push((at, device.clone()));
+                    epoch = device.vblank_epoch();
+                }
+                if at < 3 * 70224 && (at % 113 == 0 || device.phase_remaining == 1) {
+                    let before = device.clone();
+                    let prediction = device.tcycles_until_vblank();
+                    assert_eq!(device, before, "query must not advance any state");
+                    if let Some(distance) = prediction {
+                        samples.push((at, before, distance));
+                    }
+                }
+            }
+            assert!(!samples.is_empty());
+            for (at, mut state, distance) in samples {
+                let (edge, expected) = entries.iter().find(|(edge, _)| *edge > at).unwrap();
+                assert_eq!(
+                    u64::from(distance),
+                    edge - at,
+                    "SCX={scx}, at={at}, state={state:?}"
+                );
+                state
+                    .observe_time(at + u64::from(distance), &[0; 160])
+                    .unwrap();
+                assert_eq!(&state, expected, "SCX={scx}, at={at}");
+            }
+        }
+    }
+
+    #[test]
+    fn vblank_forecast_rejects_dynamic_off_and_invalid_rasters() {
+        let mut base = DisplayDevice::powered_off(0);
+        assert_eq!(base.tcycles_until_vblank(), None);
+        base.write_port(0xff40, 0x91, 0xc3).unwrap();
+        base.observe_time(2 * 70224, &[0; 160]).unwrap();
+        for case in 0..8 {
+            let mut state = base.clone();
+            match case {
+                0 => state.lcdc |= 2,
+                1 => state.lcdc |= 0x20,
+                2 => state.stat_enable = 8,
+                3 => {
+                    state.dma = Some(OamDma {
+                        next: 0,
+                        cycles_until_byte: 8,
+                    })
+                }
+                4 => state.oam.clear(),
+                5 => state.ly = 154,
+                6 => state.phase_remaining = 0,
+                _ => state.stat_irq_line = true,
+            }
+            assert_eq!(state.tcycles_until_vblank(), None, "case={case}");
+        }
     }
 
     #[test]

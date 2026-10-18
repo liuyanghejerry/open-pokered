@@ -389,6 +389,15 @@ impl DisplayWorkTime {
             .min(self.remaining());
         self.elapse(cycles)
     }
+    /// Wait only to the next real VBlank edge (or this host grant's end).
+    /// No interrupt acceptance, request acknowledgement or RETI is inferred.
+    pub fn idle_to_vblank_edge(&mut self) -> Result<(), DisplayWorkError> {
+        if let Some(distance) = self.device.tcycles_until_vblank() {
+            self.elapse(u64::from(distance).min(self.remaining()))
+        } else {
+            self.idle_to_device_event()
+        }
+    }
     pub fn pattern_bus<'a, A: PatternAssets>(
         &'a mut self,
         patterns: &'a mut PatternMemory,
@@ -869,6 +878,58 @@ mod tests {
                             assert!(done);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn vblank_edge_wait_matches_fine_events_with_budget_and_dynamic_fallback() {
+        for sample in [0, 4, 80, 252, 65660, 70224, 135892] {
+            for budget in [0, 4, 80, 4096, 70224] {
+                for variant in 0..6 {
+                    let mut fast = DisplayWorkTime::default();
+                    fast.deadline = sample + budget;
+                    fast.elapse(sample).unwrap();
+                    match variant {
+                        1 => fast.device_mut().write_port(0xff40, 0x93, 0xc3).unwrap(),
+                        2 => fast.device_mut().write_port(0xff40, 0xb1, 0xc3).unwrap(),
+                        3 => fast.device_mut().write_port(0xff46, 0xc3, 0xc3).unwrap(),
+                        4 => fast.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap(),
+                        5 => {
+                            let mut value = serde_json::to_value(fast.device()).unwrap();
+                            value["stat_enable"] = 8.into();
+                            *fast.device_mut() = serde_json::from_value(value).unwrap();
+                        }
+                        _ => (),
+                    }
+                    let mut reference = fast.clone();
+                    let epoch = fast.device().vblank_epoch();
+                    let actual = loop {
+                        if let Err(e) = fast.idle_to_vblank_edge() {
+                            break Err(e);
+                        }
+                        if fast.remaining() == 0 || fast.device().vblank_epoch() > epoch {
+                            break Ok(());
+                        }
+                    };
+                    let expected = loop {
+                        if let Err(e) = reference.idle_to_device_event() {
+                            break Err(e);
+                        }
+                        if reference.remaining() == 0 || reference.device().vblank_epoch() > epoch {
+                            break Ok(());
+                        }
+                    };
+                    assert_eq!(
+                        actual, expected,
+                        "sample={sample} budget={budget} variant={variant}"
+                    );
+                    assert_eq!(
+                        serde_json::to_value(&fast).unwrap(),
+                        serde_json::to_value(&reference).unwrap(),
+                        "sample={sample} budget={budget} variant={variant}"
+                    );
                 }
             }
         }

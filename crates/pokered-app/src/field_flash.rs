@@ -417,7 +417,7 @@ impl PokemonGame {
                         return Ok(false);
                     }
                     self.source_display
-                        .idle_to_device_event()
+                        .idle_to_vblank_edge()
                         .map_err(|e| format!("{e:?}"))?;
                 }
                 let receipt = flow.waits.last_mut().ok_or("missing FLASH wait receipt")?;
@@ -438,7 +438,7 @@ impl PokemonGame {
                     && self.source_display.device().vblank_epoch() <= armed
                 {
                     self.source_display
-                        .idle_to_device_event()
+                        .idle_to_vblank_edge()
                         .map_err(|e| format!("{e:?}"))?;
                     if self.source_display.remaining() == 0 {
                         return Ok(false);
