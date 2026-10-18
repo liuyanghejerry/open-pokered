@@ -1,0 +1,660 @@
+{
+  "scope": "ordinary Continue and actual Rocket1 battle from constructed persistent fixture; no fresh/full-route claim",
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c scripts/PokemonTower7F.asm PokemonTower7FEndBattleScript: EndTrainerBattle then DisplayTextID then RocketLeaveMovement",
+  "core_tests": 3127,
+  "controls": "all3NPCs hold position/visibility without ACK, depart after ACK, stay hidden and do not replay on re-entry;12 original exit paths retained",
+  "comparison_frame": 3892,
+  "comparison_frames_after_overworld_return": 102,
+  "binary_build": "fae2415e110e5fe6896ba8026d911db4d26ed208",
+  "before_build": "13611df1 (rebuild at3f2cec28 byte-identical, see Tower exits proof)",
+  "fixture_path": "docs/validation/tower-rocket-exits/fixture.json",
+  "fixture_sha256": "3bf55d3159fa7d18859f7d73d4fe61b0620a042bada36a48a20bfd0a67371c49",
+  "before": {
+    "flow_completed": true,
+    "full_parting_line_seen": false,
+    "binary_sha256": "065d82441787be8cbf188d384bc6ff9b9489f7a8626ec0504aa1aeed7f97e583",
+    "transcript_after_victory": [
+      {
+        "frame_count": 3758,
+        "screen": "battle",
+        "dialogue": null,
+        "dialogue_state": null,
+        "battle_message": "I give up!",
+        "active_script_effect": null
+      },
+      {
+        "frame_count": 3784,
+        "screen": "battle",
+        "dialogue": null,
+        "dialogue_state": null,
+        "battle_message": "RED got $750 for\nwinning!",
+        "active_script_effect": null
+      }
+    ],
+    "trace": [
+      {
+        "frame": 3692,
+        "position": [
+          9,
+          11
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3848,
+        "position": [
+          10,
+          11
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3882,
+        "position": [
+          10,
+          12
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3916,
+        "position": [
+          10,
+          13
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3950,
+        "position": [
+          10,
+          14
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3984,
+        "position": [
+          10,
+          15
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4018,
+        "position": [
+          10,
+          16
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4052,
+        "position": [
+          9,
+          16
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4054,
+        "position": [
+          9,
+          16
+        ],
+        "visible": false
+      }
+    ],
+    "commands": {
+      "get_state": 742,
+      "press_sequence": 251,
+      "step_frames": 501,
+      "wait_until": 2,
+      "get_npcs": 227,
+      "press_timeline": 228,
+      "capture_frame": 1,
+      "get_flags": 1
+    },
+    "Game_exit": -15
+  },
+  "after": {
+    "flow_completed": true,
+    "full_parting_line_seen": true,
+    "binary_sha256": "83a891e799b770e363651b91ce62de0fc391928c5b35c94aaffd1eff667be565",
+    "transcript_after_victory": [
+      {
+        "frame_count": 3758,
+        "screen": "battle",
+        "dialogue": null,
+        "dialogue_state": null,
+        "battle_message": "I give up!",
+        "active_script_effect": null
+      },
+      {
+        "frame_count": 3784,
+        "screen": "battle",
+        "dialogue": null,
+        "dialogue_state": null,
+        "battle_message": "RED got $750 for\nwinning!",
+        "active_script_effect": null
+      },
+      {
+        "frame_count": 3816,
+        "screen": "overworld",
+        "dialogue": "I",
+        "dialogue_state": {
+          "char_index": 1,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3820,
+        "screen": "overworld",
+        "dialogue": "I'",
+        "dialogue_state": {
+          "char_index": 2,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3822,
+        "screen": "overworld",
+        "dialogue": "I'm",
+        "dialogue_state": {
+          "char_index": 3,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3826,
+        "screen": "overworld",
+        "dialogue": "I'm",
+        "dialogue_state": {
+          "char_index": 4,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3828,
+        "screen": "overworld",
+        "dialogue": "I'm n",
+        "dialogue_state": {
+          "char_index": 5,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm n",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3832,
+        "screen": "overworld",
+        "dialogue": "I'm no",
+        "dialogue_state": {
+          "char_index": 6,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm no",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3834,
+        "screen": "overworld",
+        "dialogue": "I'm not",
+        "dialogue_state": {
+          "char_index": 7,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3838,
+        "screen": "overworld",
+        "dialogue": "I'm not g",
+        "dialogue_state": {
+          "char_index": 9,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not g",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3842,
+        "screen": "overworld",
+        "dialogue": "I'm not go",
+        "dialogue_state": {
+          "char_index": 10,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not go",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3844,
+        "screen": "overworld",
+        "dialogue": "I'm not goi",
+        "dialogue_state": {
+          "char_index": 11,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not goi",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3848,
+        "screen": "overworld",
+        "dialogue": "I'm not goin",
+        "dialogue_state": {
+          "char_index": 12,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not goin",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3850,
+        "screen": "overworld",
+        "dialogue": "I'm not going",
+        "dialogue_state": {
+          "char_index": 13,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3854,
+        "screen": "overworld",
+        "dialogue": "I'm not going t",
+        "dialogue_state": {
+          "char_index": 15,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going t",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3858,
+        "screen": "overworld",
+        "dialogue": "I'm not going to",
+        "dialogue_state": {
+          "char_index": 16,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3860,
+        "screen": "overworld",
+        "dialogue": "I'm not going to",
+        "dialogue_state": {
+          "char_index": 17,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3864,
+        "screen": "overworld",
+        "dialogue": "I'm not going to f",
+        "dialogue_state": {
+          "char_index": 18,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to f",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3866,
+        "screen": "overworld",
+        "dialogue": "I'm not going to fo",
+        "dialogue_state": {
+          "char_index": 19,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to fo",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3870,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forg",
+        "dialogue_state": {
+          "char_index": 21,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forg",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3874,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forge",
+        "dialogue_state": {
+          "char_index": 22,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forge",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3876,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget",
+        "dialogue_state": {
+          "char_index": 23,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3880,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget t",
+        "dialogue_state": {
+          "char_index": 24,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget t",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3882,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget th",
+        "dialogue_state": {
+          "char_index": 25,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget th",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3886,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget this",
+        "dialogue_state": {
+          "char_index": 27,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget this",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3890,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget this!",
+        "dialogue_state": {
+          "char_index": 28,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget this!",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": false
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      },
+      {
+        "frame_count": 3892,
+        "screen": "overworld",
+        "dialogue": "I'm not going to forget this!",
+        "dialogue_state": {
+          "char_index": 28,
+          "done": false,
+          "holding_open": false,
+          "page": 1,
+          "text": "I'm not going to forget this!",
+          "total_chars": 28,
+          "total_pages": 1,
+          "waiting_for_input": true
+        },
+        "battle_message": null,
+        "active_script_effect": "ShowDialogue"
+      }
+    ],
+    "trace": [
+      {
+        "frame": 3692,
+        "position": [
+          9,
+          11
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3936,
+        "position": [
+          10,
+          11
+        ],
+        "visible": true
+      },
+      {
+        "frame": 3970,
+        "position": [
+          10,
+          12
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4004,
+        "position": [
+          10,
+          13
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4038,
+        "position": [
+          10,
+          14
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4072,
+        "position": [
+          10,
+          15
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4106,
+        "position": [
+          10,
+          16
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4140,
+        "position": [
+          9,
+          16
+        ],
+        "visible": true
+      },
+      {
+        "frame": 4142,
+        "position": [
+          9,
+          16
+        ],
+        "visible": false
+      }
+    ],
+    "commands": {
+      "get_state": 743,
+      "press_sequence": 251,
+      "step_frames": 502,
+      "wait_until": 2,
+      "get_npcs": 228,
+      "press_timeline": 229,
+      "capture_frame": 1,
+      "get_flags": 1
+    },
+    "Game_exit": -15
+  },
+  "portable_replay": {
+    "all_pass": true,
+    "full_parting_line_seen": true,
+    "comparison_png_equal": true,
+    "trace_equal": true,
+    "controller_sha256": "739eabc3233ab4de24f42fe62eeadce573379189db16eb32dcaecd9e3f919fcf"
+  }
+}
