@@ -635,6 +635,28 @@ impl DisplayDevice {
                 remaining %= 154 * 456;
                 continue;
             }
+            // An idle interval may span several complete visible scanlines.
+            // With OBJ/window/STAT/DMA disabled, each settled mode2 start
+            // returns after exactly 456 dots. Stop before the last visible
+            // line, preserving its distinct VBlank edge on the event path.
+            if remaining >= 456
+                && self.phase == RasterPhase::Mode2
+                && self.phase_remaining == 80
+                && self.ly < 143
+                && !self.first_frame
+                && self.lcdc & 0xa2 == 0x80
+                && self.dma.is_none()
+                && self.stat_enable == 0
+            {
+                let lines = (remaining / 456).min(u64::from(143 - self.ly)) as u8;
+                let previous_ly = self.ly;
+                self.ly += lines;
+                self.mode3_length = 172 + u16::from(self.scx & 7);
+                self.window_y_reached |= previous_ly < self.wy && self.wy <= self.ly;
+                self.stat_irq_line = false;
+                remaining -= u64::from(lines) * 456;
+                continue;
+            }
             let lcd_next = if self.lcd_enabled() {
                 u64::from(self.phase_remaining)
             } else {
@@ -837,6 +859,38 @@ mod tests {
                 _ => state.stat_irq_line = true,
             }
             assert_eq!(state.tcycles_until_vblank(), None, "case={case}");
+        }
+    }
+
+    #[test]
+    fn idle_visible_lines_match_single_dot_steps_including_partial_endpoints() {
+        let shadow = [0; 160];
+        for scx in [0, 3, 7] {
+            for wy in [0, 7, 144, 255] {
+                for ly in [0, 6, 7, 142, 143] {
+                    let mut base = DisplayDevice::powered_off(0);
+                    base.write_port(0xff40, 0x91, 0xc3).unwrap();
+                    base.scx = scx;
+                    base.wy = wy;
+                    base.ly = ly;
+                    base.phase = RasterPhase::Mode2;
+                    base.phase_remaining = 80;
+                    base.mode3_length = 172 + u16::from(scx & 7);
+                    base.first_frame = false;
+                    base.window_y_reached = wy <= ly;
+                    // OBJ is off; nonempty OAM must remain untouched.
+                    base.oam[0] = 32;
+                    for duration in [455, 456, 457, 912, 30_003, 65_664] {
+                        let mut fast = base.clone();
+                        fast.observe_time(duration, &shadow).unwrap();
+                        let mut reference = base.clone();
+                        for at in 1..=duration {
+                            reference.observe_time(at, &shadow).unwrap();
+                        }
+                        assert_eq!(fast, reference, "scx={scx} wy={wy} ly={ly} dt={duration}");
+                    }
+                }
+            }
         }
     }
 
