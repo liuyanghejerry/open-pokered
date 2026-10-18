@@ -13,18 +13,22 @@ use pokered_renderer::resource::ResourceManager;
 
 pub struct NativePatternAssets<'a> {
     resources: RefCell<&'a mut ResourceManager>,
+    #[cfg(target_os = "none")]
+    rom_cache: RomPatternCache,
 }
 impl<'a> NativePatternAssets<'a> {
     pub fn new(resources: &'a mut ResourceManager) -> Self {
         Self {
             resources: RefCell::new(resources),
+            #[cfg(target_os = "none")]
+            rom_cache: RomPatternCache::default(),
         }
     }
 }
 impl PatternAssets for NativePatternAssets<'_> {
     fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8> {
         #[cfg(target_os = "none")]
-        return rom_pattern_byte(source, offset);
+        return self.rom_cache.read(source, offset, rom_pattern_source);
         #[cfg(not(target_os = "none"))]
         {
             let mut resources = self.resources.borrow_mut();
@@ -71,10 +75,49 @@ impl PatternAssets for NativePatternAssets<'_> {
     }
 }
 
+// Retain a borrowed ROM slice only. Mutable VRAM is still read through its
+// timed bus, and no cache hit completes or shortens an instruction/transfer.
+#[cfg(any(target_os = "none", test))]
+#[derive(Clone, Copy)]
+struct RomPatternData {
+    bytes: &'static [u8],
+    tiles: usize,
+    stored_one_bpp: bool,
+    output_one_bpp: bool,
+}
+#[cfg(any(target_os = "none", test))]
+#[derive(Default)]
+struct RomPatternCache(core::cell::Cell<Option<(PatternSource, RomPatternData)>>);
+#[cfg(any(target_os = "none", test))]
+impl RomPatternCache {
+    fn read(
+        &self,
+        source: PatternSource,
+        offset: u16,
+        resolve: impl FnOnce(PatternSource) -> Option<RomPatternData>,
+    ) -> Option<u8> {
+        let data = match self.0.get() {
+            Some((cached_source, data)) if cached_source == source => data,
+            _ => {
+                let data = resolve(source)?;
+                self.0.set(Some((source, data)));
+                data
+            }
+        };
+        stored_pattern_byte(
+            data.bytes,
+            offset,
+            data.tiles,
+            data.stored_one_bpp,
+            data.output_one_bpp,
+        )
+    }
+}
+
 // GBA already has immutable original tile bytes in ROM. Reading a transfer
 // must not allocate a decoded sheet merely to reconstruct those same bytes.
 #[cfg(target_os = "none")]
-fn rom_pattern_byte(source: PatternSource, offset: u16) -> Option<u8> {
+fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
     let (dir, name, tiles, stored_one_bpp, output_one_bpp) = match source {
         PatternSource::Sprite(raw) => {
             if raw == 0 {
@@ -100,7 +143,12 @@ fn rom_pattern_byte(source: PatternSource, offset: u16) -> Option<u8> {
         PatternSource::Flower(_) => return None,
     };
     let bytes = pokered_renderer::gba_assets::get_preconverted_asset(dir, name)?;
-    stored_pattern_byte(bytes, offset, tiles, stored_one_bpp, output_one_bpp)
+    Some(RomPatternData {
+        bytes,
+        tiles,
+        stored_one_bpp,
+        output_one_bpp,
+    })
 }
 
 #[cfg(any(target_os = "none", test))]
@@ -149,6 +197,52 @@ fn pattern_byte(tiles: &TileSet, offset: u16, one_bpp: bool) -> Option<u8> {
 #[cfg(test)]
 mod tests {
     use crate::alloc_prelude::Vec;
+
+    #[test]
+    fn borrowed_rom_cache_switches_sources_formats_and_keeps_offset_bounds() {
+        let cache = RomPatternCache::default();
+        let resolutions = core::cell::Cell::new(0);
+        let resolve = |source| {
+            resolutions.set(resolutions.get() + 1);
+            match source {
+                PatternSource::WalkingPlayer => Some(RomPatternData {
+                    bytes: &[0x96; 16],
+                    tiles: 1,
+                    stored_one_bpp: false,
+                    output_one_bpp: false,
+                }),
+                PatternSource::TextBox => Some(RomPatternData {
+                    bytes: &[0xa5, 0x81, 0x42, 0x24, 0x18, 0x66, 0x99, 0xff],
+                    tiles: 1,
+                    stored_one_bpp: true,
+                    output_one_bpp: false,
+                }),
+                _ => None,
+            }
+        };
+        for source in [
+            PatternSource::WalkingPlayer,
+            PatternSource::TextBox,
+            PatternSource::WalkingPlayer,
+        ] {
+            for offset in 0..16 {
+                let expected = if source == PatternSource::WalkingPlayer {
+                    0x96
+                } else {
+                    [0xa5, 0x81, 0x42, 0x24, 0x18, 0x66, 0x99, 0xff][offset as usize / 2]
+                };
+                assert_eq!(cache.read(source, offset, &resolve), Some(expected));
+            }
+            assert_eq!(cache.read(source, 16, &resolve), None);
+        }
+        assert_eq!(resolutions.get(), 3);
+        assert_eq!(cache.read(PatternSource::Sprite(0), 0, &resolve), None);
+        assert_eq!(
+            cache.read(PatternSource::WalkingPlayer, 0, &resolve),
+            Some(0x96)
+        );
+        assert_eq!(resolutions.get(), 4);
+    }
 
     #[test]
     fn rom_transfer_bytes_match_decoded_reencoded_tiles() {

@@ -289,7 +289,17 @@ impl PokemonGame {
                             .as_mut()
                             .ok_or("graphics resources unavailable")?;
                         let assets = NativePatternAssets::new(resources);
-                        work.step(&mut self.source_display.pattern_bus(&mut flow.patterns, &assets))
+                        // Keep the same source adapter while the child runs;
+                        // it can resolve its immutable ROM slice once while
+                        // every original instruction still reaches the bus.
+                        loop {
+                            match work.step(
+                                &mut self.source_display.pattern_bus(&mut flow.patterns, &assets),
+                            ) {
+                                Ok(true) => (),
+                                result => break result,
+                            }
+                        }
                     }
                 };
                 match result {
