@@ -346,13 +346,13 @@ fn test_play_time_tick_maxed_at_255_hours() {
     };
     pt.tick(); // should trigger hour rollover to 255 and max
     assert_eq!(pt.hours, 255);
-    assert_eq!(pt.frames, 59);
+    assert_eq!((pt.minutes, pt.seconds, pt.frames), (0, 0, 0));
     assert!(pt.maxed);
 
     // Further ticks should be no-ops
     pt.tick();
     assert_eq!(pt.hours, 255);
-    assert_eq!(pt.frames, 59);
+    assert_eq!((pt.minutes, pt.seconds, pt.frames), (0, 0, 0));
     assert!(pt.maxed);
 }
 
@@ -943,5 +943,20 @@ fn bank_stream_rejects_corrupt_banks_before_replacing_resident_save() {
             "bank {damaged}"
         );
         assert_eq!(loaded.game_data.player_id, 987);
+    }
+}
+
+#[test]
+fn play_time_tick_matches_original_rom_rollovers_and_byte_counters() {
+    #[derive(serde::Deserialize)]
+    struct Case { before: PlayTime, after: PlayTime }
+    #[derive(serde::Deserialize)]
+    struct Cases { cases: Vec<Case> }
+    let controls: Cases = serde_json::from_str(include_str!("play_time_rom_cases.json")).unwrap();
+    assert_eq!(controls.cases.len(), 12);
+    for case in controls.cases {
+        let mut actual = case.before;
+        actual.tick();
+        assert_eq!(actual, case.after, "input {:?}", case.before);
     }
 }

@@ -1,0 +1,299 @@
+{
+  "base": "1447d49b114921cfa1c6c52e9115c908f0a4c9a4",
+  "fix_code_commit": "30d57606771a0a36821c021a8214b4acaa913e8b",
+  "before_actual_build_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+  "before_production_equivalence": {
+    "checked_out": "1447d49b114921cfa1c6c52e9115c908f0a4c9a4",
+    "branch": "master",
+    "normal_binary_actual_build_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+    "binary_sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a",
+    "production_diff": "",
+    "capture": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-before-2"
+  },
+  "after_identity": {
+    "actual_build_head": "30d57606771a0a36821c021a8214b4acaa913e8b",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-pokered-app",
+    "sha256": "a03a20043567a0c13fc7ba6229e515a9d6d6a919ebdc11911770f20edbe303b9",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///home/jerry/develop/open-pokered/crates/pokered-app#0.1.0",
+      "manifest_path": "/home/jerry/develop/open-pokered/crates/pokered-app/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "pokered-app",
+        "src_path": "/home/jerry/develop/open-pokered/crates/pokered-app/src/main.rs",
+        "edition": "2021",
+        "required-features": [
+          "desktop"
+        ],
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 0,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": false
+      },
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "embedded-map-data",
+        "embedded-scripts",
+        "mobile",
+        "pokered-debug-server"
+      ],
+      "filenames": [
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app"
+      ],
+      "executable": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+      "fresh": false
+    }
+  },
+  "source_oracle": {
+    "ROM_SHA256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "controls": 12,
+    "source": "engine/play_time.asm TrackPlayTime",
+    "normal_boundary_before": [
+      254,
+      0,
+      59,
+      59,
+      59
+    ],
+    "normal_boundary_after": [
+      255,
+      255,
+      0,
+      0,
+      0
+    ],
+    "scope": "Normal active timer rollovers, already-maxed preservation, and constructed invalid-byte counters. Input-ignore countdown is outside PlayTime::tick and not claimed as part of this fix."
+  },
+  "fixture_sha256": "7ca189ccd1d1690321e3f6cbaa07e65e8e1b06a932f4bb2ed0a14fa5ee2538bc",
+  "fixture_preparation": {
+    "source": ".task-tmp/fidelity-39-plus/audit-1096-flash-pair-qEIgEW/fixture.sav",
+    "source_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+    "output": ".task-tmp/fidelity-39-plus/audit-1140-time-limit-fixture.sav",
+    "sha256": "7ca189ccd1d1690321e3f6cbaa07e65e8e1b06a932f4bb2ed0a14fa5ee2538bc",
+    "changes": [
+      {
+        "offset": "0x2ced",
+        "before": 0,
+        "after": 254
+      },
+      {
+        "offset": "0x2cef",
+        "before": 3,
+        "after": 59
+      },
+      {
+        "offset": "0x2cf0",
+        "before": 55,
+        "after": 59
+      },
+      {
+        "offset": "0x2cf1",
+        "before": 20,
+        "after": 59
+      },
+      {
+        "offset": "0x3523",
+        "before": 241,
+        "after": 144
+      }
+    ],
+    "scope": "Offline ordinary SRAM fixture at254:59:59:59, unmaxed. Other map/party/flags unchanged. Source save already checksum valid; checksum recomputed. Controlled setup, not fresh playthrough."
+  },
+  "runs": {
+    "before-1": {
+      "runtime_result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-before-1/result.json",
+      "result_sha256": "186f6e3b772823e8cad91183502a6826f6b17ee7f187e20f6a91659bfe7efe13",
+      "binary_sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a",
+      "card_frame": 794,
+      "time": {
+        "frames": 59,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 59,
+        "seconds": 59
+      },
+      "saved_time_bytes": [
+        255,
+        255,
+        59,
+        59,
+        59
+      ],
+      "saved_sha256": "65c05d079922f6e3ad058be0f2aaba7fcd9dafb0b48f27f5ef916960abfcc1b2",
+      "independent_continue_time": {
+        "frames": 59,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 59,
+        "seconds": 59
+      },
+      "commands": {
+        "get_state": 121,
+        "press_sequence": 51,
+        "step_frames": 54,
+        "wait_until": 4,
+        "export_fixture": 4,
+        "press_timeline": 2,
+        "capture_frame": 1
+      },
+      "card_sha256": "7228985d2e534537cf829b5fe34d5956a143293c6f41d96ab5895e79dde118be"
+    },
+    "before-2": {
+      "runtime_result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-before-2/result.json",
+      "result_sha256": "186f6e3b772823e8cad91183502a6826f6b17ee7f187e20f6a91659bfe7efe13",
+      "binary_sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a",
+      "card_frame": 794,
+      "time": {
+        "frames": 59,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 59,
+        "seconds": 59
+      },
+      "saved_time_bytes": [
+        255,
+        255,
+        59,
+        59,
+        59
+      ],
+      "saved_sha256": "65c05d079922f6e3ad058be0f2aaba7fcd9dafb0b48f27f5ef916960abfcc1b2",
+      "independent_continue_time": {
+        "frames": 59,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 59,
+        "seconds": 59
+      },
+      "commands": {
+        "get_state": 121,
+        "press_sequence": 51,
+        "step_frames": 54,
+        "wait_until": 4,
+        "export_fixture": 4,
+        "press_timeline": 2,
+        "capture_frame": 1
+      },
+      "card_sha256": "7228985d2e534537cf829b5fe34d5956a143293c6f41d96ab5895e79dde118be"
+    },
+    "after-1": {
+      "runtime_result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-after-1/result.json",
+      "result_sha256": "330e72359152cc82fdc6376a04db219968e4a1463934c9ea6801891eed49c08a",
+      "binary_sha256": "a03a20043567a0c13fc7ba6229e515a9d6d6a919ebdc11911770f20edbe303b9",
+      "card_frame": 794,
+      "time": {
+        "frames": 0,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 0,
+        "seconds": 0
+      },
+      "saved_time_bytes": [
+        255,
+        255,
+        0,
+        0,
+        0
+      ],
+      "saved_sha256": "4d8290eed248501e5216d09ab348d794d65f6aa1801610c8f7d40c16e80fbb05",
+      "independent_continue_time": {
+        "frames": 0,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 0,
+        "seconds": 0
+      },
+      "commands": {
+        "get_state": 121,
+        "press_sequence": 51,
+        "step_frames": 54,
+        "wait_until": 4,
+        "export_fixture": 4,
+        "press_timeline": 2,
+        "capture_frame": 1
+      },
+      "card_sha256": "da795ae5f813b47a905e9d35f1a4e5971078acf7e130cd1a4099cabf9e3f0579"
+    },
+    "after-2": {
+      "runtime_result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-after-2/result.json",
+      "result_sha256": "330e72359152cc82fdc6376a04db219968e4a1463934c9ea6801891eed49c08a",
+      "binary_sha256": "a03a20043567a0c13fc7ba6229e515a9d6d6a919ebdc11911770f20edbe303b9",
+      "card_frame": 794,
+      "time": {
+        "frames": 0,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 0,
+        "seconds": 0
+      },
+      "saved_time_bytes": [
+        255,
+        255,
+        0,
+        0,
+        0
+      ],
+      "saved_sha256": "4d8290eed248501e5216d09ab348d794d65f6aa1801610c8f7d40c16e80fbb05",
+      "independent_continue_time": {
+        "frames": 0,
+        "hours": 255,
+        "maxed": true,
+        "minutes": 0,
+        "seconds": 0
+      },
+      "commands": {
+        "get_state": 121,
+        "press_sequence": 51,
+        "step_frames": 54,
+        "wait_until": 4,
+        "export_fixture": 4,
+        "press_timeline": 2,
+        "capture_frame": 1
+      },
+      "card_sha256": "da795ae5f813b47a905e9d35f1a4e5971078acf7e130cd1a4099cabf9e3f0579"
+    }
+  },
+  "PNG_difference_bbox": [
+    92,
+    43,
+    100,
+    50
+  ],
+  "saved_different_offsets": [
+    "0x2cef",
+    "0x2cf0",
+    "0x2cf1",
+    "0x3523"
+  ],
+  "root_branch": "fix/play-time-limit",
+  "new_target_created": false,
+  "scope": "Ordinary normalCLI Continue/TrainerInfo/UI Save/independent Continue, seeded only by offlineSRAM. ExportFixture/read-only observation; no runtime setters/debugsave/skipintro. Focused boundary evidence, not full fresh playthrough or whole-fidelity PASS.",
+  "validation": {
+    "core_pass": 3134,
+    "app_pass": 381,
+    "app_existing_ignored": 39,
+    "core_log_sha256": "8b1977230e4e1968992d060716059b3817c750584f0bbae7314bbd932e331a2d",
+    "app_log_sha256": "9adb87ef2d987b064a8d711bc7b692337881f10bc2b56c6eff2725d165f35c11"
+  },
+  "source_based_red_test": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1140-time-red.log",
+  "portable_replay": {
+    "all_pass": true,
+    "script_sha256": "25f0e0e39a3c431f1cadee546a3037ab5daafd39ac0a3e6a6792d8230ec03aec",
+    "matches_after_repeats_PNG_and_saved_bytes": true,
+    "result_sha256": "330e72359152cc82fdc6376a04db219968e4a1463934c9ea6801891eed49c08a"
+  }
+}
