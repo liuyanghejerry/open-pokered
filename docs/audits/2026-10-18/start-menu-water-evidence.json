@@ -1,0 +1,125 @@
+{
+  "scope": "START moving background only, not all-menu or per-cycle parity",
+  "base": "89ff9da62cdddd949b50ef714420046b0fe7b06f",
+  "runtime_after": "04224f0166ac8578d5ce344af58968360e9a41c9",
+  "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+  "source_ref_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_ref": "home/start_menu.asm keeps hTileAnimations; home/vcopy.asm UpdateMovingBgTiles is VBlank driven. home/pokemon.asm DisplayPartyMenu disables animations while selecting a Pokemon.",
+  "inputs": "Normal Continue from retained source SAVE fixture (ViridianCity20,30);64idle;each directional hold8+neutral24:UPx6 LEFTx6 UPx4; finalViridian14,28 as terrainblocks north;120idle field;START normal field sampled tap+32idle;120idle menu;B+32idle;120idle field. No runtime state setters.",
+  "save_preparation": "Preconstructed retained SAVE is not a fresh mainline proof. Navigation attempts/failures retained; matched obstruction was not classified as a bug.",
+  "runs": {
+    "before": {
+      "head": "89ff9da62cdddd949b50ef714420046b0fe7b06f",
+      "binary_sha256": "4688f7ff8558831f4c203463d4d4c8c90281cc0a5e42cfc5fb4e7d679baddf10",
+      "result_sha256": "914985d58423852aded648e166f2e9c98ed93611ed7ed6e57a0f97f28d3fb158",
+      "frames_sha256": "2502584bfd3bcea7a24d9fc5c8c0023aadd11b54ceb59f44e31e7f73c03665ad",
+      "frame_count": 360
+    },
+    "after": {
+      "head": "04224f0166ac8578d5ce344af58968360e9a41c9",
+      "binary_sha256": "5070d28975bd3dcb8aaf0e9c7ff3161bba39461fd7ecfc7bc037229bace05073",
+      "result_sha256": "64878645eb315aaf41904e4ad4eee885417ba772e4dd1b632ac5fd36d0583ecc",
+      "frames_sha256": "35a3e1b50466521f2a95fd8e3f15ac80cfc03ee0923ed93eadd8460dfee27486",
+      "frame_count": 360
+    }
+  },
+  "screenshots": [
+    {
+      "path": "docs/screenshots/start-menu-water/before-000.png",
+      "sha256": "84de2773e0d78aba8fcfcbdcdc9a6367b6d68a748bbe5031527bfe42d3fc99e4",
+      "tag": "menu",
+      "index": 0
+    },
+    {
+      "path": "docs/screenshots/start-menu-water/before-042.png",
+      "sha256": "84de2773e0d78aba8fcfcbdcdc9a6367b6d68a748bbe5031527bfe42d3fc99e4",
+      "tag": "menu",
+      "index": 42
+    },
+    {
+      "path": "docs/screenshots/start-menu-water/after-000.png",
+      "sha256": "9e0bfe706f6dea5d09b77b1aeb66da6b967bf59ce51080e4788af2730fcae18a",
+      "tag": "menu",
+      "index": 0
+    },
+    {
+      "path": "docs/screenshots/start-menu-water/after-042.png",
+      "sha256": "9e0bfe706f6dea5d09b77b1aeb66da6b967bf59ce51080e4788af2730fcae18a",
+      "tag": "menu",
+      "index": 42
+    },
+    {
+      "path": "docs/screenshots/start-menu-water/original-000.png",
+      "sha256": "a02f846c1f24cb86c8b7113a29e309b21e90b3b0935636ee6b875acbfa0d6b4f",
+      "tag": "source menu",
+      "index": 0,
+      "limit": "source tick indices are not aligned timestamps with native captures"
+    },
+    {
+      "path": "docs/screenshots/start-menu-water/original-042.png",
+      "sha256": "1c727d0496bc21d53c605a2d616be8242b120a77ecf16c9de6fc94f8bd29e344",
+      "tag": "source menu",
+      "index": 42,
+      "limit": "source tick indices are not aligned timestamps with native captures"
+    }
+  ],
+  "checks": {
+    "app": "382 passed;39existingignored",
+    "retained_render": "126 updates with actual Game, cursor movement and visible water; all retained frames equal full draw; actor coordinates/walk delays and world-script counter remain fixed; party selection tile state pauses",
+    "mobile": "PASS cargo check --offline --locked -p pokered-app --no-default-features --features mobile",
+    "CI": "must all pass on latest PR head"
+  },
+  "ordinary_source_controls": {
+    "scope": "ordinary CONTINUE and directional/menu input from a retained preconstructed SAVE, not NEW GAME evidence; all360 frames in two source and two native runs",
+    "original": {
+      "4": {
+        "result_sha256": "4a5541db8b87b288016734d76a23d15ac23aa5f03f7a3737c169720ee9aab312",
+        "frames_sha256": "61373dec93c8e2066c05c04a1466b64e3cb3335ab7ee12f13bbf7e4501400614",
+        "left32px_distinct_images": {
+          "field": 5,
+          "menu": 4,
+          "returned": 4
+        },
+        "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced"
+      },
+      "5": {
+        "result_sha256": "4a5541db8b87b288016734d76a23d15ac23aa5f03f7a3737c169720ee9aab312",
+        "frames_sha256": "61373dec93c8e2066c05c04a1466b64e3cb3335ab7ee12f13bbf7e4501400614",
+        "left32px_distinct_images": {
+          "field": 5,
+          "menu": 4,
+          "returned": 4
+        },
+        "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced"
+      },
+      "both_repeats360PNGs_equal": true
+    },
+    "native": {
+      "3": {
+        "result_sha256": "e6d25936be81076e57b4a4f2832586ccedbf824fe42e96765b4af2e7bc3a6fff",
+        "frames_sha256": "2502584bfd3bcea7a24d9fc5c8c0023aadd11b54ceb59f44e31e7f73c03665ad",
+        "left32px_distinct_images": {
+          "field": 5,
+          "menu": 1,
+          "returned": 5
+        },
+        "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced"
+      },
+      "4": {
+        "result_sha256": "83d7472928fa7a644e06725083122ad6ef4ec6ab3c3d645c32436c40b6209d13",
+        "frames_sha256": "2502584bfd3bcea7a24d9fc5c8c0023aadd11b54ceb59f44e31e7f73c03665ad",
+        "left32px_distinct_images": {
+          "field": 5,
+          "menu": 1,
+          "returned": 5
+        },
+        "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced"
+      },
+      "both_repeats360PNGs_equal": true
+    },
+    "finding": "CONFIRMED: START menu freezes moving background in native. Source menu has4distinct left32px water images, native1; field/returned controls animate onboth. Menu positionsViridian14,28, no runtime setters.",
+    "native_runtime_source": "374fcb9f1d84a47526b3cbc3798a04fc8d6e07cb, verified binaryfdef7353; head f377 is docs-onlydescendant; no FLASH executed; before new displayperf executable."
+  },
+  "regression_test_fixture_note": "Initial attempted regression fixture queued a warp without advancing it; these failures and the zero-test wrong-workdir invocation are not counted as evidence. Final test constructs ViridianCity explicitly and asserts WaterFlower before testing actual Game/menu/render behavior."
+}
