@@ -72,6 +72,18 @@ pub struct DisplayDevice {
     dma: Option<OamDma>,
     oam: Vec<u8>,
 }
+// A constructor-checked interval keeps the one-period proof local and avoids
+// recomputing the same 64-bit subtraction in both the time owner and device.
+pub(super) struct CheckedFramePeriod {
+    from: u64,
+    target: u64,
+}
+impl CheckedFramePeriod {
+    #[inline(always)]
+    pub(super) fn new(from: u64, target: u64) -> Option<Self> {
+        (target.checked_sub(from) == Some(154 * 456)).then_some(Self { from, target })
+    }
+}
 impl DisplayDevice {
     /// Passive event distance for the shared CPU's HALT. It grants no time.
     pub fn tcycles_until_event(&self) -> Option<u16> {
@@ -430,8 +442,15 @@ impl DisplayDevice {
     /// work can change a line length or publish data during this interval.
     /// The bounded predicate also rejects malformed deserialized state; all
     /// other states continue through the fully validated event path.
+    #[cfg(test)]
+    fn try_idle_vblank_period(&mut self, target: u64) -> bool {
+        let Some(period) = CheckedFramePeriod::new(self.observed_tcycles, target) else {
+            return false;
+        };
+        self.try_idle_checked_period(period)
+    }
     #[inline(always)]
-    pub(crate) fn try_idle_vblank_period(&mut self, target: u64) -> bool {
+    pub(super) fn try_idle_checked_period(&mut self, period: CheckedFramePeriod) -> bool {
         if self.phase != RasterPhase::VBlank
             || self.lcdc & 0xa2 != 0x80
             || (self.first_frame | self.stat_irq_line | self.window_y_reached)
@@ -441,11 +460,11 @@ impl DisplayDevice {
             || self.dma.is_some()
             || self.stat_enable != 0
             || self.oam.len() != 160
-            || target.checked_sub(self.observed_tcycles) != Some(154 * 456)
+            || self.observed_tcycles != period.from
         {
             return false;
         }
-        self.observed_tcycles = target;
+        self.observed_tcycles = period.target;
         self.vblank_epoch += 1;
         self.iflags |= 1;
         true
@@ -663,6 +682,27 @@ mod tests {
             state.observe_time(14, &[0; 160]),
             Err(DisplayDeviceError::InvalidPhase)
         );
+    }
+
+    #[test]
+    fn checked_frame_period_rejects_wrong_lengths_overflow_and_desynchronized_devices() {
+        for (from, target) in [
+            (0, 70223),
+            (0, 70225),
+            (1, 0),
+            (u64::MAX, 0),
+            (u64::MAX - 10, u64::MAX),
+        ] {
+            assert!(CheckedFramePeriod::new(from, target).is_none());
+        }
+        assert!(CheckedFramePeriod::new(u64::MAX - 70224, u64::MAX).is_some());
+        let mut device = DisplayDevice::powered_off(0);
+        device.write_port(0xff40, 0x91, 0xc3).unwrap();
+        device.observe_time(2 * 70224, &[0; 160]).unwrap();
+        let before = device.clone();
+        let period = CheckedFramePeriod::new(2 * 70224 + 4, 3 * 70224 + 4).unwrap();
+        assert!(!device.try_idle_checked_period(period));
+        assert_eq!(device, before);
     }
 
     #[test]

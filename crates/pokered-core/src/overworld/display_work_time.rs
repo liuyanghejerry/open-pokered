@@ -2,7 +2,7 @@
 //! A native update grants 70224 T-cycles; grants never finish a child or move
 //! time. The caller executes real instructions or explicit idle intervals.
 //! This is a native projection, not a recovered original startup/IRQ phase.
-use super::display_device::{DisplayDevice, DisplayDeviceError};
+use super::display_device::{CheckedFramePeriod, DisplayDevice, DisplayDeviceError};
 use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus};
 use super::field_restore::{PatternAssets, PatternMemory, RestoreError};
 use super::pattern_copy_work::{PatternAccess, PatternInstruction, PatternInstructionBus};
@@ -340,15 +340,16 @@ impl DisplayWorkTime {
         // An untouched one-period grant in settled VBlank has an exact
         // periodic device state. Avoid generic elapsed/event dispatch there,
         // preserving the same global time, divider and real VBlank request.
-        if self.deadline.checked_sub(self.elapsed) == Some(NATIVE_FRAME_T_CYCLES)
-            && self.shadow_oam.len() == 160
-            && self.device.try_idle_vblank_period(self.deadline)
-        {
-            self.divider_counter = self
-                .divider_counter
-                .wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
-            self.elapsed = self.deadline;
-            return Ok(());
+        if self.shadow_oam.len() == 160 {
+            if let Some(period) = CheckedFramePeriod::new(self.elapsed, self.deadline) {
+                if self.device.try_idle_checked_period(period) {
+                    self.divider_counter = self
+                        .divider_counter
+                        .wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
+                    self.elapsed = self.deadline;
+                    return Ok(());
+                }
+            }
         }
         self.elapse(self.remaining())
     }
