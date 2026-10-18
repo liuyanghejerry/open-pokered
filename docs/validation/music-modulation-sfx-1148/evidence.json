@@ -1,0 +1,22 @@
+{
+  "base": "48cee603554150b190ae08124faf669669313a86",
+  "upstream_source": "547e3e6aa7136aeb527e70534168bf01d48a7464",
+  "upstream_merge": "61f753fbd2e13ace2650e649b4d39441d248f3b6",
+  "upstream_all12_original_CI_success": true,
+  "old_audio_source": "475e17077d08462a4c4a1b3f606db6550cd1ab69",
+  "regression": {
+    "real_music_tests_old_source_failed": 2,
+    "audio_library_passed": 101,
+    "app_debug_library_passed": 381,
+    "app_ignored": 39,
+    "audio_no_default_features_check": "passed",
+    "original_ROM_controls": 24
+  },
+  "lock_scope": "All non-audio entries/edges unchanged, except the intended pokered-audio dependency edge to the new source",
+  "validated_source_sha256": {
+    "Cargo.lock": "52d9a77f68f19339aed4646876de37493ea483d5be8776c23d078c8c528f0bd8",
+    "crates/pokered-audio/Cargo.toml": "4e8d6d3acd75d3db8c1d434e357b80be7403d83776b797c0cc7dc76b34a445ae",
+    "crates/pokered-audio/src/audio_manager_tests.rs": "f73acbffe7ebd883ba13de170e3eb5ffd96043b80aa2c8781fc27eb8504cbbc4"
+  },
+  "scope": "Audio-only dependency update with actual DUNGEON3/SILPH_CO stream regressions and separate original-ROM RAM controls; no complete scene/waveform/FLASH timing parity claim"
+}

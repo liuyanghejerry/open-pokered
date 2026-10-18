@@ -760,3 +760,42 @@ fn badge_wrong_bank_plays_only_ball_poof_noise_and_finishes() {
     for _ in 0..120 { mgr.update_frame(); }
     assert!(!mgr.is_sfx_playing());
 }
+
+fn check_real_song_keeps_paired_vibrato_while_press_ab_plays(music: MusicId) {
+    let mut mgr = AudioManager::new();
+    mgr.apu.write_register(0xff26, 0x80);
+    mgr.play_music(music);
+    let mut ready = false;
+    for _ in 0..2000 {
+        mgr.update_frame();
+        let channel = &mgr.sequencer.channels[0];
+        if channel.delay_counter > 2
+            && channel.vibrato.delay_counter > 0
+            && channel.vibrato.extent != 0
+        {
+            ready = true;
+            break;
+        }
+    }
+    assert!(ready, "real song must reach a delayed vibrato note");
+    let note_delay = mgr.sequencer.channels[0].delay_counter;
+    let vibrato_delay = mgr.sequencer.channels[0].vibrato.delay_counter;
+    mgr.play_sfx(SfxId::PressAB);
+    mgr.update_frame();
+    assert_eq!(mgr.sequencer.channels[0].delay_counter, note_delay - 1);
+    assert_eq!(
+        mgr.sequencer.channels[0].vibrato.delay_counter,
+        vibrato_delay
+    );
+    assert!(mgr.sequencer.channels[4].active);
+}
+
+#[test]
+fn rock_tunnel_press_ab_holds_real_music_vibrato_delay() {
+    check_real_song_keeps_paired_vibrato_while_press_ab_plays(MusicId::DUNGEON3);
+}
+
+#[test]
+fn silph_press_ab_holds_real_music_vibrato_delay() {
+    check_real_song_keeps_paired_vibrato_while_press_ab_plays(MusicId::SILPH_CO);
+}
