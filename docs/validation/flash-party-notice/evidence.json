@@ -1,0 +1,115 @@
+{
+  "scope": "FLASH success notice backing and map input lock only; full restoration timing remains unaligned",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_actual_build_head": "043f64ebcbeaefbb36c79fe592f36cd4243323a3",
+  "baseline_product_crates_byte_equal_master": "043f64ebcbeaefbb36c79fe592f36cd4243323a3",
+  "candidate_build": {
+    "actual_build_head": "531039ff647edc15c03a8423f1ef16753a4f8229",
+    "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
+    "artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///home/jerry/develop/open-pokered/.task-tmp/fidelity-1123-flash-party-text/crates/pokered-app#0.1.0",
+      "manifest_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1123-flash-party-text/crates/pokered-app/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "pokered-app",
+        "src_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1123-flash-party-text/crates/pokered-app/src/main.rs",
+        "edition": "2021",
+        "required-features": [
+          "desktop"
+        ],
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 0,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": false
+      },
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "embedded-map-data",
+        "embedded-scripts",
+        "mobile",
+        "pokered-debug-server"
+      ],
+      "filenames": [
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app"
+      ],
+      "executable": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+      "fresh": false
+    }
+  },
+  "core_tests": 3130,
+  "field_move_Game_tests": 10,
+  "cases": {
+    "before": {
+      "all_pass": true,
+      "binary_sha256": "e2ffe9db27ee79cbc5e809c79d84f65eee0af212ee758b319e0e185ae770af0d",
+      "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+      "pretrigger_frame": 764,
+      "notice_frame": 884,
+      "screen": "overworld",
+      "held_direction_position": [
+        15,
+        3
+      ],
+      "returned_screen": "overworld",
+      "returned_position": [
+        15,
+        3
+      ],
+      "returned_dialogue": null,
+      "commands": {
+        "get_state": 58,
+        "press_sequence": 23,
+        "step_frames": 25,
+        "wait_until": 2,
+        "press_timeline": 4,
+        "capture_frame": 2,
+        "get_npcs": 1
+      },
+      "Game_exit": -15,
+      "screenshot_sha256": "adad8e8f14cd05cdc116da0bbf7b9b6fa3ecb9d7c917402aa5c2ec265eb73bb3"
+    },
+    "after": {
+      "all_pass": true,
+      "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
+      "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+      "pretrigger_frame": 764,
+      "notice_frame": 884,
+      "screen": "party",
+      "held_direction_position": [
+        15,
+        3
+      ],
+      "returned_screen": "overworld",
+      "returned_position": [
+        15,
+        3
+      ],
+      "returned_dialogue": null,
+      "commands": {
+        "get_state": 58,
+        "press_sequence": 23,
+        "step_frames": 25,
+        "wait_until": 2,
+        "press_timeline": 4,
+        "capture_frame": 2,
+        "get_npcs": 1
+      },
+      "Game_exit": -15,
+      "screenshot_sha256": "c516f4158edd9320b9227fbd53a5abccffb8effed091757bf4dc841fb9a8267e"
+    }
+  }
+}

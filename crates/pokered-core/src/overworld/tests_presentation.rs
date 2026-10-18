@@ -41,40 +41,28 @@ fn elevator_shake_uses_core_params() {
 // ── FLASH white-out (GBPalWhiteOutWithDelay3) ─────────────────────
 
 #[test]
-fn flash_white_out_starts_when_message_dismissed() {
+fn flash_success_leaves_text_and_restore_with_the_party_caller() {
     let mut screen = screen_on(MapId::RockTunnel1F);
     assert!(screen.dark_cave.is_dark());
-    let mon = test_mon();
-    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
-    assert!(!screen.dark_cave.is_dark(), "wMapPalOffset cleared");
-    assert_eq!(screen.flash_lit_frames, 0, "white-out waits for the text");
-
-    screen.pending_dialogue = None;
-    let input = idle_input();
-    screen.update_frame(input);
-    assert_eq!(screen.flash_lit_frames, 3, "GBPalWhiteOutWithDelay3 = 3 frames");
-    screen.update_frame(input);
-    assert_eq!(screen.flash_lit_frames, 2);
-    screen.update_frame(input);
-    screen.update_frame(input);
-    assert_eq!(screen.flash_lit_frames, 0);
-
-    // The menu's FLASH branch still whites out after a second use, although
-    // wMapPalOffset was already cleared by the first use.
-    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
-    screen.pending_dialogue = None;
-    screen.update_frame(input);
-    assert_eq!(screen.flash_lit_frames, 3);
+    for _ in 0..2 {
+        let outcome = screen.use_field_move(MoveId::Flash, &test_mon(), BOULDER, MapId::PalletTown);
+        assert!(!screen.dark_cave.is_dark(), "wMapPalOffset cleared");
+        assert!(matches!(outcome, super::field_moves::FieldMoveOutcome::Flash { message }
+            if message == "A blinding FLASH\nlights the area!"));
+        assert!(screen.pending_dialogue.is_none(), "party caller owns PrintText");
+        assert!(!screen.flash_pending_white, "no map-loop restoration before caller returns");
+        assert_eq!(screen.flash_lit_frames, 0);
+    }
 }
 
 #[test]
-fn flash_outside_cave_still_whites_out_after_its_notice() {
+fn flash_outside_cave_uses_the_same_party_notice_continuation() {
     let mut screen = screen_on(MapId::PalletTown);
-    let mon = test_mon();
-    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
-    screen.pending_dialogue = None;
-    screen.update_frame(idle_input());
-    assert_eq!(screen.flash_lit_frames, 3);
+    assert!(matches!(screen.use_field_move(MoveId::Flash, &test_mon(), BOULDER, MapId::PalletTown),
+        super::field_moves::FieldMoveOutcome::Flash { .. }));
+    assert!(screen.pending_dialogue.is_none());
+    assert!(!screen.flash_pending_white);
+    assert_eq!(screen.flash_lit_frames, 0);
 }
 
 // ── Naming screen white flash (GBPalWhiteOutWithDelay3) ───────────
@@ -204,12 +192,11 @@ fn flash_white_out_freezes_movement_for_three_frames() {
     // Stand on open cave floor (block 1), facing a passable tile above.
     screen.state.player.x = 10;
     screen.state.player.y = 10;
-    let mon = test_mon();
-    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
-    screen.pending_dialogue = None;
-    let input = idle_input();
-    screen.update_frame(input);
-    assert_eq!(screen.flash_lit_frames, 3, "white-out starts");
+    // Component fixture: the app has already acknowledged its party notice
+    // and entered the existing whiteout guard. This does not claim that the
+    // full source map reload lasts only three frames.
+    screen.update_frame(idle_input());
+    screen.flash_lit_frames = 3;
 
     // Movement input during the white-out must be ignored (the original's
     // Delay3 blocks the whole overworld loop).

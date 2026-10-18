@@ -44,6 +44,9 @@ const NEW_BADGE_REQUIRED_TEXT: &str = "No! A new BADGE\nis required.";
 /// What happened after the player chose a field move in the party menu.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FieldMoveOutcome {
+    /// FLASH keeps the restored party screen for PrintText, then reloads the
+    /// map before its caller can resume the ordinary overworld loop.
+    Flash { message: String },
     /// The successful effect continues on the field (including its result
     /// dialogue, animation or warp).
     Done,
@@ -322,15 +325,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             FlashResult::NoBadge => self.field_refusal(NEW_BADGE_REQUIRED_TEXT),
             FlashResult::LitUpCave => {
                 self.dark_cave.use_flash();
-                // GBPalWhiteOutWithDelay3: the screen whites out for 3 frames
-                // once the "blinding FLASH" text is dismissed.
-                self.flash_pending_white = true;
-                self.field_message("A blinding FLASH\nlights the area!")
+                FieldMoveOutcome::Flash { message: self.localize_message("A blinding FLASH\nlights the area!") }
             }
             FlashResult::AlreadyLit => {
                 self.dark_cave.use_flash();
-                self.flash_pending_white = true;
-                self.field_message("A blinding FLASH\nlights the area!")
+                FieldMoveOutcome::Flash { message: self.localize_message("A blinding FLASH\nlights the area!") }
             }
         }
     }

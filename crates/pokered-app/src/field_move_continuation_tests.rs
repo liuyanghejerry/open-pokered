@@ -104,6 +104,40 @@ fn choose_field_move(game: &mut PokemonGame) {
     );
     tap(game, GbButton::A);
 }
+#[test]
+fn flash_success_notice_retains_party_until_ack() {
+    on_game_thread(|| {
+        for map in [MapId::RockTunnel1F, MapId::ViridianCity] {
+            let mut game = fixture(MoveId::Flash, 1, map);
+            game.overworld.set_no_text_delay(false);
+            let position = (game.overworld.state.player.x, game.overworld.state.player.y);
+            let actors: Vec<_> = game.overworld.npc_states.iter().map(|n| (n.x, n.y)).collect();
+            let field_frame = game.overworld.frame_counter;
+            choose_field_move(&mut game);
+            assert_eq!(game.state.screen, GameScreen::PartyScreen);
+            let mut held = InputState::new();
+            held.press(GbButton::Down);
+            for _ in 0..600 {
+                game.update(&held);
+                assert_eq!(game.state.screen, GameScreen::PartyScreen);
+                assert_eq!(game.overworld.frame_counter, field_frame, "party notice must not tick the map");
+                assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), position);
+                assert_eq!(game.overworld.npc_states.iter().map(|n| (n.x, n.y)).collect::<Vec<_>>(), actors);
+            }
+            assert!(game.overworld.pending_dialogue.as_ref().unwrap().waiting_for_input());
+            let mut ack = InputState::new();
+            ack.press(GbButton::B);
+            game.update(&ack);
+            assert_eq!(game.state.screen, GameScreen::Overworld);
+            assert!(game.overworld.displayed_field_dialogue().is_none());
+            assert!(game.overworld.flash_lit_frames > 0);
+            while game.overworld.flash_lit_frames > 0 {
+                game.update(&held);
+                assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), position);
+            }
+        }
+    });
+}
 fn assert_notice_then_list(game: &mut PokemonGame, acknowledge: GbButton) {
     assert_eq!(game.state.screen, GameScreen::PartyScreen);
     assert!(matches!(
@@ -327,6 +361,65 @@ fn softboiled_ordinary_load_and_soft_reset_discard_the_abandoned_picker() {
             // caller; verify the next party entry has no discarded picker.
             game.handle_transition(GameScreen::PartyScreen);
             assert!(game.pending_softboiled_user.is_none());
+            assert_eq!(game.party_screen.mode(), PartyScreenMode::Normal);
+            assert_eq!(game.save_data.party.to_vec(), before);
+            std::fs::remove_dir_all(dir).unwrap();
+        }
+    });
+}
+
+#[test]
+fn flash_snapshot_restore_discards_the_abandoned_notice() {
+    on_game_thread(|| {
+        let mut game = fixture(MoveId::Flash, 1, MapId::RockTunnel1F);
+        game.handle_transition(GameScreen::Overworld);
+        let snapshot = game.agent_save_state().unwrap();
+        game.handle_transition(GameScreen::PartyScreen);
+        choose_field_move(&mut game);
+        assert!(game.party_flash_text.is_some());
+        game.agent_restore_state(&snapshot).unwrap();
+        assert!(game.party_flash_text.is_none());
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        game.handle_transition(GameScreen::PartyScreen);
+        assert!(game.party_flash_text.is_none());
+    });
+}
+
+#[test]
+fn flash_ordinary_load_and_soft_reset_discard_the_abandoned_notice() {
+    on_game_thread(|| {
+        for reset in [false, true] {
+            let mut game = fixture(MoveId::Flash, 1, MapId::RockTunnel1F);
+            let unique = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let dir = std::env::temp_dir()
+                .join(format!("flash-notice-reset-{}-{unique}", std::process::id()));
+            std::fs::create_dir_all(&dir).unwrap();
+            let path = dir.join("owned.sav");
+            std::fs::write(&path, export_sram(&game.save_data)).unwrap();
+            game.save_path = Some(path.clone());
+            let before = game.save_data.party.to_vec();
+            choose_field_move(&mut game);
+            assert!(game.party_flash_text.is_some());
+            if reset {
+                let mut chord = InputState::new();
+                for key in [GbButton::A, GbButton::B, GbButton::Start, GbButton::Select] {
+                    chord.press(key);
+                }
+                for _ in 0..SOFT_RESET_HOLD_FRAMES {
+                    game.update(&chord);
+                    chord.begin_frame();
+                }
+                assert_eq!(game.state.screen, GameScreen::TitleScreen);
+            } else {
+                game.load_from_path(&path).unwrap();
+            }
+            // The ordinary-load API delegates overlay reconstruction to its
+            // caller; verify the next party entry has no discarded FLASH notice.
+            game.handle_transition(GameScreen::PartyScreen);
+            assert!(game.party_flash_text.is_none());
             assert_eq!(game.party_screen.mode(), PartyScreenMode::Normal);
             assert_eq!(game.save_data.party.to_vec(), before);
             std::fs::remove_dir_all(dir).unwrap();

@@ -762,12 +762,10 @@ fn rock_tunnel_loads_as_dark_cave() {
 fn flash_lights_dark_cave() {
     let mut screen = screen_on(MapId::RockTunnel1F);
     let mon = test_mon();
-    screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
+    let outcome = screen.use_field_move(MoveId::Flash, &mon, BOULDER, MapId::PalletTown);
     assert!(!screen.dark_cave.is_dark(), "FLASH clears the dark state");
-    assert_eq!(
-        dialogue_text(&screen).as_deref(),
-        Some("A blinding FLASH\nlights the area!")
-    );
+    assert_eq!(outcome, FieldMoveOutcome::Flash { message: "A blinding FLASH\nlights the area!".into() });
+    assert!(screen.pending_dialogue.is_none(), "the retained party caller owns FLASH text");
 }
 
 #[test]

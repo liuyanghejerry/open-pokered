@@ -29,6 +29,7 @@ pub mod npc_interaction;
 pub mod npc_movement;
 pub mod npc_presentation;
 pub mod player_movement;
+pub mod party_field_text;
 pub mod poison;
 pub mod presentation;
 pub mod script_bridge;
