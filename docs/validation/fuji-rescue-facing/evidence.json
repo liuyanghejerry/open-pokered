@@ -1,0 +1,1052 @@
+{
+  "scope": "constructed legal right-side persistent fixture, ordinary Continue and actual Fuji rescue, fixed frame1500; not fresh route",
+  "base_master": "e8518c5963f9fd3b9d743f23df78ecda3de1c22e",
+  "actual_before_build": "dc5c28eca9a2822e89ba9dbd8ca542c99f8c5902",
+  "before_Rust_data_equal_base": true,
+  "actual_after_build": "ca150af0bafa4ead1dbf0868f66f33786d9ce4f0",
+  "fixture_sha256": "3c3a2c36411779a1a20d9f8cc316acbbb9d554ceaea7e362f089281013fab638",
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c scripts/PokemonTower7F.asm PokemonTower7FWarpToMrFujiHouseScript: SPRITE_FACING_UP before warp",
+  "reference_sha256": "5782c7eb0e052a079526032b507896fb94d6ac17a488ef3930a3b2e7f7b34f65",
+  "core_tests": 3127,
+  "core_legal_approaches": [
+    [
+      11,
+      3,
+      "Left"
+    ],
+    [
+      10,
+      2,
+      "Down"
+    ],
+    [
+      10,
+      4,
+      "Up"
+    ]
+  ],
+  "excluded_diagnostic": "initial (9,3) left-side fixture was on an unwalkable tile and is not legal-player proof; only legal right-side captures are retained here",
+  "baseline_test": "expected Direction::Up failed with Direction::Left at (11,3); repaired test passes all3 approaches",
+  "before": {
+    "all_pass": true,
+    "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+    "commands": {
+      "get_state": 55,
+      "press_sequence": 19,
+      "step_frames": 22,
+      "wait_until": 5,
+      "get_npcs": 1,
+      "press_timeline": 4,
+      "skip_dialogue": 1,
+      "get_flags": 1,
+      "capture_frame": 1
+    },
+    "before": {
+      "active_script_effect": null,
+      "audio_sfx": {
+        "id": 90,
+        "playing": true
+      },
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "capture_phase": null,
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 169,
+            "level": 52,
+            "max_hp": 169,
+            "moves": [
+              "Thunder",
+              "DrillPeck",
+              "Fly",
+              "Thunderbolt"
+            ],
+            "pp": [
+              10,
+              20,
+              15,
+              15
+            ],
+            "species": "Zapdos",
+            "status": "None",
+            "total_exp": 181113
+          },
+          {
+            "hp": 67,
+            "level": 15,
+            "max_hp": 67,
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ],
+            "species": "Lapras",
+            "status": "None",
+            "total_exp": 4218
+          },
+          {
+            "hp": 166,
+            "level": 52,
+            "max_hp": 166,
+            "moves": [
+              "MegaDrain",
+              "RazorLeaf",
+              "Cut",
+              "VineWhip"
+            ],
+            "pp": [
+              10,
+              25,
+              30,
+              10
+            ],
+            "species": "Venusaur",
+            "status": "None",
+            "total_exp": 136933
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 5,
+          "owned_numbers": [
+            1,
+            2,
+            3,
+            131,
+            145
+          ],
+          "seen": 96,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "field_poison": null,
+      "frame_count": 622,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        1,
+        1,
+        1,
+        3,
+        2,
+        2,
+        2,
+        3,
+        1,
+        1,
+        1,
+        1,
+        16,
+        2,
+        108,
+        14,
+        109,
+        2,
+        8,
+        1,
+        1,
+        12,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        13,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        2,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        53,
+        2,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        2,
+        1,
+        12,
+        2,
+        2,
+        28,
+        14,
+        30,
+        2,
+        2,
+        13,
+        1,
+        1,
+        20,
+        2,
+        2,
+        14,
+        2,
+        2,
+        11,
+        1,
+        1,
+        1,
+        1,
+        5,
+        49,
+        29,
+        30,
+        5,
+        1,
+        1
+      ],
+      "map_id": 148,
+      "map_name": "PokemonTower7F",
+      "money": 1608,
+      "party": [
+        {
+          "hp": 169,
+          "level": 52,
+          "max_hp": 169,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            10,
+            20,
+            15,
+            15
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 166,
+          "level": 52,
+          "max_hp": 166,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            10,
+            25,
+            30,
+            10
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Left",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 11,
+      "player_y": 3,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_message": null,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "after": {
+      "active_script_effect": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      },
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "capture_phase": null,
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 169,
+            "level": 52,
+            "max_hp": 169,
+            "moves": [
+              "Thunder",
+              "DrillPeck",
+              "Fly",
+              "Thunderbolt"
+            ],
+            "pp": [
+              10,
+              20,
+              15,
+              15
+            ],
+            "species": "Zapdos",
+            "status": "None",
+            "total_exp": 181113
+          },
+          {
+            "hp": 67,
+            "level": 15,
+            "max_hp": 67,
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ],
+            "species": "Lapras",
+            "status": "None",
+            "total_exp": 4218
+          },
+          {
+            "hp": 166,
+            "level": 52,
+            "max_hp": 166,
+            "moves": [
+              "MegaDrain",
+              "RazorLeaf",
+              "Cut",
+              "VineWhip"
+            ],
+            "pp": [
+              10,
+              25,
+              30,
+              10
+            ],
+            "species": "Venusaur",
+            "status": "None",
+            "total_exp": 136933
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 5,
+          "owned_numbers": [
+            1,
+            2,
+            3,
+            131,
+            145
+          ],
+          "seen": 96,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "field_poison": null,
+      "frame_count": 1500,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        4,
+        14,
+        5,
+        9,
+        15,
+        1,
+        2,
+        15,
+        15,
+        12,
+        13,
+        15,
+        6,
+        11,
+        15,
+        7
+      ],
+      "map_id": 149,
+      "map_name": "MrFujisHouse",
+      "money": 1608,
+      "party": [
+        {
+          "hp": 169,
+          "level": 52,
+          "max_hp": 169,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            10,
+            20,
+            15,
+            15
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 166,
+          "level": 52,
+          "max_hp": 166,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            10,
+            25,
+            30,
+            10
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Left",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 3,
+      "player_y": 7,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_message": null,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "Game_exit": -15
+  },
+  "after": {
+    "all_pass": true,
+    "binary_sha256": "a54b06a788cc673187926379a71992d844d019a8a2b5585af8b244a1b169a447",
+    "commands": {
+      "get_state": 55,
+      "press_sequence": 19,
+      "step_frames": 22,
+      "wait_until": 5,
+      "get_npcs": 1,
+      "press_timeline": 4,
+      "skip_dialogue": 1,
+      "get_flags": 1,
+      "capture_frame": 1
+    },
+    "before": {
+      "active_script_effect": null,
+      "audio_sfx": {
+        "id": 90,
+        "playing": true
+      },
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "capture_phase": null,
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 169,
+            "level": 52,
+            "max_hp": 169,
+            "moves": [
+              "Thunder",
+              "DrillPeck",
+              "Fly",
+              "Thunderbolt"
+            ],
+            "pp": [
+              10,
+              20,
+              15,
+              15
+            ],
+            "species": "Zapdos",
+            "status": "None",
+            "total_exp": 181113
+          },
+          {
+            "hp": 67,
+            "level": 15,
+            "max_hp": 67,
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ],
+            "species": "Lapras",
+            "status": "None",
+            "total_exp": 4218
+          },
+          {
+            "hp": 166,
+            "level": 52,
+            "max_hp": 166,
+            "moves": [
+              "MegaDrain",
+              "RazorLeaf",
+              "Cut",
+              "VineWhip"
+            ],
+            "pp": [
+              10,
+              25,
+              30,
+              10
+            ],
+            "species": "Venusaur",
+            "status": "None",
+            "total_exp": 136933
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 5,
+          "owned_numbers": [
+            1,
+            2,
+            3,
+            131,
+            145
+          ],
+          "seen": 96,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "field_poison": null,
+      "frame_count": 622,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        1,
+        1,
+        1,
+        3,
+        2,
+        2,
+        2,
+        3,
+        1,
+        1,
+        1,
+        1,
+        16,
+        2,
+        108,
+        14,
+        109,
+        2,
+        8,
+        1,
+        1,
+        12,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        13,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        2,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        53,
+        2,
+        1,
+        2,
+        2,
+        2,
+        57,
+        14,
+        32,
+        2,
+        2,
+        2,
+        1,
+        12,
+        2,
+        2,
+        28,
+        14,
+        30,
+        2,
+        2,
+        13,
+        1,
+        1,
+        20,
+        2,
+        2,
+        14,
+        2,
+        2,
+        11,
+        1,
+        1,
+        1,
+        1,
+        5,
+        49,
+        29,
+        30,
+        5,
+        1,
+        1
+      ],
+      "map_id": 148,
+      "map_name": "PokemonTower7F",
+      "money": 1608,
+      "party": [
+        {
+          "hp": 169,
+          "level": 52,
+          "max_hp": 169,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            10,
+            20,
+            15,
+            15
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 166,
+          "level": 52,
+          "max_hp": 166,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            10,
+            25,
+            30,
+            10
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Left",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 11,
+      "player_y": 3,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_message": null,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "after": {
+      "active_script_effect": null,
+      "audio_sfx": {
+        "id": 0,
+        "playing": false
+      },
+      "badges": 255,
+      "battle_bag": null,
+      "battle_inventory": [],
+      "battle_live": null,
+      "battle_message": null,
+      "battle_moves": null,
+      "battle_party_cursor": 0,
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+      "capture_phase": null,
+      "choice": null,
+      "coins": 0,
+      "credits_final_button": null,
+      "credits_phase": null,
+      "dialogue": null,
+      "dialogue_state": null,
+      "evaluation": {
+        "party": [
+          {
+            "hp": 169,
+            "level": 52,
+            "max_hp": 169,
+            "moves": [
+              "Thunder",
+              "DrillPeck",
+              "Fly",
+              "Thunderbolt"
+            ],
+            "pp": [
+              10,
+              20,
+              15,
+              15
+            ],
+            "species": "Zapdos",
+            "status": "None",
+            "total_exp": 181113
+          },
+          {
+            "hp": 67,
+            "level": 15,
+            "max_hp": 67,
+            "moves": [
+              "WaterGun",
+              "Growl",
+              "Surf",
+              "Strength"
+            ],
+            "pp": [
+              25,
+              40,
+              15,
+              15
+            ],
+            "species": "Lapras",
+            "status": "None",
+            "total_exp": 4218
+          },
+          {
+            "hp": 166,
+            "level": 52,
+            "max_hp": 166,
+            "moves": [
+              "MegaDrain",
+              "RazorLeaf",
+              "Cut",
+              "VineWhip"
+            ],
+            "pp": [
+              10,
+              25,
+              30,
+              10
+            ],
+            "species": "Venusaur",
+            "status": "None",
+            "total_exp": 136933
+          }
+        ],
+        "party_source": "save_data",
+        "pokedex": {
+          "owned": 5,
+          "owned_numbers": [
+            1,
+            2,
+            3,
+            131,
+            145
+          ],
+          "seen": 96,
+          "total": 151
+        }
+      },
+      "field_menu": null,
+      "field_poison": null,
+      "frame_count": 1500,
+      "hall_of_fame_count": 0,
+      "hof_phase": null,
+      "last_outside_map": "IndigoPlateau",
+      "link": {
+        "cable_phase": "Inactive",
+        "role": "Host",
+        "status": "disabled",
+        "trade": null
+      },
+      "map_blocks": [
+        4,
+        14,
+        5,
+        9,
+        15,
+        1,
+        2,
+        15,
+        15,
+        12,
+        13,
+        15,
+        6,
+        11,
+        15,
+        7
+      ],
+      "map_id": 149,
+      "map_name": "MrFujisHouse",
+      "money": 1608,
+      "party": [
+        {
+          "hp": 169,
+          "level": 52,
+          "max_hp": 169,
+          "moves": [
+            "Thunder",
+            "DrillPeck",
+            "Fly",
+            "Thunderbolt"
+          ],
+          "pp": [
+            10,
+            20,
+            15,
+            15
+          ],
+          "species": "Zapdos",
+          "status": "None"
+        },
+        {
+          "hp": 67,
+          "level": 15,
+          "max_hp": 67,
+          "moves": [
+            "WaterGun",
+            "Growl",
+            "Surf",
+            "Strength"
+          ],
+          "pp": [
+            25,
+            40,
+            15,
+            15
+          ],
+          "species": "Lapras",
+          "status": "None"
+        },
+        {
+          "hp": 166,
+          "level": 52,
+          "max_hp": 166,
+          "moves": [
+            "MegaDrain",
+            "RazorLeaf",
+            "Cut",
+            "VineWhip"
+          ],
+          "pp": [
+            10,
+            25,
+            30,
+            10
+          ],
+          "species": "Venusaur",
+          "status": "None"
+        }
+      ],
+      "party_count": 3,
+      "pc_phase": null,
+      "player_facing": "Up",
+      "player_movement_state": "Idle",
+      "player_name": "RED",
+      "player_transport": "Walking",
+      "player_x": 3,
+      "player_y": 7,
+      "screen": "overworld",
+      "script_awaiting_battle": false,
+      "script_effect": null,
+      "script_running": false,
+      "shop_message": null,
+      "shop_phase": null,
+      "text_speed_delay_frames": 3,
+      "warp_fade": "Idle"
+    },
+    "Game_exit": -15
+  },
+  "portable_replay": {
+    "all_pass": true,
+    "frame": 1500,
+    "facing": "Up",
+    "comparison_png_equal": true,
+    "controller_sha256": "362b3b2afb27a47a5d11a03f1e0507968fdb3d8a6b8fbcc8a81754fa6a693582"
+  },
+  "changed_pixel_bounds": [
+    32,
+    0,
+    79,
+    76
+  ],
+  "visual_scope": "arrival-facing comparison, not whole-frame/cycle parity; wandering NPC phase also changes after the extra scene operation"
+}
