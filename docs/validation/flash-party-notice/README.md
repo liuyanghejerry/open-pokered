@@ -26,7 +26,7 @@ it transitions to Overworld before the text acknowledgement. Controls exercise
 both RockTunnel1F and an already lit outside map, hold movement for600 updates,
 verify the map frame counter and all actor coordinates stay frozen, acknowledge,
 and verify the existing whiteout continues to block movement. Snapshot, ordinary
-SRAM load and held soft-reset chord cover abandoned flow cleanup. All3129 core
+SRAM load and held soft-reset chord cover abandoned flow cleanup. All3130 core
 library tests and10 field-move shared-Game tests pass. Core text controls cover
 held A/B history and never synthesise a neutral menu predecessor.
 

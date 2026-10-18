@@ -1,11 +1,11 @@
 {
   "scope": "FLASH success notice backing and map input lock only; full restoration timing remains unaligned",
   "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
-  "baseline_actual_build_head": "fae2415e110e5fe6896ba8026d911db4d26ed208",
-  "baseline_product_crates_byte_equal_master": "05197c494e5a92af44d47c720d8e1fd48fc6d303",
+  "baseline_actual_build_head": "043f64ebcbeaefbb36c79fe592f36cd4243323a3",
+  "baseline_product_crates_byte_equal_master": "043f64ebcbeaefbb36c79fe592f36cd4243323a3",
   "candidate_build": {
-    "actual_build_head": "8d08c637c6082ae147995e368e89042725a77fe4",
-    "binary_sha256": "06de63b782342080ffe1b532e3697848cf432b41399b6aa9710ca4c77089bdf0",
+    "actual_build_head": "531039ff647edc15c03a8423f1ef16753a4f8229",
+    "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
     "artifact": {
       "reason": "compiler-artifact",
       "package_id": "path+file:///home/jerry/develop/open-pokered/.task-tmp/fidelity-1123-flash-party-text/crates/pokered-app#0.1.0",
@@ -50,12 +50,12 @@
       "fresh": false
     }
   },
-  "core_tests": 3129,
+  "core_tests": 3130,
   "field_move_Game_tests": 10,
   "cases": {
     "before": {
       "all_pass": true,
-      "binary_sha256": "83a891e799b770e363651b91ce62de0fc391928c5b35c94aaffd1eff667be565",
+      "binary_sha256": "e2ffe9db27ee79cbc5e809c79d84f65eee0af212ee758b319e0e185ae770af0d",
       "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
       "pretrigger_frame": 764,
       "notice_frame": 884,
@@ -84,7 +84,7 @@
     },
     "after": {
       "all_pass": true,
-      "binary_sha256": "06de63b782342080ffe1b532e3697848cf432b41399b6aa9710ca4c77089bdf0",
+      "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
       "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
       "pretrigger_frame": 764,
       "notice_frame": 884,
