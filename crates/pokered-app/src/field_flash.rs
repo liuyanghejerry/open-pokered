@@ -49,14 +49,39 @@ fn draw_flash_frame(frame: &FlashFrame, fb: &mut FrameBuffer) {
     #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     fb.copy_from(frame);
     #[cfg(all(target_os = "none", target_arch = "arm"))]
-    {
-        for y in 0..144 {
-            for x in 0..160 {
-                fb.set_pixel_index(x, y, frame.get_index(x, y).unwrap());
-            }
+    unpack_flash_frame(frame, fb);
+}
+
+// Four monochrome plane bits expanded into four little-endian index bytes.
+// Combining the two planes needs just two word writes per eight pixels.
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn unpack_flash_frame(
+    frame: &FlashFrame,
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    const NIBBLES: [u32; 16] = {
+        let mut table = [0; 16];
+        let mut n = 0;
+        while n < 16 {
+            table[n] = ((n as u32 & 8) >> 3)
+                | ((n as u32 & 4) << 6)
+                | ((n as u32 & 2) << 15)
+                | ((n as u32 & 1) << 24);
+            n += 1;
         }
-        fb.set_palette(*frame.display_palette());
+        table
+    };
+    for (planes, out) in frame
+        .packed()
+        .chunks_exact(2)
+        .zip(fb.indices_mut().chunks_exact_mut(8))
+    {
+        let first = NIBBLES[(planes[0] >> 4) as usize] | (NIBBLES[(planes[1] >> 4) as usize] << 1);
+        let second = NIBBLES[(planes[0] & 15) as usize] | (NIBBLES[(planes[1] & 15) as usize] << 1);
+        out[..4].copy_from_slice(&first.to_le_bytes());
+        out[4..].copy_from_slice(&second.to_le_bytes());
     }
+    fb.set_palette(*frame.display_palette());
 }
 
 enum DisplayChild {
@@ -835,6 +860,36 @@ impl PokemonGame {
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gba_flash_unpack_matches_every_bitplane_pair() {
+        use dotzuki_renderer::palette::GbColor;
+        let mut packed = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+            RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        packed.apply_bgp(0x1b);
+        let groups = packed.packed().len() / 2;
+        for base in (0..65536usize).step_by(groups) {
+            for (i, planes) in packed.packed_mut().chunks_exact_mut(2).enumerate() {
+                planes.copy_from_slice(&((base + i) as u16).to_le_bytes());
+            }
+            unpack_flash_frame(&packed, &mut linear);
+            for (i, planes) in packed.packed().chunks_exact(2).enumerate() {
+                for bit in 0..8 {
+                    let expected =
+                        ((planes[0] >> (7 - bit)) & 1) | (((planes[1] >> (7 - bit)) & 1) << 1);
+                    assert_eq!(linear.indices()[i * 8 + bit], expected);
+                    let pixel = i * 8 + bit;
+                    assert_eq!(
+                        linear.get_pixel((pixel % 160) as u32, (pixel / 160) as u32),
+                        packed.get_pixel((pixel % 160) as u32, (pixel / 160) as u32)
+                    );
+                }
+            }
+        }
+    }
 
     #[test]
     fn packed_flash_snapshots_preserve_linear_pixels_and_display_palette() {
