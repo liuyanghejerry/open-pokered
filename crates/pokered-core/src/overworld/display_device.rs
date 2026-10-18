@@ -568,16 +568,30 @@ impl DisplayDevice {
     pub(super) fn observe_reserved_time(
         &mut self,
         tcycles: u64,
+        instruction_tcycles: u8,
         shadow_oam: &[u8],
     ) -> Result<(), DisplayDeviceError> {
         debug_assert!(self.validate().is_ok());
-        if tcycles < self.observed_tcycles {
-            return Err(DisplayDeviceError::TimeReversed);
-        }
+        // The exclusive bus reserved a synchronized instruction and checked
+        // elapsed + duration for overflow. Its duration is already known;
+        // do not recover it with another absolute 64-bit subtraction.
+        debug_assert_eq!(
+            tcycles.checked_sub(self.observed_tcycles),
+            Some(u64::from(instruction_tcycles))
+        );
         if shadow_oam.len() != 160 || self.oam.len() != 160 {
             return Err(DisplayDeviceError::InvalidOam);
         }
-        self.observe_time_after_validation(tcycles, shadow_oam)
+        if self.dma.is_none()
+            && (!self.lcd_enabled() || u16::from(instruction_tcycles) < self.phase_remaining)
+        {
+            if self.lcd_enabled() {
+                self.phase_remaining -= u16::from(instruction_tcycles);
+            }
+            self.observed_tcycles = tcycles;
+            return Ok(());
+        }
+        self.observe_time_events(tcycles, shadow_oam)
     }
 
     #[inline(always)]
@@ -695,6 +709,47 @@ impl DisplayDevice {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reserved_instruction_duration_matches_checked_time_in_all_phases() {
+        let shadow = core::array::from_fn::<_, 160, _>(|i| i as u8);
+        for lcdc in [0, 0x91, 0x93, 0xb3] {
+            let mut initial = DisplayDevice::powered_off(0);
+            initial.write_port(0xff40, lcdc, 0xc3).unwrap();
+            initial.write_port(0xff43, 7, 0xc3).unwrap();
+            initial.write_port(0xff4a, 7, 0xc3).unwrap();
+            initial.oam[0..4].copy_from_slice(&[32, 24, 1, 0]);
+            for sample in (0..2 * 70224)
+                .step_by(137)
+                .chain([4, 80, 252, 65660, 70224])
+            {
+                let mut seed = initial.clone();
+                seed.observe_time(sample, &shadow).unwrap();
+                for dma in [false, true] {
+                    let mut base = seed.clone();
+                    if dma {
+                        base.write_port(0xff46, 0xc3, 0xc3).unwrap();
+                    }
+                    for duration in [0, 1, 4, 8, 12, 16, 24, 80, 255] {
+                        let mut reserved = base.clone();
+                        let mut checked = base.clone();
+                        assert_eq!(
+                            reserved.observe_reserved_time(
+                                sample + u64::from(duration),
+                                duration,
+                                &shadow
+                            ),
+                            checked.observe_time(sample + u64::from(duration), &shadow)
+                        );
+                        assert_eq!(
+                            reserved, checked,
+                            "lcdc={lcdc} sample={sample} dma={dma} dt={duration}"
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn short_instruction_advances_match_event_path_in_every_raster_phase() {

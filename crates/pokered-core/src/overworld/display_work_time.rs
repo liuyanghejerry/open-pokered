@@ -339,16 +339,16 @@ impl DisplayWorkTime {
     // Only PatternBus calls this after its checked reservation. The exclusive
     // bus lease prevents external replacement of time/device state.
     #[inline(always)]
-    fn elapse_reserved(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+    fn elapse_reserved(&mut self, cycles: u8) -> Result<(), DisplayWorkError> {
         self.idle_period_cached = false;
         let next = self
             .elapsed
-            .checked_add(cycles)
+            .checked_add(u64::from(cycles))
             .expect("display time overflow");
         self.device
-            .observe_reserved_time(next, &self.shadow_oam)
+            .observe_reserved_time(next, cycles, &self.shadow_oam)
             .map_err(DisplayWorkError::Device)?;
-        self.divider_counter = self.divider_counter.wrapping_add(cycles as u16);
+        self.divider_counter = self.divider_counter.wrapping_add(u16::from(cycles));
         self.elapsed = next;
         Ok(())
     }
@@ -586,7 +586,7 @@ impl DisplayInstructionBus for DisplayBus<'_> {
         match instruction.access {
             None => {
                 self.reserve()?;
-                self.time.elapse_reserved(u64::from(instruction.tcycles))?;
+                self.time.elapse_reserved(instruction.tcycles)?;
                 Ok(None)
             }
             Some(DisplayAccess::Read { port, at_tcycle }) => {
@@ -595,13 +595,12 @@ impl DisplayInstructionBus for DisplayBus<'_> {
                     .read_display_port(port)
                     .map_err(DisplayWorkError::Device)?;
                 self.reserve()?;
-                self.time.elapse_reserved(u64::from(at_tcycle))?;
+                self.time.elapse_reserved(at_tcycle)?;
                 let value = self
                     .time
                     .read_display_port(port)
                     .map_err(DisplayWorkError::Device)?;
-                self.time
-                    .elapse_reserved(u64::from(instruction.tcycles - at_tcycle))?;
+                self.time.elapse_reserved(instruction.tcycles - at_tcycle)?;
                 Ok(Some(value))
             }
             Some(DisplayAccess::Write { .. }) => {
@@ -637,7 +636,7 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
         if instruction.access.is_none() {
             self.check_memory()?;
             self.reserve()?;
-            self.elapse(u64::from(instruction.tcycles))?;
+            self.elapse(instruction.tcycles)?;
             return Ok(None);
         }
         self.execute_pattern_general(instruction)
@@ -692,10 +691,10 @@ impl<A: PatternAssets> PatternBus<'_, A> {
         Ok(())
     }
     #[inline(always)]
-    fn elapse(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+    fn elapse(&mut self, cycles: u8) -> Result<(), DisplayWorkError> {
         #[cfg(test)]
         if self.check_each_instruction {
-            return self.time.elapse(cycles);
+            return self.time.elapse(u64::from(cycles));
         }
         self.time.elapse_reserved(cycles)
     }
@@ -744,7 +743,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
         self.reserve()?;
         let consumed = match instruction.access {
             Some(PatternAccess::ReadVram { address, at_tcycle }) => {
-                self.elapse(u64::from(at_tcycle))?;
+                self.elapse(at_tcycle)?;
                 read = Some(u16::from(if self.time.device.vram_accessible() {
                     self.patterns.read(address).expect("validated VRAM address")
                 } else {
@@ -753,7 +752,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 at_tcycle
             }
             Some(PatternAccess::Read { at_tcycle, .. }) => {
-                self.elapse(u64::from(at_tcycle))?;
+                self.elapse(at_tcycle)?;
                 at_tcycle
             }
             Some(PatternAccess::ReadPair {
@@ -761,8 +760,8 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 second_at_tcycle,
                 ..
             }) => {
-                self.elapse(u64::from(first_at_tcycle))?;
-                self.elapse(u64::from(second_at_tcycle - first_at_tcycle))?;
+                self.elapse(first_at_tcycle)?;
+                self.elapse(second_at_tcycle - first_at_tcycle)?;
                 second_at_tcycle
             }
             Some(PatternAccess::Write {
@@ -770,7 +769,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 value,
                 at_tcycle,
             }) => {
-                self.elapse(u64::from(at_tcycle))?;
+                self.elapse(at_tcycle)?;
                 if self.time.device.vram_accessible() {
                     self.patterns
                         .write(destination, value)
@@ -780,7 +779,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
             }
             None => 0,
         };
-        self.elapse(u64::from(instruction.tcycles - consumed))?;
+        self.elapse(instruction.tcycles - consumed)?;
         Ok(read)
     }
 }
