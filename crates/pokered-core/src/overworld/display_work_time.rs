@@ -24,7 +24,11 @@ pub enum DisplayWorkError {
 pub struct DisplayWorkTime {
     elapsed: u64,
     deadline: u64,
-    pub device: DisplayDevice,
+    device: DisplayDevice,
+    // Ephemeral: snapshots always restart the full device check. Device
+    // mutation is exposed only through an invalidating mutable accessor.
+    #[serde(skip)]
+    idle_period_cached: bool,
     shadow_oam: Vec<u8>,
     /// Actual native caller/control effects. Missing old snapshot fields stay
     /// unknown until a caller writes them; default native boot projects1.
@@ -84,6 +88,7 @@ impl Default for DisplayWorkTime {
             elapsed: 0,
             deadline: 0,
             device,
+            idle_period_cached: false,
             shadow_oam: vec![0; 160],
             sprite_updates_enabled: Some(1),
             legacy_party_sprite_owner: false,
@@ -107,6 +112,16 @@ impl Default for DisplayWorkTime {
 }
 
 impl DisplayWorkTime {
+    #[inline(always)]
+    pub fn device(&self) -> &DisplayDevice {
+        &self.device
+    }
+    #[inline(always)]
+    pub fn device_mut(&mut self) -> &mut DisplayDevice {
+        self.idle_period_cached = false;
+        &mut self.device
+    }
+
     /// Before display-device snapshots existed, native frames never changed
     /// LCD phase. Recreate that revision's fixed-frame projection explicitly;
     /// this is not recovery of an original hardware startup phase.
@@ -309,6 +324,7 @@ impl DisplayWorkTime {
     }
     #[inline(always)]
     fn elapse(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        self.idle_period_cached = false;
         let next = self
             .elapsed
             .checked_add(cycles)
@@ -324,6 +340,7 @@ impl DisplayWorkTime {
     // bus lease prevents external replacement of time/device state.
     #[inline(always)]
     fn elapse_reserved(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        self.idle_period_cached = false;
         let next = self
             .elapsed
             .checked_add(cycles)
@@ -342,7 +359,15 @@ impl DisplayWorkTime {
         // preserving the same global time, divider and real VBlank request.
         if self.shadow_oam.len() == 160 {
             if let Some(period) = CheckedFramePeriod::new(self.elapsed, self.deadline) {
-                if self.device.try_idle_checked_period(period) {
+                let advanced = if self.idle_period_cached {
+                    self.device.advance_eligible_period(period);
+                    true
+                } else {
+                    let ok = self.device.try_idle_checked_period(period);
+                    self.idle_period_cached = ok;
+                    ok
+                };
+                if advanced {
                     self.divider_counter = self
                         .divider_counter
                         .wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
@@ -728,7 +753,7 @@ mod tests {
                     for interleave in [false, true] {
                         for limit in [None, Some(24)] {
                             let mut time = DisplayWorkTime::default();
-                            time.device.write_port(0xff40, lcdc, 0xc3).unwrap();
+                            time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
                             time.begin_native_update();
                             while time.remaining() > available {
                                 let n = (time.remaining() - available).min(24) as u8;
@@ -847,6 +872,115 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn cached_idle_period_is_invalidated_by_mutation_and_snapshot_reload() {
+        fn settled() -> DisplayWorkTime {
+            let mut time = DisplayWorkTime::default();
+            for _ in 0..3 {
+                time.begin_native_update();
+                time.idle_to_target().unwrap();
+            }
+            assert!(time.idle_period_cached);
+            time
+        }
+        for case in 0..12 {
+            let mut fast = settled();
+            match case {
+                0 => {
+                    let _ = fast.device_mut();
+                }
+                1 => {
+                    fast.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
+                }
+                2 => {
+                    fast.device_mut().write_port(0xff43, 3, 0xc3).unwrap();
+                }
+                3 => {
+                    fast.device_mut().write_port(0xff4a, 144, 0xc3).unwrap();
+                }
+                4 => {
+                    fast.device_mut().write_port(0xff46, 0xc3, 0xc3).unwrap();
+                }
+                5 => {
+                    fast.device_mut().write_port(0xffff, 0, 0xc3).unwrap();
+                }
+                6 => {
+                    assert!(fast.device_mut().write_port(0xff41, 8, 0xc3).is_err());
+                }
+                7 => {
+                    fast.device_mut().write_port(0xff47, 0xe4, 0xc3).unwrap();
+                }
+                8 => {
+                    fast.begin_native_update();
+                    DisplayInstructionBus::execute(
+                        &mut fast,
+                        DisplayInstruction {
+                            tcycles: 24,
+                            access: None,
+                        },
+                    )
+                    .unwrap();
+                }
+                9 => {
+                    fast.begin_native_update();
+                    let mut memory = PatternMemory::default();
+                    PatternInstructionBus::execute(
+                        &mut fast.pattern_bus(&mut memory, &Bytes),
+                        PatternInstruction {
+                            tcycles: 24,
+                            access: None,
+                        },
+                    )
+                    .unwrap();
+                }
+                10 => {
+                    let now = fast.elapsed;
+                    *fast.device_mut() = DisplayDevice::powered_off(now);
+                }
+                11 => {
+                    let mut value = serde_json::to_value(fast.device()).unwrap();
+                    value["stat_enable"] = 8.into();
+                    *fast.device_mut() = serde_json::from_value(value).unwrap();
+                }
+                _ => unreachable!(),
+            }
+            assert!(!fast.idle_period_cached, "case={case}");
+            let mut reference = fast.clone();
+            if !matches!(case, 8 | 9) {
+                fast.begin_native_update();
+                reference.begin_native_update();
+            }
+            assert_eq!(
+                fast.idle_to_target(),
+                reference.elapse(reference.remaining()),
+                "case={case}"
+            );
+            assert_eq!(
+                serde_json::to_value(&fast).unwrap(),
+                serde_json::to_value(&reference).unwrap(),
+                "case={case}"
+            );
+        }
+        let base = settled();
+        let mut value = serde_json::to_value(&base).unwrap();
+        assert!(value.get("idle_period_cached").is_none());
+        value["idle_period_cached"] = true.into();
+        let mut reloaded: DisplayWorkTime = serde_json::from_value(value).unwrap();
+        assert!(
+            !reloaded.idle_period_cached,
+            "saved input cannot grant trusted eligibility"
+        );
+        let mut reference = base.clone();
+        reloaded.begin_native_update();
+        reference.begin_native_update();
+        reloaded.idle_to_target().unwrap();
+        reference.elapse(reference.remaining()).unwrap();
+        assert_eq!(
+            serde_json::to_value(&reloaded).unwrap(),
+            serde_json::to_value(&reference).unwrap()
+        );
     }
 
     #[test]
@@ -971,14 +1105,14 @@ mod tests {
             Err(DisplayWorkError::Device(DisplayDeviceError::InvalidOam))
         ));
         assert_eq!(time.elapsed(), elapsed);
-        assert_eq!(time.device.observed_tcycles(), elapsed);
+        assert_eq!(time.device().observed_tcycles(), elapsed);
     }
 
     #[test]
     fn idle_whole_grants_match_complete_time_state_after_every_update() {
         for wy in [0, 7, 144] {
             let mut fast = DisplayWorkTime::default();
-            fast.device.write_port(0xff4a, wy, 0xc3).unwrap();
+            fast.device_mut().write_port(0xff4a, wy, 0xc3).unwrap();
             let mut small = fast.clone();
             for frame in 0..64 {
                 fast.begin_native_update();
@@ -1005,29 +1139,29 @@ mod tests {
         while !disable.finished() {
             disable.step(&mut time).unwrap();
         }
-        assert!(!time.device.lcd_enabled());
+        assert!(!time.device().lcd_enabled());
         assert!(
             time.elapsed() >= 145 * 456,
             "LY145 must actually be reached"
         );
-        assert_eq!(time.device.read_port(0xffff).unwrap(), 1);
+        assert_eq!(time.device().read_port(0xffff).unwrap(), 1);
         let mut enable = EnableLcdWork::default();
         while !enable.finished() {
             enable.step(&mut time).unwrap();
         }
-        assert!(time.device.lcd_enabled());
-        let epoch = time.device.vblank_epoch();
+        assert!(time.device().lcd_enabled());
+        let epoch = time.device().vblank_epoch();
         time.idle_to_target().unwrap();
         time.begin_native_update();
-        while time.remaining() > 0 && time.device.vblank_epoch() == epoch {
+        while time.remaining() > 0 && time.device().vblank_epoch() == epoch {
             time.idle_to_device_event().unwrap();
         }
-        assert!(time.device.vblank_epoch() > epoch);
+        assert!(time.device().vblank_epoch() > epoch);
     }
     #[test]
     fn copied_bytes_consume_shared_time_and_do_not_finish_on_a_new_grant() {
         let mut time = DisplayWorkTime::default();
-        time.device.write_port(0xff40, 0x11, 0xc3).unwrap();
+        time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
         let mut patterns = PatternMemory::default();
         let mut work = PatternCopyDataWork::new(PatternSource::Sprite(3), 0, 0x8000, 4096);
         assert_eq!(
@@ -1058,7 +1192,7 @@ mod tests {
     fn unsupported_port_write_stops_before_consuming_time_or_mutating_device() {
         let mut time = DisplayWorkTime::default();
         time.begin_native_update();
-        let device = time.device.clone();
+        let device = time.device().clone();
         let result = time.execute(DisplayInstruction {
             tcycles: 12,
             access: Some(DisplayAccess::Write {
@@ -1101,7 +1235,7 @@ mod tests {
     fn unsupported_dma_write_is_rejected_before_time_or_device_changes() {
         let mut time = DisplayWorkTime::default();
         time.begin_native_update();
-        let prior = time.device.clone();
+        let prior = time.device().clone();
         assert_eq!(
             time.execute(DisplayInstruction {
                 tcycles: 12,

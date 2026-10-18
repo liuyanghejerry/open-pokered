@@ -450,7 +450,7 @@ impl DisplayDevice {
         self.try_idle_checked_period(period)
     }
     #[inline(always)]
-    pub(super) fn try_idle_checked_period(&mut self, period: CheckedFramePeriod) -> bool {
+    fn idle_period_eligible(&self, from: u64) -> bool {
         if self.phase != RasterPhase::VBlank
             || self.lcdc & 0xa2 != 0x80
             || (self.first_frame | self.stat_irq_line | self.window_y_reached)
@@ -460,14 +460,28 @@ impl DisplayDevice {
             || self.dma.is_some()
             || self.stat_enable != 0
             || self.oam.len() != 160
-            || self.observed_tcycles != period.from
+            || self.observed_tcycles != from
         {
             return false;
         }
+        true
+    }
+    #[inline(always)]
+    pub(super) fn try_idle_checked_period(&mut self, period: CheckedFramePeriod) -> bool {
+        if !self.idle_period_eligible(period.from) {
+            return false;
+        }
+        self.advance_eligible_period(period);
+        true
+    }
+    // DisplayWorkTime retains eligibility only while its private device is
+    // unchanged except for these exact periodic advances.
+    #[inline(always)]
+    pub(super) fn advance_eligible_period(&mut self, period: CheckedFramePeriod) {
+        debug_assert!(self.idle_period_eligible(period.from));
         self.observed_tcycles = period.target;
         self.vblank_epoch += 1;
         self.iflags |= 1;
-        true
     }
 
     /// Synchronize to the sole owner's absolute time. No service is inferred

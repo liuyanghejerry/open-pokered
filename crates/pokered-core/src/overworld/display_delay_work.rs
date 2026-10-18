@@ -226,7 +226,7 @@ mod tests {
         let mut work = DelayFrameWork::default();
         enter_halt(&mut time, &mut work);
         time.idle_to_target().unwrap();
-        assert!(time.device.vblank_epoch() > 0);
+        assert!(time.device().vblank_epoch() > 0);
         assert_eq!(work.step(&mut time).unwrap(), DelayProgress::Sleeping);
         time.begin_native_update();
         clear_flag(&mut time);

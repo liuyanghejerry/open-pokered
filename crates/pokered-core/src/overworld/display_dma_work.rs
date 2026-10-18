@@ -87,14 +87,14 @@ mod tests {
         time.set_shadow_oam(&source).unwrap();
         let mut work = DisplayDmaWork::default();
         work.step(&mut time).unwrap();
-        assert!(!time.device.dma_active());
+        assert!(!time.device().dma_active());
         work.step(&mut time).unwrap();
-        assert!(time.device.dma_active());
-        assert_ne!(time.device.oam(), source);
+        assert!(time.device().dma_active());
+        assert_ne!(time.device().oam(), source);
         for _ in 0..18 {
             work.step(&mut time).unwrap();
         }
-        assert!(time.device.dma_active());
+        assert!(time.device().dma_active());
         let saved = serde_json::to_string(&(work, &time)).unwrap();
         let (mut other, mut other_time): (DisplayDmaWork, DisplayWorkTime) =
             serde_json::from_str(&saved).unwrap();
@@ -102,9 +102,9 @@ mod tests {
         while other.step(&mut other_time).unwrap().is_some() {}
         assert_eq!(work, other);
         assert!(work.finished());
-        assert!(!time.device.dma_active());
-        assert_eq!(time.device.oam(), source);
-        assert_eq!(time.device, other_time.device);
+        assert!(!time.device().dma_active());
+        assert_eq!(time.device().oam(), source);
+        assert_eq!(time.device(), other_time.device());
         assert_eq!(time.elapsed(), 680); // source instructions, excludes caller CALL
     }
     #[test]
@@ -133,17 +133,17 @@ mod tests {
                 other => panic!("unexpected DMA result {other:?}"),
             }
         }
-        assert!(time.device.dma_active());
+        assert!(time.device().dma_active());
         let elapsed = time.elapsed();
-        let prior = time.device.clone();
+        let prior = time.device().clone();
         let child = work;
         time.begin_native_update();
         assert_eq!(time.elapsed(), elapsed);
-        assert_eq!(time.device, prior);
+        assert_eq!(time.device(), &prior);
         assert_eq!(work, child);
         while work.step(&mut time).unwrap().is_some() {}
         assert_eq!(time.elapsed() - start, 680);
-        assert_eq!(time.device.oam(), source);
-        assert!(!time.device.dma_active());
+        assert_eq!(time.device().oam(), source);
+        assert!(!time.device().dma_active());
     }
 }

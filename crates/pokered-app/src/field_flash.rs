@@ -382,7 +382,7 @@ impl PokemonGame {
                             self.overworld.player_presentation.clear_shadow_oam(map);
                             self.overworld.npc_presentation.clear_shadow_oam(map);
                             flow.clear_oam_armed_epoch =
-                                Some(self.source_display.device.vblank_epoch());
+                                Some(self.source_display.device().vblank_epoch());
                         }
                         flow.display_child = None;
                         if matches!(
@@ -412,7 +412,7 @@ impl PokemonGame {
                 // A host grant may begin after the previous VBlank and end
                 // before the next one. Count actual new LCD edges; a host
                 // frame number cannot acknowledge a Delay3/DelayFrame wait.
-                while self.source_display.device.vblank_epoch() < until {
+                while self.source_display.device().vblank_epoch() < until {
                     if self.source_display.remaining() == 0 {
                         return Ok(false);
                     }
@@ -421,7 +421,7 @@ impl PokemonGame {
                         .map_err(|e| format!("{e:?}"))?;
                 }
                 let receipt = flow.waits.last_mut().ok_or("missing FLASH wait receipt")?;
-                receipt.reached_epoch = Some(self.source_display.device.vblank_epoch());
+                receipt.reached_epoch = Some(self.source_display.device().vblank_epoch());
                 receipt.reached_tcycles = Some(self.source_display.elapsed());
                 flow.wait_until_vblank = None;
                 // This acknowledges only the plan's physical-edge boundary.
@@ -435,7 +435,7 @@ impl PokemonGame {
                 // counter advanced while the LCD was disabled/restarted.
                 let armed = video.armed_epoch().ok_or("video request not armed")?;
                 while flow.video_service_epoch.is_none()
-                    && self.source_display.device.vblank_epoch() <= armed
+                    && self.source_display.device().vblank_epoch() <= armed
                 {
                     self.source_display
                         .idle_to_device_event()
@@ -446,7 +446,7 @@ impl PokemonGame {
                 }
                 let accepted = *flow
                     .video_service_epoch
-                    .get_or_insert(self.source_display.device.vblank_epoch());
+                    .get_or_insert(self.source_display.device().vblank_epoch());
                 let resources = self
                     .resources
                     .as_mut()
@@ -498,7 +498,7 @@ impl PokemonGame {
                     }
                     if self
                         .source_display
-                        .device
+                        .device()
                         .oam()
                         .iter()
                         .any(|&byte| byte != 0)
@@ -520,7 +520,7 @@ impl PokemonGame {
                 flow.video_instructions_returned = false;
                 if !video.finished() {
                     video
-                        .arm(self.source_display.device.vblank_epoch())
+                        .arm(self.source_display.device().vblank_epoch())
                         .map_err(|e| format!("{e:?}"))?;
                     continue;
                 }
@@ -540,8 +540,8 @@ impl PokemonGame {
                 log::info!(target: "pokered::overworld", "FLASH_RESTORE_STAGE {}", serde_json::json!({
                     "index": flow.work.operation_index(), "operation": flow.work.operation(),
                     "host_frame": self.frame_count, "tcycles": self.source_display.elapsed(),
-                    "vblank_epoch": self.source_display.device.vblank_epoch(),
-                    "ly": self.source_display.device.read_port(0xff44).ok(),
+                    "vblank_epoch": self.source_display.device().vblank_epoch(),
+                    "ly": self.source_display.device().read_port(0xff44).ok(),
                 }));
                 pokered_core::debug_log::flush();
             }
@@ -557,7 +557,7 @@ impl PokemonGame {
                 RestoreOperation::WaitVBlanks(frames) => {
                     // DelayFrames enters its loop before decrementing C.
                     let edges = if frames == 0 { 256 } else { u64::from(frames) };
-                    let armed = self.source_display.device.vblank_epoch();
+                    let armed = self.source_display.device().vblank_epoch();
                     let target = armed
                         .checked_add(edges)
                         .ok_or("FLASH VBlank deadline overflow")?;
@@ -619,7 +619,7 @@ impl PokemonGame {
                     {
                         return Err("prepared indoor bulk copy differs from transfer plan".into());
                     }
-                    if self.source_display.device.lcd_enabled() {
+                    if self.source_display.device().lcd_enabled() {
                         return Err("bulk transfer while LCD enabled".into());
                     }
                     let work = FarPatternCopyCall::from_2bpp(copy)
@@ -637,7 +637,7 @@ impl PokemonGame {
                     }
                     let mut video = VideoCopyWork::new(copy);
                     video
-                        .arm(self.source_display.device.vblank_epoch())
+                        .arm(self.source_display.device().vblank_epoch())
                         .map_err(|e| format!("{e:?}"))?;
                     flow.video = Some(video);
                     return Ok(false);
@@ -950,10 +950,10 @@ mod tests {
         plan["next"] = serde_json::json!(0);
         flow.work = serde_json::from_value(plan).unwrap();
         game.source_display.begin_native_update();
-        while game.source_display.device.vblank_epoch() == 0 {
+        while game.source_display.device().vblank_epoch() == 0 {
             game.source_display.idle_to_device_event().unwrap();
         }
-        let armed = game.source_display.device.vblank_epoch();
+        let armed = game.source_display.device().vblank_epoch();
         game.frame_count = 1;
         assert!(!game.service_field_flash(&mut flow).unwrap());
         game.source_display.idle_to_target().unwrap();
@@ -964,7 +964,7 @@ mod tests {
             returned = game.service_field_flash(&mut flow).unwrap();
             if returned {
                 assert!(
-                    game.source_display.device.vblank_epoch() >= armed + 3,
+                    game.source_display.device().vblank_epoch() >= armed + 3,
                     "host frame reached the deadline before the third new VBlank"
                 );
                 break;
@@ -993,12 +993,12 @@ mod tests {
         game.begin_field_flash("FLASH");
         let mut flow = game.field_flash.take().unwrap();
         game.source_display.begin_native_update();
-        while game.source_display.device.vblank_epoch() == 0 {
+        while game.source_display.device().vblank_epoch() == 0 {
             game.source_display.idle_to_device_event().unwrap();
         }
         // Arm after this grant's VBlank. Its remaining time ends before the
         // next VBlank, regardless of the unrelated host frame counter.
-        let edge = game.source_display.device.vblank_epoch();
+        let edge = game.source_display.device().vblank_epoch();
         let mut video = VideoCopyWork::new(PatternCopy {
             source: PatternSource::WalkingPlayer,
             source_offset: 0,
@@ -1011,7 +1011,7 @@ mod tests {
         let before = flow.patterns.bytes().to_vec();
         game.frame_count = edge + 1;
         assert!(!game.service_field_flash(&mut flow).unwrap());
-        assert_eq!(game.source_display.device.vblank_epoch(), edge);
+        assert_eq!(game.source_display.device().vblank_epoch(), edge);
         assert_eq!(flow.video.as_ref().unwrap().requested_tiles(), Some(8));
         assert_eq!(flow.patterns.bytes(), before);
     }
@@ -1060,7 +1060,7 @@ mod tests {
             game.frame_count += 1;
             game.source_display.begin_native_update();
             done = game.service_field_flash(&mut flow).unwrap();
-            saw_lcd_off |= !game.source_display.device.lcd_enabled();
+            saw_lcd_off |= !game.source_display.device().lcd_enabled();
             saw_pending_child |= flow.display_child.is_some();
             assert_eq!(
                 (game.overworld.state.player.x, game.overworld.state.player.y),
@@ -1080,23 +1080,29 @@ mod tests {
             saw_lcd_off,
             "real LCD state must remain off during suspended copies"
         );
-        assert!(game.source_display.device.lcd_enabled());
+        assert!(game.source_display.device().lcd_enabled());
         assert!(flow.display_child.is_none());
         assert!(
             game.source_display.shadow_oam().iter().all(|&b| b == 0),
             "ClearSprites must clear the actual shadow page"
         );
         assert!(
-            game.source_display.device.oam().iter().all(|&b| b == 0),
+            game.source_display.device().oam().iter().all(|&b| b == 0),
             "cleared shadow bytes must reach hardware OAM through DMA"
         );
         assert_eq!(
-            game.source_display.device.read_port(0xff47).unwrap(),
+            game.source_display.device().read_port(0xff47).unwrap(),
             0xe4,
             "LoadGBPal must actually restore BGP, not just a drawing flag"
         );
-        assert_eq!(game.source_display.device.read_port(0xff48).unwrap(), 0xd0);
-        assert_eq!(game.source_display.device.read_port(0xff49).unwrap(), 0xe0);
+        assert_eq!(
+            game.source_display.device().read_port(0xff48).unwrap(),
+            0xd0
+        );
+        assert_eq!(
+            game.source_display.device().read_port(0xff49).unwrap(),
+            0xe0
+        );
         assert_eq!(
             game.source_display.source_rom_bank_temp(),
             5,

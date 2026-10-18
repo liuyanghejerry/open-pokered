@@ -156,7 +156,7 @@ mod tests {
         );
         assert_eq!(t.interrupt_returns(), 1);
         assert_ne!(
-            t.device.pending_interrupts() & 1,
+            t.device().pending_interrupts() & 1,
             0,
             "new request while IRQ was active must survive RETI"
         );

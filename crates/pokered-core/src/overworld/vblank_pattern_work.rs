@@ -221,7 +221,7 @@ mod tests {
             (CopyFormat::OneBppDouble, 8, 2380),
         ] {
             let mut time = DisplayWorkTime::default();
-            time.device.write_port(0xff40, 0x11, 0xc3).unwrap();
+            time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
             time.begin_native_update();
             let mut memory = PatternMemory::default();
             let mut work = VBlankPatternWork::new(copy(format, tiles));
@@ -260,7 +260,7 @@ mod tests {
             Err(DisplayWorkError::Budget)
         );
         assert_eq!(work, before);
-        time.device.write_port(0xff40, 0x11, 0xc3).unwrap();
+        time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
         time.begin_native_update();
         for _ in 0..21 {
             work.step(&mut time.pattern_bus(&mut memory, &Bytes))
@@ -292,7 +292,7 @@ mod tests {
         let mut work = VideoCopyWork::new(copy(CopyFormat::TwoBpp, 8));
         work.arm(10).unwrap();
         let mut time = DisplayWorkTime::default();
-        time.device.write_port(0xff40, 0x11, 0xc3).unwrap();
+        time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
         time.begin_native_update();
         let mut memory = PatternMemory::default();
         assert_eq!(

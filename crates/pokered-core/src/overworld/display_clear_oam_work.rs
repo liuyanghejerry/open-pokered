@@ -60,7 +60,7 @@ mod tests {
         time.set_shadow_oam(&[0x5a; 160]).unwrap();
         let mut dma = DisplayDmaWork::default();
         while dma.step(&mut time).unwrap().is_some() {}
-        assert!(time.device.oam().iter().all(|&b| b == 0x5a));
+        assert!(time.device().oam().iter().all(|&b| b == 0x5a));
         while time.remaining() > 32 {
             time.execute(DisplayInstruction {
                 tcycles: 4,
@@ -83,7 +83,7 @@ mod tests {
         }
         assert_eq!(time.shadow_oam()[0], 0);
         assert_eq!(time.shadow_oam()[1], 0x5a);
-        assert!(time.device.oam().iter().all(|&b| b == 0x5a));
+        assert!(time.device().oam().iter().all(|&b| b == 0x5a));
         let state = serde_json::to_string(&(clear, &time)).unwrap();
         let (mut other_clear, mut other_time): (ClearShadowOamWork, DisplayWorkTime) =
             serde_json::from_str(&state).unwrap();
@@ -96,9 +96,9 @@ mod tests {
         assert_eq!(clear, other_clear);
         assert_eq!(time.shadow_oam(), other_time.shadow_oam());
         assert!(time.shadow_oam().iter().all(|&b| b == 0));
-        assert!(time.device.oam().iter().all(|&b| b == 0x5a));
+        assert!(time.device().oam().iter().all(|&b| b == 0x5a));
         let mut dma = DisplayDmaWork::default();
         while dma.step(&mut time).unwrap().is_some() {}
-        assert!(time.device.oam().iter().all(|&b| b == 0));
+        assert!(time.device().oam().iter().all(|&b| b == 0));
     }
 }

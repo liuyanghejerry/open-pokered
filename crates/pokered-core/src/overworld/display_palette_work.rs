@@ -136,7 +136,7 @@ mod tests {
         );
         assert_eq!(bus.time.elapsed(), 188);
         for port in 0xff47..=0xff49 {
-            assert_eq!(bus.time.device.read_port(port).unwrap(), 0);
+            assert_eq!(bus.time.device().read_port(port).unwrap(), 0);
         }
     }
 
@@ -164,8 +164,8 @@ mod tests {
                 other => panic!("unexpected palette result {other:?}"),
             }
         }
-        assert_eq!(time.device.read_port(0xff47).unwrap(), 0xe4);
-        assert_eq!(time.device.read_port(0xff48).unwrap(), 0);
+        assert_eq!(time.device().read_port(0xff47).unwrap(), 0xe4);
+        assert_eq!(time.device().read_port(0xff48).unwrap(), 0);
         let saved = serde_json::to_string(&(work, &time)).unwrap();
         let (mut copy, mut other): (DisplayPaletteWork, DisplayWorkTime) =
             serde_json::from_str(&saved).unwrap();
@@ -175,8 +175,8 @@ mod tests {
         while copy.step(&mut other).unwrap().is_some() {}
         assert_eq!(work, copy);
         assert_eq!(time.elapsed() - start, 132);
-        assert_eq!(time.device, other.device);
-        assert_eq!(time.device.read_port(0xff48).unwrap(), 0xd0);
-        assert_eq!(time.device.read_port(0xff49).unwrap(), 0xe0);
+        assert_eq!(time.device(), other.device());
+        assert_eq!(time.device().read_port(0xff48).unwrap(), 0xd0);
+        assert_eq!(time.device().read_port(0xff49).unwrap(), 0xe0);
     }
 }
