@@ -1317,17 +1317,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.10.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=e533a3d23a0cdbed1524a1ac91184733da4a6f7e#e533a3d23a0cdbed1524a1ac91184733da4a6f7e"
-dependencies = [
- "bitflags 2.13.2",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "dotzuki-audio"
-version = "0.10.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=f8784e127d5051bef762100882320fd56dbd463e#f8784e127d5051bef762100882320fd56dbd463e"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=245ca8f3fe9737571e72b8a683cd966e6fa84252#245ca8f3fe9737571e72b8a683cd966e6fa84252"
 dependencies = [
  "bitflags 2.13.2",
  "cpal",
@@ -1336,6 +1326,16 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "dotzuki-audio"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=e533a3d23a0cdbed1524a1ac91184733da4a6f7e#e533a3d23a0cdbed1524a1ac91184733da4a6f7e"
+dependencies = [
+ "bitflags 2.13.2",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3461,7 +3461,7 @@ dependencies = [
  "agb",
  "bitflags 2.13.2",
  "critical-section",
- "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=f8784e127d5051bef762100882320fd56dbd463e)",
+ "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=245ca8f3fe9737571e72b8a683cd966e6fa84252)",
  "serde_json",
 ]
 

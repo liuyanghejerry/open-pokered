@@ -980,3 +980,70 @@ mod real_music_rest_output_tests {
         check_real_rests(MusicId::SILPH_CO);
     }
 }
+
+mod real_perfect_pitch_base_tests {
+    use super::*;
+    use crate::ChannelFlags1;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    fn check_real_pitch_base(music: MusicId) {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut mgr = AudioManager::new();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(music);
+        mgr.apu.set_register_sink(Some(record));
+        let mut onsets = 0;
+        let mut vibrato = false;
+        let mut last_note_low = None;
+        for tick in 0..2000 {
+            WRITES.lock().unwrap().clear();
+            mgr.update_frame();
+            let ch = &mgr.sequencer.channels[0];
+            if !ch.active || !ch.flags1.contains(ChannelFlags1::PERFECT_PITCH) {
+                continue;
+            }
+            let writes = WRITES.lock().unwrap().clone();
+            let low = writes
+                .iter()
+                .rev()
+                .find_map(|&(a, v)| (a == 0xff13).then_some(v));
+            if writes.iter().any(|&(a, v)| a == 0xff14 && v & 128 != 0) {
+                let written = low.expect("actual note low-byte write");
+                onsets += 1;
+                last_note_low = Some(written);
+                assert_eq!(
+                    ch.freq_lo_saved, written,
+                    "{music:?}, onset tick{tick}: modulation must use the emitted pitch"
+                );
+            } else if ch.vibrato_freq_lo.is_some() && low.is_some() {
+                assert_eq!(
+                    Some(ch.freq_lo_saved),
+                    last_note_low,
+                    "modulation retains the last emitted note base"
+                );
+                vibrato = true;
+            }
+            if onsets >= 3 && vibrato {
+                break;
+            }
+        }
+        assert!(
+            onsets >= 3 && vibrato,
+            "must encounter real adjusted notes and subsequent vibrato"
+        );
+    }
+    #[test]
+    fn rock_tunnel_perfect_pitch_is_retained_as_the_vibrato_base() {
+        check_real_pitch_base(MusicId::DUNGEON3);
+    }
+    #[test]
+    fn silph_perfect_pitch_is_retained_as_the_vibrato_base() {
+        check_real_pitch_base(MusicId::SILPH_CO);
+    }
+}

@@ -1,0 +1,200 @@
+{
+  "before_audio": "f8784e127d5051bef762100882320fd56dbd463e",
+  "after_audio": "245ca8f3fe9737571e72b8a683cd966e6fa84252",
+  "probe": "real_perfect_probe.rs, normal AudioManager APIs;3selectedonsets and1subsequentvibrato per real song",
+  "scope": "Native manager diagnostics used a private branch with only an unused source-work wrapper added; normal update_frame body matches master. Game regressions independently exercise the public branch. Not full waveform/IRQ parity.",
+  "cases": [
+    {
+      "before": {
+        "delay": 15,
+        "frequency": 1518,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 195,
+        "saved_low": 237,
+        "slide_origin": 0,
+        "tick": 0,
+        "written_low": 238
+      },
+      "after": {
+        "delay": 15,
+        "frequency": 1518,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 195,
+        "saved_low": 238,
+        "slide_origin": 0,
+        "tick": 0,
+        "written_low": 238
+      }
+    },
+    {
+      "before": {
+        "delay": 2,
+        "frequency": 1518,
+        "mode": "vibrato",
+        "music": "DUNGEON3",
+        "ptr": 195,
+        "saved_low": 237,
+        "slide_origin": 0,
+        "tick": 13,
+        "written_low": 238
+      },
+      "after": {
+        "delay": 2,
+        "frequency": 1518,
+        "mode": "vibrato",
+        "music": "DUNGEON3",
+        "ptr": 195,
+        "saved_low": 238,
+        "slide_origin": 0,
+        "tick": 13,
+        "written_low": 239
+      }
+    },
+    {
+      "before": {
+        "delay": 15,
+        "frequency": 1627,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 197,
+        "saved_low": 90,
+        "slide_origin": 0,
+        "tick": 15,
+        "written_low": 91
+      },
+      "after": {
+        "delay": 15,
+        "frequency": 1627,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 197,
+        "saved_low": 91,
+        "slide_origin": 0,
+        "tick": 15,
+        "written_low": 91
+      }
+    },
+    {
+      "before": {
+        "delay": 15,
+        "frequency": 1714,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 198,
+        "saved_low": 177,
+        "slide_origin": 0,
+        "tick": 30,
+        "written_low": 178
+      },
+      "after": {
+        "delay": 15,
+        "frequency": 1714,
+        "mode": "onset",
+        "music": "DUNGEON3",
+        "ptr": 198,
+        "saved_low": 178,
+        "slide_origin": 0,
+        "tick": 30,
+        "written_low": 178
+      }
+    },
+    {
+      "before": {
+        "delay": 3,
+        "frequency": 1254,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 15,
+        "saved_low": 229,
+        "slide_origin": 0,
+        "tick": 0,
+        "written_low": 230
+      },
+      "after": {
+        "delay": 3,
+        "frequency": 1254,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 15,
+        "saved_low": 230,
+        "slide_origin": 0,
+        "tick": 0,
+        "written_low": 230
+      }
+    },
+    {
+      "before": {
+        "delay": 4,
+        "frequency": 1340,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 16,
+        "saved_low": 59,
+        "slide_origin": 0,
+        "tick": 3,
+        "written_low": 60
+      },
+      "after": {
+        "delay": 4,
+        "frequency": 1340,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 16,
+        "saved_low": 60,
+        "slide_origin": 0,
+        "tick": 3,
+        "written_low": 60
+      }
+    },
+    {
+      "before": {
+        "delay": 4,
+        "frequency": 1418,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 17,
+        "saved_low": 137,
+        "slide_origin": 0,
+        "tick": 7,
+        "written_low": 138
+      },
+      "after": {
+        "delay": 4,
+        "frequency": 1418,
+        "mode": "onset",
+        "music": "SILPH_CO",
+        "ptr": 17,
+        "saved_low": 138,
+        "slide_origin": 0,
+        "tick": 7,
+        "written_low": 138
+      }
+    },
+    {
+      "before": {
+        "delay": 34,
+        "frequency": 1548,
+        "mode": "vibrato",
+        "music": "SILPH_CO",
+        "ptr": 23,
+        "saved_low": 11,
+        "slide_origin": 0,
+        "tick": 29,
+        "written_low": 12
+      },
+      "after": {
+        "delay": 34,
+        "frequency": 1548,
+        "mode": "vibrato",
+        "music": "SILPH_CO",
+        "ptr": 23,
+        "saved_low": 12,
+        "slide_origin": 0,
+        "tick": 29,
+        "written_low": 13
+      }
+    }
+  ]
+}
