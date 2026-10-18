@@ -68,12 +68,148 @@
     ]
   },
   "owned_Game_shutdown": "both Games terminated by diagnostic owner after assertions; not natural game completion",
-  "portable_replay": {
+  "indigo": {
+    "fixture_sha256": "513816f31adc4929931bba9332f203c692aa8857914c5df2bf347f7ea3e53b4b",
+    "baseline_requested_label": "YES",
+    "baseline_available_options": [
+      "HEAL",
+      "CANCEL"
+    ],
+    "baseline_error": "StopIteration in m44 choose(YES)",
+    "fixed_driver_source": "a00652cbb7802c3624fb4e242c9b677b50a9b28f",
+    "fixed_tail_ast_sha256": "712c48ca664e3e67d1518e952bab909997ed8f49c627faf83a211352dcc5ea15",
+    "fixed_selected_label": "HEAL",
+    "all_party_hp_full": true,
+    "after_money": 1608,
+    "after_bag": [
+      {
+        "item": "HelixFossil",
+        "qty": 1
+      },
+      {
+        "item": "SsTicket",
+        "qty": 1
+      },
+      {
+        "item": "Tm28",
+        "qty": 1
+      },
+      {
+        "item": "Hm01",
+        "qty": 1
+      },
+      {
+        "item": "LiftKey",
+        "qty": 1
+      },
+      {
+        "item": "SilphScope",
+        "qty": 1
+      },
+      {
+        "item": "RareCandy",
+        "qty": 1
+      },
+      {
+        "item": "PokeFlute",
+        "qty": 1
+      },
+      {
+        "item": "Tm06",
+        "qty": 1
+      },
+      {
+        "item": "Hm03",
+        "qty": 1
+      },
+      {
+        "item": "Hm04",
+        "qty": 1
+      },
+      {
+        "item": "CardKey",
+        "qty": 1
+      },
+      {
+        "item": "HyperPotion",
+        "qty": 5
+      },
+      {
+        "item": "Tm46",
+        "qty": 1
+      },
+      {
+        "item": "Hm02",
+        "qty": 1
+      },
+      {
+        "item": "SecretKey",
+        "qty": 1
+      },
+      {
+        "item": "Tm38",
+        "qty": 1
+      },
+      {
+        "item": "FullRestore",
+        "qty": 11
+      },
+      {
+        "item": "Revive",
+        "qty": 4
+      }
+    ],
+    "scope": "actual committed m44 tail from already-reached lobby, normal CLI/buttons; not full route or ordinary SAVE"
+  },
+  "historical_portable_quiz_replay": {
     "all_pass": true,
     "quizzes": 6,
     "controller_sha256": "7c5f5b40e7493305b1f7cdea5c53d96643fc68451521bd4c2ad41701f900b33e",
     "driver_file_sha256": "2f3df9d35523708d06a3090022657d21d052487b7caec5426e7c9878de9e2783",
     "only_observation_and_input_commands": true,
     "Game_exit": -15
+  },
+  "portable_replay": {
+    "controller_sha256": "10575ec08b040c402b7029f433eaafebfe97ecac9ec7593a181d909b7d3433c0",
+    "cases": {
+      "quiz": {
+        "all_pass": true,
+        "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+        "driver_hashes": {
+          "playthrough.py": "2f3df9d35523708d06a3090022657d21d052487b7caec5426e7c9878de9e2783",
+          "playthrough_late.py": "e3cd433275831ad6e2049b7054316ce8f689d453dc8c87ad0fd532c0d7eb5236"
+        },
+        "commands": {
+          "get_state": 239,
+          "press_sequence": 65,
+          "step_frames": 106,
+          "wait_until": 14,
+          "press_timeline": 21,
+          "skip_dialogue": 18,
+          "get_flags": 6,
+          "get_npcs": 5
+        },
+        "Game_exit": -15
+      },
+      "indigo": {
+        "all_pass": true,
+        "binary_sha256": "c81527dc8adc6b79862c8214841891116f192a7418b2e6b4ca1b6db913545ea1",
+        "driver_hashes": {
+          "playthrough.py": "2f3df9d35523708d06a3090022657d21d052487b7caec5426e7c9878de9e2783",
+          "playthrough_late.py": "e3cd433275831ad6e2049b7054316ce8f689d453dc8c87ad0fd532c0d7eb5236"
+        },
+        "commands": {
+          "get_state": 571,
+          "press_sequence": 254,
+          "step_frames": 273,
+          "wait_until": 7,
+          "press_timeline": 15,
+          "skip_dialogue": 9,
+          "get_npcs": 1,
+          "get_bag": 245
+        },
+        "Game_exit": -15
+      }
+    }
   }
 }
