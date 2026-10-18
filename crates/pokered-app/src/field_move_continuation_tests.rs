@@ -104,6 +104,38 @@ fn choose_field_move(game: &mut PokemonGame) {
     );
     tap(game, GbButton::A);
 }
+#[test]
+fn flash_success_notice_retains_party_until_ack() {
+    on_game_thread(|| {
+        for map in [MapId::RockTunnel1F, MapId::ViridianCity] {
+            let mut game = fixture(MoveId::Flash, 1, map);
+            game.overworld.set_no_text_delay(false);
+            let position = (game.overworld.state.player.x, game.overworld.state.player.y);
+            let actors: Vec<_> = game.overworld.npc_states.iter().map(|n| (n.x, n.y)).collect();
+            choose_field_move(&mut game);
+            assert_eq!(game.state.screen, GameScreen::PartyScreen);
+            let mut held = InputState::new();
+            held.press(GbButton::Down);
+            for _ in 0..600 {
+                game.update(&held);
+                assert_eq!(game.state.screen, GameScreen::PartyScreen);
+                assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), position);
+                assert_eq!(game.overworld.npc_states.iter().map(|n| (n.x, n.y)).collect::<Vec<_>>(), actors);
+            }
+            assert!(game.overworld.pending_dialogue.as_ref().unwrap().waiting_for_input());
+            let mut ack = InputState::new();
+            ack.press(GbButton::B);
+            game.update(&ack);
+            assert_eq!(game.state.screen, GameScreen::Overworld);
+            assert!(game.overworld.displayed_field_dialogue().is_none());
+            assert!(game.overworld.flash_lit_frames > 0);
+            while game.overworld.flash_lit_frames > 0 {
+                game.update(&held);
+                assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), position);
+            }
+        }
+    });
+}
 fn assert_notice_then_list(game: &mut PokemonGame, acknowledge: GbButton) {
     assert_eq!(game.state.screen, GameScreen::PartyScreen);
     assert!(matches!(

@@ -12,6 +12,8 @@ macro_rules! dbg_eprintln {
     }};
 }
 
+#[path = "party_flash_text.rs"]
+pub(crate) mod party_flash_text;
 #[path = "rare_candy.rs"]
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
@@ -700,6 +702,7 @@ pub struct PokemonGame {
     /// CANCEL (the move is then not learned, like AbandonLearning).
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
+    pub(crate) party_flash_text: Option<Box<party_flash_text::PartyFlashText>>,
     post_capture_flow: Option<Box<post_capture::PostCaptureFlow>>,
     pub stats_screen: Option<StatsScreenState>,
     pub slots_screen: Option<SlotsScreen>,
@@ -1390,6 +1393,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            party_flash_text: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1569,6 +1573,7 @@ impl PokemonGame {
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            party_flash_text: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1697,6 +1702,7 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
+            party_flash_text: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -2376,6 +2382,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.pending_softboiled_user = None;
+        self.party_flash_text = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -2391,6 +2398,7 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        if screen != GameScreen::PartyScreen { self.party_flash_text = None; }
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
             self.overworld.suspend_source_foreground();
             self.pending_softboiled_user = None;
@@ -3013,6 +3021,7 @@ impl PokemonGame {
     #[cfg(not(target_os = "none"))]
     fn soft_reset_host(&mut self) {
         self.pending_softboiled_user = None;
+        self.party_flash_text = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -3826,6 +3835,11 @@ impl PokemonGame {
                     return;
                 }
             }
+            return;
+        }
+
+        if self.state.screen == GameScreen::PartyScreen && self.party_flash_text.is_some() {
+            self.update_party_flash_text(input);
             return;
         }
 
@@ -5583,6 +5597,10 @@ impl PokemonGame {
                             None => pokered_core::overworld::field_moves::FieldMoveOutcome::Done,
                         };
                         match outcome {
+                            pokered_core::overworld::field_moves::FieldMoveOutcome::Flash { message } => {
+                                self.begin_party_flash_text(&message);
+                                ScreenAction::Continue
+                            }
                             pokered_core::overworld::field_moves::FieldMoveOutcome::Done => {
                                 ScreenAction::Transition(GameScreen::Overworld)
                             }
@@ -7117,6 +7135,7 @@ impl PokemonGame {
                     "kind": "party", "cursor": self.party_screen.cursor(),
                     "phase": format!("{:?}", self.party_screen.phase()),
                     "mode": format!("{:?}", self.party_screen.mode()),
+                    "flash_notice": self.party_flash_text.is_some(),
                     "rare_candy_phase": self.rare_candy_phase().map(|phase| format!("{phase:?}")),
                     "machine_learning_phase": self.machine_learning_phase().map(|phase| format!("{phase:?}")),
                     "field_moves": self.party_screen.selected_field_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
@@ -8362,6 +8381,10 @@ impl PokemonGame {
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
+                if self.party_flash_text.is_some() {
+                    self.draw_party_flash_text(frame_buffer);
+                    return;
+                }
                 if self.rare_candy_flow.is_some() {
                     self.draw_rare_candy(frame_buffer);
                     return;
