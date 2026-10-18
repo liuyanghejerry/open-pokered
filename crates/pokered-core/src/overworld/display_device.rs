@@ -466,17 +466,10 @@ impl DisplayDevice {
                             || (self.wy == self.ly && self.phase != RasterPhase::AdvanceLy)))
                 && (self.lcdc & 2 == 0 || self.oam.iter().all(|&byte| byte == 0))
             {
-                // Normal native updates grant one period. Avoid a software
-                // u64 divide/modulo on ARM7 for that common case; larger
-                // snapshot catch-ups retain the same arbitrary-interval path.
-                let (frames, tail) = if remaining == 154 * 456 {
-                    (1, 0)
-                } else {
-                    (remaining / (154 * 456), remaining % (154 * 456))
-                };
+                let frames = remaining / (154 * 456);
                 self.vblank_epoch += frames;
                 self.iflags |= 1;
-                remaining = tail;
+                remaining %= 154 * 456;
                 continue;
             }
             let lcd_next = if self.lcd_enabled() {
