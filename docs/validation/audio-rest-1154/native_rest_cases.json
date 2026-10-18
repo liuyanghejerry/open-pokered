@@ -1,0 +1,331 @@
+{
+  "source_original": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "native_before_audio": "5c7f7cd5ed1c21e40cff6c142135aaffb7ffefca",
+  "native_after_audio": "f8784e127d5051bef762100882320fd56dbd463e",
+  "native_probe": "real_rest_probe.rs: normal AudioManager APIs; first real rest per tonal voice per song, at most2000 updates each",
+  "scope": "Selected native register writes/state. Collection used a private AudioManager with only an unused source-work wrapper added; normal update_frame body matches public master. This PR independently tests the same6 cases from a clean master branch. Not waveform/ordinary original-ROM full-song playback proof.",
+  "cases": [
+    {
+      "before": {
+        "NR51": 255,
+        "channel": 2,
+        "logical_volume": 18,
+        "music": "DUNGEON3",
+        "note_delay": 120,
+        "ptr": 3,
+        "rest_byte": 207,
+        "tick": 0,
+        "vibrato_delay": 0,
+        "vibrato_reload": 0,
+        "writes": [
+          [
+            65306,
+            0
+          ],
+          [
+            65306,
+            128
+          ],
+          [
+            65308,
+            32
+          ],
+          [
+            65309,
+            0
+          ],
+          [
+            65310,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 187,
+        "channel": 2,
+        "logical_volume": 18,
+        "music": "DUNGEON3",
+        "note_delay": 120,
+        "ptr": 3,
+        "rest_byte": 207,
+        "tick": 0,
+        "vibrato_delay": 0,
+        "vibrato_reload": 0,
+        "writes": []
+      }
+    },
+    {
+      "before": {
+        "NR51": 255,
+        "channel": 1,
+        "logical_volume": 211,
+        "music": "DUNGEON3",
+        "note_delay": 15,
+        "ptr": 33,
+        "rest_byte": 193,
+        "tick": 465,
+        "vibrato_delay": 0,
+        "vibrato_reload": 11,
+        "writes": [
+          [
+            65302,
+            192
+          ],
+          [
+            65303,
+            211
+          ],
+          [
+            65304,
+            0
+          ],
+          [
+            65305,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 187,
+        "channel": 1,
+        "logical_volume": 211,
+        "music": "DUNGEON3",
+        "note_delay": 15,
+        "ptr": 33,
+        "rest_byte": 193,
+        "tick": 465,
+        "vibrato_delay": 11,
+        "vibrato_reload": 11,
+        "writes": [
+          [
+            65303,
+            8
+          ],
+          [
+            65305,
+            128
+          ]
+        ]
+      }
+    },
+    {
+      "before": {
+        "NR51": 255,
+        "channel": 0,
+        "logical_volume": 195,
+        "music": "DUNGEON3",
+        "note_delay": 15,
+        "ptr": 50,
+        "rest_byte": 193,
+        "tick": 1470,
+        "vibrato_delay": 0,
+        "vibrato_reload": 8,
+        "writes": [
+          [
+            65296,
+            0
+          ],
+          [
+            65297,
+            192
+          ],
+          [
+            65298,
+            195
+          ],
+          [
+            65299,
+            0
+          ],
+          [
+            65300,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 187,
+        "channel": 0,
+        "logical_volume": 195,
+        "music": "DUNGEON3",
+        "note_delay": 15,
+        "ptr": 50,
+        "rest_byte": 193,
+        "tick": 1470,
+        "vibrato_delay": 8,
+        "vibrato_reload": 8,
+        "writes": [
+          [
+            65298,
+            8
+          ],
+          [
+            65300,
+            128
+          ]
+        ]
+      }
+    },
+    {
+      "before": {
+        "NR51": 119,
+        "channel": 2,
+        "logical_volume": 17,
+        "music": "SILPH_CO",
+        "note_delay": 90,
+        "ptr": 6,
+        "rest_byte": 203,
+        "tick": 0,
+        "vibrato_delay": 8,
+        "vibrato_reload": 8,
+        "writes": [
+          [
+            65306,
+            0
+          ],
+          [
+            65306,
+            128
+          ],
+          [
+            65308,
+            32
+          ],
+          [
+            65309,
+            0
+          ],
+          [
+            65310,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 51,
+        "channel": 2,
+        "logical_volume": 17,
+        "music": "SILPH_CO",
+        "note_delay": 90,
+        "ptr": 6,
+        "rest_byte": 203,
+        "tick": 0,
+        "vibrato_delay": 8,
+        "vibrato_reload": 8,
+        "writes": []
+      }
+    },
+    {
+      "before": {
+        "NR51": 119,
+        "channel": 0,
+        "logical_volume": 179,
+        "music": "SILPH_CO",
+        "note_delay": 8,
+        "ptr": 34,
+        "rest_byte": 193,
+        "tick": 97,
+        "vibrato_delay": 2,
+        "vibrato_reload": 8,
+        "writes": [
+          [
+            65296,
+            0
+          ],
+          [
+            65297,
+            192
+          ],
+          [
+            65298,
+            179
+          ],
+          [
+            65299,
+            0
+          ],
+          [
+            65300,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 119,
+        "channel": 0,
+        "logical_volume": 179,
+        "music": "SILPH_CO",
+        "note_delay": 8,
+        "ptr": 34,
+        "rest_byte": 193,
+        "tick": 97,
+        "vibrato_delay": 8,
+        "vibrato_reload": 8,
+        "writes": [
+          [
+            65298,
+            8
+          ],
+          [
+            65300,
+            128
+          ]
+        ]
+      }
+    },
+    {
+      "before": {
+        "NR51": 119,
+        "channel": 1,
+        "logical_volume": 195,
+        "music": "SILPH_CO",
+        "note_delay": 8,
+        "ptr": 28,
+        "rest_byte": 193,
+        "tick": 97,
+        "vibrato_delay": 4,
+        "vibrato_reload": 10,
+        "writes": [
+          [
+            65302,
+            192
+          ],
+          [
+            65303,
+            195
+          ],
+          [
+            65304,
+            0
+          ],
+          [
+            65305,
+            128
+          ]
+        ]
+      },
+      "after": {
+        "NR51": 119,
+        "channel": 1,
+        "logical_volume": 195,
+        "music": "SILPH_CO",
+        "note_delay": 8,
+        "ptr": 28,
+        "rest_byte": 193,
+        "tick": 97,
+        "vibrato_delay": 10,
+        "vibrato_reload": 10,
+        "writes": [
+          [
+            65303,
+            8
+          ],
+          [
+            65305,
+            128
+          ]
+        ]
+      }
+    }
+  ]
+}
