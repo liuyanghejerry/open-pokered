@@ -466,10 +466,17 @@ impl DisplayDevice {
                             || (self.wy == self.ly && self.phase != RasterPhase::AdvanceLy)))
                 && (self.lcdc & 2 == 0 || self.oam.iter().all(|&byte| byte == 0))
             {
-                let frames = remaining / (154 * 456);
+                // Normal native updates grant one period. Avoid a software
+                // u64 divide/modulo on ARM7 for that common case; larger
+                // snapshot catch-ups retain the same arbitrary-interval path.
+                let (frames, tail) = if remaining == 154 * 456 {
+                    (1, 0)
+                } else {
+                    (remaining / (154 * 456), remaining % (154 * 456))
+                };
                 self.vblank_epoch += frames;
                 self.iflags |= 1;
-                remaining %= 154 * 456;
+                remaining = tail;
                 continue;
             }
             let lcd_next = if self.lcd_enabled() {
@@ -554,6 +561,25 @@ mod tests {
                     }
                     assert_eq!(fast, small, "wy={wy} offset={offset} lcdc={lcdc}");
                 }
+            }
+        }
+    }
+    #[test]
+    fn one_period_native_grants_match_small_steps_after_every_update() {
+        for wy in [0, 7, 144] {
+            let mut fast = DisplayDevice::powered_off(0);
+            fast.write_port(0xff40, 0x91, 0xc3).unwrap();
+            fast.write_port(0xff4a, wy, 0xc3).unwrap();
+            let mut small = fast.clone();
+            let mut time = 0;
+            for frame in 1..=32 {
+                let target = frame * 154 * 456;
+                fast.observe_time(target, &[0; 160]).unwrap();
+                while time < target {
+                    time = (time + 4096).min(target);
+                    small.observe_time(time, &[0; 160]).unwrap();
+                }
+                assert_eq!(fast, small, "frame={frame} wy={wy}");
             }
         }
     }
