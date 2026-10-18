@@ -12,8 +12,10 @@ macro_rules! dbg_eprintln {
     }};
 }
 
-#[path = "party_flash_text.rs"]
-pub(crate) mod party_flash_text;
+#[path = "field_flash.rs"]
+pub(crate) mod field_flash;
+#[path = "field_restore_assets.rs"]
+pub(crate) mod field_restore_assets;
 #[path = "rare_candy.rs"]
 pub(crate) mod rare_candy;
 #[path = "post_capture.rs"]
@@ -702,7 +704,8 @@ pub struct PokemonGame {
     /// CANCEL (the move is then not learned, like AbandonLearning).
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
-    pub(crate) party_flash_text: Option<Box<party_flash_text::PartyFlashText>>,
+    pub(crate) field_flash: Option<Box<field_flash::FieldFlash>>,
+    pub(crate) source_display: pokered_core::overworld::display_work_time::DisplayWorkTime,
     post_capture_flow: Option<Box<post_capture::PostCaptureFlow>>,
     pub stats_screen: Option<StatsScreenState>,
     pub slots_screen: Option<SlotsScreen>,
@@ -1393,7 +1396,8 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
-            party_flash_text: None,
+            field_flash: None,
+            source_display: Default::default(),
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1573,7 +1577,8 @@ impl PokemonGame {
             trainer_card_screen: f_card,
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
-            party_flash_text: None,
+            field_flash: None,
+            source_display: Default::default(),
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1702,7 +1707,8 @@ impl PokemonGame {
             trainer_card_screen: TrainerCardScreenState::new(),
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
-            party_flash_text: None,
+            field_flash: None,
+            source_display: Default::default(),
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -2382,7 +2388,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.pending_softboiled_user = None;
-        self.party_flash_text = None;
+        self.field_flash = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -2398,7 +2404,10 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
-        if screen != GameScreen::PartyScreen { self.party_flash_text = None; }
+        if matches!(screen, GameScreen::Overworld | GameScreen::StartMenu) {
+            self.source_display.finish_legacy_party_sprite_owner();
+        }
+        if screen != GameScreen::PartyScreen { self.field_flash = None; }
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
             self.overworld.suspend_source_foreground();
             self.pending_softboiled_user = None;
@@ -3021,7 +3030,7 @@ impl PokemonGame {
     #[cfg(not(target_os = "none"))]
     fn soft_reset_host(&mut self) {
         self.pending_softboiled_user = None;
-        self.party_flash_text = None;
+        self.field_flash = None;
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -3512,6 +3521,20 @@ impl PokemonGame {
 
     pub fn update(&mut self, input: &InputState) {
         #[cfg(any(target_os = "none", test))]
+        if self.platform_reset_requested { return; }
+        self.source_display.begin_native_update();
+        // Complete an older native hide child before the foreground runs.
+        if !self.source_display.service_legacy_sprite_hide().expect("valid native sprite hide") {
+            self.source_display.idle_to_target().expect("valid native display time");
+            return;
+        }
+        self.update_native_inner(input);
+        self.source_display.service_legacy_sprite_hide().expect("valid native sprite hide");
+        self.source_display.idle_to_target().expect("valid shared native display time");
+    }
+
+    fn update_native_inner(&mut self, input: &InputState) {
+        #[cfg(any(target_os = "none", test))]
         if self.platform_reset_requested {
             return;
         }
@@ -3838,8 +3861,8 @@ impl PokemonGame {
             return;
         }
 
-        if self.state.screen == GameScreen::PartyScreen && self.party_flash_text.is_some() {
-            self.update_party_flash_text(input);
+        if self.state.screen == GameScreen::PartyScreen && self.field_flash.is_some() {
+            self.update_field_flash(input);
             return;
         }
 
@@ -5167,7 +5190,11 @@ impl PokemonGame {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
                     }
                     StartMenuAction::OpenSave => ScreenAction::Transition(GameScreen::SaveMenu),
-                    StartMenuAction::OpenPokemon => ScreenAction::Transition(GameScreen::PartyScreen),
+                    StartMenuAction::OpenPokemon => {
+                        self.source_display.begin_legacy_party_sprite_hide()
+                            .expect("foreground party caller outside active IRQ");
+                        ScreenAction::Transition(GameScreen::PartyScreen)
+                    },
                     StartMenuAction::OpenItem => ScreenAction::Transition(GameScreen::Bag),
                     StartMenuAction::OpenPokedex => ScreenAction::Transition(GameScreen::Pokedex),
                     StartMenuAction::OpenTrainerInfo => {
@@ -5601,7 +5628,7 @@ impl PokemonGame {
                         };
                         match outcome {
                             pokered_core::overworld::field_moves::FieldMoveOutcome::Flash { message } => {
-                                self.begin_party_flash_text(&message);
+                                self.begin_field_flash(&message);
                                 ScreenAction::Continue
                             }
                             pokered_core::overworld::field_moves::FieldMoveOutcome::Done => {
@@ -7138,7 +7165,7 @@ impl PokemonGame {
                     "kind": "party", "cursor": self.party_screen.cursor(),
                     "phase": format!("{:?}", self.party_screen.phase()),
                     "mode": format!("{:?}", self.party_screen.mode()),
-                    "flash_notice": self.party_flash_text.is_some(),
+                    "flash_notice": self.field_flash.is_some(),
                     "rare_candy_phase": self.rare_candy_phase().map(|phase| format!("{phase:?}")),
                     "machine_learning_phase": self.machine_learning_phase().map(|phase| format!("{phase:?}")),
                     "field_moves": self.party_screen.selected_field_moves().iter().map(|m| format!("{:?}", m)).collect::<Vec<_>>(),
@@ -7224,6 +7251,21 @@ impl PokemonGame {
             }),
             _ => serde_json::Value::Null,
         };
+        snapshot["field_flash"] = self.debug_field_flash().unwrap_or(serde_json::Value::Null);
+        snapshot["source_display"] = serde_json::json!({
+            "elapsed_tcycles": self.source_display.elapsed(),
+            "sprite_updates_enabled": self.source_display.sprite_updates_enabled(),
+            "vblank_epoch": self.source_display.device.vblank_epoch(),
+            "pending_interrupts": self.source_display.device.pending_interrupts(),
+            "lcdc": self.source_display.device.read_port(0xff40).ok(),
+            "ly": self.source_display.device.read_port(0xff44).ok(),
+            "bgp": self.source_display.device.read_port(0xff47).ok(),
+            "obp0": self.source_display.device.read_port(0xff48).ok(),
+            "obp1": self.source_display.device.read_port(0xff49).ok(),
+            "loaded_rom_bank": self.source_display.source_loaded_rom_bank(),
+            "rom_bank_temp": self.source_display.source_rom_bank_temp(),
+            "selected_rom_bank": self.source_display.selected_rom_bank(),
+        });
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },
             "party": party.iter().map(|mon| serde_json::json!({
@@ -8384,8 +8426,8 @@ impl PokemonGame {
                 draw_save_menu(&self.save_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::PartyScreen => {
-                if self.party_flash_text.is_some() {
-                    self.draw_party_flash_text(frame_buffer);
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
                     return;
                 }
                 if self.rare_candy_flow.is_some() {
