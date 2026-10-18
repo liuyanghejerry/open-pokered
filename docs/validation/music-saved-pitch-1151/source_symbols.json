@@ -1,0 +1,70 @@
+{
+  "Audio3_sound_ret": [
+    31,
+    21082
+  ],
+  "Audio3_PlayNextNote": [
+    31,
+    21060
+  ],
+  "wChannelCommandPointers": [
+    0,
+    49158
+  ],
+  "wChannelFlags1": [
+    0,
+    49198
+  ],
+  "wChannelFlags2": [
+    0,
+    49206
+  ],
+  "wChannelNoteSpeeds": [
+    0,
+    49350
+  ],
+  "wChannelNoteDelayCountersFractionalPart": [
+    0,
+    49358
+  ],
+  "wChannelDutyCycles": [
+    0,
+    49214
+  ],
+  "wChannelSoundIDs": [
+    0,
+    49190
+  ],
+  "wChannelFrequencyLowBytes": [
+    0,
+    49254
+  ],
+  "wChannelOctaves": [
+    0,
+    49366
+  ],
+  "wChannelVolumes": [
+    0,
+    49374
+  ],
+  "wMusicTempo": [
+    0,
+    49384
+  ],
+  "wSfxTempo": [
+    0,
+    49386
+  ],
+  "wChannelNoteDelayCounters": [
+    0,
+    49334
+  ],
+  "SFX_Press_AB_3": [
+    31,
+    16816
+  ],
+  "SFX_Headers_3": [
+    31,
+    16384
+  ]
+}
