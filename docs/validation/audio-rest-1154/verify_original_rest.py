@@ -114,5 +114,5 @@ for channel in range(3):
    assert c['vibrato_delay']==7 and c['flags1']==0
    expected=[] if paired else ([[0xff25,0xbb]]if channel==2 else [[0xff12 if channel==0 else 0xff17,8],[0xff14 if channel==0 else 0xff19,128]])
    assert c['write_intents']==expected,(channel,paired,c['write_intents'],expected)
-a.output.write_text(json.dumps({'source':'fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c','ROM_SHA256':hashlib.sha256(rom).hexdigest(),'scope':'Original PlayNextNote music rest, artificial RAM, matching paired SFX active or not; paired rest holds, pulse writes envelope8/high128 only, wave masks NR51 0xff->0xbb; not physical APU waveform','cases':cases},indent=2)+'\n')
+a.output.write_text(json.dumps({'source':'fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c','ROM_SHA256':hashlib.sha256(rom).hexdigest(),'scope':'Original PlayNextNote music rest, artificial RAM, matching paired SFX active or not; paired rest holds, pulse writes envelope8/high128 only, wave masks NR51 0xff->0xbb; not physical APU waveform','cases':cases},separators=(',',':'),sort_keys=True)+'\n')
 print('12 original rest controls passed')
