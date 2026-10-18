@@ -24,6 +24,7 @@ use pokered_core::overworld::sprite_bank_call_work::SpriteBankCallWork;
 // Retained images need only four shades; two GBA linear copies exhaust the heap.
 type FlashFrame = dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>;
 
+#[cfg(test)]
 fn retain_flash_frame<const LINEAR: bool>(
     frame: dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor, LINEAR>,
 ) -> FlashFrame {
@@ -97,7 +98,7 @@ pub(crate) struct FieldFlash {
     waits: Vec<FieldWaitEdges>,
     #[cfg(feature = "debug-server")]
     traced_operation: Option<usize>,
-    party: Option<FlashFrame>,
+    party: FrameBuffer,
     map: FlashFrame,
     white_from: Option<u64>,
     show_map: bool,
@@ -115,15 +116,18 @@ pub(crate) struct FieldFlash {
 
 impl PokemonGame {
     pub(super) fn begin_field_flash(&mut self, message: &str) {
-        let mut map = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        // One live staging buffer serves both party text and the final map
+        // redraw. Reusing it avoids a late contiguous allocation on GBA.
+        let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         crate::render::draw_overworld_background(
             &mut self.overworld,
             &mut self.resources,
-            &mut map,
+            &mut party,
             self.state.config.language,
         );
-        let map = retain_flash_frame(map);
-        let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut map = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        copy_flash_frame(&party, &mut map);
+        party.clear(Rgba::WHITE);
         crate::render::draw_party_screen(
             &self.party_screen,
             self.resources.as_mut(),
@@ -131,7 +135,6 @@ impl PokemonGame {
             &mut party,
             self.state.config.language,
         );
-        let party = retain_flash_frame(party);
         // StartMenu_Pokemon entered through DisplayPartyMenu, which has the
         // font loaded. The source plan deliberately performs both reloads.
         let work = FieldRestoreWork::new(self.overworld.field_restore_input(1));
@@ -155,7 +158,7 @@ impl PokemonGame {
             waits: Vec::new(),
             #[cfg(feature = "debug-server")]
             traced_operation: None,
-            party: Some(party),
+            party,
             map,
             white_from: None,
             show_map: false,
@@ -688,9 +691,6 @@ impl PokemonGame {
                 RestoreOperation::SetWindowY(144) => {
                     self.overworld.clear_retained_field_text();
                     flow.show_map = true;
-                    // The party parent has returned; only the retained map
-                    // can be presented from this point onward.
-                    flow.party = None;
                 }
                 RestoreOperation::RestoreNpcFacing => {
                     if self.overworld.npc_states.len() != flow.facing.len() {
@@ -701,21 +701,16 @@ impl PokemonGame {
                     }
                 }
                 RestoreOperation::LoadCurrentMapView => {
-                    // Decoded assets are reloadable from ROM. Release the
-                    // party-era cache before the temporary linear GBA render;
-                    // ResourceManager remains the sole decoded-asset owner.
-                    #[cfg(all(target_os = "none", target_arch = "arm"))]
-                    if let Some(resources) = self.resources.as_mut() {
-                        resources.clear_cache();
-                    }
-                    let mut map = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    // Party text has returned and the retained map is on
+                    // screen. Its old staging buffer can now render the new
+                    // map without another full framebuffer allocation.
                     crate::render::draw_overworld_background(
                         &mut self.overworld,
                         &mut self.resources,
-                        &mut map,
+                        &mut flow.party,
                         self.state.config.language,
                     );
-                    copy_flash_frame(&map, &mut flow.map);
+                    copy_flash_frame(&flow.party, &mut flow.map);
                 }
                 RestoreOperation::LoadMapPalettes => {
                     if self.overworld.dark_cave.is_dark() {
@@ -809,19 +804,11 @@ impl PokemonGame {
             fb.clear(Rgba::WHITE);
             return;
         }
-        draw_flash_frame(
-            if flow.show_map {
-                &flow.map
-            } else {
-                flow.party
-                    .as_ref()
-                    .expect("party snapshot retained until map handoff")
-            },
-            fb,
-        );
         if flow.show_map {
+            draw_flash_frame(&flow.map, fb);
             return;
         }
+        fb.copy_from(&flow.party);
         if let Some(dialogue) = self.overworld.displayed_field_dialogue() {
             if let Some((first, second)) = dialogue.get_display_text() {
                 let text = if second.is_empty() {
