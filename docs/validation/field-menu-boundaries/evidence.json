@@ -1,0 +1,178 @@
+{
+  "scope": "settled field menu endpoint and cancel priority; not initial/cursor input cadence or layout parity",
+  "captures": {
+    "fossils-top-before.png": {
+      "frame": 2047,
+      "sha256": "e01b635f047d93203a022f6bfcb23da1f55ba3057fcea92dfc2f95c3901059ad"
+    },
+    "fossils-bottom-before.png": {
+      "frame": 1179,
+      "sha256": "3d3b1f27074ec58d1cce267f9f08160fe95e03d32e6f74642e321b985180f09a"
+    },
+    "drinks-top-before.png": {
+      "frame": 1663,
+      "sha256": "9492bf3725e9c5458f40d41ae4073b9e603d211c771a9b5dfb58d4d579acce17"
+    },
+    "drinks-bottom-before.png": {
+      "frame": 1147,
+      "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+    },
+    "fossils-top-after.png": {
+      "frame": 2047,
+      "sha256": "3d3b1f27074ec58d1cce267f9f08160fe95e03d32e6f74642e321b985180f09a"
+    },
+    "fossils-bottom-after.png": {
+      "frame": 1179,
+      "sha256": "e01b635f047d93203a022f6bfcb23da1f55ba3057fcea92dfc2f95c3901059ad"
+    },
+    "drinks-top-after.png": {
+      "frame": 1663,
+      "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+    },
+    "drinks-bottom-after.png": {
+      "frame": 1147,
+      "sha256": "9492bf3725e9c5458f40d41ae4073b9e603d211c771a9b5dfb58d4d579acce17"
+    }
+  },
+  "results": {
+    "before": {
+      "binary_sha256": "065d82441787be8cbf188d384bc6ff9b9489f7a8626ec0504aa1aeed7f97e583",
+      "all_pass": true,
+      "cases": [
+        {
+          "kind": "fossils",
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": true,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "DomeFossil",
+              "qty": 1
+            },
+            {
+              "item": "HelixFossil",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        },
+        {
+          "kind": "drinks",
+          "question_probes": [
+            {
+              "up_at_first": 1,
+              "two_ups": 0
+            },
+            {
+              "up_at_first": 1,
+              "two_ups": 0
+            }
+          ],
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": true
+          },
+          "after_bag": [
+            {
+              "item": "FreshWater",
+              "qty": 1
+            },
+            {
+              "item": "SodaPop",
+              "qty": 1
+            },
+            {
+              "item": "Tm49",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        }
+      ]
+    },
+    "after": {
+      "binary_sha256": "656feecff51e9ca5428277e3f6404835ea3052b19dfdfd4d7ffa9c2fd7107df9",
+      "all_pass": true,
+      "cases": [
+        {
+          "kind": "fossils",
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": true,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "HelixFossil",
+              "qty": 1
+            },
+            {
+              "item": "OldAmber",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        },
+        {
+          "kind": "drinks",
+          "question_probes": [
+            {
+              "up_at_first": 0,
+              "two_ups": 0
+            },
+            {
+              "up_at_first": 0,
+              "two_ups": 0
+            }
+          ],
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": true,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "SodaPop",
+              "qty": 1
+            },
+            {
+              "item": "Lemonade",
+              "qty": 1
+            },
+            {
+              "item": "Tm13",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        }
+      ]
+    }
+  },
+  "candidate_actual_build_head": "16f1cac261e8c88e193e002cd6f03214a278af1b",
+  "baseline_actual_build_head": "13611df1 (full identity in prior Tower-exit proof); production crates byte-equal master 5e8b4c1e",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c"
+}

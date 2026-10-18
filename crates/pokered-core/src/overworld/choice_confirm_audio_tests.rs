@@ -55,13 +55,12 @@ fn choice_idle_and_cursor_movement_do_not_play_confirmation() {
 }
 
 #[test]
-fn choice_a_b_and_combined_confirmation_play_once_without_changing_the_result() {
+fn choice_a_b_and_combined_confirmation_play_once_with_b_priority() {
     for (a, b, response) in [
         (true, false, "When I'm in the TELEPORTER"),
         (false, true, "No!? Come on"),
-        // Preserve the current A-first result; its original-game mismatch is
-        // separate from this audio-only repair.
-        (true, true, "When I'm in the TELEPORTER"),
+        // HandleMenuInput callers test B before accepting a selection.
+        (true, true, "No!? Come on"),
     ] {
         let mut field = bill_choice();
         field.update_frame(input(false, false, a, b));
