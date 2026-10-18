@@ -109,5 +109,61 @@
         "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559"
       }
     ]
+  },
+  "performance_followup_1171": {
+    "source": "460b0072fcdb1d56510b6345860ffaa087310088",
+    "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+    "ROM_sha256": "5c683a362b0503529b3e246ef443f0b4537aee4d223177f6cea02c27957bebb4",
+    "elf_sha256": "f7baa24f4c8a913777ebf2089abee1dffd598be5d2d0c490b97624a0b1caa5bb",
+    "cases": [
+      [
+        "0",
+        "45",
+        "1468945",
+        "49784",
+        "11848"
+      ],
+      [
+        "1",
+        "45",
+        "1462793",
+        "49784",
+        "11848"
+      ]
+    ],
+    "seconds": [
+      5.603580474853516,
+      5.580112457275391
+    ],
+    "case_stats": {
+      "0": {
+        "heap": 23487,
+        "wait": 57454,
+        "update": 1171315,
+        "draw": 171434,
+        "present": 34631
+      },
+      "1": {
+        "heap": 22891,
+        "wait": 59782,
+        "update": 1163348,
+        "draw": 171515,
+        "present": 34619
+      }
+    },
+    "core_tests": 3200,
+    "app_tests": {
+      "passed": 399,
+      "ignored": 39
+    },
+    "limits": "Two seeded GBA flows retain every sourceinstruction/busaccess; hardwaretime~5.6s stillslow, notsourcephysicalparity/fullfreshplaythrough. Keepdraft.",
+    "native_replay": {
+      "actual_source": "460b0072fcdb1d56510b6345860ffaa087310088",
+      "binary_sha256": "9606b0b5ebc9b61affb4e72c59dc947b2a20bf72d1b9ab0ebae1065a3ed9ae67",
+      "frames": 240,
+      "png_equal": true,
+      "complete_observed_records_equal": true
+    },
+    "method": "Keep each source instruction and bus access. Cache immutable ROM source references, specialize no-event device advances, and retain state-validation results only during an exclusive bus borrow. Every fresh bus/snapshot starts unchecked; budget checks, accesses, device events and failures remain per instruction."
   }
 }
