@@ -1,0 +1,170 @@
+{
+  "source_pin": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "native_before_audio_source": "db60028d5bcde1433e0fafd8ae9e560a0f7bd01f",
+  "native_after_audio_source": "5c7f7cd5ed1c21e40cff6c142135aaffb7ffefca",
+  "native_harness": "real_song_probe.rs; two real tracks through normal AudioManager APIs, one early insertion per song",
+  "source_control_scope": "Constructed-RAM original instruction controls in master PR320. Paired music and pulse SFX return paths have no pulse register write intent. No ordinary original-ROM full-song recording or waveform comparison.",
+  "scope": "Selected native sink records. Native diagnostics used private branch AudioManager, whose normal update_frame is byte-identical to public master; only an unused source-work wrapper was added. Public game regression separately checks both songs.",
+  "cases": [
+    {
+      "music": "DUNGEON3",
+      "tick": 16,
+      "before": {
+        "music": "DUNGEON3",
+        "post_music_delay": 13,
+        "post_sfx": false,
+        "pre_music_delay": 14,
+        "pre_music_trigger": true,
+        "pre_sfx": true,
+        "pre_vibrato_delay": 8,
+        "pre_vibrato_rate": 68,
+        "tick": 16,
+        "writes": [
+          [
+            65316,
+            119
+          ],
+          [
+            65296,
+            0
+          ],
+          [
+            65297,
+            192
+          ],
+          [
+            65298,
+            195
+          ],
+          [
+            65299,
+            91
+          ],
+          [
+            65300,
+            134
+          ],
+          [
+            65304,
+            46
+          ],
+          [
+            65309,
+            0
+          ],
+          [
+            65317,
+            255
+          ]
+        ]
+      },
+      "after": {
+        "music": "DUNGEON3",
+        "post_music_delay": 13,
+        "post_sfx": false,
+        "pre_music_delay": 14,
+        "pre_music_trigger": false,
+        "pre_sfx": true,
+        "pre_vibrato_delay": 8,
+        "pre_vibrato_rate": 68,
+        "tick": 16,
+        "writes": [
+          [
+            65316,
+            119
+          ],
+          [
+            65304,
+            46
+          ],
+          [
+            65317,
+            255
+          ]
+        ]
+      }
+    },
+    {
+      "music": "SILPH_CO",
+      "tick": 16,
+      "before": {
+        "music": "SILPH_CO",
+        "post_music_delay": 1,
+        "post_sfx": false,
+        "pre_music_delay": 2,
+        "pre_music_trigger": true,
+        "pre_sfx": true,
+        "pre_vibrato_delay": 8,
+        "pre_vibrato_rate": 34,
+        "tick": 16,
+        "writes": [
+          [
+            65316,
+            119
+          ],
+          [
+            65296,
+            0
+          ],
+          [
+            65297,
+            192
+          ],
+          [
+            65298,
+            179
+          ],
+          [
+            65299,
+            12
+          ],
+          [
+            65300,
+            134
+          ],
+          [
+            65304,
+            5
+          ],
+          [
+            65309,
+            0
+          ],
+          [
+            65313,
+            0
+          ],
+          [
+            65317,
+            119
+          ]
+        ]
+      },
+      "after": {
+        "music": "SILPH_CO",
+        "post_music_delay": 1,
+        "post_sfx": false,
+        "pre_music_delay": 2,
+        "pre_music_trigger": false,
+        "pre_sfx": true,
+        "pre_vibrato_delay": 8,
+        "pre_vibrato_rate": 34,
+        "tick": 16,
+        "writes": [
+          [
+            65316,
+            119
+          ],
+          [
+            65313,
+            0
+          ],
+          [
+            65317,
+            119
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -850,3 +850,56 @@ fn rock_tunnel_press_ab_preserves_saved_music_pitch() {
 fn silph_press_ab_preserves_saved_music_pitch() {
     check_real_song_retains_saved_pitch_under_press_ab(MusicId::SILPH_CO);
 }
+
+mod confirmation_output_owner_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(address: u16, value: u8) {
+        WRITES.lock().unwrap().push((address, value));
+    }
+    fn check_real_song(music: MusicId) {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut mgr = AudioManager::new();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(music);
+        mgr.update_frame();
+        mgr.play_sfx(SfxId::PressAB);
+        mgr.apu.set_register_sink(Some(record));
+        let mut saw_release = false;
+        for tick in 0..20 {
+            let was_playing = mgr.sequencer.channels[4].active;
+            let note_delay = mgr.sequencer.channels[0].delay_counter;
+            let vibrato_delay = mgr.sequencer.channels[0].vibrato.delay_counter;
+            WRITES.lock().unwrap().clear();
+            mgr.update_frame();
+            if was_playing && !mgr.sequencer.channels[4].active {
+                assert!(note_delay > 1 && vibrato_delay > 0, "covered sustain case");
+                let voice_writes: Vec<_> = WRITES
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .copied()
+                    .filter(|(address, _)| (0xff10..=0xff14).contains(address))
+                    .collect();
+                assert!(
+                    voice_writes.is_empty(),
+                    "{music:?} confirmation release tick{tick}: {voice_writes:?}"
+                );
+                saw_release = true;
+            }
+        }
+        assert!(saw_release, "ordinary finite PressAB must end");
+    }
+    #[test]
+    fn rock_tunnel_confirmation_does_not_replay_covered_music_note() {
+        check_real_song(MusicId::DUNGEON3);
+    }
+    #[test]
+    fn silph_confirmation_does_not_replay_covered_music_note() {
+        check_real_song(MusicId::SILPH_CO);
+    }
+}
