@@ -5143,6 +5143,9 @@ impl PokemonGame {
                 }
             }
             GameScreen::StartMenu => {
+                // DisplayStartMenu leaves hTileAnimations enabled. Only the
+                // VBlank background animation runs; field actors/scripts wait.
+                self.overworld.tile_anim.tick();
                 let sm_input = StartMenuInput {
                     up: input.is_just_pressed(GbButton::Up),
                     down: input.is_just_pressed(GbButton::Down),

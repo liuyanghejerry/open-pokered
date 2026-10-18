@@ -3504,3 +3504,7 @@ fn draw_full(
         same_frame_map_hash,
     );
 }
+
+#[cfg(test)]
+#[path = "start_menu_animation_tests.rs"]
+mod start_menu_animation_tests;
