@@ -1024,5 +1024,27 @@
       "warp_fade": "Idle"
     },
     "Game_exit": -15
+  },
+  "portable_replay": {
+    "all_pass": true,
+    "controller_sha256": "254ca26fa5fbe40df6b8ded9cd3493c880e908190a21e5e7defa76838d5218f7",
+    "trace_and_comparison_png_equal": true,
+    "commands": {
+      "get_state": 742,
+      "press_sequence": 251,
+      "step_frames": 501,
+      "wait_until": 2,
+      "get_npcs": 227,
+      "press_timeline": 228,
+      "capture_frame": 1,
+      "get_flags": 1
+    },
+    "Game_exit": -15
+  },
+  "final_build_validation": {
+    "actual_build_head": "3f2cec28fa0fcc2ccf6d74675c6120747f547204",
+    "binary_sha256": "065d82441787be8cbf188d384bc6ff9b9489f7a8626ec0504aa1aeed7f97e583",
+    "byte_identical_to_captured_binary": true,
+    "captured_binary_actual_build_head": "13611df1f70cfc00f9bb4e715d9bd367d6ac309f"
   }
 }

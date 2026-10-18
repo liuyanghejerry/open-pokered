@@ -31,3 +31,7 @@ This package verifies departure paths. It does not establish complete Tower
 story, timing or whole-game parity. The first capture attempt used invalid
 nested-array timeline entries; both diagnostic Games were stopped and the
 corrected string/neutral timeline was used for the retained comparison.
+
+The packaged replay was also run successfully from this sparse checkout;
+its full path trace and comparison PNG match the retained candidate run.
+A final normal CLI build produced identical bytes to the captured binary.
