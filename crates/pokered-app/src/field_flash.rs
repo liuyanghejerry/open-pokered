@@ -292,10 +292,9 @@ impl PokemonGame {
                         // Keep the same source adapter while the child runs;
                         // it can resolve its immutable ROM slice once while
                         // every original instruction still reaches the bus.
+                        let mut bus = self.source_display.pattern_bus(&mut flow.patterns, &assets);
                         loop {
-                            match work.step(
-                                &mut self.source_display.pattern_bus(&mut flow.patterns, &assets),
-                            ) {
+                            match work.step(&mut bus) {
                                 Ok(true) => (),
                                 result => break result,
                             }
@@ -454,11 +453,9 @@ impl PokemonGame {
                     .ok_or("graphics resources unavailable")?;
                 let assets = NativePatternAssets::new(resources);
                 if !flow.video_instructions_returned {
+                    let mut bus = self.source_display.pattern_bus(&mut flow.patterns, &assets);
                     loop {
-                        match video.service_instruction(
-                            accepted,
-                            &mut self.source_display.pattern_bus(&mut flow.patterns, &assets),
-                        ) {
+                        match video.service_instruction(accepted, &mut bus) {
                             Ok(true) => break,
                             Ok(false) => continue,
                             Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => {

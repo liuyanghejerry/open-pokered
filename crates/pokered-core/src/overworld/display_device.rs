@@ -471,6 +471,34 @@ impl DisplayDevice {
         if self.lcd_enabled() && self.phase_remaining == 0 {
             return Err(DisplayDeviceError::InvalidPhase);
         }
+        self.observe_time_after_validation(tcycles, shadow_oam)
+    }
+
+    /// The exclusive PatternBus has validated the device and retains its
+    /// mutable borrow. Its checked writes and event transitions preserve
+    /// validity; no external snapshot/device replacement can interleave.
+    #[inline(always)]
+    pub(super) fn observe_reserved_time(
+        &mut self,
+        tcycles: u64,
+        shadow_oam: &[u8],
+    ) -> Result<(), DisplayDeviceError> {
+        debug_assert!(self.validate().is_ok());
+        if tcycles < self.observed_tcycles {
+            return Err(DisplayDeviceError::TimeReversed);
+        }
+        if shadow_oam.len() != 160 || self.oam.len() != 160 {
+            return Err(DisplayDeviceError::InvalidOam);
+        }
+        self.observe_time_after_validation(tcycles, shadow_oam)
+    }
+
+    #[inline(always)]
+    fn observe_time_after_validation(
+        &mut self,
+        tcycles: u64,
+        shadow_oam: &[u8],
+    ) -> Result<(), DisplayDeviceError> {
         let remaining = tcycles - self.observed_tcycles;
         // A source instruction often ends before the next device event.
         // Without DMA, only elapsed time (and the current LCD phase's

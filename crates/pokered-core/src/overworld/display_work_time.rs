@@ -320,6 +320,21 @@ impl DisplayWorkTime {
         self.elapsed = next;
         Ok(())
     }
+    // Only PatternBus calls this after its checked reservation. The exclusive
+    // bus lease prevents external replacement of time/device state.
+    #[inline(always)]
+    fn elapse_reserved(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        let next = self
+            .elapsed
+            .checked_add(cycles)
+            .expect("display time overflow");
+        self.device
+            .observe_reserved_time(next, &self.shadow_oam)
+            .map_err(DisplayWorkError::Device)?;
+        self.divider_counter = self.divider_counter.wrapping_add(cycles as u16);
+        self.elapsed = next;
+        Ok(())
+    }
     #[inline(always)]
     pub fn idle_to_target(&mut self) -> Result<(), DisplayWorkError> {
         // An untouched one-period grant in settled VBlank has an exact
@@ -357,6 +372,10 @@ impl DisplayWorkTime {
             time: self,
             patterns,
             assets,
+            validated: false,
+            memory_valid: false,
+            #[cfg(test)]
+            check_each_instruction: false,
         }
     }
 }
@@ -501,6 +520,12 @@ pub struct PatternBus<'a, A> {
     time: &'a mut DisplayWorkTime,
     patterns: &'a mut PatternMemory,
     assets: &'a A,
+    // These checks are valid only for this exclusive borrow. A new bus starts
+    // unchecked, including after loading or replacing any snapshot.
+    validated: bool,
+    memory_valid: bool,
+    #[cfg(test)]
+    check_each_instruction: bool,
 }
 impl<A> DisplayInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
@@ -514,13 +539,9 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     #[inline(always)]
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error> {
         if instruction.access.is_none() {
-            if self.patterns.bytes().len() != 0x2000 {
-                return Err(DisplayWorkError::Resource(
-                    RestoreError::InvalidPatternMemory,
-                ));
-            }
-            self.time.reserve()?;
-            self.time.elapse(u64::from(instruction.tcycles))?;
+            self.check_memory()?;
+            self.reserve()?;
+            self.elapse(u64::from(instruction.tcycles))?;
             return Ok(None);
         }
         self.execute_pattern_general(instruction)
@@ -528,15 +549,66 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
 }
 
 impl<A: PatternAssets> PatternBus<'_, A> {
+    #[cfg(test)]
+    fn checking_each_instruction(mut self) -> Self {
+        self.check_each_instruction = true;
+        self
+    }
+
+    #[inline(always)]
+    fn check_memory(&mut self) -> Result<(), DisplayWorkError> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return if self.patterns.bytes().len() == 0x2000 {
+                Ok(())
+            } else {
+                Err(DisplayWorkError::Resource(
+                    RestoreError::InvalidPatternMemory,
+                ))
+            };
+        }
+        if !self.memory_valid {
+            if self.patterns.bytes().len() != 0x2000 {
+                return Err(DisplayWorkError::Resource(
+                    RestoreError::InvalidPatternMemory,
+                ));
+            }
+            self.memory_valid = true;
+        }
+        Ok(())
+    }
+    #[inline(always)]
+    fn reserve(&mut self) -> Result<(), DisplayWorkError> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return self.time.reserve();
+        }
+        if !self.validated {
+            self.time.reserve()?;
+            self.validated = true;
+        } else {
+            debug_assert!(self.time.device.validate().is_ok());
+            debug_assert_eq!(self.time.device.observed_tcycles(), self.time.elapsed);
+            if self.time.elapsed >= self.time.deadline {
+                return Err(DisplayWorkError::Budget);
+            }
+        }
+        Ok(())
+    }
+    #[inline(always)]
+    fn elapse(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return self.time.elapse(cycles);
+        }
+        self.time.elapse_reserved(cycles)
+    }
+
     fn execute_pattern_general(
         &mut self,
         instruction: PatternInstruction,
     ) -> Result<Option<u16>, DisplayWorkError> {
-        if self.patterns.bytes().len() != 0x2000 {
-            return Err(DisplayWorkError::Resource(
-                RestoreError::InvalidPatternMemory,
-            ));
-        }
+        self.check_memory()?;
         let mut read = match instruction.access {
             Some(PatternAccess::ReadVram { address, .. }) => {
                 self.patterns
@@ -573,10 +645,10 @@ impl<A: PatternAssets> PatternBus<'_, A> {
             }
             None => None,
         };
-        self.time.reserve()?;
+        self.reserve()?;
         let consumed = match instruction.access {
             Some(PatternAccess::ReadVram { address, at_tcycle }) => {
-                self.time.elapse(u64::from(at_tcycle))?;
+                self.elapse(u64::from(at_tcycle))?;
                 read = Some(u16::from(if self.time.device.vram_accessible() {
                     self.patterns.read(address).expect("validated VRAM address")
                 } else {
@@ -585,7 +657,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 at_tcycle
             }
             Some(PatternAccess::Read { at_tcycle, .. }) => {
-                self.time.elapse(u64::from(at_tcycle))?;
+                self.elapse(u64::from(at_tcycle))?;
                 at_tcycle
             }
             Some(PatternAccess::ReadPair {
@@ -593,9 +665,8 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 second_at_tcycle,
                 ..
             }) => {
-                self.time.elapse(u64::from(first_at_tcycle))?;
-                self.time
-                    .elapse(u64::from(second_at_tcycle - first_at_tcycle))?;
+                self.elapse(u64::from(first_at_tcycle))?;
+                self.elapse(u64::from(second_at_tcycle - first_at_tcycle))?;
                 second_at_tcycle
             }
             Some(PatternAccess::Write {
@@ -603,7 +674,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 value,
                 at_tcycle,
             }) => {
-                self.time.elapse(u64::from(at_tcycle))?;
+                self.elapse(u64::from(at_tcycle))?;
                 if self.time.device.vram_accessible() {
                     self.patterns
                         .write(destination, value)
@@ -613,8 +684,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
             }
             None => 0,
         };
-        self.time
-            .elapse(u64::from(instruction.tcycles - consumed))?;
+        self.elapse(u64::from(instruction.tcycles - consumed))?;
         Ok(read)
     }
 }
@@ -633,6 +703,151 @@ mod tests {
             Some(offset as u8)
         }
     }
+    #[test]
+    fn exclusive_pattern_bus_matches_checked_instructions_io_and_snapshot_resume() {
+        use super::super::field_restore::{CopyFormat, PatternCopy};
+        use super::super::vblank_pattern_work::VBlankPatternWork;
+        struct Source {
+            limit: Option<u16>,
+            reads: core::cell::RefCell<Vec<(PatternSource, u16)>>,
+        }
+        impl PatternAssets for Source {
+            fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8> {
+                self.reads.borrow_mut().push((source, offset));
+                if self.limit.is_some_and(|limit| offset >= limit) {
+                    None
+                } else {
+                    Some((offset as u8).wrapping_mul(3))
+                }
+            }
+        }
+        for format in [CopyFormat::TwoBpp, CopyFormat::OneBppDouble] {
+            for lcdc in [0x11, 0x91] {
+                for available in [0, 4, 12, 256, 70224] {
+                    for interleave in [false, true] {
+                        for limit in [None, Some(24)] {
+                            let mut time = DisplayWorkTime::default();
+                            time.device.write_port(0xff40, lcdc, 0xc3).unwrap();
+                            time.begin_native_update();
+                            while time.remaining() > available {
+                                let n = (time.remaining() - available).min(24) as u8;
+                                DisplayInstructionBus::execute(
+                                    &mut time,
+                                    DisplayInstruction {
+                                        tcycles: n,
+                                        access: None,
+                                    },
+                                )
+                                .unwrap();
+                            }
+                            let mut reference_time = time.clone();
+                            let mut memory = PatternMemory::default();
+                            let mut reference_memory = memory.clone();
+                            let copy = PatternCopy {
+                                source: PatternSource::WalkingPlayer,
+                                source_offset: 17,
+                                destination: 0x8800,
+                                tiles: 8,
+                                format,
+                            };
+                            let mut work = VBlankPatternWork::new(copy);
+                            let mut reference_work = work;
+                            let source = Source {
+                                limit,
+                                reads: core::cell::RefCell::new(Vec::new()),
+                            };
+                            let reference_source = Source {
+                                limit,
+                                reads: core::cell::RefCell::new(Vec::new()),
+                            };
+                            let mut done = false;
+                            for _ in 0..3 {
+                                let result = {
+                                    let mut bus = time.pattern_bus(&mut memory, &source);
+                                    let mut reference = reference_time
+                                        .pattern_bus(&mut reference_memory, &reference_source)
+                                        .checking_each_instruction();
+                                    let mut last = None;
+                                    for index in 0..2000 {
+                                        let actual = work.step(&mut bus);
+                                        let expected = reference_work.step(&mut reference);
+                                        assert_eq!(actual, expected);
+                                        assert_eq!(work, reference_work);
+                                        if interleave && matches!(actual, Ok(Some(_))) {
+                                            let port = if index % 37 == 0 {
+                                                Some((0xff46, 0xc3))
+                                            } else if index % 29 == 0 {
+                                                Some((
+                                                    0xff40,
+                                                    if index % 2 == 0 { 0x11 } else { 0x91 },
+                                                ))
+                                            } else if index % 31 == 0 {
+                                                Some((0xff41, 8))
+                                            } else {
+                                                None
+                                            };
+                                            if let Some((port, value)) = port {
+                                                let io = DisplayInstruction {
+                                                    tcycles: 12,
+                                                    access: Some(DisplayAccess::Write {
+                                                        port,
+                                                        value,
+                                                        at_tcycle: 8,
+                                                    }),
+                                                };
+                                                assert_eq!(
+                                                    DisplayInstructionBus::execute(&mut bus, io),
+                                                    DisplayInstructionBus::execute(
+                                                        &mut reference,
+                                                        io
+                                                    )
+                                                );
+                                            }
+                                        }
+                                        assert_eq!(bus.patterns, reference.patterns);
+                                        assert_eq!(
+                                            serde_json::to_value(&*bus.time).unwrap(),
+                                            serde_json::to_value(&*reference.time).unwrap()
+                                        );
+                                        assert_eq!(
+                                            *source.reads.borrow(),
+                                            *reference_source.reads.borrow()
+                                        );
+                                        if !matches!(actual, Ok(Some(_))) {
+                                            last = Some(actual);
+                                            break;
+                                        }
+                                    }
+                                    last.expect("bounded instruction stream")
+                                };
+                                if result == Err(DisplayWorkError::Budget) {
+                                    time.idle_to_target().unwrap();
+                                    reference_time.idle_to_target().unwrap();
+                                    // The bus lease/cache is gone. Real snapshot reloads must
+                                    // restart validation, rather than trusting a saved flag.
+                                    time = serde_json::from_value(
+                                        serde_json::to_value(&time).unwrap(),
+                                    )
+                                    .unwrap();
+                                    memory = serde_json::from_value(
+                                        serde_json::to_value(&memory).unwrap(),
+                                    )
+                                    .unwrap();
+                                    time.begin_native_update();
+                                    reference_time.begin_native_update();
+                                } else {
+                                    done = true;
+                                    break;
+                                }
+                            }
+                            assert!(done);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     #[test]
     fn quiet_bus_dispatch_matches_general_path_and_rejects_bad_state() {
         let mut seed = DisplayWorkTime::default();
