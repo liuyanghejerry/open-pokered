@@ -1,0 +1,113 @@
+{
+  "source": "d3261d10528a9c2d4ca0e5e0940473a649ef3e2b",
+  "scope": "Temporary GBA controller seeds party/badge/map then uses real START Pokemon FLASH inputs twice, repeat retains cache; not NEW GAME/ordinary SAVE parity evidence",
+  "all_pass": true,
+  "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+  "build_command": [
+    "cargo",
+    "+nightly-2025-12-07",
+    "build",
+    "--offline",
+    "--release",
+    "--features",
+    "repro-rival"
+  ],
+  "ROM_sha256": "bc22bdcc124a8619f76428149d292d8078b63b49c3cdcc6cc9b8d00bb3a94cea",
+  "elf_sha256": "12c315661a4de0af641bfed8dcc171675e135ecb03a5b2bfea5d0181febdd326",
+  "cases": [
+    [
+      "0",
+      "45",
+      "2254047",
+      "49784",
+      "11888"
+    ],
+    [
+      "1",
+      "45",
+      "2253321",
+      "49784",
+      "11888"
+    ]
+  ],
+  "case_stats": {
+    "0": {
+      "rows": 45,
+      "sum_timer64_ticks": {
+        "heap": 23508,
+        "wait": 39888,
+        "update": 1973637,
+        "draw": 171323,
+        "present": 34544
+      }
+    },
+    "1": {
+      "rows": 45,
+      "sum_timer64_ticks": {
+        "heap": 22976,
+        "wait": 45477,
+        "update": 1967830,
+        "draw": 171374,
+        "present": 34516
+      }
+    }
+  },
+  "seconds": [
+    8.598506927490234,
+    8.59573745727539
+  ],
+  "limits": "Seededcontroller anddiagnosticstagepatch, notsourcephysicalparity/fullfreshplaythrough. Memory/repeat-returnPASS but sourceworkcoststilltoo slow; PRremainDRAFT. Previousfirstcase 9: heap23489 wait40088 update1970554 draw572121 present34518.",
+  "native_tests": {
+    "features": [
+      "desktop",
+      "debug-server"
+    ],
+    "passed": 398,
+    "ignored": 39,
+    "new_packed_unpack_test": "Every65536bitplane-pair combination checked against reference indices and RGBApalette output",
+    "fixture_physical_stack_margin_bytes": 11888
+  },
+  "memory_design": "One GBA linearparty/staging framebuffer23040B, onepackedmapsnapshot5760B, reusedstagebufferatLoadCurrentMapView; no secondfull-frameallocation. PatterntransfersreadimmutablepreconvertedROMbyteswithoutdecodedSpriteSheet/font allocations; sourceinstructions/waits remain.",
+  "pending": "Game.update accounts for~1.97million Timer2/64ticks (~7.5seconds) percall; heapdiagnostic~23.5k ticks anddraw~171k ticks. Do not treat memoryPASS/greenCI as source-speed parity. WholecommonIRQ/raster parity remains open.",
+  "ordinary_SAVE_native_replay": {
+    "source": "d3261d10528a9c2d4ca0e5e0940473a649ef3e2b",
+    "binary_sha256": "24117d3a857ce0978fe21a2f9b8e0dd5882b8dede78e855a24ce7f7b1d5ca333",
+    "frames": 240,
+    "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+    "all_png_and_complete_observed_records_equal_to_previous_replay": true,
+    "limits": "capture_frame uses fullGame.draw; cached/full renderer parity is separately covered by8map/facing tests, not byCLI screenshots."
+  },
+  "fresh_master_before": {
+    "source": "74cd6ff107c59fd6eec02e7fcfeef7563ec4f3ba",
+    "binary_sha256": "de58103f6a348d7988f78bef7ce80bb6832b8c3c07ffab56891904af8f13cbd6",
+    "same_fixture_and_240_frame_inputs_as_candidate": true,
+    "committed_comparison_indices": [
+      159,
+      174,
+      194,
+      200
+    ],
+    "images": [
+      {
+        "index": 159,
+        "same_as_previous_committed": true,
+        "sha256": "c516f4158edd9320b9227fbd53a5abccffb8effed091757bf4dc841fb9a8267e"
+      },
+      {
+        "index": 174,
+        "same_as_previous_committed": true,
+        "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559"
+      },
+      {
+        "index": 194,
+        "same_as_previous_committed": true,
+        "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559"
+      },
+      {
+        "index": 200,
+        "same_as_previous_committed": true,
+        "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559"
+      }
+    ]
+  }
+}
