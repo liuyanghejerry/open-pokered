@@ -13887,3 +13887,7 @@ mod static_encounter_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "game/pokecenter_nurse_tests.rs"]
 mod pokecenter_nurse_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "dual_type_effectiveness_tests.rs"]
+mod dual_type_effectiveness_tests;
