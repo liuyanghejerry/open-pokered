@@ -363,7 +363,22 @@ impl DisplayWorkTime {
 
 impl DisplayInstructionBus for DisplayWorkTime {
     type Error = DisplayWorkError;
+    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
+        if instruction.access.is_none() {
+            self.reserve()?;
+            self.elapse(u64::from(instruction.tcycles))?;
+            return Ok(None);
+        }
+        self.execute_display_general(instruction)
+    }
+}
+
+impl DisplayWorkTime {
+    fn execute_display_general(
+        &mut self,
+        instruction: DisplayInstruction,
+    ) -> Result<Option<u8>, DisplayWorkError> {
         // Validate ports without mutation before accepting this instruction.
         if let Some(access) = instruction.access {
             match access {
@@ -496,7 +511,27 @@ impl<A> DisplayInstructionBus for PatternBus<'_, A> {
 
 impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
+    #[inline(always)]
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error> {
+        if instruction.access.is_none() {
+            if self.patterns.bytes().len() != 0x2000 {
+                return Err(DisplayWorkError::Resource(
+                    RestoreError::InvalidPatternMemory,
+                ));
+            }
+            self.time.reserve()?;
+            self.time.elapse(u64::from(instruction.tcycles))?;
+            return Ok(None);
+        }
+        self.execute_pattern_general(instruction)
+    }
+}
+
+impl<A: PatternAssets> PatternBus<'_, A> {
+    fn execute_pattern_general(
+        &mut self,
+        instruction: PatternInstruction,
+    ) -> Result<Option<u16>, DisplayWorkError> {
         if self.patterns.bytes().len() != 0x2000 {
             return Err(DisplayWorkError::Resource(
                 RestoreError::InvalidPatternMemory,
@@ -598,6 +633,113 @@ mod tests {
             Some(offset as u8)
         }
     }
+    #[test]
+    fn quiet_bus_dispatch_matches_general_path_and_rejects_bad_state() {
+        let mut seed = DisplayWorkTime::default();
+        seed.deadline = 3 * NATIVE_FRAME_T_CYCLES;
+        for sample in (0..2 * NATIVE_FRAME_T_CYCLES).step_by(113) {
+            seed.elapse(sample - seed.elapsed).unwrap();
+            for cycles in [0, 4, 8, 12, 16, 24] {
+                let display = DisplayInstruction {
+                    tcycles: cycles,
+                    access: None,
+                };
+                let mut fast = seed.clone();
+                let mut reference = seed.clone();
+                assert_eq!(
+                    DisplayInstructionBus::execute(&mut fast, display),
+                    reference.execute_display_general(display)
+                );
+                assert_eq!(
+                    serde_json::to_value(&fast).unwrap(),
+                    serde_json::to_value(&reference).unwrap()
+                );
+                let pattern = PatternInstruction {
+                    tcycles: cycles,
+                    access: None,
+                };
+                let mut a = PatternMemory::default();
+                let mut b = a.clone();
+                let mut fast = seed.clone();
+                let mut reference = seed.clone();
+                assert_eq!(
+                    PatternInstructionBus::execute(&mut fast.pattern_bus(&mut a, &Bytes), pattern),
+                    reference
+                        .pattern_bus(&mut b, &Bytes)
+                        .execute_pattern_general(pattern)
+                );
+                assert_eq!(a, b);
+                assert_eq!(
+                    serde_json::to_value(&fast).unwrap(),
+                    serde_json::to_value(&reference).unwrap()
+                );
+            }
+        }
+        for bad in 0..6 {
+            let mut seed = DisplayWorkTime::default();
+            seed.begin_native_update();
+            match bad {
+                0 => seed.shadow_oam.clear(),
+                1 => seed.elapsed = 1,
+                2 => seed.deadline = 0,
+                3 => seed.deadline = 1,
+                4 => {
+                    let mut value = serde_json::to_value(&seed).unwrap();
+                    value["device"]["stat_enable"] = 8.into();
+                    seed = serde_json::from_value(value).unwrap();
+                }
+                5 => {
+                    let mut value = serde_json::to_value(&seed).unwrap();
+                    value["device"]["oam"] = serde_json::json!([]);
+                    seed = serde_json::from_value(value).unwrap();
+                }
+                _ => unreachable!(),
+            }
+            let instruction = DisplayInstruction {
+                tcycles: 24,
+                access: None,
+            };
+            let mut fast = seed.clone();
+            let mut reference = seed.clone();
+            assert_eq!(
+                DisplayInstructionBus::execute(&mut fast, instruction),
+                reference.execute_display_general(instruction)
+            );
+            assert_eq!(
+                serde_json::to_value(&fast).unwrap(),
+                serde_json::to_value(&reference).unwrap()
+            );
+            for malformed_pattern in [false, true] {
+                let mut a = if malformed_pattern {
+                    serde_json::from_str("{\"bytes\":[]}").unwrap()
+                } else {
+                    PatternMemory::default()
+                };
+                let mut b = a.clone();
+                let mut fast = seed.clone();
+                let mut reference = seed.clone();
+                let instruction = PatternInstruction {
+                    tcycles: 24,
+                    access: None,
+                };
+                assert_eq!(
+                    PatternInstructionBus::execute(
+                        &mut fast.pattern_bus(&mut a, &Bytes),
+                        instruction
+                    ),
+                    reference
+                        .pattern_bus(&mut b, &Bytes)
+                        .execute_pattern_general(instruction)
+                );
+                assert_eq!(a, b);
+                assert_eq!(
+                    serde_json::to_value(&fast).unwrap(),
+                    serde_json::to_value(&reference).unwrap()
+                );
+            }
+        }
+    }
+
     #[test]
     fn idle_fast_path_does_not_hide_invalid_shadow_memory() {
         let mut time = DisplayWorkTime::default();
