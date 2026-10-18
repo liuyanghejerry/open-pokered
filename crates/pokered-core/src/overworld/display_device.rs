@@ -458,8 +458,13 @@ impl DisplayDevice {
                 && self.stat_enable == 0
                 && self.lcdc & 0x20 == 0
                 && self.mode3_length == 172 + u16::from(self.scx & 7)
-                && self.window_y_reached == (self.wy < 144 && self.ly >= self.wy)
-                && self.oam.iter().all(|&byte| byte == 0)
+                // The window latch clears on VBlank entry, not when LY wraps.
+                // AdvanceLy exposes the next LY four dots before its latch.
+                && self.window_y_reached
+                    == (self.ly < 144
+                        && (self.wy < self.ly
+                            || (self.wy == self.ly && self.phase != RasterPhase::AdvanceLy)))
+                && (self.lcdc & 2 == 0 || self.oam.iter().all(|&byte| byte == 0))
             {
                 let frames = remaining / (154 * 456);
                 self.vblank_epoch += frames;
@@ -522,6 +527,34 @@ mod tests {
                 small.observe_time(time, &[0; 160]).unwrap();
             }
             assert_eq!(fast, small);
+        }
+    }
+    #[test]
+    fn steady_frame_skip_preserves_vblank_and_visible_line_latches() {
+        // Native whole-update grants normally land in VBlank, where LY >= WY
+        // but the window latch is cleared. Compare every field against small
+        // steps that cannot enter the whole-frame shortcut.
+        for wy in [0, 7, 144] {
+            for offset in [0, 4, 80, 256, 456, 10_000] {
+                for lcdc in [0x91, 0x93] {
+                    let mut fast = DisplayDevice::powered_off(0);
+                    fast.write_port(0xff40, lcdc, 0xc3).unwrap();
+                    fast.write_port(0xff4a, wy, 0xc3).unwrap();
+                    // Nonempty OAM is irrelevant when OBJ rendering is off.
+                    if lcdc & 2 == 0 { fast.oam[0] = 32; }
+                    let start = 2 * 154 * 456 + offset;
+                    fast.observe_time(start, &[0; 160]).unwrap();
+                    let mut small = fast.clone();
+                    let end = start + 16 * 154 * 456 + 183;
+                    fast.observe_time(end, &[0; 160]).unwrap();
+                    let mut time = start;
+                    while time < end {
+                        time = (time + 4096).min(end);
+                        small.observe_time(time, &[0; 160]).unwrap();
+                    }
+                    assert_eq!(fast, small, "wy={wy} offset={offset} lcdc={lcdc}");
+                }
+            }
         }
     }
     fn enabled() -> DisplayDevice {
