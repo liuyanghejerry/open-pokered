@@ -87,6 +87,7 @@ impl DisplayDevice {
     pub fn observed_tcycles(&self) -> u64 {
         self.observed_tcycles
     }
+    #[inline(always)]
     pub fn validate(&self) -> Result<(), DisplayDeviceError> {
         if self.oam.len() != 160 {
             return Err(DisplayDeviceError::InvalidOam);
@@ -454,6 +455,7 @@ impl DisplayDevice {
     /// from the number of host calls; splitting an interval is identical.
     /// DMA reads each byte from the live canonical shadow buffer at that byte's
     /// arrival cycle, so writes between calls remain observable.
+    #[inline(always)]
     pub fn observe_time(
         &mut self,
         tcycles: u64,
@@ -469,6 +471,27 @@ impl DisplayDevice {
         if self.lcd_enabled() && self.phase_remaining == 0 {
             return Err(DisplayDeviceError::InvalidPhase);
         }
+        let remaining = tcycles - self.observed_tcycles;
+        // A source instruction often ends before the next device event.
+        // Without DMA, only elapsed time (and the current LCD phase's
+        // remainder) can change. Exact boundaries stay on the event path.
+        if self.dma.is_none()
+            && (!self.lcd_enabled() || remaining < u64::from(self.phase_remaining))
+        {
+            if self.lcd_enabled() {
+                self.phase_remaining -= remaining as u16;
+            }
+            self.observed_tcycles = tcycles;
+            return Ok(());
+        }
+        self.observe_time_events(tcycles, shadow_oam)
+    }
+
+    fn observe_time_events(
+        &mut self,
+        tcycles: u64,
+        shadow_oam: &[u8],
+    ) -> Result<(), DisplayDeviceError> {
         let mut remaining = tcycles - self.observed_tcycles;
         while remaining != 0 {
             // With unchanged empty OBJ state, no window/STAT/DMA and a
@@ -537,6 +560,84 @@ mod tests {
     use super::*;
 
     #[test]
+    fn short_instruction_advances_match_event_path_in_every_raster_phase() {
+        let shadow = core::array::from_fn::<_, 160, _>(|i| i as u8);
+        for lcdc in [0, 0x91, 0x93, 0xb3] {
+            let mut state = DisplayDevice::powered_off(0);
+            if lcdc != 0 {
+                state.write_port(0xff40, lcdc, 0xc3).unwrap();
+            }
+            for sample in (0..2 * 70224u64).step_by(73) {
+                state.observe_time_events(sample, &shadow).unwrap();
+                let boundary = u64::from(state.phase_remaining);
+                for delta in [
+                    0,
+                    1,
+                    4,
+                    8,
+                    12,
+                    16,
+                    24,
+                    boundary.saturating_sub(1),
+                    boundary,
+                    boundary + 1,
+                    70224,
+                ] {
+                    let mut fast = state.clone();
+                    let mut reference = state.clone();
+                    fast.observe_time(sample + delta, &shadow).unwrap();
+                    reference
+                        .observe_time_events(sample + delta, &shadow)
+                        .unwrap();
+                    assert_eq!(
+                        fast, reference,
+                        "LCD={lcdc:02x}, sample={sample}, delta={delta}"
+                    );
+                }
+            }
+        }
+        // A live DMA byte must never be bypassed, including an LCD-off bus.
+        for lcdc in [0, 0x91] {
+            let mut state = DisplayDevice::powered_off(0);
+            if lcdc != 0 {
+                state.write_port(0xff40, lcdc, 0xc3).unwrap();
+            }
+            state.write_port(0xff46, 0xc3, 0xc3).unwrap();
+            for sample in 0..650u64 {
+                let mut fast = state.clone();
+                let mut reference = state.clone();
+                fast.observe_time(sample, &shadow).unwrap();
+                reference.observe_time_events(sample, &shadow).unwrap();
+                assert_eq!(fast, reference, "DMA lcd={lcdc:02x}, sample={sample}");
+            }
+        }
+    }
+
+    #[test]
+    fn short_advance_keeps_validation_and_time_reversal_errors() {
+        let mut state = DisplayDevice::powered_off(10);
+        assert_eq!(
+            state.observe_time(9, &[0; 159]),
+            Err(DisplayDeviceError::TimeReversed)
+        );
+        assert_eq!(
+            state.observe_time(10, &[0; 159]),
+            Err(DisplayDeviceError::InvalidOam)
+        );
+        state.stat_enable = 8;
+        assert_eq!(
+            state.observe_time(14, &[0; 160]),
+            Err(DisplayDeviceError::UnsupportedStatInterrupts(8))
+        );
+        state.stat_enable = 0;
+        state.phase_remaining = 1;
+        assert_eq!(
+            state.observe_time(14, &[0; 160]),
+            Err(DisplayDeviceError::InvalidPhase)
+        );
+    }
+
+    #[test]
     fn empty_steady_frame_fast_forward_matches_small_device_steps() {
         for (scx, wy) in [(0, 0), (3, 7), (7, 144)] {
             let mut fast = DisplayDevice::powered_off(0);
@@ -566,7 +667,9 @@ mod tests {
                     fast.write_port(0xff40, lcdc, 0xc3).unwrap();
                     fast.write_port(0xff4a, wy, 0xc3).unwrap();
                     // Nonempty OAM is irrelevant when OBJ rendering is off.
-                    if lcdc & 2 == 0 { fast.oam[0] = 32; }
+                    if lcdc & 2 == 0 {
+                        fast.oam[0] = 32;
+                    }
                     let start = 2 * 154 * 456 + offset;
                     fast.observe_time(start, &[0; 160]).unwrap();
                     let mut small = fast.clone();
@@ -630,8 +733,15 @@ mod tests {
                 7 => state.stat_enable = 1,
                 8 => state.stat_irq_line = true,
                 9 => state.window_y_reached = true,
-                10 => { state.oam.pop(); },
-                _ => state.dma = Some(OamDma { next: 0, cycles_until_byte: 8 }),
+                10 => {
+                    state.oam.pop();
+                }
+                _ => {
+                    state.dma = Some(OamDma {
+                        next: 0,
+                        cycles_until_byte: 8,
+                    })
+                }
             }
             let before = state.clone();
             assert!(!state.try_idle_vblank_period(target), "case={case}");

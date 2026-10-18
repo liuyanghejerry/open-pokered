@@ -294,6 +294,7 @@ impl DisplayWorkTime {
             .checked_add(NATIVE_FRAME_T_CYCLES)
             .expect("display deadline overflow");
     }
+    #[inline(always)]
     fn reserve(&self) -> Result<(), DisplayWorkError> {
         self.device.validate().map_err(DisplayWorkError::Device)?;
         if self.device.observed_tcycles() != self.elapsed {
@@ -306,6 +307,7 @@ impl DisplayWorkTime {
         }
         Ok(())
     }
+    #[inline(always)]
     fn elapse(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
         let next = self
             .elapsed
@@ -327,7 +329,9 @@ impl DisplayWorkTime {
             && self.shadow_oam.len() == 160
             && self.device.try_idle_vblank_period(self.deadline)
         {
-            self.divider_counter = self.divider_counter.wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
+            self.divider_counter = self
+                .divider_counter
+                .wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
             self.elapsed = self.deadline;
             return Ok(());
         }
@@ -597,11 +601,17 @@ mod tests {
     #[test]
     fn idle_fast_path_does_not_hide_invalid_shadow_memory() {
         let mut time = DisplayWorkTime::default();
-        for _ in 0..2 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        for _ in 0..2 {
+            time.begin_native_update();
+            time.idle_to_target().unwrap();
+        }
         let elapsed = time.elapsed();
         time.shadow_oam.pop();
         time.begin_native_update();
-        assert!(matches!(time.idle_to_target(), Err(DisplayWorkError::Device(DisplayDeviceError::InvalidOam))));
+        assert!(matches!(
+            time.idle_to_target(),
+            Err(DisplayWorkError::Device(DisplayDeviceError::InvalidOam))
+        ));
         assert_eq!(time.elapsed(), elapsed);
         assert_eq!(time.device.observed_tcycles(), elapsed);
     }
@@ -619,8 +629,11 @@ mod tests {
                 while small.remaining() > 0 {
                     small.elapse(small.remaining().min(4096)).unwrap();
                 }
-                assert_eq!(serde_json::to_value(&fast).unwrap(),
-                    serde_json::to_value(&small).unwrap(), "frame={frame} wy={wy}");
+                assert_eq!(
+                    serde_json::to_value(&fast).unwrap(),
+                    serde_json::to_value(&small).unwrap(),
+                    "frame={frame} wy={wy}"
+                );
             }
         }
     }
