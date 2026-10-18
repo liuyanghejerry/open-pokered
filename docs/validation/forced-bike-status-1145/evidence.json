@@ -1,0 +1,64 @@
+{
+  "before": {
+    "actual_build_head": "378367b25778dc982dbae946e949c3d88705c6ca",
+    "binary_sha256": "23909b0918ee43ad398434df9017c9e68a2f445aaebc85c196c53bf6a79afd6b",
+    "repeat_count": 2,
+    "all_pass": true,
+    "field_frame": 960,
+    "use_frame": 858,
+    "transport": "Walking",
+    "field_png_sha256": "5b9227837494a3c542732858e1b450b99dd4f9f76a043a60016cf15c59478d63",
+    "commands": {
+      "get_state": 61,
+      "press_sequence": 26,
+      "step_frames": 29,
+      "wait_until": 2,
+      "press_timeline": 2,
+      "capture_frame": 2
+    }
+  },
+  "after": {
+    "actual_build_head": "ce87a6ff63ab26c511c7fd2eabefe1cd0a194622",
+    "binary_sha256": "33b0e383f06d84b19542573a56779d7190ce51f23b9f4a81655b2e675efc3d63",
+    "repeat_count": 2,
+    "all_pass": true,
+    "field_frame": 960,
+    "use_frame": 858,
+    "transport": "Biking",
+    "field_png_sha256": "5a44b2af2050358ba3d333bb228fd8df06817c864880d874f34c3a5925ec84c0",
+    "commands": {
+      "get_state": 137,
+      "press_sequence": 58,
+      "step_frames": 64,
+      "wait_until": 4,
+      "press_timeline": 5,
+      "capture_frame": 2
+    },
+    "saved_status_flags": {
+      "Flags5": 0,
+      "Flags6": 35
+    },
+    "saved_sha256": "836f3f212879b262179699695ae07fed276f034269483b104cd94d681d1b542b",
+    "independent_continue_and_repeat_use_passed": true
+  },
+  "field_pixel_diff_bbox": [
+    0,
+    40,
+    128,
+    144
+  ],
+  "field_pixel_diff_count": 1760,
+  "scope": "Offline controlled SRAM, ordinaryContinue/BicycleUSE/UI SAVE/independentContinue. Paired field shots same960frame andinputsequence, no runtime setters/debugsave/skipintro. Not freshplaythrough or originalROM normalplay proof.",
+  "portable_replay": {
+    "all_pass": true,
+    "binary_sha256": "33b0e383f06d84b19542573a56779d7190ce51f23b9f4a81655b2e675efc3d63",
+    "saved_sha256": "836f3f212879b262179699695ae07fed276f034269483b104cd94d681d1b542b",
+    "screenshots_equal_original_replay": true
+  },
+  "regression": {
+    "core_unit_passed": 3136,
+    "app_debug_library_passed": 381,
+    "app_ignored": 39,
+    "core_no_default_features_check": "passed"
+  }
+}
