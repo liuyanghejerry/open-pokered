@@ -1,0 +1,216 @@
+{
+  "scope": "settled field menu endpoint and cancel priority; not initial/cursor input cadence or layout parity",
+  "captures": {
+    "fossils-top-before.png": {
+      "frame": 2047,
+      "sha256": "e01b635f047d93203a022f6bfcb23da1f55ba3057fcea92dfc2f95c3901059ad"
+    },
+    "fossils-bottom-before.png": {
+      "frame": 1179,
+      "sha256": "3d3b1f27074ec58d1cce267f9f08160fe95e03d32e6f74642e321b985180f09a"
+    },
+    "drinks-top-before.png": {
+      "frame": 1663,
+      "sha256": "9492bf3725e9c5458f40d41ae4073b9e603d211c771a9b5dfb58d4d579acce17"
+    },
+    "drinks-bottom-before.png": {
+      "frame": 1147,
+      "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+    },
+    "fossils-top-after.png": {
+      "frame": 2047,
+      "sha256": "3d3b1f27074ec58d1cce267f9f08160fe95e03d32e6f74642e321b985180f09a"
+    },
+    "fossils-bottom-after.png": {
+      "frame": 1179,
+      "sha256": "e01b635f047d93203a022f6bfcb23da1f55ba3057fcea92dfc2f95c3901059ad"
+    },
+    "drinks-top-after.png": {
+      "frame": 1663,
+      "sha256": "ee4b71b17dffbdb1dcda69fd90069a9e58a055982ba8d0d42ddf7150b8141cf1"
+    },
+    "drinks-bottom-after.png": {
+      "frame": 1147,
+      "sha256": "9492bf3725e9c5458f40d41ae4073b9e603d211c771a9b5dfb58d4d579acce17"
+    }
+  },
+  "results": {
+    "before": {
+      "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
+      "all_pass": true,
+      "cases": [
+        {
+          "kind": "fossils",
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": true,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "DomeFossil",
+              "qty": 1
+            },
+            {
+              "item": "HelixFossil",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        },
+        {
+          "kind": "drinks",
+          "question_probes": [
+            {
+              "up_at_first": 1,
+              "two_ups": 0
+            },
+            {
+              "up_at_first": 1,
+              "two_ups": 0
+            }
+          ],
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": true
+          },
+          "after_bag": [
+            {
+              "item": "FreshWater",
+              "qty": 1
+            },
+            {
+              "item": "SodaPop",
+              "qty": 1
+            },
+            {
+              "item": "Tm49",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        }
+      ]
+    },
+    "after": {
+      "binary_sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a",
+      "all_pass": true,
+      "cases": [
+        {
+          "kind": "fossils",
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": true,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": false,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "HelixFossil",
+              "qty": 1
+            },
+            {
+              "item": "OldAmber",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        },
+        {
+          "kind": "drinks",
+          "question_probes": [
+            {
+              "up_at_first": 0,
+              "two_ups": 0
+            },
+            {
+              "up_at_first": 0,
+              "two_ups": 0
+            }
+          ],
+          "B_cancel_bag_unchanged": true,
+          "result_flags": {
+            "EVENT_REVIVING_KABUTO": false,
+            "EVENT_REVIVING_OMANYTE": false,
+            "EVENT_REVIVING_AERODACTYL": false,
+            "EVENT_GOT_TM13": true,
+            "EVENT_GOT_TM48": false,
+            "EVENT_GOT_TM49": false
+          },
+          "after_bag": [
+            {
+              "item": "SodaPop",
+              "qty": 1
+            },
+            {
+              "item": "Lemonade",
+              "qty": 1
+            },
+            {
+              "item": "Tm13",
+              "qty": 1
+            }
+          ],
+          "all_pass": true,
+          "Game_exit": -15
+        }
+      ]
+    }
+  },
+  "candidate_actual_build_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+  "baseline_actual_build_head": "531039ff647edc15c03a8423f1ef16753a4f8229",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_product_crates_byte_equal_master": true,
+  "candidate_build": {
+    "actual_source_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+    "sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a"
+  },
+  "core_full_tests": 3133,
+  "baseline_master": "25709ad84a4ea89f412f590025410254f01fe0ea",
+  "baseline_equivalence_scope": "git diff531039ff..25709ad8 is empty for crates,scripts,Cargo.toml,Cargo.lock,gfx; map resources unchanged by this PR",
+  "app_field_move_continuation_tests": 10,
+  "captures_same_bytes_as_prior_baseline": {
+    "fossils-top-before.png": true,
+    "fossils-bottom-before.png": true,
+    "drinks-top-before.png": true,
+    "drinks-bottom-before.png": true,
+    "fossils-top-after.png": true,
+    "fossils-bottom-after.png": true,
+    "drinks-top-after.png": true,
+    "drinks-bottom-after.png": true
+  },
+  "fresh_pre_rebase_candidate": {
+    "all49_pass": true,
+    "source_head": "c4164f22c1bf78f9591b31104ee47108534b86a0",
+    "actual_build_head": "229985fe384ee0ade3a6d33f03e2907b134f8ad0",
+    "binary_sha256": "16c8b2ef1d8bd979dd6e1a796d854fd2b7b5fc615628b22a848c79c934d38e7d",
+    "initial_save_absent": true,
+    "source_unchanged_at_finish": true,
+    "TheEnd_and_title_observed": true,
+    "independent_Continue": {
+      "screen": "overworld",
+      "map_name": "PalletTown",
+      "player_x": 5,
+      "player_y": 6,
+      "hall_of_fame_count": 1,
+      "badges": 255
+    },
+    "runtime_setters_or_debug_SAVE": false,
+    "scope": "Full fresh run was on pre-rebase c416 candidate; it is not relabeled as the rebased or final merged-master run."
+  }
+}

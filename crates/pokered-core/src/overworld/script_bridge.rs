@@ -32,24 +32,20 @@ impl PendingChoice {
         }
     }
 
-    /// Move cursor up (wraps around).
+    /// HandleMenuInput field choices stop at the first entry.
     pub fn move_up(&mut self) {
         if self.options.is_empty() {
             return;
         }
-        if self.selected == 0 {
-            self.selected = self.options.len() as u32 - 1;
-        } else {
-            self.selected -= 1;
-        }
+        self.selected = self.selected.saturating_sub(1);
     }
 
-    /// Move cursor down (wraps around).
+    /// HandleMenuInput field choices stop at the last entry.
     pub fn move_down(&mut self) {
         if self.options.is_empty() {
             return;
         }
-        self.selected = (self.selected + 1) % self.options.len() as u32;
+        self.selected = (self.selected + 1).min(self.options.len() as u32 - 1);
     }
 }
 
@@ -1344,3 +1340,7 @@ mod field_sound_window_snapshot_tests {
     }
 
 }
+
+#[cfg(test)]
+#[path = "tests_choice_boundaries.rs"]
+mod choice_boundaries_tests;
