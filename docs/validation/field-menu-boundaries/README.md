@@ -33,7 +33,7 @@ Two UP taps restore YES in both versions, preserving the matched timeline.
 Native DSL tests check actual 1/2/3-option continuations and A+B cancellation
 branch receipts; the two generic tests fail before the fix. Filtered tests
 cover counts1/2/3/11 and simultaneous key priority. Complete core library
-regression: 3,129 passed, including the updated B-priority audio control.
+regression: 3,130 passed, including the updated B-priority audio control.
 
 Build ordinary base and candidate CLI binaries with desktop,debug-server,
 then run from a checkout containing this proof package:

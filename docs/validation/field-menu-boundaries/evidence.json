@@ -36,7 +36,7 @@
   },
   "results": {
     "before": {
-      "binary_sha256": "065d82441787be8cbf188d384bc6ff9b9489f7a8626ec0504aa1aeed7f97e583",
+      "binary_sha256": "83a891e799b770e363651b91ce62de0fc391928c5b35c94aaffd1eff667be565",
       "all_pass": true,
       "cases": [
         {
@@ -104,7 +104,7 @@
       ]
     },
     "after": {
-      "binary_sha256": "656feecff51e9ca5428277e3f6404835ea3052b19dfdfd4d7ffa9c2fd7107df9",
+      "binary_sha256": "16c8b2ef1d8bd979dd6e1a796d854fd2b7b5fc615628b22a848c79c934d38e7d",
       "all_pass": true,
       "cases": [
         {
@@ -172,7 +172,56 @@
       ]
     }
   },
-  "candidate_actual_build_head": "16f1cac261e8c88e193e002cd6f03214a278af1b",
-  "baseline_actual_build_head": "13611df1 (full identity in prior Tower-exit proof); production crates byte-equal master 5e8b4c1e",
-  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c"
+  "candidate_actual_build_head": "229985fe384ee0ade3a6d33f03e2907b134f8ad0",
+  "baseline_actual_build_head": "fae2415e110e5fe6896ba8026d911db4d26ed208",
+  "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_product_crates_byte_equal_master": "05197c494e5a92af44d47c720d8e1fd48fc6d303",
+  "candidate_build": {
+    "actual_build_head": "229985fe384ee0ade3a6d33f03e2907b134f8ad0",
+    "binary_sha256": "16c8b2ef1d8bd979dd6e1a796d854fd2b7b5fc615628b22a848c79c934d38e7d",
+    "artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app#0.1.0",
+      "manifest_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "pokered-app",
+        "src_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app/src/main.rs",
+        "edition": "2021",
+        "required-features": [
+          "desktop"
+        ],
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 0,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": false
+      },
+      "features": [
+        "debug-server",
+        "default",
+        "desktop",
+        "embedded-map-data",
+        "embedded-scripts",
+        "mobile",
+        "pokered-debug-server"
+      ],
+      "filenames": [
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app"
+      ],
+      "executable": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+      "fresh": false
+    }
+  },
+  "core_full_tests": 3130
 }
