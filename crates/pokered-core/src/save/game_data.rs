@@ -170,26 +170,22 @@ impl PlayTime {
     }
 
     /// Tick one frame (60Hz). Carries: frames→seconds→minutes→hours.
-    /// Caps at 255:59:59:59 and sets maxed flag.
+    /// TrackPlayTime stops at 255:00:00:00 when the hour reaches $ff.
     pub fn tick(&mut self) {
         if self.maxed {
             return;
         }
         self.frames = self.frames.wrapping_add(1);
-        if self.frames >= 60 {
+        if self.frames == 60 {
             self.frames = 0;
             self.seconds = self.seconds.wrapping_add(1);
-            if self.seconds >= 60 {
+            if self.seconds == 60 {
                 self.seconds = 0;
                 self.minutes = self.minutes.wrapping_add(1);
-                if self.minutes >= 60 {
+                if self.minutes == 60 {
                     self.minutes = 0;
                     self.hours = self.hours.wrapping_add(1);
-                    if self.hours >= 255 {
-                        self.hours = 255;
-                        self.minutes = 59;
-                        self.seconds = 59;
-                        self.frames = 59;
+                    if self.hours == 255 {
                         self.maxed = true;
                     }
                 }
