@@ -656,5 +656,12 @@
     "comparison_png_equal": true,
     "trace_equal": true,
     "controller_sha256": "739eabc3233ab4de24f42fe62eeadce573379189db16eb32dcaecd9e3f919fcf"
-  }
+  },
+  "rebase_and_final_build": {
+    "actual_build_head": "54d4824a40b4bf62892be50e88015d3e98946355",
+    "binary_sha256": "83a891e799b770e363651b91ce62de0fc391928c5b35c94aaffd1eff667be565",
+    "byte_identical_to_captured_binary": true,
+    "original_captured_build": "fae2415e110e5fe6896ba8026d911db4d26ed208"
+  },
+  "product_source_equal_after_rebase": true
 }
