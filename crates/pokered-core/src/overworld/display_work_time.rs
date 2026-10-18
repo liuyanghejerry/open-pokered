@@ -398,6 +398,15 @@ impl DisplayWorkTime {
             self.idle_to_device_event()
         }
     }
+    /// An exclusive read/plain-instruction lease. Checked writes invalidate
+    /// its validation receipt; loading a snapshot always creates a new lease.
+    pub fn display_bus(&mut self) -> DisplayBus<'_> {
+        DisplayBus {
+            time: self,
+            validated: false,
+        }
+    }
+
     pub fn pattern_bus<'a, A: PatternAssets>(
         &'a mut self,
         patterns: &'a mut PatternMemory,
@@ -548,6 +557,58 @@ impl super::vblank_return_work::VBlankReturnBus for DisplayWorkTime {
         self.elapse(16)?;
         self.record_interrupt_return();
         Ok(())
+    }
+}
+
+pub struct DisplayBus<'a> {
+    time: &'a mut DisplayWorkTime,
+    validated: bool,
+}
+impl DisplayBus<'_> {
+    #[inline(always)]
+    fn reserve(&mut self) -> Result<(), DisplayWorkError> {
+        if !self.validated {
+            self.time.reserve()?;
+            self.validated = true;
+        } else {
+            debug_assert!(self.time.device.validate().is_ok());
+            debug_assert_eq!(self.time.device.observed_tcycles(), self.time.elapsed);
+            if self.time.elapsed >= self.time.deadline {
+                return Err(DisplayWorkError::Budget);
+            }
+        }
+        Ok(())
+    }
+}
+impl DisplayInstructionBus for DisplayBus<'_> {
+    type Error = DisplayWorkError;
+    fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
+        match instruction.access {
+            None => {
+                self.reserve()?;
+                self.time.elapse_reserved(u64::from(instruction.tcycles))?;
+                Ok(None)
+            }
+            Some(DisplayAccess::Read { port, at_tcycle }) => {
+                // Preserve the checked path's port-error-before-budget order.
+                self.time
+                    .read_display_port(port)
+                    .map_err(DisplayWorkError::Device)?;
+                self.reserve()?;
+                self.time.elapse_reserved(u64::from(at_tcycle))?;
+                let value = self
+                    .time
+                    .read_display_port(port)
+                    .map_err(DisplayWorkError::Device)?;
+                self.time
+                    .elapse_reserved(u64::from(instruction.tcycles - at_tcycle))?;
+                Ok(Some(value))
+            }
+            Some(DisplayAccess::Write { .. }) => {
+                self.validated = false;
+                DisplayInstructionBus::execute(self.time, instruction)
+            }
+        }
     }
 }
 
@@ -738,6 +799,182 @@ mod tests {
             Some(offset as u8)
         }
     }
+    #[test]
+    fn exclusive_display_bus_matches_every_lcd_poll_and_snapshot_resume() {
+        for lcdc in [0x11, 0x91, 0x93, 0xb1] {
+            for offset in [0, 80, 65_660] {
+                for budget in [0, 4, 4096, 70224] {
+                    let mut time = DisplayWorkTime::default();
+                    time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                    time.elapse(offset).unwrap();
+                    if offset == 80 {
+                        time.device_mut().write_port(0xff46, 0xc3, 0xc3).unwrap();
+                    }
+                    time.deadline = time.elapsed + budget;
+                    let mut reference = time.clone();
+                    let mut work = DisableLcdWork::default();
+                    let mut expected_work = work;
+                    for _ in 0..3 {
+                        let result = {
+                            let mut bus = time.display_bus();
+                            let mut result = Ok(None);
+                            for index in 0..22_000 {
+                                let instruction = work.instruction();
+                                result = work.step(&mut bus);
+                                assert_eq!(result, expected_work.step(&mut reference));
+                                assert_eq!(work, expected_work);
+                                assert_eq!(bus.time.device, reference.device);
+                                assert_eq!(bus.time.elapsed, reference.elapsed);
+                                assert_eq!(bus.time.divider_counter, reference.divider_counter);
+                                if index % 256 == 0
+                                    || instruction.is_some_and(|i| {
+                                        matches!(i.access, Some(DisplayAccess::Write { .. }))
+                                    })
+                                {
+                                    assert_eq!(
+                                        serde_json::to_value(&*bus.time).unwrap(),
+                                        serde_json::to_value(&reference).unwrap()
+                                    );
+                                }
+                                if !matches!(result, Ok(Some(_))) {
+                                    break;
+                                }
+                            }
+                            result
+                        };
+                        assert_eq!(
+                            serde_json::to_value(&time).unwrap(),
+                            serde_json::to_value(&reference).unwrap()
+                        );
+                        match result {
+                            Ok(None) => break,
+                            Err(DisplayWorkError::Budget) => (),
+                            other => panic!("LCD work did not pause or return: {other:?}"),
+                        }
+                        time =
+                            serde_json::from_value(serde_json::to_value(&time).unwrap()).unwrap();
+                        reference =
+                            serde_json::from_value(serde_json::to_value(&reference).unwrap())
+                                .unwrap();
+                        time.begin_native_update();
+                        reference.begin_native_update();
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn display_bus_preserves_writes_port_errors_and_malformed_snapshot_order() {
+        let instructions = [
+            DisplayInstruction {
+                tcycles: 4,
+                access: None,
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Read {
+                    port: 0xff44,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Read {
+                    port: 0xff01,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Write {
+                    port: 0xff40,
+                    value: 0x91,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Write {
+                    port: 0xff46,
+                    value: 0xc3,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Read {
+                    port: 0xff44,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Write {
+                    port: 0xff41,
+                    value: 8,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Write {
+                    port: 0xff46,
+                    value: 0xc2,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 12,
+                access: Some(DisplayAccess::Write {
+                    port: 0xff40,
+                    value: 0x11,
+                    at_tcycle: 8,
+                }),
+            },
+            DisplayInstruction {
+                tcycles: 4,
+                access: None,
+            },
+        ];
+        for case in 0..7 {
+            let mut seed = DisplayWorkTime::default();
+            seed.begin_native_update();
+            match case {
+                0 => (),
+                1 => seed.shadow_oam.clear(),
+                2 => seed.elapsed = 1,
+                3 => seed.deadline = 0,
+                4 => {
+                    let mut value = serde_json::to_value(&seed).unwrap();
+                    value["device"]["stat_enable"] = 8.into();
+                    seed = serde_json::from_value(value).unwrap();
+                }
+                5 => {
+                    let mut value = serde_json::to_value(&seed).unwrap();
+                    value["device"]["oam"] = serde_json::json!([]);
+                    seed = serde_json::from_value(value).unwrap();
+                }
+                6 => seed.deadline = 4,
+                _ => unreachable!(),
+            }
+            let mut time = seed.clone();
+            let mut reference = seed;
+            let mut bus = time.display_bus();
+            for instruction in instructions {
+                assert_eq!(
+                    bus.execute(instruction),
+                    reference.execute(instruction),
+                    "case={case} instruction={instruction:?}"
+                );
+                assert_eq!(
+                    serde_json::to_value(&*bus.time).unwrap(),
+                    serde_json::to_value(&reference).unwrap()
+                );
+            }
+        }
+    }
+
     #[test]
     fn exclusive_pattern_bus_matches_checked_instructions_io_and_snapshot_resume() {
         use super::super::field_restore::{CopyFormat, PatternCopy};

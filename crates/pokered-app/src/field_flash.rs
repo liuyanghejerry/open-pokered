@@ -257,7 +257,13 @@ impl PokemonGame {
             if let Some(child) = flow.display_child.as_mut() {
                 let result = match child {
                     DisplayChild::Disable(work) => {
-                        work.step(&mut self.source_display).map(|i| i.is_some())
+                        let mut bus = self.source_display.display_bus();
+                        loop {
+                            match work.step(&mut bus) {
+                                Ok(Some(_)) => (),
+                                result => break result.map(|i| i.is_some()),
+                            }
+                        }
                     }
                     DisplayChild::Enable { work, called } => {
                         if !*called {
