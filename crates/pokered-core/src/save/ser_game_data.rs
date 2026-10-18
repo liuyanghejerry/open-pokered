@@ -278,7 +278,8 @@ pub fn serialize_game_data_into(data: &GameData, buf: &mut Vec<u8>) {
     buf.extend_from_slice(&[0u8; 8]);
 
     // -- Status flags with WRAM padding (15 bytes total) --
-    // Layout: [flags0, pad, flags1, pad, flags2, flags3, flags4, pad, flags5, pad, flags6, flags7, flags8, pad, flags9]
+    // Layout: [Flags1, pad, beaten gyms, pad, Flags2, Flags3, Flags4,
+    //          pad, Flags5, pad, Flags6, Flags7, Elite Four, pad, movement]
     buf.push(data.status_flags[0]);
     buf.push(0); // padding
     buf.push(data.status_flags[1]);

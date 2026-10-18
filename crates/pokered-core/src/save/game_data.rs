@@ -321,6 +321,9 @@ pub struct GameData {
     pub tile_in_front_of_boulder: u8,
     pub dungeon_warp_dest_map: u8,
     pub which_dungeon_warp: u8,
+    /// Compacted WRAM bytes: Flags1, beaten gyms, Flags2, Flags3, Flags4,
+    /// Flags5, Flags6, Flags7, Elite Four, movement. Slots 10/11 are spare.
+    /// Flags5 and Flags6 remain distinct: input/text bits versus the bike lock.
     pub status_flags: [u8; 12],
     pub completed_in_game_trade_flags: u16,
     pub warped_from_warp: u8,
