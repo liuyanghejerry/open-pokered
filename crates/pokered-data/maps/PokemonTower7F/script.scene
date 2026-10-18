@@ -82,6 +82,9 @@ game_scene PokemonTower7F {
   @load {
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0") && !getFlag("EVENT_TOWER7_ROCKET_0_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_0_LEFT")
+      @speaker("") {
+        @t("I'm not going to forget\nthis!", "我绝不会忘记这件事！")
+      }
       @if (getPlayerX() == 9 && getPlayerY() == 12) {
         moveNpc("POKEMONTOWER7F_ROCKET_1", [[10, 11], [10, 12], [10, 13], [10, 14], [10, 15], [10, 16], [9, 16]])
       }
@@ -98,6 +101,9 @@ game_scene PokemonTower7F {
     }
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1") && !getFlag("EVENT_TOWER7_ROCKET_1_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_1_LEFT")
+      @speaker("") {
+        @t("POKeMON are only good for\nmaking money!\n\nStay out of our business!", "宝可梦不过是用来赚钱的工具！\n\n别来管我们的闲事！")
+      }
       @if (getPlayerX() == 12 && getPlayerY() == 10) {
         moveNpc("POKEMONTOWER7F_ROCKET_2", [[11, 9], [11, 10], [11, 11], [11, 12], [11, 13], [11, 14], [11, 15]])
       }
@@ -114,6 +120,9 @@ game_scene PokemonTower7F {
     }
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2") && !getFlag("EVENT_TOWER7_ROCKET_2_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_2_LEFT")
+      @speaker("") {
+        @t("You're not getting away with\nthis!", "你别想轻易逃掉！")
+      }
       @if (getPlayerX() == 9 && getPlayerY() == 8) {
         moveNpc("POKEMONTOWER7F_ROCKET_3", [[10, 7], [10, 8], [10, 9], [10, 10], [10, 11], [10, 12], [10, 13]])
       }

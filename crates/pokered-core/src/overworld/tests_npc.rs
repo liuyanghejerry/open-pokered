@@ -1536,8 +1536,8 @@ fn tower_rockets_leave_and_hide_after_victory() {
         screen.rerun_map_on_load_script();
         let mut actual = Vec::new();
         let mut previous = case.start;
-        for _ in 0..1500 {
-            screen.update_frame(neutral());
+        for frame in 0..2800 {
+            screen.update_frame(super::OverworldInput::new(false,false,false,false,frame%8==0,false,false,false));
             let rocket = &screen.npc_states[index];
             let position = [rocket.x, rocket.y];
             if position != previous { actual.push(position); previous = position; }
@@ -1550,6 +1550,51 @@ fn tower_rockets_leave_and_hide_after_victory() {
         screen.warp_to_map(MapId::PokemonTower7F,9,15);
         for _ in 0..160 { screen.update_frame(neutral()); }
         assert!(!screen.npc_states[index].visible);
+    }
+}
+
+/// Tower's EndBattleScript prints the ordinary AfterBattleText before moving.
+/// No input for a full page must keep the visible Rocket at its battle square.
+#[test]
+fn tower_rockets_parting_text_waits_before_any_departure() {
+    use pokered_data::{event_flags::EventFlag, impl_traits::PokemonRedData};
+    let flags = [EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_0,
+        EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_1,
+        EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_2];
+    let starts = [(9,11),(12,9),(9,7)];
+    let prefixes = ["I'm not going", "POKeMON are only", "You're not getting"];
+    for index in 0..3 {
+        let mut field = OverworldScreen::new(MapId::PokemonTower7F, None, PokemonRedData);
+        let input = |a| super::OverworldInput::new(false,false,false,false,a,false,false,false);
+        field.run_on_load();
+        for _ in 0..50 { field.update_frame(input(false)); }
+        let (x,y) = starts[index];
+        field.state.player.x = x;
+        field.state.player.y = y+1;
+        field.set_event_flag_live(flags[index]);
+        field.rerun_map_on_load_script();
+        for _ in 0..100 {
+            field.update_frame(input(false));
+            if field.pending_dialogue.is_some() { break; }
+        }
+        assert!(field.pending_dialogue.is_some(), "Rocket {} omitted its AfterBattleText",index+1);
+        for _ in 0..240 {
+            field.update_frame(input(false));
+            assert_eq!((field.npc_states[index].x,field.npc_states[index].y),(x,y));
+            assert!(field.npc_states[index].visible);
+        }
+        let (top,bottom) = field.pending_dialogue.as_ref().unwrap().get_display_text().unwrap();
+        assert!(format!("{top} {bottom}").contains(prefixes[index]));
+        for frame in 0..2800 {
+            field.update_frame(input(frame%8==0));
+            if !field.npc_states[index].visible { break; }
+        }
+        assert!(!field.npc_states[index].visible, "dialogue ACK must resume the departure");
+        field.warp_to_map(MapId::PalletTown,5,6);
+        field.warp_to_map(MapId::PokemonTower7F,9,15);
+        for _ in 0..160 { field.update_frame(input(false)); }
+        assert!(!field.npc_states[index].visible);
+        assert!(field.pending_dialogue.is_none(), "re-entry must not replay the parting text");
     }
 }
 
