@@ -1369,24 +1369,34 @@ class Game:
                 self.step(30)
         raise NavError("expected a choice menu, never opened")
 
+    def _ready_choice(self, max_wait_frames=120):
+        """Wait for a drawn menu's real input poll, including cursor delays."""
+        for frame in range(max_wait_frames + 1):
+            choice = self.st()["choice"]
+            assert choice is not None, "choice closed before selection"
+            if choice.get("input_enabled", True):
+                return choice
+            if frame < max_wait_frames:
+                self.step(1)
+        raise NavError("choice never enabled input")
+
     def choose(self, label):
-        """Move the cursor to `label` in the open choice menu, press A.
-        Matches case-insensitively (scripts use both YES/NO and Yes/No).
-        The menu wraps both ways, so take the shorter arc."""
-        ch = self.st()["choice"]
-        assert ch is not None, "no choice open"
+        """Wait for input readiness, move toward `label`, then confirm.
+
+        Matches case-insensitively. Moving directly toward the target works
+        for both wrapping lists and the original clamped YES/NO menus.
+        """
+        ch = self._ready_choice()
         opts = ch["options"]
         if label not in opts:
             label = next(o for o in opts if o.lower() == label.lower())
         idx = opts.index(label)
-        n = len(ch["options"])
-        delta = (idx - ch["selected"]) % n
-        if delta:
-            down = delta * 2 <= n
-            for _ in range(delta if down else n - delta):
-                self.d.drive(["down" if down else "up"], frames=12)
-            s = self.st()["choice"]
-            assert s["selected"] == idx, s
+        delta = idx - ch["selected"]
+        for _ in range(abs(delta)):
+            self.d.drive(["down" if delta > 0 else "up"], frames=12)
+            self._ready_choice()
+        ch = self._ready_choice()
+        assert ch["options"] == opts and ch["selected"] == idx, ch
         self.tap("a", 10)
 
     def talk(self, post="control_ready", budget=600):

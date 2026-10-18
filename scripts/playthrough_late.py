@@ -1620,7 +1620,7 @@ def m44_indigo(g):
     g.face("up")
     g.tap("a", 16)
     g.dialogue_then_choice()
-    g.choose("YES")
+    g.choose("HEAL")
     assert g.cutscene()
     assert all(mon["hp"] == mon["max_hp"] for mon in g.st()["party"])
     g.nav_to(2, 5, "IndigoPlateauLobby")
