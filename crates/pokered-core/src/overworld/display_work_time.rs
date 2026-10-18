@@ -336,8 +336,8 @@ impl DisplayWorkTime {
         self.elapsed = next;
         Ok(())
     }
-    // Only PatternBus calls this after its checked reservation. The exclusive
-    // bus lease prevents external replacement of time/device state.
+    // Only exclusive display/pattern buses call this after reservation. Their
+    // leases prevent external replacement of time/device state.
     #[inline(always)]
     fn elapse_reserved(&mut self, cycles: u8) -> Result<(), DisplayWorkError> {
         self.idle_period_cached = false;
