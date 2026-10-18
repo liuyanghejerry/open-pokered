@@ -23,44 +23,104 @@ impl<'a> NativePatternAssets<'a> {
 }
 impl PatternAssets for NativePatternAssets<'_> {
     fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8> {
-        let mut resources = self.resources.borrow_mut();
-        let (cached, expected_tiles, one_bpp) = match source {
-            PatternSource::Sprite(raw) => {
-                // SpriteId::None.sprite_name() is a rendering convenience
-                // that returns "red". It cannot repair an invalid raw source.
-                if raw == 0 {
-                    return None;
-                }
-                let id = SpriteId::from_u8(raw)?;
-                (
-                    resources.load_sprite(id.sprite_name()).ok()?,
-                    if id.is_still() { 4 } else { 24 },
-                    false,
-                )
-            }
-            PatternSource::WalkingPlayer => (resources.load_sprite("red").ok()?, 24, false),
-            PatternSource::BicyclePlayer => (resources.load_sprite("red_bike").ok()?, 24, false),
-            PatternSource::SurfingPlayer => (resources.load_sprite("seel").ok()?, 24, false),
-            // Pattern contents are uploaded as transfer data only. The normal
-            // text renderer continues to use Fusion Pixel, not these glyphs.
-            PatternSource::Font => (resources.load_font("font").ok()?, 128, true),
-            PatternSource::TextBox => (resources.load_font("font_extra").ok()?, 32, false),
-            PatternSource::Flower(frame @ 1..=3) => (
-                resources
-                    .load_asset(
-                        AssetCategory::Tileset,
-                        &format!("flower/flower{}.png", frame),
+        #[cfg(target_os = "none")]
+        return rom_pattern_byte(source, offset);
+        #[cfg(not(target_os = "none"))]
+        {
+            let mut resources = self.resources.borrow_mut();
+            let (cached, expected_tiles, one_bpp) = match source {
+                PatternSource::Sprite(raw) => {
+                    // SpriteId::None.sprite_name() is a rendering convenience
+                    // that returns "red". It cannot repair an invalid raw source.
+                    if raw == 0 {
+                        return None;
+                    }
+                    let id = SpriteId::from_u8(raw)?;
+                    (
+                        resources.load_sprite(id.sprite_name()).ok()?,
+                        if id.is_still() { 4 } else { 24 },
+                        false,
                     )
-                    .ok()?,
-                1,
-                false,
-            ),
-            PatternSource::Flower(_) => return None,
-        };
-        if cached.tileset.len() != expected_tiles {
-            return None;
+                }
+                PatternSource::WalkingPlayer => (resources.load_sprite("red").ok()?, 24, false),
+                PatternSource::BicyclePlayer => {
+                    (resources.load_sprite("red_bike").ok()?, 24, false)
+                }
+                PatternSource::SurfingPlayer => (resources.load_sprite("seel").ok()?, 24, false),
+                // Pattern contents are uploaded as transfer data only. The normal
+                // text renderer continues to use Fusion Pixel, not these glyphs.
+                PatternSource::Font => (resources.load_font("font").ok()?, 128, true),
+                PatternSource::TextBox => (resources.load_font("font_extra").ok()?, 32, false),
+                PatternSource::Flower(frame @ 1..=3) => (
+                    resources
+                        .load_asset(
+                            AssetCategory::Tileset,
+                            &format!("flower/flower{}.png", frame),
+                        )
+                        .ok()?,
+                    1,
+                    false,
+                ),
+                PatternSource::Flower(_) => return None,
+            };
+            if cached.tileset.len() != expected_tiles {
+                return None;
+            }
+            pattern_byte(&cached.tileset, offset, one_bpp)
         }
-        pattern_byte(&cached.tileset, offset, one_bpp)
+    }
+}
+
+// GBA already has immutable original tile bytes in ROM. Reading a transfer
+// must not allocate a decoded sheet merely to reconstruct those same bytes.
+#[cfg(target_os = "none")]
+fn rom_pattern_byte(source: PatternSource, offset: u16) -> Option<u8> {
+    let (dir, name, tiles, stored_one_bpp, output_one_bpp) = match source {
+        PatternSource::Sprite(raw) => {
+            if raw == 0 {
+                return None;
+            }
+            let id = SpriteId::from_u8(raw)?;
+            (
+                "sprites",
+                id.sprite_name(),
+                if id.is_still() { 4 } else { 24 },
+                false,
+                false,
+            )
+        }
+        PatternSource::WalkingPlayer => ("sprites", "red", 24, false, false),
+        PatternSource::BicyclePlayer => ("sprites", "red_bike", 24, false, false),
+        PatternSource::SurfingPlayer => ("sprites", "seel", 24, false, false),
+        PatternSource::Font => ("font", "font", 128, true, true),
+        PatternSource::TextBox => ("font", "font_extra", 32, true, false),
+        PatternSource::Flower(1) => ("tilesets/flower", "flower1", 1, false, false),
+        PatternSource::Flower(2) => ("tilesets/flower", "flower2", 1, false, false),
+        PatternSource::Flower(3) => ("tilesets/flower", "flower3", 1, false, false),
+        PatternSource::Flower(_) => return None,
+    };
+    let bytes = pokered_renderer::gba_assets::get_preconverted_asset(dir, name)?;
+    stored_pattern_byte(bytes, offset, tiles, stored_one_bpp, output_one_bpp)
+}
+
+#[cfg(any(target_os = "none", test))]
+fn stored_pattern_byte(
+    bytes: &[u8],
+    offset: u16,
+    tiles: usize,
+    stored_one_bpp: bool,
+    output_one_bpp: bool,
+) -> Option<u8> {
+    let stored_stride = if stored_one_bpp { 8 } else { 16 };
+    let output_stride = if output_one_bpp { 8 } else { 16 };
+    if bytes.len() != tiles * stored_stride || usize::from(offset) >= tiles * output_stride {
+        return None;
+    }
+    let offset = usize::from(offset);
+    match (stored_one_bpp, output_one_bpp) {
+        (true, false) => bytes.get(offset / 2).copied(),
+        (false, true) => None, // no current caller may discard a 2bpp plane
+        _ => bytes.get(offset).copied(),
     }
 }
 
@@ -88,6 +148,48 @@ fn pattern_byte(tiles: &TileSet, offset: u16, one_bpp: bool) -> Option<u8> {
 }
 #[cfg(test)]
 mod tests {
+    use crate::alloc_prelude::Vec;
+
+    #[test]
+    fn rom_transfer_bytes_match_decoded_reencoded_tiles() {
+        for one_bpp in [false, true] {
+            let stride = if one_bpp { 8 } else { 16 };
+            let bytes: Vec<u8> = (0..256).map(|n| n as u8).collect();
+            let tiles = if one_bpp {
+                TileSet::from_1bpp(&bytes)
+            } else {
+                TileSet::from_2bpp(&bytes)
+            };
+            for output_one_bpp in [false, true] {
+                if output_one_bpp && !one_bpp {
+                    continue;
+                }
+                let output_len = bytes.len() / stride * if output_one_bpp { 8 } else { 16 };
+                for offset in 0..output_len {
+                    assert_eq!(
+                        stored_pattern_byte(
+                            &bytes,
+                            offset as u16,
+                            bytes.len() / stride,
+                            one_bpp,
+                            output_one_bpp
+                        ),
+                        pattern_byte(&tiles, offset as u16, output_one_bpp)
+                    );
+                }
+                assert_eq!(
+                    stored_pattern_byte(
+                        &bytes,
+                        output_len as u16,
+                        bytes.len() / stride,
+                        one_bpp,
+                        output_one_bpp
+                    ),
+                    None
+                );
+            }
+        }
+    }
     use super::*;
     #[test]
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
