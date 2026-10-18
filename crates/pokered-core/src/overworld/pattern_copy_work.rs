@@ -83,7 +83,6 @@ impl PatternCopyDataWork {
     pub fn finished(&self) -> bool {
         self.step == CopyStep::Done
     }
-    #[inline(always)]
     pub fn instruction(&self) -> Option<PatternInstruction> {
         use CopyStep::*;
         let (tcycles, access) = match self.step {
@@ -111,7 +110,6 @@ impl PatternCopyDataWork {
         };
         Some(PatternInstruction { tcycles, access })
     }
-    #[inline(always)]
     pub fn step<B: PatternInstructionBus>(
         &mut self,
         bus: &mut B,

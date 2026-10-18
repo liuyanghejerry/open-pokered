@@ -363,7 +363,6 @@ impl DisplayWorkTime {
 
 impl DisplayInstructionBus for DisplayWorkTime {
     type Error = DisplayWorkError;
-    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         // Validate ports without mutation before accepting this instruction.
         if let Some(access) = instruction.access {
@@ -490,7 +489,6 @@ pub struct PatternBus<'a, A> {
 }
 impl<A> DisplayInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
-    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         DisplayInstructionBus::execute(self.time, instruction)
     }
@@ -498,7 +496,6 @@ impl<A> DisplayInstructionBus for PatternBus<'_, A> {
 
 impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
-    #[inline(always)]
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error> {
         if self.patterns.bytes().len() != 0x2000 {
             return Err(DisplayWorkError::Resource(

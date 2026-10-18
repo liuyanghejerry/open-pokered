@@ -26,7 +26,6 @@ impl<'a> NativePatternAssets<'a> {
     }
 }
 impl PatternAssets for NativePatternAssets<'_> {
-    #[inline(always)]
     fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8> {
         #[cfg(target_os = "none")]
         return self.rom_cache.read(source, offset, rom_pattern_source);
@@ -91,7 +90,6 @@ struct RomPatternData {
 struct RomPatternCache(core::cell::Cell<Option<(PatternSource, RomPatternData)>>);
 #[cfg(any(target_os = "none", test))]
 impl RomPatternCache {
-    #[inline(always)]
     fn read(
         &self,
         source: PatternSource,
@@ -154,7 +152,6 @@ fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
 }
 
 #[cfg(any(target_os = "none", test))]
-#[inline(always)]
 fn stored_pattern_byte(
     bytes: &[u8],
     offset: u16,
