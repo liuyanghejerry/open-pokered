@@ -51,7 +51,7 @@ impl ElevatorScreen {
         }
     }
 
-    /// The drink filter reuses this screen but supplies item entries, not floors.
+    /// Fossil and drink filters call HandleMenuInput with wrapping disabled.
     pub fn new_filtered(items: Vec<String>) -> Self {
         Self {
             floor_menu: false,
@@ -115,11 +115,14 @@ impl ElevatorScreen {
             }
         } else {
             if input.up {
-                self.selected = (self.selected + self.floors.len() - 1) % self.floors.len();
+                self.selected = self.selected.saturating_sub(1);
+            } else if input.down {
+                self.selected = (self.selected + 1).min(self.floors.len() - 1);
             }
-            if input.down {
-                self.selected = (self.selected + 1) % self.floors.len();
-            }
+        }
+        // Both original filtered-item callers test B before using the index.
+        if !self.floor_menu && input.b {
+            return ElevatorAction::Cancel;
         }
         if input.a {
             return if self.floor_menu && self.selected == self.floors.len() {
@@ -269,16 +272,70 @@ mod tests {
         assert_eq!(menu.scroll_offset(3), 0);
     }
 
+    // GiveFossilToCinnabarLab and CeladonMartRoofScript_GiveDrinkToGirl
+    // call HandleMenuInput without enabling wrapping. UP wins over DOWN;
+    // both callers test B before accepting the selected item.
     #[test]
-    fn filtered_bag_keeps_its_existing_entries_and_input_policy() {
-        let mut menu = ElevatorScreen::new_filtered(floors(11));
-        assert_eq!(menu.menu_entries().count(), 11);
-        up(&mut menu);
-        assert_eq!(menu.selected_index(), 10);
-        assert_eq!(menu.scroll_offset(7), 4);
-        assert_eq!(confirm(&mut menu), ElevatorAction::Select(10));
-        down(&mut menu);
-        assert_eq!(menu.selected_index(), 0);
+    fn filtered_items_clamp_both_ends_without_adding_a_cancel_entry() {
+        for count in [1, 2, 3, 11] {
+            let mut menu = ElevatorScreen::new_filtered(floors(count));
+            assert_eq!(menu.menu_entries().count(), count);
+            up(&mut menu);
+            assert_eq!(menu.selected_index(), 0);
+            for _ in 0..count + 2 {
+                down(&mut menu);
+            }
+            assert_eq!(menu.selected_index(), count - 1);
+            assert_eq!(confirm(&mut menu), ElevatorAction::Select(count - 1));
+            for _ in 0..count + 2 {
+                up(&mut menu);
+            }
+            assert_eq!(menu.selected_index(), 0);
+        }
+    }
+
+    #[test]
+    fn filtered_items_preserve_source_simultaneous_key_priority() {
+        let mut menu = ElevatorScreen::new_filtered(floors(3));
+        for cursor in 0..3 {
+            menu.selected = cursor;
+            assert_eq!(
+                menu.update_frame(ElevatorInput {
+                    up: true,
+                    down: true,
+                    ..ElevatorInput::none()
+                }),
+                ElevatorAction::Continue
+            );
+            assert_eq!(menu.selected_index(), cursor.saturating_sub(1));
+            assert_eq!(
+                menu.update_frame(ElevatorInput {
+                    a: true,
+                    b: true,
+                    ..ElevatorInput::none()
+                }),
+                ElevatorAction::Cancel
+            );
+        }
+        menu.selected = 1;
+        assert_eq!(
+            menu.update_frame(ElevatorInput {
+                up: true,
+                a: true,
+                ..ElevatorInput::none()
+            }),
+            ElevatorAction::Select(0)
+        );
+        menu.selected = 1;
+        assert_eq!(
+            menu.update_frame(ElevatorInput {
+                down: true,
+                b: true,
+                ..ElevatorInput::none()
+            }),
+            ElevatorAction::Cancel
+        );
+        assert_eq!(menu.selected_index(), 2);
     }
 
     #[test]
