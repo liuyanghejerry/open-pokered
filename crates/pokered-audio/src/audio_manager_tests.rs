@@ -133,7 +133,10 @@ fn initial_song_volume_command_controls_the_next_real_fade_step() {
 
     // The next step must read that live level, rather than cached 6,6.
     mgr.update_frame();
-    assert_eq!((mgr.master_volume_left(), mgr.master_volume_right()), (6, 6));
+    assert_eq!(
+        (mgr.master_volume_left(), mgr.master_volume_right()),
+        (6, 6)
+    );
     assert_eq!(mgr.apu.nr50, 0x66);
 }
 
@@ -745,7 +748,9 @@ fn healed_jingle_first_music_channel_reports_natural_completion() {
     assert!(manager.sequencer.is_music_channel_active(0));
     for _ in 0..1024 {
         manager.update_frame();
-        if !manager.sequencer.is_music_channel_active(0) { return; }
+        if !manager.sequencer.is_music_channel_active(0) {
+            return;
+        }
     }
     panic!("finite healed jingle never ended its first music channel");
 }
@@ -757,7 +762,9 @@ fn badge_wrong_bank_plays_only_ball_poof_noise_and_finishes() {
     for ch in 0..4 {
         assert_eq!(mgr.sequencer.is_sfx_channel_active(ch), ch == 3);
     }
-    for _ in 0..120 { mgr.update_frame(); }
+    for _ in 0..120 {
+        mgr.update_frame();
+    }
     assert!(!mgr.is_sfx_playing());
 }
 
@@ -798,4 +805,48 @@ fn rock_tunnel_press_ab_holds_real_music_vibrato_delay() {
 #[test]
 fn silph_press_ab_holds_real_music_vibrato_delay() {
     check_real_song_keeps_paired_vibrato_while_press_ab_plays(MusicId::SILPH_CO);
+}
+
+fn check_real_song_retains_saved_pitch_under_press_ab(music: MusicId) {
+    let mut covered_new_notes = 0;
+    for warmup in 1..=64 {
+        let mut mgr = AudioManager::new();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(music);
+        for _ in 0..warmup {
+            mgr.update_frame();
+        }
+        mgr.play_sfx(SfxId::PressAB);
+        for tick in 0..18 {
+            let overridden = mgr.sequencer.channels[4].active;
+            let before = mgr.sequencer.channels[0].clone();
+            mgr.update_frame();
+            let after = &mgr.sequencer.channels[0];
+            if overridden {
+                // Source Audio3_note_pitch returns before storing the low
+                // byte while the paired one-shot owns the hardware voice.
+                assert_eq!(
+                    after.freq_lo_saved, before.freq_lo_saved,
+                    "{music:?}, warmup {warmup}, confirmation tick {tick}"
+                );
+                if after.ptr != before.ptr && after.frequency != before.frequency {
+                    covered_new_notes += 1;
+                }
+            }
+        }
+    }
+    assert!(
+        covered_new_notes > 0,
+        "must cross real pitched notes under SFX"
+    );
+}
+
+#[test]
+fn rock_tunnel_press_ab_preserves_saved_music_pitch() {
+    check_real_song_retains_saved_pitch_under_press_ab(MusicId::DUNGEON3);
+}
+
+#[test]
+fn silph_press_ab_preserves_saved_music_pitch() {
+    check_real_song_retains_saved_pitch_under_press_ab(MusicId::SILPH_CO);
 }
