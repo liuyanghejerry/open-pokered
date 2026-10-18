@@ -425,6 +425,33 @@ impl DisplayDevice {
         }
         self.stat_edge();
     }
+    /// Exact periodic state in an unmodified VBlank. No OBJ/window/STAT/DMA
+    /// work can change a line length or publish data during this interval.
+    /// The bounded predicate also rejects malformed deserialized state; all
+    /// other states continue through the fully validated event path.
+    #[inline]
+    pub(crate) fn try_idle_vblank_period(&mut self, target: u64) -> bool {
+        if self.phase != RasterPhase::VBlank
+            || self.lcdc & 0xa2 != 0x80
+            || self.first_frame
+            || !(144..=153).contains(&self.ly)
+            || !(1..=456).contains(&self.phase_remaining)
+            || self.mode3_length != 172 + u16::from(self.scx & 7)
+            || self.dma.is_some()
+            || self.stat_enable != 0
+            || self.stat_irq_line
+            || self.window_y_reached
+            || self.oam.len() != 160
+            || target.checked_sub(self.observed_tcycles) != Some(154 * 456)
+        {
+            return false;
+        }
+        self.observed_tcycles = target;
+        self.vblank_epoch += 1;
+        self.iflags |= 1;
+        true
+    }
+
     /// Synchronize to the sole owner's absolute time. No service is inferred
     /// from the number of host calls; splitting an interval is identical.
     /// DMA reads each byte from the live canonical shadow buffer at that byte's
@@ -575,6 +602,45 @@ mod tests {
                 assert_eq!(fast, small, "frame={frame} wy={wy}");
             }
         }
+    }
+    #[test]
+    fn idle_vblank_period_rejects_nonperiodic_or_malformed_snapshots() {
+        let mut base = DisplayDevice::powered_off(0);
+        base.write_port(0xff40, 0x91, 0xc3).unwrap();
+        let start = 2 * 154 * 456;
+        base.observe_time(start, &[0; 160]).unwrap();
+        let target = start + 154 * 456;
+        let mut fast = base.clone();
+        assert!(fast.try_idle_vblank_period(target));
+        let mut small = base.clone();
+        let mut at = start;
+        while at < target {
+            at = (at + 4096).min(target);
+            small.observe_time(at, &[0; 160]).unwrap();
+        }
+        assert_eq!(fast, small);
+        for case in 0..12 {
+            let mut state = base.clone();
+            match case {
+                0 => state.lcdc |= 2,
+                1 => state.lcdc |= 0x20,
+                2 => state.first_frame = true,
+                3 => state.ly = 154,
+                4 => state.phase_remaining = 0,
+                5 => state.phase_remaining = 457,
+                6 => state.mode3_length += 1,
+                7 => state.stat_enable = 1,
+                8 => state.stat_irq_line = true,
+                9 => state.window_y_reached = true,
+                10 => { state.oam.pop(); },
+                _ => state.dma = Some(OamDma { next: 0, cycles_until_byte: 8 }),
+            }
+            let before = state.clone();
+            assert!(!state.try_idle_vblank_period(target), "case={case}");
+            assert_eq!(state, before, "fallback must not partially advance");
+        }
+        assert!(!base.try_idle_vblank_period(target - 1));
+        assert!(!base.try_idle_vblank_period(target + 1));
     }
     fn enabled() -> DisplayDevice {
         let mut device = DisplayDevice::powered_off(0);

@@ -317,7 +317,19 @@ impl DisplayWorkTime {
         self.elapsed = next;
         Ok(())
     }
+    #[inline]
     pub fn idle_to_target(&mut self) -> Result<(), DisplayWorkError> {
+        // An untouched one-period grant in settled VBlank has an exact
+        // periodic device state. Avoid generic elapsed/event dispatch there,
+        // preserving the same global time, divider and real VBlank request.
+        if self.deadline.checked_sub(self.elapsed) == Some(NATIVE_FRAME_T_CYCLES)
+            && self.shadow_oam.len() == 160
+            && self.device.try_idle_vblank_period(self.deadline)
+        {
+            self.divider_counter = self.divider_counter.wrapping_add(NATIVE_FRAME_T_CYCLES as u16);
+            self.elapsed = self.deadline;
+            return Ok(());
+        }
         self.elapse(self.remaining())
     }
     /// Wait only as far as the next actual device event or host target.
@@ -581,6 +593,37 @@ mod tests {
             Some(offset as u8)
         }
     }
+    #[test]
+    fn idle_fast_path_does_not_hide_invalid_shadow_memory() {
+        let mut time = DisplayWorkTime::default();
+        for _ in 0..2 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        let elapsed = time.elapsed();
+        time.shadow_oam.pop();
+        time.begin_native_update();
+        assert!(matches!(time.idle_to_target(), Err(DisplayWorkError::Device(DisplayDeviceError::InvalidOam))));
+        assert_eq!(time.elapsed(), elapsed);
+        assert_eq!(time.device.observed_tcycles(), elapsed);
+    }
+
+    #[test]
+    fn idle_whole_grants_match_complete_time_state_after_every_update() {
+        for wy in [0, 7, 144] {
+            let mut fast = DisplayWorkTime::default();
+            fast.device.write_port(0xff4a, wy, 0xc3).unwrap();
+            let mut small = fast.clone();
+            for frame in 0..64 {
+                fast.begin_native_update();
+                small.begin_native_update();
+                fast.idle_to_target().unwrap();
+                while small.remaining() > 0 {
+                    small.elapse(small.remaining().min(4096)).unwrap();
+                }
+                assert_eq!(serde_json::to_value(&fast).unwrap(),
+                    serde_json::to_value(&small).unwrap(), "frame={frame} wy={wy}");
+            }
+        }
+    }
+
     #[test]
     fn grants_do_not_advance_the_device_and_lcd_work_waits_for_real_ly() {
         let mut time = DisplayWorkTime::default();
