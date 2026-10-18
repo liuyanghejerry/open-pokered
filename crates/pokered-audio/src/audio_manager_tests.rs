@@ -119,9 +119,30 @@ fn test_play_music_with_fade_starts_fading() {
 }
 
 #[test]
+fn initial_song_volume_command_controls_the_next_real_fade_step() {
+    let mut mgr = AudioManager::new();
+    mgr.apu.write_register(0xff26, 0x80);
+    mgr.play_music(MusicId::PALLET_TOWN);
+    mgr.play_music_with_fade(MusicId::BIKE_RIDING, 0);
+
+    // Fade runs before music. The first step writes $66, then the real
+    // Pallet Town header's volume 7,7 command restores the live $77.
+    mgr.update_frame();
+    assert_eq!(mgr.master_volume_left(), 6);
+    assert_eq!(mgr.apu.nr50, 0x77);
+
+    // The next step must read that live level, rather than cached 6,6.
+    mgr.update_frame();
+    assert_eq!((mgr.master_volume_left(), mgr.master_volume_right()), (6, 6));
+    assert_eq!(mgr.apu.nr50, 0x66);
+}
+
+#[test]
 fn test_fade_decrements_volume_over_time() {
     let mut mgr = AudioManager::new();
     mgr.play_music(MusicId::PALLET_TOWN);
+    // Establish steady playback after the song header's volume command.
+    mgr.update_frame();
     mgr.play_music_with_fade(MusicId::BIKE_RIDING, 0);
     assert_eq!(mgr.master_volume_left(), 7);
 
@@ -154,6 +175,8 @@ fn test_fade_with_counter_delays_volume_decrement() {
 fn test_fade_completes_and_switches_music() {
     let mut mgr = AudioManager::new();
     mgr.play_music(MusicId::PALLET_TOWN);
+    // Establish steady playback after the song header's volume command.
+    mgr.update_frame();
     mgr.play_music_with_fade(MusicId::BIKE_RIDING, 0);
 
     // 8 frames to go from volume 7 to 0 (decrement each frame), then one more for completion
@@ -176,6 +199,8 @@ fn test_fade_completes_and_switches_music() {
 fn test_fade_with_no_queued_music_just_stops() {
     let mut mgr = AudioManager::new();
     mgr.play_music(MusicId::PALLET_TOWN);
+    // Establish steady playback after the song header's volume command.
+    mgr.update_frame();
 
     mgr.fade_state = FadeState::FadingOut;
     mgr.fade_queued_music = None;
