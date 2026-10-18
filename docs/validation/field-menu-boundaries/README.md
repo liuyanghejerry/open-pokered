@@ -33,7 +33,7 @@ Two UP taps restore YES in both versions, preserving the matched timeline.
 Native DSL tests check actual 1/2/3-option continuations and A+B cancellation
 branch receipts; the two generic tests fail before the fix. Filtered tests
 cover counts1/2/3/11 and simultaneous key priority. Complete core library
-regression: 3,130 passed, including the updated B-priority audio control.
+regression: 3,133 passed, including the updated B-priority audio control.
 
 Build ordinary base and candidate CLI binaries with desktop,debug-server,
 then run from a checkout containing this proof package:
@@ -48,3 +48,16 @@ menu/story validation, not natural game completion or a fresh playthrough.
 Evidence concerns settled-menu bounds and key priority. Initial/cursor poll
 cadence and menu rendering/backing parity remain separate audit items; the
 full-screen white menu shown in the captures is not evidence of layout parity.
+
+
+After synchronizing onto master25709ad8, the ordinary CLI base build531039ff
+has byte-identical production sources (crates/scripts/Cargo manifests/gfx).
+The rebased candidate build and hashes are recorded in evidence.json. Both
+actual fossil/drink replays pass again, with matching before/after frames;
+3133 full core and10 field-move continuation tests pass on rebased source.
+
+A separate full NEW GAME run at pre-rebase sourcec4164f22 completed all49
+milestones: HOF1, THE END, title and a separate process Continue to PalletTown
+with all8 badges. It began without a persistent save and used no runtime
+setters/debug SAVE. This validates that candidate's route and saved return;
+it is not relabeled as a run of the rebased source or final merged master.

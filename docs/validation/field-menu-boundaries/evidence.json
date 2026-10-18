@@ -36,7 +36,7 @@
   },
   "results": {
     "before": {
-      "binary_sha256": "83a891e799b770e363651b91ce62de0fc391928c5b35c94aaffd1eff667be565",
+      "binary_sha256": "a8b490e70049877775bb0233e7bb1fb1177054aff325f2eb29c3426f8f9767b5",
       "all_pass": true,
       "cases": [
         {
@@ -104,7 +104,7 @@
       ]
     },
     "after": {
-      "binary_sha256": "16c8b2ef1d8bd979dd6e1a796d854fd2b7b5fc615628b22a848c79c934d38e7d",
+      "binary_sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a",
       "all_pass": true,
       "cases": [
         {
@@ -172,56 +172,45 @@
       ]
     }
   },
-  "candidate_actual_build_head": "229985fe384ee0ade3a6d33f03e2907b134f8ad0",
-  "baseline_actual_build_head": "fae2415e110e5fe6896ba8026d911db4d26ed208",
+  "candidate_actual_build_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+  "baseline_actual_build_head": "531039ff647edc15c03a8423f1ef16753a4f8229",
   "original_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
-  "baseline_product_crates_byte_equal_master": "05197c494e5a92af44d47c720d8e1fd48fc6d303",
+  "baseline_product_crates_byte_equal_master": true,
   "candidate_build": {
+    "actual_source_head": "f123d791bd48afbb815c0e5ae6f729a7aac843df",
+    "sha256": "dbd6596de771b1cd260e2e113dd08a967f58ce7d69c31fe64a5ccdf3eac93c9a"
+  },
+  "core_full_tests": 3133,
+  "baseline_master": "25709ad84a4ea89f412f590025410254f01fe0ea",
+  "baseline_equivalence_scope": "git diff531039ff..25709ad8 is empty for crates,scripts,Cargo.toml,Cargo.lock,gfx; map resources unchanged by this PR",
+  "app_field_move_continuation_tests": 10,
+  "captures_same_bytes_as_prior_baseline": {
+    "fossils-top-before.png": true,
+    "fossils-bottom-before.png": true,
+    "drinks-top-before.png": true,
+    "drinks-bottom-before.png": true,
+    "fossils-top-after.png": true,
+    "fossils-bottom-after.png": true,
+    "drinks-top-after.png": true,
+    "drinks-bottom-after.png": true
+  },
+  "fresh_pre_rebase_candidate": {
+    "all49_pass": true,
+    "source_head": "c4164f22c1bf78f9591b31104ee47108534b86a0",
     "actual_build_head": "229985fe384ee0ade3a6d33f03e2907b134f8ad0",
     "binary_sha256": "16c8b2ef1d8bd979dd6e1a796d854fd2b7b5fc615628b22a848c79c934d38e7d",
-    "artifact": {
-      "reason": "compiler-artifact",
-      "package_id": "path+file:///home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app#0.1.0",
-      "manifest_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app/Cargo.toml",
-      "target": {
-        "kind": [
-          "bin"
-        ],
-        "crate_types": [
-          "bin"
-        ],
-        "name": "pokered-app",
-        "src_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1120-filter-menu/crates/pokered-app/src/main.rs",
-        "edition": "2021",
-        "required-features": [
-          "desktop"
-        ],
-        "doc": true,
-        "doctest": false,
-        "test": true
-      },
-      "profile": {
-        "opt_level": "0",
-        "debuginfo": 0,
-        "debug_assertions": true,
-        "overflow_checks": true,
-        "test": false
-      },
-      "features": [
-        "debug-server",
-        "default",
-        "desktop",
-        "embedded-map-data",
-        "embedded-scripts",
-        "mobile",
-        "pokered-debug-server"
-      ],
-      "filenames": [
-        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app"
-      ],
-      "executable": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
-      "fresh": false
-    }
-  },
-  "core_full_tests": 3130
+    "initial_save_absent": true,
+    "source_unchanged_at_finish": true,
+    "TheEnd_and_title_observed": true,
+    "independent_Continue": {
+      "screen": "overworld",
+      "map_name": "PalletTown",
+      "player_x": 5,
+      "player_y": 6,
+      "hall_of_fame_count": 1,
+      "badges": 255
+    },
+    "runtime_setters_or_debug_SAVE": false,
+    "scope": "Full fresh run was on pre-rebase c416 candidate; it is not relabeled as the rebased or final merged-master run."
+  }
 }
