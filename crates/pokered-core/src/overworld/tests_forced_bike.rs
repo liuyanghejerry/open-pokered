@@ -496,13 +496,13 @@ fn saved_transport_respects_tileset_and_forced_entry_rules() {
         screen.state.player.x = x; screen.state.player.y = y;
         let mut save = SaveData::new();
         save.game_data.walk_bike_surf_state = mode;
-        save.game_data.status_flags[5] = if locked { 1 << 5 } else { 0 };
+        save.game_data.status_flags[6] = if locked { 1 << 5 } else { 0 };
         save.tile_animations = animations;
         screen.restore_loaded_save_flags(&save, None);
         assert_eq!(screen.state.player.transport, expected, "{map:?}");
         assert_eq!(screen.forced_bike.active, expected_lock, "{map:?}");
         screen.write_system_save_state(&mut save.game_data);
-        assert_eq!(save.game_data.status_flags[5] & (1 << 5) != 0, expected_lock);
+        assert_eq!(save.game_data.status_flags[6] & (1 << 5) != 0, expected_lock);
     }
 }
 
@@ -516,4 +516,48 @@ fn downhill_simulated_input_does_not_arm_the_no_direction_turn_check() {
     assert_eq!(screen.player_moving_direction,4);
     assert!(!screen.check_player_turn,"forced DOWN is a direction, not NoDirection");
     assert_eq!(screen.player_last_stop_direction,0,"no stop was sampled");
+}
+
+#[test]
+fn forced_bike_status_original_sram_bit_refuses_dismount_after_continue() {
+    use crate::save::{SaveData, sram_export::export_sram, sram_import::import_sram};
+    let mut save = SaveData::new();
+    save.game_data.position.map_id = MapId::Route18 as u8;
+    save.game_data.position.x = 30;
+    save.game_data.position.y = 8;
+    save.game_data.walk_bike_surf_state = 1;
+    save.game_data.status_flags[5] = 0; // original wStatusFlags5: input enabled
+    save.game_data.status_flags[6] = 0x21; // timer counting + ALWAYS_ON_BIKE
+    save.tile_animations = 2;
+    let bytes = export_sram(&save);
+    // Original wMainDataStart=$d2f7 -> sMainData=$25a3;
+    // wStatusFlags5=$d730, wStatusFlags6=$d732 (not adjacent packed slots).
+    assert_eq!(bytes[0x29dc] & 0x20, 0);
+    assert_eq!(bytes[0x29de] & 0x20, 0x20);
+    let restored = import_sram(&bytes).unwrap();
+    let mut screen = screen_on(MapId::Route18);
+    screen.state.player.x = 30;
+    screen.state.player.y = 8;
+    screen.restore_loaded_save_flags(&restored, None);
+    assert!(screen.forced_bike.active, "the original Flags6 bit survives Continue");
+    screen.use_field_item(pokered_data::items::ItemId::Bicycle, MapId::PalletTown);
+    assert_eq!(screen.state.player.transport, TransportMode::Biking);
+    assert_eq!(dialogue_text(&screen).as_deref(), Some("You can't get off\nhere."));
+}
+
+#[test]
+fn forced_bike_status_save_preserves_input_disable_and_other_flags() {
+    for flags5 in [0, 0x20, 0x40, 0x65, 0xff] {
+        for locked in [false, true] {
+            let mut data = crate::save::game_data::GameData::new();
+            data.status_flags[5] = flags5;
+            data.status_flags[6] = 0x9f;
+            let mut screen = screen_on(MapId::Route18);
+            screen.restore_system_save_state(&data);
+            screen.forced_bike.active = locked;
+            screen.write_system_save_state(&mut data);
+            assert_eq!(data.status_flags[5], flags5, "bike writes must not change input/text flags");
+            assert_eq!(data.status_flags[6], 0x9f | if locked { 0x20 } else { 0 });
+        }
+    }
 }
