@@ -11,6 +11,7 @@ pub mod collision;
 pub mod doors_elevators;
 pub mod event_flags;
 pub mod field_moves;
+pub mod display_text_init;
 pub mod field_cry;
 pub mod static_encounter;
 pub mod field_cry_continuation;

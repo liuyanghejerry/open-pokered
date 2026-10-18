@@ -1,0 +1,398 @@
+{
+  "base": "74cd6ff107c59fd6eec02e7fcfeef7563ec4f3ba",
+  "code_commit": "e0427aa71d84d00c464a103cfb3694cc23643c12",
+  "fixture_SRAM_sha256": "218d53bcf1bb3ae61a88f998c7ba549be6faa58b7ea1013e5b4333f755b532a2",
+  "binary_sha256": {
+    "before": "de58103f6a348d7988f78bef7ce80bb6832b8c3c07ffab56891904af8f13cbd6",
+    "after": "dd2ddf868f1ce8b048ef531983abe7cb59d595f87fa59adcd763eb195884394e"
+  },
+  "matched_initial_png_sha256": "af19fbe02e4fdbe5abab8461c547c3b3888cbefdb59302a1a1214d6ea4cffca8",
+  "phase_calibration": {
+    "before": [
+      {
+        "extra_idle_frames": 0,
+        "no_push_START73_native_menu": null
+      },
+      {
+        "extra_idle_frames": 1,
+        "no_push_START73_native_menu": 73
+      }
+    ],
+    "after": [
+      {
+        "extra_idle_frames": 0,
+        "no_push_START73_native_menu": null
+      },
+      {
+        "extra_idle_frames": 1,
+        "no_push_START73_native_menu": 73
+      }
+    ]
+  },
+  "native_trials": {
+    "before": [
+      {
+        "A_at": 74,
+        "native_party": 74,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 74,
+        "native_party": 74,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      },
+      {
+        "A_at": 75,
+        "native_party": 75,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 74
+      },
+      {
+        "A_at": 75,
+        "native_party": 75,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 74
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 74
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 74
+      },
+      {
+        "A_at": 120,
+        "native_party": 120,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 120,
+        "native_party": 120,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      }
+    ],
+    "after": [
+      {
+        "A_at": 74,
+        "native_party": null,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 74,
+        "native_party": null,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      },
+      {
+        "A_at": 75,
+        "native_party": null,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 74
+      },
+      {
+        "A_at": 75,
+        "native_party": null,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 74
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 74
+      },
+      {
+        "A_at": 96,
+        "native_party": 96,
+        "push": true,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 74
+      },
+      {
+        "A_at": 120,
+        "native_party": 120,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 1,
+        "native_menu": 73
+      },
+      {
+        "A_at": 120,
+        "native_party": 120,
+        "push": false,
+        "at": 73,
+        "duration": 1,
+        "trial": 2,
+        "native_menu": 73
+      }
+    ]
+  },
+  "source_ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_prepared_state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+  "source_no_push_boundary_scan": [
+    {
+      "A_at": 74,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 90,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 92,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 93,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 94,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 95,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96
+      }
+    },
+    {
+      "A_at": 96,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 96,
+        "DisplayPartyMenu": 96
+      }
+    },
+    {
+      "A_at": 97,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 97,
+        "DisplayPartyMenu": 97
+      }
+    },
+    {
+      "A_at": 98,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 98,
+        "DisplayPartyMenu": 98
+      }
+    },
+    {
+      "A_at": 100,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 100,
+        "DisplayPartyMenu": 100
+      }
+    },
+    {
+      "A_at": 120,
+      "held_frames": 1,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 120,
+        "DisplayPartyMenu": 120
+      }
+    },
+    {
+      "A_at": 74,
+      "held_frames": 48,
+      "first_calls": {
+        "DisplayTextIDInit": 73,
+        "CopyScreenTileBufferToVRAM": 73,
+        "LoadFontTilePatterns": 76,
+        "DisplayStartMenu": 93,
+        "HandleMenuInput": 93,
+        "JoypadLowSensitivity": 96,
+        "StartMenu_Pokemon": 96,
+        "DisplayPartyMenu": 96
+      }
+    }
+  ],
+  "source_push_early_A_control": "1176 paired traces: START73+A75 ignored through200ticks; no-push source first-poll boundary measured separately1177. Native push A96 positive control is not a new paired source push-A96 observation.",
+  "tests": {
+    "core": "3140 pass",
+    "app_desktop_debug_server": "384 pass;39 ignored",
+    "app_default": "373 pass;37 ignored",
+    "actual_input_scenarios": [
+      "s07-save-roundtrip PASS",
+      "s08-start-menu PASS",
+      "s09-options PASS"
+    ],
+    "GBA_performance": "original checked-in baseline and default allowances PASS; perf-benchmark ROM code e0427aa7, no diagnostic controller patch"
+  },
+  "limitations": [
+    "Prepared save and reused prepush M5 state are focused evidence, not a fresh playthrough.",
+    "Source boot state and native ordinary SRAM entry are independently prepared; initial visible pixels and idle-input phase matched.",
+    "Boulder START logical transition remains one native update later, with one VBlank carried into preparation. No CPU-cycle or full raster-parity claim.",
+    "Existing project fonts and dialogue/menu layout preserved.",
+    "RedisplayStartMenu from submenus retains its existing caller and is not covered as fixed.",
+    "Unmodified fresh m01-m49 driver is running separately; latest artifacts confirm m01-m09, final verdict pending."
+  ]
+}

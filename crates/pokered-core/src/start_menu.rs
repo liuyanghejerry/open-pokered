@@ -75,6 +75,9 @@ impl StartMenuInput {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StartMenuEntryTick { Waiting, DisplayReady, Poll }
+
 #[derive(Debug, Clone)]
 pub struct StartMenuState {
     items: Vec<StartMenuItem>,
@@ -89,6 +92,10 @@ pub struct StartMenuState {
     /// with the "NNN/500" steps + "BALL×× NN" info box in the top-left.
     /// None = not in the Safari Zone.
     pub safari_info: Option<SafariZoneInfo>,
+    entry: Option<crate::overworld::display_text_init::DisplayTextInit>,
+    source_entry: bool,
+    poll_wait: u8,
+    published_thirds: u8,
 }
 
 /// The Safari Zone START-menu info box contents.
@@ -111,6 +118,10 @@ impl StartMenuState {
             is_link_connected,
             saved_cursor: 0,
             safari_info: None,
+            entry: None,
+            source_entry: false,
+            poll_wait: 0,
+            published_thirds: 3,
         }
     }
 
@@ -137,11 +148,50 @@ impl StartMenuState {
     }
 
     pub fn open(&mut self, has_pokedex: bool, has_pokemon: bool, is_link_connected: bool) {
+        self.entry = None;
+        self.source_entry = false;
+        self.poll_wait = 0;
+        self.published_thirds = 3;
         self.has_pokedex = has_pokedex;
         self.has_pokemon = has_pokemon;
         self.is_link_connected = is_link_connected;
         self.items = Self::build_items(has_pokedex, is_link_connected);
         self.cursor = self.saved_cursor.min(self.items.len().saturating_sub(1));
+    }
+
+    pub fn begin_field_entry(&mut self, entry: crate::overworld::display_text_init::DisplayTextInit) {
+        self.entry = Some(entry);
+        self.source_entry = true;
+        self.poll_wait = 0;
+        self.published_thirds = 0;
+    }
+    pub fn has_source_entry(&self) -> bool { self.source_entry }
+    pub fn input_ready(&self) -> bool { self.entry.is_none() && self.poll_wait == 0 }
+    /// Visible border and number of LCD rows published from DrawStartMenu.
+    pub fn entry_visual(&self) -> (bool, u32) {
+        match self.entry {
+            Some(entry) => (entry.border_visible(), 0),
+            None => (true, u32::from(self.published_thirds) * 48),
+        }
+    }
+    pub fn advance_source_entry(&mut self) -> StartMenuEntryTick {
+        if let Some(entry) = self.entry.as_mut() {
+            if entry.advance_vblank() {
+                self.entry = None;
+                self.poll_wait = 3; // HandleMenuInput: PlaceMenuCursor, Delay3.
+                return StartMenuEntryTick::DisplayReady;
+            }
+            return StartMenuEntryTick::Waiting;
+        }
+        if self.poll_wait != 0 {
+            self.poll_wait -= 1;
+            self.published_thirds = (self.published_thirds + 1).min(3);
+            if self.poll_wait != 0 { return StartMenuEntryTick::Waiting; }
+        }
+        StartMenuEntryTick::Poll
+    }
+    pub fn wait_for_menu_cursor(&mut self) {
+        if self.source_entry { self.poll_wait = 3; }
     }
 
     /// InitBattleVariables and EndOfBattle clear wBattleAndStartSavedMenuItem.
@@ -151,6 +201,7 @@ impl StartMenuState {
     }
 
     pub fn update_frame(&mut self, input: StartMenuInput) -> StartMenuAction {
+        if self.entry.is_some() || self.poll_wait != 0 { return StartMenuAction::Redisplay; }
         // DisplayStartMenu checks HandleMenuInput's UP/DOWN bits before
         // A/B/START and returns to its loop after moving the cursor.
         if input.up {
@@ -290,5 +341,39 @@ mod safari_info_tests {
         let info = m.safari_info.unwrap();
         assert_eq!(info.steps, 427);
         assert_eq!(info.balls, 17);
+    }
+}
+
+#[cfg(test)]
+mod entry_tests {
+    use super::*;
+    use crate::foreground_input::{ForegroundJoypad, A, START};
+    use crate::overworld::display_text_init::DisplayTextInit;
+    #[test]
+    fn entry_uses_resource_requests_then_cursor_delay_and_background_publication() {
+        let mut menu = StartMenuState::new(false, true, false);
+        menu.begin_field_entry(DisplayTextInit::new());
+        for tick in 1u8..=23 {
+            let event = menu.advance_source_entry();
+            assert_eq!(event, if tick == 20 { StartMenuEntryTick::DisplayReady } else if tick == 23 { StartMenuEntryTick::Poll } else { StartMenuEntryTick::Waiting });
+            assert_eq!(menu.entry_visual(), (tick >= 4, u32::from(tick.saturating_sub(20).min(3)) * 48));
+            if tick != 23 { assert_eq!(menu.update_frame(StartMenuInput {a:true,..StartMenuInput::none()}), StartMenuAction::Redisplay); }
+        }
+        assert_eq!(menu.update_frame(StartMenuInput {a:true,..StartMenuInput::none()}), StartMenuAction::OpenPokemon);
+    }
+    #[test]
+    fn preparation_does_not_poll_a_pulse_but_first_real_poll_accepts_held_a() {
+        for held in [false, true] {
+            let mut menu = StartMenuState::new(false, true, false);
+            menu.begin_field_entry(DisplayTextInit::new());
+            let mut owner = ForegroundJoypad::default();
+            owner.read_raw(START); owner.poll();
+            for tick in 1u8..=23 {
+                owner.read_raw(if held || tick == 1 { A } else { 0 });
+                if menu.advance_source_entry() == StartMenuEntryTick::Poll {
+                    assert_eq!(owner.poll().pressed.unwrap() & A != 0, held);
+                } else { assert_eq!(owner.last(), Some(START)); }
+            }
+        }
     }
 }

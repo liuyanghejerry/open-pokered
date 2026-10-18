@@ -2399,6 +2399,9 @@ impl PokemonGame {
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
         if screen != GameScreen::PartyScreen { self.party_flash_text = None; }
+        if self.state.screen == GameScreen::StartMenu && screen != GameScreen::StartMenu && self.start_menu.has_source_entry() {
+            self.overworld.suspend_source_foreground();
+        }
         if matches!(screen, GameScreen::TitleScreen | GameScreen::MainMenu | GameScreen::OakSpeech | GameScreen::Battle) {
             self.overworld.suspend_source_foreground();
             self.pending_softboiled_user = None;
@@ -2769,12 +2772,15 @@ impl PokemonGame {
             }
             GameScreen::StartMenu => {
                 self.overworld.set_no_text_delay(false);
-                self.overworld.suspend_source_foreground();
+                let field_entry = self.overworld.take_start_menu_entry();
+                if field_entry.is_some() { self.overworld.claim_start_menu_foreground(); }
+                else { self.overworld.suspend_source_foreground(); }
                 // Read the LIVE overworld flag store (unified_flags), not
                 // the `save_data` snapshot which is only synced at save time.
                 let has_pokedex = self.overworld.unified_flags().get_flag("EVENT_GOT_POKEDEX");
                 let has_pokemon = self.save_data.party.count() > 0;
                 self.start_menu.open(has_pokedex, has_pokemon, false);
+                if let Some(entry) = field_entry { self.start_menu.begin_field_entry(entry); }
                 // PrintSafariZoneSteps (player_state.asm:219-255): while a
                 // Safari run is live, the START menu shows steps/balls.
                 self.start_menu.safari_info = if self.overworld.is_safari_game_active() {
@@ -2788,10 +2794,8 @@ impl PokemonGame {
                 // DisplayStartMenu plays this only on an overworld START.
                 // Returning from a submenu uses RedisplayStartMenu, which
                 // preserves that submenu's confirm/cancel sound.
-                if self.state.screen == GameScreen::Overworld {
-                    if let Some(ref audio) = self.audio {
-                        audio.play_sfx(SfxId::StartMenu);
-                    }
+                if self.state.screen == GameScreen::Overworld && field_entry.is_none() {
+                    if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::StartMenu); }
                 }
             }
             GameScreen::OptionsMenu => {
@@ -5146,12 +5150,28 @@ impl PokemonGame {
                 // DisplayStartMenu leaves hTileAnimations enabled. Only the
                 // VBlank background animation runs; field actors/scripts wait.
                 self.overworld.tile_anim.tick();
+                let source_keys = if self.start_menu.has_source_entry() {
+                    let Some(owner) = self.overworld.source_foreground_mut() else { return; };
+                    owner.read_raw(input.raw_current());
+                    match self.start_menu.advance_source_entry() {
+                        pokered_core::start_menu::StartMenuEntryTick::Waiting => return,
+                        pokered_core::start_menu::StartMenuEntryTick::DisplayReady => {
+                            if let Some(audio) = &self.audio { audio.play_sfx(SfxId::StartMenu); }
+                            return;
+                        }
+                        pokered_core::start_menu::StartMenuEntryTick::Poll => (),
+                    }
+                    if soft_reset_combo_held(input) { return; }
+                    let Some(pressed) = owner.poll().pressed else { return; };
+                    Some(pressed)
+                } else { None };
+                let edge = |button, bit| source_keys.map_or_else(|| input.is_just_pressed(button), |keys| keys & bit != 0);
                 let sm_input = StartMenuInput {
-                    up: input.is_just_pressed(GbButton::Up),
-                    down: input.is_just_pressed(GbButton::Down),
-                    a: input.is_just_pressed(GbButton::A),
-                    b: input.is_just_pressed(GbButton::B),
-                    start: input.is_just_pressed(GbButton::Start),
+                    up: edge(GbButton::Up, pokered_core::foreground_input::UP),
+                    down: edge(GbButton::Down, pokered_core::foreground_input::DOWN),
+                    a: edge(GbButton::A, pokered_core::foreground_input::A),
+                    b: edge(GbButton::B, pokered_core::foreground_input::B),
+                    start: edge(GbButton::Start, pokered_core::foreground_input::START),
                 };
                 // HandleMenuInput plays PRESS_AB before returning its full
                 // key mask to DisplayStartMenu, including UP+A / UP+B polls.
@@ -5161,7 +5181,11 @@ impl PokemonGame {
                         audio.play_sfx(SfxId::PressAB);
                     }
                 }
-                match self.start_menu.update_frame(sm_input) {
+                let menu_action = self.start_menu.update_frame(sm_input);
+                if source_keys.is_some_and(|keys| keys != 0) && menu_action == StartMenuAction::Redisplay {
+                    self.start_menu.wait_for_menu_cursor();
+                }
+                match menu_action {
                     StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
@@ -7125,6 +7149,8 @@ impl PokemonGame {
             "field_menu": match &self.state.screen {
                 GameScreen::StartMenu => Some(serde_json::json!({
                     "kind": "start", "cursor": self.start_menu.cursor(),
+                    "ready_for_input": self.start_menu.input_ready(),
+                    "published_menu_rows": self.start_menu.entry_visual().1,
                     "items": self.start_menu.items().iter().map(|item| format!("{:?}", item)).collect::<Vec<_>>(),
                 })),
                 GameScreen::Bag => Some(serde_json::json!({
@@ -8554,6 +8580,9 @@ mod rare_candy_tests;
 #[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
 #[path = "field_poison_tests.rs"]
 mod field_poison_tests;
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "start_menu_entry_tests.rs"]
+mod start_menu_entry_tests;
 
 #[cfg(test)]
 #[path = "tmhm_learning_tests.rs"]
@@ -9486,6 +9515,17 @@ mod link_stats_cry_fidelity_tests {
     use pokered_core::pokemon::stats::create_pokemon_with_moves;
     use pokered_data::{moves::MoveId, species::Species};
 
+    // Observe the actual source caller, rather than sending short pulses while
+    // DisplayTextIDInit or HandleMenuInput's Delay3 owns the foreground.
+    fn wait_start_menu_input(game: &mut PokemonGame) {
+        for _ in 0..64 {
+            if game.start_menu.input_ready() { return; }
+            assert_eq!(game.state.screen, GameScreen::StartMenu);
+            game.update(&InputState::new());
+        }
+        panic!("START menu never became ready");
+    }
+
     // These fixtures hold two full games plus persisted snapshots (and a
     // third game when checking Continue). The unoptimized test build needs
     // more stack than Rust's default 2 MiB worker; production is unchanged.
@@ -10361,9 +10401,11 @@ mod link_stats_cry_fidelity_tests {
                 let position=(g.overworld.state.player.x,g.overworld.state.player.y);
                 g.update(&button(GbButton::Start));g.update(&idle);
                 assert_eq!(g.state.screen,GameScreen::StartMenu);
+                wait_start_menu_input(&mut g);
                 for _ in 0..7 {
                     if g.start_menu.current_item()==StartMenuItem::Save {break;}
                     g.update(&button(GbButton::Down));g.update(&idle);
+                    wait_start_menu_input(&mut g);
                 }
                 assert_eq!(g.start_menu.current_item(),StartMenuItem::Save);
                 g.update(&button(GbButton::A));g.update(&idle);
@@ -11208,7 +11250,10 @@ mod link_stats_cry_fidelity_tests {
         game.update(&start);
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::StartMenu);
-        game.update(&button(GbButton::Down)); game.update(&button(GbButton::A));
+        wait_start_menu_input(&mut game);
+        game.update(&button(GbButton::Down));
+        wait_start_menu_input(&mut game);
+        game.update(&button(GbButton::A));
         for _ in 0..4 { game.update(&idle); }
         assert_eq!(game.state.screen, GameScreen::PartyScreen);
         game.update(&button(GbButton::A));
@@ -13379,6 +13424,11 @@ mod pokedex_menu_audio_tests {
         g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
         g.state.screen = GameScreen::Overworld;
         let mut input = InputState::new(); input.press(GbButton::Start); g.update(&input);
+        for _ in 0..64 {
+            if g.start_menu.input_ready() { break; }
+            g.update(&InputState::new());
+        }
+        assert!(g.start_menu.input_ready());
         assert_eq!(g.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.current_sfx_id, SfxId::StartMenu as u8);
         for _ in 0..90 { g.update(&InputState::new()); }
         let mut input = InputState::new(); input.press(GbButton::A); g.update(&input);

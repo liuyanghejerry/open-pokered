@@ -685,6 +685,7 @@ impl OverworldVisualKey {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct StartMenuVisualKey {
     cursor: usize,
+    entry_visual: (bool, u32),
     item_count: usize,
     items_hash: u32,
     player_name_hash: u32,
@@ -705,6 +706,7 @@ impl StartMenuVisualKey {
         }
         Some(Self {
             cursor: game.start_menu.cursor(),
+            entry_visual: game.start_menu.entry_visual(),
             item_count: game.start_menu.item_count(),
             items_hash,
             player_name_hash,
