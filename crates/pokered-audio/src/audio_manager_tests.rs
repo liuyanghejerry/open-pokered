@@ -903,3 +903,80 @@ mod confirmation_output_owner_tests {
         check_real_song(MusicId::SILPH_CO);
     }
 }
+
+mod real_music_rest_output_tests {
+    use super::*;
+    use std::sync::Mutex;
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    static WRITES: Mutex<Vec<(u16, u8)>> = Mutex::new(Vec::new());
+    fn record(a: u16, v: u8) {
+        WRITES.lock().unwrap().push((a, v));
+    }
+    fn check_real_rests(music: MusicId) {
+        let _guard = TEST_LOCK
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut mgr = AudioManager::new();
+        mgr.apu.write_register(0xff26, 0x80);
+        mgr.play_music(music);
+        mgr.apu.set_register_sink(Some(record));
+        let mut seen = [false; 3];
+        for tick in 0..2000 {
+            let ptrs = mgr.sequencer.channels.each_ref().map(|c| c.ptr);
+            WRITES.lock().unwrap().clear();
+            mgr.update_frame();
+            for hw in 0..3 {
+                let c = &mgr.sequencer.channels[hw];
+                if seen[hw]
+                    || !c.active
+                    || c.ptr == ptrs[hw]
+                    || c.ptr == 0
+                    || !matches!(c.data.get(c.ptr - 1), Some(0xc0..=0xcf))
+                {
+                    continue;
+                }
+                let range = [0xff10..=0xff14, 0xff16..=0xff19, 0xff1a..=0xff1e][hw].clone();
+                let writes: Vec<_> = WRITES
+                    .lock()
+                    .unwrap()
+                    .iter()
+                    .copied()
+                    .filter(|(a, _)| range.contains(a))
+                    .collect();
+                if hw < 2 {
+                    assert_eq!(
+                        writes,
+                        vec![([0xff12, 0xff17][hw], 8), ([0xff14, 0xff19][hw], 128)],
+                        "{music:?} voice{hw} rest tick{tick}"
+                    );
+                } else {
+                    assert!(
+                        writes.is_empty(),
+                        "wave rest must not reload/retrigger: {writes:?}"
+                    );
+                    assert_eq!(mgr.apu.nr51 & 0x44, 0);
+                }
+                assert_eq!(
+                    c.vibrato.delay_counter, c.vibrato.delay_reload,
+                    "rest shares the next-note entry"
+                );
+                seen[hw] = true;
+            }
+            if seen.iter().all(|v| *v) {
+                break;
+            }
+        }
+        assert_eq!(
+            seen, [true; 3],
+            "must reach a real rest on every tonal voice"
+        );
+    }
+    #[test]
+    fn rock_tunnel_real_rests_use_original_register_requests() {
+        check_real_rests(MusicId::DUNGEON3);
+    }
+    #[test]
+    fn silph_real_rests_use_original_register_requests() {
+        check_real_rests(MusicId::SILPH_CO);
+    }
+}
