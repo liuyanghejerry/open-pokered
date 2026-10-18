@@ -214,5 +214,89 @@
       "all_observed_records_equal": true
     },
     "method": "Private device with immutable read accessor and invalidating mutable accessor; any elapsed instruction clears eligibility. Only uninterrupted checked periods retain eligibility. Cache is serde-skipped and cannot be granted by saved input."
+  },
+  "performance_followup_1174": {
+    "source": "9079b6b926f90f9364316cbc265a9fb1600635f2",
+    "scope": "Temporary GBA controller seeds party/badge/map then uses real START Pokemon FLASH inputs twice, repeat retains cache; not NEW GAME/ordinary SAVE parity evidence",
+    "all_pass": true,
+    "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+    "build_command": [
+      "cargo",
+      "+nightly-2025-12-07",
+      "build",
+      "--offline",
+      "--release",
+      "--features",
+      "repro-rival"
+    ],
+    "build_exit": 0,
+    "ROM_sha256": "477f83c95e59e09f7900294c3c534cb4f9586a78f17c002029ae5ca54ffabb7e",
+    "cases": [
+      [
+        "0",
+        "45",
+        "857300",
+        "49784",
+        "11848"
+      ],
+      [
+        "1",
+        "45",
+        "852748",
+        "49784",
+        "11848"
+      ]
+    ],
+    "tracked_bytes_restored": true,
+    "seconds": [
+      3.2703399658203125,
+      3.2529754638671875
+    ],
+    "implementation": "Passive exact next-VBlank forecast bounded by remaining owner budget; all underlying device events remain. Settled mode2 intervals with OBJ/window/STAT/DMA off batch whole visible lines, stopping before LY143/VBlank. Source transfer instructions and bus accesses are unchanged.",
+    "oracle": "Forecast vs single-T-cycle device runner, full-state and bounded-owner comparisons; whole scanline endpoints vs single-dot execution including partial endpoints, scroll/window latches and nonempty irrelevant OAM.",
+    "native_tests": {
+      "core_passed": 3206,
+      "app_passed": 399,
+      "app_existing_ignored": 39
+    },
+    "original_GBA_performance_gate": {
+      "all_thresholds_passed": true,
+      "baseline_changed": false,
+      "limits_changed": false,
+      "pokedex_update_ticks": 113,
+      "pokedex_update_limit": 118
+    },
+    "ordinary_SAVE_native_replay": {
+      "source": "9079b6b926f90f9364316cbc265a9fb1600635f2",
+      "binary_sha256": "07650ea490164377ae3a06713023af5e26c942813fd741a1bc6c11a173efc73c",
+      "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+      "compared_previous": "audit-1172-native-idle-cache-after",
+      "frames": 240,
+      "all_pngs_and_complete_observed_records_equal": true,
+      "images": [
+        {
+          "index": 159,
+          "sha256": "c516f4158edd9320b9227fbd53a5abccffb8effed091757bf4dc841fb9a8267e",
+          "equal_to_committed_after": true
+        },
+        {
+          "index": 174,
+          "sha256": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
+          "equal_to_committed_after": true
+        },
+        {
+          "index": 194,
+          "sha256": "52e05ab3f92385f224983cba92d64c6a1fe9523f4b617424786da333e9eedf08",
+          "equal_to_committed_after": true
+        },
+        {
+          "index": 200,
+          "sha256": "52e05ab3f92385f224983cba92d64c6a1fe9523f4b617424786da333e9eedf08",
+          "equal_to_committed_after": true
+        }
+      ],
+      "limits": "CLI full draw only; 8 map/facing cached/full rendering cases separately passed with full app suite. Not fresh full playthrough or source physical timing proof."
+    },
+    "limits": "Actual GBA seeded diagnostic controller; not NEW GAME/ordinary SAVE playthrough proof. 45 logical updates and repeat/memory return pass. FLASH still ~3.25 seconds, excessive; PR remains draft. Physical source palette/raster/common IRQ/RETI parity unproven."
   }
 }
