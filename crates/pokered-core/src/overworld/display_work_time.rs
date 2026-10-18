@@ -287,6 +287,7 @@ impl DisplayWorkTime {
     pub fn remaining(&self) -> u64 {
         self.deadline.saturating_sub(self.elapsed)
     }
+    #[inline(always)]
     pub fn begin_native_update(&mut self) {
         self.deadline = self
             .deadline
@@ -317,7 +318,7 @@ impl DisplayWorkTime {
         self.elapsed = next;
         Ok(())
     }
-    #[inline]
+    #[inline(always)]
     pub fn idle_to_target(&mut self) -> Result<(), DisplayWorkError> {
         // An untouched one-period grant in settled VBlank has an exact
         // periodic device state. Avoid generic elapsed/event dispatch there,

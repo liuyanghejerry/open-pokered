@@ -429,18 +429,16 @@ impl DisplayDevice {
     /// work can change a line length or publish data during this interval.
     /// The bounded predicate also rejects malformed deserialized state; all
     /// other states continue through the fully validated event path.
-    #[inline]
+    #[inline(always)]
     pub(crate) fn try_idle_vblank_period(&mut self, target: u64) -> bool {
         if self.phase != RasterPhase::VBlank
             || self.lcdc & 0xa2 != 0x80
-            || self.first_frame
+            || (self.first_frame | self.stat_irq_line | self.window_y_reached)
             || !(144..=153).contains(&self.ly)
             || !(1..=456).contains(&self.phase_remaining)
             || self.mode3_length != 172 + u16::from(self.scx & 7)
             || self.dma.is_some()
             || self.stat_enable != 0
-            || self.stat_irq_line
-            || self.window_y_reached
             || self.oam.len() != 160
             || target.checked_sub(self.observed_tcycles) != Some(154 * 456)
         {
