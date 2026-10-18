@@ -196,7 +196,7 @@ impl DisplayWorkTime {
     }
     /// Execute the real hide child on native publication time. This is a
     /// legacy adapter, not a VBlank body: never accept IF or issue RETI here.
-    #[inline]
+    #[inline(always)]
     pub fn service_legacy_sprite_hide(&mut self) -> Result<bool, DisplayWorkError> {
         // Do not move a large optional resumable child on every idle update.
         // Keep the common no-work check inline; only the pending path takes
