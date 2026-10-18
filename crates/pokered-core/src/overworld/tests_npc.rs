@@ -2176,3 +2176,28 @@ fn silph_liberation_enemy_bits_hide_all_original_targets_on_map_reload() {
         }
     }
 }
+
+/// PokemonTower7FWarpToMrFujiHouseScript sets SPRITE_FACING_UP before warp.
+/// All three walkable adjacent approach tiles must reach the same facing.
+#[test]
+fn fuji_rescue_arrives_facing_up_from_each_legal_approach() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for (x,y,facing) in [(11,3,Direction::Left),(10,2,Direction::Down),(10,4,Direction::Up)] {
+        let mut field = OverworldScreen::new(MapId::PokemonTower7F,None,PokemonRedData);
+        let input = |a| super::OverworldInput::new(false,false,false,false,a,false,false,false);
+        field.run_on_load();
+        for _ in 0..50 {field.update_frame(input(false));}
+        field.state.player.x=x;
+        field.state.player.y=y;
+        field.state.player.facing=facing;
+        field.update_frame(input(true));
+        for frame in 0..5000 {
+            field.update_frame(input(frame%8==0));
+            if field.state.current_map==MapId::MrFujisHouse && field.pending_warp.is_none() {break;}
+        }
+        assert_eq!(field.state.current_map,MapId::MrFujisHouse);
+        assert_eq!((field.state.player.x,field.state.player.y),(3,7));
+        assert_eq!(field.state.player.facing,Direction::Up,"approach ({x},{y}) {facing:?}");
+        assert!(field.unified_flags().get_flag("EVENT_RESCUED_MR_FUJI"));
+    }
+}

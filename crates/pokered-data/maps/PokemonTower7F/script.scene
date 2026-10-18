@@ -69,6 +69,8 @@ game_scene PokemonTower7F {
     hideObject("POKEMONTOWER7F_MR_FUJI")
     // ShowObject TOGGLE_MR_FUJIS_HOUSE_MR_FUJI — he now waits at home.
     showObject("MRFUJISHOUSE_MR_FUJI")
+    // PokemonTower7FWarpToMrFujiHouseScript sets SPRITE_FACING_UP.
+    facePlayer("up")
     warpTo("MrFujisHouse", 3, 7)
   }
 
