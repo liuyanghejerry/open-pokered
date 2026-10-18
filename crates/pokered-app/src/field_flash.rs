@@ -827,12 +827,26 @@ impl PokemonGame {
         }))
     }
 
+    pub(crate) fn field_flash_white_frame(&self) -> bool {
+        self.state.screen == GameScreen::PartyScreen
+            && self.black_screen_frames == 0
+            && self.post_capture_flow.is_none()
+            && self.trade_anim.is_none()
+            && self.evolution_anim.is_none()
+            && self.hof_ceremony.is_none()
+            && self.credits.is_none()
+            && self.field_flash_is_white()
+    }
+
+    pub(super) fn field_flash_is_white(&self) -> bool {
+        self.field_flash.as_ref().is_some_and(|flow| {
+            flow.white_from.is_some_and(|start| self.frame_count >= start)
+        })
+    }
+
     pub(super) fn draw_field_flash(&self, fb: &mut FrameBuffer) {
         let flow = self.field_flash.as_ref().unwrap();
-        if flow
-            .white_from
-            .is_some_and(|start| self.frame_count >= start)
-        {
+        if self.field_flash_is_white() {
             fb.clear(Rgba::WHITE);
             return;
         }
@@ -1250,13 +1264,19 @@ mod tests {
                 let mut returned = false;
                 let mut returned_at = None;
                 let mut saw_white = false;
+                let mut reused_white = false;
+                let mut checked_interruption = false;
                 for frame in 0..500 {
                     let mut input = InputState::new();
                     if frame % 20 == 0 {
                         input.press(GbButton::A);
                     }
                     game.update(&input);
-                    session.render(&mut game, &mut retained, &mut scroll);
+                    let reused = matches!(
+                        session.render(&mut game, &mut retained, &mut scroll),
+                        crate::render::session::FrameUpdate::Reuse
+                    );
+                    reused_white |= reused && game.field_flash_is_white();
                     let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                     game.draw(&mut full);
                     for y in 0..144 {
@@ -1264,6 +1284,25 @@ mod tests {
                             assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y),
                         "FLASH retained map={map:?} facing={facing:?} frame={frame} pixel=({x},{y})");
                         }
+                    }
+                    if reused_white && !checked_interruption {
+                        // A different takeover must invalidate the retained
+                        // white frame even though FLASH itself is unchanged.
+                        game.black_screen_frames = 1;
+                        assert!(matches!(
+                            session.render(&mut game, &mut retained, &mut scroll),
+                            crate::render::session::FrameUpdate::Full
+                        ));
+                        assert!((0..144).all(|y| (0..160)
+                            .all(|x| retained.get_pixel(x, y) == Some(Rgba::BLACK))));
+                        game.black_screen_frames = 0;
+                        assert!(matches!(
+                            session.render(&mut game, &mut retained, &mut scroll),
+                            crate::render::session::FrameUpdate::Full
+                        ));
+                        assert!((0..144).all(|y| (0..160)
+                            .all(|x| retained.get_pixel(x, y) == full.get_pixel(x, y))));
+                        checked_interruption = true;
                     }
                     if let Some(flow) = game.field_flash.as_ref() {
                         saw_white |= flow
@@ -1277,7 +1316,7 @@ mod tests {
                         }
                     }
                 }
-                assert!(returned && saw_white);
+                assert!(returned && saw_white && reused_white && checked_interruption);
                 assert_eq!(game.state.screen, GameScreen::Overworld);
             }
         }

@@ -1895,6 +1895,7 @@ pub struct RenderSession {
     last_hof: Option<super::HofVisualKey>,
     last_credits: Option<super::CreditsVisualKey>,
     last_takeover_active: bool,
+    last_flash_white: bool,
     last_static_splash: Option<SplashPhase>,
     last_language_select: Option<Lang>,
     last_title: Option<TitleVisualKey>,
@@ -1937,6 +1938,7 @@ impl RenderSession {
         let last_hof = self.last_hof.take();
         let last_credits = self.last_credits.take();
         let last_takeover_active = self.last_takeover_active;
+        let last_flash_white = self.last_flash_white;
         let last_static_splash = self.last_static_splash.take();
         let last_language_select = self.last_language_select.take();
         let last_title = self.last_title.take();
@@ -1973,6 +1975,9 @@ impl RenderSession {
             .map(|hof| super::hof_visual_key(hof, game.state.config.language));
         let credits = game.credits.as_ref().map(super::credits_visual_key);
         let field_flash_active = game.field_flash.is_some();
+        // Only the uniform white stage is reusable. Text and map handoff
+        // continue to redraw. Other takeovers must invalidate the white key.
+        let flash_white = game.field_flash_white_frame();
         let takeover_active = field_flash_active || black_screen
             || trade.is_some()
             || evolution.is_some()
@@ -2167,7 +2172,7 @@ impl RenderSession {
         } else if credits.is_some() {
             credits != last_credits
         } else if field_flash_active {
-            true
+            !(flash_white && last_flash_white)
         } else if last_takeover_active {
             // The takeover replaced the ordinary screen contents. Restore
             // that screen even when its own visual state did not change.
@@ -2633,6 +2638,7 @@ impl RenderSession {
         self.last_hof = hof;
         self.last_credits = credits;
         self.last_takeover_active = takeover_active;
+        self.last_flash_white = flash_white;
         self.last_static_splash = static_splash;
         self.last_language_select = language_select;
         self.last_title = title;
