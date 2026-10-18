@@ -17,7 +17,7 @@ web-audio = ["dotzuki-audio/web-audio"]
 bitflags = "2"
 
 # The sequencer/APU supports alloc + no_std on GBA; device backends remain optional.
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "475e17077d08462a4c4a1b3f606db6550cd1ab69" }
 
 # An allocation-free VBlank counter keeps PSG tempo independent of slow draws.
 [target.'cfg(target_os = "none")'.dependencies]
@@ -29,5 +29,5 @@ critical-section = "1"
 # `export_audio` example opt into the file-based `format`/`library` API — dev
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e", features = ["serde"] }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "475e17077d08462a4c4a1b3f606db6550cd1ab69", features = ["serde"] }
 serde_json = "1"
