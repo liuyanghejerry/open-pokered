@@ -21,6 +21,43 @@ use pokered_core::overworld::indoor_sprite_transfer_work::IndoorSpriteTransferWo
 use pokered_core::overworld::party_field_text::PartyFieldText;
 use pokered_core::overworld::sprite_bank_call_work::SpriteBankCallWork;
 
+// Retained images need only four shades; two GBA linear copies exhaust the heap.
+type FlashFrame = dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>;
+
+fn retain_flash_frame<const LINEAR: bool>(
+    frame: dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor, LINEAR>,
+) -> FlashFrame {
+    let mut retained = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+    copy_flash_frame(&frame, &mut retained);
+    retained
+}
+
+fn copy_flash_frame<const LINEAR: bool>(
+    frame: &dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor, LINEAR>,
+    retained: &mut FlashFrame,
+) {
+    for y in 0..144 {
+        for x in 0..160 {
+            retained.set_pixel_index(x, y, frame.get_index(x, y).unwrap());
+        }
+    }
+    retained.set_palette(*frame.display_palette());
+}
+
+fn draw_flash_frame(frame: &FlashFrame, fb: &mut FrameBuffer) {
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    fb.copy_from(frame);
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    {
+        for y in 0..144 {
+            for x in 0..160 {
+                fb.set_pixel_index(x, y, frame.get_index(x, y).unwrap());
+            }
+        }
+        fb.set_palette(*frame.display_palette());
+    }
+}
+
 enum DisplayChild {
     Disable(DisableLcdWork),
     Enable { work: EnableLcdWork, called: bool },
@@ -60,8 +97,8 @@ pub(crate) struct FieldFlash {
     waits: Vec<FieldWaitEdges>,
     #[cfg(feature = "debug-server")]
     traced_operation: Option<usize>,
-    party: FrameBuffer,
-    map: FrameBuffer,
+    party: FlashFrame,
+    map: FlashFrame,
     white_from: Option<u64>,
     show_map: bool,
     display_child: Option<DisplayChild>,
@@ -85,6 +122,7 @@ impl PokemonGame {
             &mut map,
             self.state.config.language,
         );
+        let map = retain_flash_frame(map);
         let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         crate::render::draw_party_screen(
             &self.party_screen,
@@ -93,6 +131,7 @@ impl PokemonGame {
             &mut party,
             self.state.config.language,
         );
+        let party = retain_flash_frame(party);
         // StartMenu_Pokemon entered through DisplayPartyMenu, which has the
         // font loaded. The source plan deliberately performs both reloads.
         let work = FieldRestoreWork::new(self.overworld.field_restore_input(1));
@@ -659,12 +698,14 @@ impl PokemonGame {
                     }
                 }
                 RestoreOperation::LoadCurrentMapView => {
+                    let mut map = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                     crate::render::draw_overworld_background(
                         &mut self.overworld,
                         &mut self.resources,
-                        &mut flow.map,
+                        &mut map,
                         self.state.config.language,
                     );
+                    copy_flash_frame(&map, &mut flow.map);
                 }
                 RestoreOperation::LoadMapPalettes => {
                     if self.overworld.dark_cave.is_dark() {
@@ -758,11 +799,14 @@ impl PokemonGame {
             fb.clear(Rgba::WHITE);
             return;
         }
-        fb.copy_from(if flow.show_map {
-            &flow.map
-        } else {
-            &flow.party
-        });
+        draw_flash_frame(
+            if flow.show_map {
+                &flow.map
+            } else {
+                &flow.party
+            },
+            fb,
+        );
         if flow.show_map {
             return;
         }
@@ -792,6 +836,33 @@ impl PokemonGame {
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn packed_flash_snapshots_preserve_linear_pixels_and_display_palette() {
+        use dotzuki_renderer::palette::GbColor;
+        let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+            RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        for y in 0..144 {
+            for x in 0..160 {
+                linear.set_pixel_index(x, y, GbColor::from_u8(((x + y * 3) % 4) as u8));
+            }
+        }
+        linear.apply_bgp(0x1b);
+        let expected: Vec<_> = (0..144)
+            .flat_map(|y| (0..160).map(move |x| (x, y)))
+            .map(|(x, y)| linear.get_pixel(x, y).unwrap())
+            .collect();
+        let packed = retain_flash_frame(linear);
+        assert_eq!(packed.packed().len(), 5760);
+        for (i, color) in expected.into_iter().enumerate() {
+            assert_eq!(
+                packed.get_pixel((i % 160) as u32, (i / 160) as u32),
+                Some(color)
+            );
+        }
+    }
 
     #[test]
     fn flash_three_vblank_wait_cannot_return_after_only_two_new_edges() {
@@ -1100,7 +1171,8 @@ mod tests {
                     1,
                     MapId::PalletTown,
                 );
-                let pokered_core::overworld::field_moves::FieldMoveOutcome::Flash { message } = outcome
+                let pokered_core::overworld::field_moves::FieldMoveOutcome::Flash { message } =
+                    outcome
                 else {
                     panic!("FLASH caller required");
                 };
@@ -1143,5 +1215,4 @@ mod tests {
             }
         }
     }
-
 }
