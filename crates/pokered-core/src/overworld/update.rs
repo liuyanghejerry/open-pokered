@@ -3360,14 +3360,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     if a_just_pressed || b_just_pressed {
                         *sfx_event = OverworldSfxEvent::TextAdvance;
                     }
-                    if a_just_pressed {
-                        *selected = choice.selected;
+                    // Original field callers test B before accepting A.
+                    if b_just_pressed {
+                        // B = cancel = last option (NO)
+                        *selected = choice.options.len().saturating_sub(1) as u32;
                         *pending_choice = None;
                         if !retain_cached_window { *last_script_dialogue = None; }
                         true
-                    } else if b_just_pressed {
-                        // B = cancel = last option (NO)
-                        *selected = choice.options.len().saturating_sub(1) as u32;
+                    } else if a_just_pressed {
+                        *selected = choice.selected;
                         *pending_choice = None;
                         if !retain_cached_window { *last_script_dialogue = None; }
                         true
