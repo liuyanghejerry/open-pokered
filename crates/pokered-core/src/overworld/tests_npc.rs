@@ -1509,51 +1509,47 @@ fn zapdos_hidden_after_capture_and_stays_hidden_on_reentry() {
     assert!(!bird.visible, "captured ZAPDOS stays hidden on re-entry");
 }
 
-/// Beaten Tower 7F Rockets walk to the down-stairs and vanish
-/// (PokemonTower7FEndBattleScript → RocketLeaveMovement → HideNPC): the
-/// writeback's post-battle OnLoad re-run plays the leave once, and the hidden
-/// state persists across re-entries (audit: tower-rockets-path — all three
-/// flags true, all three still visible with no movement left).
+/// All twelve original coordinate-table exits retain every stride before hiding.
+/// These constructed post-victory states isolate the map continuation; ordinary
+/// battles and visible-frame captures provide separate integration evidence.
 #[test]
 fn tower_rockets_leave_and_hide_after_victory() {
-    use super::screen::OverworldScreen;
-    use pokered_data::event_flags::EventFlag;
-    use pokered_data::impl_traits::PokemonRedData;
-    let mut screen = OverworldScreen::new(MapId::PokemonTower7F, None, PokemonRedData);
-    screen.run_on_load();
-    let input = |a: bool| super::OverworldInput::new(false, false, false, false, a, false, false, false);
-    for _ in 0..50 {
-        screen.update_frame(input(false));
-    }
-    for flag in [
-        EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_0,
-        EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_1,
-        EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_2,
-    ] {
-        screen.set_event_flag_live(flag);
-    }
-    // Post-battle OnLoad re-run (what the writeback fires after each win).
-    screen.rerun_map_on_load_script();
-    // Nine original 34-frame NPC strides plus script boundaries exceed
-    // the old 300-frame allowance. Wait for the actual completion state.
-    for _ in 0..600 {
-        screen.update_frame(input(false));
-        if screen.npc_states.iter().take(3).all(|npc| !npc.visible) { break; }
-    }
-    for (i, rocket) in screen.npc_states.iter().take(3).enumerate() {
-        assert!(!rocket.visible, "beaten rocket {} must be hidden", i + 1);
-    }
-    for (rocket, expected) in screen.npc_states.iter().take(3).zip([(9,13),(12,12),(9,11)]) {
-        assert_eq!((rocket.x, rocket.y), expected, "original per-rocket departure path");
-    }
-    // Latch: another load must not replay the walk (rockets stay hidden).
-    screen.warp_to_map(MapId::PalletTown, 5, 6);
-    screen.warp_to_map(MapId::PokemonTower7F, 9, 15);
-    for _ in 0..160 {
-        screen.update_frame(input(false));
-    }
-    for (i, rocket) in screen.npc_states.iter().take(3).enumerate() {
-        assert!(!rocket.visible, "rocket {} stays hidden on re-entry", i + 1);
+    use pokered_data::{event_flags::EventFlag, impl_traits::PokemonRedData};
+    #[derive(serde::Deserialize)]
+    struct Case { rocket: usize, player: [u16;2], start: [u16;2], path: Vec<[u16;2]> }
+    let cases: Vec<Case> = serde_json::from_str(include_str!("tower_rocket_cases.json")).unwrap();
+    assert_eq!(cases.len(), 12);
+    let neutral = || super::OverworldInput::new(false,false,false,false,false,false,false,false);
+    for case in cases {
+        let mut screen = OverworldScreen::new(MapId::PokemonTower7F, None, PokemonRedData);
+        screen.run_on_load();
+        for _ in 0..50 { screen.update_frame(neutral()); }
+        screen.state.player.x = case.player[0];
+        screen.state.player.y = case.player[1];
+        let index = case.rocket - 1;
+        screen.npc_states[index].x = case.start[0];
+        screen.npc_states[index].y = case.start[1];
+        let flags = [EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_0,
+            EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_1,
+            EventFlag::EVENT_BEAT_POKEMONTOWER_7_TRAINER_2];
+        screen.set_event_flag_live(flags[index]);
+        screen.rerun_map_on_load_script();
+        let mut actual = Vec::new();
+        let mut previous = case.start;
+        for _ in 0..1500 {
+            screen.update_frame(neutral());
+            let rocket = &screen.npc_states[index];
+            let position = [rocket.x, rocket.y];
+            if position != previous { actual.push(position); previous = position; }
+            if !rocket.visible { break; }
+        }
+        assert_eq!(actual, case.path, "rocket {} player {:?}",case.rocket,case.player);
+        assert!(!screen.npc_states[index].visible);
+        // A later load must neither replay the path nor reveal the Rocket.
+        screen.warp_to_map(MapId::PalletTown,5,6);
+        screen.warp_to_map(MapId::PokemonTower7F,9,15);
+        for _ in 0..160 { screen.update_frame(neutral()); }
+        assert!(!screen.npc_states[index].visible);
     }
 }
 
