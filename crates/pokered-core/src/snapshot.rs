@@ -211,6 +211,10 @@ pub struct OverworldSnapshot {
     pub boulder_push: Option<crate::overworld::presentation::BoulderPushState>,
     #[serde(default)]
     pub boulder_resume_input: Option<crate::overworld::OverworldInput>,
+    #[serde(default)]
+    pub boulder_resume_poll: Option<(bool, bool)>,
+    #[serde(default)]
+    pub start_menu_entry: Option<crate::overworld::display_text_init::DisplayTextInit>,
     pub dark_cave: DarkCaveState,
     pub forced_bike: ForcedBikeState,
     pub flash_lit_frames: u8,
@@ -378,6 +382,8 @@ impl OverworldSnapshot {
             boulder_dust: screen.boulder_dust,
             boulder_push: screen.boulder_push,
             boulder_resume_input: screen.boulder_resume_input,
+            boulder_resume_poll: screen.boulder_resume_poll,
+            start_menu_entry: screen.start_menu_entry,
             dark_cave: screen.dark_cave.clone(),
             forced_bike: screen.forced_bike,
             flash_lit_frames: 0,
@@ -423,7 +429,7 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, boulder_push, boulder_resume_input, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, boulder_resume_input, boulder_resume_poll, start_menu_entry, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, escape_rope_delay_frames, escape_rope_consumption_pending, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,
@@ -476,7 +482,7 @@ impl OverworldSnapshot {
             toggleable_object_flags, hidden_item_flags, hidden_coin_flags, player_coins,
             itemfinder_dings, rng, safari_steps, safari_balls, safari_game_active,
             safari_eject_pending, strength_active, tried_push_boulder, boulder_dust_frames,
-            boulder_dust, boulder_push, boulder_resume_input, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
+            boulder_dust, boulder_push, boulder_resume_input, boulder_resume_poll, start_menu_entry, dark_cave, forced_bike, flash_lit_frames, flash_pending_white,
             warp_fade_to_white, teleport_spin, escape_rope_delay_frames, escape_rope_consumption_pending, fly_departure, enter_map_anim,
             enter_map_fly_anim, pending_fly_arrival, fly_arrival_delay_frames, elevator_shake,
             elevator_shake_pending, fishing_cast_delay, tile_anim, post_dialogue_warp,

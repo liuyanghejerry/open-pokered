@@ -173,10 +173,20 @@ impl Session {
         assert_eq!(session.game.state.screen, GameScreen::StartMenu);
         assert_eq!(session.game.start_menu.has_pokedex(), has_pokedex);
         assert!(!session.game.start_menu.is_link_connected());
+        session.wait_menu_input(&[]);
         session.finish_sound(&[]);
         assert_eq!(session.game.state.screen, GameScreen::StartMenu);
         assert_eq!(session.game.start_menu.cursor(), 0);
         session
+    }
+
+    fn wait_menu_input(&mut self, held: &[GbButton]) {
+        for _ in 0..64 {
+            if self.game.start_menu.input_ready() { return; }
+            assert_eq!(self.game.state.screen, GameScreen::StartMenu);
+            self.step(held);
+        }
+        panic!("START menu never became ready");
     }
 
     fn finish_sound(&mut self, held: &[GbButton]) {
@@ -259,10 +269,12 @@ fn actual_empty_party_start_a_uses_fresh_edges_without_held_restarts() {
     assert!(!sound.busy);
     assert_eq!(session.game.state.screen, GameScreen::StartMenu);
     assert_eq!(session.game.start_menu.cursor(), 1);
+    session.wait_menu_input(&[GbButton::A, GbButton::Down]);
     let sound = session.step(&[GbButton::A, GbButton::Up]);
     assert!(!sound.busy);
     assert_eq!(session.game.start_menu.cursor(), 0);
     session.step(&[]);
+    session.wait_menu_input(&[]);
     session.assert_press_ab(&[GbButton::A], &[GbButton::A]);
     assert_eq!(session.game.state.screen, GameScreen::StartMenu);
     session.assert_fixture_unchanged();
@@ -277,10 +289,12 @@ fn actual_start_menu_directions_and_start_do_not_play_press_ab() {
     assert_eq!(session.game.state.screen, GameScreen::StartMenu);
     assert_eq!(session.game.start_menu.cursor(), last);
     session.step(&[]);
+    session.wait_menu_input(&[]);
     let sound = session.step(&[GbButton::Down]);
     assert!(!sound.busy);
     assert_eq!(session.game.start_menu.cursor(), 0);
     session.step(&[]);
+    session.wait_menu_input(&[]);
     let sound = session.step(&[GbButton::Start]);
     assert!(!sound.busy);
     assert_eq!(session.game.state.screen, GameScreen::Overworld);
