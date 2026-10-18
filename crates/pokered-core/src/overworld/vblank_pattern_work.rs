@@ -66,9 +66,11 @@ impl VBlankPatternWork {
     pub fn destination(&self) -> u16 {
         self.destination
     }
+    #[inline(always)]
     fn double(&self) -> bool {
         self.copy.format == CopyFormat::OneBppDouble
     }
+    #[inline(always)]
     fn writes_per_pair(&self) -> u8 {
         if self.double() {
             4
@@ -76,6 +78,7 @@ impl VBlankPatternWork {
             2
         }
     }
+    #[inline(always)]
     fn pairs_per_tile(&self) -> u8 {
         if self.double() {
             4
@@ -83,9 +86,11 @@ impl VBlankPatternWork {
             8
         }
     }
+    #[inline(always)]
     fn last_increment(&self) -> bool {
         self.pair + 1 == self.pairs_per_tile() && self.write + 1 == self.writes_per_pair()
     }
+    #[inline(always)]
     pub fn instruction(&self) -> Option<PatternInstruction> {
         use Step::*;
         let (tcycles, access) = match self.step {
@@ -129,6 +134,7 @@ impl VBlankPatternWork {
     }
     /// A bus refusal leaves the whole instruction unexecuted. POP DE is never
     /// partially committed across a grant, and writes cannot be replayed.
+    #[inline(always)]
     pub fn step<B: PatternInstructionBus>(
         &mut self,
         bus: &mut B,

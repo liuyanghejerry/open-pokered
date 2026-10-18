@@ -57,6 +57,7 @@ impl FarPatternCopyCall {
 
     /// True means one source instruction executed. False means the complete
     /// CALL/body/RET returned. Errors preserve the pending instruction.
+    #[inline(always)]
     pub fn step<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>
     where
         B: DisplayInstructionBus

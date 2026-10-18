@@ -81,6 +81,7 @@ impl DisableLcdWork {
     pub fn finished(&self) -> bool {
         self.step == DisableStep::Done
     }
+    #[inline(always)]
     pub fn instruction(&self) -> Option<DisplayInstruction> {
         use DisableStep::*;
         Some(match self.step {
@@ -99,6 +100,7 @@ impl DisableLcdWork {
     }
     /// None means the child has returned. A blocked shared bus leaves the
     /// exact native branch/register state intact for the next host slice.
+    #[inline(always)]
     pub fn step<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,
@@ -177,6 +179,7 @@ impl EnableLcdWork {
     pub fn finished(&self) -> bool {
         self.step == EnableStep::Done
     }
+    #[inline(always)]
     pub fn instruction(&self) -> Option<DisplayInstruction> {
         Some(match self.step {
             EnableStep::ReadLcdc => read(0xff40),
@@ -186,6 +189,7 @@ impl EnableLcdWork {
             EnableStep::Done => return None,
         })
     }
+    #[inline(always)]
     pub fn step<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,

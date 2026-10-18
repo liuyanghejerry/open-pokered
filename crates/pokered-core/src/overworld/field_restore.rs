@@ -321,6 +321,7 @@ impl VideoCopyWork {
     /// Execute one instruction of an accepted VBlank transfer. The owner must
     /// provide the actual device epoch and keep foreground DelayFrame blocked
     /// until the rest of its ISR returns. Clearing size alone is not return.
+    #[inline(always)]
     pub fn service_instruction<B: super::pattern_copy_work::PatternInstructionBus>(
         &mut self,
         epoch: u64,
