@@ -97,7 +97,7 @@ pub(crate) struct FieldFlash {
     waits: Vec<FieldWaitEdges>,
     #[cfg(feature = "debug-server")]
     traced_operation: Option<usize>,
-    party: FlashFrame,
+    party: Option<FlashFrame>,
     map: FlashFrame,
     white_from: Option<u64>,
     show_map: bool,
@@ -155,7 +155,7 @@ impl PokemonGame {
             waits: Vec::new(),
             #[cfg(feature = "debug-server")]
             traced_operation: None,
-            party,
+            party: Some(party),
             map,
             white_from: None,
             show_map: false,
@@ -688,6 +688,9 @@ impl PokemonGame {
                 RestoreOperation::SetWindowY(144) => {
                     self.overworld.clear_retained_field_text();
                     flow.show_map = true;
+                    // The party parent has returned; only the retained map
+                    // can be presented from this point onward.
+                    flow.party = None;
                 }
                 RestoreOperation::RestoreNpcFacing => {
                     if self.overworld.npc_states.len() != flow.facing.len() {
@@ -698,6 +701,13 @@ impl PokemonGame {
                     }
                 }
                 RestoreOperation::LoadCurrentMapView => {
+                    // Decoded assets are reloadable from ROM. Release the
+                    // party-era cache before the temporary linear GBA render;
+                    // ResourceManager remains the sole decoded-asset owner.
+                    #[cfg(all(target_os = "none", target_arch = "arm"))]
+                    if let Some(resources) = self.resources.as_mut() {
+                        resources.clear_cache();
+                    }
                     let mut map = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                     crate::render::draw_overworld_background(
                         &mut self.overworld,
@@ -803,7 +813,9 @@ impl PokemonGame {
             if flow.show_map {
                 &flow.map
             } else {
-                &flow.party
+                flow.party
+                    .as_ref()
+                    .expect("party snapshot retained until map handoff")
             },
             fb,
         );
