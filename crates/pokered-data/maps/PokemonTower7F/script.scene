@@ -7,8 +7,6 @@
 //    EVENT_BEAT_POKEMONTOWER_7_TRAINER_0/1/2.
 //  - Mr.Fuji (npc 4): talk-driven rescue cutscene. Talking to him sets the
 //    rescued flags and warps the player to MR.FUJI's house (POKeMON HOUSE).
-//    The original's "Rockets walk away + hide NPC" choreography is approximated
-//    by the rescue dialogue + flag set + warp (see TODO at the bottom).
 
 game_scene PokemonTower7F {
   // ── Team Rocket grunt (npc 1) — sight-engaged; dialogue only ──────────────
@@ -77,22 +75,57 @@ game_scene PokemonTower7F {
   // ── Rocket walk-off (PokemonTower7FEndBattleScript → RocketLeaveMovement
   //    + HideNPCScript, scripts/PokemonTower7F.asm:38-100): after each
   //    rocket's battle the rocket walks its coord-table path down the tower
-  //    and is hidden for good. LOS battles end without a per-map hook, so
+  //    and is hidden for good. Select the original four player-coordinate
+  //    branches per Rocket after its approach; keep every source stride.
+  //    LOS battles end without a per-map hook, so
   //    the post-battle OnLoad callback plays the walk immediately.
   @load {
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_0") && !getFlag("EVENT_TOWER7_ROCKET_0_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_0_LEFT")
-      moveNpc("POKEMONTOWER7F_ROCKET_1", [[9, 12], [9, 13]])
+      @if (getPlayerX() == 9 && getPlayerY() == 12) {
+        moveNpc("POKEMONTOWER7F_ROCKET_1", [[10, 11], [10, 12], [10, 13], [10, 14], [10, 15], [10, 16], [9, 16]])
+      }
+      @if (getPlayerX() == 10 && getPlayerY() == 11) {
+        moveNpc("POKEMONTOWER7F_ROCKET_1", [[9, 12], [10, 12], [10, 13], [10, 14], [10, 15], [10, 16]])
+      }
+      @if (getPlayerX() == 11 && getPlayerY() == 11) {
+        moveNpc("POKEMONTOWER7F_ROCKET_1", [[10, 12], [10, 13], [10, 14], [10, 15], [10, 16]])
+      }
+      @if (getPlayerX() == 12 && getPlayerY() == 11) {
+        moveNpc("POKEMONTOWER7F_ROCKET_1", [[11, 12], [11, 13], [11, 14], [11, 15], [11, 16]])
+      }
       hideObject("POKEMONTOWER7F_ROCKET_1")
     }
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_1") && !getFlag("EVENT_TOWER7_ROCKET_1_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_1_LEFT")
-      moveNpc("POKEMONTOWER7F_ROCKET_2", [[12, 10], [12, 11], [12, 12]])
+      @if (getPlayerX() == 12 && getPlayerY() == 10) {
+        moveNpc("POKEMONTOWER7F_ROCKET_2", [[11, 9], [11, 10], [11, 11], [11, 12], [11, 13], [11, 14], [11, 15]])
+      }
+      @if (getPlayerX() == 11 && getPlayerY() == 9) {
+        moveNpc("POKEMONTOWER7F_ROCKET_2", [[12, 10], [12, 11], [12, 12], [11, 12], [11, 13], [11, 14]])
+      }
+      @if (getPlayerX() == 10 && getPlayerY() == 9) {
+        moveNpc("POKEMONTOWER7F_ROCKET_2", [[11, 10], [11, 11], [11, 12], [11, 13], [11, 14]])
+      }
+      @if (getPlayerX() == 9 && getPlayerY() == 9) {
+        moveNpc("POKEMONTOWER7F_ROCKET_2", [[10, 10], [10, 11], [10, 12], [10, 13], [10, 14]])
+      }
       hideObject("POKEMONTOWER7F_ROCKET_2")
     }
     @if (getFlag("EVENT_BEAT_POKEMONTOWER_7_TRAINER_2") && !getFlag("EVENT_TOWER7_ROCKET_2_LEFT")) {
       setFlag("EVENT_TOWER7_ROCKET_2_LEFT")
-      moveNpc("POKEMONTOWER7F_ROCKET_3", [[9, 8], [9, 9], [9, 10], [9, 11]])
+      @if (getPlayerX() == 9 && getPlayerY() == 8) {
+        moveNpc("POKEMONTOWER7F_ROCKET_3", [[10, 7], [10, 8], [10, 9], [10, 10], [10, 11], [10, 12], [10, 13]])
+      }
+      @if (getPlayerX() == 10 && getPlayerY() == 7) {
+        moveNpc("POKEMONTOWER7F_ROCKET_3", [[9, 8], [9, 9], [9, 10], [9, 11], [9, 12]])
+      }
+      @if (getPlayerX() == 11 && getPlayerY() == 7) {
+        moveNpc("POKEMONTOWER7F_ROCKET_3", [[10, 8], [10, 9], [10, 10], [10, 11], [10, 12]])
+      }
+      @if (getPlayerX() == 12 && getPlayerY() == 7) {
+        moveNpc("POKEMONTOWER7F_ROCKET_3", [[11, 8], [11, 9], [11, 10], [11, 11], [11, 12]])
+      }
       hideObject("POKEMONTOWER7F_ROCKET_3")
     }
   }

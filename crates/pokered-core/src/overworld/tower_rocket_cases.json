@@ -1,0 +1,534 @@
+[
+  {
+    "rocket": 1,
+    "player": [
+      9,
+      12
+    ],
+    "start": [
+      9,
+      11
+    ],
+    "label": "PokemonTower7FRocket1ExitRightDownMovement",
+    "directions": [
+      "RIGHT",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "LEFT"
+    ],
+    "path": [
+      [
+        10,
+        11
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        13
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        10,
+        16
+      ],
+      [
+        9,
+        16
+      ]
+    ]
+  },
+  {
+    "rocket": 1,
+    "player": [
+      10,
+      11
+    ],
+    "start": [
+      9,
+      11
+    ],
+    "label": "PokemonTower7FRocket1ExitDownRightMovement",
+    "directions": [
+      "DOWN",
+      "RIGHT",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        9,
+        12
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        13
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        10,
+        16
+      ]
+    ]
+  },
+  {
+    "rocket": 1,
+    "player": [
+      11,
+      11
+    ],
+    "start": [
+      10,
+      11
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        13
+      ],
+      [
+        10,
+        14
+      ],
+      [
+        10,
+        15
+      ],
+      [
+        10,
+        16
+      ]
+    ]
+  },
+  {
+    "rocket": 1,
+    "player": [
+      12,
+      11
+    ],
+    "start": [
+      11,
+      11
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        13
+      ],
+      [
+        11,
+        14
+      ],
+      [
+        11,
+        15
+      ],
+      [
+        11,
+        16
+      ]
+    ]
+  },
+  {
+    "rocket": 2,
+    "player": [
+      12,
+      10
+    ],
+    "start": [
+      12,
+      9
+    ],
+    "label": "PokemonTower7FRocket2ExitLeftDownMovement",
+    "directions": [
+      "LEFT",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        11,
+        9
+      ],
+      [
+        11,
+        10
+      ],
+      [
+        11,
+        11
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        13
+      ],
+      [
+        11,
+        14
+      ],
+      [
+        11,
+        15
+      ]
+    ]
+  },
+  {
+    "rocket": 2,
+    "player": [
+      11,
+      9
+    ],
+    "start": [
+      12,
+      9
+    ],
+    "label": "PokemonTower7FRocket2ExitDownLeftMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "LEFT",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        12,
+        10
+      ],
+      [
+        12,
+        11
+      ],
+      [
+        12,
+        12
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        13
+      ],
+      [
+        11,
+        14
+      ]
+    ]
+  },
+  {
+    "rocket": 2,
+    "player": [
+      10,
+      9
+    ],
+    "start": [
+      11,
+      9
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        11,
+        10
+      ],
+      [
+        11,
+        11
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        11,
+        13
+      ],
+      [
+        11,
+        14
+      ]
+    ]
+  },
+  {
+    "rocket": 2,
+    "player": [
+      9,
+      9
+    ],
+    "start": [
+      10,
+      9
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        13
+      ],
+      [
+        10,
+        14
+      ]
+    ]
+  },
+  {
+    "rocket": 3,
+    "player": [
+      9,
+      8
+    ],
+    "start": [
+      9,
+      7
+    ],
+    "label": "PokemonTower7FRocket3ExitRightDownMovement",
+    "directions": [
+      "RIGHT",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        10,
+        7
+      ],
+      [
+        10,
+        8
+      ],
+      [
+        10,
+        9
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        10,
+        12
+      ],
+      [
+        10,
+        13
+      ]
+    ]
+  },
+  {
+    "rocket": 3,
+    "player": [
+      10,
+      7
+    ],
+    "start": [
+      9,
+      7
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        9,
+        8
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        9,
+        11
+      ],
+      [
+        9,
+        12
+      ]
+    ]
+  },
+  {
+    "rocket": 3,
+    "player": [
+      11,
+      7
+    ],
+    "start": [
+      10,
+      7
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        10,
+        8
+      ],
+      [
+        10,
+        9
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        10,
+        12
+      ]
+    ]
+  },
+  {
+    "rocket": 3,
+    "player": [
+      12,
+      7
+    ],
+    "start": [
+      11,
+      7
+    ],
+    "label": "PokemonTower7FRocketExitDownMovement",
+    "directions": [
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN",
+      "DOWN"
+    ],
+    "path": [
+      [
+        11,
+        8
+      ],
+      [
+        11,
+        9
+      ],
+      [
+        11,
+        10
+      ],
+      [
+        11,
+        11
+      ],
+      [
+        11,
+        12
+      ]
+    ]
+  }
+]
