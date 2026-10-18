@@ -1061,4 +1061,87 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn retained_renderer_matches_flash_typing_whiteout_and_map_return() {
+        use pokered_core::overworld::Direction;
+        for (map, px, py) in [(MapId::RockTunnel1F, 15, 3), (MapId::RedsHouse2F, 3, 3)] {
+            for facing in [
+                Direction::Down,
+                Direction::Up,
+                Direction::Left,
+                Direction::Right,
+            ] {
+                let mut game = PokemonGame::new(GameVersion::Red);
+                game.audio = None;
+                game.overworld = OverworldScreen::new(map, None, PokemonRedData);
+                game.overworld.state.player.x = px;
+                game.overworld.state.player.y = py;
+                game.overworld.state.player.facing = facing;
+                game.state.screen = GameScreen::PartyScreen;
+                let mut mon = pokered_core::pokemon::stats::create_pokemon(
+                    pokered_data::species::Species::Bulbasaur,
+                    12,
+                    [0xff, 0xff],
+                )
+                .unwrap();
+                mon.moves = [
+                    pokered_data::moves::MoveId::Flash,
+                    pokered_data::moves::MoveId::Tackle,
+                    pokered_data::moves::MoveId::None,
+                    pokered_data::moves::MoveId::None,
+                ];
+                mon.pp = [20, 35, 0, 0];
+                game.save_data.party.add(mon.clone()).unwrap();
+                game.party_screen = PartyScreenState::new(game.save_data.party.to_vec());
+                game.overworld.set_no_text_delay(false);
+                let outcome = game.overworld.use_field_move(
+                    pokered_data::moves::MoveId::Flash,
+                    &mon,
+                    1,
+                    MapId::PalletTown,
+                );
+                let pokered_core::overworld::field_moves::FieldMoveOutcome::Flash { message } = outcome
+                else {
+                    panic!("FLASH caller required");
+                };
+                game.begin_field_flash(&message);
+                let mut session = crate::render::session::RenderSession::new();
+                let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                let mut returned = false;
+                let mut returned_at = None;
+                let mut saw_white = false;
+                for frame in 0..500 {
+                    let mut input = InputState::new();
+                    if frame % 20 == 0 {
+                        input.press(GbButton::A);
+                    }
+                    game.update(&input);
+                    session.render(&mut game, &mut retained, &mut scroll);
+                    let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                    game.draw(&mut full);
+                    for y in 0..144 {
+                        for x in 0..160 {
+                            assert_eq!(retained.get_pixel(x,y), full.get_pixel(x,y),
+                        "FLASH retained map={map:?} facing={facing:?} frame={frame} pixel=({x},{y})");
+                        }
+                    }
+                    if let Some(flow) = game.field_flash.as_ref() {
+                        saw_white |= flow
+                            .white_from
+                            .is_some_and(|start| game.frame_count >= start);
+                    } else {
+                        let first = *returned_at.get_or_insert(frame);
+                        if frame - first >= 8 {
+                            returned = true;
+                            break;
+                        }
+                    }
+                }
+                assert!(returned && saw_white);
+                assert_eq!(game.state.screen, GameScreen::Overworld);
+            }
+        }
+    }
+
 }

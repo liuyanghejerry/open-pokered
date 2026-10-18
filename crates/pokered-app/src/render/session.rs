@@ -1972,7 +1972,8 @@ impl RenderSession {
             .as_ref()
             .map(|hof| super::hof_visual_key(hof, game.state.config.language));
         let credits = game.credits.as_ref().map(super::credits_visual_key);
-        let takeover_active = black_screen
+        let field_flash_active = game.field_flash.is_some();
+        let takeover_active = field_flash_active || black_screen
             || trade.is_some()
             || evolution.is_some()
             || hof.is_some()
@@ -2054,8 +2055,10 @@ impl RenderSession {
             .as_ref()
             .zip(last_bag.as_ref())
             .and_then(|(current, previous)| current.quantity_change_from(previous));
-        let party =
-            (game.state.screen == GameScreen::PartyScreen).then(|| PartyVisualKey::new(game));
+        // FLASH retains the party caller while its text/map takeover changes
+        // pixels independently of the ordinary party cursor/icon key.
+        let party = (game.state.screen == GameScreen::PartyScreen && !field_flash_active)
+            .then(|| PartyVisualKey::new(game));
         let party_selection_change = party
             .as_ref()
             .zip(last_party.as_ref())
@@ -2163,6 +2166,8 @@ impl RenderSession {
             hof != last_hof
         } else if credits.is_some() {
             credits != last_credits
+        } else if field_flash_active {
+            true
         } else if last_takeover_active {
             // The takeover replaced the ordinary screen contents. Restore
             // that screen even when its own visual state did not change.
