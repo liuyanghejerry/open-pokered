@@ -1,0 +1,38 @@
+{
+  "cause": "Whole-period shortcut expected window_y_reached during VBlank whenever LY >= WY, but the transition clears it on entering VBlank. Host-aligned idle grants therefore executed every scanline.",
+  "correction": "Compare the latch with visible-line state; distinguish AdvanceLy before the latch updates. OBJ-disabled frames need no OAM zero scan because no OBJ fetches affect scanline length.",
+  "invariants": "Keep real LCD/IF/VBlank state, phase and elapsed cycles; no gate/baseline changes.",
+  "new_runtime": {
+    "actual_source": "f7d98f9c231acef9f026706e1e59cd7f298287bb",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "7cef06e8945535c7538e366e8c9143da3cdf7f93e869761769fa9bcbe1902d1e",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "regression": "7 display-device tests pass, including VBlank/visible/AdvanceLy, both OBJ flags and nonempty OAM when OBJ is disabled; 3192 full core pass; 393 full app pass, 39 existing ignored",
+  "ordinary_FLASH": "240 PNGs and all complete observed records exactly equal previous verified implementation; no timing/image change",
+  "manifest_sha256": "882595b260a0acc7c03c916c6ee468582cbb7161b90661bd438e6186c19dc4ba",
+  "CI": "Previous f377 fails GBA performance; must re-run every original workflow on final PR head, no merge while any failure/pending remains."
+}

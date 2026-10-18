@@ -130,10 +130,11 @@
   "before_repeat_full_records_equal": true,
   "after_repeat_full_records_equal": true,
   "regression": {
-    "core": "3191 passed, 0 failed",
+    "core": "3192 passed after performance correction",
     "app_debug": "393 passed, 39 existing ignored, 0 failed",
     "mobile": "cargo check --offline --locked -p pokered-app --no-default-features --features mobile: PASS",
     "bare_no_default": "Invalid hosted feature combination: unresolved preexisting dotzuki_renderer::mon_icon without resource; recorded, not passed",
     "GBA": "Actual thumbv4t no_std release check PASS; temporary local standalone workspace/lock metadata restored exactly. Original CI gates still required"
-  }
+  },
+  "performance_followup": "flash-map-restoration-performance.json"
 }

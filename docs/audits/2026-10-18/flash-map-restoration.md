@@ -11,3 +11,7 @@ Tests also exercise outdoor/indoor repeat use, held movement, transfer/cache beh
 ## Remaining limits
 
 This restores a missing player-visible sequence. It does **not** establish complete cycle/raster parity. The source LCD-off/restart capture ticks have variable cycle lengths; raw 35 vs 33 white capture counts cannot be interpreted as two physical frames. The current native restoration executes display/copy children with a shared display clock, but its physical-edge waits are not a full common interrupt handler / audio / RETI implementation. The accompanying timing JSON records that limitation and supersedes the earlier raw-count inference. Further normalized timing verification and the broader story/function audit remain open.
+
+## Performance follow-up
+
+The first PR head failed the original GBA performance gate: display updates walked every scanline even during an unchanged frame. The shortcut compared the window latch as if it remained set during VBlank; the device correctly clears it at VBlank entry. The corrected predicate distinguishes visible/AdvanceLy/VBlank phases and skips inspecting OAM when OBJ rendering is disabled. This preserves the complete display state while restoring the steady-period shortcut; no performance baseline or CI limits were changed. The follow-up actual Game replay has the same 240 PNGs and complete observed state records as the preceding after captures. `flash-map-restoration-performance.json` records its exact source/build and limits. Original CI must pass again on the latest head.
