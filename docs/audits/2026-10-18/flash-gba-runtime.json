@@ -165,5 +165,54 @@
       "complete_observed_records_equal": true
     },
     "method": "Keep each source instruction and bus access. Cache immutable ROM source references, specialize no-event device advances, and retain state-validation results only during an exclusive bus borrow. Every fresh bus/snapshot starts unchecked; budget checks, accesses, device events and failures remain per instruction."
+  },
+  "idle_performance_fix_1172": {
+    "source": "0c8fe58422488c7b0e925869d7f6567501fd1ce2",
+    "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+    "ROM_sha256": "0946e9f326058f90ba002a26be32860b4a98d97176374226bfbee53d2621f261",
+    "elf_sha256": "8b8d71d6e6d73a624ed6d79e7e48d6d6ac89c082a06da8e38e011a65771ed72e",
+    "cases": [
+      [
+        "0",
+        "45",
+        "1467876",
+        "49784",
+        "11848"
+      ],
+      [
+        "1",
+        "45",
+        "1462585",
+        "49784",
+        "11848"
+      ]
+    ],
+    "seconds": [
+      5.5995025634765625,
+      5.579319000244141
+    ],
+    "tests": {
+      "core_library_unit_passed": 3202,
+      "app_library_desktop_debug_server_passed": 399,
+      "app_existing_ignored": 39
+    },
+    "limits": "ActualseededGBA2callsreturn withsame45logicalticks andmemoryrecovery. FLASH~5.6sstillunfixed; notNEWGAME/fullsourcephysicaltimingparity.",
+    "original_baseline_comparison": {
+      "all_original_gates_passed": true,
+      "baseline_and_limits_unchanged": true,
+      "pokedex_update_avg_ticks": 113,
+      "pokedex_update_limit": 118,
+      "previous_ci_value": 119,
+      "previous_failed_run": "https://github.com/liuyanghejerry/open-pokered/actions/runs/39153034407",
+      "perf_rom_sha256": "4cc808b8d9392d87f9457d193a6bb73cc5b3154feb02d6ba9c24b2dea15aad95"
+    },
+    "native_replay": {
+      "source": "0c8fe58422488c7b0e925869d7f6567501fd1ce2",
+      "binary_sha256": "b22599cc0ac43545feb1b1780dec1ad36055069d8e86c2f3f0340a8cf1587861",
+      "frames": 240,
+      "all_png_equal": true,
+      "all_observed_records_equal": true
+    },
+    "method": "Private device with immutable read accessor and invalidating mutable accessor; any elapsed instruction clears eligibility. Only uninterrupted checked periods retain eligibility. Cache is serde-skipped and cannot be granted by saved input."
   }
 }
