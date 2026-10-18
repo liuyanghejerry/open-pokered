@@ -454,13 +454,18 @@ impl PokemonGame {
                     .ok_or("graphics resources unavailable")?;
                 let assets = NativePatternAssets::new(resources);
                 if !flow.video_instructions_returned {
-                    match video.service_available_instructions(
-                        accepted,
-                        &mut self.source_display.pattern_bus(&mut flow.patterns, &assets),
-                    ) {
-                        Ok(()) => (),
-                        Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => return Ok(false),
-                        Err(error) => return Err(format!("{error:?}")),
+                    loop {
+                        match video.service_instruction(
+                            accepted,
+                            &mut self.source_display.pattern_bus(&mut flow.patterns, &assets),
+                        ) {
+                            Ok(true) => break,
+                            Ok(false) => continue,
+                            Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => {
+                                return Ok(false)
+                            }
+                            Err(error) => return Err(format!("{error:?}")),
+                        }
                     }
                     flow.video_instructions_returned = true;
                 }
