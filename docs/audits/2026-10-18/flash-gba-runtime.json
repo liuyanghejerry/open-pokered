@@ -537,5 +537,69 @@
       "focused_tests_passed": 54,
       "verdict": "Rejected and reverted privately: +4/+5 timer64 ticks, stack margin16 bytes worse; no performance gain. Not in this PR."
     }
+  },
+  "current_followup_1189": {
+    "status": "PARTIAL: restoration candidate and timing-preserving performance optimizations verified locally; original normalized physical timing/common IRQ/audio/RETI and excessive GBA runtime remain open",
+    "source": "dda4fafab2e0fecff483a33755348fad490923bd",
+    "base_master": "2106f360f637e224142401419df8ee3cab3bae46",
+    "native_comparison": "flash-restoration-current-master/verification.json",
+    "gba": {
+      "source": "dda4fafab2e0fecff483a33755348fad490923bd",
+      "scope": "Temporary GBA controller seeds party/badge/map then uses real START Pokemon FLASH inputs twice, repeat retains cache; not NEW GAME/ordinary SAVE parity evidence",
+      "all_pass": true,
+      "prior_sram_sha256": "2d864c0b789a43214eee8524d3182075125e5ca2cd527f3582ec87ffd94076bc",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "build_command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--offline",
+        "--release",
+        "--features",
+        "repro-rival"
+      ],
+      "build_exit": 0,
+      "ROM_sha256": "d39d59c77f623b835a8e0f5baa5fe31da0bed794d6d68a2c2deb4c200d92c4f3",
+      "ROM_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba",
+      "elf_sha256": "be76a07edfd1ff619a725dff624c7ce1850e584579801e693f4b63b1e35428e9",
+      "pid": 3742727,
+      "cases": [
+        [
+          "0",
+          "45",
+          "563400",
+          "49784",
+          "11820"
+        ],
+        [
+          "1",
+          "45",
+          "563142",
+          "49784",
+          "11820"
+        ]
+      ],
+      "sram_restored": true,
+      "tracked_bytes_restored": true
+    },
+    "seconds": [
+      2.149200439453125,
+      2.1482162475585938
+    ],
+    "improvement_percent_against_1188": [
+      18.3835480702649,
+      17.885868265568583
+    ],
+    "retained_optimizations": [
+      "Constant-operand DisableLCD polling, every instruction retained",
+      "Exclusive accepted video request service, size published after every successful instruction",
+      "Constant-operand CopyData with real far-bank restoration",
+      "Inline pattern dispatch to specialize constant access variants"
+    ],
+    "focused_display_tests_passed": 56,
+    "core_passed": 3228,
+    "app_passed": 408,
+    "app_existing_ignored": 40,
+    "cli_passed": 11
   }
 }
