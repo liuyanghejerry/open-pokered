@@ -1,0 +1,213 @@
+{
+  "all_pass": true,
+  "scope": "Prepared original OneHitKOEffect -> type adjustment -> X Accuracy MoveHitTest -> text selector CPU chain. Captured operands transferred between routines explicitly, valid SoftReset return, readonly hooks. Slow branch skips type adjustment/hit test as caller does. Not full original battle, raster, RNG-order or timing proof.",
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "rows": [
+    {
+      "case": "Fissure-Pidgey",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "DoesntAffectMonText",
+      "selected_text_address": 23639
+    },
+    {
+      "case": "HornDrill-Gengar",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "DoesntAffectMonText",
+      "selected_text_address": 23639
+    },
+    {
+      "case": "Fissure-Rattata",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "OHKOText",
+      "selected_text_address": 23683
+    },
+    {
+      "case": "slow-Fissure-Rattata",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 0,
+        "factor": 10,
+        "move_missed": 1,
+        "critical_ohko": 255
+      },
+      "AdjustDamageForMoveType": null,
+      "MoveHitTest_XAccuracy": null,
+      "selected_text_label": "UnaffectedText",
+      "selected_text_address": 23628
+    },
+    {
+      "case": "STAB-Fissure-Rattata",
+      "attacker_types": [
+        4,
+        4
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 32766,
+        "factor": 138,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 32766,
+        "factor": 138,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "OHKOText",
+      "selected_text_address": 23683
+    },
+    {
+      "case": "Fissure-Golem",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 65534,
+        "factor": 20,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 65534,
+        "factor": 20,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "OHKOText",
+      "selected_text_address": 23683
+    },
+    {
+      "case": "Fissure-Tangela",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 32767,
+        "factor": 5,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 32767,
+        "factor": 5,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "OHKOText",
+      "selected_text_address": 23683
+    },
+    {
+      "case": "HornDrill-Golem",
+      "attacker_types": [
+        24,
+        24
+      ],
+      "OneHitKOEffect": {
+        "damage": 65535,
+        "factor": 10,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "AdjustDamageForMoveType": {
+        "damage": 32767,
+        "factor": 5,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "MoveHitTest_XAccuracy": {
+        "damage": 32767,
+        "factor": 5,
+        "move_missed": 0,
+        "critical_ohko": 2
+      },
+      "selected_text_label": "OHKOText",
+      "selected_text_address": 23683
+    }
+  ]
+}

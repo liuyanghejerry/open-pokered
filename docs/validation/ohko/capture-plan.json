@@ -1,0 +1,2651 @@
+{
+  "seed": 42,
+  "cases": [
+    {
+      "name": "fissure-pidgey",
+      "fixture": "fissure.json",
+      "move": "Fissure",
+      "target": "Pidgey",
+      "target_level": 5,
+      "use_x_accuracy": true,
+      "inputs": [
+        {
+          "frame": 608,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 609,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 620,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 630,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 631,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 642,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 652,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 653,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 664,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 674,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 675,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 686,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 696,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 697,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 708,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 718,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 719,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 730,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 740,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 741,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 752,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 762,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 763,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 774,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 784,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 785,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 796,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 806,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 807,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 818,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 828,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 829,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 840,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 850,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 851,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 862,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 872,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 873,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 884,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 894,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 895,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 906,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 916,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 917,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 928,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 938,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "down",
+              "left"
+            ]
+          }
+        },
+        {
+          "frame": 940,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 950,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 951,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 956,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 966,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 967,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 972,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 982,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 983,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 994,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1004,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1005,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1016,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1026,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1027,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1038,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1048,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1049,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1060,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1070,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1071,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1082,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1092,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1093,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1104,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1114,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1115,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1126,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1136,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1137,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1148,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1158,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1159,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1170,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1180,
+          "command": {
+            "cmd": "step_frames",
+            "count": 600
+          }
+        },
+        {
+          "frame": 1780,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1781,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1792,
+          "command": {
+            "cmd": "step_frames",
+            "count": 60
+          }
+        }
+      ],
+      "final_frame": 1852,
+      "before": "Enemy PIDGEY fainted!",
+      "after": "It doesn't affect\nEnemy PIDGEY!",
+      "before_hp": 0,
+      "after_hp": 19
+    },
+    {
+      "name": "horn-drill-gengar",
+      "fixture": "horn-drill.json",
+      "move": "HornDrill",
+      "target": "Gengar",
+      "target_level": 5,
+      "use_x_accuracy": true,
+      "inputs": [
+        {
+          "frame": 608,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 609,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 620,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 630,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 631,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 642,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 652,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 653,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 664,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 674,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 675,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 686,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 696,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 697,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 708,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 718,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 719,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 730,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 740,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 741,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 752,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 762,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 763,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 774,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 784,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 785,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 796,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 806,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 807,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 818,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 828,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 829,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 840,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 850,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 851,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 862,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 872,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 873,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 884,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 894,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 895,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 906,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 916,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 917,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 928,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 938,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "down",
+              "left"
+            ]
+          }
+        },
+        {
+          "frame": 940,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 950,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 951,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 956,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 966,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 967,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 972,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 982,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 983,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 994,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1004,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1005,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1016,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1026,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1027,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1038,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1048,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1049,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1060,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1070,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1071,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1082,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1092,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1093,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1104,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1114,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1115,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1126,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1136,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1137,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1148,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1158,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1159,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1170,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1180,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1181,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1192,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1202,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1203,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1214,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1224,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1225,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1236,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1246,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1247,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1258,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1268,
+          "command": {
+            "cmd": "step_frames",
+            "count": 600
+          }
+        },
+        {
+          "frame": 1868,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1869,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1880,
+          "command": {
+            "cmd": "step_frames",
+            "count": 60
+          }
+        }
+      ],
+      "final_frame": 1940,
+      "before": "Enemy GENGAR fainted!",
+      "after": "It doesn't affect\nEnemy GENGAR!",
+      "before_hp": 0,
+      "after_hp": 21
+    },
+    {
+      "name": "fissure-rattata",
+      "fixture": "fissure.json",
+      "move": "Fissure",
+      "target": "Rattata",
+      "target_level": 5,
+      "use_x_accuracy": true,
+      "inputs": [
+        {
+          "frame": 608,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 609,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 620,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 630,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 631,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 642,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 652,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 653,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 664,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 674,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 675,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 686,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 696,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 697,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 708,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 718,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 719,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 730,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 740,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 741,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 752,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 762,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 763,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 774,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 784,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 785,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 796,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 806,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 807,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 818,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 828,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 829,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 840,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 850,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 851,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 862,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 872,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 873,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 884,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 894,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 895,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 906,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 916,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 917,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 928,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 938,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "down",
+              "left"
+            ]
+          }
+        },
+        {
+          "frame": 940,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 950,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 951,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 956,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 966,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 967,
+          "command": {
+            "cmd": "step_frames",
+            "count": 5
+          }
+        },
+        {
+          "frame": 972,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 982,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 983,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 994,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1004,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1005,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1016,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1026,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1027,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1038,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1048,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1049,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1060,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1070,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1071,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1082,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1092,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1093,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1104,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1114,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1115,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1126,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1136,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1137,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1148,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1158,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1159,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1170,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1180,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1181,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1192,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1202,
+          "command": {
+            "cmd": "step_frames",
+            "count": 600
+          }
+        },
+        {
+          "frame": 1802,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1803,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1814,
+          "command": {
+            "cmd": "step_frames",
+            "count": 60
+          }
+        }
+      ],
+      "final_frame": 1874,
+      "before": "Enemy RATTATA fainted!",
+      "after": "One-hit KO!",
+      "before_hp": 0,
+      "after_hp": 0
+    },
+    {
+      "name": "slow-fissure-pidgey",
+      "fixture": "slow-fissure.json",
+      "move": "Fissure",
+      "target": "Pidgey",
+      "target_level": 100,
+      "use_x_accuracy": false,
+      "inputs": [
+        {
+          "frame": 608,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 609,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 620,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 630,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 631,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 642,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 652,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 653,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 664,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 674,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 675,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 686,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 696,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 697,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 708,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 718,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 719,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 730,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 740,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 741,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 752,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 762,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 763,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 774,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 784,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 785,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 796,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 806,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 807,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 818,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 828,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 829,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 840,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 850,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 851,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 862,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 872,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 873,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 884,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 894,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 895,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 906,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 916,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 917,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 928,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 938,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 939,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 950,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 960,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 961,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 972,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 982,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 983,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 994,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1004,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1005,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1016,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1026,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1027,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1038,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1048,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1049,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1060,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1070,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1071,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1082,
+          "command": {
+            "cmd": "step_frames",
+            "count": 10
+          }
+        },
+        {
+          "frame": 1092,
+          "command": {
+            "cmd": "step_frames",
+            "count": 600
+          }
+        },
+        {
+          "frame": 1692,
+          "command": {
+            "cmd": "press_sequence",
+            "buttons": [
+              "a"
+            ]
+          }
+        },
+        {
+          "frame": 1693,
+          "command": {
+            "cmd": "step_frames",
+            "count": 11
+          }
+        },
+        {
+          "frame": 1704,
+          "command": {
+            "cmd": "step_frames",
+            "count": 60
+          }
+        }
+      ],
+      "final_frame": 1764,
+      "before": "MEW's attack missed!",
+      "after": "Enemy PIDGEY's\nunaffected!",
+      "before_hp": 194,
+      "after_hp": 194
+    }
+  ]
+}
