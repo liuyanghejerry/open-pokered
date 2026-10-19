@@ -1047,3 +1047,22 @@ mod real_perfect_pitch_base_tests {
         check_real_pitch_base(MusicId::SILPH_CO);
     }
 }
+
+#[test]
+fn applying_attack_sound_uses_original_audio2_tempo_and_stab_mask() {
+    for (factor, id, tempo) in [(10, SfxId::Damage, 0xb0),
+        (20, SfxId::SuperEffective, 0x17f), (5, SfxId::NotVeryEffective, 0x81)] {
+        for stab in [0, 0x80] {
+            let mut manager = AudioManager::new();
+            manager.play_applying_attack_sound(factor | stab);
+            assert_eq!(manager.sequencer.current_sfx_id, id as u8);
+            assert_eq!(manager.sequencer.sfx_tempo, tempo);
+            assert!(manager.is_sfx_playing());
+        }
+    }
+    for factor in [0, 0x80] {
+        let mut manager = AudioManager::new();
+        manager.play_applying_attack_sound(factor);
+        assert!(!manager.is_sfx_playing());
+    }
+}

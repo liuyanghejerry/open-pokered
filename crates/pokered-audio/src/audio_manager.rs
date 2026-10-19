@@ -121,14 +121,26 @@ impl AudioManager {
         self.sequencer.play_sfx(SfxId::BallPoof as u8, &[noise.to_vec()], 3, 0x0100);
     }
 
+    /// Audio2's PlayApplyingAttackSound: select from the original presentation
+    /// byte, then use $80 + wTempoModifier. These are battle SFX, which Audio2
+    /// explicitly permits to use modifiers (unlike the Audio1/3 plain-SFX path).
+    pub fn play_applying_attack_sound(&mut self, effectiveness: u8) {
+        let factor = effectiveness & 0x7f;
+        if factor == 0 { return; }
+        let (id, pitch, tempo) = if factor == 10 { (SfxId::Damage, 0x20, 0x30) }
+            else if factor > 10 { (SfxId::SuperEffective, 0xe0, 0xff) }
+            else { (SfxId::NotVeryEffective, 0x50, 0x01) };
+        if !self.alarm_suppresses_sfx(id) {
+            self.engine.play_sfx_with_modifiers(id, pitch, 0x80 + tempo);
+        }
+    }
+
     /// Play a cry with the original engine's cry modifiers
     /// (`wFrequencyModifier`/`wTempoModifier`, home/pokemon.asm `GetCryData`).
     ///
-    /// In the disassembly these only take effect for cries
-    /// (`Audio1_ApplyFrequencyModifier` / `Audio1_SetSfxTempo` gate on
-    /// `Audio1_IsCry`): the cry's tempo is `0x0080 + tempo_mod` (plain SFX
-    /// always run at `0x0100`) and `pitch_mod` is added to every note
-    /// frequency.
+    /// Audio1/3 gate these on IsCry; Audio2 additionally supports battle
+    /// SFX (see play_applying_attack_sound). Cry tempo is $80 + tempo_mod;
+    /// the plain play_sfx API uses $100 with no requested pitch modifier.
     pub fn play_cry(&mut self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
         if self.alarm_suppresses_sfx(id) {
             return;

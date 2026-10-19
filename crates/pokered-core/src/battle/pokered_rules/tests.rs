@@ -2639,13 +2639,10 @@ fn conversion_narration_honours_defender_override() {
         with_override.iter().any(|l| l.contains("super effective")),
         "narration honours the defender override: {with_override:?}"
     );
-    // Without the arena (the old behaviour) the text would fall back to species types
-    // (Normal) and omit the line — proving the fix depends on the override.
+    // The actual action retained the presentation byte. Removing the arena
+    // afterward cannot rewrite what the already-resolved attack displayed.
     let without = super::runtime::translate_turn(&log, &state, &[]);
-    assert!(
-        !without.iter().any(|l| l.contains("super effective")),
-        "species-based fallback omits the line: {without:?}"
-    );
+    assert_eq!(without, with_override);
 }
 
 /// A FASTER Disable user's target decrements its FRESH counter the SAME turn (the
@@ -5258,4 +5255,46 @@ fn seeded_attacker_knockout_cannot_revive_the_seeder_or_allow_its_move() {
     assert_eq!(state.player_battlers[0].hp, 160);
     assert!(text.iter().any(|line| line.contains("fainted!")), "{text:?}");
     assert!(!text.iter().any(|line| line.contains("SOLARBEAM") || line.contains("LEECH SEED")), "{text:?}");
+}
+
+#[test]
+fn later_conversion_does_not_reclassify_an_earlier_attack() {
+    install_canonical();
+    clear_current_moves();
+    set_current_move(BattlerRef::PLAYER, real_move(MoveId::Surf));
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Conversion));
+    let mut state = EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Lapras, 400, 100), MoveId::Surf)],
+        vec![engine_battler(&Mon::new(Species::Porygon, 4000, 50), MoveId::Conversion)],
+    );
+    let mut effects = Vec::new();
+    let actions = [BattleAction::<PokeredRules>::Fight {move_:MoveId::Surf},
+        BattleAction::<PokeredRules>::Fight {move_:MoveId::Conversion}];
+    let mut rng = ScriptedRng::new(vec![0u8; 128]);
+    let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
+    assert!(effects.iter().any(|effect| effect.host == BattlerRef::OPPONENT && matches!(effect.kind,
+        PokeVolatile::TypeOverride {type1:PokemonType::Water,type2:PokemonType::Ice})));
+    assert_eq!(super::presented_effectiveness(true, MoveId::Surf), Some(Effectiveness::Normal));
+    let text = super::runtime::translate_turn(&log, &state, &effects);
+    assert!(!text.iter().any(|line| line.contains("not very effective")), "{text:?}");
+}
+
+#[test]
+fn later_conversion_cannot_turn_an_earlier_hit_into_a_visual_miss() {
+    install_canonical();clear_current_moves();
+    set_current_move(BattlerRef::PLAYER,real_move(MoveId::MegaPunch));
+    set_current_move(BattlerRef::OPPONENT,real_move(MoveId::Conversion));
+    let mut state=EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Gengar,400,100),MoveId::MegaPunch)],
+        vec![engine_battler(&Mon::new(Species::Porygon,4000,50),MoveId::Conversion)]);
+    let mut effects=Vec::new();
+    let mut rng=ScriptedRng::new(vec![0u8;128]);
+    let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,
+        [BattleAction::<PokeredRules>::Fight {move_:MoveId::MegaPunch},
+         BattleAction::<PokeredRules>::Fight {move_:MoveId::Conversion}],&mut rng);
+    assert!(log.events.iter().any(|event|matches!(event,TurnEvent::Damaged {target,cause:None,..} if *target==BattlerRef::OPPONENT)));
+    assert!(effects.iter().any(|effect|effect.host==BattlerRef::OPPONENT && matches!(effect.kind,
+        PokeVolatile::TypeOverride {type1:PokemonType::Ghost,type2:PokemonType::Poison})));
+    assert_eq!(super::presented_move_missed(true,MoveId::MegaPunch),Some(false));
+    assert_eq!(super::presented_effectiveness(true,MoveId::MegaPunch),Some(Effectiveness::Normal));
 }

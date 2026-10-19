@@ -4954,6 +4954,7 @@ impl PokemonGame {
                 // layer defers the animation start while an SFX is playing —
                 // but WaitForSoundToFinish returns immediately while the
                 // low-health alarm bit is set (home/delay.asm:15-18).
+                self.battle_vfx.audio_available = self.audio.is_some();
                 self.battle_vfx.sfx_playing = self
                     .audio
                     .as_ref()
@@ -4963,7 +4964,10 @@ impl PokemonGame {
                     audio.is_sfx_playing() && !audio.low_health_alarm_active());
                 let faint_sound = faint_sound_ready.then(|| self.battle_vfx.take_faint_sound()).flatten();
 
+                let move_sfx = self.battle_vfx.take_move_sfx();
+                let applying_sound = self.battle_vfx.take_applying_attack_sound();
                 if let Some(ref audio) = self.audio {
+                    if let Some(effectiveness) = applying_sound { audio.play_applying_attack_sound(effectiveness as u8); }
                     // wLowHealthAlarm: re-evaluated every frame from the
                     // player mon's HP (DrawPlayerHUDAndHPBar,
                     // engine/battle/core.asm:1851-1875).
@@ -4980,13 +4984,6 @@ impl PokemonGame {
                             pokered_core::battle::BattleItemSfx::HealHp => SfxId::HealHP,
                             pokered_core::battle::BattleItemSfx::HealAilment => SfxId::HealAilment,
                         });
-                    }
-                    // HP-bar drain starting: play the damage SFX once per
-                    // drain. (Deviation: Gen 1's UpdateHPBar drain itself is
-                    // silent — hp_bar.asm has no SFX; the task spec asks for
-                    // SFX_DAMAGE while draining.)
-                    if self.battle.take_hp_drain_sfx_pending() {
-                        audio.play_sfx(SfxId::Damage);
                     }
                     // Pokémon cries (tracked by visual-effects layer)
                     if let Some(species) = self.battle_vfx.take_cry_pending() {
@@ -5014,7 +5011,7 @@ impl PokemonGame {
 
                     // Per-command move animation SFX (GetMoveSound in
                     // PlayAnimation/PlaySubanimation — one play per command).
-                    if let Some(req) = self.battle_vfx.take_move_sfx() {
+                    if let Some(req) = move_sfx {
                         use pokered_data::move_sfx::{get_move_sound, MoveSound};
                         match get_move_sound(req.anim_move, req.sound_move, req.attacker_species) {
                             Some(MoveSound::Sfx(raw)) => {
@@ -5098,10 +5095,6 @@ impl PokemonGame {
                             let msg_lower = msg.to_lowercase();
                             if (self.battle.captured_mon.is_some() || self.battle.is_old_man) && msg_lower.starts_with("all right!") {
                                 audio.play_sfx(SfxId::CaughtMon);
-                            } else if msg_lower.contains("super effective") {
-                                audio.play_sfx(SfxId::SuperEffective);
-                            } else if msg_lower.contains("not very effective") {
-                                audio.play_sfx(SfxId::NotVeryEffective);
                             } else if self.battle.presentation.current_faint().is_none() && msg_lower.ends_with("fainted!") {
                                 // HandleEnemyMonFainted: trainer battles play
                                 // SFX_FAINT_FALL then SFX_FAINT_THUD; wild
@@ -5117,8 +5110,6 @@ impl PokemonGame {
                                 || msg_lower.contains("enough")
                             {
                                 audio.play_sfx(SfxId::WithdrawDeposit);
-                            } else if msg_lower.contains("critical hit") {
-                                audio.play_sfx(SfxId::Damage);
                             }
                         }
                         self.battle_prev_message = cur_message;
@@ -13887,3 +13878,7 @@ mod static_encounter_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "game/pokecenter_nurse_tests.rs"]
 mod pokecenter_nurse_tests;
+
+#[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
+#[path = "dual_type_effectiveness_tests.rs"]
+mod dual_type_effectiveness_tests;
