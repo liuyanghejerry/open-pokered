@@ -137,6 +137,11 @@
       "build": "nightly-2025-12-07 release perf-benchmark; production audio revision 8a6e0dd; no diagnostic controller/source patch",
       "baseline": "checked-in perf-baseline.json and default tolerances: PASS",
       "scope": "autopilot-v1 hardware-timer benchmark; not all original CI memory/frame-pacing scenarios or hardware sound-wave validation"
+    },
+    "CLI_scenarios": {
+      "passed": 11,
+      "failed": 0,
+      "scope": "fresh scenario processes with scripted seeding and real inputs, fixed master capture driver; binary source99f45890; not a whole fresh first-clear playthrough"
     }
   },
   "limits": [
