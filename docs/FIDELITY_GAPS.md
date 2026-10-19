@@ -728,14 +728,15 @@ no baseline/CI gate (manual). `visual-verify` skill covers only the heal machine
   (IsCryMove/GetCryData). The BATTLE ANIMATION option is wired in both frontends: when off,
   the animation and its per-command sounds are skipped and replaced by the original's
   DelayFrames(30) + applying-attack feedback (`.animationsDisabled`).
-  **Follow-up (same day):** the pitch/tempo modifier bytes are now **applied** —
-  the disassembly gates them on `Audio1_IsCry`, so they only ever affect cries:
-  `pokered-data/src/cries.rs` ports `data/pokemon/cries.asm` (verified 0-diff by
-  `workspace/scripts/verify_cry_data.py`), `AudioManager::play_cry` applies
-  `wFrequencyModifier`/`wTempoModifier` (note-frequency add + cry tempo
-  `0x0080 + mod`), and GROWL/ROAR add their command row's bytes on top — this
-  also closed the pre-existing per-species cry pitch/length gap (all cry play
-  sites go through `play_species_cry`). `WaitForSoundToFinish` is modeled:
+  **Corrected 2026-10-19:** Audio1/3 gate modifiers on cries, while Audio2
+  also accepts battle SFX. `get_move_sound` now retains each command row's
+  pitch/tempo bytes, and both battle owners use `AudioManager::play_move_sfx`.
+  Tonal SFX notes use frequency + pitch and tempo `0x0080 + mod`; CHAN8 noise
+  retains its parameters and fixed `0x0100` note timing. GROWL/ROAR still add
+  the command row to the species cry data. The earlier cry-pitch claim was
+  incomplete: the engine stored the addend but ignored it when executing
+  notes. The audio dependency now includes [dotzuki #104](https://github.com/liuyanghejerry/dotzuki/pull/104), with regressions
+  checking actual note and APU frequencies. `WaitForSoundToFinish` is modeled:
   both frontends defer the animation start while an SFX is still playing
   (`BattleVisualEffects.sfx_playing` + `pending_anim_start`).
 - 2026-07-21: **Battle-animation data + engine + renderer audited against the

@@ -5014,9 +5014,9 @@ impl PokemonGame {
                     if let Some(req) = move_sfx {
                         use pokered_data::move_sfx::{get_move_sound, MoveSound};
                         match get_move_sound(req.anim_move, req.sound_move, req.attacker_species) {
-                            Some(MoveSound::Sfx(raw)) => {
-                                if let Some(id) = SfxId::from_u8(raw) {
-                                    audio.play_sfx(id);
+                            Some(MoveSound::Sfx(row)) => {
+                                if let Some(id) = SfxId::from_u8(row.sfx) {
+                                    audio.play_move_sfx(id, row.pitch_mod, row.tempo_mod);
                                 }
                             }
                             Some(MoveSound::Cry {
