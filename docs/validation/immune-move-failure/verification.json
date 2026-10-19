@@ -1,0 +1,60 @@
+{
+  "all_pass": true,
+  "scope": "Prepared original AdjustDamageForMoveType and PrintMoveFailureText CPU subroutine chain; recorded damage factor transferred explicitly between measured routines, valid SoftReset stack return and readonly completion hooks. Not full original battle, text raster, or timing parity.",
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "rows": [
+    {
+      "case": "Earthquake-Zapdos",
+      "original_adjust_damage": {
+        "damage": 0,
+        "factor": 20,
+        "move_missed": 1
+      },
+      "selected_text_label": "AttackMissedText",
+      "selected_text_address": 23618
+    },
+    {
+      "case": "Earthquake-Butterfree",
+      "original_adjust_damage": {
+        "damage": 0,
+        "factor": 5,
+        "move_missed": 1
+      },
+      "selected_text_label": "AttackMissedText",
+      "selected_text_address": 23618
+    },
+    {
+      "case": "Earthquake-Pidgey",
+      "original_adjust_damage": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1
+      },
+      "selected_text_label": "DoesntAffectMonText",
+      "selected_text_address": 23639
+    },
+    {
+      "case": "Tackle-Gengar",
+      "original_adjust_damage": {
+        "damage": 0,
+        "factor": 0,
+        "move_missed": 1
+      },
+      "selected_text_label": "DoesntAffectMonText",
+      "selected_text_address": 23639
+    }
+  ],
+  "native_checks": {
+    "core_tests_passed": 3147,
+    "app_tests_passed": 391,
+    "app_existing_ignored": 40,
+    "cases": "Five actual stack actor/target cases (raw0/5/20, both sides), both directions of later Conversion with an earlier accuracy failure, zero-byte priority over critical/miss flags, four actual Game immune battles. Damage/RNG assertions in the full suite remain intact.",
+    "before_probes": "Five real CLI before cases: Earthquake versus Zapdos/Butterfree/Pidgey, Tackle versus Gengar, enemy Pikachu Thundershock versus player Dugtrio. Fixtures were built with SaveBuilder and loaded by CONTINUE, then driven through actual A input.",
+    "source_before": "99f45890 audio consumer binary; no immunity fix in that artifact."
+  },
+  "limits": [
+    "Original controls execute prepared subroutines, not a whole original battle or original text raster.",
+    "CLI after verification and master-before/after captures remain required before publishing this visual fix.",
+    "This change addresses ordinary typed damage immunity; OHKO and other special effect failure branches require separate source/gameplay audits."
+  ]
+}
