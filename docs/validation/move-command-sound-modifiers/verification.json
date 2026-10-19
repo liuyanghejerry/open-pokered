@@ -132,7 +132,12 @@
     },
     "source_transcriptions": "move SFX, cry, and battle-animation tables each verified with zero differences against referenced disassembly; animation checker uses production pinned renderer e533a3d",
     "cry_before": "modifiers 0 and 32 produced identical executed notes 1944/1928 despite stored addend",
-    "cry_after": "same AudioManager request with engine fix produces 1976/1960 and corresponding APU frequencies; committed consumer dependency now pins merged engine fix"
+    "cry_after": "same AudioManager request with engine fix produces 1976/1960 and corresponding APU frequencies; committed consumer dependency now pins merged engine fix",
+    "GBA": {
+      "build": "nightly-2025-12-07 release perf-benchmark; production audio revision 8a6e0dd; no diagnostic controller/source patch",
+      "baseline": "checked-in perf-baseline.json and default tolerances: PASS",
+      "scope": "autopilot-v1 hardware-timer benchmark; not all original CI memory/frame-pacing scenarios or hardware sound-wave validation"
+    }
   },
   "limits": [
     "Noise request metadata may change while actual CHAN8 timing remains fixed; do not infer audible speed from the sfx_tempo field alone.",
