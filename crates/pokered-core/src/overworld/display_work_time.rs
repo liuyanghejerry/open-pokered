@@ -825,7 +825,9 @@ mod tests {
         for (lcdc, offset) in [(0x11, 0), (0x91, 0), (0x93, 65_660)] {
             for format in [CopyFormat::TwoBpp, CopyFormat::OneBppDouble] {
                 for tiles in [0, 1, 8] {
-                    for budget in (0..=100).step_by(4).chain([4096, 70224]) {
+                    // Include the header, POP/write/inc loop and footer;
+                    // checking only small budgets would miss copy resumptions.
+                    for budget in (0..=3200).step_by(4).chain([4096, 70224]) {
                         let mut time = DisplayWorkTime::default();
                         time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
                         time.elapse(offset).unwrap();
