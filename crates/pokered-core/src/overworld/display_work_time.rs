@@ -801,6 +801,119 @@ mod tests {
         }
     }
     #[test]
+    fn video_runner_matches_single_instruction_receipts_and_snapshot_resume() {
+        use super::super::field_restore::{
+            CopyFormat, PatternCopy, VideoCopyWork, VideoServiceError,
+        };
+        struct Recording<'a, B> {
+            bus: &'a mut B,
+            trace: &'a mut Vec<(PatternInstruction, Result<Option<u16>, DisplayWorkError>)>,
+        }
+        impl<B: PatternInstructionBus<Error = DisplayWorkError>> PatternInstructionBus
+            for Recording<'_, B>
+        {
+            type Error = DisplayWorkError;
+            fn execute(
+                &mut self,
+                instruction: PatternInstruction,
+            ) -> Result<Option<u16>, Self::Error> {
+                let result = self.bus.execute(instruction);
+                self.trace.push((instruction, result));
+                result
+            }
+        }
+        for (lcdc, offset) in [(0x11, 0), (0x91, 0), (0x93, 65_660)] {
+            for format in [CopyFormat::TwoBpp, CopyFormat::OneBppDouble] {
+                for tiles in [0, 1, 8] {
+                    for budget in (0..=100).step_by(4).chain([4096, 70224]) {
+                        let mut time = DisplayWorkTime::default();
+                        time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                        time.elapse(offset).unwrap();
+                        time.deadline = time.elapsed + budget;
+                        let mut reference = time.clone();
+                        let mut work = VideoCopyWork::new(PatternCopy {
+                            source: PatternSource::Font,
+                            source_offset: 17,
+                            destination: 0x8800,
+                            tiles,
+                            format,
+                        });
+                        let epoch = time.device.vblank_epoch() + 1;
+                        work.arm(epoch - 1).unwrap();
+                        let mut expected_work = work.clone();
+                        let mut memory = PatternMemory::default();
+                        let mut expected_memory = memory.clone();
+                        for _ in 0..3 {
+                            let mut actual_trace = Vec::new();
+                            let actual = work.service_until_blocked(
+                                epoch,
+                                &mut Recording {
+                                    bus: &mut time.pattern_bus(&mut memory, &Bytes),
+                                    trace: &mut actual_trace,
+                                },
+                            );
+                            let mut expected_trace = Vec::new();
+                            let expected = loop {
+                                match expected_work.service_instruction(
+                                    epoch,
+                                    &mut Recording {
+                                        bus: &mut reference
+                                            .pattern_bus(&mut expected_memory, &Bytes)
+                                            .checking_each_instruction(),
+                                        trace: &mut expected_trace,
+                                    },
+                                ) {
+                                    Ok(false) => (),
+                                    Ok(true) => break Ok(()),
+                                    Err(error) => break Err(error),
+                                }
+                            };
+                            assert_eq!(actual, expected);
+                            assert_eq!(actual_trace, expected_trace);
+                            assert_eq!(work, expected_work);
+                            assert_eq!(memory, expected_memory);
+                            assert_eq!(
+                                serde_json::to_value(&time).unwrap(),
+                                serde_json::to_value(&reference).unwrap()
+                            );
+                            match actual {
+                                Ok(()) => {
+                                    assert!(work.vblank_work().unwrap().finished());
+                                    assert!(matches!(
+                                        work.service_until_blocked(
+                                            epoch,
+                                            &mut time.pattern_bus(&mut memory, &Bytes)
+                                        ),
+                                        Err(VideoServiceError::Protocol(
+                                            RestoreError::AlreadyServiced
+                                        ))
+                                    ));
+                                    break;
+                                }
+                                Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => (),
+                                other => panic!("unexpected video result: {other:?}"),
+                            }
+                            work = serde_json::from_value(serde_json::to_value(work).unwrap())
+                                .unwrap();
+                            expected_work = serde_json::from_value(
+                                serde_json::to_value(expected_work).unwrap(),
+                            )
+                            .unwrap();
+                            time = serde_json::from_value(serde_json::to_value(time).unwrap())
+                                .unwrap();
+                            reference =
+                                serde_json::from_value(serde_json::to_value(reference).unwrap())
+                                    .unwrap();
+                            time.begin_native_update();
+                            reference.begin_native_update();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn lcd_runner_preserves_every_bus_receipt_budget_and_snapshot_continuation() {
         struct Recording<'a, B> {
             bus: &'a mut B,

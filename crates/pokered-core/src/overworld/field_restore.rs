@@ -326,6 +326,26 @@ impl VideoCopyWork {
         epoch: u64,
         bus: &mut B,
     ) -> Result<bool, VideoServiceError<B::Error>> {
+        self.service_instructions::<false, B>(epoch, bus)
+    }
+
+    /// Hold the accepted request exclusively until its child returns or the
+    /// bus refuses an instruction. Request/epoch validation is unchanged but
+    /// cannot be invalidated by another caller during this mutable borrow.
+    /// Size is still published after every successful child instruction.
+    pub fn service_until_blocked<B: super::pattern_copy_work::PatternInstructionBus>(
+        &mut self,
+        epoch: u64,
+        bus: &mut B,
+    ) -> Result<(), VideoServiceError<B::Error>> {
+        self.service_instructions::<true, B>(epoch, bus).map(|_| ())
+    }
+
+    fn service_instructions<const RUN: bool, B: super::pattern_copy_work::PatternInstructionBus>(
+        &mut self,
+        epoch: u64,
+        bus: &mut B,
+    ) -> Result<bool, VideoServiceError<B::Error>> {
         let request = self
             .request
             .ok_or(VideoServiceError::Protocol(RestoreError::NoRequest))?;
@@ -345,15 +365,19 @@ impl VideoCopyWork {
         if epoch != *accepted_epoch {
             return Err(VideoServiceError::Protocol(RestoreError::StaleVBlank));
         }
-        child.step(bus).map_err(VideoServiceError::Bus)?;
-        self.request.as_mut().unwrap().size = child.size_port();
-        if !child.finished() {
-            return Ok(false);
+        loop {
+            child.step(bus).map_err(VideoServiceError::Bus)?;
+            self.request.as_mut().unwrap().size = child.size_port();
+            if child.finished() {
+                self.source_offset = child.source_offset();
+                self.destination = child.destination();
+                self.request.as_mut().unwrap().serviced_epoch = Some(*accepted_epoch);
+                return Ok(true);
+            }
+            if !RUN {
+                return Ok(false);
+            }
         }
-        self.source_offset = child.source_offset();
-        self.destination = child.destination();
-        self.request.as_mut().unwrap().serviced_epoch = Some(*accepted_epoch);
-        Ok(true)
     }
 
     /// Called by the common display service at an actual VBlank. Complete all

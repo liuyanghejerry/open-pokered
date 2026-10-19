@@ -455,15 +455,10 @@ impl PokemonGame {
                 let assets = NativePatternAssets::new(resources);
                 if !flow.video_instructions_returned {
                     let mut bus = self.source_display.pattern_bus(&mut flow.patterns, &assets);
-                    loop {
-                        match video.service_instruction(accepted, &mut bus) {
-                            Ok(true) => break,
-                            Ok(false) => continue,
-                            Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => {
-                                return Ok(false)
-                            }
-                            Err(error) => return Err(format!("{error:?}")),
-                        }
+                    match video.service_until_blocked(accepted, &mut bus) {
+                        Ok(()) => (),
+                        Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => return Ok(false),
+                        Err(error) => return Err(format!("{error:?}")),
                     }
                     flow.video_instructions_returned = true;
                 }
