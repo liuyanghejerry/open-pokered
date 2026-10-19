@@ -1,0 +1,47 @@
+{
+  "implementation_commit": "af3cc415b49e751eef319bdee56c424eaaf17e50",
+  "core": {
+    "library_passed": 3152,
+    "all_passed": 3565,
+    "existing_ignored": 1
+  },
+  "app": {
+    "library_passed": 380,
+    "all_passed": 874,
+    "existing_ignored_in_full_run": 88,
+    "note": "Full invocation includes duplicated library/binary coverage."
+  },
+  "GBA": {
+    "source": "af3cc415b49e751eef319bdee56c424eaaf17e50",
+    "command": [
+      "cargo",
+      "+nightly-2025-12-07",
+      "build",
+      "--offline",
+      "--release",
+      "--features",
+      "perf-benchmark"
+    ],
+    "manifest_restored_after_build": true,
+    "elf": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba",
+    "elf_sha256": "5a66b408e8cd46285943008b3691514a4078a02857f8af03562e339fc38d4fa3",
+    "rom": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba",
+    "rom_sha256": "1bc55136f9515a6925641d72b5e9a971ce3600c902ed3d3dae26244f1731bc12",
+    "features": [
+      "perf-benchmark"
+    ],
+    "diagnostic_controller_patch": false
+  },
+  "performance": {
+    "pass": true,
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "limits": "Unchanged checked-in baseline, default 15% regression and 25 tick floor.",
+    "scope": "Default autopilot-v1 baseline; not OHKO gameplay proof."
+  },
+  "pending": [
+    "Matched actual-master before / PR after CLI captures using committed capture.py and plan.",
+    "Actual CLI subsystem suite on final candidate.",
+    "Original full published-head CI before merge."
+  ],
+  "original_controls": "original-cpu-controls.json contains 8 prepared original subroutine cases; not full original battle/raster/RNG-order evidence."
+}
