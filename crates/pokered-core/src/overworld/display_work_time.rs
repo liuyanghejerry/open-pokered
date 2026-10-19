@@ -243,6 +243,7 @@ impl DisplayWorkTime {
         }
     }
 
+    #[inline(always)]
     fn read_display_port(&self, port: u16) -> Result<u8, DisplayDeviceError> {
         if port == super::sprite_update_control_work::SPRITE_UPDATES_PORT {
             self.sprite_updates_enabled
@@ -582,6 +583,7 @@ impl DisplayBus<'_> {
 }
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
+    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         match instruction.access {
             None => {

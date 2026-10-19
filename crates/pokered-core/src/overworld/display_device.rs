@@ -252,6 +252,7 @@ impl DisplayDevice {
     pub fn dma_active(&self) -> bool {
         self.dma.is_some()
     }
+    #[inline(always)]
     pub fn read_port(&self, port: u16) -> Result<u8, DisplayDeviceError> {
         Ok(match port {
             0xff0f => self.iflags | 0xe0,
