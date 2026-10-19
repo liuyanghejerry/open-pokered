@@ -469,5 +469,6 @@
     "Original per-command MoveSound::Sfx pitch/tempo handling and tonal frequency modifier path remain separate audit candidates.",
     "Failed-move wording on mixed immunity/weakness combinations needs separate source gameplay controls.",
     "No all-story/all-function or whole original-raster parity claim."
-  ]
+  ],
+  "noise_timing_scope": "All three applying-hit effects use noise CHAN8. Original Audio2_note_length bypasses Audio2_SetSfxTempo and uses fixed $0100 for CHAN8, as does the native sequencer. Recorded native sfx_tempo is request metadata; it does not prove or imply different audible noise-note duration. Prepared SetSfxTempo controls establish the isolated routine only."
 }
