@@ -221,9 +221,9 @@ impl DirectBattleGame {
         if let Some(req) = self.battle_vfx.take_move_sfx() {
             use pokered_data::move_sfx::{get_move_sound, MoveSound};
             match get_move_sound(req.anim_move, req.sound_move, req.attacker_species) {
-                Some(MoveSound::Sfx(raw)) => {
-                    if let Some(id) = SfxId::from_u8(raw) {
-                        self.play_sfx(id);
+                Some(MoveSound::Sfx(row)) => {
+                    if let (Some(audio), Some(id)) = (&self.audio, SfxId::from_u8(row.sfx)) {
+                        audio.play_move_sfx(id, row.pitch_mod, row.tempo_mod);
                     }
                 }
                 Some(MoveSound::Cry {
@@ -447,6 +447,47 @@ mod applying_sound_tests {
     use super::*;
     use pokered_core::{pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
     use pokered_data::moves::MoveId;
+
+    #[test]
+    fn direct_battle_preserves_the_animation_command_sound_modifiers() {
+        std::thread::Builder::new().stack_size(16 * 1024 * 1024).spawn(|| {
+            let mon = |species, level, move_id| create_pokemon_with_moves(
+                species, level, [0x99, 0x88],
+                [move_id, MoveId::None, MoveId::None, MoveId::None],
+            ).unwrap();
+            let mut battle = BattleScreen::from_parties(true,
+                &[mon(Species::Mew, 30, MoveId::HornAttack)],
+                &[mon(Species::Rattata, 5, MoveId::Splash)], None);
+            battle.phase = BattlePhase::PlayerMenu;
+            battle.rng = StdBattleRng::from_seed(42);
+            let mut game = DirectBattleGame {
+                battle, resources: None, battle_vfx: BattleVisualEffects::default(),
+                exit_requested: false, lang: Lang::En, audio: Some(AudioOutput::new_pcm()),
+                prev_message: None, prev_phase_tag: 0, music_started: true,
+                prev_enemy_species: Species::Rattata, prev_player_species: Species::Mew,
+                end_music_played: false, cry_played_for_msg: false, faint_thud_pending: false,
+            };
+            let mut input = InputState::new();
+            let mut pcm = vec![0.0; 1470];
+            let mut heard = false;
+            for tick in 0..1000 {
+                input.begin_frame();
+                if tick % 16 == 0 { input.press(GbButton::A); }
+                else { input.release(GbButton::A); }
+                game.update(&input);
+                let audio = game.audio.as_ref().unwrap();
+                let command = {
+                    let manager = audio.manager.lock().unwrap();
+                    manager.sequencer.current_sfx_id == SfxId::Battle1E as u8
+                        && manager.sequencer.sfx_tempo == 0xe0
+                };
+                audio.render_pcm(&mut pcm);
+                heard |= command && pcm.iter().any(|value| value.abs() > 0.00001);
+                if game.battle.enemy_hp == 0 { break; }
+            }
+            assert!(heard, "the real DirectBattle owner must play the command with HornAttack's tempo");
+        }).unwrap().join().unwrap();
+    }
 
     #[test]
     fn direct_battle_uses_the_same_early_typed_sound_without_a_text_duplicate() {

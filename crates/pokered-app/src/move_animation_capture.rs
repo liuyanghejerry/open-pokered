@@ -384,13 +384,16 @@ pub fn capture_item_animation(
                 request.sound_move,
                 request.attacker_species,
             ) {
-                Some(MoveSound::Sfx(raw)) => {
+                Some(MoveSound::Sfx(row)) => {
+                    let raw = row.sfx;
                     let name = SfxId::from_u8(raw)
                         .map(|id| format!("{id:?}"))
                         .unwrap_or_else(|| format!("Unknown{raw}"));
                     sfx.push(json!({
                         "kind": "animation-command",
                         "id": raw,
+                        "pitch_mod": row.pitch_mod,
+                        "tempo_mod": row.tempo_mod,
                         "name": name,
                         "sound_move": request.sound_move,
                     }));

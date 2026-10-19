@@ -1,0 +1,142 @@
+{
+  "all_pass": true,
+  "scope": "Prepared original GetMoveSound, Audio2_SetSfxTempo, and Audio2_note_length tempo-operand CPU controls. Valid stack return and readonly completion hooks. Not full-battle, raster, physical sound, or PCM alignment.",
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "rows": [
+    {
+      "actual_note_channel": 8,
+      "note_length_tempo": 256,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": false,
+      "move": "Pound",
+      "original_move_id": 1,
+      "original_GetMoveSound": {
+        "header": 160,
+        "pitch": 0,
+        "tempo": 128
+      },
+      "original_Audio2_tempo": 256,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": false
+    },
+    {
+      "actual_note_channel": 8,
+      "note_length_tempo": 256,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": false,
+      "move": "MegaPunch",
+      "original_move_id": 5,
+      "original_GetMoveSound": {
+        "header": 163,
+        "pitch": 0,
+        "tempo": 64
+      },
+      "original_Audio2_tempo": 192,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    },
+    {
+      "actual_note_channel": 8,
+      "note_length_tempo": 256,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": false,
+      "move": "FirePunch",
+      "original_move_id": 7,
+      "original_GetMoveSound": {
+        "header": 163,
+        "pitch": 16,
+        "tempo": 96
+      },
+      "original_Audio2_tempo": 224,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    },
+    {
+      "actual_note_channel": 8,
+      "note_length_tempo": 256,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": false,
+      "move": "Tackle",
+      "original_move_id": 33,
+      "original_GetMoveSound": {
+        "header": 176,
+        "pitch": 16,
+        "tempo": 160
+      },
+      "original_Audio2_tempo": 288,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    },
+    {
+      "actual_note_channel": 5,
+      "note_length_tempo": 383,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": true,
+      "move": "PayDay",
+      "original_move_id": 6,
+      "original_GetMoveSound": {
+        "header": 233,
+        "pitch": 0,
+        "tempo": 255
+      },
+      "original_Audio2_tempo": 383,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    },
+    {
+      "actual_note_channel": 5,
+      "note_length_tempo": 224,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": true,
+      "move": "HornAttack",
+      "original_move_id": 30,
+      "original_GetMoveSound": {
+        "header": 180,
+        "pitch": 0,
+        "tempo": 96
+      },
+      "original_Audio2_tempo": 224,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    },
+    {
+      "actual_note_channel": 5,
+      "note_length_tempo": 192,
+      "native_plain_note_tempo": 256,
+      "note_duration_difference": true,
+      "move": "FuryAttack",
+      "original_move_id": 31,
+      "original_GetMoveSound": {
+        "header": 180,
+        "pitch": 1,
+        "tempo": 64
+      },
+      "original_Audio2_tempo": 192,
+      "native_plain_play_sfx_tempo": 256,
+      "request_metadata_difference": true
+    }
+  ],
+  "engine_merge": "8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8",
+  "native_validation": {
+    "audio_library": {
+      "passed": 112,
+      "scope": "real executed cry notes and APU pulse frequencies; tonal fixed-point duration including fractional carry; unchanged CHAN8 frequency/delay; low-health suppression and non-battle sound controls"
+    },
+    "data_library": {
+      "passed": 281
+    },
+    "app_library": {
+      "passed": 390,
+      "ignored": 40,
+      "scope": "includes actual Game PayDay two commands in source order, HornAttack and FirePunch with real nonzero PCM, plus DirectBattle HornAttack PCM/tempo"
+    },
+    "source_transcriptions": "move SFX, cry, and battle-animation tables each verified with zero differences against referenced disassembly; animation checker uses production pinned renderer e533a3d",
+    "cry_before": "modifiers 0 and 32 produced identical executed notes 1944/1928 despite stored addend",
+    "cry_after": "same AudioManager request with engine fix produces 1976/1960 and corresponding APU frequencies; committed consumer dependency now pins merged engine fix"
+  },
+  "limits": [
+    "Noise request metadata may change while actual CHAN8 timing remains fixed; do not infer audible speed from the sfx_tempo field alone.",
+    "Game/DirectBattle fixtures are seeded subsystem battles, not a fresh playthrough or original complete-battle comparison.",
+    "Trainer-appearance and other non-command callers are outside this change and require their own audio-bank/modifier audit."
+  ]
+}

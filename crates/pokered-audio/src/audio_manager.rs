@@ -113,6 +113,24 @@ impl AudioManager {
         self.engine.play_sfx(id);
     }
 
+    /// GetMoveSound's command-table modifiers in the battle audio bank.
+    /// Audio2 accepts them for battle SFX as well as cries. CHAN8 noise
+    /// notes retain fixed tempo and noise parameters in the sequencer.
+    pub fn play_move_sfx(&mut self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
+        if self.alarm_suppresses_sfx(id) {
+            return;
+        }
+        if (SfxId::Peck as u8..=SfxId::SilphScope as u8).contains(&(id as u8)) {
+            self.engine.play_sfx_with_modifiers(
+                id,
+                pitch_mod as i16,
+                0x80 + tempo_mod as u16,
+            );
+        } else {
+            self.engine.play_sfx(id);
+        }
+    }
+
     /// Cerulean/Saffron/Cinnabar badge text selects GET_KEY_ITEM in bank 2,
     /// which resolves to only BALL_POOF's second (noise) channel in Red.
     pub fn play_badge_bank_quirk(&mut self) {

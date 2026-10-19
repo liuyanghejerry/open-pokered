@@ -129,6 +129,26 @@ fn actual_ice_beam_against_gyarados_prints_original_dual_type_caption() {
 }
 
 #[test]
+fn actual_move_commands_keep_their_own_sound_table_modifiers_and_pcm() {
+    on_stack(|| {
+        for (move_id, expected) in [
+            (MoveId::PayDay, vec![(SfxId::Pound, 0x100), (SfxId::SilphScope, 0x17f)]),
+            (MoveId::HornAttack, vec![(SfxId::Battle1E, 0xe0)]),
+            (MoveId::FirePunch, vec![(SfxId::Battle0D, 0xe0)]),
+        ] {
+            let (_, _, trace) = attack_battle(move_id, Species::Rattata, None, None);
+            let mut previous = None;
+            for (sound, tempo) in expected {
+                let tick = trace.iter().find(|row| row.3 == sound as u8 && row.4 == tempo && row.5)
+                    .unwrap_or_else(|| panic!("{move_id:?} missing audible {sound:?}/{tempo}: {trace:?}")).0;
+                if let Some(before) = previous { assert!(before < tick); }
+                previous = Some(tick);
+            }
+        }
+    });
+}
+
+#[test]
 #[ignore = "matched master/branch captures; FIDELITY_DUAL_TYPE_CAPTURE, optional FIDELITY_DUAL_TYPE_TICK"]
 fn capture_dual_type_effectiveness() {
     on_stack(|| {
