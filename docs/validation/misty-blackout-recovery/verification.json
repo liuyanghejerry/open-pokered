@@ -1,0 +1,144 @@
+{
+  "scope": "Playthrough controller recovery only; game logic unchanged. This diagnosis is not a whole-route fresh pass.",
+  "fresh_candidate_game_source": "dda4fafab2e0fecff483a33755348fad490923bd",
+  "fresh_completed_milestones": 12,
+  "fresh_failed_milestone": "m13: actual normal defeat",
+  "recorded_loss": {
+    "frame": 174413,
+    "map": "CeruleanCity",
+    "money_after_half": 3118,
+    "badges": 1,
+    "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: false }",
+    "battle_live": {
+      "enemy": {
+        "hp": 3,
+        "level": 21,
+        "max_hp": 59,
+        "species": "Starmie",
+        "status": "None"
+      },
+      "enemy_party": [
+        {
+          "hp": 0,
+          "level": 18,
+          "species": "Staryu"
+        },
+        {
+          "hp": 3,
+          "level": 21,
+          "species": "Starmie"
+        }
+      ],
+      "is_ghost": false,
+      "player": {
+        "hp": 0,
+        "level": 20,
+        "max_hp": 58,
+        "species": "Ivysaur",
+        "status": "None"
+      },
+      "player_party": [
+        {
+          "hp": 0,
+          "level": 20,
+          "max_hp": 58,
+          "species": "Ivysaur"
+        }
+      ]
+    },
+    "persistent_party_after_blackout": [
+      {
+        "hp": 58,
+        "level": 20,
+        "max_hp": 58,
+        "moves": [
+          "Tackle",
+          "Growl",
+          "LeechSeed",
+          "VineWhip"
+        ],
+        "pp": [
+          35,
+          40,
+          10,
+          10
+        ],
+        "species": "Ivysaur",
+        "status": "None"
+      }
+    ]
+  },
+  "repair": "Reuse existing retry_town_challenge, max3, normal heal/walk/rechallenge only; only confirmed blackout can retry; actual Misty flag and badge still required.",
+  "existing_recovery_unit_tests": 39,
+  "diagnostic_replay": {
+    "scope": "Diagnostic persistent SaveData exported after actual fresh13 loss, not a fresh or full RNG/runtime replay. Same unchanged candidate executable; normal Continue/heal/walk/rechallenge, actual victory required.",
+    "game_source": "dda4fafab2e0fecff483a33755348fad490923bd",
+    "binary_sha256": "ac65e949ea1c32ef68e00838aa68082b887c35f69ee10c3c18bcec746f751a49",
+    "fixture_sha256": "929b6318499cca1cadedd7e9c8aeadcec1bb12b12412e7be384727e5c3d70042",
+    "initial": {
+      "screen": "overworld",
+      "frame_count": 608,
+      "map_name": "CeruleanCity",
+      "player_x": 19,
+      "player_y": 18,
+      "money": 3118,
+      "badges": 1,
+      "party": [
+        {
+          "hp": 58,
+          "level": 20,
+          "max_hp": 58,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            35,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }"
+    },
+    "after": {
+      "screen": "overworld",
+      "frame_count": 8642,
+      "map_name": "CeruleanCity",
+      "player_x": 19,
+      "player_y": 18,
+      "money": 5197,
+      "badges": 3,
+      "party": [
+        {
+          "hp": 63,
+          "level": 22,
+          "max_hp": 63,
+          "moves": [
+            "Tackle",
+            "Growl",
+            "LeechSeed",
+            "VineWhip"
+          ],
+          "pp": [
+            35,
+            40,
+            10,
+            10
+          ],
+          "species": "Ivysaur",
+          "status": "None"
+        }
+      ],
+      "battle_phase": "TrainerVictory { phase: EndBattleText, wait_frames: 0, player_won: true }"
+    },
+    "EVENT_BEAT_MISTY": true,
+    "all_pass": true
+  },
+  "fixture": "post-blackout-fixture.json"
+}

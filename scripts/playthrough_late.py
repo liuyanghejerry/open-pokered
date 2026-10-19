@@ -352,9 +352,13 @@ def challenge(g, map_name, x, y, direction, flag):
 
 
 def m13_misty(g):
-    g.nav_warp(30, 19, "CeruleanCity", "CeruleanGym")
-    # The sight trainer walks onto (4,3), blocking Misty's south side.
-    challenge(g, "CeruleanGym", 5, 2, "left", "EVENT_BEAT_MISTY")
+    def challenge_misty():
+        g.nav_warp(30, 19, "CeruleanCity", "CeruleanGym")
+        # The sight trainer walks onto (4,3), blocking Misty's south side.
+        challenge(g, "CeruleanGym", 5, 2, "left", "EVENT_BEAT_MISTY")
+    retry_town_challenge(g, 'm13', 'CeruleanCity',
+                         ((19, 17), 'CeruleanCity', 'CeruleanPokecenter'),
+                         challenge_misty, max_attempts=3)
     g.evidence("m13")
     g.nav_warp(4, 13, "CeruleanGym", "CeruleanCity", approach="down")
     g.heal_pokecenter((19, 17), "CeruleanCity", "CeruleanPokecenter")
