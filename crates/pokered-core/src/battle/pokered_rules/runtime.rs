@@ -314,7 +314,20 @@ pub(crate) fn translate_turn_named_with_faints(
                             .unwrap_or_else(|| displayed_effectiveness(md.move_type, d1, d2))
                     }
                 } else { Effectiveness::Normal };
-                if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
+                if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
+                    let target_name = display_name_named(state, opp_ref(actor), names);
+                    if super::ohko::speed_failed(actor, *move_) {
+                        msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
+                        msgs.push(format!("{target_name}'s\nunaffected!"));
+                    } else {
+                        let eff = super::presented_effectiveness(actor.side == 0, *move_)
+                            .unwrap_or(Effectiveness::Normal);
+                        let mut announcement = move_announcement(&display_name_named(state, actor, names), &target_name,
+                            move_name(*move_, false), false, missed, eff, None);
+                        if !missed { announcement.insert(1, "One-hit KO!".to_string()); }
+                        msgs.extend(announcement);
+                    }
+                } else if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
                     msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
                     let target_name = display_name_named(state, opp_ref(actor), names);
                     if missed {

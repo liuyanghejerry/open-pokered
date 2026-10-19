@@ -720,14 +720,14 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
             .any(|e| e.host == who && volatile_name_matches(name, &e.kind))
     }
 
-    /// `redirect_hp_loss` — Substitute vs the DIRECT-MUTATE ops (Super Fang / OHKO /
+    /// `redirect_hp_loss` — Substitute vs the DIRECT-MUTATE ops (Super Fang /
     /// multi-hit). The formula path already routes through `Event::Damage`; these ops
     /// apply HP outside it, so the interpreter asks here whether `who`'s doll should
     /// swallow the loss. It does — EXCEPT self-inflicted loss (recoil / Explosion
     /// self-KO, where `who == source`): the mover's OWN doll never absorbs its own
     /// recoil/detonation (Gen-1). Matches the oracle absorb (mon-based damage number
     /// routed into the doll, e.g. Super Fang's `curHP/2` from the MON hits the doll;
-    /// OHKO's full-HP loss breaks it). Mutates the arena via [`absorb_into_substitute`].
+    /// its current-HP-based amount). Mutates the arena via [`absorb_into_substitute`].
     fn redirect_hp_loss(
         &self,
         ctx: &mut BattleCtx<'_, PokeredRules>,
@@ -1500,6 +1500,7 @@ pub fn clear_current_moves() {
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
+    ohko::clear();
 }
 
 /// Captured while this action resolves, before a later Conversion or switch
@@ -1730,17 +1731,23 @@ fn pokered_crit(
     _eff: EffectId,
 ) -> HandlerResult {
     let pm = current_move_for(source);
+    if pm.effect == MoveEffect::OhkoEffect {
+        // Original CriticalHitTest runs, but OneHitKOEffect replaces its flag.
+        // Its byte is still consumed before the OHKO damage/hit-test sequence.
+        if pm.power > 0 { let _ = ctx.rng.next_u8(); }
+        return HandlerResult::Unchanged;
+    }
     if trapping_continuation_damage(ctx, source).is_some()
         || bide_release_damage(ctx, source).is_some()
         || pm.power == 0
         || is_special_damage_effect(pm.effect)
         || (is_charge_move(pm.effect) && charging_of(ctx, source).is_none())
     {
-        // power-0 move OR a special/fixed/OHKO/SuperFang move OR a charge move's
+        // power-0 move OR a special/fixed/SuperFang move OR a charge move's
         // gather turn (not yet charging): no crit draw. The
         // special-damage moves bypass the damage formula entirely (the SetDamage /
         // DamageCurrentHpFraction / SetHp op writes the number), and the legacy
-        // standalone oracle (`apply_special_damage`/`apply_super_fang`/`apply_ohko`)
+        // standalone oracle (`apply_special_damage`/`apply_super_fang`)
         // draws no crit byte — so neither does the stack (P3 parity).
         return HandlerResult::Unchanged;
     }
@@ -1786,6 +1793,10 @@ fn pokered_accuracy(
     PRESENTED_EFFECTIVENESS.with(|values| {
         values.borrow_mut()[source.side as usize] = Some((pm.id, display, false));
     });
+    let ohko_missed = pm.effect == MoveEffect::OhkoEffect && !ohko::prepare(ctx, target, source);
+    if ohko::speed_failed(source, pm.id) {
+        return HandlerResult::Set(RelayVar::Bool(false));
+    }
     if pm.id == MoveId::Counter {
         if !counter_can_reflect(ctx, target) {
             return HandlerResult::Set(RelayVar::Bool(false));
@@ -1872,27 +1883,15 @@ fn pokered_accuracy(
         return HandlerResult::Set(RelayVar::Bool(false));
     }
     if ctx.effects.iter().any(|e| e.host == source && matches!(e.kind, PokeVolatile::XAccuracy)) {
-        // OneHitKOEffect sets wMoveMissed before MoveHitTest; the latter's
-        // X Accuracy return cannot erase a failed current-Speed comparison.
-        if pm.effect == MoveEffect::OhkoEffect
-            && effective_speed(ctx.battler(source)) < effective_speed(ctx.battler(target))
-        {
-            return HandlerResult::Set(RelayVar::Bool(false));
-        }
-        return HandlerResult::Unchanged;
+        // X Accuracy cannot erase type immunity established before MoveHitTest.
+        return if ohko_missed { HandlerResult::Set(RelayVar::Bool(false)) }
+            else { HandlerResult::Unchanged };
     }
     let acc_stage = ctx.battler(source).stat_stages.get(StatIndex::Accuracy).copied().unwrap_or(0);
     let eva_stage = ctx.battler(target).stat_stages.get(StatIndex::Evasion).copied().unwrap_or(0);
     let scaled = scaled_accuracy(pm.accuracy, acc_stage, eva_stage);
     let byte = ctx.rng.next_u8();
-    // OneHitKOEffect_ compares the current battle Speed words, not levels.
-    // Retain the ordinary accuracy roll; a slower user always misses.
-    if pm.effect == MoveEffect::OhkoEffect
-        && effective_speed(ctx.battler(source)) < effective_speed(ctx.battler(target))
-    {
-        return HandlerResult::Set(RelayVar::Bool(false));
-    }
-    if byte < scaled {
+    if byte < scaled && !ohko_missed {
         HandlerResult::Unchanged
     } else {
         HandlerResult::Set(RelayVar::Bool(false)) // miss → STOP
@@ -1914,6 +1913,8 @@ fn pokered_damage(
 ) -> HandlerResult {
     use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
     let pm = current_move_for(source);
+    // OHKO prepared its typed/randomized damage before MoveHitTest.
+    if pm.effect == MoveEffect::OhkoEffect { return HandlerResult::Unchanged; }
     // The move initializes the presentation byte to neutral. Only the
     // ordinary type-adjustment path below overwrites it; fixed damage and
     // Counter/Psywave must not acquire a type message from a later lookup.
@@ -1986,7 +1987,7 @@ fn pokered_damage(
         return HandlerResult::Unchanged;
     }
     if pm.power == 0 || is_special_damage_effect(pm.effect) {
-        // power-0 OR special/fixed/OHKO/SuperFang: the formula does NOT run here.
+        // power-0 OR special/fixed/SuperFang: the formula does NOT run here.
         // For a special-damage move the SetDamage / DamageCurrentHpFraction / SetHp
         // op (on ModifyDamage / DamagingHit) writes `ctx.mv.damage` directly,
         // bypassing the type chart — and draws no formula damage byte (P3 parity
@@ -3431,6 +3432,7 @@ pub fn record_has_op(source_id: &str, want: &Op) -> bool {
 
 mod tests;
 
+mod ohko;
 pub mod p5_native;
 mod p5_tests;
 

@@ -1900,7 +1900,7 @@ fn super_fang_hits_the_substitute() {
 }
 
 /// An OHKO move (Horn Drill) breaks the DOLL instead of KO-ing the mon — the mon
-/// survives. Exercises `redirect_hp_loss` routing a `SetHp(Target,0)` op's implied loss.
+/// survives. Exercises the ordinary Damage fold with the full OHKO damage.
 #[test]
 fn ohko_breaks_the_substitute() {
     install_canonical();
@@ -1922,7 +1922,7 @@ fn ohko_breaks_the_substitute() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::HornDrill },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = ScriptedRng::new(vec![0, 255, 0]);
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -2062,7 +2062,7 @@ fn ohko_breaks_a_sub_below_the_mon_hp() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::HornDrill },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = ScriptedRng::new(vec![0, 255, 0]);
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -4371,13 +4371,15 @@ fn p2_authored_as_data() {
 // P3 — SPECIAL / FIXED / OHKO / SUPER FANG + FOE STAT-DOWN nested-veto cascade
 //      (blueprint 15 §5 P3). The legacy ORACLE differs by family:
 //
-//   • SuperFang / SpecialDamage / OHKO have NO `execute_turn` wiring (production
+//   • SuperFang / SpecialDamage have NO `execute_turn` wiring (production
 //     `apply_move_effect` returns NoEffect; `calc_and_apply_damage` has no special
 //     branch — an honest finding documented in stack_slice7). So the STANDALONE
-//     `damage_effects::apply_super_fang` / `apply_special_damage` / `apply_ohko`
+//     `damage_effects::apply_super_fang` / `apply_special_damage`
 //     functions ARE the oracle (they take no rng). We diff the STACK's resulting
 //     HP against the standalone oracle on a fresh legacy state, and assert the
 //     stack's `consumed()` explicitly (accuracy [+ 1 Psywave byte]).
+//   • OHKO now follows original CPU/source controls, including typed $ffff and
+//     randomization. The standalone helper below checks only its Speed gate.
 //   • Foe stat-down (primary AND side) IS wired in production via `apply_stat_down`
 //     / `apply_stat_down_side` (the Mist + Substitute + −6 floor guards). So the
 //     legacy `execute_move` per-mover path is the oracle, mirroring the P2 harness.
@@ -4408,6 +4410,7 @@ fn p3_legacy_state(s: &Scenario) -> LegacyState {
 /// special damage). Returns (state, consumed).
 fn p3_special_stack(s: &Scenario, bytes: Vec<u8>) -> (EngineState<PokeredRules>, usize) {
     install_canonical();
+    clear_current_moves();
     clear_levels();
     set_level(s.player.species, s.player.level);
     if s.enemy.species != s.player.species {
@@ -4517,7 +4520,7 @@ fn ohko_speed_gate_ignores_level() {
         let mut s = Scenario::base("OHKO faster low-level user", move_id);
         s.player = Mon::lvl(Species::Diglett, 250, 100, 30);
         s.enemy = Mon::lvl(Species::Snorlax, 250, 50, 61);
-        let (stack, _) = p3_special_stack(&s, vec![0; 16]);
+        let (stack, _) = p3_special_stack(&s, vec![0, 255, 0]);
         assert_eq!(stack.opponent_battlers[0].hp, 0, "{move_id:?}: faster lower-level user connects");
         let mut legacy = p3_legacy_state(&s);
         assert_eq!(apply_ohko(&mut legacy), crate::battle::effects::EffectResult::OhkoSuccess);
@@ -4526,7 +4529,7 @@ fn ohko_speed_gate_ignores_level() {
         s.enemy = Mon::lvl(Species::Venusaur, 250, 100, 52);
         let mut legacy = p3_legacy_state(&s);
         assert_eq!(apply_ohko(&mut legacy), crate::battle::effects::EffectResult::OhkoFailed);
-        let (stack, _) = p3_special_stack(&s, vec![0; 16]);
+        let (stack, _) = p3_special_stack(&s, vec![0, 255, 0]);
         assert_eq!(stack.opponent_battlers[0].hp, 250, "{move_id:?}: faster target survives");
     }
 }
@@ -4550,8 +4553,10 @@ fn ohko_uses_current_speed_including_stages_and_paralysis() {
         let foe = engine_battler(&Mon::new(Species::Venusaur, 250, foe_speed), MoveId::Splash);
         let mut state = EngineState::new(vec![user], vec![foe]);
         let mut effects = Vec::new();
-        let mut bytes = vec![0; 8];
-        if status.is_some() { bytes[0] = 128; } // pass full-paralysis roll
+        let mut bytes = Vec::new();
+        if speed == foe_speed { bytes.push(0); } // player wins the order tie
+        if status.is_some() { bytes.push(128); } // pass full-paralysis roll
+        bytes.extend([0, 255, 0]); // crit, rotated damage multiplier, accuracy
         let mut rng = ScriptedRng::new(bytes);
         StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects, [
             BattleAction::Fight { move_: MoveId::HornDrill },
@@ -4778,7 +4783,7 @@ fn p3_authored_as_data() {
     install_canonical();
     use dotzuki_rules::{DamageValue, Op, Selector};
     // Special damage: SetDamage(UserLevel) / Const(40) / RngScaledLevel; SuperFang;
-    // OHKO SetHp after the native current-Speed check.
+    // OHKO DealMoveDamage after native typed damage and hit test.
     assert!(super::record_has_op("special.user_level", &Op::SetDamage {
         value: DamageValue::UserLevel, of: Selector::Source
     }), "seismic toss is SetDamage(UserLevel)");
@@ -4789,9 +4794,8 @@ fn p3_authored_as_data() {
     assert!(super::record_has_op("special.super_fang", &Op::DamageCurrentHpFraction {
         num: 1, den: 2, target: Selector::Target
     }), "super fang is DamageCurrentHpFraction(1/2, Target)");
-    assert!(super::record_has_op("special.ohko", &Op::SetHp {
-        target: Selector::Target, value: 0, when: vec![]
-    }), "ohko is SetHp(Target, 0) after Accuracy");
+    assert!(super::record_has_op("special.ohko", &Op::DealMoveDamage),
+        "OHKO applies native typed/randomized damage through the ordinary Damage fold");
     // Foe stat-down: Boost(stat, -N, Target) routed through the nested-veto driver.
     assert!(super::record_has_op("foedown.attack_1", &Op::Boost {
         stat: "Attack".into(), stages: -1, target: Selector::Target
@@ -5366,4 +5370,133 @@ fn immune_failure_retains_pre_accuracy_types_across_later_conversion() {
         assert!(text.iter().any(|line|line == expected), "{initially_immune}: {text:?}");
         assert_eq!(text.iter().filter(|line|line.contains("doesn't affect")).count(), usize::from(initially_immune));
     }
+}
+
+/// Original CPU controls: typed OHKO cannot bypass immunity with X Accuracy,
+/// raw last-match byte controls the failure text, and slow failure precedes
+/// type adjustment (even against an otherwise immune target).
+#[test]
+fn ohko_original_type_speed_and_message_branches() {
+    for (move_id, species, speed, bytes, expected_hp, expected, draws) in [
+        (MoveId::Fissure, Species::Pidgey, 200, vec![0], 1000, "It doesn't affect\nEnemy PIDGEY!", 1),
+        (MoveId::HornDrill, Species::Gengar, 200, vec![0], 1000, "It doesn't affect\nEnemy GENGAR!", 1),
+        (MoveId::Guillotine, Species::Gengar, 200, vec![0], 1000, "It doesn't affect\nEnemy GENGAR!", 1),
+        (MoveId::Fissure, Species::Zapdos, 200, vec![0], 1000, "MEW's attack missed!", 1),
+        (MoveId::Fissure, Species::Butterfree, 200, vec![0], 1000, "MEW's attack missed!", 1),
+        (MoveId::Fissure, Species::Rattata, 200, vec![0, 255], 0, "One-hit KO!", 2),
+        (MoveId::Fissure, Species::Rattata, 20, vec![0], 1000, "Enemy RATTATA's\nunaffected!", 1),
+        (MoveId::Fissure, Species::Pidgey, 20, vec![0], 1000, "Enemy PIDGEY's\nunaffected!", 1),
+    ] {
+        install_canonical(); clear_current_moves();
+        set_current_move(BattlerRef::PLAYER, real_move(move_id));
+        set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Splash));
+        let mut state = EngineState::new(
+            vec![engine_battler(&Mon::new(Species::Mew, 1000, speed), move_id)],
+            vec![engine_battler(&Mon::new(species, 1000, 100), MoveId::Splash)],
+        );
+        let mut effects = vec![EffectState { id: EffectId(0xa100), host: BattlerRef::PLAYER,
+            effect_order: 0, kind: PokeVolatile::XAccuracy }];
+        let mut rng = ScriptedRng::new(bytes);
+        let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
+            [BattleAction::Fight { move_: move_id }, BattleAction::Fight { move_: MoveId::Splash }], &mut rng);
+        assert_eq!(state.opponent_battlers[0].hp, expected_hp, "{move_id:?}/{species:?}/{speed}");
+        let messages = super::runtime::translate_turn(&log, &state, &effects);
+        assert!(messages.iter().any(|message| message == expected), "{messages:?}");
+        assert!(!messages.iter().any(|message| message == "Critical hit!"), "{messages:?}");
+        assert_eq!(rng.consumed(), draws, "{move_id:?}/{species:?}/{speed}");
+    }
+}
+
+#[test]
+fn ohko_damage_roll_precedes_accuracy_and_counter_keeps_substitute_damage() {
+    install_canonical(); clear_current_moves();
+    set_current_move(BattlerRef::PLAYER, real_move(MoveId::HornDrill));
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Counter));
+    let mut state = EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Mew, 1000, 200), MoveId::HornDrill)],
+        vec![engine_battler(&Mon::new(Species::Chansey, 1000, 100), MoveId::Counter)],
+    );
+    let mut effects = vec![EffectState { id: EffectId(0xa101), host: BattlerRef::OPPONENT,
+        effect_order: 0, kind: PokeVolatile::SubstituteHp { hp: 60 } }];
+    // CriticalHitTest byte, rejected rotated damage byte, accepted 255,
+    // successful accuracy, Counter critical/accuracy. Full $ffff survives
+    // the doll breaking and Counter saturates the doubled value to $ffff.
+    let mut rng = ScriptedRng::new(vec![0, 0, 255, 0, 255, 0]);
+    let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
+        [BattleAction::Fight { move_: MoveId::HornDrill }, BattleAction::Fight { move_: MoveId::Counter }], &mut rng);
+    assert_eq!(state.opponent_battlers[0].hp, 1000);
+    assert_eq!(state.player_battlers[0].hp, 0);
+    assert_eq!(rng.consumed(), 6);
+    assert!(!effects.iter().any(|entry| entry.host == BattlerRef::OPPONENT
+        && matches!(entry.kind, PokeVolatile::SubstituteHp { .. })));
+    assert!(super::runtime::translate_turn(&log, &state, &effects).contains(&"One-hit KO!".to_string()));
+}
+
+/// Values measured in original AdjustDamageForMoveType with OHKO's $ffff.
+/// Large artificial HP makes the exact intermediate visible, rather than
+/// allowing every nonzero result to look equivalent because the foe fainted.
+#[test]
+fn ohko_preserves_original_stab_and_type_word_overflow() {
+    for (user, move_id, target, damage) in [
+        (Species::Mew, MoveId::Fissure, Species::Rattata, 65535),
+        (Species::Diglett, MoveId::Fissure, Species::Rattata, 32766),
+        (Species::Mew, MoveId::Fissure, Species::Golem, 65534),
+        (Species::Mew, MoveId::Fissure, Species::Tangela, 32767),
+        (Species::Mew, MoveId::HornDrill, Species::Golem, 32767),
+    ] {
+        install_canonical(); clear_current_moves();
+        set_current_move(BattlerRef::PLAYER, real_move(move_id));
+        set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Splash));
+        let mut state = EngineState::new(
+            vec![engine_battler(&Mon::new(user, 1000, 200), move_id)],
+            vec![engine_battler(&Mon::new(target, u16::MAX, 100), MoveId::Splash)],
+        );
+        let mut effects = vec![EffectState { id: EffectId(0xa102), host: BattlerRef::PLAYER,
+            effect_order: 0, kind: PokeVolatile::XAccuracy }];
+        let mut rng = ScriptedRng::new(vec![0, 255]);
+        StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects,
+            [BattleAction::Fight { move_: move_id }, BattleAction::Fight { move_: MoveId::Splash }], &mut rng);
+        assert_eq!(state.opponent_battlers[0].hp, u16::MAX - damage, "{user:?}/{move_id:?}/{target:?}");
+        assert_eq!(rng.consumed(), 2);
+    }
+}
+
+#[test]
+fn ohko_randomization_and_accuracy_failure_follow_original_order() {
+    install_canonical(); clear_current_moves();
+    set_current_move(BattlerRef::PLAYER, real_move(MoveId::Fissure));
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Splash));
+    let mut state = EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Mew, 1000, 200), MoveId::Fissure)],
+        vec![engine_battler(&Mon::new(Species::Rattata, 1000, 100), MoveId::Splash)],
+    );
+    let mut effects = Vec::new();
+    // 179 rotates to 217; accuracy 255 must still miss after that roll.
+    let mut rng = ScriptedRng::new(vec![0, 0, 179, 255]);
+    let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
+        [BattleAction::Fight { move_: MoveId::Fissure }, BattleAction::Fight { move_: MoveId::Splash }], &mut rng);
+    assert_eq!(state.opponent_battlers[0].hp, 1000);
+    assert_eq!(rng.consumed(), 4);
+    let messages = super::runtime::translate_turn(&log, &state, &effects);
+    assert!(messages.contains(&"MEW's attack missed!".to_string()));
+    assert!(!messages.contains(&"One-hit KO!".to_string()));
+}
+
+#[test]
+fn enemy_ohko_immunity_names_the_player() {
+    install_canonical(); clear_current_moves();
+    set_current_move(BattlerRef::PLAYER, real_move(MoveId::Splash));
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Fissure));
+    let mut state = EngineState::new(
+        vec![engine_battler(&Mon::new(Species::Pidgey, 1000, 100), MoveId::Splash)],
+        vec![engine_battler(&Mon::new(Species::Mew, 1000, 200), MoveId::Fissure)],
+    );
+    let mut effects = vec![EffectState { id: EffectId(0xa103), host: BattlerRef::OPPONENT,
+        effect_order: 0, kind: PokeVolatile::XAccuracy }];
+    let mut rng = ScriptedRng::new(vec![0]);
+    let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
+        [BattleAction::Fight { move_: MoveId::Splash }, BattleAction::Fight { move_: MoveId::Fissure }], &mut rng);
+    assert_eq!(state.player_battlers[0].hp, 1000);
+    assert!(super::runtime::translate_turn(&log, &state, &effects)
+        .contains(&"It doesn't affect\nPIDGEY!".to_string()));
 }

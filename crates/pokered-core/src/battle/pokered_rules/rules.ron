@@ -514,11 +514,11 @@ Ruleset(
             hooks: [
                 Hook(on: "DamagingHit", do: [ DamageCurrentHpFraction(num: 1, den: 2, target: Target) ]),
             ]),
-        // OHKO (Horn Drill / Guillotine / Fissure): set the defender's hp to 0,
-        // after the Accuracy hook has checked current Speed and the hit roll.
+        // OHKO: native preparation computes typed/randomized $ffff before
+        // MoveHitTest. Apply through normal Damage (Substitute/shared wDamage).
         Effect(id: "special.ohko", kind: Move, power: 0, type: "Normal", accuracy: 30,
             hooks: [
-                Hook(on: "DamagingHit", do: [ SetHp(target: Target, value: 0, when: []) ]),
+                Hook(on: "ModifyDamage", order: 2000, do: [ DealMoveDamage ]),
             ]),
 
         // JUMP KICK / HI JUMP KICK (JumpKickEffect): the DAMAGE half is a plain
