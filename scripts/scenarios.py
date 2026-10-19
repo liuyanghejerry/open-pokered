@@ -84,27 +84,38 @@ def throw_balls_until_caught(g, max_balls):
     budget runs out; the caller must dismiss the dex-registration
     screen afterwards (`dismiss_dex_screen`)."""
     throws = 0
-    for _ in range(max_balls * 8):
+    initial = g.st()
+    initial_balls = next((row["qty"] for row in initial["battle_inventory"]
+                          if row["item"] == "PokeBall"), 0)
+    # A throw spans ball animation, result text and the foe's action. Budget
+    # game frames rather than eight UI polls per ball, and let the final
+    # permitted throw finish before deciding that the budget is exhausted.
+    deadline = initial["frame_count"] + max_balls * 3000
+    while True:
         s = g.st()
         if s["screen"] != "battle":
             return throws
+        remaining = next((row["qty"] for row in s["battle_inventory"]
+                          if row["item"] == "PokeBall"), 0)
+        throws = initial_balls - remaining
         ph = s["battle_phase"]
+        if s["frame_count"] >= deadline:
+            raise AssertionError(f"catch timed out after {throws} balls: {ph}")
         if ph == "PlayerMenu":
-            # 2x2 menu: FIGHT TL / PKMN TR / BAG BL / RUN BR — battle_loop's
-            # up+left and down+right pin the other two corners.
-            g.d.drive(["down", "left"], frames=10)  # -> BAG
+            if throws >= max_balls:
+                raise AssertionError(f"catch failed after {throws} completed throws")
+            # FIGHT TL / PKMN TR / BAG BL / RUN BR.
+            g.d.drive(["down", "left"], frames=10)
             g.tap("a", 4)
             g.step(10)
         elif ph == "BagSelect":
-            g.tap("a", 4)               # slot 0 is the only item: the ball
-            throws += 1
+            assert throws < max_balls, (throws, ph)
+            g.tap("a", 4)  # slot 0 is the only item: the ball
             g.step(10)
         else:
-            g.tap("a", 10)              # "used POKé BALL" / miss text
+            g.tap("a", 10)  # used-ball / miss text, animation, foe's action
             g.step(10)
-        if throws >= max_balls:
-            break
-    raise AssertionError(f"catch failed: still battling after {throws} balls")
+
 
 
 def dismiss_dex_screen(g):
@@ -263,14 +274,41 @@ def s07_save_roundtrip():
         shutil.rmtree(save_path.parent, ignore_errors=True)
 
 
+def wait_pause_ready(g):
+    """Wait neutrally for DisplayTextID and the menu cursor delay to finish."""
+    for _ in range(120):
+        state = g.st()
+        assert state["screen"] == "start-menu", state["screen"]
+        menu = state["field_menu"]
+        if menu["ready_for_input"]:
+            return menu
+        g.step(1)
+    raise AssertionError("START menu never became ready for input")
+
+
 def pause_menu(g):
-    """Open the START menu and return its screen name."""
+    """Open START and return only once its input owner is ready."""
     for _ in range(20):
         g.tap("start", 20)
-        s = g.st()
-        if s["screen"] != "overworld":
-            return s["screen"]
+        state = g.st()
+        if state["screen"] != "overworld":
+            wait_pause_ready(g)
+            return state["screen"]
     raise AssertionError("START did not open the pause menu")
+
+
+def open_pause_entry(g, item):
+    """Select a named observed entry with real direction/confirm input."""
+    menu = wait_pause_ready(g)
+    assert item in menu["items"], (item, menu)
+    for _ in range(len(menu["items"])):
+        menu = wait_pause_ready(g)
+        if menu["items"][menu["cursor"]] == item:
+            g.tap("a", 10)
+            g.step(20)
+            return
+        g.tap("down", 10)
+    raise AssertionError(f"START never selected {item}: {g.st()['field_menu']}")
 
 
 @scenario("s08-start-menu", "START menu: party submenu opens; EXIT returns control")
@@ -280,33 +318,22 @@ def s08_start_menu(g):
     assert r["ok"], r
     menu = pause_menu(g)
     print(f"   pause menu screen: {menu}")
-    # Cursor starts on the first entry (POKéMON when the dex is missing);
-    # open it, then back out to the menu.
-    g.tap("a", 10)
-    g.step(20)
-    sub = g.st()["screen"]
-    print(f"   first-entry screen: {sub}")
-    assert sub not in ("overworld", menu), sub
+    # With no dex, the initial entry is POKéMON. Verify the actual submenu.
+    entry = wait_pause_ready(g)
+    assert entry["items"][entry["cursor"]] == "Pokemon", entry
+    open_pause_entry(g, "Pokemon")
+    g.wait("screen=party", 600)
+    print(f"   first-entry screen: {g.st()['screen']}")
     for _ in range(20):
         g.tap("b", 10)
         if g.st()["screen"] == menu:
             break
     else:
         raise AssertionError(f"never returned to {menu}")
-    # Walk down the entries until one of them closes the menu for good
-    # (EXIT). Any other entry only opens a one-level submenu; B backs out
-    # of it (and cancels SAVE's prompt) before we move the cursor on.
-    for _ in range(7):
-        g.tap("a", 10)
-        g.step(20)
-        if g.st()["screen"] == "overworld":
-            break
-        g.tap("b", 10)
-        g.step(10)
-        g.d.drive(["down"], frames=10)
-        g.step(6)
-    else:
-        raise AssertionError("EXIT never returned to the overworld")
+    # Observe the menu's rebuilt entry/readiness instead of sending A into
+    # its preparation frames or opening unrelated SAVE/OPTION screens.
+    open_pause_entry(g, "Exit")
+    g.wait("screen=overworld", 600)
     g.evidence("s08")
 
 
@@ -314,15 +341,10 @@ def s08_start_menu(g):
 def s09_options(g):
     boot_starter(g, "Bulbasaur", 5)
     ts0 = g.st()["text_speed_delay_frames"]
-    menu = pause_menu(g)
-    # Entries: POKéMON ITEM RED SAVE OPTION EXIT — cursor 0 + 4 downs
-    # reaches OPTION (5 downs is EXIT, which would just close the menu).
-    for _ in range(4):
-        g.d.drive(["down"], frames=10)
-    g.tap("a", 10)
-    g.step(20)
+    pause_menu(g)
+    open_pause_entry(g, "Option")
     opt = g.st()["screen"]
-    assert opt not in ("overworld", menu), f"OPTION never opened: {opt}"
+    assert opt == "options", f"OPTION never opened: {opt}"
     print(f"   options screen: {opt} text_speed {ts0}")
     # Text Speed is the first row: left/right cycles FAST/MEDIUM/SLOW.
     seen = {}
@@ -334,31 +356,27 @@ def s09_options(g):
         g.tap("left", 8)
     else:
         raise AssertionError(f"text speed never moved: {seen}")
+    changed_speed = g.st()["text_speed_delay_frames"]
     for _ in range(20):
         g.tap("b", 10)
         if g.st()["screen"] == "overworld":
             break
     else:
         raise AssertionError("OPTIONS never returned to the overworld")
-    # Persistence: close and reopen the menu — the setting survives.
-    for _ in range(20):
-        g.tap("b", 10)
-        if g.st()["screen"] == "overworld":
-            break
-    else:
-        raise AssertionError("OPTIONS never returned to the overworld")
-    menu = pause_menu(g)
-    for _ in range(4):
-        g.d.drive(["down"], frames=10)
-    g.tap("a", 10)
-    g.step(20)
+    # START preserves its last selected entry. Select the observed OPTION
+    # again rather than moving four more rows from the saved cursor.
+    pause_menu(g)
+    open_pause_entry(g, "Option")
+    assert g.st()["screen"] == "options", g.st()["screen"]
     ts1 = g.st()["text_speed_delay_frames"]
-    assert ts1 != ts0, (ts0, ts1)
+    assert ts1 == changed_speed and ts1 != ts0, (ts0, changed_speed, ts1)
     print(f"   text_speed {ts0} -> {ts1} (persisted)")
     for _ in range(20):
         g.tap("b", 10)
         if g.st()["screen"] == "overworld":
             break
+    else:
+        raise AssertionError("OPTIONS never returned to the overworld after reopen")
     g.evidence("s09")
 
 
