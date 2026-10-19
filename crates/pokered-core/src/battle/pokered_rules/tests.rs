@@ -5298,3 +5298,72 @@ fn later_conversion_cannot_turn_an_earlier_hit_into_a_visual_miss() {
     assert_eq!(super::presented_move_missed(true,MoveId::MegaPunch),Some(false));
     assert_eq!(super::presented_effectiveness(true,MoveId::MegaPunch),Some(Effectiveness::Normal));
 }
+
+#[test]
+fn immune_failure_uses_original_last_matching_row_and_actual_target() {
+    for (side, attacker, move_id, defender, expected) in [
+        (0, Species::Mew, MoveId::Earthquake, Species::Zapdos, "MEW's attack missed!"),
+        (0, Species::Mew, MoveId::Earthquake, Species::Butterfree, "MEW's attack missed!"),
+        (0, Species::Mew, MoveId::Earthquake, Species::Pidgey, "It doesn't affect\nEnemy PIDGEY!"),
+        (0, Species::Mew, MoveId::Tackle, Species::Gengar, "It doesn't affect\nEnemy GENGAR!"),
+        (1, Species::Pikachu, MoveId::Thundershock, Species::Dugtrio, "It doesn't affect\nDUGTRIO!"),
+    ] {
+        install_canonical(); clear_current_moves();
+        let actor = BattlerRef::new(side, 0);
+        let target = BattlerRef::new(1 - side, 0);
+        set_current_move(actor, real_move(move_id));
+        set_current_move(target, real_move(MoveId::Splash));
+        let attack = engine_battler(&Mon::new(attacker, 400, 100), move_id);
+        let defend = engine_battler(&Mon::new(defender, 400, 50), MoveId::Splash);
+        let (player, opponent) = if side == 0 { (attack, defend) } else { (defend, attack) };
+        let mut state = EngineState::new(vec![player], vec![opponent]);
+        let mut effects = Vec::new();
+        let actions = if side == 0 {
+            [BattleAction::<PokeredRules>::Fight {move_:move_id}, BattleAction::<PokeredRules>::Fight {move_:MoveId::Splash}]
+        } else {
+            [BattleAction::<PokeredRules>::Fight {move_:MoveId::Splash}, BattleAction::<PokeredRules>::Fight {move_:move_id}]
+        };
+        // Also exercises a successful critical roll on the immune attack:
+        // original PrintMoveFailureText must not announce a critical hit.
+        let mut rng = ScriptedRng::new(vec![0; 128]);
+        let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
+        let text = super::runtime::translate_turn(&log, &state, &effects);
+        assert!(text.iter().any(|line|line == expected), "{move_id:?}/{defender:?}: {text:?}");
+        assert!(!text.iter().any(|line|line == "Critical hit!" || line.contains("super effective")), "{text:?}");
+        assert_eq!(state.player_battlers[0].hp, 400);
+        assert_eq!(state.opponent_battlers[0].hp, 400);
+    }
+}
+
+#[test]
+fn immune_failure_retains_pre_accuracy_types_across_later_conversion() {
+    for initially_immune in [false, true] {
+        install_canonical(); clear_current_moves();
+        let attacker = if initially_immune { Species::Mew } else { Species::Gengar };
+        set_current_move(BattlerRef::PLAYER, real_move(MoveId::MegaPunch));
+        set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Conversion));
+        let mut state = EngineState::new(
+            vec![engine_battler(&Mon::new(attacker, 400, 100), MoveId::MegaPunch)],
+            vec![engine_battler(&Mon::new(Species::Porygon, 4000, 50), MoveId::Conversion)]);
+        let mut effects = if initially_immune { vec![EffectState {
+            id:EffectId(0x9910), host:BattlerRef::OPPONENT, effect_order:999,
+            kind:PokeVolatile::TypeOverride {type1:PokemonType::Ghost,type2:PokemonType::Poison},
+        }] } else { Vec::new() };
+        // Accuracy fails before ModifyDamage, so the earlier capture is needed.
+        let mut bytes = vec![0, 255]; bytes.extend([0; 128]);
+        let mut rng = ScriptedRng::new(bytes);
+        let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
+            [BattleAction::<PokeredRules>::Fight {move_:MoveId::MegaPunch},
+             BattleAction::<PokeredRules>::Fight {move_:MoveId::Conversion}], &mut rng);
+        let wanted = if initially_immune { (PokemonType::Psychic, PokemonType::Psychic) }
+                     else { (PokemonType::Ghost, PokemonType::Poison) };
+        assert!(effects.iter().any(|effect| effect.host == BattlerRef::OPPONENT
+            && matches!(effect.kind,PokeVolatile::TypeOverride {type1,type2} if (type1,type2)==wanted)));
+        assert_eq!(state.opponent_battlers[0].hp, 4000);
+        let text = super::runtime::translate_turn(&log, &state, &effects);
+        let expected = if initially_immune { "It doesn't affect\nEnemy PORYGON!" }
+                       else { "GENGAR's attack missed!" };
+        assert!(text.iter().any(|line|line == expected), "{initially_immune}: {text:?}");
+        assert_eq!(text.iter().filter(|line|line.contains("doesn't affect")).count(), usize::from(initially_immune));
+    }
+}

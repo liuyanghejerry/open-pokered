@@ -1,0 +1,116 @@
+{
+  "scope": "Actual master and PR checkout native CLI captures, same fixture, seed, frame-stamped inputs and final frame; not original raster parity.",
+  "before": {
+    "actual_source": "582af850626f5f72e090c5709bb68725ac69a0de",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "3863a366f8cf14deedfd1ea749c88bb655d36c2f8af7acff13f0d27784978bb5",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "after": {
+    "actual_source": "7e26cabf4002441beec4bc93c64f8912ac673305",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "9955427446dbc0a404ff9981c27e9bc607f1d56f193a6fb050711c9d6fee94b1",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "before_workspace_head": "582af850626f5f72e090c5709bb68725ac69a0de",
+  "after_workspace_head": "7e26cabf4002441beec4bc93c64f8912ac673305",
+  "controller_sha256": "81071d6a80d02d7aa74f16c4d38a252890e025c2f9e2cb7b6792a1f4db278eab",
+  "plan_sha256": "b083f55c535c415119f88ae136b510789b71add79b8b4e7fbac79e235a0728b0",
+  "all_pairs_pass": true,
+  "pairs": [
+    {
+      "case": "earthquake-zapdos",
+      "frame": 1066,
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "26d1b0db78122ee27cf4abf215dd7459d0889fb8f90877916657f91984392e06",
+      "fixture_sha256": "d27f1b553190b489eb4c6ef02a3798ce0ce99399916ee2488d39c2e30921d00a",
+      "before_message": "It doesn't affect the enemy!",
+      "after_message": "MEW's attack missed!",
+      "victim_hp_unchanged": true,
+      "before_png_sha256": "902831b62d31ef50dbfc7549121ad37b715c63d419852210ee66fe9b296b7d28",
+      "after_png_sha256": "605cdd2ddbfbc59aec74d4ebace9e4d9f7fd5f30a6a33c2d620f6966b24d1ffa",
+      "paths": {
+        "before": "docs/screenshots/immune-failure-earthquake-zapdos-before.png",
+        "after": "docs/screenshots/immune-failure-earthquake-zapdos-after.png"
+      }
+    },
+    {
+      "case": "earthquake-pidgey",
+      "frame": 1066,
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "c4ad7f1590d2622a27bd25cea11c13ddf85e174a187d2a6ed205a847bfe5b5fd",
+      "fixture_sha256": "d27f1b553190b489eb4c6ef02a3798ce0ce99399916ee2488d39c2e30921d00a",
+      "before_message": "It doesn't affect the enemy!",
+      "after_message": "It doesn't affect\nEnemy PIDGEY!",
+      "victim_hp_unchanged": true,
+      "before_png_sha256": "b58460356d6e83f2148293c4658d66f96798b7fca8ccc163d67a22167b9b1c75",
+      "after_png_sha256": "677f14865aa45e6947080389353d06782b068d99b7587e2d28e9b405b7343762",
+      "paths": {
+        "before": "docs/screenshots/immune-failure-earthquake-pidgey-before.png",
+        "after": "docs/screenshots/immune-failure-earthquake-pidgey-after.png"
+      }
+    },
+    {
+      "case": "enemy-thundershock-dugtrio",
+      "frame": 3442,
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "ef6f892337dd92ef5d81fc4e34a1384f54021a389f88a8321525378adc1de6e3",
+      "fixture_sha256": "ad292a69a32905b52416ec41df1fccdaeee27c6c6d99d67f7035c4afac204345",
+      "before_message": "It doesn't affect the enemy!",
+      "after_message": "It doesn't affect\nDUGTRIO!",
+      "victim_hp_unchanged": true,
+      "before_png_sha256": "f823f0a710f8a9b21475005d894b9cc812b12768705b557a32cb3a4ac7654a34",
+      "after_png_sha256": "9a6a4ee12131cd38f03cbd495b2eff5e58c2f65aaeab5bb92437d95d2ca9a242",
+      "paths": {
+        "before": "docs/screenshots/immune-failure-enemy-thundershock-dugtrio-before.png",
+        "after": "docs/screenshots/immune-failure-enemy-thundershock-dugtrio-after.png"
+      }
+    }
+  ]
+}

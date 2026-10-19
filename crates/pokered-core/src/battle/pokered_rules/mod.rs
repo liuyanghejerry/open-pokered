@@ -1773,6 +1773,19 @@ fn pokered_accuracy(
         return HandlerResult::Unchanged;
     }
     let pm = current_move_for(source);
+    // Capture the display byte before accuracy can veto the damage hook.
+    // A later Conversion must not change which failure text this action used.
+    let display = if pm.power > 0 && !is_special_damage_effect(pm.effect)
+        && !matches!(pm.id, MoveId::Counter | MoveId::Psywave)
+    {
+        let (one, two) = effective_types(ctx, target);
+        runtime::displayed_effectiveness(pm.move_type, one, two)
+    } else {
+        Effectiveness::Normal
+    };
+    PRESENTED_EFFECTIVENESS.with(|values| {
+        values.borrow_mut()[source.side as usize] = Some((pm.id, display, false));
+    });
     if pm.id == MoveId::Counter {
         if !counter_can_reflect(ctx, target) {
             return HandlerResult::Set(RelayVar::Bool(false));

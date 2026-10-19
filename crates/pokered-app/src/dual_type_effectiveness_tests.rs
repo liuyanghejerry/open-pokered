@@ -149,6 +149,22 @@ fn actual_move_commands_keep_their_own_sound_table_modifiers_and_pcm() {
 }
 
 #[test]
+fn actual_immune_attack_failure_uses_original_message_and_named_target() {
+    on_stack(|| {
+        for (move_id, defender, expected) in [
+            (MoveId::Earthquake, Species::Zapdos, "MEW's attack missed!"),
+            (MoveId::Earthquake, Species::Butterfree, "MEW's attack missed!"),
+            (MoveId::Earthquake, Species::Pidgey, "It doesn't affect\nEnemy PIDGEY!"),
+            (MoveId::Tackle, Species::Gengar, "It doesn't affect\nEnemy GENGAR!"),
+        ] {
+            let (game, _, _) = attack_battle(move_id, defender, Some(expected), None);
+            assert_eq!(game.battle.current_message.as_deref(), Some(expected));
+            assert_eq!(game.battle.enemy_hp, game.battle.enemy_max_hp);
+        }
+    });
+}
+
+#[test]
 #[ignore = "matched master/branch captures; FIDELITY_DUAL_TYPE_CAPTURE, optional FIDELITY_DUAL_TYPE_TICK"]
 fn capture_dual_type_effectiveness() {
     on_stack(|| {
