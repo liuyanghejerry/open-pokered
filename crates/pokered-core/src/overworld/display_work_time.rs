@@ -701,6 +701,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
         self.time.elapse_reserved(cycles)
     }
 
+    #[inline(always)]
     fn execute_pattern_general(
         &mut self,
         instruction: PatternInstruction,
