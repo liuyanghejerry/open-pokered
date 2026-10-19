@@ -50,6 +50,16 @@
       "sha256": "bdea08a9300b9e66e886e2923637b7e99c6c5d9ce32f8439c418ad25587cc1af",
       "uncompressed_sha256": "df835daa943671567d20558625e21a3b22bef7acf81cf1f5143c004e0fc5d826",
       "uncompressed_bytes": 371910
+    },
+    {
+      "path": "commands.json.gz",
+      "sha256": "722bde69c3ec25eae28b6b0a29c5a97e73d9d72fcaf6aa3d1105d67f11913330",
+      "uncompressed_sha256": "3d9484352cae5b0dd75c4cf979047c69a7a1a5f446575166fc36aada861c6094"
+    },
+    {
+      "path": "fixture.sav",
+      "sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+      "bytes": 32768
     }
   ],
   "unit_tests": {
