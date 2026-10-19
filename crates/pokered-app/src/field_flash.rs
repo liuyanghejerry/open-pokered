@@ -258,12 +258,7 @@ impl PokemonGame {
                 let result = match child {
                     DisplayChild::Disable(work) => {
                         let mut bus = self.source_display.display_bus();
-                        loop {
-                            match work.step(&mut bus) {
-                                Ok(Some(_)) => (),
-                                result => break result.map(|i| i.is_some()),
-                            }
-                        }
+                        work.run(&mut bus).map(|()| false)
                     }
                     DisplayChild::Enable { work, called } => {
                         if !*called {

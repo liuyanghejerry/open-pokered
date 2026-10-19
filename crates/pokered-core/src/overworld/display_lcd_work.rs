@@ -98,6 +98,27 @@ impl DisableLcdWork {
             Done => return None,
         })
     }
+    /// Run the same instructions until return or a bus refusal. The hot LY
+    /// loop uses constant instruction operands so the native compiler can
+    /// specialize its bus calls. Every read, compare and branch still goes
+    /// through the bus separately; commit each continuation only on success.
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        use DisableStep::*;
+        loop {
+            if self.step == ReadLy {
+                let value = bus.execute(read(0xff44))?;
+                self.a = value.expect("display read receipt");
+                self.step = CompareLy;
+                bus.execute(plain(8))?;
+                self.step = PollLy;
+                bus.execute(plain(if self.a == 145 { 8 } else { 12 }))?;
+                self.step = if self.a == 145 { ReadLcdc } else { ReadLy };
+            } else if self.step(bus)?.is_none() {
+                return Ok(());
+            }
+        }
+    }
+
     /// None means the child has returned. A blocked shared bus leaves the
     /// exact native branch/register state intact for the next host slice.
     #[inline(always)]

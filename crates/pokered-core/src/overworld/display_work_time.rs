@@ -801,6 +801,83 @@ mod tests {
         }
     }
     #[test]
+    fn lcd_runner_preserves_every_bus_receipt_budget_and_snapshot_continuation() {
+        struct Recording<'a, B> {
+            bus: &'a mut B,
+            trace: &'a mut Vec<(DisplayInstruction, Result<Option<u8>, DisplayWorkError>)>,
+        }
+        impl<B: DisplayInstructionBus<Error = DisplayWorkError>> DisplayInstructionBus
+            for Recording<'_, B>
+        {
+            type Error = DisplayWorkError;
+            fn execute(
+                &mut self,
+                instruction: DisplayInstruction,
+            ) -> Result<Option<u8>, Self::Error> {
+                let result = self.bus.execute(instruction);
+                self.trace.push((instruction, result.clone()));
+                result
+            }
+        }
+        for lcdc in [0x11, 0x91, 0x93, 0xb1] {
+            for offset in [0, 80, 65_660] {
+                for budget in (0..=124).step_by(4).chain([4096, 70224]) {
+                    let mut time = DisplayWorkTime::default();
+                    time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                    time.elapse(offset).unwrap();
+                    if offset == 80 {
+                        time.device_mut().write_port(0xff46, 0xc3, 0xc3).unwrap();
+                    }
+                    time.deadline = time.elapsed + budget;
+                    let mut reference = time.clone();
+                    let mut work = DisableLcdWork::default();
+                    let mut expected_work = work;
+                    for _ in 0..3 {
+                        let mut actual_trace = Vec::new();
+                        let actual = work.run(&mut Recording {
+                            bus: &mut time.display_bus(),
+                            trace: &mut actual_trace,
+                        });
+                        let mut expected_trace = Vec::new();
+                        let expected = loop {
+                            match expected_work.step(&mut Recording {
+                                bus: &mut reference,
+                                trace: &mut expected_trace,
+                            }) {
+                                Ok(Some(_)) => (),
+                                Ok(None) => break Ok(()),
+                                Err(error) => break Err(error),
+                            }
+                        };
+                        assert_eq!(actual, expected);
+                        assert_eq!(actual_trace, expected_trace);
+                        assert_eq!(work, expected_work);
+                        assert_eq!(
+                            serde_json::to_value(&time).unwrap(),
+                            serde_json::to_value(&reference).unwrap()
+                        );
+                        match actual {
+                            Ok(()) => break,
+                            Err(DisplayWorkError::Budget) => (),
+                            other => panic!("unexpected LCD result: {other:?}"),
+                        }
+                        work = serde_json::from_value(serde_json::to_value(work).unwrap()).unwrap();
+                        expected_work =
+                            serde_json::from_value(serde_json::to_value(expected_work).unwrap())
+                                .unwrap();
+                        time = serde_json::from_value(serde_json::to_value(time).unwrap()).unwrap();
+                        reference =
+                            serde_json::from_value(serde_json::to_value(reference).unwrap())
+                                .unwrap();
+                        time.begin_native_update();
+                        reference.begin_native_update();
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn exclusive_display_bus_matches_every_lcd_poll_and_snapshot_resume() {
         for lcdc in [0x11, 0x91, 0x93, 0xb1] {
             for offset in [0, 80, 65_660] {
