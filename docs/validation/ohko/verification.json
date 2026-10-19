@@ -39,9 +39,26 @@
     "scope": "Default autopilot-v1 baseline; not OHKO gameplay proof."
   },
   "pending": [
-    "Matched actual-master before / PR after CLI captures using committed capture.py and plan.",
-    "Actual CLI subsystem suite on final candidate.",
-    "Original full published-head CI before merge."
+    "Repair or resolve the three existing deterministic CLI scenario failures independently before publication.",
+    "All original published-head CI before merge."
   ],
-  "original_controls": "original-cpu-controls.json contains 8 prepared original subroutine cases; not full original battle/raster/RNG-order evidence."
+  "original_controls": "original-cpu-controls.json contains 8 prepared original subroutine cases; not full original battle/raster/RNG-order evidence.",
+  "CLI_focused": {
+    "passed": 4,
+    "proof": "screenshots.json",
+    "actual_source": "f10a08526e390c7ad4aaadcb1df8112154447272",
+    "cases": "Two immunity cases after actual X Accuracy use, nonimmune KO control, slower user failure."
+  },
+  "CLI_scenarios": {
+    "passed": 8,
+    "total": 11,
+    "seed": 42,
+    "speed": 0,
+    "failed": [
+      "s05-wild-catch",
+      "s08-start-menu",
+      "s09-options"
+    ],
+    "state": "Investigation in progress; not presented as green. Separate same-input master reproduction and driver correction required."
+  }
 }

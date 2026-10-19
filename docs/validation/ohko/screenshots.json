@@ -1,0 +1,134 @@
+{
+  "all_pass": true,
+  "before_binary": {
+    "actual_source": "9fe81b59326ab720141ce7a82ca0d0b4a175ef14",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "7fe61a220189ef242f626a9846d532a3e007bf853e0f4349fef58d3672994b70",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "after_binary": {
+    "actual_source": "f10a08526e390c7ad4aaadcb1df8112154447272",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "7766cff6fb1e6bd571d482c07dffb42e5c2d00337d95f9fae81565fe39316708",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "controller_sha256": "8a0e93e56593747904a5f6076e9d9194b84662d74aa6c50ecace8cd179021be9",
+  "plan_sha256": "fbb82a1c966538c78dc0389bd34d067d68139008876415bd85650d3a8c29b26c",
+  "pairs": [
+    {
+      "case": "fissure-pidgey",
+      "frame": 1852,
+      "fixture_sha256": "f01801d13fa72bce410fb5cba17a13aa4049be8dba9f5e33282d475513d4c111",
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "0828a3fffc0ecab682e1869e36160124afe59638ee0efcf05df338cfa0f5778c",
+      "before_message": "Enemy PIDGEY fainted!",
+      "after_message": "It doesn't affect\nEnemy PIDGEY!",
+      "before_hp": 0,
+      "after_hp": 19,
+      "before_png_sha256": "46db0538e09db13d6597b4d3190ed4e15a83b1ffcf290514104c5a87ee81e9f8",
+      "after_png_sha256": "5cdb6d0a98df016bd77b518ca9f6f6fa99b437568dbcdafc21cf3f2cfe96aa7e",
+      "paths": {
+        "before": "docs/screenshots/ohko-fissure-pidgey-before.png",
+        "after": "docs/screenshots/ohko-fissure-pidgey-after.png"
+      }
+    },
+    {
+      "case": "horn-drill-gengar",
+      "frame": 1940,
+      "fixture_sha256": "da5e87d43c93c72768deab28884bcda825062cf3c865e597811481e799e6bf52",
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "c68e982897515836ecdd496d290214355d890394094a68366e2a61f1dfd675db",
+      "before_message": "Enemy GENGAR fainted!",
+      "after_message": "It doesn't affect\nEnemy GENGAR!",
+      "before_hp": 0,
+      "after_hp": 21,
+      "before_png_sha256": "ab6c319b46b2c7d49f827b67a2f2d9c4d2ca2de566be19372bf760cb9899d2f7",
+      "after_png_sha256": "b4b91222eb17d54773e3f779306abecddbc5993d6213e166b0ae6a23761803af",
+      "paths": {
+        "before": "docs/screenshots/ohko-horn-drill-gengar-before.png",
+        "after": "docs/screenshots/ohko-horn-drill-gengar-after.png"
+      }
+    },
+    {
+      "case": "fissure-rattata",
+      "frame": 1874,
+      "fixture_sha256": "f01801d13fa72bce410fb5cba17a13aa4049be8dba9f5e33282d475513d4c111",
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "935f1943cc21fee91f8318c19625de17010769cd4156569331e7e5daf9d97f64",
+      "before_message": "Enemy RATTATA fainted!",
+      "after_message": "One-hit KO!",
+      "before_hp": 0,
+      "after_hp": 0,
+      "before_png_sha256": "73e5555aad183bc8b1d84e670b81e64cef4e5728955534570d90099eb4faf6db",
+      "after_png_sha256": "b3b99ae81e5c9cd7daaa2bafb2d2ec0a3ea170ac7841514e722d88dd21e2f59a",
+      "paths": {
+        "before": "docs/screenshots/ohko-fissure-rattata-before.png",
+        "after": "docs/screenshots/ohko-fissure-rattata-after.png"
+      }
+    },
+    {
+      "case": "slow-fissure-pidgey",
+      "frame": 1764,
+      "fixture_sha256": "affb0367e1b3ef3ad6f73f62377454601ecf709d841607cc9341ff4d877cf661",
+      "initial_world_sha256": "b6f160f1cfddfabad4feef50df918f3dcaa0d124065875caf77beec239e22a2d",
+      "initial_state_sha256": "43c84cfeecc79543dfc2cbc1ca58b5586066aa22e7f316d268cbcb9e36939c93",
+      "before_message": "MEW's attack missed!",
+      "after_message": "Enemy PIDGEY's\nunaffected!",
+      "before_hp": 194,
+      "after_hp": 194,
+      "before_png_sha256": "a88fe1bf8101d7606d4aa03d453ff4dbde5bcbc5b0d39c5ad76c779dcb673bae",
+      "after_png_sha256": "9f7f92b50a48dfd93c16df928b8417bb1de4402cb35ba8a7109448d4c73f382f",
+      "paths": {
+        "before": "docs/screenshots/ohko-slow-fissure-pidgey-before.png",
+        "after": "docs/screenshots/ohko-slow-fissure-pidgey-after.png"
+      }
+    }
+  ],
+  "scope": "Actual current master9fe and private branchf10 CLI, same saved fixtures, seed, raw input tape and final frame. Starting PNG/state hashes equal. Eight images visually inspected; not original raster parity."
+}
