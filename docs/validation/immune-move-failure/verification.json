@@ -50,11 +50,61 @@
     "app_existing_ignored": 40,
     "cases": "Five actual stack actor/target cases (raw0/5/20, both sides), both directions of later Conversion with an earlier accuracy failure, zero-byte priority over critical/miss flags, four actual Game immune battles. Damage/RNG assertions in the full suite remain intact.",
     "before_probes": "Five real CLI before cases: Earthquake versus Zapdos/Butterfree/Pidgey, Tackle versus Gengar, enemy Pikachu Thundershock versus player Dugtrio. Fixtures were built with SaveBuilder and loaded by CONTINUE, then driven through actual A input.",
-    "source_before": "99f45890 audio consumer binary; no immunity fix in that artifact."
+    "source_before": "99f45890 audio consumer binary; no immunity fix in that artifact.",
+    "CLI_after": {
+      "passed": 5,
+      "source": "9173a6287a62e9115f3fe10daf13bb335a37bc91",
+      "binary_sha256": "9955427446dbc0a404ff9981c27e9bc607f1d56f193a6fb050711c9d6fee94b1",
+      "scope": "Real Game CLI, identical saved fixtures and actual A input frame timelines to before; victims retain full HP. Diagnostic screenshots inspected. Not the required master/PR captures.",
+      "rows": [
+        {
+          "case": "Earthquake-Zapdos",
+          "actual": "MEW's attack missed!",
+          "frame": 1026,
+          "fixture_sha256": "d27f1b553190b489eb4c6ef02a3798ce0ce99399916ee2488d39c2e30921d00a",
+          "input_timeline_equal": true,
+          "victim_hp_unchanged": true
+        },
+        {
+          "case": "Earthquake-Butterfree",
+          "actual": "MEW's attack missed!",
+          "frame": 1026,
+          "fixture_sha256": "d27f1b553190b489eb4c6ef02a3798ce0ce99399916ee2488d39c2e30921d00a",
+          "input_timeline_equal": true,
+          "victim_hp_unchanged": true
+        },
+        {
+          "case": "Earthquake-Pidgey",
+          "actual": "It doesn't affect\nEnemy PIDGEY!",
+          "frame": 1026,
+          "fixture_sha256": "d27f1b553190b489eb4c6ef02a3798ce0ce99399916ee2488d39c2e30921d00a",
+          "input_timeline_equal": true,
+          "victim_hp_unchanged": true
+        },
+        {
+          "case": "Tackle-Gengar",
+          "actual": "It doesn't affect\nEnemy GENGAR!",
+          "frame": 1026,
+          "fixture_sha256": "4853e260d0092f8cc1b3e3ad442888d9424d39250633bbbfecb63c22684cd79a",
+          "input_timeline_equal": true,
+          "victim_hp_unchanged": true
+        },
+        {
+          "case": "enemy-Thundershock-Dugtrio",
+          "actual": "It doesn't affect\nDUGTRIO!",
+          "frame": 3402,
+          "fixture_sha256": "ad292a69a32905b52416ec41df1fccdaeee27c6c6d99d67f7035c4afac204345",
+          "input_timeline_equal": true,
+          "victim_hp_unchanged": true
+        }
+      ]
+    },
+    "CLI_scenarios": "11/11 PASS on actual9173a628 CLI",
+    "GBA": "nightly2025-12-07 release perf-benchmark builds; unchanged checked-in performance baseline/defaultlimits PASS, source9173a628"
   },
   "limits": [
     "Original controls execute prepared subroutines, not a whole original battle or original text raster.",
-    "CLI after verification and master-before/after captures remain required before publishing this visual fix.",
-    "This change addresses ordinary typed damage immunity; OHKO and other special effect failure branches require separate source/gameplay audits."
+    "This change addresses ordinary typed damage immunity; OHKO and other special effect failure branches require separate source/gameplay audits.",
+    "Master-before/PR-after identical-input/frame screenshots pending audio PR329 merge; visual fix not published."
   ]
 }
