@@ -108,15 +108,21 @@ def throw_balls_until_caught(g, max_balls):
 
 
 def dismiss_dex_screen(g):
-    """A catch parks the dex-registration entry screen over the
-    overworld; b/a taps dismiss it."""
+    """Dismiss dex registration and decline the post-capture nickname."""
     for _ in range(20):
-        if g.st()["screen"] == "overworld":
+        s = g.st()
+        if s["screen"] == "overworld":
             return
-        g.tap("b", 10)
-        g.tap("a", 10)
+        # Dex entry returns to the battle-owned AskName flow. Alternating
+        # B/A blindly can select YES as its question opens the choice, then
+        # edit the naming grid forever. Observe the modal and decline it.
+        if s["screen"] == "pokedex" or s.get("capture_phase") == "Choice":
+            g.tap("b", 10)
+        else:
+            g.tap("a", 10)
+        g.step(10)
     raise AssertionError(f"never returned to the overworld: "
-                         f"{g.st()['screen']}")
+                         f"{g.st()}")
 
 
 # ── seeding / observation ───────────────────────────────────────────────
