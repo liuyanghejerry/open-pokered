@@ -55,6 +55,23 @@ impl FarPatternCopyCall {
         self.step == Step::Done
     }
 
+    /// Keep the CopyData child borrowed through its instruction loop. The
+    /// parent still executes its real bank restoration and RET afterwards.
+    pub fn run<B>(&mut self, bus: &mut B) -> Result<(), <B as DisplayInstructionBus>::Error>
+    where
+        B: DisplayInstructionBus
+            + PatternInstructionBus<Error = <B as DisplayInstructionBus>::Error>,
+    {
+        loop {
+            if self.step == Step::Copy {
+                self.copy.run(bus)?;
+            }
+            if !self.step(bus)? {
+                return Ok(());
+            }
+        }
+    }
+
     /// True means one source instruction executed. False means the complete
     /// CALL/body/RET returned. Errors preserve the pending instruction.
     pub fn step<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>

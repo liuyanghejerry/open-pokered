@@ -801,6 +801,117 @@ mod tests {
         }
     }
     #[test]
+    fn far_copy_runner_preserves_mixed_bus_trace_banks_and_partial_instructions() {
+        use super::super::{
+            far_pattern_copy_work::FarPatternCopyCall,
+            field_restore::{CopyFormat, PatternCopy},
+        };
+        #[derive(Debug, PartialEq, Eq)]
+        enum Receipt {
+            Display(DisplayInstruction, Result<Option<u8>, DisplayWorkError>),
+            Pattern(PatternInstruction, Result<Option<u16>, DisplayWorkError>),
+        }
+        struct Recording<'a, B> {
+            bus: &'a mut B,
+            trace: &'a mut Vec<Receipt>,
+        }
+        impl<B: DisplayInstructionBus<Error = DisplayWorkError>> DisplayInstructionBus
+            for Recording<'_, B>
+        {
+            type Error = DisplayWorkError;
+            fn execute(&mut self, i: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
+                let result = DisplayInstructionBus::execute(self.bus, i);
+                self.trace.push(Receipt::Display(i, result));
+                result
+            }
+        }
+        impl<B: PatternInstructionBus<Error = DisplayWorkError>> PatternInstructionBus
+            for Recording<'_, B>
+        {
+            type Error = DisplayWorkError;
+            fn execute(&mut self, i: PatternInstruction) -> Result<Option<u16>, Self::Error> {
+                let result = PatternInstructionBus::execute(self.bus, i);
+                self.trace.push(Receipt::Pattern(i, result));
+                result
+            }
+        }
+        for lcdc in [0x11, 0x93] {
+            for tiles in [0, 1, 12] {
+                let budgets: Vec<u64> = if tiles == 1 {
+                    (0..=1400).step_by(4).chain([4096, 70224]).collect()
+                } else {
+                    vec![
+                        0, 4, 128, 132, 140, 152, 256, 512, 1024, 4096, 8000, 9500, 11_000, 70224,
+                    ]
+                };
+                for (destination, source_offset) in [(0x8800, 17), (0x9fff, 65535)] {
+                    for &budget in &budgets {
+                        let mut time = DisplayWorkTime::default();
+                        time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                        time.deadline = budget;
+                        let mut reference = time.clone();
+                        let mut work = FarPatternCopyCall::from_2bpp(PatternCopy {
+                            source: PatternSource::Sprite(14),
+                            source_offset,
+                            destination,
+                            tiles,
+                            format: CopyFormat::TwoBpp,
+                        })
+                        .unwrap();
+                        let mut expected_work = work;
+                        let mut memory = PatternMemory::default();
+                        let mut expected_memory = memory.clone();
+                        for _ in 0..3 {
+                            let mut actual_trace = Vec::new();
+                            let actual = work.run(&mut Recording {
+                                bus: &mut time.pattern_bus(&mut memory, &Bytes),
+                                trace: &mut actual_trace,
+                            });
+                            let mut expected_trace = Vec::new();
+                            let expected = loop {
+                                match expected_work.step(&mut Recording {
+                                    bus: &mut reference
+                                        .pattern_bus(&mut expected_memory, &Bytes)
+                                        .checking_each_instruction(),
+                                    trace: &mut expected_trace,
+                                }) {
+                                    Ok(true) => (),
+                                    Ok(false) => break Ok(()),
+                                    Err(error) => break Err(error),
+                                }
+                            };
+                            assert_eq!(actual, expected);
+                            assert_eq!(actual_trace, expected_trace);
+                            assert_eq!(work, expected_work);
+                            assert_eq!(memory, expected_memory);
+                            assert_eq!(
+                                serde_json::to_value(&time).unwrap(),
+                                serde_json::to_value(&reference).unwrap()
+                            );
+                            if actual != Err(DisplayWorkError::Budget) {
+                                break;
+                            }
+                            work = serde_json::from_value(serde_json::to_value(work).unwrap())
+                                .unwrap();
+                            expected_work = serde_json::from_value(
+                                serde_json::to_value(expected_work).unwrap(),
+                            )
+                            .unwrap();
+                            time = serde_json::from_value(serde_json::to_value(time).unwrap())
+                                .unwrap();
+                            reference =
+                                serde_json::from_value(serde_json::to_value(reference).unwrap())
+                                    .unwrap();
+                            time.begin_native_update();
+                            reference.begin_native_update();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn video_runner_matches_single_instruction_receipts_and_snapshot_resume() {
         use super::super::field_restore::{
             CopyFormat, PatternCopy, VideoCopyWork, VideoServiceError,

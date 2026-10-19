@@ -110,6 +110,67 @@ impl PatternCopyDataWork {
         };
         Some(PatternInstruction { tcycles, access })
     }
+    /// Execute the CopyData loop with constant access variants, retaining
+    /// every source instruction and its exact refusal/continuation boundary.
+    pub fn run<B: PatternInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        use CopyStep::*;
+        loop {
+            if self.step == Read {
+                let value = bus.execute(PatternInstruction {
+                    tcycles: 8,
+                    access: Some(PatternAccess::Read {
+                        source: self.source,
+                        offset: self.source_offset,
+                        at_tcycle: 4,
+                    }),
+                })?;
+                self.a = value.expect("asset read receipt") as u8;
+                self.source_offset = self.source_offset.wrapping_add(1);
+                self.step = Write;
+                bus.execute(PatternInstruction {
+                    tcycles: 8,
+                    access: Some(PatternAccess::Write {
+                        destination: self.destination,
+                        value: self.a,
+                        at_tcycle: 4,
+                    }),
+                })?;
+                self.step = IncrementDestination;
+                bus.execute(PatternInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                self.destination = self.destination.wrapping_add(1);
+                self.step = DecrementCount;
+                bus.execute(PatternInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                self.remaining = self.remaining.wrapping_sub(1);
+                self.step = LoadCountLow;
+                bus.execute(PatternInstruction {
+                    tcycles: 4,
+                    access: None,
+                })?;
+                self.a = self.remaining as u8;
+                self.step = OrCountHigh;
+                bus.execute(PatternInstruction {
+                    tcycles: 4,
+                    access: None,
+                })?;
+                self.a |= (self.remaining >> 8) as u8;
+                self.step = Repeat;
+                bus.execute(PatternInstruction {
+                    tcycles: if self.a == 0 { 8 } else { 12 },
+                    access: None,
+                })?;
+                self.step = if self.a == 0 { Return } else { Read };
+            } else if self.step(bus)?.is_none() {
+                return Ok(());
+            }
+        }
+    }
+
     pub fn step<B: PatternInstructionBus>(
         &mut self,
         bus: &mut B,

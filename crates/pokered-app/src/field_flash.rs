@@ -294,12 +294,7 @@ impl PokemonGame {
                         // it can resolve its immutable ROM slice once while
                         // every original instruction still reaches the bus.
                         let mut bus = self.source_display.pattern_bus(&mut flow.patterns, &assets);
-                        loop {
-                            match work.step(&mut bus) {
-                                Ok(true) => (),
-                                result => break result,
-                            }
-                        }
+                        work.run(&mut bus).map(|()| false)
                     }
                 };
                 match result {
