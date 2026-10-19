@@ -104,7 +104,7 @@
   },
   "limits": [
     "Original controls execute prepared subroutines, not a whole original battle or original text raster.",
-    "This change addresses ordinary typed damage immunity; OHKO and other special effect failure branches require separate source/gameplay audits.",
-    "Master-before/PR-after identical-input/frame screenshots pending audio PR329 merge; visual fix not published."
-  ]
+    "This change addresses ordinary typed damage immunity; OHKO and other special effect failure branches require separate source/gameplay audits."
+  ],
+  "master_PR_screenshots": "screenshots.json: three identical-input/frame pairs, initial image/state hashes equal; PNGs visually inspected, complete text and unchanged HP."
 }
