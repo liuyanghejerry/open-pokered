@@ -416,8 +416,8 @@ pub struct BedroomDialogue {
 }
 
 impl BedroomDialogue {
-    const FIELD_BG_TRANSFER_FRAMES: u8 = 3;
-    const FIELD_FONT_TILES: u8 = 128;
+    const FIELD_BG_TRANSFER_FRAMES: u8 = super::display_text_init::DisplayTextInit::BACKGROUND_TRANSFERS;
+    const FIELD_FONT_TILES: u8 = super::display_text_init::DisplayTextInit::FONT_TILES;
     const FIELD_FONT_AND_PRINT_FRAMES: u8 = Self::FIELD_FONT_TILES / 8 + 1 + 3;
 
     /// DisplayTextIDInit copies the background in thirds, loads the font
@@ -1116,6 +1116,8 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub boulder_dust: presentation::BoulderDustState,
     pub boulder_push: Option<presentation::BoulderPushState>,
     pub(crate) boulder_resume_input: Option<super::OverworldInput>,
+    pub(crate) boulder_resume_poll: Option<(bool, bool)>,
+    pub(crate) start_menu_entry: Option<super::display_text_init::DisplayTextInit>,
     /// Dark-cave palette state (wMapPalOffset): set on entering Rock Tunnel,
     /// cleared by FLASH or by leaving. The darkened *rendering* is a
     /// renderer-side follow-up; this tracks the logic state.
@@ -1497,6 +1499,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             boulder_dust: presentation::BoulderDustState::inactive(),
             boulder_push: None,
             boulder_resume_input: None,
+            boulder_resume_poll: None,
+            start_menu_entry: None,
             dark_cave,
             forced_bike: forced_bike::ForcedBikeState::default(),
             flash_lit_frames: 0,
@@ -2994,6 +2998,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.boulder_dust = presentation::BoulderDustState::inactive();
             self.boulder_push = None;
             self.boulder_resume_input = None;
+            self.boulder_resume_poll = None;
+            self.start_menu_entry = None;
             // A mid-cutscene map change (e.g. the departure's walk-out warp)
             // must not carry the animation into the next map.
             self.ship_departure = None;

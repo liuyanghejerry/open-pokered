@@ -306,6 +306,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.source_foreground.as_ref()
     }
 
+    pub fn take_start_menu_entry(&mut self) -> Option<super::display_text_init::DisplayTextInit> {
+        self.start_menu_entry.take()
+    }
+    /// The field Joypad really executed before this menu call; preserve its
+    /// ledger instead of retiring it as an unmodeled owner.
+    pub fn claim_start_menu_foreground(&mut self) {
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Field;
+    }
+
     /// A real unmodeled owner invalidates knowledge without fabricating a poll.
     /// The next ordinary field poll may record a new real observation while
     /// the unsupported caller retains its legacy edge API.
@@ -489,6 +498,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     fn update_frame_inner(&mut self, input: OverworldInput, physical_buttons: u8) -> ScreenAction {
+        let legacy_boulder_raw = if self.boulder_resume_poll.is_none() {
+            self.boulder_resume_input.and_then(|retained| {
+                self.source_foreground.as_ref().map(|owner| owner.raw()).or_else(|| {
+                    // Older normal-game captures predate the raw ledger. A
+                    // retained START is unfiltered (soft reset suppresses it).
+                    retained.start.then(|| crate::foreground_input::ForegroundJoypad::field_buttons(retained))
+                })
+            })
+        } else { None };
+        self.start_menu_entry = None;
         self.frame_counter = self.frame_counter.wrapping_add(1);
         if let Some(owner) = self.source_foreground.as_mut() {
             owner.read_raw(physical_buttons);
@@ -568,6 +587,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 if push.frame == presentation::BoulderPushState::COMPLETION_FRAME {
                     // Joypad resumes with the completion script. The following
                     // CPU work reaches the next LCD frame before handling it.
+                    // Record the actual completion-frame Joypad once. The
+                    // following continuation must not poll a newer raw byte.
+                    self.boulder_resume_poll = match self.sample_idle_field_buttons(input, physical_buttons) {
+                        Ok(poll) => Some(poll),
+                        Err(error) => { self.source_foreground_error = Some(error); return ScreenAction::Continue; }
+                    };
                     self.boulder_resume_input=Some(input);
                     self.field_loop_wait=0;
                     return ScreenAction::Continue;
@@ -575,6 +600,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
         }
         let resumed_boulder=self.boulder_resume_input.take();
+        let resumed_poll=self.boulder_resume_poll.take();
         let input=resumed_boulder.unwrap_or(input);
 
         // ITEMFINDER: PlaySoundWaitForCurrent blocks for the exact lifetime of
@@ -1733,7 +1759,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // A short START pulse during the step is discarded; a held START
         // becomes a fresh press at the next idle sample. START precedes A.
         let (control_start_just_pressed, control_a_just_pressed) =
-            match self.sample_idle_field_buttons(input, physical_buttons) {
+            match resumed_poll.map(Ok).unwrap_or_else(|| self.sample_idle_field_buttons(input, legacy_boulder_raw.unwrap_or(physical_buttons))) {
                 Ok(buttons) => buttons,
                 Err(error) => {
                     self.source_foreground_error = Some(error);
@@ -1763,6 +1789,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
 
         if control_start_just_pressed {
+            let mut entry = super::display_text_init::DisplayTextInit::new();
+            // The boulder continuation already crossed one VBlank after its
+            // real Joypad receipt; retain that progress in the same caller.
+            if resumed_boulder.is_some() {
+                entry.advance_vblank();
+                // The dust caller has returned. Its two retained OAM frames
+                // are superseded by DisplayTextIDInit's standing text pose;
+                // do not resume a stale boulder lock after closing the menu.
+                self.boulder_push = None;
+                self.boulder_dust_frames = 0;
+                self.boulder_dust = presentation::BoulderDustState::inactive();
+            }
+            self.start_menu_entry = Some(entry);
             return ScreenAction::Transition(GameScreen::StartMenu);
         }
 
@@ -2027,6 +2066,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.boulder_dust_frames = 0;
                     self.boulder_push = None;
                     self.boulder_resume_input = None;
+                    self.boulder_resume_poll = None;
+                    self.start_menu_entry = None;
                     self.dark_cave.enter_map(new_map);
                     if pokered_data::map_flags::is_city_map(new_map) {
                         self.game_data_requests

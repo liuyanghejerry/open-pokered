@@ -32,6 +32,7 @@ pub mod sprite_update_control_work;
 pub mod vblank_pattern_work;
 pub mod vblank_return_work;
 
+pub mod display_text_init;
 pub mod field_cry;
 pub mod static_encounter;
 pub mod field_cry_continuation;

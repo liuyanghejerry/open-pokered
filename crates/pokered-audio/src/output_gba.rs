@@ -73,8 +73,14 @@ impl AudioOutput {
     pub fn play_badge_bank_quirk(&self) {
         self.manager.borrow_mut().play_badge_bank_quirk()
     }
+    pub fn play_applying_attack_sound(&self, effectiveness: u8) {
+        self.manager.borrow_mut().play_applying_attack_sound(effectiveness)
+    }
     pub fn play_cry(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
         self.manager.borrow_mut().play_cry(id, pitch_mod, tempo_mod)
+    }
+    pub fn play_move_sfx(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
+        self.manager.borrow_mut().play_move_sfx(id, pitch_mod, tempo_mod)
     }
     pub fn play_flute_in_battle(&self) {
         self.manager.borrow_mut().play_flute_in_battle()

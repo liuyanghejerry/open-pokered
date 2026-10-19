@@ -1,0 +1,45 @@
+{
+  "all_pass": true,
+  "before": "master-failures.json",
+  "after": {
+    "binary_identity": {
+      "actual_source": "9fe81b59326ab720141ce7a82ca0d0b4a175ef14",
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+      "sha256": "7fe61a220189ef242f626a9846d532a3e007bf853e0f4349fef58d3672994b70",
+      "command": [
+        "cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "-p",
+        "pokered-app",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "desktop,debug-server",
+        "--message-format=json"
+      ],
+      "settings": {
+        "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+        "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_PROFILE_TEST_DEBUG": "0",
+        "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+        "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+      },
+      "artifact_fresh": false,
+      "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+    },
+    "script_sha256": "9a91608a54b8046e6c108c5a2a964c862e980ef704c3e64300f3b9f8220c9e41",
+    "exit_code": 0,
+    "seed": 42,
+    "speed": 0,
+    "scope": "All existing CLI subsystem scenarios, canonical executable directly; no product or controller source patches."
+  },
+  "after_scenarios_passed": 11,
+  "after_scenarios_total": 11,
+  "same_binary_before_after": true,
+  "game_source_diff_empty": true,
+  "limits": "Validation-driver repair only. This is not a fresh complete playthrough or proof of full original-game parity."
+}

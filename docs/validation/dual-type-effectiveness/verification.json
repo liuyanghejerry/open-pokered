@@ -1,0 +1,474 @@
+{
+  "base": "ce4deb0702cceab4bfafc9e956f45da581f0623a",
+  "original_ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_scope": "Prepared original ROM subroutine operands and readonly completion hooks, not full original gameplay or CPU/raster alignment. Independent native seeded Game battle uses actual A updates, renderer and PCM.",
+  "type_chart_order": {
+    "ordered_rows": 82,
+    "exact_order_and_values_match": true,
+    "source_sha256": "f7f2286029d4fe64c80ed6cc5f5c75ec1f1b8903a9eabd171deab49e23228d39",
+    "native_sha256": "281778b24ffc2a0554c3b1b43b3ef5c0fa71662a6da8792631c1266a9d3c8d2e",
+    "meaning": "Raw-effectiveness helper can use last matching native row because original TypeEffects order is retained. Damage multiplication remains independent."
+  },
+  "original_type_byte_cases": [
+    {
+      "case": "ice-water-flying",
+      "move_type": 25,
+      "defender_types": [
+        21,
+        2
+      ],
+      "input_damage": 100,
+      "damage": 100,
+      "damage_multiplier": 20,
+      "move_missed": 0
+    },
+    {
+      "case": "fire-water-ice",
+      "move_type": 20,
+      "defender_types": [
+        21,
+        25
+      ],
+      "input_damage": 100,
+      "damage": 100,
+      "damage_multiplier": 5,
+      "move_missed": 0
+    },
+    {
+      "case": "poison-grass-poison",
+      "move_type": 3,
+      "defender_types": [
+        22,
+        3
+      ],
+      "input_damage": 100,
+      "damage": 100,
+      "damage_multiplier": 5,
+      "move_missed": 0
+    },
+    {
+      "case": "ground-bug-poison",
+      "move_type": 4,
+      "defender_types": [
+        7,
+        3
+      ],
+      "input_damage": 100,
+      "damage": 100,
+      "damage_multiplier": 20,
+      "move_missed": 0
+    },
+    {
+      "case": "ground-electric-flying",
+      "move_type": 4,
+      "defender_types": [
+        23,
+        2
+      ],
+      "input_damage": 100,
+      "damage": 0,
+      "damage_multiplier": 20,
+      "move_missed": 1
+    },
+    {
+      "case": "normal-ghost-poison",
+      "move_type": 0,
+      "defender_types": [
+        8,
+        3
+      ],
+      "input_damage": 100,
+      "damage": 0,
+      "damage_multiplier": 0,
+      "move_missed": 1
+    },
+    {
+      "case": "ice-dragon-flying",
+      "move_type": 25,
+      "defender_types": [
+        26,
+        2
+      ],
+      "input_damage": 100,
+      "damage": 400,
+      "damage_multiplier": 20,
+      "move_missed": 0
+    },
+    {
+      "case": "fire-fire-fire",
+      "move_type": 20,
+      "defender_types": [
+        20,
+        20
+      ],
+      "input_damage": 100,
+      "damage": 50,
+      "damage_multiplier": 5,
+      "move_missed": 0
+    }
+  ],
+  "original_applying_sound_cases": [
+    {
+      "multiplier_byte": 10,
+      "native_logical_sound_id": 111,
+      "original_header_sound_id": 166,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 166,
+          "frequency_modifier": 32,
+          "tempo_modifier": 48
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 20,
+      "native_logical_sound_id": 121,
+      "original_header_sound_id": 176,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 176,
+          "frequency_modifier": 224,
+          "tempo_modifier": 255
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 5,
+      "native_logical_sound_id": 112,
+      "original_header_sound_id": 167,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 167,
+          "frequency_modifier": 80,
+          "tempo_modifier": 1
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 0,
+      "native_logical_sound_id": null,
+      "original_header_sound_id": null,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 138,
+      "native_logical_sound_id": 111,
+      "original_header_sound_id": 166,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 166,
+          "frequency_modifier": 32,
+          "tempo_modifier": 48
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 148,
+      "native_logical_sound_id": 121,
+      "original_header_sound_id": 176,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 176,
+          "frequency_modifier": 224,
+          "tempo_modifier": 255
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 133,
+      "native_logical_sound_id": 112,
+      "original_header_sound_id": 167,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "PlaySound",
+          "frame": 0,
+          "A": 167,
+          "frequency_modifier": 80,
+          "tempo_modifier": 1
+        }
+      ]
+    },
+    {
+      "multiplier_byte": 128,
+      "native_logical_sound_id": null,
+      "original_header_sound_id": null,
+      "events": [
+        {
+          "routine": "PlayApplyingAttackSound",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        },
+        {
+          "routine": "WaitForSoundToFinish",
+          "frame": 0,
+          "A": 2,
+          "frequency_modifier": 0,
+          "tempo_modifier": 128
+        }
+      ]
+    }
+  ],
+  "original_audio2_modifier_cases": [
+    {
+      "logical_sound_id": 111,
+      "original_header_id": 166,
+      "routine": "Audio2_SetSfxTempo",
+      "frequency_modifier": 32,
+      "tempo_modifier": 48,
+      "result": {
+        "sfx_tempo": 176,
+        "DE": 0
+      }
+    },
+    {
+      "logical_sound_id": 111,
+      "original_header_id": 166,
+      "routine": "Audio2_ApplyFrequencyModifier",
+      "frequency_modifier": 32,
+      "tempo_modifier": 48,
+      "result": {
+        "sfx_tempo": 256,
+        "DE": 1312
+      }
+    },
+    {
+      "logical_sound_id": 121,
+      "original_header_id": 176,
+      "routine": "Audio2_SetSfxTempo",
+      "frequency_modifier": 224,
+      "tempo_modifier": 255,
+      "result": {
+        "sfx_tempo": 383,
+        "DE": 256
+      }
+    },
+    {
+      "logical_sound_id": 121,
+      "original_header_id": 176,
+      "routine": "Audio2_ApplyFrequencyModifier",
+      "frequency_modifier": 224,
+      "tempo_modifier": 255,
+      "result": {
+        "sfx_tempo": 256,
+        "DE": 1504
+      }
+    },
+    {
+      "logical_sound_id": 112,
+      "original_header_id": 167,
+      "routine": "Audio2_SetSfxTempo",
+      "frequency_modifier": 80,
+      "tempo_modifier": 1,
+      "result": {
+        "sfx_tempo": 129,
+        "DE": 0
+      }
+    },
+    {
+      "logical_sound_id": 112,
+      "original_header_id": 167,
+      "routine": "Audio2_ApplyFrequencyModifier",
+      "frequency_modifier": 80,
+      "tempo_modifier": 1,
+      "result": {
+        "sfx_tempo": 256,
+        "DE": 1360
+      }
+    },
+    {
+      "logical_sound_id": null,
+      "original_header_id": 1,
+      "routine": "Audio2_SetSfxTempo",
+      "frequency_modifier": 32,
+      "tempo_modifier": 48,
+      "result": {
+        "sfx_tempo": 256,
+        "DE": 1280
+      }
+    },
+    {
+      "logical_sound_id": null,
+      "original_header_id": 1,
+      "routine": "Audio2_ApplyFrequencyModifier",
+      "frequency_modifier": 32,
+      "tempo_modifier": 48,
+      "result": {
+        "sfx_tempo": 256,
+        "DE": 1280
+      }
+    }
+  ],
+  "native_capture": {
+    "input": "A on ticks divisible by16; otherwise released. Seed42, Mew30/IceBeam vs Gyarados5/Splash; seeded subsystem, not fresh playthrough.",
+    "frame": 219,
+    "initial_images_and_battle_party_states_equal": true,
+    "playerHP_before_after": 107,
+    "enemyHP_before_after": 0,
+    "IceBeam_PP_before_after": 9,
+    "before": "No effectiveness caption; late genericDamage111 atHPdrain withdefaulttempo256.",
+    "after": "It's super effective!; applying SuperEffective121 before HP drain withtempo383; no generic drain or message duplicate.",
+    "after_sound_and_caption_rows": [
+      [
+        127,
+        "MEW used ICE BEAM!",
+        25,
+        121,
+        383,
+        false
+      ],
+      [
+        128,
+        "MEW used ICE BEAM!",
+        25,
+        121,
+        383,
+        true
+      ],
+      [
+        148,
+        "MEW used ICE BEAM!",
+        24,
+        121,
+        383,
+        true
+      ],
+      [
+        219,
+        "It's super effective!",
+        0,
+        0,
+        383,
+        false
+      ]
+    ],
+    "images": {
+      "before": "25a83326f84ff72792b1b4dd18e10328c105a530af569d643e21e374eb2b7463",
+      "after": "ad972f6df2955331bb287ccf7a7e4e459f13af2551618dfb057118c63f515733"
+    }
+  },
+  "checks": {
+    "core": "3144 passed",
+    "audio": "110 passed",
+    "app_desktop_debug_server": "388 passed;40 ignored (controlled captures)",
+    "same_turn_conversion": "earlier hit retains original type byte and hit/miss even after later Conversion",
+    "DirectBattle": "one applying sound, correct tempo, real PCM, before HP loss; no text duplicate"
+  },
+  "remaining_scope": [
+    "This repairs applying-attack cue and the effectiveness caption byte, not every move-command audio modifier.",
+    "Original per-command MoveSound::Sfx pitch/tempo handling and tonal frequency modifier path remain separate audit candidates.",
+    "Failed-move wording on mixed immunity/weakness combinations needs separate source gameplay controls.",
+    "No all-story/all-function or whole original-raster parity claim."
+  ],
+  "noise_timing_scope": "All three applying-hit effects use noise CHAN8. Original Audio2_note_length bypasses Audio2_SetSfxTempo and uses fixed $0100 for CHAN8, as does the native sequencer. Recorded native sfx_tempo is request metadata; it does not prove or imply different audible noise-note duration. Prepared SetSfxTempo controls establish the isolated routine only."
+}

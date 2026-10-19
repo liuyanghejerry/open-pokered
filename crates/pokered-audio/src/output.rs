@@ -129,6 +129,18 @@ impl AudioOutput {
         }
     }
 
+    pub fn play_applying_attack_sound(&self, effectiveness: u8) {
+        self.try_resume();
+        if let Ok(mut manager) = self.manager.lock() { manager.play_applying_attack_sound(effectiveness); }
+    }
+
+    pub fn play_move_sfx(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
+        self.try_resume();
+        if let Ok(mut manager) = self.manager.lock() {
+            manager.play_move_sfx(id, pitch_mod, tempo_mod);
+        }
+    }
+
     /// Play a species cry with pitch/length modifiers (`PlayCry`).
     pub fn play_cry(&self, id: SfxId, pitch_mod: u8, tempo_mod: u8) {
         self.try_resume();

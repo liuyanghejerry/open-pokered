@@ -1,0 +1,97 @@
+{
+  "binary_identity": {
+    "actual_source": "9fe81b59326ab720141ce7a82ca0d0b4a175ef14",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+    "sha256": "7fe61a220189ef242f626a9846d532a3e007bf853e0f4349fef58d3672994b70",
+    "command": [
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "-p",
+      "pokered-app",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "desktop,debug-server",
+      "--message-format=json"
+    ],
+    "settings": {
+      "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+      "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+      "CARGO_INCREMENTAL": "0",
+      "CARGO_PROFILE_DEV_DEBUG": "0",
+      "CARGO_PROFILE_TEST_DEBUG": "0",
+      "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+      "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+    },
+    "artifact_fresh": false,
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "controller_sha256": "48d6ad94f4f2b46e18a3235b5dc5284f05c7d0444c01461245ea1df088d265b5",
+  "seed": 42,
+  "speed": 0,
+  "scope": "Unmodified master scenario functions on actual master binary; observations only.",
+  "cases": [
+    {
+      "case": "s05",
+      "passed": false,
+      "error": "catch failed: still battling after 8 balls",
+      "final_state": {
+        "frame_count": 5339,
+        "screen": "battle",
+        "battle_phase": "ShowingText { messages: [\"RED used\\nPOK\u00e9 BALL!\", \"Shoot! It almost had it!\"], current: 0, wait_frames: 0, next_phase: EnemyFreeTurnAfterItem, backdrop: Battle }",
+        "battle_message": "RED used\nPOK\u00e9 BALL!",
+        "battle_inventory": [
+          {
+            "item": "PokeBall",
+            "qty": 12
+          }
+        ],
+        "field_menu": null,
+        "text_speed_delay_frames": 3
+      }
+    },
+    {
+      "case": "s08",
+      "passed": false,
+      "error": "start-menu",
+      "final_state": {
+        "frame_count": 1872,
+        "screen": "start-menu",
+        "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+        "battle_message": null,
+        "battle_inventory": [],
+        "field_menu": {
+          "cursor": 0,
+          "items": [
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 144,
+          "ready_for_input": true
+        },
+        "text_speed_delay_frames": 3
+      }
+    },
+    {
+      "case": "s09",
+      "passed": false,
+      "error": "text speed never moved: {3: 30}",
+      "final_state": {
+        "frame_count": 2216,
+        "screen": "save",
+        "battle_phase": "Intro { phase: TransitionFlash, wait_frames: 72 }",
+        "battle_message": null,
+        "battle_inventory": [],
+        "field_menu": null,
+        "text_speed_delay_frames": 3
+      }
+    }
+  ]
+}

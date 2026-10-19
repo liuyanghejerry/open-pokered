@@ -182,6 +182,7 @@ struct MonRasterTransfer {
 struct PendingApplying {
     anim_type: AnimationType,
     attacker_is_player: bool,
+    effectiveness: pokered_data::types::Effectiveness,
 }
 
 /// A request to play one animation-command sound, surfaced to the frontend
@@ -455,6 +456,7 @@ pub struct BattleVisualEffects {
     /// play it (PlayAnimation/PlaySubanimation call GetMoveSound+PlaySound
     /// once per command).
     pending_move_sfx: Option<AnimSfxRequest>,
+    pending_applying_sound: Option<pokered_data::types::Effectiveness>,
     /// wOptions BIT_BATTLE_ANIMATION: set by the frontend every frame.
     /// When false, move animations (and their per-command sounds) are
     /// skipped; MoveAnimation instead waits 30 frames and runs only the
@@ -467,6 +469,9 @@ pub struct BattleVisualEffects {
     /// MoveAnimation opens with WaitForSoundToFinish — the animation does
     /// not start until the previous sound (e.g. the send-out cry) ends.
     pub sfx_playing: bool,
+    /// An audio owner will consume this update's command request. Standalone
+    /// visual captures have no such owner and cannot wait on an undrained receipt.
+    pub audio_available: bool,
     /// Animation start deferred by WaitForSoundToFinish
     /// ((animation id, player_is_attacker)).
     pending_anim_start: Option<(usize, bool)>,
@@ -687,6 +692,7 @@ impl BattleVisualEffects {
         self.bg_palette.reset();
         self.current_attacker_species = pokered_data::species::Species::Rhydon;
         self.pending_applying = None;
+        self.pending_applying_sound = None;
         self.pending_anim_start = None;
         self.suppress_hit_flash = false;
         self.anim_player
@@ -748,7 +754,7 @@ impl BattleVisualEffects {
             6=>AnimationType::ShakeScreenHorizontallySlow2,
             _=>AnimationType::None,
         };
-        self.pending_applying=(kind!=0).then_some(PendingApplying{anim_type,attacker_is_player:player});
+        self.pending_applying=(kind!=0).then_some(PendingApplying{anim_type,attacker_is_player:player,effectiveness:pokered_data::types::Effectiveness::Normal});
     }
 
     pub(crate) fn move_animation_capture_state(&self) -> MoveAnimationCaptureState {
@@ -881,6 +887,10 @@ impl BattleVisualEffects {
         self.anim_layer_pending.clear();
     }
 
+    pub fn take_applying_attack_sound(&mut self) -> Option<pokered_data::types::Effectiveness> {
+        self.pending_applying_sound.take()
+    }
+
     /// Take the pending animation-command sound request, if any.
     pub fn take_move_sfx(&mut self) -> Option<AnimSfxRequest> {
         self.pending_move_sfx.take()
@@ -921,9 +931,11 @@ impl Default for BattleVisualEffects {
             pending_applying: None,
             applying_motion: None,
             pending_move_sfx: None,
+            pending_applying_sound: None,
             animations_enabled: true,
             anim_disabled_wait: 0,
             sfx_playing: false,
+            audio_available: false,
             pending_anim_start: None,
             suppress_hit_flash: false,
             player_sub_flag: false,
@@ -1255,6 +1267,18 @@ impl BattleVisualEffects {
         }
     }
 
+    fn finish_move_with_applying_feedback(&mut self) {
+        if self.suppress_hit_flash { self.pending_applying = None; return; }
+        let Some(pending) = self.pending_applying else { return; };
+        let plays_sound = matches!(pending.anim_type as u8, 1 | 2 | 4 | 5);
+        // PlayApplyingAttackSound waits for the previous command sound. A
+        // command emitted in this update has not yet reached the audio owner.
+        if plays_sound && (self.sfx_playing || (self.audio_available && self.pending_move_sfx.is_some())) { return; }
+        self.pending_applying = None;
+        if plays_sound { self.pending_applying_sound = Some(pending.effectiveness); }
+        self.run_applying_attack_feedback(pending.anim_type, pending.attacker_is_player);
+    }
+
     fn run_applying_attack_feedback(&mut self, anim_type: AnimationType, attacker_is_player: bool) {
         let kind=anim_type as u8;
         if kind==0 { return; }
@@ -1396,6 +1420,7 @@ impl BattleVisualEffects {
                         self.pending_applying = (!missed).then(|| PendingApplying {
                             anim_type: Self::classify_applying_attack(move_id, player_is_attacker),
                             attacker_is_player: player_is_attacker,
+                            effectiveness: screen.presentation.current_hit_effectiveness(),
                         });
                     }
                 }
@@ -2145,16 +2170,7 @@ impl BattleVisualEffects {
         if self.anim_disabled_wait > 0 {
             self.anim_disabled_wait -= 1;
             if self.anim_disabled_wait == 0 {
-                if !self.suppress_hit_flash {
-                    if let Some(pending) = self.pending_applying.take() {
-                        self.run_applying_attack_feedback(
-                            pending.anim_type,
-                            pending.attacker_is_player,
-                        );
-                    }
-                } else {
-                    self.pending_applying = None;
-                }
+                self.finish_move_with_applying_feedback();
             }
             return;
         }
@@ -2164,7 +2180,8 @@ impl BattleVisualEffects {
         // drain HP or start the next actor's move.
         if self.anim_player.is_finished() {
             self.anim_layer.clear();
-            self.anim_wait = self.anim_wait.saturating_sub(1);
+            if self.pending_applying.is_some() { self.finish_move_with_applying_feedback(); }
+            else { self.anim_wait = self.anim_wait.saturating_sub(1); }
             return;
         }
 
@@ -2214,16 +2231,7 @@ impl BattleVisualEffects {
                     if !self.anim_player.preserves_oam_when_finished() {
                         self.anim_layer_pending.clear();
                     }
-                    if !self.suppress_hit_flash {
-                        if let Some(pending) = self.pending_applying.take() {
-                            self.run_applying_attack_feedback(
-                                pending.anim_type,
-                                pending.attacker_is_player,
-                            );
-                        }
-                    } else {
-                        self.pending_applying = None;
-                    }
+                    self.finish_move_with_applying_feedback();
                     return;
                 }
             }
@@ -6372,3 +6380,30 @@ mod old_man_render_tests {
 #[cfg(test)]
 #[path = "battle_faint_tests.rs"]
 mod faint_tests;
+
+#[cfg(test)]
+mod applying_audio_owner_tests {
+    use super::*;
+    #[test]
+    fn applying_waits_for_new_command_and_busy_owner_then_emits_once() {
+        let mut effects=BattleVisualEffects::default();
+        effects.audio_available=true;
+        effects.pending_applying=Some(PendingApplying {
+            anim_type:AnimationType::BlinkEnemyMonSprite,attacker_is_player:true,
+            effectiveness:pokered_data::types::Effectiveness::SuperEffective,
+        });
+        effects.pending_move_sfx=Some(AnimSfxRequest {sound_move:MoveId::LeechSeed as u8,
+            anim_move:MoveId::Tackle,attacker_species:pokered_data::species::Species::Mew});
+        effects.finish_move_with_applying_feedback();
+        assert!(effects.applying_motion.is_none());
+        assert!(effects.take_applying_attack_sound().is_none());
+        effects.take_move_sfx();effects.sfx_playing=true;
+        effects.finish_move_with_applying_feedback();
+        assert!(effects.applying_motion.is_none());
+        effects.sfx_playing=false;effects.finish_move_with_applying_feedback();
+        assert!(effects.applying_motion.is_some());
+        assert_eq!(effects.take_applying_attack_sound(),Some(pokered_data::types::Effectiveness::SuperEffective));
+        effects.finish_move_with_applying_feedback();
+        assert!(effects.take_applying_attack_sound().is_none());
+    }
+}

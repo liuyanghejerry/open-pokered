@@ -7,9 +7,11 @@ use pokered_data::ui_layout::schema::{Justify, SizeMode, StartDefaultLayout};
 use crate::engine::{InkColor, Painter, Rgba, TilePos, TileRect, Ui};
 
 pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &StartDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
+    let (border_visible, published_rows) = state.entry_visual();
+    if !border_visible { return; }
     // PrintSafariZoneSteps (player_state.asm:219-255): inside the Safari Zone
     // a small box at (0,0) shows "NNN/500" and "BALL×× NN" before the menu.
-    if let Some(info) = state.safari_info {
+    if let Some(info) = state.safari_info.filter(|_| published_rows != 0) {
         // Interior 7×3 plus its borders (player_state.asm:225): the labels
         // land at screen (1,1) and (1,3). The earlier 7×4 TOTAL box had only
         // two interior rows, pushing the ball row onto the bottom border.
@@ -71,6 +73,14 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
             frame.cursor_glyph_at(0, cur_y, cursor.glyph, cursor.color);
         }
     });
+    // AutoBGTransfer publishes DrawStartMenu in three six-row bands while
+    // HandleMenuInput waits Delay3. Erase unpublished interior rows without
+    // allocating another framebuffer; the earlier border remains visible.
+    let top = ((rect.ty + 1) * 8).max(published_rows);
+    let bottom = (rect.ty + rect.th.saturating_sub(1)) * 8;
+    if top < bottom {
+        ui.painter().draw_pixel_rect((rect.tx + 1) * 8, top, rect.tw.saturating_sub(2) * 8, bottom - top, Rgba::INK_WHITE);
+    }
 }
 
 /// Repaint only the changed cursor cells of an already-rendered START menu.

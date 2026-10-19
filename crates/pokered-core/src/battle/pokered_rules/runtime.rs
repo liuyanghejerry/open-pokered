@@ -110,9 +110,20 @@ pub fn effectiveness_category(move_type: PokemonType, def1: PokemonType, def2: P
     }
 }
 
-/// The move-announcement block for one mover, matching `format_move_outcome`.
+/// DisplayEffectiveness reads the last matching TypeEffects row. The damage
+/// calculation still multiplies both defending types; Gen I's message byte is
+/// overwritten for each match, so opposing weaknesses can yield neutral damage
+/// with a non-neutral message. TYPE_CHART retains the original ROM row order.
+pub(super) fn displayed_effectiveness(move_type: PokemonType, def1: PokemonType, def2: PokemonType) -> Effectiveness {
+    pokered_data::type_chart::TYPE_CHART.iter().rev()
+        .find(|row| row.attacker == move_type && (row.defender == def1 || row.defender == def2))
+        .map_or(Effectiveness::Normal, |row| row.effectiveness)
+}
+
+/// Move announcement and original failure-text selection with both party names.
 pub fn move_announcement(
     side_name: &str,
+    target_name: &str,
     move_name: &str,
     crit: bool,
     missed: bool,
@@ -123,6 +134,12 @@ pub fn move_announcement(
         return vec![format!("{} {}", side_name, reason)];
     }
     let mut msgs = vec![format!("{} used {}!", side_name, move_name)];
+    // PrintMoveFailureText selects zero effectiveness before its critical/OHKO
+    // branch. This outcome also precedes generic accuracy-miss narration.
+    if eff == Effectiveness::NoEffect {
+        msgs.push(format!("It doesn't affect\n{target_name}!"));
+        return msgs;
+    }
     if missed {
         msgs.push(format!("{}'s attack missed!", side_name));
         return msgs;
@@ -133,8 +150,7 @@ pub fn move_announcement(
     match eff {
         Effectiveness::SuperEffective => msgs.push("It's super effective!".to_string()),
         Effectiveness::NotVeryEffective => msgs.push("It's not very effective...".to_string()),
-        Effectiveness::NoEffect => msgs.push("It doesn't affect the enemy!".to_string()),
-        Effectiveness::Normal => {}
+        Effectiveness::NoEffect | Effectiveness::Normal => {}
     }
     msgs
 }
@@ -236,17 +252,9 @@ fn narration_types(
         .unwrap_or((PokemonType::Normal, PokemonType::Normal))
 }
 
-pub(crate) fn move_is_immune(state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], actor: BattlerRef, move_id: MoveId) -> bool {
-    if effects.iter().any(|effect|effect.host==actor && matches!(effect.kind,PokeVolatile::Charging { .. })) { return false; }
-    let md=move_data(move_id);
-    let (one,two)=narration_types(effects,state,opp_ref(actor));
-    md.power>0 && effectiveness_category(md.move_type,one,two)==Effectiveness::NoEffect
-}
-
-/// Walk the whole `TurnLog` → the production per-turn text lines. `effects` is the
-/// post-turn arena, consulted so the effectiveness message honours a Conversion
-/// `TypeOverride` on the defender (the damage already does); pass `&[]` when no
-/// override can be live.
+/// Walk the whole `TurnLog` → production text. Actual-action receipts retain
+/// type display bytes across later Conversion. `effects` supplies the fallback
+/// for synthetic logs and other narration about the post-turn arena.
 pub fn translate_turn(
     log: &TurnLog<PokeredRules>,
     state: &EngineState<PokeredRules>,
@@ -290,16 +298,36 @@ pub(crate) fn translate_turn_named_with_faints(
                         _ => {}
                     }
                 }
+                missed |= super::presented_move_missed(actor.side == 0, *move_) == Some(true);
                 let md = move_data(*move_);
                 let (d1, d2) = narration_types(effects, state, opp_ref(actor));
-                // Type effectiveness text belongs to applied move damage,
-                // never a status move or a charge-only turn.
+                // A failed ordinary attack also uses its captured display byte:
+                // zero names the immune target, nonzero prints an attack miss.
                 let dealt_damage = evs[i + 1..].iter()
                     .take_while(|event| !matches!(event, TurnEvent::MoveUsed { .. } | TurnEvent::Blocked { .. }))
                     .any(|event| matches!(event, TurnEvent::Damaged { target, cause: None, .. } if *target == opp_ref(actor)));
-                let eff = if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
-                    else if dealt_damage { effectiveness_category(md.move_type, d1, d2) } else { Effectiveness::Normal };
-                if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
+                let eff = if dealt_damage || missed {
+                    if super::is_special_damage_effect(md.effect) || matches!(move_, MoveId::Counter | MoveId::Psywave) {
+                        Effectiveness::Normal
+                    } else {
+                        super::presented_effectiveness(actor.side == 0, *move_)
+                            .unwrap_or_else(|| displayed_effectiveness(md.move_type, d1, d2))
+                    }
+                } else { Effectiveness::Normal };
+                if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
+                    let target_name = display_name_named(state, opp_ref(actor), names);
+                    if super::ohko::speed_failed(actor, *move_) {
+                        msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
+                        msgs.push(format!("{target_name}'s\nunaffected!"));
+                    } else {
+                        let eff = super::presented_effectiveness(actor.side == 0, *move_)
+                            .unwrap_or(Effectiveness::Normal);
+                        let mut announcement = move_announcement(&display_name_named(state, actor, names), &target_name,
+                            move_name(*move_, false), false, missed, eff, None);
+                        if !missed { announcement.insert(1, "One-hit KO!".to_string()); }
+                        msgs.extend(announcement);
+                    }
+                } else if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
                     msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
                     let target_name = display_name_named(state, opp_ref(actor), names);
                     if missed {
@@ -313,7 +341,7 @@ pub(crate) fn translate_turn_named_with_faints(
                         });
                     }
                 } else {
-                    msgs.extend(move_announcement(&display_name_named(state, actor, names), move_name(*move_, false), crit, missed, eff, None));
+                    msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
                 }
                 // PayDayEffect runs after this action's applied/substitute
                 // damage and before faint handling, not at the end of the turn.
@@ -786,14 +814,64 @@ mod tests {
     }
 
     #[test]
+    fn dual_type_narration_uses_original_last_matching_chart_entry() {
+        use crate::battle::state::{new_battle_state, BattleType};
+        use crate::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::species::Species;
+        for (move_id, defender, expected) in [
+            (MoveId::IceBeam, Species::Gyarados, "It's super effective!"),
+            (MoveId::Flamethrower, Species::Dewgong, "It's not very effective..."),
+            (MoveId::Sludge, Species::Venusaur, "It's not very effective..."),
+            (MoveId::Earthquake, Species::Venomoth, "It's super effective!"),
+        ] {
+            let mon = |species| create_pokemon_with_moves(species, 30, [0x99, 0x88],
+                [move_id, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+            let legacy = new_battle_state(BattleType::Wild, vec![mon(Species::Mew)], vec![mon(defender)]);
+            let (state, effects) = engine_state_from_legacy(&legacy);
+            let stats = get_base_stats(defender).unwrap();
+            assert_eq!(effectiveness_category(move_data(move_id).move_type, stats.type1, stats.type2),
+                Effectiveness::Normal, "these examples deal neutral damage");
+            let mut log = TurnLog::new();
+            log.push(TurnEvent::MoveUsed {actor: BattlerRef::PLAYER, move_: move_id});
+            log.push(TurnEvent::Damaged {target: BattlerRef::OPPONENT, amount: 1, cause: None});
+            let text = translate_turn(&log, &state, &effects);
+            assert!(text.iter().any(|line| line == expected), "{move_id:?} vs {defender:?}: {text:?}");
+        }
+    }
+
+    #[test]
+    fn fixed_damage_does_not_gain_a_type_effectiveness_caption() {
+        use crate::battle::state::{new_battle_state, BattleType};
+        use crate::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::species::Species;
+        let mon=|species| create_pokemon_with_moves(species,30,[0x99,0x88],
+            [MoveId::SeismicToss,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+        let legacy=new_battle_state(BattleType::Wild,vec![mon(Species::Mew)],vec![mon(Species::Snorlax)]);
+        let (state,effects)=engine_state_from_legacy(&legacy);
+        let mut log=TurnLog::new();
+        log.push(TurnEvent::MoveUsed {actor:BattlerRef::PLAYER,move_:MoveId::SeismicToss});
+        log.push(TurnEvent::Damaged {target:BattlerRef::OPPONENT,amount:30,cause:None});
+        let text=translate_turn(&log,&state,&effects);
+        assert!(!text.iter().any(|line|line.contains("effective")),"{text:?}");
+    }
+
+    #[test]
     fn move_announcement_wording() {
         assert_eq!(
-            move_announcement("PIKACHU", "TACKLE", true, false, Effectiveness::SuperEffective, None),
+            move_announcement("PIKACHU", "Enemy RATTATA", "TACKLE", true, false, Effectiveness::SuperEffective, None),
             vec!["PIKACHU used TACKLE!", "Critical hit!", "It's super effective!"]
         );
         assert_eq!(
-            move_announcement("SNORLAX", "TACKLE", false, false, Effectiveness::Normal, Some("is fast asleep!")),
+            move_announcement("SNORLAX", "Enemy RATTATA", "TACKLE", false, false, Effectiveness::Normal, Some("is fast asleep!")),
             vec!["SNORLAX is fast asleep!"]
+        );
+    }
+
+    #[test]
+    fn zero_effectiveness_failure_precedes_miss_and_critical_text() {
+        assert_eq!(
+            move_announcement("PIKACHU", "MOLE", "THUNDERSHOCK", true, true, Effectiveness::NoEffect, None),
+            vec!["PIKACHU used THUNDERSHOCK!", "It doesn't affect\nMOLE!"]
         );
     }
 

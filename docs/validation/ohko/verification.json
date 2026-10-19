@@ -1,0 +1,112 @@
+{
+  "implementation_commit": "af3cc415b49e751eef319bdee56c424eaaf17e50",
+  "core": {
+    "library_passed": 3152,
+    "all_passed": 3565,
+    "existing_ignored": 1
+  },
+  "app": {
+    "library_passed": 380,
+    "all_passed": 874,
+    "existing_ignored_in_full_run": 88,
+    "note": "Full invocation includes duplicated library/binary coverage."
+  },
+  "GBA": {
+    "source": "af3cc415b49e751eef319bdee56c424eaaf17e50",
+    "command": [
+      "cargo",
+      "+nightly-2025-12-07",
+      "build",
+      "--offline",
+      "--release",
+      "--features",
+      "perf-benchmark"
+    ],
+    "manifest_restored_after_build": true,
+    "elf": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba",
+    "elf_sha256": "5a66b408e8cd46285943008b3691514a4078a02857f8af03562e339fc38d4fa3",
+    "rom": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba",
+    "rom_sha256": "1bc55136f9515a6925641d72b5e9a971ce3600c902ed3d3dae26244f1731bc12",
+    "features": [
+      "perf-benchmark"
+    ],
+    "diagnostic_controller_patch": false
+  },
+  "performance": {
+    "pass": true,
+    "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+    "limits": "Unchanged checked-in baseline, default 15% regression and 25 tick floor.",
+    "scope": "Default autopilot-v1 baseline; not OHKO gameplay proof."
+  },
+  "pending": [
+    "All original published-head CI before merge."
+  ],
+  "original_controls": "original-cpu-controls.json contains 8 prepared original subroutine cases; not full original battle/raster/RNG-order evidence.",
+  "CLI_focused": {
+    "passed": 4,
+    "proof": "screenshots.json",
+    "actual_source": "f10a08526e390c7ad4aaadcb1df8112154447272",
+    "cases": "Two immunity cases after actual X Accuracy use, nonimmune KO control, slower user failure."
+  },
+  "CLI_scenarios_historical": {
+    "passed": 8,
+    "total": 11,
+    "seed": 42,
+    "speed": 0,
+    "failed": [
+      "s05-wild-catch",
+      "s08-start-menu",
+      "s09-options"
+    ],
+    "state": "Investigation in progress; not presented as green. Separate same-input master reproduction and driver correction required."
+  },
+  "CLI_scenarios": {
+    "passed": 11,
+    "total": 11,
+    "verification": {
+      "binary_identity": {
+        "actual_source": "9c0aed53bcca978de34cf90814e61a2015f40781",
+        "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app",
+        "sha256": "7766cff6fb1e6bd571d482c07dffb42e5c2d00337d95f9fae81565fe39316708",
+        "command": [
+          "cargo",
+          "build",
+          "--offline",
+          "--locked",
+          "-p",
+          "pokered-app",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "desktop,debug-server",
+          "--message-format=json"
+        ],
+        "settings": {
+          "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+          "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+          "CARGO_INCREMENTAL": "0",
+          "CARGO_PROFILE_DEV_DEBUG": "0",
+          "CARGO_PROFILE_TEST_DEBUG": "0",
+          "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+          "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+        },
+        "artifact_fresh": false,
+        "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+      },
+      "script_sha256": "9a91608a54b8046e6c108c5a2a964c862e980ef704c3e64300f3b9f8220c9e41",
+      "exit_code": 0,
+      "seed": 42,
+      "speed": 0,
+      "scope": "All existing CLI subsystem scenarios, canonical executable directly; no product or controller source patches."
+    },
+    "log": "cli-scenarios.log",
+    "scope": "Final OHKO game binary with the independently merged PR331 driver; all scenarios retained."
+  },
+  "source_relationship": {
+    "tested_game_crates_byte_equal_to_f10": true,
+    "captured_after_binary_sha_equal_to_final_candidate": true,
+    "current_master_game_crates_and_capture_driver_byte_equal_to_captured_master9fe": true,
+    "current_master": "c066ce0f124385da7c557fbc2ca11002480b1f42",
+    "final_native_build_source": "9c0aed53bcca978de34cf90814e61a2015f40781"
+  }
+}

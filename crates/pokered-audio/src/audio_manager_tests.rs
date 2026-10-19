@@ -304,6 +304,73 @@ fn test_play_cry_applies_modifiers() {
     assert!(mgr.is_sfx_playing());
     assert_eq!(mgr.sequencer.sfx_tempo, 0x0140);
     assert_eq!(mgr.sequencer.frequency_modifier, 0x20);
+    mgr.apu.write_register(0xff26, 0x80);
+    let mut normal = AudioManager::new();
+    normal.apu.write_register(0xff26, 0x80);
+    normal.play_cry(SfxId::Cry00, 0, 0xc0);
+    mgr.update_frame();
+    normal.update_frame();
+    for ch in 4..6 {
+        let base = normal.sequencer.channels[ch].frequency;
+        assert_ne!(base, 0, "positive control: a tonal cry note executed");
+        assert_eq!(mgr.sequencer.channels[ch].frequency, base.wrapping_add(0x20));
+    }
+    assert_eq!(mgr.apu.ch1.freq_reg, (normal.apu.ch1.freq_reg + 0x20) & 0x7ff);
+    assert_eq!(mgr.apu.ch2.freq_reg, (normal.apu.ch2.freq_reg + 0x20) & 0x7ff);
+}
+
+#[test]
+fn move_sfx_modifiers_reach_tonal_notes_without_changing_noise_timing() {
+    // Source Audio2 note-length controls: PayDay $17f, HornAttack $e0,
+    // FuryAttack $c0. Pure CHAN8 FirePunch retains fixed $100 note timing.
+    for (id, pitch, tempo, expected_tempo) in [
+        (SfxId::SilphScope, 0, 0xff, 0x17f),
+        (SfxId::Battle1E, 0, 0x60, 0xe0),
+        (SfxId::Battle1E, 1, 0x40, 0xc0),
+    ] {
+        let mut modified = AudioManager::new();
+        let mut normal = AudioManager::new();
+        modified.play_move_sfx(id, pitch, tempo);
+        normal.play_sfx(id);
+        assert_eq!(modified.sequencer.sfx_tempo, expected_tempo);
+        modified.update_frame();
+        normal.update_frame();
+        let base = normal.sequencer.channels[4].frequency;
+        assert_ne!(base, 0);
+        assert_eq!(modified.sequencer.channels[4].frequency, base + pitch as u16);
+        let duration = |manager: &AudioManager| {
+            let channel = &manager.sequencer.channels[4];
+            channel.delay_counter as u32 * 256 + channel.delay_frac as u32
+        };
+        // A one-frame note can retain the same integer delay while its
+        // fractional carry changes the following note's start time.
+        assert_eq!(duration(&modified), duration(&normal) * expected_tempo as u32 / 256);
+        assert_ne!(duration(&modified), duration(&normal));
+    }
+    let mut modified = AudioManager::new();
+    let mut normal = AudioManager::new();
+    modified.play_move_sfx(SfxId::Battle0D, 0x10, 0x60);
+    normal.play_sfx(SfxId::Battle0D);
+    modified.update_frame();
+    normal.update_frame();
+    assert_ne!(normal.sequencer.channels[7].delay_counter, 0);
+    assert_eq!(modified.sequencer.channels[7].frequency, normal.sequencer.channels[7].frequency);
+    assert_eq!(modified.sequencer.channels[7].delay_counter, normal.sequencer.channels[7].delay_counter);
+}
+
+#[test]
+fn move_sfx_respects_low_health_and_non_battle_sound_controls() {
+    let mut manager = AudioManager::new();
+    manager.set_low_health_alarm(true);
+    manager.play_move_sfx(SfxId::SilphScope, 0x20, 0xff);
+    assert!(!manager.is_sfx_playing());
+    manager.play_move_sfx(SfxId::Battle0D, 0x10, 0x60);
+    assert!(manager.is_sfx_playing(), "noise can still play under the alarm");
+    manager.stop_sfx();
+    manager.set_low_health_alarm(false);
+    manager.play_move_sfx(SfxId::PressAB, 0x20, 0x40);
+    assert_eq!(manager.sequencer.sfx_tempo, 0x100);
+    assert_eq!(manager.sequencer.frequency_modifier, 0);
 }
 
 #[test]
@@ -1045,5 +1112,24 @@ mod real_perfect_pitch_base_tests {
     #[test]
     fn silph_perfect_pitch_is_retained_as_the_vibrato_base() {
         check_real_pitch_base(MusicId::SILPH_CO);
+    }
+}
+
+#[test]
+fn applying_attack_sound_uses_original_audio2_tempo_and_stab_mask() {
+    for (factor, id, tempo) in [(10, SfxId::Damage, 0xb0),
+        (20, SfxId::SuperEffective, 0x17f), (5, SfxId::NotVeryEffective, 0x81)] {
+        for stab in [0, 0x80] {
+            let mut manager = AudioManager::new();
+            manager.play_applying_attack_sound(factor | stab);
+            assert_eq!(manager.sequencer.current_sfx_id, id as u8);
+            assert_eq!(manager.sequencer.sfx_tempo, tempo);
+            assert!(manager.is_sfx_playing());
+        }
+    }
+    for factor in [0, 0x80] {
+        let mut manager = AudioManager::new();
+        manager.play_applying_attack_sound(factor);
+        assert!(!manager.is_sfx_playing());
     }
 }

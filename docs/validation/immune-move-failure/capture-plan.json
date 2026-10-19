@@ -1,0 +1,862 @@
+{
+  "seed": 42,
+  "settle_frames": 40,
+  "scope": "Same native saved fixtures and A timelines before/after; does not claim original raster alignment.",
+  "cases": [
+    {
+      "name": "earthquake-zapdos",
+      "fixture": "earthquake.json",
+      "target": "Zapdos",
+      "target_level": 5,
+      "before": "It doesn't affect the enemy!",
+      "after": "MEW's attack missed!",
+      "inputs": [
+        {
+          "frame": 608,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 630,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 652,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 674,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 696,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 718,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 740,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 762,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 784,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 806,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 828,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 850,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 872,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 894,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 916,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 938,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 960,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 982,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1004,
+          "button": "a",
+          "gap": 10
+        }
+      ]
+    },
+    {
+      "name": "earthquake-pidgey",
+      "fixture": "earthquake.json",
+      "target": "Pidgey",
+      "target_level": 5,
+      "before": "It doesn't affect the enemy!",
+      "after": "It doesn't affect\nEnemy PIDGEY!",
+      "inputs": [
+        {
+          "frame": 608,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 630,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 652,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 674,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 696,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 718,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 740,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 762,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 784,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 806,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 828,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 850,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 872,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 894,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 916,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 938,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 960,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 982,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1004,
+          "button": "a",
+          "gap": 10
+        }
+      ]
+    },
+    {
+      "name": "enemy-thundershock-dugtrio",
+      "fixture": "dugtrio.json",
+      "target": "Pikachu",
+      "target_level": 5,
+      "before": "It doesn't affect the enemy!",
+      "after": "It doesn't affect\nDUGTRIO!",
+      "inputs": [
+        {
+          "frame": 608,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 630,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 652,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 674,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 696,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 718,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 740,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 762,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 784,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 806,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 828,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 850,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 872,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 894,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 916,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 938,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 960,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 982,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1004,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1026,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1048,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1070,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1092,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1114,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1136,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1158,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1180,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1202,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1224,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1246,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1268,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1290,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1312,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1334,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1356,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1378,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1400,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1422,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1444,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1466,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1488,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1510,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1532,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1554,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1576,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1598,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1620,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1642,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1664,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1686,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1708,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1730,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1752,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1774,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1796,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1818,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1840,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1862,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1884,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1906,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1928,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1950,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1972,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 1994,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2016,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2038,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2060,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2082,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2104,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2126,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2148,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2170,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2192,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2214,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2236,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2258,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2280,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2302,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2324,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2346,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2368,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2390,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2412,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2434,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2456,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2478,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2500,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2522,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2544,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2566,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2588,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2610,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2632,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2654,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2676,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2698,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2720,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2742,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2764,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2786,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2808,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2830,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2852,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2874,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2896,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2918,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2940,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2962,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 2984,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3006,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3028,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3050,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3072,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3094,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3116,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3138,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3160,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3182,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3204,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3226,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3248,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3270,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3292,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3314,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3336,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3358,
+          "button": "a",
+          "gap": 10
+        },
+        {
+          "frame": 3380,
+          "button": "a",
+          "gap": 10
+        }
+      ]
+    }
+  ]
+}

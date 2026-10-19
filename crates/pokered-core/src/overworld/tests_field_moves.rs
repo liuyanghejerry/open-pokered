@@ -1286,3 +1286,36 @@ fn door_exit_uses_simulated_down_and_the_foreground_walk_clock() {
     assert_eq!(screen.player_last_stop_direction, 4);
     assert!(screen.check_player_turn);
 }
+
+#[test]
+fn boulder_start_menu_handoff_preserves_the_real_poll_across_snapshot() {
+    use crate::foreground_input::START;
+    use crate::game_state::{GameScreen, ScreenAction};
+    use crate::snapshot::OverworldSnapshot;
+    let mut screen = screen_on(MapId::PalletTown);
+    fill_map_with_passable_block(&mut screen);
+    screen.state.player.x = 5;
+    screen.state.player.y = 5;
+    screen.state.player.facing = Direction::Down;
+    screen.npc_states.clear();
+    screen.npc_states.push(make_boulder(5,6));
+    screen.strength_active = true;
+    screen.tick_boulder_push(Some(Direction::Down));
+    screen.tick_boulder_push(Some(Direction::Down));
+    for _ in 1..presentation::BoulderPushState::COMPLETION_FRAME {
+        screen.advance_boulder_push();
+    }
+    let start = OverworldInput::new(false,false,false,false,false,false,true,false);
+    assert!(matches!(screen.update_frame_with_physical_buttons(start, START), ScreenAction::Continue));
+    assert_eq!(screen.foreground_observation().unwrap().last(), Some(START));
+    assert_eq!(screen.boulder_resume_poll, Some((true,false)));
+    let snapshot = OverworldSnapshot::capture(&screen);
+    let snapshot: OverworldSnapshot = serde_json::from_value(serde_json::to_value(snapshot).unwrap()).unwrap();
+    let mut resumed = screen_on(MapId::PalletTown);
+    snapshot.restore_into(&mut resumed);
+    assert!(matches!(resumed.update_frame_with_physical_buttons(no_input(), 0), ScreenAction::Transition(GameScreen::StartMenu)));
+    assert_eq!(resumed.foreground_observation().unwrap().last(), Some(START), "no second Joypad on the newer released byte");
+    assert!(resumed.boulder_push.is_none(), "text standing pose supersedes the retained dust caller");
+    let mut entry = resumed.take_start_menu_entry().unwrap();
+    for tick in 1..=19 { assert_eq!(entry.advance_vblank(), tick == 19); }
+}

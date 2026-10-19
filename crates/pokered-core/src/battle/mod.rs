@@ -801,7 +801,7 @@ fn disobedience_self_hit_damage(bs: &BattleState) -> u16 {
 /// ticks (two waiting frames each)", hp_bar.asm:140-163). The bar is 48 px
 /// (`; 48 * bc (hp bar is 48 pixels long)`, hp_bar.asm:15-16). The original
 /// runs this synchronously and *silently* (hp_bar.asm contains no SFX
-/// reference — the audible feedback is the move animation's own SFX).
+/// reference — move-command and applying-attack sounds run before it).
 ///
 /// Here the animation is asynchronous: `BattleScreen.player_hp` / `enemy_hp`
 /// are the *displayed* values, tweening toward the real HP at the original
@@ -817,11 +817,6 @@ pub struct HpBarAnim {
     enemy: HpBarSide,
     /// 2-frame divider: the bar steps on every other frame.
     tick: bool,
-    /// Set when a *drain* (HP loss) begins. The frontend polls
-    /// [`BattleScreen::take_hp_drain_sfx_pending`] and plays `SfxId::Damage`.
-    /// (Deviation: the Gen-1 drain is silent; the task spec asks for the
-    /// damage SFX, fired once per drain — not per frame.)
-    drain_sfx_pending: bool,
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -884,9 +879,6 @@ impl HpBarAnim {
             return;
         }
         if hp != s.target {
-            if hp < *display {
-                self.drain_sfx_pending = true;
-            }
             s.target = hp;
         }
         s.active = *display != s.target;
@@ -1579,13 +1571,6 @@ impl BattleScreen {
     /// choreography, X-stat spiral, …).
     pub fn take_anim_event(&mut self) -> Option<BattleAnimEvent> {
         self.pending_anim_events.pop_front()
-    }
-
-    /// Take the pending HP-bar *drain* notification (see
-    /// [`HpBarAnim::drain_sfx_pending`]). Returns `true` at most once per
-    /// drain. The frontend plays `SfxId::Damage` on it.
-    pub fn take_hp_drain_sfx_pending(&mut self) -> bool {
-        core::mem::take(&mut self.hp_bar_anim.drain_sfx_pending)
     }
 
     /// Low-health alarm flag (`wLowHealthAlarm` bit 7), replicating the
@@ -7721,12 +7706,10 @@ mod hp_bar_anim_tests {
         // Snap at full HP first (battle-start behavior).
         anim.set_target(BattleSide::Enemy, 48, 48, Species::Rattata, &mut display);
         assert!(!anim.is_active());
-        assert!(!anim.drain_sfx_pending);
 
         // Take 10 damage → drain starts.
         anim.set_target(BattleSide::Enemy, 38, 48, Species::Rattata, &mut display);
         assert!(anim.is_active());
-        assert!(anim.drain_sfx_pending, "drain notifies the damage SFX once");
 
         let mut other = 10u16; // untouched side
         anim.tick(&mut other, &mut display);
@@ -7757,16 +7740,14 @@ mod hp_bar_anim_tests {
         assert_eq!(display, 45);
     }
 
-    /// Refills animate too (original `wHPBarDelta = $01` path) but do NOT
-    /// request the damage SFX.
+    /// Refills animate too (original `wHPBarDelta = $01` path).
     #[test]
-    fn refill_animates_without_damage_sfx() {
+    fn refill_animates_at_the_same_rate() {
         let mut anim = HpBarAnim::default();
         let mut display = 20u16;
         anim.set_target(BattleSide::Player, 20, 48, Species::Charmander, &mut display);
         anim.set_target(BattleSide::Player, 30, 48, Species::Charmander, &mut display);
         assert!(anim.is_active());
-        assert!(!anim.drain_sfx_pending);
         let mut other = 0u16;
         anim.tick(&mut display, &mut other);
         anim.tick(&mut display, &mut other);
@@ -7802,7 +7783,6 @@ mod hp_bar_anim_tests {
         };
         assert_eq!(s.player_hp, php);
         assert_eq!(s.enemy_hp, ehp);
-        assert!(!s.take_hp_drain_sfx_pending());
     }
 
     /// Turn pacing: while the bar is draining, A/B does NOT advance the
@@ -7821,8 +7801,6 @@ mod hp_bar_anim_tests {
         }
         s.sync_display_from_state();
         assert!(s.hp_bar_anim.is_active());
-        assert!(s.take_hp_drain_sfx_pending(), "app plays SfxId::Damage");
-        assert!(!s.take_hp_drain_sfx_pending(), "one-shot");
         assert_eq!(s.enemy_hp, enemy_full, "display still at the pre-hit value");
 
         s.phase = BattlePhase::ShowingText {
