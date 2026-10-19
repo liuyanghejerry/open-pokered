@@ -212,6 +212,10 @@ impl DirectBattleGame {
             }
         }
 
+        if let Some(effectiveness) = self.battle_vfx.take_applying_attack_sound() {
+            if let Some(audio) = &self.audio { audio.play_applying_attack_sound(effectiveness as u8); }
+        }
+
         // Per-command move animation SFX (GetMoveSound in
         // PlayAnimation/PlaySubanimation — one play per command).
         if let Some(req) = self.battle_vfx.take_move_sfx() {
@@ -313,11 +317,7 @@ impl DirectBattleGame {
 
                 // Move-use SFX are per-command animation sounds
                 // (take_move_sfx below), not message triggers.
-                if msg_lower.contains("super effective") {
-                    self.play_sfx(SfxId::SuperEffective);
-                } else if msg_lower.contains("not very effective") {
-                    self.play_sfx(SfxId::NotVeryEffective);
-                } else if self.battle.presentation.current_faint().is_none() && msg_lower.ends_with("fainted!") {
+                if self.battle.presentation.current_faint().is_none() && msg_lower.ends_with("fainted!") {
                     // HandleEnemyMonFainted: trainer battles play
                     // SFX_FAINT_FALL then SFX_FAINT_THUD; wild battles play
                     // the victory music instead. A PLAYER faint plays the
@@ -345,8 +345,6 @@ impl DirectBattleGame {
                         self.play_cry(self.battle.enemy_species);
                         self.cry_played_for_msg = true;
                     }
-                } else if msg_lower.contains("critical hit") {
-                    self.play_sfx(SfxId::Damage);
                 }
             }
         }
@@ -408,9 +406,17 @@ impl GameLoop for DirectBattleGame {
             && (input.is_just_pressed(GbButton::A) || input.is_just_pressed(GbButton::B)))) {
             self.play_sfx(SfxId::PressAB);
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        { self.battle_vfx.audio_available = self.audio.is_some();
+          self.battle_vfx.sfx_playing = self.audio.as_ref()
+            .is_some_and(|audio| audio.is_sfx_playing() && !audio.low_health_alarm_active()); }
         self.battle_vfx.update(&self.battle);
         #[cfg(target_arch = "wasm32")]
-        { let _ = self.battle_vfx.take_faint_sound(); }
+        {
+            let _ = self.battle_vfx.take_faint_sound();
+            let _ = self.battle_vfx.take_move_sfx();
+            let _ = self.battle_vfx.take_applying_attack_sound();
+        }
 
         #[cfg(not(target_arch = "wasm32"))]
         self.update_audio();
@@ -433,5 +439,47 @@ impl GameLoop for DirectBattleGame {
 
     fn should_exit(&self) -> bool {
         self.exit_requested
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+mod applying_sound_tests {
+    use super::*;
+    use pokered_core::{pokemon::stats::create_pokemon_with_moves, battle::pokered_rules::runtime::StdBattleRng};
+    use pokered_data::moves::MoveId;
+
+    #[test]
+    fn direct_battle_uses_the_same_early_typed_sound_without_a_text_duplicate() {
+        std::thread::Builder::new().stack_size(16*1024*1024).spawn(|| {
+            let mon=|species,level,move_id|create_pokemon_with_moves(species,level,[0x99,0x88],
+                [move_id,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+            let mut battle=BattleScreen::from_parties(true,&[mon(Species::Mew,30,MoveId::IceBeam)],
+                &[mon(Species::Gyarados,5,MoveId::Splash)],None);
+            battle.phase=BattlePhase::PlayerMenu;
+            battle.rng=StdBattleRng::from_seed(42);
+            let mut game=DirectBattleGame {
+                battle,resources:None,battle_vfx:BattleVisualEffects::default(),exit_requested:false,
+                lang:Lang::En,audio:Some(AudioOutput::new_pcm()),prev_message:None,prev_phase_tag:0,
+                music_started:true,prev_enemy_species:Species::Gyarados,prev_player_species:Species::Mew,
+                end_music_played:false,cry_played_for_msg:false,faint_thud_pending:false,
+            };
+            let mut input=InputState::new();let mut cue=None;let mut hp=None;let mut caption=false;
+            let mut starts=0;let mut previous=(0,0);let mut pcm=vec![0.0;1470];let mut heard=false;
+            for tick in 0..1400 {
+                input.begin_frame();if tick%16==0 {input.press(GbButton::A);}else{input.release(GbButton::A);}
+                game.update(&input);
+                let audio=game.audio.as_ref().unwrap();
+                let current={let manager=audio.manager.lock().unwrap();(manager.sequencer.current_sfx_id,manager.sequencer.sfx_tempo)};
+                assert_ne!(current.0,SfxId::Damage as u8,"super-effective attack must not get generic drain sound");
+                if current==(SfxId::SuperEffective as u8,0x17f) {
+                    if current!=previous {starts+=1;cue.get_or_insert(tick);}
+                    audio.render_pcm(&mut pcm);heard|=pcm.iter().any(|v|v.abs()>0.00001);
+                } else {audio.render_pcm(&mut pcm);}
+                previous=current;
+                if game.battle.enemy_hp<game.battle.enemy_max_hp {hp.get_or_insert(tick);}
+                if game.battle.current_message.as_deref()==Some("It's super effective!") {caption=true;break;}
+            }
+            assert!(caption && heard);assert_eq!(starts,1);assert!(cue.unwrap()<hp.unwrap());
+        }).unwrap().join().unwrap();
     }
 }

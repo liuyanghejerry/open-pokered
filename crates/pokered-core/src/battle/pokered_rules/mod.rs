@@ -94,7 +94,7 @@ use pokered_data::move_data::MoveData;
 use pokered_data::moves::{MoveEffect, MoveId};
 use pokered_data::pokemon_data::get_base_stats;
 use pokered_data::species::Species;
-use pokered_data::types::PokemonType;
+use pokered_data::types::{Effectiveness, PokemonType};
 
 use crate::battle::stat_stages::StatIndex;
 use crate::battle::state::StatusCondition as LegacyStatus;
@@ -1485,6 +1485,7 @@ thread_local! {
     /// `substitute_install`, cleared with [`clear_current_moves`] before each turn.
     static SUB_CREATED: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
+    static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
 }
 
 /// Set the move the battler on `who`'s side is executing this action (production).
@@ -1498,6 +1499,19 @@ pub fn clear_current_moves() {
     CURRENT_MOVES.with(|c| *c.borrow_mut() = [None, None]);
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
+    PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
+}
+
+/// Captured while this action resolves, before a later Conversion or switch
+/// can change the defender. The move identity prevents an unrelated receipt.
+pub(super) fn presented_effectiveness(player: bool, move_id: MoveId) -> Option<Effectiveness> {
+    PRESENTED_EFFECTIVENESS.with(|values| values.borrow()[usize::from(!player)]
+        .filter(|(recorded, _, _)| *recorded == move_id).map(|(_, value, _)| value))
+}
+
+pub(super) fn presented_move_missed(player: bool, move_id: MoveId) -> Option<bool> {
+    PRESENTED_EFFECTIVENESS.with(|values| values.borrow()[usize::from(!player)]
+        .filter(|(recorded, _, _)| *recorded == move_id).map(|(_, _, missed)| missed))
 }
 
 /// Actual per-hit HP losses, including zero when a Substitute took the hit.
@@ -1886,11 +1900,15 @@ fn pokered_damage(
     _eff: EffectId,
 ) -> HandlerResult {
     use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
+    let pm = current_move_for(source);
+    // The move initializes the presentation byte to neutral. Only the
+    // ordinary type-adjustment path below overwrites it; fixed damage and
+    // Counter/Psywave must not acquire a type message from a later lookup.
+    PRESENTED_EFFECTIVENESS.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, Effectiveness::Normal, false)));
     if let Some(damage) = trapping_continuation_damage(ctx, source) {
         ctx.mv.damage = damage;
         return HandlerResult::Unchanged;
     }
-    let pm = current_move_for(source);
     // HandleCounterMove skips the ordinary formula and damage randomization.
     if pm.id == MoveId::Counter { return HandlerResult::Unchanged; }
 
@@ -1996,6 +2014,7 @@ fn pokered_damage(
     // the arena TypeOverride (effective_types), falling back to the species types.
     let (atype1, atype2) = effective_types(ctx, source);
     let (dtype1, dtype2) = effective_types(ctx, target);
+    let displayed = runtime::displayed_effectiveness(pm.move_type, dtype1, dtype2);
     // Reflect halves physical damage, Light Screen halves special — modelled as
     // doubling the relevant defence when the DEFENDER holds the matching screen
     // volatile (the setter is InflictVolatile on the screen records).
@@ -2030,6 +2049,7 @@ fn pokered_damage(
             && crate::battle::badge_boosts::staged_stats(a).is_none(),
     };
     let result = calculate_damage(&params);
+    PRESENTED_EFFECTIVENESS.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, displayed, result.is_miss)));
     ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
     if result.is_miss {
         // AdjustDamageForMoveType zeroes wDamage on immunity.

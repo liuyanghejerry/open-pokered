@@ -34,6 +34,7 @@ struct MoveStep {
     faint_continuation: bool,
     faint_text_published: bool,
     move_id: Option<MoveId>,
+    effectiveness: pokered_data::types::Effectiveness,
     leech_seed: bool,
     charge: Option<MoveId>,
     missed: bool,
@@ -46,7 +47,7 @@ impl MoveStep {
     fn faint(cue: FaintCue, announcement: String, hp: [u16; 2]) -> Self {
         Self {
             announcement, faint: Some(cue), faint_continuation: false,
-            faint_text_published: false, move_id: None, leech_seed: false,
+            faint_text_published: false, move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal, leech_seed: false,
             charge: None, missed: false, player: cue.side == super::FaintSide::Player,
             hp, hits: Vec::new(),
         }
@@ -214,6 +215,7 @@ impl BattlePresentation {
                 } else {
                     MoveId::MirrorMove
                 }),
+                effectiveness: pokered_data::types::Effectiveness::Normal,
                 charge: None,
                 leech_seed: false,
                 missed: failed,
@@ -222,6 +224,13 @@ impl BattlePresentation {
                 hits: Vec::new(),
             },
         );
+    }
+
+    /// The original presentation byte recorded for this action, not a
+    /// post-turn type lookup or a multiplier inferred from a translated page.
+    pub fn current_hit_effectiveness(&self) -> pokered_data::types::Effectiveness {
+        self.page.and_then(|page| self.pages.get(page)).and_then(Option::as_ref)
+            .map_or(pokered_data::types::Effectiveness::Normal, |step| step.effectiveness)
     }
 
     pub fn current_move(&self) -> Option<(u32, MoveId, bool)> {
@@ -262,6 +271,7 @@ impl BattlePresentation {
                     faint_text_published: false,
                     hits: Vec::new(),
                     move_id: None,
+                    effectiveness: pokered_data::types::Effectiveness::Normal,
                     charge: None,
                     missed: false,
                     leech_seed: matches!(
@@ -300,9 +310,11 @@ impl BattlePresentation {
                     faint_continuation: false,
                     faint_text_published: false,
                     move_id: Some(*move_),
+                    effectiveness: super::pokered_rules::presented_effectiveness(actor.side == 0, *move_)
+                        .unwrap_or(pokered_data::types::Effectiveness::Normal),
                     leech_seed: false,
                     charge: None,
-                    missed: runtime::move_is_immune(state, effects, *actor, *move_),
+                    missed: super::pokered_rules::presented_move_missed(actor.side == 0, *move_).unwrap_or(false),
                     player: actor.side == 0,
                     hp,
                 }),

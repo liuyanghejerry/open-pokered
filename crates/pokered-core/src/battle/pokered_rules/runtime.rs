@@ -114,7 +114,7 @@ pub fn effectiveness_category(move_type: PokemonType, def1: PokemonType, def2: P
 /// calculation still multiplies both defending types; Gen I's message byte is
 /// overwritten for each match, so opposing weaknesses can yield neutral damage
 /// with a non-neutral message. TYPE_CHART retains the original ROM row order.
-fn displayed_effectiveness(move_type: PokemonType, def1: PokemonType, def2: PokemonType) -> Effectiveness {
+pub(super) fn displayed_effectiveness(move_type: PokemonType, def1: PokemonType, def2: PokemonType) -> Effectiveness {
     pokered_data::type_chart::TYPE_CHART.iter().rev()
         .find(|row| row.attacker == move_type && (row.defender == def1 || row.defender == def2))
         .map_or(Effectiveness::Normal, |row| row.effectiveness)
@@ -307,8 +307,15 @@ pub(crate) fn translate_turn_named_with_faints(
                 let dealt_damage = evs[i + 1..].iter()
                     .take_while(|event| !matches!(event, TurnEvent::MoveUsed { .. } | TurnEvent::Blocked { .. }))
                     .any(|event| matches!(event, TurnEvent::Damaged { target, cause: None, .. } if *target == opp_ref(actor)));
-                let eff = if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
-                    else if dealt_damage { displayed_effectiveness(md.move_type, d1, d2) } else { Effectiveness::Normal };
+                let eff = if dealt_damage {
+                    if super::is_special_damage_effect(md.effect) || matches!(move_, MoveId::Counter | MoveId::Psywave) {
+                        Effectiveness::Normal
+                    } else {
+                        super::presented_effectiveness(actor.side == 0, *move_)
+                            .unwrap_or_else(|| displayed_effectiveness(md.move_type, d1, d2))
+                    }
+                } else if move_is_immune(state,effects,actor,*move_) { Effectiveness::NoEffect }
+                else { Effectiveness::Normal };
                 if md.effect == pokered_data::moves::MoveEffect::SwitchAndTeleportEffect {
                     msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
                     let target_name = display_name_named(state, opp_ref(actor), names);
@@ -819,6 +826,22 @@ mod tests {
             let text = translate_turn(&log, &state, &effects);
             assert!(text.iter().any(|line| line == expected), "{move_id:?} vs {defender:?}: {text:?}");
         }
+    }
+
+    #[test]
+    fn fixed_damage_does_not_gain_a_type_effectiveness_caption() {
+        use crate::battle::state::{new_battle_state, BattleType};
+        use crate::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::species::Species;
+        let mon=|species| create_pokemon_with_moves(species,30,[0x99,0x88],
+            [MoveId::SeismicToss,MoveId::None,MoveId::None,MoveId::None]).unwrap();
+        let legacy=new_battle_state(BattleType::Wild,vec![mon(Species::Mew)],vec![mon(Species::Snorlax)]);
+        let (state,effects)=engine_state_from_legacy(&legacy);
+        let mut log=TurnLog::new();
+        log.push(TurnEvent::MoveUsed {actor:BattlerRef::PLAYER,move_:MoveId::SeismicToss});
+        log.push(TurnEvent::Damaged {target:BattlerRef::OPPONENT,amount:30,cause:None});
+        let text=translate_turn(&log,&state,&effects);
+        assert!(!text.iter().any(|line|line.contains("effective")),"{text:?}");
     }
 
     #[test]

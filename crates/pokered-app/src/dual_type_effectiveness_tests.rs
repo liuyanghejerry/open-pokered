@@ -12,9 +12,23 @@ fn on_stack(test: impl FnOnce() + Send + 'static) {
         .unwrap();
 }
 
-fn ice_beam_battle(
+type BattleTrace = Vec<(u32, Option<String>, u16, u8, u16, bool)>;
+
+fn ice_beam_battle(limit: Option<u32>) -> (PokemonGame, u32, BattleTrace) {
+    attack_battle(
+        MoveId::IceBeam,
+        Species::Gyarados,
+        Some("It's super effective!"),
+        limit,
+    )
+}
+
+fn attack_battle(
+    player_move: MoveId,
+    defender: Species,
+    stop_message: Option<&str>,
     limit: Option<u32>,
-) -> (PokemonGame, u32, Vec<(u32, Option<String>, u16, u8, u16)>) {
+) -> (PokemonGame, u32, BattleTrace) {
     let mut game = PokemonGame::new_with_options(
         GameVersion::Red,
         None,
@@ -36,14 +50,10 @@ fn ice_beam_battle(
         )
         .unwrap()
     };
-    let lead = mon(Species::Mew, 30, MoveId::IceBeam);
+    let lead = mon(Species::Mew, 30, player_move);
     game.save_data.party.add(lead.clone()).unwrap();
-    game.battle = BattleScreen::from_parties(
-        true,
-        &[lead],
-        &[mon(Species::Gyarados, 5, MoveId::Splash)],
-        None,
-    );
+    game.battle =
+        BattleScreen::from_parties(true, &[lead], &[mon(defender, 5, MoveId::Splash)], None);
     game.battle.phase = BattlePhase::PlayerMenu;
     game.state.screen = GameScreen::Battle;
     game.set_seed(42);
@@ -69,18 +79,37 @@ fn ice_beam_battle(
             )
         };
         audio.render_pcm(&mut pcm);
+        let audible = pcm.iter().any(|sample| sample.abs() > 0.00001);
         let message = game.battle.current_message.clone();
-        if trace.last().is_none_or(|(_, last, hp, sound, last_tempo)| {
-            last != &message || *hp != game.battle.enemy_hp || *sound != id || *last_tempo != tempo
-        }) {
-            trace.push((tick, message.clone(), game.battle.enemy_hp, id, tempo));
+        if trace
+            .last()
+            .is_none_or(|(_, last, hp, sound, last_tempo, last_audible)| {
+                last != &message
+                    || *hp != game.battle.enemy_hp
+                    || *sound != id
+                    || *last_tempo != tempo
+                    || *last_audible != audible
+            })
+        {
+            trace.push((
+                tick,
+                message.clone(),
+                game.battle.enemy_hp,
+                id,
+                tempo,
+                audible,
+            ));
         }
         if limit == Some(tick)
-            || (limit.is_none() && message.as_deref() == Some("It's super effective!"))
+            || (limit.is_none()
+                && stop_message.is_some_and(|expected| message.as_deref() == Some(expected)))
         {
             return (game, tick, trace);
         }
         if limit.is_none() && game.state.screen != GameScreen::Battle {
+            if stop_message.is_none() {
+                return (game, tick, trace);
+            }
             break;
         }
     }
@@ -137,5 +166,57 @@ fn capture_dual_type_effectiveness() {
                 "phase": format!("{:?}", game.battle.phase),
             "scope": "Seeded subsystem battle, actual Game A updates/draw/muted PCM; no whole playthrough or source-frame alignment claim",
         })).unwrap()).unwrap();
+    });
+}
+
+#[test]
+fn actual_hit_sound_precedes_hp_drain_once_with_original_tempo() {
+    on_stack(|| {
+        for (move_id, defender, caption, sound, tempo) in [
+            (MoveId::Tackle, Species::Rattata, None, SfxId::Damage, 0xb0),
+            (
+                MoveId::IceBeam,
+                Species::Gyarados,
+                Some("It's super effective!"),
+                SfxId::SuperEffective,
+                0x17f,
+            ),
+            (
+                MoveId::Flamethrower,
+                Species::Dewgong,
+                Some("It's not very effective..."),
+                SfxId::NotVeryEffective,
+                0x81,
+            ),
+        ] {
+            let (_, _, trace) = attack_battle(move_id, defender, caption, None);
+            let mut previous = (0u8, 0u16);
+            let mut starts = Vec::new();
+            for row in &trace {
+                let current = (row.3, row.4);
+                if current != previous && current == (sound as u8, tempo) {
+                    starts.push(row.0);
+                }
+                previous = current;
+            }
+            let first_hp_loss = trace.iter().find(|row| row.2 < trace[0].2).unwrap().0;
+            assert!(
+                trace
+                    .iter()
+                    .any(|row| row.3 == sound as u8 && row.4 == tempo && row.5),
+                "the applying sound must reach the real PCM renderer: {trace:?}"
+            );
+            assert_eq!(starts.len(), 1, "{move_id:?}: {trace:?}");
+            assert!(
+                starts[0] < first_hp_loss,
+                "sound belongs to applying feedback, before HP drain: {trace:?}"
+            );
+            if sound != SfxId::Damage {
+                assert!(
+                    !trace.iter().any(|row| row.3 == SfxId::Damage as u8),
+                    "no generic HP-drain sound: {trace:?}"
+                );
+            }
+        }
     });
 }
