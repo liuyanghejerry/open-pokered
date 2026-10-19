@@ -735,7 +735,7 @@ no baseline/CI gate (manual). `visual-verify` skill covers only the heal machine
   retains its parameters and fixed `0x0100` note timing. GROWL/ROAR still add
   the command row to the species cry data. The earlier cry-pitch claim was
   incomplete: the engine stored the addend but ignored it when executing
-  notes. The audio dependency now includes dotzuki #104, with regressions
+  notes. The audio dependency now includes [dotzuki #104](https://github.com/liuyanghejerry/dotzuki/pull/104), with regressions
   checking actual note and APU frequencies. `WaitForSoundToFinish` is modeled:
   both frontends defer the animation start while an SFX is still playing
   (`BattleVisualEffects.sfx_playing` + `pending_anim_start`).
