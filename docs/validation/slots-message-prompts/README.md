@@ -1,6 +1,6 @@
 # Slot refusal and loss acknowledgement
 
-Depends on slot entry PR #336. Native base game source: `642668cb329bcc2537d233046a13fe85db6e1264`.
+Follows merged slot entry PR #336. Native base: literal master `7c663fd065a1847e1ade6a1dfb0733ec990a529a` after PR #336 merged.
 Candidate game source: `9d51723896488eab574426fdf6edf1b9f38c5a31`.
 The candidate includes the entry PR's regenerated agent graph; its game-flow
 changes were tested at `a150e1cf` before that metadata-only merge.
@@ -38,7 +38,9 @@ on slots through 59 frames after acknowledgement and leaves on frame 60.
 
 Three base/candidate screenshot pairs have identical command prefixes and frame
 numbers (944 for refused bet, 3082 for funded/zero-coin losses). Baseline ran
-once, candidate twice. Records and logs are losslessly compressed. The baseline
+once on the actual merged master; candidate twice. The refreshed baseline
+executable and all PNGs match the earlier controls. Candidate production crates
+remain byte-identical to the tested source after merging master. Records and logs are losslessly compressed. The baseline
 Down+A observation additionally records the still-unfixed OneMoreGo selection
 problem; that behavior is not part of this change.
 
