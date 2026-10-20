@@ -267,6 +267,8 @@ impl SlotsScreen {
             }
             SlotsPhase::Loss => {
                 if input.a || input.b {
+                    self.result_last_buttons = self.latest_held_buttons
+                        .unwrap_or(u8::from(input.a) | (u8::from(input.b) << 1));
                     self.begin_result();
                 }
                 SlotsAction::Continue
@@ -428,6 +430,8 @@ impl SlotsScreen {
             PayoutStage::WaitPress => {
                 // WaitForTextScrollButtonPress.
                 if input.a || input.b {
+                    self.result_last_buttons = self.latest_held_buttons
+                        .unwrap_or(u8::from(input.a) | (u8::from(input.b) << 1));
                     self.payout_stage = PayoutStage::Tick;
                     self.payout_cooldown = 0;
                 }
@@ -466,8 +470,8 @@ impl SlotsScreen {
         self.result_poll_delay = 3;
         self.result_completion_delay = 0;
         self.result_answer_no = false;
-        // A/B acknowledged the parent; holding it must not choose again.
-        self.result_last_buttons = self.latest_held_buttons.unwrap_or(0);
+        // Keep the parent's actual ACK poll. Coin-transfer DelayFrames does
+        // not sample Joypad, even when raw held buttons change meanwhile.
         if self.coins == 0 {
             self.message = String::from("OUT OF COINS!");
         } else {
@@ -784,6 +788,32 @@ mod tests {
         screen.update_frame_with_held_input(press_a(), A);
         for _ in 0..14 { assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), A), SlotsAction::Continue); }
         assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), A), SlotsAction::Exit);
+    }
+
+    #[test]
+    fn hosted_one_more_go_inherits_last_payout_ack_poll_not_latest_raw_sample() {
+        use crate::foreground_input::{A, B};
+        for held in [A, B] {
+            let mut screen = SlotsScreen::new(false, 97, 42);
+            screen.phase = SlotsPhase::Payout;
+            screen.payout_stage = PayoutStage::WaitPress;
+            screen.payout_remaining = 2;
+            screen.update_frame_with_held_input(press_a(), A);
+            // SlotMachine_PayCoinsToPlayer has DelayFrames but no Joypad.
+            // A release/new B during those ticks is not sampled until the menu.
+            for _ in 0..100 {
+                if screen.phase == SlotsPhase::Result { break; }
+                screen.update_frame_with_held_input(SlotsInput::none(), held);
+            }
+            assert_eq!(screen.coins, 99);
+            assert_eq!(screen.phase, SlotsPhase::Result);
+            for _ in 0..3 { screen.update_frame_with_held_input(SlotsInput::none(), held); }
+            assert_eq!(screen.take_sfx().iter().filter(|cue| **cue == SlotsSfx::MenuConfirm).count(),
+                usize::from(held == B), "a new B during payout must survive the raw-only interval");
+            for _ in 0..14 { assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), held), SlotsAction::Continue); }
+            assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), held),
+                if held == B { SlotsAction::Exit } else { SlotsAction::Continue });
+        }
     }
 
     #[test]
