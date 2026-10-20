@@ -3631,6 +3631,37 @@ mod tests {
     }
 
     #[test]
+    fn fidelity_all_prize_counters_go_directly_from_exchange_greeting_to_question() {
+        // CeladonPrizeMenu prints ExchangeCoinsForPrizesText and WhichPrizeText
+        // before HandleMenuInput. TM prices are menu entries, never extra dialogue.
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
+        for version in [0.0, 1.0] {
+            for handler in ["prizeVendor1", "prizeVendor2", "prizeVendor3"] {
+                for has_case in [false, true] {
+                    let mut engine = NativeScriptEngine::new();
+                    engine.load_map("GameCornerPrizeRoom", &scene);
+                    engine.seed_number("gameVersion", version);
+                    if has_case {
+                        engine.seed_set("bag", &["COIN_CASE".into()]);
+                    }
+                    let commands = drive_fidelity_scene(&mut engine, handler, false, "", &[3]);
+                    let texts: Vec<_> = commands.iter().filter_map(|command| match command {
+                        ScriptCommand::ShowText { text } => Some(text.as_str()),
+                        _ => None,
+                    }).collect();
+                    assert_eq!(texts, if has_case {
+                        vec!["We exchange your coins for\nprizes.", "Which prize do you want?"]
+                    } else {
+                        vec!["A COIN CASE is required!"]
+                    }, "version {version}, {handler}, coin case {has_case}");
+                    assert_eq!(commands.iter().filter(|command| matches!(command,
+                        ScriptCommand::ShowChoice { .. })).count(), usize::from(has_case));
+                }
+            }
+        }
+    }
+
+    #[test]
     fn fidelity_prize_dialogue_distinguishes_list_exit_from_confirmation_no() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("GameCornerPrizeRoom").unwrap();
         for version in [0.0, 1.0] {
