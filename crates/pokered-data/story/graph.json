@@ -3372,8 +3372,19 @@
     },
     {
       "from": "script:GameCorner:slotMachines",
+      "to": "item:COIN_CASE",
+      "kind": "requires"
+    },
+    {
+      "from": "script:GameCorner:slotMachines",
       "to": "map:GameCorner",
       "kind": "triggered_at"
+    },
+    {
+      "from": "script:GameCorner:slotMachines",
+      "to": "resource:coins",
+      "kind": "requires",
+      "detail": ">=1"
     },
     {
       "from": "script:GameCorner:talkBeauty1",

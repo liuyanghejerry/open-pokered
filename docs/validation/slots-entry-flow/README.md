@@ -26,6 +26,9 @@ Two intended unit failures are retained against the old guards/argument behavior
 a separate intended failure catches the intermediate extra-acknowledgement bug.
 Full core: 3,158 passed. Shared app: default 380 passed / 38 existing ignores;
 debug-server 391 passed / 40 existing ignores. No new ignores or relaxed tests.
+The first CI run caught a stale generated story graph. Regenerating it adds only
+the COIN_CASE and >=1 coin requirements for this handler. All 61 pokered-agent
+tests, including deterministic generation and committed-graph equality, pass.
 
 The native replay starts with an offline-constructed fixture, boots normally,
 and chooses CONTINUE. It uses actual buttons and read-only observation from
