@@ -85,8 +85,12 @@ pub enum SlotsSfx {
 pub enum SlotsPhase {
     /// Choosing a bet; waiting for the player to insert coins and spin.
     BetSelect,
+    /// Refused bet: NotEnoughCoinsSlotMachineText ends in PROMPT (A/B).
+    InsufficientCoins,
     /// The reels are spinning; the player stops them one at a time.
     Spinning,
+    /// NotThisTimeText ends in PROMPT before the balance/menu check.
+    Loss,
     /// A win was rolled: flash the screen, wait for a button press, then tick
     /// the payout into the balance one coin at a time (the ASM's
     /// flashScreenLoop → "lined up" text → SlotMachine_PayCoinsToPlayer).
@@ -223,6 +227,21 @@ impl SlotsScreen {
         self.frame = self.frame.wrapping_add(1);
         match self.phase {
             SlotsPhase::BetSelect => self.update_bet_select(input),
+            SlotsPhase::InsufficientCoins => {
+                if input.a || input.b {
+                    // The original jumps to .loop, not MainSlotMachineLoop:
+                    // redraw/reset the menu, retaining the refusal text.
+                    self.bet = 3;
+                    self.phase = SlotsPhase::BetSelect;
+                }
+                SlotsAction::Continue
+            }
+            SlotsPhase::Loss => {
+                if input.a || input.b {
+                    self.begin_result();
+                }
+                SlotsAction::Continue
+            }
             SlotsPhase::Spinning => self.update_spinning(input),
             SlotsPhase::Payout => self.update_payout(input),
             SlotsPhase::Result => self.update_result(input),
@@ -249,11 +268,10 @@ impl SlotsScreen {
             }
             return SlotsAction::Continue;
         }
-        self.message = String::from("BET HOW MANY COINS?");
         if input.a {
             if self.bet as u16 > self.coins {
-                // Stay in the bet menu with the refusal message
-                // (NotEnoughCoinsSlotMachineText) — the bet is NOT clamped.
+                // PROMPT blocks the menu until A/B; the bet is NOT clamped.
+                self.phase = SlotsPhase::InsufficientCoins;
                 self.message = String::from("NOT ENOUGH COINS!");
                 return SlotsAction::Continue;
             }
@@ -349,7 +367,7 @@ impl SlotsScreen {
                 self.last_symbol = None;
                 self.last_payout = 0;
                 self.message = String::from("NOT THIS TIME!");
-                self.phase = SlotsPhase::Result;
+                self.phase = SlotsPhase::Loss;
             }
         }
     }
@@ -408,7 +426,12 @@ impl SlotsScreen {
     fn finish_payout(&mut self) {
         self.flash_on = false;
         self.payout_remaining = 0;
+        self.begin_result();
+    }
+
+    fn begin_result(&mut self) {
         self.phase = SlotsPhase::Result;
+        self.out_of_coins_frames = 0;
         if self.coins == 0 {
             self.message = String::from("OUT OF COINS!");
         } else {
@@ -531,6 +554,65 @@ mod tests {
     }
 
     #[test]
+    fn original_slots_messages_keep_insufficient_coins_until_acknowledged() {
+        for acknowledge in [SlotsInput { a: true, ..SlotsInput::none() },
+                            SlotsInput { b: true, ..SlotsInput::none() }] {
+            let mut screen = SlotsScreen::new(false, 1, 42);
+            screen.bet = 2;
+            screen.update_frame(press_a());
+            assert_eq!(screen.message, "NOT ENOUGH COINS!");
+            for _ in 0..120 {
+                assert_eq!(screen.update_frame(SlotsInput { down: true, ..SlotsInput::none() }), SlotsAction::Continue);
+                assert_eq!(screen.message, "NOT ENOUGH COINS!", "PROMPT must wait for A/B");
+                assert_eq!(screen.bet, 2, "the hidden bet menu must not accept directions");
+                assert_eq!(screen.coins, 1);
+            }
+            assert_eq!(screen.update_frame(acknowledge), SlotsAction::Continue);
+            assert_eq!(screen.phase, SlotsPhase::BetSelect);
+            assert_eq!(screen.bet, 3, "MainSlotMachineLoop.loop resets the cursor after the refusal");
+            assert_eq!(screen.message, "NOT ENOUGH COINS!", "the original .loop redraws only the menu");
+            screen.update_frame(SlotsInput::none());
+            assert_eq!(screen.message, "NOT ENOUGH COINS!");
+            assert_eq!(screen.coins, 1, "B acknowledges the refusal; it does not exit or spend coins");
+            assert!(screen.take_sfx().is_empty());
+        }
+    }
+
+    #[test]
+    fn original_slots_messages_loss_waits_before_menu_or_empty_balance_countdown() {
+        for coins in [0, 97] {
+            for acknowledge in [SlotsInput { a: true, ..SlotsInput::none() },
+                                SlotsInput { b: true, ..SlotsInput::none() }] {
+                let mut screen = SlotsScreen::new(false, coins, 42);
+                screen.phase = SlotsPhase::Spinning;
+                screen.reels_stopped = [true; 3];
+                screen.machine.flags = 0;
+                screen.update_frame(SlotsInput::none());
+                assert_eq!(screen.message, "NOT THIS TIME!");
+                let reels = screen.machine.wheel_offsets;
+                for _ in 0..120 {
+                    assert_eq!(screen.update_frame(SlotsInput { down: true, ..SlotsInput::none() }), SlotsAction::Continue);
+                    assert_eq!(screen.message, "NOT THIS TIME!", "loss PROMPT precedes OneMoreGo/OutOfCoins");
+                    assert_eq!(screen.coins, coins);
+                    assert_eq!(screen.machine.wheel_offsets, reels);
+                    assert_eq!(screen.out_of_coins_frames, 0);
+                }
+                assert_eq!(screen.update_frame(acknowledge), SlotsAction::Continue);
+                assert_eq!(screen.phase, SlotsPhase::Result, "B acknowledges loss instead of choosing NO");
+                if coins == 0 {
+                    assert_eq!(screen.message, "OUT OF COINS!");
+                    for _ in 0..OUT_OF_COINS_DELAY_FRAMES - 1 {
+                        assert_eq!(screen.update_frame(SlotsInput::none()), SlotsAction::Continue);
+                    }
+                    assert_eq!(screen.update_frame(SlotsInput::none()), SlotsAction::Exit);
+                } else {
+                    assert_eq!(screen.message, "ONE MORE GO?");
+                }
+            }
+        }
+    }
+
+    #[test]
     fn bet_selection_is_clamped_1_to_3() {
         let mut s = SlotsScreen::new(false, 100, 1);
         // Raise past the cap.
@@ -598,7 +680,7 @@ mod tests {
         s.update_frame(SlotsInput { up: true, ..SlotsInput::none() });
         assert_eq!(s.bet, 3);
         assert_eq!(s.update_frame(press_a()), SlotsAction::Continue);
-        assert_eq!(s.phase, SlotsPhase::BetSelect, "spin must not start");
+        assert_eq!(s.phase, SlotsPhase::InsufficientCoins, "spin must not start");
         assert_eq!(s.coins, 2, "nothing deducted");
         assert_eq!(s.message, "NOT ENOUGH COINS!");
     }
