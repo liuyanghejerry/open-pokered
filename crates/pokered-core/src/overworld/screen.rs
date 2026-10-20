@@ -152,6 +152,8 @@ pub enum OverworldAudioRequest {
     RestartMapMusic { map: MapId },
     /// Play a Pokémon cry by species name (script `game.playCry(...)`).
     PlayCry { species: String },
+    /// DisplayPokedex dims music to $33 and restores $77 on leaving.
+    SetMasterVolume { volume: u8 },
     /// ItemUsePokeFlute: stop map music, play the full channel-3 jingle, then
     /// resume the current transport/map theme only after it finishes.
     PlayPokeFlute { map: MapId },
@@ -767,6 +769,16 @@ fn resolve_placeholders(text: &str, player_name: &str, rival_name: &str, starter
 use crate::overworld::presentation;
 use crate::overworld::special_terrain;
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum PokedexEntryPresentation {
+    White,
+    CryHeader,
+    PageClear,
+    #[default]
+    Data,
+    ReturnMap,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PokedexEntryState {
     pub species: String,
@@ -778,6 +790,8 @@ pub struct PokedexEntryState {
     /// Total description pages (set by renderer on first draw so input handler
     /// knows when A/B should close the screen rather than advance).
     pub total_pages: usize,
+    #[serde(default)]
+    pub presentation: PokedexEntryPresentation,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -3213,7 +3227,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn is_reading_menu_active(&self) -> bool {
-        matches!(self.active_script_effect, Some(super::script_bridge::ScriptEffect::ReadingMenu { .. }))
+        matches!(self.active_script_effect, Some(super::script_bridge::ScriptEffect::ReadingMenu { .. } | super::script_bridge::ScriptEffect::BillPokemonList { .. }))
     }
 
     pub fn update_naming_input(&mut self, input: crate::naming_screen::NamingInput, is_zh: bool) {

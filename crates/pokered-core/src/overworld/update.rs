@@ -909,6 +909,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect = Some(script_bridge::ScriptEffect::AskFieldYesNo { state });
             Some(done)
         } else { None };
+        let bill_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::BillPokemonList { .. })) {
+            let Some(script_bridge::ScriptEffect::BillPokemonList { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_bill_pokemon_list(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::BillPokemonList { state });
+            Some(done)
+        } else { None };
         let rating_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::PokedexRating { .. })) {
             let Some(script_bridge::ScriptEffect::PokedexRating { mut state }) = self.active_script_effect.take() else { unreachable!() };
             let done = self.tick_pokedex_rating(&mut state);
@@ -1006,7 +1012,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = nurse_tick_done.or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = bill_tick_done.or(nurse_tick_done).or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
 
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
@@ -3694,6 +3700,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         page: 0,
                         owned: false,
                         total_pages: 0,
+                        presentation: Default::default(),
                     });
                     *started = true;
                     false

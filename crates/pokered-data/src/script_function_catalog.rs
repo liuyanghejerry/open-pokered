@@ -59,6 +59,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "pokecenterNurseOffer",
     "pokedexRating",
     "pokemonMenu",
+    "billPokemonList",
     "printFieldText",
     "printTextCry",
     "readingMenu",

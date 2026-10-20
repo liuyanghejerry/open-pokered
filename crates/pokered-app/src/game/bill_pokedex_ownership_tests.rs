@@ -21,6 +21,11 @@ fn step(game: &mut PokemonGame, input: &mut InputState, buttons: &[GbButton]) {
         input.press(*button);
     }
     game.update(input);
+    // Advance the actual logical APU in muted mode; wait gates must observe
+    // sequencer completion rather than substituting a guessed cry timer.
+    if let Some(audio) = game.audio.as_ref() {
+        audio.render_pcm(&mut [0f32; 1470]);
+    }
 }
 fn same_pixels(a: &FrameBuffer, b: &FrameBuffer) -> bool {
     (0..144).all(|y| (0..160).all(|x| a.get_pixel(x, y) == b.get_pixel(x, y)))
@@ -121,7 +126,7 @@ fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_regist
             step(&mut game, &mut input, &[GbButton::A]);
         }
         for frame in 0..6000 {
-            if game.overworld.pending_choice.is_some() {
+            if game.overworld.choice_accepts_input() {
                 break;
             }
             let read = frame % 4 == 0
@@ -161,6 +166,47 @@ fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_regist
                 .unwrap()
                 .species,
             "Eevee"
+        );
+        let mut saw_cry = false;
+        let mut data_ready = false;
+        for _ in 0..2000 {
+            if let Some(audio) = game.audio.as_ref() {
+                let manager = audio.manager.lock().unwrap();
+                let cry = manager.is_sfx_playing()
+                    && manager.sequencer.current_sfx_id
+                        == pokered_data::cries::cry_data(Species::Eevee).sfx;
+                if cry {
+                    assert_eq!(manager.nr50(), 0x77, "cry uses full volume");
+                }
+                saw_cry |= cry;
+            }
+            assert_eq!(
+                game.save_data.game_data.pokedex.is_seen(Species::Eevee),
+                seen
+            );
+            if game
+                .overworld
+                .pending_pokedex_entry
+                .as_ref()
+                .is_some_and(|entry| {
+                    entry.presentation
+                        == pokered_core::overworld::screen::PokedexEntryPresentation::Data
+                })
+            {
+                data_ready = true;
+                break;
+            }
+            step(&mut game, &mut input, &[]);
+        }
+        assert!(
+            saw_cry,
+            "Bill's entry must play the real Eevee cry before data"
+        );
+        assert!(data_ready, "actual cry must finish before data input");
+        assert_eq!(
+            game.audio.as_ref().unwrap().manager.lock().unwrap().nr50(),
+            0x33,
+            "data music is quiet after cry"
         );
         assert_eq!(
             game.save_data.game_data.pokedex.is_owned(Species::Eevee),
@@ -227,6 +273,11 @@ fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_regist
             game.draw(&mut actual);
         }
         assert!(game.overworld.pending_pokedex_entry.is_none());
+        assert_eq!(
+            game.audio.as_ref().unwrap().manager.lock().unwrap().nr50(),
+            0x77,
+            "map volume restored on exit"
+        );
         assert!(game.save_data.game_data.pokedex.is_seen(Species::Eevee));
         assert_eq!(
             game.save_data.game_data.pokedex.is_owned(Species::Eevee),

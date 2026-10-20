@@ -111,6 +111,7 @@ fn capture_tui_zh_descriptions() {
         species: "Bulbasaur".into(),
         page: 0,
         total_pages: 0,
+        presentation: Default::default(),
     });
     game.draw(&mut fb);
     save(&fb, "tui-starter-dex-overlay");

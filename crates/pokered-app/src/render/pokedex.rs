@@ -398,6 +398,19 @@ pub fn draw_entry_for_species(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) -> usize {
+    draw_entry_for_species_with_description(sp, page, owned, true, is_zh, res, fb)
+}
+
+/// PAGE preserves the owned header while clearing only the description body.
+pub(super) fn draw_entry_for_species_with_description(
+    sp: Species,
+    page: usize,
+    owned: bool,
+    show_description: bool,
+    is_zh: bool,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+) -> usize {
     fb.clear(Rgba::WHITE);
     let pal = &GRAYSCALE_PALETTE;
     let t = TILE_SIZE;
@@ -413,7 +426,9 @@ pub fn draw_entry_for_species(
         pokered_data::lang_data::species_name(sp, false).to_uppercase()
     };
     let weight = format!("{:.1}", entry.weight_pounds());
-    let lines = if is_zh {
+    let lines = if !show_description {
+        Vec::new()
+    } else if is_zh {
         flavor_lines_zh(entry)
     } else {
         flavor_lines(entry)

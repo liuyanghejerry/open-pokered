@@ -354,6 +354,7 @@ fn capture_zh_descriptions() {
             species: "Bulbasaur".into(),
             page: 0,
             total_pages: 0,
+        presentation: Default::default(),
         });
     render::draw_overworld(
         &mut overlay_game.overworld,

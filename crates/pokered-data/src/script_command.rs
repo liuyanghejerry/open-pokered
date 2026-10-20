@@ -117,6 +117,8 @@ pub enum PokemonScriptCommand {
     WaitSound,
     ReadingMenu { options: Vec<String>, texts: Vec<String> },
     PokemonMenu { options: Vec<String>, species: Vec<String> },
+    /// Bill's PROMPT, question/DONE and direct five-item HandleMenuInput loop.
+    BillPokemonList { texts: Vec<String> },
     ShowMoneyBox { amount: i64 },
     ShowCoinBox { amount: i64 },
     VendingDelivery,
@@ -171,6 +173,7 @@ impl PokemonScriptCommand {
             Self::WaitSound => "waitSound",
             Self::ReadingMenu { .. } => "readingMenu",
             Self::PokemonMenu { .. } => "pokemonMenu",
+            Self::BillPokemonList { .. } => "billPokemonList",
             Self::ShowMoneyBox { .. } => "showMoneyBox",
             Self::ShowCoinBox { .. } => "showCoinBox",
             Self::VendingDelivery => "vendingDelivery",
@@ -214,6 +217,7 @@ impl PokemonScriptCommand {
             },
             Self::ReadingMenu { options, texts } => vec![json!(options), json!(texts)],
             Self::PokemonMenu { options, species } => vec![json!(options), json!(species)],
+            Self::BillPokemonList { texts } => vec![json!(texts)],
             Self::ShowMoneyBox { amount } => vec![json!(amount)],
             Self::ShowCoinBox { amount } => vec![json!(amount)],
             Self::TradePokemon {
@@ -401,6 +405,12 @@ impl PokemonScriptCommand {
                 if !species.is_valid() { return Err("staticEncounter: unknown species".into()); }
                 let level=args[2].as_u64().filter(|n| (1..=100).contains(n)).ok_or("staticEncounter: level must be an integer from 1 to 100")? as u8;
                 Self::StaticEncounter { text: string(0)?, species, level }
+            },
+            "billPokemonList" => {
+                if args.len() != 1 { return Err("billPokemonList: one text array required".into()); }
+                let texts = strings(0)?;
+                if texts.len() != 7 || texts.iter().any(String::is_empty) { return Err("billPokemonList: favorite, question and five labels required".into()); }
+                Self::BillPokemonList { texts }
             },
             "pokemonMenu" => {
                 let options = strings(0)?;
@@ -836,6 +846,21 @@ mod static_encounter_protocol_tests {
         }
         for args in [vec![],vec![json!("cry"),json!("MEWTWO")],vec![json!(false),json!("MEWTWO"),json!(70)],vec![json!("cry"),json!("None"),json!(70)],vec![json!("cry"),json!("MEWTWO"),json!(0)],vec![json!("cry"),json!("MEWTWO"),json!(101)],vec![json!("cry"),json!("MEWTWO"),json!(70.5)]] {
             assert!(PokemonScriptCommand::from_custom("staticEncounter",&args).is_err());
+        }
+    }
+}
+
+#[cfg(test)]
+mod bill_list_protocol_tests {
+    use super::*;
+    #[test]
+    fn bill_list_roundtrips_and_rejects_incomplete_or_ambiguous_payloads() {
+        let texts: Vec<String> = ["favorite", "question", "EEVEE", "FLAREON", "JOLTEON", "VAPOREON", "CANCEL"].iter().map(|s| (*s).into()).collect();
+        let command = PokemonScriptCommand::BillPokemonList { texts: texts.clone() };
+        let ScriptCommand::Custom { name, args } = command.clone().into_script_command() else { panic!("typed extension") };
+        assert_eq!(PokemonScriptCommand::from_custom(&name, &args).unwrap(), command);
+        for args in [vec![], vec![json!(texts), json!(true)], vec![json!(["favorite", "question"])], vec![json!(["", "question", "a", "b", "c", "d", "cancel"])], vec![json!([0,1,2,3,4,5,6])]] {
+            assert!(PokemonScriptCommand::from_custom("billPokemonList", &args).is_err());
         }
     }
 }

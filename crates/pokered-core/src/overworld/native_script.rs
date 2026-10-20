@@ -500,6 +500,11 @@ impl ScriptHost for NativeHost {
                 let amount = args::number(v.first().ok_or("showCoinBox: missing amount")?, "showCoinBox")? as i64;
                 Ok(pokemon(PokemonScriptCommand::ShowCoinBox { amount }))
             }
+            "billPokemonList" => {
+                if v.len() != 1 { return Err("billPokemonList: one text array required".into()); }
+                let texts = args::string_array(&v[0], "billPokemonList")?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(texts)])?))
+            },
             "badgeMenu" | "pokemonMenu" => {
                 let options = args::string_array(v.first().ok_or("menu: missing options")?, "menu")?;
                 let contents = args::string_array(v.get(1).ok_or("menu: missing contents")?, "menu")?;
@@ -3107,7 +3112,7 @@ mod tests {
             e.set_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", returned);
             let cmds = drive_fidelity_scene(&mut e, "pcMachine", true, "", &[]);
             assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "openBillsPC")));
-            assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "pokemonMenu")), returned);
+            assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "billPokemonList")), returned);
         }
     }
 
@@ -3181,7 +3186,7 @@ mod tests {
                     let run = facing == "up" && !returned && !used && agreed;
                     assert_eq!(engine.get_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL"), used || run);
                     assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "printFieldText")), run);
-                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "pokemonMenu")), facing == "up" && returned);
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "billPokemonList")), facing == "up" && returned);
                     if facing != "up" {
                         assert!(commands.is_empty(), "BillsHousePC returns silently unless facing UP");
                     } else if !returned && !run {

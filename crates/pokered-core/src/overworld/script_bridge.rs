@@ -54,6 +54,7 @@ pub enum ScriptEffect {
     PokecenterNurseOffer { state: Box<super::pokecenter_nurse::NurseOfferState> },
     PokecenterFarewell { state: Box<super::pokecenter_nurse::NurseFarewellState> },
     AskFieldYesNo { state: Box<super::field_yes_no::FieldYesNoState> },
+    BillPokemonList { state: Box<super::bill_pokemon_list::BillPokemonListState> },
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
     StaticEncounter { state: Box<super::static_encounter::StaticEncounterState> },
@@ -405,6 +406,7 @@ impl ScriptEffect {
         match self {
             Self::PokecenterNurseOffer { state } => state.accepts_input(),
             Self::AskFieldYesNo { state } => state.accepts_input(),
+            Self::BillPokemonList { state } => state.accepts_input(),
             Self::BikeShopOffer { state } => state.accepts_input(),
             Self::ShowChoice { .. } => true,
             Self::GivePokemon { flow: Some(flow), .. } => flow.child.is_choice(),
@@ -430,6 +432,7 @@ impl ScriptEffect {
             }
             ScriptEffect::PokecenterNurseOffer { state } => json!({ "effect": "PokecenterNurseOffer", "state": state }),
             ScriptEffect::PokecenterFarewell { state } => json!({ "effect": "PokecenterFarewell", "state": state }),
+            ScriptEffect::BillPokemonList { state } => json!({ "effect": "BillPokemonList", "state": state }),
             ScriptEffect::AskFieldYesNo { state } => json!({ "effect": "AskFieldYesNo", "state": state }),
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::PokedexRating { state } => json!({ "effect": "PokedexRating", "state": state }),
@@ -1004,6 +1007,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
             leading_sound_started: false,
         },
         PokemonScriptCommand::ShowItemDialogue { text, sound_id } => ScriptEffect::ShowItemDialogue { text, sound_id, sound_started: false },
+        PokemonScriptCommand::BillPokemonList { texts } => ScriptEffect::BillPokemonList {
+            state: Box::new(super::bill_pokemon_list::BillPokemonListState::new(texts)),
+        },
         PokemonScriptCommand::PokemonMenu { options, species } => ScriptEffect::ReadingMenu {
             menu: super::script_interactions::ReadingMenu::pokemon(options, species),
         },
