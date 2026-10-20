@@ -69,6 +69,8 @@ fn billshouse_pc_shows_monitor_before_bill_is_saved() {
     screen.state.player.x = 1;
     screen.state.player.y = 5;
     screen.state.player.facing = Direction::Up;
+    // Production seeds synchronous script queries before field input.
+    screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
     screen.update_frame(press_a());
     for _ in 0..60 {
         screen.update_frame(none());
@@ -133,6 +135,7 @@ fn bills_house_pc() -> OverworldScreen {
     screen.state.player.x = 1;
     screen.state.player.y = 5;
     screen.state.player.facing = Direction::Up;
+    screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
     screen
 }
 
