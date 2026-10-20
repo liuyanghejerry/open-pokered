@@ -179,7 +179,7 @@ impl SlotsScreen {
             coins: coins.min(MAX_COINS),
             phase: SlotsPhase::BetSelect,
             pending_sfx: alloc::collections::VecDeque::new(),
-            bet: 1,
+            bet: 3,
             reels_stopped: [false; 3],
             current_reel: 0,
             stop_pending: false,
@@ -233,11 +233,11 @@ impl SlotsScreen {
         if input.b {
             return SlotsAction::Exit;
         }
-        // Raising/lowering the bet with the d-pad.
-        if input.up || input.right {
+        // HandleMenuInput: Up takes priority over Down; horizontal keys
+        // do not move this vertical menu. Rows are ordered 3, 2, 1.
+        if input.up {
             self.bet = (self.bet + 1).min(3);
-        }
-        if input.down || input.left {
+        } else if input.down {
             self.bet = self.bet.saturating_sub(1).max(1);
         }
         // Entry guard: the original refuses to even start without coins
@@ -431,6 +431,8 @@ impl SlotsScreen {
         self.message = String::from("ONE MORE GO?");
         if input.a {
             self.phase = SlotsPhase::BetSelect;
+            // YES jumps to MainSlotMachineLoop, which clears the menu cursor.
+            self.bet = 3;
             self.message = String::from("BET HOW MANY COINS?");
         } else if input.b {
             // "One more go?" → NO: leave the machine.
@@ -488,6 +490,47 @@ mod tests {
     }
 
     #[test]
+    fn original_bet_menu_starts_at_three_and_restarts_at_three_after_each_game() {
+        // MainSlotMachineLoop.loop clears wCurrentMenuItem; displayed bets
+        // are 3, 2, 1. Returning YES from OneMoreGo starts the same loop.
+        for coins in [1, 2, 3, MAX_COINS] {
+            let screen = SlotsScreen::new(false, coins, 42);
+            assert_eq!(screen.bet, 3, "the default is not clamped to the balance");
+        }
+        for bet in [1, 2, 3] {
+            let mut screen = SlotsScreen::new(false, 99, 42);
+            screen.bet = bet;
+            drive_to_result(&mut screen);
+            assert_eq!(screen.update_frame(press_a()), SlotsAction::Continue);
+            assert_eq!(screen.phase, SlotsPhase::BetSelect);
+            assert_eq!(screen.bet, 3, "previous bet {bet} must not be remembered");
+        }
+    }
+
+    #[test]
+    fn original_bet_menu_ignores_horizontal_buttons_and_prioritizes_up() {
+        // home/window.asm HandleMenuInput checks Up, otherwise Down.
+        // Left/Right are not in this menu's watched-key mask (A | B).
+        for initial in [1, 2, 3] {
+            for bits in 0..16 {
+                let mut screen = SlotsScreen::new(false, 99, 42);
+                screen.bet = initial;
+                let input = SlotsInput {
+                    up: bits & 1 != 0, down: bits & 2 != 0,
+                    left: bits & 4 != 0, right: bits & 8 != 0,
+                    ..SlotsInput::none()
+                };
+                let expected = if input.up { (initial + 1).min(3) }
+                    else if input.down { (initial - 1).max(1) } else { initial };
+                assert_eq!(screen.update_frame(input), SlotsAction::Continue);
+                assert_eq!(screen.bet, expected, "initial {initial}, buttons {bits:04b}");
+                assert_eq!(screen.coins, 99);
+                assert_eq!(screen.phase, SlotsPhase::BetSelect);
+            }
+        }
+    }
+
+    #[test]
     fn bet_selection_is_clamped_1_to_3() {
         let mut s = SlotsScreen::new(false, 100, 1);
         // Raise past the cap.
@@ -505,7 +548,7 @@ mod tests {
     #[test]
     fn pressing_a_deducts_bet_and_starts_spin() {
         let mut s = SlotsScreen::new(false, 50, 7);
-        s.update_frame(SlotsInput { up: true, ..SlotsInput::none() }); // bet -> 2
+        s.update_frame(SlotsInput { down: true, ..SlotsInput::none() }); // bet -> 2
         assert_eq!(s.bet, 2);
         s.update_frame(press_a());
         assert_eq!(s.phase, SlotsPhase::Spinning);
@@ -605,7 +648,9 @@ mod tests {
     #[test]
     fn payout_fanfare_ticks_one_coin_at_a_time() {
         let mut s = SlotsScreen::new(false, 100, 42);
-        // Start a spin, then force a known cherry win on the middle payline.
+        // Select the one-coin middle payline, then force a known cherry win.
+        s.update_frame(SlotsInput { down: true, ..SlotsInput::none() });
+        s.update_frame(SlotsInput { down: true, ..SlotsInput::none() });
         s.update_frame(press_a());
         s.machine.flags = SLOTS_CAN_WIN;
         s.machine.wheel_offsets = [6, 10, 12]; // middle row: cherry × 3
