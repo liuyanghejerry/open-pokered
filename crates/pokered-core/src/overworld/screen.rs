@@ -771,6 +771,10 @@ use crate::overworld::special_terrain;
 pub struct PokedexEntryState {
     pub species: String,
     pub page: usize,
+    /// The host projects the persistent Pokédex owned bit before drawing.
+    /// An entry requested by a script does not itself grant ownership.
+    #[serde(default)]
+    pub owned: bool,
     /// Total description pages (set by renderer on first draw so input handler
     /// knows when A/B should close the screen rather than advance).
     pub total_pages: usize,
