@@ -1,0 +1,25 @@
+{
+  "base": "d037ea54abdf5d76e950e1c08fb560cebd7fa441",
+  "source_reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "results": {
+    "before": {
+      "binary_sha256": "7766cff6fb1e6bd571d482c07dffb42e5c2d00337d95f9fae81565fe39316708",
+      "cases": 1,
+      "two_runs_observations_identical": true,
+      "comparison_frame": 926,
+      "screenshot_sha256": "c854a56b780a17050c4d638d1e9fa6bf0e88db23dc89e8c7b7514983c0e84fb1"
+    },
+    "after": {
+      "binary_sha256": "9fadc77aeead80c994539466ea54ff76bdfda4bb88680dee02dfe4f4e05201b5",
+      "cases": 9,
+      "two_runs_observations_identical": true,
+      "comparison_frame": 926,
+      "screenshot_sha256": "260d7dd0ba6f3860ceea91a177af84c7b3880e8b8920d421dc93af4d5ee60f8b"
+    }
+  },
+  "unit_after": 81,
+  "regression_test_failed_before": true,
+  "independent_process_save_roundtrip": true,
+  "fixture_sha256": "9be3e02df3868a02d43aa70e5183b1c306318fa1cba1f0d1c358a57762f20ae3",
+  "scope": "Original assembly/text inspected; actual native ordinary boot/Continue and buttons repeated. No original ROM pixel/audio/animation claim. Fixtures are constructed, not fresh travel."
+}
