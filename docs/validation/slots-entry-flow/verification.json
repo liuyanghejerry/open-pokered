@@ -1,0 +1,103 @@
+{
+  "base": "7624055a37b9fcd734932bcda116ce96b426f19a",
+  "tested_candidate_source": "642668cb329bcc2537d233046a13fe85db6e1264",
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "binary_sha256": {
+    "before": "3224e8c1c66d9adb58715f57a1d7d3b460b8b2a3865bad09f627d722f1b9329f",
+    "after": "36a484ab0648df44c4210b9d3f3f9dcb819441beb4434e2181367606d418ebff"
+  },
+  "fixture_sha256": "9b1431fd5166ab265c3ab99fb5a5e5563d72f8bcb9bc981e936645101217bbd5",
+  "repeat_count": 2,
+  "observations_and_pngs_identical_in_each_repeat_ignoring_capture_path": true,
+  "paired_tapes_equal_through_capture": true,
+  "paired_comparison_frame": 803,
+  "core_pass": 3158,
+  "app_default": {
+    "pass": 380,
+    "existing_ignores": 38
+  },
+  "app_debug": {
+    "pass": 391,
+    "existing_ignores": 40
+  },
+  "source_sha256": {
+    "crates/pokered-data/maps/GameCorner/script.scene": "f98e5db0dcad5000755a041d50a3b5bc2df956a2347f4c39737f00eff837e035",
+    "crates/pokered-core/src/overworld/native_script.rs": "0980d6aae6efd8f6b968a2ff1e31ff28e7d2f884dd0b7184088221f54c7c4071",
+    "crates/pokered-core/src/overworld/tests_slots_lucky.rs": "16c5dd2f95d3eab33376ff8698d04566c40a794c0a8b52e573cfaf86d0c473ed"
+  },
+  "cases": [
+    {
+      "case": "missing",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 99
+    },
+    {
+      "case": "empty",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 0
+    },
+    {
+      "case": "neither",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 0
+    },
+    {
+      "case": "no",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 99
+    },
+    {
+      "case": "b",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 99
+    },
+    {
+      "case": "yes",
+      "passed": true,
+      "final_screen": "slots",
+      "final_coins": 96
+    },
+    {
+      "case": "one",
+      "control_position": [
+        16,
+        16
+      ],
+      "passed": true,
+      "final_screen": "overworld",
+      "final_coins": 1
+    },
+    {
+      "case": "max",
+      "passed": true,
+      "final_screen": "slots",
+      "final_coins": 9996
+    }
+  ],
+  "scope": "Native offline fixture, normal boot/Continue, buttons only; original source comparison. Does not prove original-ROM animation/audio/timing or whole-game parity."
+}
