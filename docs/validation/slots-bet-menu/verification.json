@@ -1,0 +1,66 @@
+{
+  "base": "d037ea54abdf5d76e950e1c08fb560cebd7fa441",
+  "tested_candidate_source": "a03223ea67cee12ddc589fd4fc3cf352601e46bb",
+  "source_file_sha256": "40cec646c2d638d42911e45d8cab5e5d32eaa2ef41db6bd2f40f941c0ca2167a",
+  "fixture_sha256": "9b1431fd5166ab265c3ab99fb5a5e5563d72f8bcb9bc981e936645101217bbd5",
+  "results": {
+    "before": {
+      "binary_sha256": "7766cff6fb1e6bd571d482c07dffb42e5c2d00337d95f9fae81565fe39316708",
+      "repeats": 2,
+      "repeat_observations_and_images_identical": true,
+      "cases": [
+        {
+          "case": "entry",
+          "cursor": 1,
+          "final_coins": 98,
+          "comparison_frame": 803
+        },
+        {
+          "case": "horizontal",
+          "cursor": 3,
+          "final_coins": 96,
+          "comparison_frame": 875
+        },
+        {
+          "case": "repeat",
+          "cursor": 2,
+          "final_coins": 97,
+          "comparison_frame": 3187
+        }
+      ]
+    },
+    "after": {
+      "binary_sha256": "412efca91f2a36b94193f61a539ab0745aba25aad027ffce58f336991d3ec3ed",
+      "repeats": 2,
+      "repeat_observations_and_images_identical": true,
+      "cases": [
+        {
+          "case": "entry",
+          "cursor": 3,
+          "final_coins": 96,
+          "comparison_frame": 803
+        },
+        {
+          "case": "horizontal",
+          "cursor": 2,
+          "final_coins": 97,
+          "comparison_frame": 875
+        },
+        {
+          "case": "repeat",
+          "cursor": 3,
+          "final_coins": 97,
+          "comparison_frame": 3187
+        }
+      ]
+    }
+  },
+  "all_base_candidate_command_tapes_equal_ignoring_output_directory": true,
+  "all_comparison_frames_equal": true,
+  "repeat_two_coin_spin_result_image_equal_across_sides": true,
+  "source_control": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/slots/slot_machine.asm MainSlotMachineLoop; home/window.asm HandleMenuInput",
+  "unit_cases": 73,
+  "renderer_tests": 4,
+  "new_tests_fail_before": 2,
+  "scope": "Only bet menu controls/defaults/reset. Original source is authoritative; original ROM runtime not verified by this evidence. Native offline fixture with normal Continue, no runtime setters. Entry guards, consent, full slots animations/audio are not covered."
+}
