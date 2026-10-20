@@ -224,9 +224,11 @@ fn slots_full_lifecycle_persists_coins_and_exits() {
     assert_eq!(slots.payout_remaining, 0);
     assert_eq!(game.save_data.game_data.player_coins, slots.coins);
 
-    // A on the result screen → bet selection again; B → exit to the
-    // overworld (the coin balance is already persisted).
+    // Original menu Delay3, A, DelayFrames15 → bet selection; B exits.
+    // The coin balance is already persisted.
+    for _ in 0..3 { game.update(&InputState::new()); }
     game.update(&press(GbButton::A));
+    for _ in 0..15 { game.update(&InputState::new()); }
     assert_eq!(
         game.slots_screen.as_ref().unwrap().phase,
         pokered_core::slots_screen::SlotsPhase::BetSelect
@@ -234,6 +236,32 @@ fn slots_full_lifecycle_persists_coins_and_exits() {
     game.update(&press(GbButton::B));
     assert_eq!(game.state.screen, GameScreen::Overworld);
     assert!(game.slots_screen.is_none());
+}
+
+#[test]
+fn slots_result_cancel_overrides_a_and_waits_before_leaving_shared_runtime() {
+    use pokered_core::slots_screen::SlotsPhase;
+    let mut game = game_at_overworld();
+    let mut slots = SlotsScreen::new(false, 97, 42);
+    slots.phase = SlotsPhase::Loss;
+    game.slots_screen = Some(slots);
+    game.state.screen = GameScreen::Slots;
+    game.update(&press(GbButton::B)); // Acknowledge loss, not menu NO.
+    for _ in 0..30 {
+        game.update(&press(GbButton::B));
+        assert_eq!(game.state.screen, GameScreen::Slots, "holding the parent ACK must not choose NO");
+    }
+    game.update(&InputState::new());
+    game.update(&hold_all(&[GbButton::A, GbButton::B]));
+    for _ in 0..14 {
+        game.update(&hold_all(&[GbButton::A, GbButton::B, GbButton::Down]));
+        assert_eq!(game.state.screen, GameScreen::Slots);
+        assert_eq!(game.save_data.game_data.player_coins, 97);
+    }
+    game.update(&InputState::new());
+    assert_eq!(game.state.screen, GameScreen::Overworld);
+    assert!(game.slots_screen.is_none());
+    assert_eq!(game.save_data.game_data.player_coins, 97);
 }
 
 #[test]

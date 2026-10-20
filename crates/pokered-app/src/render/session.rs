@@ -1522,6 +1522,10 @@ impl SlotsVisualKey {
             hash_byte(&mut visual_hash, byte);
         }
 
+        if slots.phase == SlotsPhase::Result && slots.coins > 0 {
+            hash_byte(&mut visual_hash, slots.result_cursor);
+        }
+
         let bet_cursor = if slots.phase == SlotsPhase::BetSelect {
             slots_bet_cursor_position(slots.bet)
         } else {
@@ -3060,6 +3064,38 @@ mod session_tests {
                             assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
                                 "{language:?} bet {previous}->{current} at ({x},{y})");
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn slots_result_cursor_invalidates_retained_frame_in_both_languages() {
+        use pokered_core::slots_screen::{SlotsPhase, SlotsScreen};
+        for language in [Lang::En, Lang::Zh] {
+            for (previous, current) in [(0, 1), (1, 0)] {
+                let mut game = PokemonGame::new(GameVersion::Red);
+                game.audio = None;
+                game.state.screen = GameScreen::Slots;
+                game.state.config.language = language;
+                let mut slots = SlotsScreen::new(false, 97, 42);
+                slots.phase = SlotsPhase::Result;
+                slots.message = "ONE MORE GO?".into();
+                slots.result_cursor = previous;
+                game.slots_screen = Some(slots);
+                let mut session = RenderSession::new();
+                let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                let mut full = retained.clone();
+                let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+                session.render(&mut game, &mut retained, &mut scroll);
+                game.slots_screen.as_mut().unwrap().result_cursor = current;
+                session.render(&mut game, &mut retained, &mut scroll);
+                game.draw(&mut full);
+                for y in 0..144 {
+                    for x in 0..160 {
+                        assert_eq!(retained.get_pixel(x, y), full.get_pixel(x, y),
+                            "{language:?} OneMoreGo {previous}->{current} at ({x},{y})");
                     }
                 }
             }

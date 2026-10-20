@@ -228,7 +228,8 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
     draw_text_box(fb, 0, 88, 18, 5, fg);
     let is_zh = lang == Lang::Zh;
     let text = zh_slots_message(&slots.message, is_zh);
-    let width = if slots.phase == SlotsPhase::BetSelect {
+    let width = if slots.phase == SlotsPhase::BetSelect
+        || (slots.phase == SlotsPhase::Result && slots.coins > 0) {
         96
     } else {
         144
@@ -245,17 +246,10 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
         draw_text(line, 8, 96 + i as u32 * 12, fg, fb);
     }
     if slots.phase == SlotsPhase::Result && slots.coins > 0 {
-        draw_text(
-            if is_zh {
-                "A：继续  B：退出"
-            } else {
-                "A: YES  B: NO"
-            },
-            8,
-            120,
-            fg,
-            fb,
-        );
+        draw_text_box(fb, 112, 96, 4, 4, fg);
+        draw_text(if is_zh { "是" } else { "YES" }, 128, 104, fg, fb);
+        draw_text(if is_zh { "否" } else { "NO" }, 128, 120, fg, fb);
+        draw_text(">", 120, 104 + 16 * u32::from(slots.result_cursor), fg, fb);
     }
     if slots.phase == SlotsPhase::BetSelect {
         draw_text_box(fb, 112, 80, 4, 6, fg);
