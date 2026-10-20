@@ -1,10 +1,10 @@
 # OneMoreGo result menu
 
-Local candidate following PR #337. Tested game source:
-`d745fb2040cd36dc690e824ec9d6e2037535641d`.
-The current native before record is `9d51723896488eab574426fdf6edf1b9f38c5a31`,
-the tested refusal/loss candidate. Before publishing, wait for PR #337 to merge,
-merge the actual master, and refresh the literal-master baseline and identities.
+Base: literal master `927becc3889afe7e565ec27edbd42c8bf9b75466` after PR #337 merged.
+Tested candidate game source: `d745fb2040cd36dc690e824ec9d6e2037535641d`.
+The refreshed master executable and all three baseline PNGs match the earlier
+9d517238 controls. Candidate production crates are byte-identical to the tested
+source after merging the actual master.
 
 Original source: pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`,
 `engine/slots/slot_machine.asm` MainSlotMachineLoop / OneMoreGoSlotMachineText /
