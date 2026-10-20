@@ -6000,7 +6000,13 @@ impl PokemonGame {
                 let mut result = SlotsAction::Continue;
                 let mut coins_out = None;
                 if let Some(ref mut slots) = self.slots_screen {
-                    result = slots.update_frame(slots_input);
+                    let held = [(GbButton::A, 1u8), (GbButton::B, 2),
+                        (GbButton::Select, 4), (GbButton::Start, 8),
+                        (GbButton::Right, 16), (GbButton::Left, 32),
+                        (GbButton::Up, 64), (GbButton::Down, 128)]
+                        .into_iter().fold(0, |bits, (button, bit)|
+                            bits | if input.is_held(button) { bit } else { 0 });
+                    result = slots.update_frame_with_held_input(slots_input, held);
                     coins_out = Some(slots.coins);
                     // The slots' own cues (slot_machine.asm: :120 spin start,
                     // :842 each reel stop, :694 per-coin payout tick, :588
@@ -6015,6 +6021,7 @@ impl PokemonGame {
                                 SlotsSfx::Reward => SfxId::SlotsReward,
                                 SlotsSfx::GetKeyItem => SfxId::GetKeyItem,
                                 SlotsSfx::GetItem2 => SfxId::GetItem2,
+                                SlotsSfx::MenuConfirm => SfxId::PressAB,
                             };
                             audio.play_sfx(id);
                         }

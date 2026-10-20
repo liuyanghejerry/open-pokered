@@ -1,0 +1,108 @@
+{
+  "depends_on_PR": 337,
+  "tested_game_source": "d745fb2040cd36dc690e824ec9d6e2037535641d",
+  "candidate_binary_sha256": "f8da09d13bc6a08edcabd359f865087061fac201e39f28ab5fb1629d8ad050a3",
+  "before_game_source": "927becc3889afe7e565ec27edbd42c8bf9b75466",
+  "before_binary_sha256": "4b8697fe36cc99af5081f708fafe726fc22627f11a14a55fb42f9cda46a417aa",
+  "candidate_repeat_count": 2,
+  "all_observations_and_PNGs_repeat_identically_ignoring_capture_paths": true,
+  "pairs": [
+    {
+      "capture": "menu",
+      "frame": 3204,
+      "advancing_commands_equal_ignoring_read_only_queries": true
+    },
+    {
+      "capture": "down",
+      "frame": 3222,
+      "advancing_commands_equal_ignoring_read_only_queries": true
+    },
+    {
+      "capture": "confirmed",
+      "frame": 3344,
+      "advancing_commands_equal_ignoring_read_only_queries": true
+    }
+  ],
+  "core_pass": 3164,
+  "app_default": {
+    "passed": 383,
+    "existing_ignored": 38
+  },
+  "app_debug": {
+    "passed": 394,
+    "existing_ignored": 40
+  },
+  "negative_controls": {
+    "base_menu_tests_failed": 2,
+    "intermediate_payout_history_test_failed": 1,
+    "payout_history_intermediate_source": "8a34d7067f32cb9274bc64327d107dbe724b5580"
+  },
+  "native_cases": [
+    {
+      "case": "down-a",
+      "control_position": [
+        16,
+        16
+      ],
+      "complete": true,
+      "final_coins": 97,
+      "final_screen": "overworld"
+    },
+    {
+      "case": "b",
+      "control_position": [
+        16,
+        16
+      ],
+      "complete": true,
+      "final_coins": 97,
+      "final_screen": "overworld"
+    },
+    {
+      "case": "yes",
+      "complete": true,
+      "final_coins": 94,
+      "final_screen": "slots"
+    },
+    {
+      "case": "early-held-a",
+      "timing_frames": {
+        "parent_ack": 3083,
+        "menu_accept": 3086,
+        "still_menu": 3100,
+        "handoff": 3101
+      },
+      "complete": true,
+      "final_coins": 94,
+      "final_screen": "slots"
+    },
+    {
+      "case": "clamp",
+      "control_position": [
+        16,
+        16
+      ],
+      "complete": true,
+      "final_coins": 97,
+      "final_screen": "overworld"
+    }
+  ],
+  "native_confirmation_sfx": {
+    "id": 63,
+    "playing": true
+  },
+  "excluded_run": "audit-1196-one-more-after-1 failed early-held boundary because legacy tap(B,0) advancedtwo observedframes, putting firstA polloneframeearlier. Atomic press_timeline(B) fixed the harness; strictthird-framepoll/fifteen-framecompletion unchanged. Runs2+3 arefinal evidence.",
+  "replay_sha256": "4b7a619795d40f5103e0034ca0f0c6f800f14dff1a7f8e0f11918fbe73960656",
+  "source_file_sha256": {
+    "crates/pokered-core/src/slots_screen.rs": "7bb403d0e5c1e423778cbd675984237d451231c79546cae1e3cab8e74d73387e",
+    "crates/pokered-app/src/game.rs": "dc03b78df2fd9317f4642b469d688a21577f421bbfa1beb501c7d5d6250e016a",
+    "crates/pokered-app/src/game/shared_runtime_regressions.rs": "7632ad2a3a6636cd6b58c96a378b88a9ca0c29e028239e82b794a80237f4b2b4",
+    "crates/pokered-app/src/render/slots.rs": "35567c168a2caa3092380d9d93e7260b9fec8a1d7501f339b7488e11c67e6c44",
+    "crates/pokered-app/src/render/session.rs": "776202a22d9e2bd8cb1f2bd0f9681ee2b003656359008e1b5a6efd24ec1d2240"
+  },
+  "scope": "Native seeded fixture, normal boot/Continue and actual buttons only. Original source comparison; not originalROM timing/audio waveform or full slots foreground/presentation parity. Winning-payout inheritance covered by pure core integration; the five CLI cases use actual losing spins.",
+  "entry_PR337_state": "MERGED",
+  "literal_master_baseline_refreshed": true,
+  "refreshed_base_binary_and_all_PNGs_equal_previous_controls": true,
+  "candidate_crates_equal_tested_source_after_master_merge": true
+}
