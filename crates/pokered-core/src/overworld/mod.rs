@@ -6,6 +6,7 @@
 //! the game's overworld map system.
 
 pub mod bookshelf;
+mod bill_pokemon_list;
 pub mod bike_shop;
 pub mod collision;
 pub mod doors_elevators;

@@ -4603,6 +4603,7 @@ impl PokemonGame {
                                         }
                                     }
                                 }
+                                OverworldAudioRequest::SetMasterVolume { volume } => audio.set_master_volume(volume, volume),
                                 OverworldAudioRequest::PlayCry { species } => {
                                     if let Some(sp) =
                                         pokered_data::species::Species::from_scene_name(&species)

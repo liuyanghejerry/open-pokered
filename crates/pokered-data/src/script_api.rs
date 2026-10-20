@@ -686,6 +686,12 @@ impl ScriptApiRegistrar for PokemonScriptApi {
                 .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
             Ok(command.into_script_command())
         });
+        engine.register_async_fn("billPokemonList", |args: &[JsValue], ctx: &mut Context| {
+            let texts = args.get_or_undefined(0).to_json(ctx)?;
+            let command = PokemonScriptCommand::from_custom("billPokemonList", &[texts])
+                .map_err(|error| boa_engine::JsNativeError::typ().with_message(error))?;
+            Ok(command.into_script_command())
+        });
         for name in ["badgeMenu", "pokemonMenu"] {
             engine.register_async_fn(name, move |args: &[JsValue], ctx: &mut Context| {
                 let mut values = vec![args.get_or_undefined(0).to_json(ctx)?, args.get_or_undefined(1).to_json(ctx)?];

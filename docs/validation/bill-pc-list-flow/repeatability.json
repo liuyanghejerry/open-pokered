@@ -1,0 +1,117 @@
+{
+  "complete": true,
+  "normalized_records_identical": true,
+  "all_images_identical": [
+    {
+      "file": "eevee-owned-entry.png",
+      "sha256": "852e8abce6581c0308b27a77e896454d4fb1ca373cc33b69c4402f095861576b"
+    },
+    {
+      "file": "eevee-owned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "eevee-owned-returned.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "eevee-seen-only-entry.png",
+      "sha256": "bbc402f44b9395a4b1758b095d9cd1373b2de160b03054b8542f8adb9f20da29"
+    },
+    {
+      "file": "eevee-seen-only-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "eevee-seen-only-returned.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "eevee-unowned-entry.png",
+      "sha256": "bbc402f44b9395a4b1758b095d9cd1373b2de160b03054b8542f8adb9f20da29"
+    },
+    {
+      "file": "eevee-unowned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "eevee-unowned-returned.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "flareon-owned-entry.png",
+      "sha256": "57cc7d11d5d7d6488d718175b44d09a13377e61d34a19d5717b0d12fbdafd004"
+    },
+    {
+      "file": "flareon-owned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "flareon-owned-returned.png",
+      "sha256": "f6391d5e0a62333e31babf4c08cb98f86d8c13ab8fc4b50cb65b36d4e5ab4b21"
+    },
+    {
+      "file": "flareon-unowned-entry.png",
+      "sha256": "d48dec8fb03d4885fa39b77c0bb44b80bdf02f79125b46959cf47f5ad402d22e"
+    },
+    {
+      "file": "flareon-unowned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "flareon-unowned-returned.png",
+      "sha256": "f6391d5e0a62333e31babf4c08cb98f86d8c13ab8fc4b50cb65b36d4e5ab4b21"
+    },
+    {
+      "file": "jolteon-owned-entry.png",
+      "sha256": "d68381a4176c71e45fd23c5f1fc08c903be29b57b95c9e402bd44cd5250b2329"
+    },
+    {
+      "file": "jolteon-owned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "jolteon-owned-returned.png",
+      "sha256": "3544a35d2c5c6a59fedafcea8be818e4e7f9c9fca8c0df2426f5d2355d179b89"
+    },
+    {
+      "file": "jolteon-unowned-entry.png",
+      "sha256": "cf16f6cc1b493a27db4f085cf611440570167bfc049614daba7726b810f3ec73"
+    },
+    {
+      "file": "jolteon-unowned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "jolteon-unowned-returned.png",
+      "sha256": "3544a35d2c5c6a59fedafcea8be818e4e7f9c9fca8c0df2426f5d2355d179b89"
+    },
+    {
+      "file": "vaporeon-owned-entry.png",
+      "sha256": "c1a7e254ab4dafd9d1365fd81ec8edafa5774055e840ed69cc3af92abcc62d27"
+    },
+    {
+      "file": "vaporeon-owned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "vaporeon-owned-returned.png",
+      "sha256": "c50ba30ea306229d44cc85da2affdbd56b1350c6ca9ce75ccb257a7ba878d3b4"
+    },
+    {
+      "file": "vaporeon-unowned-entry.png",
+      "sha256": "1fcea46031897dbe700de9104607d8f8fe56fb3c50c3ac97d8168ad674b25fae"
+    },
+    {
+      "file": "vaporeon-unowned-question.png",
+      "sha256": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4"
+    },
+    {
+      "file": "vaporeon-unowned-returned.png",
+      "sha256": "c50ba30ea306229d44cc85da2affdbd56b1350c6ca9ce75ccb257a7ba878d3b4"
+    }
+  ],
+  "source": "b594bf52bfa588e76d4fe624b5d8e7aff22da529",
+  "binary_sha256": "b4dbc7f0a02038b9a65796f081070e23cd460cba34d08b2c83c21dcb067535b6",
+  "native_cases_per_run": 9
+}

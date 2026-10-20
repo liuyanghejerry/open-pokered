@@ -1,0 +1,15 @@
+{
+  "source": "efca10a5bbbae95f39204821fbf72d98a3e72842",
+  "binary_sha256": "e023e6fb0d7f42ce1c004a7dbb7ea10b7ca71ccbfae3373f0624d88188986a83",
+  "cause": "New scene capability had not been registered with the quest semantic extractor; strict unknown coverage gate caught it",
+  "fix": "Recognize Bill list as presentation outside quest-event effects, just like prior pokemonMenu. No unknown-construct allowance or gate change.",
+  "negative_control_two_tests_fail_before_registration": true,
+  "agent_full_passed": 63,
+  "workspace_passed": 5712,
+  "workspace_existing_ignored": 95,
+  "workspace_targets": 126,
+  "workspace_command": "cargo test --workspace --tests",
+  "native_cold_api_case": "unseen Eevee; normal CONTINUE/physical PC input; read-only get_script_semantics before PC activation; actual response retains all three PC flag reads and separator effect with no unknown effect, query frame804 unchanged",
+  "three_actual_PNGs_identical_to_previous_candidate": true,
+  "full_nine_case_native_runs_remain_at_previous_named_sources": "b594bf52 and eb282194; not relabeled as nine-case runs on this source"
+}

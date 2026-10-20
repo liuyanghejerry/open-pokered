@@ -225,6 +225,9 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "pokecenterFarewell",
     // Blocking presentation only; giveItem / takeMoney own vending state.
     "pokemonMenu",
+    // Viewing Bill's entries only registers Dex-seen state, outside this
+    // quest graph; the scene still owns separator flags and the ticket gift.
+    "billPokemonList",
     "readingMenu",
     "showMoneyBox",
     "showCoinBox",
@@ -1239,5 +1242,51 @@ mod static_encounter_effect_tests {
         assert_eq!(command_effect("staticEncounter",&args),StateEffect::BattleStarted{battle:BattleKind::Wild{species:"ZAPDOS".into(),level:Some(50)}});
         assert!(EFFECT_COMMANDS.contains(&"staticEncounter"));
         assert!(!NO_STATE_COMMANDS.contains(&"staticEncounter"));
+    }
+}
+
+#[cfg(test)]
+mod bill_pokemon_list_semantics_tests {
+    use super::*;
+    use dotzuki_engine_dsl::ast::SourceSpan;
+
+    #[test]
+    fn bill_pokemon_list_is_presentation_in_statements_and_calls() {
+        for name in ["billPokemonList", "game.billPokemonList"] {
+            for as_call in [false, true] {
+                let args = vec![Expression::ArrayLit(
+                    ["favorite", "question", "EEVEE", "FLAREON", "JOLTEON", "VAPOREON", "CANCEL"]
+                        .iter().map(|text| Expression::StringLit((*text).into())).collect(),
+                )];
+                let mut coverage = CoverageAccum::default();
+                let mut ex = Extractor { map: "Test", reads: vec![], effects: vec![], coverage: &mut coverage };
+                if as_call {
+                    ex.walk_expression(&Expression::Call { callee: name.into(), args });
+                } else {
+                    ex.walk_statements(&[StoryStmt::Command { name: name.into(), args, span: SourceSpan::point("test", 1, 1) }]);
+                }
+                assert!(ex.effects.is_empty());
+                assert!(ex.reads.is_empty());
+                assert!(coverage.unknown.is_empty());
+                assert_eq!(coverage.commands_recognized, 1);
+                assert_eq!(coverage.commands_unknown + coverage.calls_unknown, 0);
+            }
+        }
+    }
+
+    #[test]
+    fn actual_bills_house_keeps_pc_branch_reads_separator_and_ticket_effects() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BillsHouse").unwrap();
+        let mut coverage = CoverageAccum::default();
+        let map = extract_map_with_coverage(&scene, &mut coverage);
+        assert!(coverage.unknown.is_empty(), "{:?}", coverage.unknown);
+        let pc = map.storylines.iter().find(|s| s.storyline == "pcMachine").unwrap();
+        for flag in ["EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", "EVENT_USED_CELL_SEPARATOR_ON_BILL", "EVENT_BILL_SAID_USE_CELL_SEPARATOR"] {
+            assert!(pc.reads.contains(&StatePredicate::FlagRead { flag: flag.into() }));
+        }
+        assert!(pc.effects.contains(&StateEffect::FlagSet { flag: "EVENT_USED_CELL_SEPARATOR_ON_BILL".into() }));
+        let ticket = map.storylines.iter().find(|s| s.storyline == "talkBill").unwrap();
+        assert!(ticket.effects.contains(&StateEffect::ItemGiven { item: "SS_TICKET".into(), qty: Some(1) }));
+        assert!(ticket.effects.contains(&StateEffect::FlagSet { flag: "EVENT_GOT_SS_TICKET".into() }));
     }
 }

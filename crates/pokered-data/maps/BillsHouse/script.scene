@@ -49,13 +49,13 @@ game_scene BillsHouse {
     // BillsHousePC only operates when facing UP; a side approach is silent.
     @if (getPlayerFacing() == "up") {
       @if (getFlag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING")) {
-        @speaker("") { @t("BILL's favorite\nPOKeMON list!", "正辉喜爱的\n宝可梦列表！") }
-        @speaker("") { @t("Which POKeMON do\nyou want to see?", "你想看哪只\n宝可梦？") }
-        pokemonMenu([
+        billPokemonList([
+          @t("BILL's favorite\nPOKeMON list!", "正辉喜爱的\n宝可梦列表！"),
+          @t("Which POKeMON do\nyou want to see?", "你想看哪只\n宝可梦？"),
           @t("EEVEE", "伊布"), @t("FLAREON", "火伊布"),
           @t("JOLTEON", "雷伊布"), @t("VAPOREON", "水伊布"),
           @t("CANCEL", "取消")
-        ], ["Eevee", "Flareon", "Jolteon", "Vaporeon"])
+        ])
       } @else {
         @if (!getFlag("EVENT_USED_CELL_SEPARATOR_ON_BILL") && getFlag("EVENT_BILL_SAID_USE_CELL_SEPARATOR")) {
           // _BillsHouseInitiatedText ends in @, then TX_PROMPT_BUTTON.

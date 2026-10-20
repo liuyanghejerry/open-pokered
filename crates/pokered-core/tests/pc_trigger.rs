@@ -159,18 +159,20 @@ fn billshouse_pc_after_return_browses_all_four_entries_and_retains_cursor() {
     screen.update_frame(press_a());
     // Advance the introductory text with input, through the real hidden-event
     // binding, rather than invoking the scene handler directly.
-    for frame in 0..200 {
+    for frame in 0..2000 {
         assert!(
             screen.pending_pc.is_none(),
             "Bill's list must not open storage"
         );
-        if screen.pending_choice.is_some() {
+        if screen.choice_accepts_input() {
             break;
         }
-        if let Some(dialogue) = screen.pending_dialogue.as_mut() {
-            dialogue.skip_to_full_page();
-        }
-        screen.update_frame(if frame % 2 == 0 { press_a() } else { none() });
+        let ack = screen
+            .pending_dialogue
+            .as_ref()
+            .is_some_and(|d| d.waiting_for_input())
+            && frame % 8 == 0;
+        screen.update_frame(if ack { press_a() } else { none() });
     }
     assert_eq!(
         screen
@@ -190,6 +192,10 @@ fn billshouse_pc_after_return_browses_all_four_entries_and_retains_cursor() {
                 OverworldInput::new(false, true, false, false, false, false, false, false),
             );
         }
+        for _ in 0..3 {
+            screen.update_frame(none());
+        }
+        assert!(screen.choice_accepts_input());
         assert_eq!(
             screen.pending_choice.as_ref().unwrap().selected,
             index as u32
@@ -197,7 +203,10 @@ fn billshouse_pc_after_return_browses_all_four_entries_and_retains_cursor() {
         tap(&mut screen, press_a());
         for _ in 0..20 {
             screen.update_frame(none());
-            if screen.pending_pokedex_entry.is_some() {
+            if screen.pending_pokedex_entry.as_ref().is_some_and(|entry| {
+                entry.presentation
+                    == pokered_core::overworld::screen::PokedexEntryPresentation::Data
+            }) {
                 break;
             }
         }
@@ -215,10 +224,12 @@ fn billshouse_pc_after_return_browses_all_four_entries_and_retains_cursor() {
         );
         for _ in 0..20 {
             screen.update_frame(none());
-            if screen.pending_choice.is_some() {
+            if screen.choice_accepts_input() {
                 break;
             }
         }
+        assert!(screen.choice_accepts_input());
+        assert!(screen.displayed_field_dialogue().is_some());
         assert!(screen.pending_pokedex_entry.is_none());
         assert_eq!(
             screen

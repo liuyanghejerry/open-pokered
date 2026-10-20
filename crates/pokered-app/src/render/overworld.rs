@@ -204,9 +204,8 @@ fn blit_priority_bg_tile_clipped(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i
 
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
 /// token and draw the real dex data (`pokered_data::pokedex`, ported from
-/// `data/pokemon/dex_entries.asm`) via the shared entry renderer. Previews
-/// (starter balls, gift mons, fossils) show the full entry, as the previous
-/// hardcoded starter previews did.
+/// `data/pokemon/dex_entries.asm`) via the shared entry renderer. The host's
+/// actual owned bit controls data availability, including script-owned entries.
 fn draw_pokedex_entry(
     species: &str,
     page: usize,
@@ -2237,15 +2236,35 @@ fn draw_overworld_impl(
 
     // Fullscreen Pokédex entry overlay — takes over the entire screen.
     if let Some(ref mut dex_state) = screen.pending_pokedex_entry {
+        use pokered_core::overworld::screen::PokedexEntryPresentation;
+        if dex_state.presentation == PokedexEntryPresentation::White {
+            fb.clear(Rgba::WHITE);
+            return;
+        }
+        if dex_state.presentation == PokedexEntryPresentation::ReturnMap {
+            // ReloadMapData precedes restoration of Bill's saved menu tiles.
+            return;
+        }
+        if dex_state.presentation == PokedexEntryPresentation::PageClear {
+            if let Some(sp) = pokered_data::species::Species::from_scene_name(&dex_state.species) {
+                super::pokedex::draw_entry_for_species_with_description(
+                    sp, dex_state.page, dex_state.owned, false,
+                    language == pokered_core::game_state::Lang::Zh, res, fb,
+                );
+            }
+            return;
+        }
         let total = draw_pokedex_entry(
             &dex_state.species,
             dex_state.page,
-            dex_state.owned,
+            dex_state.owned && dex_state.presentation == PokedexEntryPresentation::Data,
             res,
             fb,
             language == pokered_core::game_state::Lang::Zh,
         );
-        dex_state.total_pages = total;
+        if dex_state.presentation == PokedexEntryPresentation::Data {
+            dex_state.total_pages = total;
+        }
         return;
     }
 

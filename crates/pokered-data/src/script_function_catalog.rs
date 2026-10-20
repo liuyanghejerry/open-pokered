@@ -8,6 +8,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "askFieldYesNo",
     "badgeMenu",
     "bikeShopOffer",
+    "billPokemonList",
     "choosePartyPokemon",
     "depositDaycare",
     "elevatorMenu",

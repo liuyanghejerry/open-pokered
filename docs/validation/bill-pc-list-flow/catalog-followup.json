@@ -1,0 +1,14 @@
+{
+  "source": "eb282194cce6041433f9d16590e7b50e2f25e063",
+  "binary_sha256": "b4dbc7f0a02038b9a65796f081070e23cd460cba34d08b2c83c21dcb067535b6",
+  "change": "Move billPokemonList into alphabetical catalog order; capability set unchanged",
+  "data_full_passed": 448,
+  "data_full_targets": 17,
+  "cold_sram_actual_cry_volume_three_cases_passed": true,
+  "native_cases": 9,
+  "normalized_case_records_identical_to_previous_game_source": true,
+  "all27_pngs_identical_to_previous_game_source": true,
+  "previous_game_source": "b594bf52bfa588e76d4fe624b5d8e7aff22da529",
+  "previous_binary_sha256": "b4dbc7f0a02038b9a65796f081070e23cd460cba34d08b2c83c21dcb067535b6",
+  "original_CI_failure": "catalog_is_sorted_and_unique; old run af9c6d5d retained in audit-1203-pr342-data-failure.log"
+}
