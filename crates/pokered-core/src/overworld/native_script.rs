@@ -3732,20 +3732,22 @@ mod tests {
                         engine.seed_number("coins", coins);
                         let commands = drive_fidelity_scene(&mut engine, "slotMachines", false, "", &[answer]);
                         let allowed = has_case && coins > 0.0;
-                        let expected = if !has_case { "A COIN CASE is required!" }
-                            else if coins == 0.0 { "You don't have any coins!" }
-                            else { "A slot machine!\nWant to play?" };
-                        assert!(matches!(&commands[0], ScriptCommand::ShowText { text } if text == expected),
-                            "owned {owned}, case {has_case}, coins {coins}, answer {answer}: {commands:?}");
-                        assert_eq!(commands.iter().filter(|command| matches!(command,
-                            ScriptCommand::ShowChoice { .. })).count(), usize::from(allowed));
                         if allowed {
-                            assert!(matches!(&commands[1], ScriptCommand::ShowChoice { options, .. }
-                                if options == &["YES", "NO"]));
+                            // PrintText's DONE ends immediately: YesNoChoice follows
+                            // without a separate ShowText acknowledgement.
+                            assert!(matches!(&commands[0], ScriptCommand::Custom { name, args }
+                                if name == "askFieldYesNo" && args == &vec![
+                                    json!("A slot machine!\nWant to play?"), json!("YES"), json!("NO")]),
+                                "funded machine must ask directly, without an extra A: {commands:?}");
+                        } else {
+                            let expected = if has_case { "You don't have any coins!" }
+                                else { "A COIN CASE is required!" };
+                            assert!(matches!(&commands[0], ScriptCommand::ShowText { text } if text == expected));
                         }
+                        assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::ShowChoice { .. })));
                         assert_eq!(commands.iter().any(|command| matches!(command,
                             ScriptCommand::Custom { name, .. } if name == "openSlots")), allowed && answer == 0);
-                        assert_eq!(commands.len(), if allowed { 2 + usize::from(answer == 0) } else { 1 });
+                        assert_eq!(commands.len(), if allowed { 1 + usize::from(answer == 0) } else { 1 });
                     }
                 }
             }
