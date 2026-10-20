@@ -1,13 +1,14 @@
 {
-  "base": "d037ea54abdf5d76e950e1c08fb560cebd7fa441",
-  "tested_candidate_source": "a03223ea67cee12ddc589fd4fc3cf352601e46bb",
+  "base": "c05ccb0f5397e94e86673262e89f1eb3dafd8f07",
+  "tested_candidate_source": "73250644bfd7adc4b615601babea715fb0496ef1",
   "source_file_sha256": "40cec646c2d638d42911e45d8cab5e5d32eaa2ef41db6bd2f40f941c0ca2167a",
   "fixture_sha256": "9b1431fd5166ab265c3ab99fb5a5e5563d72f8bcb9bc981e936645101217bbd5",
   "results": {
     "before": {
-      "binary_sha256": "7766cff6fb1e6bd571d482c07dffb42e5c2d00337d95f9fae81565fe39316708",
+      "binary_sha256": "9fadc77aeead80c994539466ea54ff76bdfda4bb88680dee02dfe4f4e05201b5",
       "repeats": 2,
       "repeat_observations_and_images_identical": true,
+      "all_images_identical_to_pre_PR334_integration_controls": true,
       "cases": [
         {
           "case": "entry",
@@ -30,9 +31,10 @@
       ]
     },
     "after": {
-      "binary_sha256": "412efca91f2a36b94193f61a539ab0745aba25aad027ffce58f336991d3ec3ed",
+      "binary_sha256": "3224e8c1c66d9adb58715f57a1d7d3b460b8b2a3865bad09f627d722f1b9329f",
       "repeats": 2,
       "repeat_observations_and_images_identical": true,
+      "all_images_identical_to_pre_PR334_integration_controls": true,
       "cases": [
         {
           "case": "entry",
@@ -62,5 +64,8 @@
   "unit_cases": 73,
   "renderer_tests": 4,
   "new_tests_fail_before": 2,
-  "scope": "Only bet menu controls/defaults/reset. Original source is authoritative; original ROM runtime not verified by this evidence. Native offline fixture with normal Continue, no runtime setters. Entry guards, consent, full slots animations/audio are not covered."
+  "scope": "Only bet menu controls/defaults/reset. Original source is authoritative; original ROM runtime not verified by this evidence. Native offline fixture with normal Continue, no runtime setters. Entry guards, consent, full slots animations/audio are not covered.",
+  "full_core_tests": 3155,
+  "original_failure_control_base": "d037ea54abdf5d76e950e1c08fb560cebd7fa441",
+  "bet_source_unchanged_in_PR334": true
 }

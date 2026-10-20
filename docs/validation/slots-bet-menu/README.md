@@ -1,7 +1,7 @@
 # Slot-machine bet menu
 
-Base: `d037ea54abdf5d76e950e1c08fb560cebd7fa441`. Tested game source:
-`a03223ea67cee12ddc589fd4fc3cf352601e46bb`.
+Base: `c05ccb0f5397e94e86673262e89f1eb3dafd8f07`. Tested game source:
+`73250644bfd7adc4b615601babea715fb0496ef1`.
 
 The original starts the bet menu on the top row, x3, every time. Returning YES
 from OneMoreGo jumps to MainSlotMachineLoop, which clears the cursor again.
@@ -15,6 +15,9 @@ and `home/window.asm` HandleMenuInput. The fix changes the pure screen state onl
 
 Two new regressions fail on the old code and pass on the candidate. 73 related
 core tests and four slot-renderer tests pass, including cached cursor redraws.
+After integrating PR #334, all 3,155 core tests and the four renderer tests pass.
+The new native before/after recordings match every earlier paired PNG.
+The intended failure logs are from d037; PR #334 does not change the bet source.
 The payout test now explicitly selects x1; it keeps its original one-payline
 payout assertions rather than depending on the former incorrect default.
 
