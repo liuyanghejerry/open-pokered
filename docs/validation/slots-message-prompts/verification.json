@@ -5,7 +5,7 @@
   "production_source_tested_in_unit_suites": "a150e1cf",
   "candidate_binary_sha256": "4b8697fe36cc99af5081f708fafe726fc22627f11a14a55fb42f9cda46a417aa",
   "base_binary_sha256": "36a484ab0648df44c4210b9d3f3f9dcb819441beb4434e2181367606d418ebff",
-  "base_source": "642668cb329bcc2537d233046a13fe85db6e1264",
+  "base_source": "7c663fd065a1847e1ade6a1dfb0733ec990a529a",
   "candidate_repeat_count": 2,
   "repeat_observations_and_all_pngs_identical_ignoring_capture_path": true,
   "paired_inputs": [
@@ -39,5 +39,9 @@
   },
   "before_unit_expected_failures": 2,
   "replay_sha256": "bdd83b62e7af8cbf6ed53ddbe0774c777a580f3a2ef25a8fc7d6b6d0b0280d12",
-  "scope": "Original assembly comparison and offline native fixture with normal boot/Continue and actual buttons. Baseline recorded once, candidate twice. Does not establish original-ROM timing/audio or whole-minigame parity. OneMoreGo selection, entry presentation, rerolls/RNG/audio remain outside this change."
+  "scope": "Original assembly comparison and offline native fixture with normal boot/Continue and actual buttons. Baseline recorded once, candidate twice. Does not establish original-ROM timing/audio or whole-minigame parity. OneMoreGo selection, entry presentation, rerolls/RNG/audio remain outside this change.",
+  "entry_PR_state": "MERGED",
+  "baseline_literal_master_build": "audit-1196-pr337-master-build.log",
+  "refreshed_base_binary_and_all_PNGs_equal_previous_controls": true,
+  "candidate_crates_equal_tested_source_after_master_merge": true
 }
