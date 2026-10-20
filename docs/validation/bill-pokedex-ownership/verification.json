@@ -1,0 +1,163 @@
+{
+  "base": "d8427ea8393488f2ba9b27ba2728b589745bc4eb",
+  "base_binary_sha256": "44e194d898b003e47b8ef0f7f8ada7145e9ee0fb3c1eb9f89101aa6cd135af38",
+  "candidate_game_source": "cbdc234cbbb2024b26ef3f7171fd146a806c8873",
+  "candidate_binary_sha256": "c308fac4e5ba890f72bc66f7aa2ca6830608946dcdcc1fd35e8ad18148dc4907",
+  "repeat_complete_runs": 2,
+  "repeat_records_equal_after_output_path_normalization": true,
+  "all_9_repeat_png_bytes_equal": true,
+  "all_9_pairs_identical_frame_advancing_input": true,
+  "all_4_owned_control_png_bytes_equal_before_after": true,
+  "cases": [
+    {
+      "case": "eevee-unowned",
+      "same_input_prefix": true,
+      "frame": 1437,
+      "owned": false,
+      "before_ink": 319,
+      "after_ink": 0,
+      "before_exit_presses": 2,
+      "after_exit_presses": 1,
+      "PNG_unchanged": false
+    },
+    {
+      "case": "eevee-owned",
+      "same_input_prefix": true,
+      "frame": 1437,
+      "owned": true,
+      "before_ink": 319,
+      "after_ink": 319,
+      "before_exit_presses": 2,
+      "after_exit_presses": 2,
+      "PNG_unchanged": true
+    },
+    {
+      "case": "flareon-unowned",
+      "same_input_prefix": true,
+      "frame": 1446,
+      "owned": false,
+      "before_ink": 324,
+      "after_ink": 0,
+      "before_exit_presses": 2,
+      "after_exit_presses": 1,
+      "PNG_unchanged": false
+    },
+    {
+      "case": "flareon-owned",
+      "same_input_prefix": true,
+      "frame": 1446,
+      "owned": true,
+      "before_ink": 324,
+      "after_ink": 324,
+      "before_exit_presses": 2,
+      "after_exit_presses": 2,
+      "PNG_unchanged": true
+    },
+    {
+      "case": "jolteon-unowned",
+      "same_input_prefix": true,
+      "frame": 1455,
+      "owned": false,
+      "before_ink": 373,
+      "after_ink": 0,
+      "before_exit_presses": 2,
+      "after_exit_presses": 1,
+      "PNG_unchanged": false
+    },
+    {
+      "case": "jolteon-owned",
+      "same_input_prefix": true,
+      "frame": 1455,
+      "owned": true,
+      "before_ink": 373,
+      "after_ink": 373,
+      "before_exit_presses": 2,
+      "after_exit_presses": 2,
+      "PNG_unchanged": true
+    },
+    {
+      "case": "vaporeon-unowned",
+      "same_input_prefix": true,
+      "frame": 1464,
+      "owned": false,
+      "before_ink": 313,
+      "after_ink": 0,
+      "before_exit_presses": 2,
+      "after_exit_presses": 1,
+      "PNG_unchanged": false
+    },
+    {
+      "case": "vaporeon-owned",
+      "same_input_prefix": true,
+      "frame": 1464,
+      "owned": true,
+      "before_ink": 313,
+      "after_ink": 313,
+      "before_exit_presses": 2,
+      "after_exit_presses": 2,
+      "PNG_unchanged": true
+    },
+    {
+      "case": "eevee-seen-only",
+      "same_input_prefix": true,
+      "frame": 1437,
+      "owned": false,
+      "before_ink": 319,
+      "after_ink": 0,
+      "before_exit_presses": 2,
+      "after_exit_presses": 1,
+      "PNG_unchanged": false
+    }
+  ],
+  "repeat_png_sha256": {
+    "eevee-unowned-entry.png": "bbc402f44b9395a4b1758b095d9cd1373b2de160b03054b8542f8adb9f20da29",
+    "eevee-owned-entry.png": "852e8abce6581c0308b27a77e896454d4fb1ca373cc33b69c4402f095861576b",
+    "flareon-unowned-entry.png": "d48dec8fb03d4885fa39b77c0bb44b80bdf02f79125b46959cf47f5ad402d22e",
+    "flareon-owned-entry.png": "57cc7d11d5d7d6488d718175b44d09a13377e61d34a19d5717b0d12fbdafd004",
+    "jolteon-unowned-entry.png": "cf16f6cc1b493a27db4f085cf611440570167bfc049614daba7726b810f3ec73",
+    "jolteon-owned-entry.png": "d68381a4176c71e45fd23c5f1fc08c903be29b57b95c9e402bd44cd5250b2329",
+    "vaporeon-unowned-entry.png": "1fcea46031897dbe700de9104607d8f8fe56fb3c50c3ac97d8168ad674b25fae",
+    "vaporeon-owned-entry.png": "c1a7e254ab4dafd9d1365fd81ec8edafa5774055e840ed69cc3af92abcc62d27",
+    "eevee-seen-only-entry.png": "bbc402f44b9395a4b1758b095d9cd1373b2de160b03054b8542f8adb9f20da29"
+  },
+  "scope": "Offline JSON fixtures, normal boot/Continue, actual single-key input/read-only RPCs. export_fixture clones live save data without writing it. Native verification against original source, not original-ROM runtime or fresh mainline.",
+  "validation_sources": {
+    "full_core_app_tui": "06c0fd819daa69b533b78fcc65e3496130489d40 on abdb master339",
+    "post_master340_targeted": "6e06d95ca2170a49082aeba3769e8c0e9ee4460f:16coreBill+1coldtest",
+    "seen_only_extension_and_native": "cbdc234cbbb2024b26ef3f7171fd146a806c8873"
+  },
+  "tests": {
+    "full_core_pass": 3579,
+    "existing_doc_ignore": 1,
+    "full_app_default_pass": 886,
+    "full_app_existing_ignore": 88,
+    "tui_all_test_targets_compile": true,
+    "post_merge_bill_tests_pass": 16,
+    "post_merge_cold_test_pass": 1,
+    "seen_only_three_cold_cases_pass": true
+  },
+  "separate_audio_finding": {
+    "first_96_frames_have_press_ab_positive_control": true,
+    "expected_eevee_cry_sfx": 45,
+    "expected_cry_present": false,
+    "fixed_by_this_change": false
+  },
+  "integrated_subplot": {
+    "complete": true,
+    "source": "cbdc234cbbb2024b26ef3f7171fd146a806c8873",
+    "binary_sha256": "c308fac4e5ba890f72bc66f7aa2ca6830608946dcdcc1fd35e8ad18148dc4907",
+    "fixture_sha256": "df3ac9755f290cb70030b6b83b4fd308765e5c8a5d28a6dac3d059f873a50bea",
+    "scope": "One offline pre-help fixture, normal boot/Continue, then actual buttons and read-only RPCs. No runtime seeding/warps/skip. Not fresh mainline or original-ROM runtime.",
+    "waypoints": [
+      "pre-help",
+      "monster-in-machine",
+      "separated",
+      "ticket-received",
+      "left-house",
+      "returned-house",
+      "unowned-eevee"
+    ],
+    "all_6_bill_flags_set_by_actual_story_actions": true,
+    "returned_pointing_bill_visible": true
+  }
+}

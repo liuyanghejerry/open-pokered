@@ -1,0 +1,74 @@
+[
+  {
+    "name": "eevee-unowned",
+    "species": "Eevee",
+    "dex": 133,
+    "index": 0,
+    "owned": false,
+    "seen": false
+  },
+  {
+    "name": "eevee-owned",
+    "species": "Eevee",
+    "dex": 133,
+    "index": 0,
+    "owned": true,
+    "seen": true
+  },
+  {
+    "name": "flareon-unowned",
+    "species": "Flareon",
+    "dex": 136,
+    "index": 1,
+    "owned": false,
+    "seen": false
+  },
+  {
+    "name": "flareon-owned",
+    "species": "Flareon",
+    "dex": 136,
+    "index": 1,
+    "owned": true,
+    "seen": true
+  },
+  {
+    "name": "jolteon-unowned",
+    "species": "Jolteon",
+    "dex": 135,
+    "index": 2,
+    "owned": false,
+    "seen": false
+  },
+  {
+    "name": "jolteon-owned",
+    "species": "Jolteon",
+    "dex": 135,
+    "index": 2,
+    "owned": true,
+    "seen": true
+  },
+  {
+    "name": "vaporeon-unowned",
+    "species": "Vaporeon",
+    "dex": 134,
+    "index": 3,
+    "owned": false,
+    "seen": false
+  },
+  {
+    "name": "vaporeon-owned",
+    "species": "Vaporeon",
+    "dex": 134,
+    "index": 3,
+    "owned": true,
+    "seen": true
+  },
+  {
+    "name": "eevee-seen-only",
+    "species": "Eevee",
+    "dex": 133,
+    "index": 0,
+    "owned": false,
+    "seen": true
+  }
+]
