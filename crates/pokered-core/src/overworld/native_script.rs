@@ -3102,11 +3102,93 @@ mod tests {
         for returned in [false, true] {
             let mut e = NativeScriptEngine::new();
             e.load_map("BillsHouse", &scene);
+            e.seed_text("playerFacing", "up");
             e.set_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL", true);
             e.set_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", returned);
             let cmds = drive_fidelity_scene(&mut e, "pcMachine", true, "", &[]);
             assert!(!cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "openBillsPC")));
             assert_eq!(cmds.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "pokemonMenu")), returned);
+        }
+    }
+
+    #[test]
+    fn original_bill_separator_text_sound_waits_and_flags_follow_the_original_order() {
+        use pokered_data::script_command::{FieldTextPrompt, PokemonScriptCommand as P};
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BillsHouse").unwrap();
+        for owned in [false, true] {
+            let mut engine = NativeScriptEngine::new();
+            if owned { engine.load_map_owned("BillsHouse", scene.clone()); }
+            else { engine.load_map("BillsHouse", &scene); }
+            engine.seed_text("playerFacing", "up");
+            engine.set_flag("EVENT_BILL_SAID_USE_CELL_SEPARATOR", true);
+            let mut next = engine.call_function_no_args("pcMachine").unwrap();
+            let mut commands = Vec::new();
+            let mut flags_at_command = Vec::new();
+            for _ in 0..64 {
+                let Some(command) = next else { break; };
+                flags_at_command.push([
+                    engine.get_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL"),
+                    engine.get_flag("EVENT_MET_BILL_2"), engine.get_flag("EVENT_MET_BILL"),
+                ]);
+                commands.push(command);
+                next = engine.signal_done(CommandResult::Void).unwrap();
+            }
+            assert!(engine.is_idle());
+            let sound = |id: &str| ScriptCommand::PlaySound { sound_id: id.into() };
+            let delay = |frames| ScriptCommand::Delay { frames };
+            let expected = vec![
+                P::PrintFieldText { text: "<PLAYER> initiated\nTELEPORTER's Cell\nSeparator!".into(),
+                    retain_window: true, prompt: FieldTextPrompt::Button, leading_sound: None }.into_script_command(),
+                sound("SFX_STOP_ALL_MUSIC"), delay(16), sound("SFX_SWITCH"), P::WaitSound.into_script_command(),
+                delay(60), P::FinishFieldText.into_script_command(),
+                delay(32), sound("SFX_TINK"), P::WaitSound.into_script_command(),
+                delay(80), sound("SFX_SHRINK"), P::WaitSound.into_script_command(),
+                delay(48), sound("SFX_TINK"), P::WaitSound.into_script_command(),
+                delay(32), sound("SFX_GET_ITEM_1"), P::WaitSound.into_script_command(),
+                ScriptCommand::PlayMusic { music_id: "Cities2".into() },
+                ScriptCommand::SetNpcPosition { npc_id: "BILLS_HOUSE_OBJ_2".into(), x: 1, y: 2 },
+                ScriptCommand::ShowObjectByName { toggle_id: "BILLS_HOUSE_OBJ_2".into() }, delay(8),
+                ScriptCommand::MoveNpc { npc_id: "BILLS_HOUSE_OBJ_2".into(), path: vec![(1,3),(2,3),(3,3),(4,3),(4,4)] },
+            ];
+            assert_eq!(commands, expected);
+            for (index, flags) in flags_at_command.iter().enumerate() {
+                assert_eq!(*flags, [index >= 20, false, false],
+                    "USED waits for the sounds/music; MET waits for Bill's walk: command {index}");
+            }
+            for flag in ["EVENT_USED_CELL_SEPARATOR_ON_BILL", "EVENT_MET_BILL_2", "EVENT_MET_BILL"] {
+                assert!(engine.get_flag(flag));
+            }
+        }
+    }
+
+    #[test]
+    fn original_bill_pc_checks_up_then_returned_used_and_help_flags() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BillsHouse").unwrap();
+        for owned in [false, true] {
+            for facing in ["up", "down", "left", "right"] {
+                for bits in 0..8 {
+                    let mut engine = NativeScriptEngine::new();
+                    if owned { engine.load_map_owned("BillsHouse", scene.clone()); }
+                    else { engine.load_map("BillsHouse", &scene); }
+                    engine.seed_text("playerFacing", facing);
+                    let returned = bits & 1 != 0;
+                    let used = bits & 2 != 0;
+                    let agreed = bits & 4 != 0;
+                    engine.set_flag("EVENT_LEFT_BILLS_HOUSE_AFTER_HELPING", returned);
+                    engine.set_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL", used);
+                    engine.set_flag("EVENT_BILL_SAID_USE_CELL_SEPARATOR", agreed);
+                    let commands = drive_fidelity_scene(&mut engine, "pcMachine", true, "", &[]);
+                    let run = facing == "up" && !returned && !used && agreed;
+                    assert_eq!(engine.get_flag("EVENT_USED_CELL_SEPARATOR_ON_BILL"), used || run);
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "printFieldText")), run);
+                    assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "pokemonMenu")), facing == "up" && returned);
+                    if facing != "up" {
+                        assert!(commands.is_empty(), "BillsHousePC returns silently unless facing UP");
+                    } else if !returned && !run {
+                        assert_eq!(commands, vec![ScriptCommand::ShowText { text: "TELEPORTER is displayed on\nthe PC monitor.".into() }]);
+                    }
+                }
+            }
         }
     }
 

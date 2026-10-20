@@ -1,0 +1,83 @@
+{
+  "base": "de704e839d3b2742c66202048806ea3a84a70cd9",
+  "base_binary_sha256": "f8da09d13bc6a08edcabd359f865087061fac201e39f28ab5fb1629d8ad050a3",
+  "candidate_game_source": "5bd4cb457c088c6a84b56886ad01e686462b739b",
+  "candidate_binary_sha256": "867e15d7a769b929a6336cb79fdad0102cebcc21a59e2638a36db474fbad4d00",
+  "native_runs_complete": 2,
+  "normalized_records_equal": true,
+  "all_repeat_png_bytes_equal": true,
+  "initial_comparison_frame": 804,
+  "after_screenshot_sha256": {
+    "up-switch.png": "6150fac4fc2a9be3919891b0250b9083facc6cfd3f6e7b826545bfd00971ddcb",
+    "up-bill-visible-before-walk.png": "6ca813a73541748f97db65718952061f695479f8a647f8661d0ce5074be21d33",
+    "up-initial.png": "c64a0587e5df967147066a8882d9afef99444b36e1cc96744949a96f493ba642",
+    "up-finished.png": "00395a955707bc52cc0d3662ea3664bed519540679f50ad402c7867f26398faa",
+    "left-initial.png": "4cc7f4665a076c0bfe0c7c3251d3537f92663af4a216236aa590c68bf45a54a0"
+  },
+  "scope": "Offline native fixtures, normal boot/Continue, buttons/read-only observations. PCM/music proven by companion cold-SRAM app tests, not this RPC. Not original-ROM timing proof.",
+  "tests": {
+    "core_pass": 3166,
+    "app_debug_pass": 396,
+    "app_debug_existing_ignore": 40,
+    "app_default_pass": 385,
+    "app_default_existing_ignore": 38,
+    "agent_pass": 61,
+    "core_all_targets_pass": 3579,
+    "core_all_targets_existing_doc_ignore": 1,
+    "core_all_targets_exit_code": 0
+  },
+  "cases": [
+    {
+      "case": "up",
+      "complete": true,
+      "sounds": [
+        [
+          855,
+          72
+        ],
+        [
+          970,
+          59
+        ],
+        [
+          1066,
+          71
+        ],
+        [
+          1196,
+          59
+        ],
+        [
+          1244,
+          57
+        ]
+      ],
+      "visible_delay_frames": 8,
+      "final_flags": {
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL": true,
+        "EVENT_MET_BILL": true,
+        "EVENT_MET_BILL_2": true
+      },
+      "control_position": [
+        3,
+        5
+      ]
+    },
+    {
+      "case": "left",
+      "complete": true,
+      "sounds": null,
+      "visible_delay_frames": null,
+      "final_flags": {
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL": false,
+        "EVENT_MET_BILL": false,
+        "EVENT_MET_BILL_2": false
+      },
+      "control_position": [
+        4,
+        4
+      ]
+    }
+  ],
+  "test_fixture_correction": "pc_trigger synchronous facing query seeded like production; no behavioral assertions changed; production crates unchanged"
+}

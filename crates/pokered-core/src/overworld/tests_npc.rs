@@ -1771,6 +1771,7 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     let mut screen = OverworldScreen::new(MapId::BillsHouse, None, PokemonRedData);
     screen.state.player.x = 1;
     screen.state.player.y = 5; // below the PC at (1,4)
+    screen.state.player.facing = Direction::Up;
     screen.run_on_load();
     let input = |a: bool| super::OverworldInput::new(false, false, false, false, a, false, false, false);
     for _ in 0..50 {
@@ -1828,12 +1829,9 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     screen.state.player.y = 5;
     screen.state.player.facing = Direction::Up;
     for _ in 0..2 { screen.update_frame(input(true)); }
-    for frame in 0..300 {
+    for frame in 0..2000 {
         if screen.script_flags().get("EVENT_MET_BILL") == Some(&true) {
             break;
-        }
-        if let Some(dialogue) = screen.pending_dialogue.as_mut() {
-            dialogue.skip_to_full_page();
         }
         screen.update_frame(input(frame % 4 >= 2));
     }
