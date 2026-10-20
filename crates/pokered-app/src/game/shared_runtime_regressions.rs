@@ -192,16 +192,17 @@ fn slots_full_lifecycle_persists_coins_and_exits() {
     game.slots_screen = Some(SlotsScreen::new(false, 100, 1));
     game.state.screen = GameScreen::Slots;
 
-    // A: deduct the bet and spin.
+    // Original MainSlotMachineLoop starts on x3; A spends three coins.
+    assert_eq!(game.slots_screen.as_ref().unwrap().bet, 3);
     game.update(&press(GbButton::A));
     let slots = game.slots_screen.as_ref().unwrap();
     assert_eq!(
         slots.phase,
         pokered_core::slots_screen::SlotsPhase::Spinning
     );
-    assert_eq!(slots.coins, 99);
+    assert_eq!(slots.coins, 97);
     assert_eq!(
-        game.save_data.game_data.player_coins, 99,
+        game.save_data.game_data.player_coins, 97,
         "running coin balance must persist to the save every frame"
     );
 
