@@ -38,8 +38,10 @@ Validation:
   TINKs); music stops and CITIES2 resumes before USED. Bill appears before
   the eight-frame delay, walks to (4,4), and the other forms remain hidden.
   A physical LEFT approach is silent. No runtime setters or script injection.
-- Full core: 3,166 pass; app debug-server: 396 pass / 40 existing ignores;
-  app default: 385 pass / 38 existing ignores; agent: 61 pass. No new ignores.
+- Core library: 3,166 pass; app library debug-server: 396 pass / 40 existing ignores;
+  app library default: 385 pass / 38 existing ignores; agent: 61 pass. No new ignores.
+  The complete `cargo test -p pokered-core` subsequently passes 3,579 tests
+  across 41 targets (one existing ignored documentation example).
   The existing full NPC subplot still verifies its flags and positions; its
   separator phase now uses actual text input and allows the restored waits.
 - Two CLI cases, UP and LEFT, run twice. They boot offline JSON fixtures via
@@ -64,3 +66,12 @@ show sound activity; PCM and music restoration are checked by the cold SRAM
 app tests. The first repeat invocation from an unrelated working directory
 failed at import before launching a game; the two archived runs use the
 workspace root and both complete successfully.
+
+The first CI run exposed three old `tests/pc_trigger.rs` fixtures that set the
+player direction but did not seed synchronous script queries. Production seeds
+these before input. The new UP guard correctly saw an empty query in those
+fixtures. The same three failures were reproduced locally, then the fixtures
+were corrected to seed queries without changing their behavioral assertions.
+The complete core command above covers integration targets omitted by the
+initial library-only run. These test-only corrections do not change the
+executable or invalidate the native frame pairs.

@@ -21,7 +21,10 @@
     "app_debug_existing_ignore": 40,
     "app_default_pass": 385,
     "app_default_existing_ignore": 38,
-    "agent_pass": 61
+    "agent_pass": 61,
+    "core_all_targets_pass": 3579,
+    "core_all_targets_existing_doc_ignore": 1,
+    "core_all_targets_exit_code": 0
   },
   "cases": [
     {
@@ -75,5 +78,6 @@
         4
       ]
     }
-  ]
+  ],
+  "test_fixture_correction": "pc_trigger synchronous facing query seeded like production; no behavioral assertions changed; production crates unchanged"
 }
