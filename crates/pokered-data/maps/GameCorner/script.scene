@@ -264,21 +264,20 @@ game_scene GameCorner {
     @trigger(map = "GameCorner", sign = 35)
     @trigger(map = "GameCorner", sign = 36)
     @trigger(map = "GameCorner", sign = 37)
-    openSlots()
+    // AbleToPlaySlotsCheck precedes PromptUserToPlaySlots in the original.
+    @if (!hasItem("COIN_CASE")) {
+      @speaker("") { @t("A COIN CASE is required!", "需要代币盒！") }
+    } @else {
+      @if (!hasCoins(1)) {
+        @speaker("") { @t("You don't have any coins!", "你没有任何代币！") }
+      } @else {
+        @speaker("") { @t("A slot machine!\nWant to play?", "一台老虎机！\n要玩吗？") }
+        @choice {
+          @option(@t("YES", "是")) { openSlots() }
+          @option(@t("NO", "否")) {}
+        }
+      }
+    }
   }
 
-  // ── Slot machines (signs []) — StartSlotMachine ──
-  @storyline("slotMachines") {
-    openSlots()
-  }
-
-  // ── Slot machines (signs []) — StartSlotMachine ──
-  @storyline("slotMachines") {
-    openSlots()
-  }
-
-  // ── Slot machines (signs []) — StartSlotMachine ──
-  @storyline("slotMachines") {
-    openSlots()
-  }
 }
