@@ -304,9 +304,6 @@ game_scene GameCornerPrizeRoom {
       @speaker("") { @t("A COIN CASE is required!", "需要代币盒！") }
     } @else {
       @speaker("") { @t("We exchange your coins for\nprizes.", "我们用代币换取奖品。") }
-      @speaker("") {
-        @t("TM prizes: TM23 3300 TM15\n5500 TM50 7700", "招式学习器奖品： TM23 3300\nTM15 5500 TM50 7700")
-      }
       @speaker("") { @t("Which prize do you want?", "你想要哪个奖品？") }
       @choice {
         @option(@t("TM23  3300", "TM23 3300")) {
