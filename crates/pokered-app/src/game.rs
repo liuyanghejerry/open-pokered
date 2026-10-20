@@ -4505,6 +4505,10 @@ impl PokemonGame {
                     let viewed_species = self.overworld.pending_pokedex_entry.as_ref()
                         .and_then(|entry| pokered_data::species::Species::from_scene_name(&entry.species));
                     let action = self.overworld.update_frame_with_physical_buttons(ow_input, input.raw_current());
+                    if let Some(entry) = self.overworld.pending_pokedex_entry.as_mut() {
+                        entry.owned = pokered_data::species::Species::from_scene_name(&entry.species)
+                            .is_some_and(|species| self.save_data.game_data.pokedex.is_owned(species));
+                    }
                     if self.overworld.take_escape_rope_consumption() {
                         let _ = self.save_data.game_data.bag.remove_item(pokered_data::items::ItemId::EscapeRope, 1);
                     }
@@ -13893,3 +13897,7 @@ mod dual_type_effectiveness_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/bill_separator_tests.rs"]
 mod bill_separator_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/bill_pokedex_ownership_tests.rs"]
+mod bill_pokedex_ownership_tests;

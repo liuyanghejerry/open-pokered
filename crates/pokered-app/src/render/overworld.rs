@@ -210,12 +210,13 @@ fn blit_priority_bg_tile_clipped(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i
 fn draw_pokedex_entry(
     species: &str,
     page: usize,
+    owned: bool,
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
     is_zh: bool,
 ) -> usize {
     match pokered_data::species::Species::from_scene_name(species) {
-        Some(sp) => super::pokedex::draw_entry_for_species(sp, page, true, is_zh, res, fb),
+        Some(sp) => super::pokedex::draw_entry_for_species(sp, page, owned, is_zh, res, fb),
         None => {
             fb.clear(Rgba::WHITE);
             let t = TILE_SIZE;
@@ -2239,6 +2240,7 @@ fn draw_overworld_impl(
         let total = draw_pokedex_entry(
             &dex_state.species,
             dex_state.page,
+            dex_state.owned,
             res,
             fb,
             language == pokered_core::game_state::Lang::Zh,

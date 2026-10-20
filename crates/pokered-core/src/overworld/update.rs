@@ -3692,6 +3692,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     *pending_pokedex_entry = Some(PokedexEntryState {
                         species: species.clone(),
                         page: 0,
+                        owned: false,
                         total_pages: 0,
                     });
                     *started = true;

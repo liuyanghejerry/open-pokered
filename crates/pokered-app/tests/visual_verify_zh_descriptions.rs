@@ -350,6 +350,7 @@ fn capture_zh_descriptions() {
     let mut overlay_game = opening_after_six_presses();
     overlay_game.overworld.pending_pokedex_entry =
         Some(pokered_core::overworld::PokedexEntryState {
+            owned: true, // This visual fixture exercises the full owned description.
             species: "Bulbasaur".into(),
             page: 0,
             total_pages: 0,

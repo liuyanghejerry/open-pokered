@@ -107,6 +107,7 @@ fn capture_tui_zh_descriptions() {
 
     game.state.screen = GameScreen::Overworld;
     game.overworld.pending_pokedex_entry = Some(pokered_core::overworld::PokedexEntryState {
+        owned: true, // Keep this full-description visual fixture explicitly owned.
         species: "Bulbasaur".into(),
         page: 0,
         total_pages: 0,
