@@ -13882,3 +13882,7 @@ mod pokecenter_nurse_tests;
 #[cfg(all(test, not(target_os = "none"), not(target_arch = "wasm32")))]
 #[path = "dual_type_effectiveness_tests.rs"]
 mod dual_type_effectiveness_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/bill_separator_tests.rs"]
+mod bill_separator_tests;
