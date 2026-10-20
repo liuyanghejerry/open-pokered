@@ -213,6 +213,7 @@ fn slots_full_lifecycle_persists_coins_and_exits() {
         let phase = game.slots_screen.as_ref().unwrap().phase;
         if phase != pokered_core::slots_screen::SlotsPhase::Spinning
             && phase != pokered_core::slots_screen::SlotsPhase::Payout
+            && phase != pokered_core::slots_screen::SlotsPhase::Loss
         {
             break;
         }

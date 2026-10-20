@@ -208,7 +208,7 @@ pub fn draw_slots(slots: &SlotsScreen, fb: &mut FrameBuffer, lang: Lang) {
     }
     // Light the center line for one coin, outer horizontal lines for two,
     // and diagonals for three (SlotMachine_LightBalls).
-    if slots.phase != SlotsPhase::BetSelect {
+    if !matches!(slots.phase, SlotsPhase::BetSelect | SlotsPhase::InsufficientCoins) {
         for (row, required) in [(2, 3), (4, 2), (6, 1), (8, 2), (10, 3)] {
             if slots.bet >= required {
                 for x in [24, 128] {
@@ -423,6 +423,42 @@ mod tests {
         }
     }
 
+    #[test]
+    fn refused_bet_and_loss_render_stable_messages_until_acknowledged() {
+        for lang in [Lang::En, Lang::Zh] {
+            let mut refused = SlotsScreen::new(false, 1, 42);
+            refused.bet = 2;
+            let cabinet = render_lang(&refused, lang);
+            refused.update_frame(SlotsInput { a: true, ..SlotsInput::none() });
+            assert_eq!(refused.phase, SlotsPhase::InsufficientCoins);
+            let message = render_lang(&refused, lang);
+            assert_eq!(region(&cabinet, 0, 0, 160, 80), region(&message, 0, 0, 160, 80),
+                "a refused bet must not light the payline lamps");
+            for _ in 0..20 {
+                refused.update_frame(SlotsInput::none());
+                assert_framebuffers_equal(&render_lang(&refused, lang), &message);
+            }
+            refused.update_frame(SlotsInput { b: true, ..SlotsInput::none() });
+            let menu = render_lang(&refused, lang);
+            assert_ne!(region(&message, 112, 80, 48, 64), region(&menu, 112, 80, 48, 64));
+
+            let mut loss = SlotsScreen::new(false, 97, 42);
+            loss.phase = SlotsPhase::Spinning;
+            loss.reels_stopped = [true; 3];
+            loss.machine.flags = 0;
+            loss.update_frame(SlotsInput::none());
+            assert_eq!(loss.phase, SlotsPhase::Loss);
+            let prompt = render_lang(&loss, lang);
+            for _ in 0..20 {
+                loss.update_frame(SlotsInput::none());
+                assert_framebuffers_equal(&render_lang(&loss, lang), &prompt);
+            }
+            loss.update_frame(SlotsInput { b: true, ..SlotsInput::none() });
+            assert_eq!(loss.phase, SlotsPhase::Result);
+            assert_ne!(region(&prompt, 0, 88, 160, 56), region(&render_lang(&loss, lang), 0, 88, 160, 56));
+        }
+    }
+
     /// Rendering must not panic in any phase (guards against coordinate
     /// under/overflow in the manual rect drawing).
     #[test]
@@ -436,14 +472,14 @@ mod tests {
         });
         draw_slots(&s, &mut fb, Lang::En); // Spinning (warm-up)
         for _ in 0..20000 {
-            if s.phase != SlotsPhase::Spinning && s.phase != SlotsPhase::Payout {
+            if !matches!(s.phase, SlotsPhase::Spinning | SlotsPhase::Payout | SlotsPhase::Loss) {
                 break;
             }
             s.update_frame(SlotsInput {
                 a: true,
                 ..SlotsInput::none()
             });
-            draw_slots(&s, &mut fb, Lang::En); // covers Spinning + Payout frames
+            draw_slots(&s, &mut fb, Lang::En); // Spinning, Loss and Payout frames
         }
         draw_slots(&s, &mut fb, Lang::En); // Result
     }
