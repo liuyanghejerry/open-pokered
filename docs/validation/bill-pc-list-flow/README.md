@@ -71,6 +71,29 @@ All 27 images and normalized case records match the preceding candidate runs.
 The full core/app suites and integrated subplot above belong to `b594bf52`;
 they are not relabeled as full-suite reruns on the catalog-order follow-up.
 
+## Event-analyzer CI follow-up
+
+The workspace coverage job also caught the new capability missing from the
+quest semantic extractor. It is now explicitly recognized as presentation
+outside quest-event effects, matching the prior `pokemonMenu` classification.
+The strict unknown-construct gate and its allowance list are unchanged.
+
+Two added tests fail before registration, then pass with it: bare/`game.` calls
+in both statement/expression form, and the actual BillsHouse PC/ticket branch
+reads and effects. The full agent suite passes **63 tests**. On the corrected
+source in `agent-followup.json`, `cargo test --workspace --tests` passes **5,712
+tests with 95 existing ignores across 126 targets**. This is the coverage job's
+workspace test scope without LLVM instrumentation; it is not a claim that the
+remote coverage job has passed.
+
+A freshly built debug-server game on that source also boots normally, CONTINUEs,
+queries actual BillsHouse semantics and views/exits unowned Eevee with actual
+input. The response retains all three PC flag reads and the separator effect,
+with no unknown effect; the read-only query leaves frame 804 unchanged. Its
+question, entry and returned-menu PNGs match the prior candidate byte-for-byte.
+This is one fresh native API case, not a relabeling of the prior nine-case runs.
+`agent-api.json.gz`, its replay and logs pin the exact scope and build.
+
 ## Text-preservation check
 
 All **20 ordered bilingual `@t` literal pairs** exactly match master `a79508cc`,
