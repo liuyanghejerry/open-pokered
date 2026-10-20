@@ -78,6 +78,8 @@ pub enum SlotsSfx {
     GetKeyItem,
     /// SFX_GET_ITEM_2, played when a 7 win is accepted (SlotReward300Func).
     GetItem2,
+    /// HandleMenuInput plays SFX_PRESS_AB when A/B selects OneMoreGo.
+    MenuConfirm,
 }
 
 /// High-level phase of the minigame.
@@ -95,8 +97,8 @@ pub enum SlotsPhase {
     /// the payout into the balance one coin at a time (the ASM's
     /// flashScreenLoop → "lined up" text → SlotMachine_PayCoinsToPlayer).
     Payout,
-    /// A spin fully resolved; "One more go?" — A returns to bet selection,
-    /// B exits. Exits by itself after a short delay when out of coins.
+    /// A spin fully resolved; the original two-option YES/NO menu.
+    /// Exits by itself after a short delay when out of coins.
     Result,
 }
 
@@ -144,6 +146,14 @@ pub struct SlotsScreen {
     pub flash_on: bool,
     /// Frames elapsed in the out-of-coins auto-exit countdown.
     pub out_of_coins_frames: u16,
+    /// Previously drawn OneMoreGo row (0=YES, 1=NO), retained during acceptance.
+    pub result_cursor: u8,
+    result_logical: u8,
+    result_poll_delay: u8,
+    result_completion_delay: u8,
+    result_answer_no: bool,
+    result_last_buttons: u8,
+    latest_held_buttons: Option<u8>,
     /// Winning symbol of the most recent spin, if any.
     pub last_symbol: Option<SlotSymbol>,
     /// Pending sound cues (drained by the frontend each frame).
@@ -195,6 +205,13 @@ impl SlotsScreen {
             flash_frames_remaining: 0,
             flash_on: false,
             out_of_coins_frames: 0,
+            result_cursor: 0,
+            result_logical: 0,
+            result_poll_delay: 0,
+            result_completion_delay: 0,
+            result_answer_no: false,
+            result_last_buttons: 0,
+            latest_held_buttons: None,
             last_symbol: None,
             message: String::from("BET HOW MANY COINS?"),
             frame: 0,
@@ -224,6 +241,18 @@ impl SlotsScreen {
 
     /// Advance one frame.
     pub fn update_frame(&mut self, input: SlotsInput) -> SlotsAction {
+        self.update_frame_sampled(input, None)
+    }
+
+    /// Hosted OneMoreGo polls held buttons only when HandleMenuInput reaches
+    /// Joypad. Raw samples during Delay3/DelayFrames15 do not consume edges.
+    /// The mask uses foreground_input's A/B/SELECT/START/RIGHT/LEFT/UP/DOWN order.
+    pub fn update_frame_with_held_input(&mut self, input: SlotsInput, held: u8) -> SlotsAction {
+        self.update_frame_sampled(input, Some(held))
+    }
+
+    fn update_frame_sampled(&mut self, input: SlotsInput, held: Option<u8>) -> SlotsAction {
+        self.latest_held_buttons = held;
         self.frame = self.frame.wrapping_add(1);
         match self.phase {
             SlotsPhase::BetSelect => self.update_bet_select(input),
@@ -238,6 +267,8 @@ impl SlotsScreen {
             }
             SlotsPhase::Loss => {
                 if input.a || input.b {
+                    self.result_last_buttons = self.latest_held_buttons
+                        .unwrap_or(u8::from(input.a) | (u8::from(input.b) << 1));
                     self.begin_result();
                 }
                 SlotsAction::Continue
@@ -399,6 +430,8 @@ impl SlotsScreen {
             PayoutStage::WaitPress => {
                 // WaitForTextScrollButtonPress.
                 if input.a || input.b {
+                    self.result_last_buttons = self.latest_held_buttons
+                        .unwrap_or(u8::from(input.a) | (u8::from(input.b) << 1));
                     self.payout_stage = PayoutStage::Tick;
                     self.payout_cooldown = 0;
                 }
@@ -432,6 +465,13 @@ impl SlotsScreen {
     fn begin_result(&mut self) {
         self.phase = SlotsPhase::Result;
         self.out_of_coins_frames = 0;
+        self.result_cursor = 0;
+        self.result_logical = 0;
+        self.result_poll_delay = 3;
+        self.result_completion_delay = 0;
+        self.result_answer_no = false;
+        // Keep the parent's actual ACK poll. Coin-transfer DelayFrames does
+        // not sample Joypad, even when raw held buttons change meanwhile.
         if self.coins == 0 {
             self.message = String::from("OUT OF COINS!");
         } else {
@@ -451,15 +491,49 @@ impl SlotsScreen {
             }
             return SlotsAction::Continue;
         }
-        self.message = String::from("ONE MORE GO?");
-        if input.a {
-            self.phase = SlotsPhase::BetSelect;
-            // YES jumps to MainSlotMachineLoop, which clears the menu cursor.
-            self.bet = 3;
-            self.message = String::from("BET HOW MANY COINS?");
-        } else if input.b {
-            // "One more go?" → NO: leave the machine.
-            return SlotsAction::Exit;
+        if self.result_completion_delay > 0 {
+            self.result_completion_delay -= 1;
+            if self.result_completion_delay == 0 {
+                if self.result_answer_no {
+                    return SlotsAction::Exit;
+                }
+                self.phase = SlotsPhase::BetSelect;
+                // YES jumps to MainSlotMachineLoop and clears its cursor.
+                self.bet = 3;
+                self.message = String::from("BET HOW MANY COINS?");
+            }
+            return SlotsAction::Continue;
+        }
+        if self.result_poll_delay > 0 {
+            self.result_poll_delay -= 1;
+            if self.result_poll_delay > 0 {
+                return SlotsAction::Continue;
+            }
+        }
+        let (input, extra_key) = if let Some(held) = self.latest_held_buttons {
+            let pressed = held & !self.result_last_buttons;
+            self.result_last_buttons = held;
+            (SlotsInput {
+                a: pressed & 1 != 0, b: pressed & 2 != 0,
+                up: pressed & 64 != 0, down: pressed & 128 != 0,
+                left: pressed & 32 != 0, right: pressed & 16 != 0,
+            }, pressed & 12 != 0)
+        } else { (input, false) };
+        // HandleMenuInput moves UP before DOWN, clamps, and then returns A/B.
+        if input.up {
+            self.result_logical = 0;
+        } else if input.down {
+            self.result_logical = 1;
+        }
+        if input.a || input.b {
+            // DisplayTwoOptionMenu gives B priority over A. Its acceptance
+            // does not redraw the cursor, even with direction+A or forced NO.
+            self.result_answer_no = input.b || self.result_logical == 1;
+            self.result_completion_delay = 15;
+            self.pending_sfx.push_back(SlotsSfx::MenuConfirm);
+        } else if input.up || input.down || input.left || input.right || extra_key {
+            self.result_cursor = self.result_logical;
+            self.result_poll_delay = 3;
         }
         SlotsAction::Continue
     }
@@ -505,6 +579,7 @@ mod tests {
         s.update_frame(press_a());
         for _ in 0..20000 {
             if s.phase == SlotsPhase::Result {
+                for _ in 0..3 { s.update_frame(SlotsInput::none()); }
                 return;
             }
             s.update_frame(press_a());
@@ -525,6 +600,7 @@ mod tests {
             screen.bet = bet;
             drive_to_result(&mut screen);
             assert_eq!(screen.update_frame(press_a()), SlotsAction::Continue);
+            for _ in 0..15 { screen.update_frame(SlotsInput::none()); }
             assert_eq!(screen.phase, SlotsPhase::BetSelect);
             assert_eq!(screen.bet, 3, "previous bet {bet} must not be remembered");
         }
@@ -613,6 +689,134 @@ mod tests {
     }
 
     #[test]
+    fn original_one_more_go_direction_and_cancel_priority_matrix() {
+        for initial in [0u8, 1] {
+            for bits in 0..64 {
+                let mut screen = SlotsScreen::new(false, 97, 42);
+                screen.begin_result();
+                for _ in 0..3 { screen.update_frame(SlotsInput::none()); }
+                if initial == 1 {
+                    screen.update_frame(SlotsInput { down: true, ..SlotsInput::none() });
+                    for _ in 0..3 { screen.update_frame(SlotsInput::none()); }
+                }
+                let input = SlotsInput {
+                    up: bits & 1 != 0, down: bits & 2 != 0,
+                    left: bits & 4 != 0, right: bits & 8 != 0,
+                    a: bits & 16 != 0, b: bits & 32 != 0,
+                };
+                let selected = if input.up { 0 } else if input.down { 1 } else { initial };
+                let mut action = screen.update_frame(input);
+                assert_eq!(screen.result_cursor, if input.a || input.b { initial } else { selected },
+                    "acceptance retains the old drawn cursor; direction-only input redraws it");
+                assert_eq!(screen.take_sfx().iter().filter(|cue| **cue == SlotsSfx::MenuConfirm).count(),
+                    usize::from(input.a || input.b));
+                for _ in 0..15 {
+                    if action == SlotsAction::Exit { break; }
+                    action = screen.update_frame(SlotsInput::none());
+                }
+                let no = input.b || (input.a && selected == 1);
+                assert_eq!(action, if no { SlotsAction::Exit } else { SlotsAction::Continue },
+                    "row {initial}, buttons {bits:06b}");
+                assert_eq!(screen.coins, 97, "selection must not spend coins");
+                if input.a && !no {
+                    assert_eq!(screen.phase, SlotsPhase::BetSelect);
+                    assert_eq!(screen.bet, 3);
+                } else if !no {
+                    assert_eq!(screen.phase, SlotsPhase::Result);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn original_one_more_go_waits_three_before_poll_and_fifteen_before_return() {
+        for cancel in [false, true] {
+            let mut screen = SlotsScreen::new(false, 97, 42);
+            screen.begin_result();
+            let confirm = SlotsInput { a: true, b: cancel, ..SlotsInput::none() };
+            for _ in 0..2 {
+                assert_eq!(screen.update_frame(confirm), SlotsAction::Continue);
+                assert_eq!(screen.phase, SlotsPhase::Result, "PlaceMenuCursor Delay3 is still running");
+            }
+            assert_eq!(screen.update_frame(confirm), SlotsAction::Continue);
+            assert_eq!(screen.phase, SlotsPhase::Result);
+            for _ in 0..14 {
+                assert_eq!(screen.update_frame(SlotsInput { a: true, b: true, down: true, ..SlotsInput::none() }), SlotsAction::Continue);
+                assert_eq!(screen.phase, SlotsPhase::Result, "acceptance retains the menu during DelayFrames15");
+                assert_eq!(screen.coins, 97);
+            }
+            assert_eq!(screen.update_frame(SlotsInput::none()), if cancel { SlotsAction::Exit } else { SlotsAction::Continue });
+            if !cancel { assert_eq!(screen.phase, SlotsPhase::BetSelect); }
+        }
+    }
+
+    #[test]
+    fn hosted_one_more_go_does_not_lose_held_edges_or_resample_protected_waits() {
+        use crate::foreground_input::{A, B, DOWN, START};
+        let mut screen = SlotsScreen::new(false, 97, 42);
+        screen.begin_result();
+        // Host edge occurs during Delay3. It remains a new source poll on
+        // frame three while A stays held, despite no new host edge then.
+        screen.update_frame_with_held_input(press_a(), A);
+        screen.update_frame_with_held_input(SlotsInput::none(), A);
+        screen.update_frame_with_held_input(SlotsInput::none(), A);
+        assert_eq!(screen.take_sfx(), vec![SlotsSfx::MenuConfirm]);
+        for _ in 0..15 { screen.update_frame_with_held_input(SlotsInput::none(), A); }
+        assert_eq!(screen.phase, SlotsPhase::BetSelect);
+        screen.update_frame_with_held_input(SlotsInput::none(), A);
+        assert_eq!(screen.coins, 97, "held confirmation must not place a bet");
+
+        screen.phase = SlotsPhase::Loss;
+        screen.update_frame_with_held_input(SlotsInput { b: true, ..SlotsInput::none() }, B);
+        for _ in 0..30 { screen.update_frame_with_held_input(SlotsInput::none(), B); }
+        assert_eq!(screen.phase, SlotsPhase::Result, "held parent ACK is not menu NO");
+        assert!(screen.take_sfx().is_empty());
+        screen.update_frame_with_held_input(SlotsInput::none(), 0);
+        screen.update_frame_with_held_input(SlotsInput::none(), START);
+        // A short pulse entirely inside an unwatched key's Delay3 is missed.
+        screen.update_frame_with_held_input(press_a(), A);
+        screen.update_frame_with_held_input(SlotsInput::none(), 0);
+        screen.update_frame_with_held_input(SlotsInput::none(), 0);
+        assert!(screen.take_sfx().is_empty());
+        screen.update_frame_with_held_input(SlotsInput { down: true, ..SlotsInput::none() }, DOWN);
+        assert_eq!(screen.result_cursor, 1);
+        // Release and re-press Down inside Delay3 cannot fabricate another poll.
+        screen.update_frame_with_held_input(SlotsInput::none(), 0);
+        screen.update_frame_with_held_input(SlotsInput { down: true, ..SlotsInput::none() }, DOWN);
+        screen.update_frame_with_held_input(SlotsInput::none(), DOWN);
+        screen.update_frame_with_held_input(SlotsInput::none(), 0);
+        screen.update_frame_with_held_input(press_a(), A);
+        for _ in 0..14 { assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), A), SlotsAction::Continue); }
+        assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), A), SlotsAction::Exit);
+    }
+
+    #[test]
+    fn hosted_one_more_go_inherits_last_payout_ack_poll_not_latest_raw_sample() {
+        use crate::foreground_input::{A, B};
+        for held in [A, B] {
+            let mut screen = SlotsScreen::new(false, 97, 42);
+            screen.phase = SlotsPhase::Payout;
+            screen.payout_stage = PayoutStage::WaitPress;
+            screen.payout_remaining = 2;
+            screen.update_frame_with_held_input(press_a(), A);
+            // SlotMachine_PayCoinsToPlayer has DelayFrames but no Joypad.
+            // A release/new B during those ticks is not sampled until the menu.
+            for _ in 0..100 {
+                if screen.phase == SlotsPhase::Result { break; }
+                screen.update_frame_with_held_input(SlotsInput::none(), held);
+            }
+            assert_eq!(screen.coins, 99);
+            assert_eq!(screen.phase, SlotsPhase::Result);
+            for _ in 0..3 { screen.update_frame_with_held_input(SlotsInput::none(), held); }
+            assert_eq!(screen.take_sfx().iter().filter(|cue| **cue == SlotsSfx::MenuConfirm).count(),
+                usize::from(held == B), "a new B during payout must survive the raw-only interval");
+            for _ in 0..14 { assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), held), SlotsAction::Continue); }
+            assert_eq!(screen.update_frame_with_held_input(SlotsInput::none(), held),
+                if held == B { SlotsAction::Exit } else { SlotsAction::Continue });
+        }
+    }
+
+    #[test]
     fn bet_selection_is_clamped_1_to_3() {
         let mut s = SlotsScreen::new(false, 100, 1);
         // Raise past the cap.
@@ -693,6 +897,7 @@ mod tests {
         assert_eq!(s.payout_remaining, 0);
         // A on the result screen goes back to bet selection.
         s.update_frame(press_a());
+        for _ in 0..15 { s.update_frame(SlotsInput::none()); }
         assert_eq!(s.phase, SlotsPhase::BetSelect);
     }
 
@@ -716,15 +921,13 @@ mod tests {
     fn one_more_go_menu_a_restarts_b_exits() {
         let mut s = SlotsScreen::new(false, 500, 42);
         drive_to_result(&mut s);
-        // One Result-phase frame publishes the "One more go?" prompt (a loss
-        // resolves with "NOT THIS TIME!" on the very same transition).
+        // The loss has been acknowledged and the result menu is ready.
         s.update_frame(SlotsInput::none());
         assert_eq!(s.message, "ONE MORE GO?");
-        // B = NO → leave the machine.
-        assert_eq!(
-            s.update_frame(SlotsInput { b: true, ..SlotsInput::none() }),
-            SlotsAction::Exit
-        );
+        // B = NO; restore the parent after the same fifteen-frame delay.
+        assert_eq!(s.update_frame(SlotsInput { b: true, ..SlotsInput::none() }), SlotsAction::Continue);
+        for _ in 0..14 { assert_eq!(s.update_frame(SlotsInput::none()), SlotsAction::Continue); }
+        assert_eq!(s.update_frame(SlotsInput::none()), SlotsAction::Exit);
     }
 
     #[test]
