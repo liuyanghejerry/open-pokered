@@ -3193,6 +3193,37 @@ mod tests {
     }
 
     #[test]
+    fn original_bill_help_question_returns_into_yes_no_and_refusal_keeps_its_inner_prompt() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("BillsHouse").unwrap();
+        for owned in [false, true] {
+            for answer in [0, 1] {
+                let mut engine = NativeScriptEngine::new();
+                if owned { engine.load_map_owned("BillsHouse", scene.clone()); }
+                else { engine.load_map("BillsHouse", &scene); }
+                engine.seed_text("playerFacing", "up");
+                let commands = drive_fidelity_scene(&mut engine, "talkBillPokemon", true, "", &[answer]);
+                assert!(matches!(&commands[0], ScriptCommand::Custom { name, args }
+                    if name == "askFieldYesNo" && args[0].as_str().unwrap().starts_with("Hiya! I'm a POKeMON")
+                        && args[1] == "YES" && args[2] == "NO"),
+                    "DONE must enter YesNoChoice without an outer text acknowledgement");
+                assert!(!commands.iter().any(|c| matches!(c, ScriptCommand::ShowChoice { .. })));
+                let refusals: Vec<_> = commands.iter().filter(|c| matches!(c,
+                    ScriptCommand::Custom { name, args } if name == "printFieldText"
+                        && args[0].as_str().unwrap().starts_with("No!? Come on")
+                        && args[1] == true && args[2] == "prompt")).collect();
+                assert_eq!(refusals.len(), answer);
+                assert_eq!(commands.iter().filter(|c| matches!(c,
+                    ScriptCommand::ShowText { text } if text.starts_with("When I'm in the TELEPORTER"))).count(), 1);
+                assert!(matches!(&commands[commands.len() - 2], ScriptCommand::MoveNpc { path, .. }
+                    if path == &vec![(6,4),(6,3),(6,2)]));
+                assert!(matches!(&commands[commands.len() - 1], ScriptCommand::HideObjectByName { toggle_id }
+                    if toggle_id == "BILLS_HOUSE_OBJ_1"));
+                assert!(engine.get_flag("EVENT_BILL_SAID_USE_CELL_SEPARATOR"));
+            }
+        }
+    }
+
+    #[test]
     fn fidelity_vermilion_departure_callback_walks_twice_only_once_without_dialogue() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("VermilionCity").unwrap();
         let mut e = NativeScriptEngine::new();

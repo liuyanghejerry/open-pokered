@@ -1,0 +1,94 @@
+{
+  "base": "abdb0ed7207a3ec8dc679fea24496fbfbc9414c8",
+  "base_binary_sha256": "a825b2f7256f0d79ef2625d6c5f88a1ef549d7faa432b2f825f8e5ed099f00a1",
+  "candidate_game_source": "92940b763e3d8169c30314bfabae4701e8fc74aa",
+  "candidate_binary_sha256": "ac3a9c82e5a0e98cecb319eada06f6cd763f128b973b78fb0d932b1e164162c3",
+  "fixture_sha256": "df3ac9755f290cb70030b6b83b4fd308765e5c8a5d28a6dac3d059f873a50bea",
+  "comparison_frame": 2538,
+  "identical_frame_advancing_prefix": true,
+  "frame_advancing_commands_to_comparison": 65,
+  "complete_candidate_runs": 2,
+  "normalized_records_equal": true,
+  "all_repeat_png_bytes_equal": true,
+  "repeat_png_sha256": {
+    "yes-bill-in-machine.png": "134f832e0dd09dc4c31b3369bffc1908d5d4b54680a65d01e879fb5b52f1323e",
+    "held-outer-a-held-outer-ack.png": "385d632329dc883673cf6c80771f2d05cdc9d66463c20a5eff35ca4f66888d0e",
+    "held-outer-a-bill-in-machine.png": "134f832e0dd09dc4c31b3369bffc1908d5d4b54680a65d01e879fb5b52f1323e",
+    "yes-instructions-outer-ack.png": "56e596d933938f2716ebe80ff2f58a89f4ab4251ae01144f9c2c3502e29a0ca7",
+    "yes-question.png": "2a6401d856aaffc537f73d6cba62d6511cb7b545ed96cb80a0997c10dfcedab7",
+    "no-question.png": "2a6401d856aaffc537f73d6cba62d6511cb7b545ed96cb80a0997c10dfcedab7",
+    "no-bill-in-machine.png": "134f832e0dd09dc4c31b3369bffc1908d5d4b54680a65d01e879fb5b52f1323e",
+    "held-outer-a-instructions-outer-ack.png": "56e596d933938f2716ebe80ff2f58a89f4ab4251ae01144f9c2c3502e29a0ca7",
+    "no-instructions-outer-ack.png": "385d632329dc883673cf6c80771f2d05cdc9d66463c20a5eff35ca4f66888d0e",
+    "held-outer-a-question.png": "2a6401d856aaffc537f73d6cba62d6511cb7b545ed96cb80a0997c10dfcedab7",
+    "no-refusal.png": "f36d6d4eeb314afdffee596a7250330f39e199782ca5b76a379bf282b1a90db5"
+  },
+  "scope": "Offline fixture, normal boot/Continue and actual buttons/read-only observations. Source comparison, not original-ROM runtime or fresh mainline. Simultaneous-key priority belongs to the existing FieldYesNo unit suite; this RPC accepts one key per frame.",
+  "tests": {
+    "core_full_pass": 3580,
+    "core_existing_doc_ignore": 1,
+    "app_default_full_pass": 884,
+    "app_default_full_existing_ignore": 88,
+    "agent_pass": 61
+  },
+  "cases": [
+    {
+      "case": "yes",
+      "complete": true,
+      "menu_timing": {
+        "accepted": 2539,
+        "still_menu": 2553,
+        "returned": 2554
+      },
+      "refusal_seen": false,
+      "final_flags": {
+        "EVENT_BILL_SAID_USE_CELL_SEPARATOR": true,
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL": false,
+        "EVENT_MET_BILL": false
+      },
+      "control_position": [
+        7,
+        6
+      ]
+    },
+    {
+      "case": "no",
+      "complete": true,
+      "menu_timing": {
+        "accepted": 2539,
+        "still_menu": 2553,
+        "returned": 2554
+      },
+      "refusal_seen": true,
+      "final_flags": {
+        "EVENT_BILL_SAID_USE_CELL_SEPARATOR": true,
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL": false,
+        "EVENT_MET_BILL": false
+      },
+      "control_position": [
+        7,
+        6
+      ]
+    },
+    {
+      "case": "held-outer-a",
+      "complete": true,
+      "menu_timing": {
+        "accepted": 2539,
+        "still_menu": 2553,
+        "returned": 2554
+      },
+      "refusal_seen": false,
+      "final_flags": {
+        "EVENT_BILL_SAID_USE_CELL_SEPARATOR": true,
+        "EVENT_USED_CELL_SEPARATOR_ON_BILL": false,
+        "EVENT_MET_BILL": false
+      },
+      "control_position": [
+        7,
+        6
+      ]
+    }
+  ],
+  "authored_translation_pairs_unchanged": 20
+}
