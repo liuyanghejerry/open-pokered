@@ -419,11 +419,13 @@ impl ScriptHost for NativeHost {
                 Ok(HostCall::Command(ScriptCommand::GiveBadge { badge }))
             }
             "openSlots" => {
+                // Missing argument preserves automatic selection by the sign
+                // that fired the script. Explicit false forces a normal machine.
                 let lucky = match v.first() {
-                    Some(Value::Bool(b)) => *b,
-                    _ => false,
+                    Some(Value::Bool(b)) => Some(*b),
+                    _ => None,
                 };
-                Ok(pokemon(PokemonScriptCommand::OpenSlots { lucky: Some(lucky) }))
+                Ok(pokemon(PokemonScriptCommand::OpenSlots { lucky }))
             }
             "elevatorMenu" => {
                 let floors = args::string_array(v.first().ok_or("elevatorMenu: missing floors")?, "elevatorMenu")?;
@@ -3717,7 +3719,54 @@ mod tests {
     }
 
     #[test]
-    fn fidelity_gamecorner_beauty_only_talks_and_machines_still_open_slots() {
+    fn original_slot_machine_entry_checks_case_coins_then_yes_no() {
+        let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
+        for owned in [false, true] {
+            for has_case in [false, true] {
+                for coins in [0.0, 1.0, 50.0] {
+                    for answer in [0, 1] {
+                        let mut engine = NativeScriptEngine::new();
+                        if owned { engine.load_map_owned("GameCorner", scene.clone()); }
+                        else { engine.load_map("GameCorner", &scene); }
+                        if has_case { engine.seed_set("bag", &["COIN_CASE".into()]); }
+                        engine.seed_number("coins", coins);
+                        let commands = drive_fidelity_scene(&mut engine, "slotMachines", false, "", &[answer]);
+                        let allowed = has_case && coins > 0.0;
+                        if allowed {
+                            // PrintText's DONE ends immediately: YesNoChoice follows
+                            // without a separate ShowText acknowledgement.
+                            assert!(matches!(&commands[0], ScriptCommand::Custom { name, args }
+                                if name == "askFieldYesNo" && args == &vec![
+                                    json!("A slot machine!\nWant to play?"), json!("YES"), json!("NO")]),
+                                "funded machine must ask directly, without an extra A: {commands:?}");
+                        } else {
+                            let expected = if has_case { "You don't have any coins!" }
+                                else { "A COIN CASE is required!" };
+                            assert!(matches!(&commands[0], ScriptCommand::ShowText { text } if text == expected));
+                        }
+                        assert!(!commands.iter().any(|command| matches!(command, ScriptCommand::ShowChoice { .. })));
+                        assert_eq!(commands.iter().any(|command| matches!(command,
+                            ScriptCommand::Custom { name, .. } if name == "openSlots")), allowed && answer == 0);
+                        assert_eq!(commands.len(), if allowed { 1 + usize::from(answer == 0) } else { 1 });
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn native_open_slots_preserves_automatic_lucky_resolution_and_explicit_overrides() {
+        for (values, expected) in [(vec![], None), (vec![Value::Bool(true)], Some(true)),
+            (vec![Value::Bool(false)], Some(false))] {
+            let call = NativeHost::new().call("openSlots", &values).unwrap();
+            assert!(matches!(call, HostCall::Command(ScriptCommand::Custom { name, args })
+                if name == "openSlots" && args == vec![json!(expected)]),
+                "no argument must reach the sign-based lucky resolver as null, not false");
+        }
+    }
+
+    #[test]
+    fn fidelity_gamecorner_beauty_only_talks_without_opening_machine() {
         let scene = pokered_data::embedded_scenes::get_scene_ast("GameCorner").unwrap();
         for bag in [vec![], vec!["COIN_CASE".to_string()]] {
             for coins in [0.0, 50.0] {
@@ -3729,9 +3778,6 @@ mod tests {
                 assert_eq!(commands.len(), 1);
                 assert!(matches!(&commands[0], ScriptCommand::ShowText { text }
                     if text == "I think these machines have\ndifferent odds."));
-                let commands = drive_fidelity_scene(&mut engine, "slotMachines", false, "", &[]);
-                assert!(commands.iter().any(|c| matches!(c,
-                    ScriptCommand::Custom { name, .. } if name == "openSlots")));
             }
         }
     }

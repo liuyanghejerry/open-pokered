@@ -68,3 +68,45 @@ fn default_open_slots_resolves_against_active_sign() {
     screen.active_sign_text_id = Some(2);
     assert!(!screen.resolve_default_lucky_slots());
 }
+
+/// Follow the real map AST through question/DONE, YesNoChoice and command
+/// dispatch. Directly testing resolve_default_lucky_slots missed an AST host
+/// that incorrectly converted an omitted argument into Some(false).
+#[test]
+#[cfg(not(feature = "script-boa"))]
+fn actual_scene_question_preserves_sign_context_and_lucky_dispatch() {
+    use super::{script_bridge, OverworldInput};
+    use dotzuki_engine::overworld::Direction;
+    let idle = OverworldInput::new(false, false, false, false, false, false, false, false);
+    let accept = OverworldInput::new(false, false, false, false, true, false, false, false);
+    for (lucky, expected) in [(Some(2), true), (Some(3), false), (None, false)] {
+        let mut screen = screen_on(MapId::GameCorner);
+        screen.state.player.x = 18;
+        screen.state.player.y = 16;
+        screen.state.player.facing = Direction::Up;
+        screen.run_on_load();
+        // The app supplies these query values. Prime normal field polling
+        // before borrowing its foreground ledger for the real question.
+        for _ in 0..20 { screen.update_frame(idle); }
+        screen.script_engine.seed_set("bag", &["COIN_CASE".into()]);
+        screen.script_engine.seed_number("coins", 99.0);
+        screen.lucky_slot_machine_sign = lucky;
+        screen.active_sign_text_id = Some(2);
+        let command = screen.script_engine.call_function_no_args("slotMachines").unwrap().unwrap();
+        screen.active_script_effect = Some(script_bridge::dispatch_command(&command));
+        // No A/B is sent to acknowledge the question: DONE must reach the menu.
+        for _ in 0..2000 {
+            screen.update_frame(idle);
+            assert_eq!(screen.source_foreground_error(), None);
+            if screen.choice_accepts_input() { break; }
+        }
+        assert!(screen.choice_accepts_input(), "question required an extra acknowledgement");
+        assert_eq!(screen.active_sign_text_id, Some(2));
+        screen.update_frame(accept);
+        for _ in 0..100 {
+            screen.update_frame(idle);
+            if screen.pending_slots.is_some() { break; }
+        }
+        assert_eq!(screen.pending_slots, Some(expected), "lucky sign {lucky:?}");
+    }
+}
