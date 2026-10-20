@@ -18,6 +18,9 @@ core tests and four slot-renderer tests pass, including cached cursor redraws.
 After integrating PR #334, all 3,155 core tests and the four renderer tests pass.
 The new native before/after recordings match every earlier paired PNG.
 The intended failure logs are from d037; PR #334 does not change the bet source.
+The shared runtime lifecycle now asserts the original x3 default and 100 -> 97
+coin persistence. Full app tests pass in both configurations: default 380 passed /
+38 existing ignores; debug-server 391 passed / 40 existing ignores.
 The payout test now explicitly selects x1; it keeps its original one-payline
 payout assertions rather than depending on the former incorrect default.
 

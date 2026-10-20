@@ -67,5 +67,20 @@
   "scope": "Only bet menu controls/defaults/reset. Original source is authoritative; original ROM runtime not verified by this evidence. Native offline fixture with normal Continue, no runtime setters. Entry guards, consent, full slots animations/audio are not covered.",
   "full_core_tests": 3155,
   "original_failure_control_base": "d037ea54abdf5d76e950e1c08fb560cebd7fa441",
-  "bet_source_unchanged_in_PR334": true
+  "bet_source_unchanged_in_PR334": true,
+  "full_app_tests": {
+    "default": {
+      "passed": 380,
+      "ignored": 38,
+      "command": "cargo test -p pokered-app --lib",
+      "log_sha256": "21b40382c4384562b8d6bc472fb30b43486d9d0d137fefe85d36168f66c48683"
+    },
+    "debug": {
+      "passed": 391,
+      "ignored": 40,
+      "command": "cargo test -p pokered-app --lib --features debug-server",
+      "log_sha256": "93b953a9693b1b7a3e274ee17cfbf80c8477d8a748eecb69ddf7569334256824"
+    }
+  },
+  "shared_runtime_contract": "default bet3;100coins->97;per-frame persistence and full spin/result/exit assertions retained"
 }
