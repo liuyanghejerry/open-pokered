@@ -1,0 +1,7 @@
+{
+  "base": "a79508ccaf5ef416235718688d76dad24ec8a417",
+  "file": "crates/pokered-data/maps/BillsHouse/script.scene",
+  "ordered_bilingual_literal_pairs": 20,
+  "all_exactly_equal": true,
+  "scope": "All @t string pairs, including custom-call arguments. Existing speaker-only structural checker reports block-count changes when strings move out of @speaker; not claimed to pass."
+}

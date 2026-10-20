@@ -1,0 +1,64 @@
+{
+  "scope": "Original-source parity plus native actual buttons after offline preboot fixtures and ordinary CONTINUE. Not original-ROM runtime, not latest-master fresh mainline proof.",
+  "source": "b594bf52bfa588e76d4fe624b5d8e7aff22da529",
+  "base_master": "a79508ccaf5ef416235718688d76dad24ec8a417",
+  "base_binary_built_from": "cbdc234cbbb2024b26ef3f7171fd146a806c8873",
+  "base_crates_diff_from_actual_master": "",
+  "binary_sha256": "b4dbc7f0a02038b9a65796f081070e23cd460cba34d08b2c83c21dcb067535b6",
+  "baseline_binary_sha256": "c308fac4e5ba890f72bc66f7aa2ca6830608946dcdcc1fd35e8ad18148dc4907",
+  "fixtures": "docs/validation/bill-pokedex-ownership/fixtures",
+  "cases_per_run": 9,
+  "candidate_runs": 2,
+  "all_27_candidate_pngs_and_normalized_records_identical": true,
+  "all_9_final_entry_images_match_baseline": true,
+  "question_comparison": {
+    "frame": 1105,
+    "identical_advancing_input_prefix": true,
+    "baseline": "question waiting for extra ACK",
+    "candidate": "question retained and menu ready"
+  },
+  "cry_trace": {
+    "case": "eevee-unowned",
+    "sampled_frames": 300,
+    "actual_sfx": 45,
+    "observed_playing": true,
+    "six_white_frames": true
+  },
+  "seen_timing": {
+    "actual_return_frames_sampled": 10,
+    "seen_remains_original_for_return_delay": true,
+    "seen_registered_after_tenth_frame": true
+  },
+  "subplot": {
+    "complete": true,
+    "waypoints": [
+      "pre-help",
+      "monster-in-machine",
+      "separated",
+      "ticket-received",
+      "left-house",
+      "returned-house",
+      "unowned-eevee"
+    ],
+    "all_six_flags_set_by_actual_story_actions": true
+  },
+  "tests": {
+    "core_full_passed": 3585,
+    "core_existing_doc_ignore": 1,
+    "app_full_passed": 886,
+    "app_existing_ignores": 88,
+    "protocol_passed": 1,
+    "cold_sram_cases": 3,
+    "actual_cry_and_NR50_77_33_77_asserted": true,
+    "tui_all_test_targets_compile_only": true
+  },
+  "images": {
+    "question-after.png": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4",
+    "unowned-after.png": "bbc402f44b9395a4b1758b095d9cd1373b2de160b03054b8542f8adb9f20da29",
+    "subplot-returned-house.png": "d8d35f6d960c97248b18798717700afd815afb3f7735ce6da705ca741277827d",
+    "returned-after.png": "ca8db006cac6060673e90c383165f5cd8951ab0cf2751dc52dcbe26cddeeaec4",
+    "owned-before.png": "852e8abce6581c0308b27a77e896454d4fb1ca373cc33b69c4402f095861576b",
+    "question-before.png": "f7005cd7aa5f7550b64b9c1f77559ceed1dccaf89451e2a2ee41bf3fdaac6407",
+    "owned-after.png": "852e8abce6581c0308b27a77e896454d4fb1ca373cc33b69c4402f095861576b"
+  }
+}
