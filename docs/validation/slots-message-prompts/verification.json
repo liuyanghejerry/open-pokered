@@ -1,0 +1,43 @@
+{
+  "depends_on_PR": 336,
+  "entry_head": "6efd0554239541e61e36e8626aad1198c500bca3",
+  "tested_candidate_source": "9d51723896488eab574426fdf6edf1b9f38c5a31",
+  "production_source_tested_in_unit_suites": "a150e1cf",
+  "candidate_binary_sha256": "4b8697fe36cc99af5081f708fafe726fc22627f11a14a55fb42f9cda46a417aa",
+  "base_binary_sha256": "36a484ab0648df44c4210b9d3f3f9dcb819441beb4434e2181367606d418ebff",
+  "base_source": "642668cb329bcc2537d233046a13fe85db6e1264",
+  "candidate_repeat_count": 2,
+  "repeat_observations_and_all_pngs_identical_ignoring_capture_path": true,
+  "paired_inputs": [
+    {
+      "candidate_case": "insufficient-a",
+      "base_case": "insufficient",
+      "frame": 944,
+      "tapes_equal_through_capture": true
+    },
+    {
+      "candidate_case": "loss-idle",
+      "base_case": "loss-idle",
+      "frame": 3082,
+      "tapes_equal_through_capture": true
+    },
+    {
+      "candidate_case": "loss-zero",
+      "base_case": "loss-zero",
+      "frame": 3082,
+      "tapes_equal_through_capture": true
+    }
+  ],
+  "core_pass": 3160,
+  "app_default": {
+    "passed": 381,
+    "existing_ignored": 38
+  },
+  "app_debug": {
+    "passed": 392,
+    "existing_ignored": 40
+  },
+  "before_unit_expected_failures": 2,
+  "replay_sha256": "bdd83b62e7af8cbf6ed53ddbe0774c777a580f3a2ef25a8fc7d6b6d0b0280d12",
+  "scope": "Original assembly comparison and offline native fixture with normal boot/Continue and actual buttons. Baseline recorded once, candidate twice. Does not establish original-ROM timing/audio or whole-minigame parity. OneMoreGo selection, entry presentation, rerolls/RNG/audio remain outside this change."
+}
