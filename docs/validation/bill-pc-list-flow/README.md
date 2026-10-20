@@ -58,6 +58,19 @@ original-ROM runtime comparison or a fresh mainline playthrough. Global
 scan/FLASH work and latest-master fresh NEW GAME → credits → independent
 CONTINUE verification remain outside this PR.
 
+## Catalog-order CI follow-up
+
+CI caught the new capability outside alphabetical order: the focused protocol
+run had omitted the pre-existing catalog-order test. The entry is now correctly
+positioned after `bikeShopOffer`. The capability set and game logic are unchanged.
+On the corrected source recorded in `catalog-followup.json`, the **full data
+suite passes 448 tests across 17 targets**, the three-case cold SRAM/real-cry/
+volume test passes, and a freshly rebuilt native binary passes all nine cases.
+All 27 images and normalized case records match the preceding candidate runs.
+`after-catalog.json.gz` and the follow-up logs preserve these exact-source results.
+The full core/app suites and integrated subplot above belong to `b594bf52`;
+they are not relabeled as full-suite reruns on the catalog-order follow-up.
+
 ## Text-preservation check
 
 All **20 ordered bilingual `@t` literal pairs** exactly match master `a79508cc`,
