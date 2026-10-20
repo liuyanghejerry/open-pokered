@@ -1799,15 +1799,15 @@ fn bills_pc_and_cutscene_run_at_real_pc_tile() {
     screen.seed_script_query_state(0, &[], 0, 0, 0, 0, &[], 0, 0, 0);
     for _ in 0..2 { screen.update_frame(input(true)); }
     let mut chose_yes = false;
-    for frame in 0..400 {
-        if screen.pending_choice.is_some() && !chose_yes {
+    for frame in 0..6000 {
+        if screen.script_flags().get("EVENT_BILL_SAID_USE_CELL_SEPARATOR") == Some(&true) {
+            break;
+        }
+        if screen.pending_choice.as_ref().is_some_and(|choice| choice.input_enabled) && !chose_yes {
             for _ in 0..2 { screen.update_frame(input(false)); }
             for _ in 0..2 { screen.update_frame(input(true)); } // YES
             chose_yes = true;
             continue;
-        }
-        if let Some(dialogue) = screen.pending_dialogue.as_mut() {
-            dialogue.skip_to_full_page();
         }
         screen.update_frame(input(frame % 4 >= 2));
     }

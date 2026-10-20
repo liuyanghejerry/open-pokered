@@ -6100,8 +6100,8 @@ mod cinnabar_quiz_audio_tests {
     }
 
     #[test]
-    fn ordinary_bill_choice_keeps_its_existing_unowned_window_lifecycle() {
-        let mut ow = start(MapId::BillsHouse, "talkBillPokemon");
+    fn generic_choice_keeps_its_existing_unowned_window_lifecycle() {
+        let mut ow = super::choice_confirm_audio_tests::generic_choice();
         for frame in 0..4000 {
             let press = frame % 2 == 0 && ow.pending_dialogue.as_ref()
                 .is_some_and(|d| d.waiting_for_input());
