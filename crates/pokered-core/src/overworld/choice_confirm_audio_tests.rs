@@ -7,16 +7,33 @@ fn input(up: bool, down: bool, a: bool, b: bool) -> OverworldInput {
     OverworldInput::new(up, down, false, false, a, b, false, false)
 }
 
-fn bill_choice() -> Field {
+pub(super) fn generic_choice() -> Field {
     let mut field = Field::new(MapId::BillsHouse, None, PokemonRedData);
+    // Bill now uses the source-owned YesNoChoice flow. Keep this regression
+    // on generic ShowChoice, including its result and confirmation audio.
+    let scene = dotzuki_engine_dsl::compiler::compile_scene_to_ast(
+        r#"game_scene ChoiceAudio {
+  @storyline("ask") {
+    @speaker("") { @t("Question?", "问题？") }
+    @choice {
+      @option(@t("YES", "是")) { @speaker("") { @t("Accepted.", "已接受。") } }
+      @option(@t("NO", "否")) { @speaker("") { @t("Cancelled.", "已取消。") } }
+    }
+  }
+}"#,
+        "ChoiceAudio",
+    ).unwrap();
+    let mut engine = crate::overworld::native_script::NativeScriptEngine::new();
+    engine.load_map("ChoiceAudio", &scene);
+    field.script_engine = crate::overworld::native_script::OverworldScriptEngine::Native(engine);
     let command = field
         .script_engine
-        .call_function_no_args("talkBillPokemon")
+        .call_function_no_args("ask")
         .unwrap()
         .unwrap();
     field.active_script_effect = Some(script_bridge::dispatch_command(&command));
 
-    // Enter the real scene's choice through its existing text/input flow.
+    // Enter the fixture's choice through its existing text/input flow.
     // Only ordinary field updates reveal pages and acknowledge them.
     for frame in 0..4000 {
         let a = frame % 2 == 0
@@ -39,7 +56,7 @@ fn bill_choice() -> Field {
 
 #[test]
 fn choice_idle_and_cursor_movement_do_not_play_confirmation() {
-    let mut field = bill_choice();
+    let mut field = generic_choice();
     for _ in 0..16 {
         field.update_frame(input(false, false, false, false));
         assert_eq!(field.sfx_event, OverworldSfxEvent::None);
@@ -57,12 +74,12 @@ fn choice_idle_and_cursor_movement_do_not_play_confirmation() {
 #[test]
 fn choice_a_b_and_combined_confirmation_play_once_with_b_priority() {
     for (a, b, response) in [
-        (true, false, "When I'm in the TELEPORTER"),
-        (false, true, "No!? Come on"),
+        (true, false, "Accepted."),
+        (false, true, "Cancelled."),
         // HandleMenuInput callers test B before accepting a selection.
-        (true, true, "No!? Come on"),
+        (true, true, "Cancelled."),
     ] {
-        let mut field = bill_choice();
+        let mut field = generic_choice();
         field.update_frame(input(false, false, a, b));
         assert_eq!(field.sfx_event, OverworldSfxEvent::TextAdvance);
         assert!(field.pending_choice.is_none());

@@ -11,17 +11,11 @@ game_scene BillsHouse {
   // ── Bill, disguised as a POKeMON (npc 1) ───────────────────────────────
   @storyline("talkBillPokemon") {
     @trigger(map = "BillsHouse", npc = 1, toggle = "BILLS_HOUSE_OBJ_1")
-    @speaker("") {
-      @t("Hiya! I'm a POKeMON... ...No\nI'm not!\n\nCall me BILL! I'm a true\nblue POKeMANIAC! Hey! What's\nwith that skeptical look?\n\nI'm not joshing you, I\nscrewed up an experiment and\ngot combined with a POKeMON!\n\nSo, how about it? Help me\nout here!", "嗨！我是一只宝可梦…………\n不，不是！\n\n叫我正辉！我是真正的宝可梦\n狂！嗨！你那怀疑的眼神是怎么\n回事？\n\n我没骗你，我做实验时出了差\n错，结果和一只宝可梦融合了！\n\n那么，怎么样？帮帮我吧！")
-    }
-    @choice {
-      @option(@t("YES", "是")) {
-      }
-      @option(@t("NO", "否")) {
-        @speaker("") {
-          @t("No!? Come on, you gotta help\na guy in deep trouble!\n\nWhat do you say, chief?\nPlease? OK? All right!", "不吗！？来吧，你得帮帮陷入大\n麻烦的家伙！\n\n怎么样，兄弟？求你了？好？没\n问题！")
-        }
-      }
+    // The question ends in DONE and returns directly into YesNoChoice.
+    answer = askFieldYesNo(@t("Hiya! I'm a POKeMON... ...No\nI'm not!\n\nCall me BILL! I'm a true\nblue POKeMANIAC! Hey! What's\nwith that skeptical look?\n\nI'm not joshing you, I\nscrewed up an experiment and\ngot combined with a POKeMON!\n\nSo, how about it? Help me\nout here!", "嗨！我是一只宝可梦…………\n不，不是！\n\n叫我正辉！我是真正的宝可梦\n狂！嗨！你那怀疑的眼神是怎么\n回事？\n\n我没骗你，我做实验时出了差\n错，结果和一只宝可梦融合了！\n\n那么，怎么样？帮帮我吧！"), @t("YES", "是"), @t("NO", "否"))
+    @if (answer != 0) {
+      // The refusal ends in PROMPT, before the common instructions.
+      printFieldText(@t("No!? Come on, you gotta help\na guy in deep trouble!\n\nWhat do you say, chief?\nPlease? OK? All right!", "不吗！？来吧，你得帮帮陷入大\n麻烦的家伙！\n\n怎么样，兄弟？求你了？好？没\n问题！"), true, "prompt")
     }
     @speaker("") {
       @t("When I'm in the TELEPORTER,\ngo to my PC and run the Cell\nSeparation System!", "当我在传送机里的时候，去我的\n电脑运行细胞分离系统！")
