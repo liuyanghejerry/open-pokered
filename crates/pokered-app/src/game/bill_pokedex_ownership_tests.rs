@@ -28,7 +28,7 @@ fn same_pixels(a: &FrameBuffer, b: &FrameBuffer) -> bool {
 
 #[test]
 fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_registers_seen() {
-    for owned in [true, false] {
+    for (owned, seen) in [(true, true), (false, false), (false, true)] {
         let mut save = SaveData::new();
         save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
         save.game_data.rival_name = pokered_data::charmap::encode_string("BLUE").unwrap();
@@ -57,11 +57,13 @@ fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_regist
         save.game_data.pokedex.set_owned(Species::Bulbasaur);
         if owned {
             save.game_data.pokedex.set_owned(Species::Eevee);
+        } else if seen {
+            save.game_data.pokedex.set_seen(Species::Eevee);
         }
         let bytes = export_sram(&save);
         assert!(!import_sram(&bytes).unwrap().imported_legacy_native);
         let fixture = Fixture(std::env::temp_dir().join(format!(
-            "pokered-bill-dex-{}-{owned}.sav",
+            "pokered-bill-dex-{}-{owned}-{seen}.sav",
             std::process::id()
         )));
         assert!(!companion_path_for_save(&fixture.0).exists());
@@ -163,6 +165,10 @@ fn cold_bill_pokedex_uses_owned_flags_for_full_and_cached_render_and_only_regist
         assert_eq!(
             game.save_data.game_data.pokedex.is_owned(Species::Eevee),
             owned
+        );
+        assert_eq!(
+            game.save_data.game_data.pokedex.is_seen(Species::Eevee),
+            seen
         );
         let mut actual = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         game.draw(&mut actual);
