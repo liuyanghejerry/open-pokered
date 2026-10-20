@@ -99,5 +99,7 @@
       "final_coins": 9996
     }
   ],
-  "scope": "Native offline fixture, normal boot/Continue, buttons only; original source comparison. Does not prove original-ROM animation/audio/timing or whole-game parity."
+  "scope": "Native offline fixture, normal boot/Continue, buttons only; original source comparison. Does not prove original-ROM animation/audio/timing or whole-game parity.",
+  "agent_tests_pass": 61,
+  "generated_graph_delta": "Only GameCorner:slotMachines COIN_CASE and >=1 coins requirements"
 }
