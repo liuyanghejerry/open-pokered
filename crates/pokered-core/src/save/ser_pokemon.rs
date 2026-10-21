@@ -184,8 +184,8 @@ pub fn serialize_box_into(box_data: &PcBox, buf: &mut Vec<u8>) {
     }
 }
 
-pub fn serialize_sprite_data_into(buf: &mut Vec<u8>) {
-    buf.extend_from_slice(&[0u8; SPRITE_DATA_SIZE]);
+pub fn serialize_sprite_data_into(data: &super::sprite_data::SpriteData, buf: &mut Vec<u8>) {
+    data.write_into(buf);
 }
 
 pub fn deserialize_box_mon(data: &[u8]) -> Result<Pokemon, SaveError> {

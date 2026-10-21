@@ -2094,6 +2094,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         .push(OverworldAudioRequest::PlayMapMusic { map: new_map });
                     let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
                     self.npc_presentation = Default::default();
+                    self.npc_saved_state = Default::default();
                     self.field_viewport = Default::default();
                     self.player_presentation = Default::default();
                     self.npc_states = self
@@ -2783,6 +2784,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             return;
         }
         if self.map_data.is_some() { self.hasten_followed_npc(); }
+        self.npc_saved_state.prepare(self.state.current_map, &self.npc_states);
         if let Some(ref map) = self.map_data {
             let rng_value = (self
                 .frame_counter
@@ -2867,6 +2869,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             npc_movement::update_npc_movement_with_stationary(
                 &mut self.npc_states,
+                &mut self.npc_saved_state.data,
                 self.state.player.x,
                 self.state.player.y,
                 player_dest,

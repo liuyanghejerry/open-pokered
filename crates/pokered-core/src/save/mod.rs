@@ -11,6 +11,7 @@ pub mod sram_deser_game_data;
 pub mod sram_export;
 pub mod sram_import;
 pub mod sram_layout;
+pub mod sprite_data;
 
 #[cfg(test)]
 mod daycare_tests;
@@ -39,6 +40,8 @@ pub struct SaveData {
     pub imported_legacy_json: bool,
     pub player_name: Vec<u8>,
     pub game_data: GameData,
+    #[serde(default)]
+    pub sprite_data: sprite_data::SpriteData,
     pub party: Party,
     pub current_box: PcBox,
     pub pc_storage: PcStorage,
@@ -53,6 +56,7 @@ impl SaveData {
             imported_legacy_json: false,
             player_name: Vec::new(),
             game_data: GameData::new(),
+            sprite_data: Default::default(),
             party: Party::new(),
             current_box: PcBox::new(),
             pc_storage: PcStorage::new(),
@@ -216,7 +220,7 @@ impl SaveData {
         // Pad to NAME_LENGTH (11 bytes) — deserializer's read_name() always reads 11.
         ser_pokemon::serialize_name(&self.player_name, &mut buf);
         ser_game_data::serialize_game_data_into(&self.game_data, &mut buf);
-        ser_pokemon::serialize_sprite_data_into(&mut buf);
+        ser_pokemon::serialize_sprite_data_into(&self.sprite_data, &mut buf);
         ser_pokemon::serialize_party_into(&self.party, &mut buf);
         ser_pokemon::serialize_box_into(&self.current_box, &mut buf);
         buf.push(self.tile_animations);
@@ -234,6 +238,7 @@ impl SaveData {
         // stack when this runs inside the top-level update state machine.
         self.player_name.clear();
         self.game_data = GameData::new();
+        self.sprite_data = Default::default();
         self.party.clear();
         self.current_box.clear();
         self.pc_storage.clear();

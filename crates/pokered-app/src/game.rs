@@ -2063,6 +2063,11 @@ impl PokemonGame {
     // The event-flag bitset serializes directly into the original
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
+    save.sprite_data = overworld.npc_saved_state.capture(current_map, &overworld.npc_states, (player.x, player.y));
+    save.game_data.num_sprites = overworld.npc_states.len().min(15) as u8;
+    for (entry, npc) in save.game_data.map_sprite_data.iter_mut().zip(&overworld.npc_states) {
+        *entry = (npc.range, npc.text_id);
+    }
     overworld.write_system_save_state(&mut save.game_data);
 
     save.game_data.toggleable_object_flags = *overworld.toggleable_object_flags();
@@ -2550,6 +2555,7 @@ impl PokemonGame {
                             .set_hidden_item_flags(self.save_data.game_data.obtained_hidden_items);
                         overworld
                             .set_hidden_coin_flags(self.save_data.game_data.obtained_hidden_coins);
+                        overworld.npc_saved_state.restore_from_save(map_id, &self.save_data, &mut overworld.npc_states);
                         overworld.apply_hidden_object_flags();
                         overworld.player_name = self.player_name.clone();
                         overworld.rival_name = self.rival_name.clone();
@@ -13877,6 +13883,8 @@ mod start_menu_button_audio_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/silph_departure_tests.rs"]
 mod silph_departure_tests;
+#[cfg(test)]
+mod npc_persistence_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/platform_soft_reset_tests.rs"]

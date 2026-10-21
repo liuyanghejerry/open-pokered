@@ -154,9 +154,10 @@ fn import_bank1_into(bank: &[u8], out: &mut SaveData) -> Result<bool, SaveError>
         }
     };
     validate_bank1_checksum(bank1)?;
-    let (player_name, game_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
+    let (player_name, game_data, sprite_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
     out.player_name = player_name;
     out.game_data = game_data;
+    out.sprite_data = sprite_data;
     out.party = party;
     out.current_box = current_box;
     out.tile_animations = tile_animations;
@@ -286,20 +287,20 @@ fn parse_hall_of_fame(bank0: &[u8], legacy_native: bool) -> Result<HallOfFame, S
     Ok(hof)
 }
 
-/// Parse bank 1: player_name + game_data + sprite_data(skip) + party + current_box + tile_animations
+/// Parse bank 1, retaining both original sprite-state tables.
 fn parse_bank1(
     bank1: &[u8],
-) -> Result<(Vec<u8>, super::game_data::GameData, Party, PcBox, u8), SaveError> {
+) -> Result<(Vec<u8>, super::game_data::GameData, super::sprite_data::SpriteData, Party, PcBox, u8), SaveError> {
     let mut reader = SramReader::new(&bank1[GAME_DATA_OFFSET..]);
 
     let player_name = reader.read_name()?;
     let game_data = deserialize_game_data(&mut reader)?;
-    reader.skip(SPRITE_DATA_SIZE)?;
+    let sprite_data = super::sprite_data::SpriteData::from_bytes(reader.read_bytes(SPRITE_DATA_SIZE)?);
     let party = parse_party(&mut reader)?;
     let current_box = parse_box(&mut reader, false)?;
     let tile_animations = reader.read_u8()?;
 
-    Ok((player_name, game_data, party, current_box, tile_animations))
+    Ok((player_name, game_data, sprite_data, party, current_box, tile_animations))
 }
 
 // Party: count(1) + species(7) + 6×party_struct(44) + 6×OT(11) + 6×nick(11) = 404 bytes
@@ -424,7 +425,7 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
     let bank3 = &data[SRAM_BANK_SIZE_LAYOUT * 3..SRAM_BANK_SIZE_LAYOUT * 4];
 
     let hall_of_fame = parse_hall_of_fame(bank0, false)?;
-    let (player_name, game_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
+    let (player_name, game_data, sprite_data, party, current_box, tile_animations) = parse_bank1(bank1)?;
     let mut pc_storage = PcStorage::new();
     parse_box_bank(bank2, &mut pc_storage, 0, false)?;
     parse_box_bank(bank3, &mut pc_storage, 6, false)?;
@@ -434,6 +435,7 @@ pub fn import_sram_no_checksum(data: &[u8]) -> Result<SaveData, SaveError> {
         imported_legacy_json: false,
         player_name,
         game_data,
+        sprite_data,
         party,
         current_box,
         pc_storage,
