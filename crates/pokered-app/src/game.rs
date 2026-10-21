@@ -13913,6 +13913,9 @@ mod pidgey_field_cry_audio_tests;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod pokedex_rating_audio_tests;
+
+#[cfg(test)]
+mod hof_pc_cry_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/jigglypuff_song_audio_tests.rs"]
 mod jigglypuff_song_audio_tests;

@@ -1,0 +1,32 @@
+{
+  "scope": "Offline disclosed fixtures, not fresh playthrough or source/native map-header equivalence. Native base atPewterPC13,4; original realViridian header/player20,30 retains its own coherent actor tables.",
+  "ending_sha256": "913a27e4d4093a0171f75772bc917574e0b1a961286913e116882f1bb152828e",
+  "cases": [
+    {
+      "role": "native",
+      "base": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/pc-before-45/box-stats.sav",
+      "base_sha256": "d1de0b7e695206055bafad2c446f10fd7051d72c2070dc247e2852e13f4d846e",
+      "output": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1243-hof-native-fixture.sav",
+      "sha256": "6133c20d0e896d577fdaef4a08f2ca9cd7c49a1c2c34af3d9b411de0675df823",
+      "map": 58,
+      "xy": [
+        13,
+        4
+      ],
+      "mutations": "Offline HOF bank0 4800-byte window copied from natural1242ending; numHoF=1 and EVENT_GOT_POKEDEX bit37; original main checksum recomputed; no runtime setters."
+    },
+    {
+      "role": "original",
+      "base": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1241-source-wander-fixture.sav",
+      "base_sha256": "81b69c07a11316ffd6c0c2fd6cb3330c47bd768fa06cfb734815ef9cd9ce91ea",
+      "output": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1243-hof-original-fixture.sav",
+      "sha256": "c3548eacb4e47d20ce0ee6b5d8e7360c6c7cb13bf8338711dd26a8b333a7ed72",
+      "map": 1,
+      "xy": [
+        20,
+        30
+      ],
+      "mutations": "Offline HOF bank0 4800-byte window copied from natural1242ending; numHoF=1 and EVENT_GOT_POKEDEX bit37; original main checksum recomputed; no runtime setters."
+    }
+  ]
+}
