@@ -1,0 +1,166 @@
+[
+  {
+    "phase": 0,
+    "trial": 1,
+    "events": [
+      {
+        "name": "MoveSprite",
+        "t": 3,
+        "ly": 58,
+        "cycles": 284298368,
+        "sprite": 240
+      },
+      {
+        "name": "UpdateSprites",
+        "t": 3,
+        "ly": 108,
+        "cycles": 284321152,
+        "sprite": 240
+      },
+      {
+        "name": "VBlank.begin",
+        "t": 3,
+        "ly": 144,
+        "cycles": 284337268,
+        "sprite": 112
+      },
+      {
+        "name": "UpdateSprites.end",
+        "t": 4,
+        "ly": 68,
+        "cycles": 284372956,
+        "sprite": 240
+      },
+      {
+        "name": "TryWalking",
+        "t": 6,
+        "ly": 127,
+        "cycles": 284540488,
+        "sprite": 176
+      }
+    ]
+  },
+  {
+    "phase": 0,
+    "trial": 2,
+    "events": [
+      {
+        "name": "MoveSprite",
+        "t": 3,
+        "ly": 58,
+        "cycles": 284298368,
+        "sprite": 240
+      },
+      {
+        "name": "UpdateSprites",
+        "t": 3,
+        "ly": 108,
+        "cycles": 284321152,
+        "sprite": 240
+      },
+      {
+        "name": "VBlank.begin",
+        "t": 3,
+        "ly": 144,
+        "cycles": 284337268,
+        "sprite": 112
+      },
+      {
+        "name": "UpdateSprites.end",
+        "t": 4,
+        "ly": 68,
+        "cycles": 284372956,
+        "sprite": 240
+      },
+      {
+        "name": "TryWalking",
+        "t": 6,
+        "ly": 127,
+        "cycles": 284540488,
+        "sprite": 176
+      }
+    ]
+  },
+  {
+    "phase": 1,
+    "trial": 1,
+    "events": [
+      {
+        "name": "MoveSprite",
+        "t": 2,
+        "ly": 58,
+        "cycles": 284298368,
+        "sprite": 240
+      },
+      {
+        "name": "UpdateSprites",
+        "t": 2,
+        "ly": 108,
+        "cycles": 284321152,
+        "sprite": 240
+      },
+      {
+        "name": "VBlank.begin",
+        "t": 2,
+        "ly": 144,
+        "cycles": 284337268,
+        "sprite": 112
+      },
+      {
+        "name": "UpdateSprites.end",
+        "t": 3,
+        "ly": 68,
+        "cycles": 284372956,
+        "sprite": 240
+      },
+      {
+        "name": "TryWalking",
+        "t": 5,
+        "ly": 127,
+        "cycles": 284540488,
+        "sprite": 176
+      }
+    ]
+  },
+  {
+    "phase": 1,
+    "trial": 2,
+    "events": [
+      {
+        "name": "MoveSprite",
+        "t": 2,
+        "ly": 58,
+        "cycles": 284298368,
+        "sprite": 240
+      },
+      {
+        "name": "UpdateSprites",
+        "t": 2,
+        "ly": 108,
+        "cycles": 284321152,
+        "sprite": 240
+      },
+      {
+        "name": "VBlank.begin",
+        "t": 2,
+        "ly": 144,
+        "cycles": 284337268,
+        "sprite": 112
+      },
+      {
+        "name": "UpdateSprites.end",
+        "t": 3,
+        "ly": 68,
+        "cycles": 284372956,
+        "sprite": 240
+      },
+      {
+        "name": "TryWalking",
+        "t": 5,
+        "ly": 127,
+        "cycles": 284540488,
+        "sprite": 176
+      }
+    ]
+  }
+]

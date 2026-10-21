@@ -1,0 +1,6 @@
+{
+  "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-c34995e71c43bc50",
+  "sha256": "13be3d149ab916d09250dce5372e533aee2106edcccd717b6e92273bb8ec8478",
+  "source": "a2f1189ceb4074937222b9257267fd79348dff05",
+  "test_only_changes": "Explicit hold19 + menu input guards respected by physical taps. Controlled warp and NPC relocation during setup; actual Strength menu key input; no setters during201frame window. Not normal-boot/travel proof."
+}
