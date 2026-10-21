@@ -1,0 +1,54 @@
+{
+  "scope": "Actual native SRAMboot/CONTINUE physical-key before/after; not original animation/audio/tcycle parity.",
+  "base_head": "13ed99a10d1dc0434e9a8f165a8a6d53c4a4e0a3",
+  "candidate_head": "e37573f8dfc034e52e52d1be273126ad10c6e162",
+  "base_binary_sha256": "cde8b9f6192afa10b4019bfad8933452c3088058c532b8cf7b54355d60e567d8",
+  "candidate_binary_sha256": "a374c209765c22bffd3c9675f2445c560e3b4def1cac870ef04b45d6764ff062",
+  "fixture_sha256": "277c2224f96c3159e073296465abd340637b0e654b48356b74db7e758333f6cc",
+  "observations_each": 248,
+  "physical_and_readonly_commands_identical_except_capture_output_directory": true,
+  "player_states_and_frames_identical": true,
+  "first_npc_difference_frame": 791,
+  "base_violations": [
+    [
+      790,
+      791,
+      1
+    ]
+  ],
+  "fixed_violations": [],
+  "resumed_after_stop_both": true,
+  "all_source_head_binary_guards_passed": true,
+  "images": [
+    {
+      "file": "frame-0791.png",
+      "before_sha256": "34b42779fb0ff157aed68c8ef136aa6362a0449c29ca4686b6ab74c38d89129f",
+      "after_sha256": "34b42779fb0ff157aed68c8ef136aa6362a0449c29ca4686b6ab74c38d89129f",
+      "equal": true
+    },
+    {
+      "file": "frame-0807.png",
+      "before_sha256": "4901f02bb05d5d091ea6c4acd56767df9b02d40cdfbc2d57448ac1d1e3b8434a",
+      "after_sha256": "5b37588ff05347621b165636dd9de07c702cdd674df1ee63190b42a78416610e",
+      "equal": false
+    },
+    {
+      "file": "frame-0823.png",
+      "before_sha256": "62ea314c29277f63850a4a2259d055e80e80262ad6dfc4f18603ad91d5d2b185",
+      "after_sha256": "8872add158e63abe1c57ab8cffcfd4b06863f5e355a90dee4a3e03628352af4c",
+      "equal": false
+    },
+    {
+      "file": "frame-0855.png",
+      "before_sha256": "e01700ddce77dc38e41f91eeeceb1dfb4c4695e9b847fda3c14199b3104d1236",
+      "after_sha256": "61f8a3b5d1fb0a7cc446870ba4595d216326ae807ec8c066a34bce75f9eeb49f",
+      "equal": false
+    },
+    {
+      "file": "frame-0919.png",
+      "before_sha256": "3b60b6230ec22f3e6820ae2fe9ef1680a822e8ada391c66b29914c82a60e0ed4",
+      "after_sha256": "9444d623399ab9665b9edc8b55ccd9742cad01cc4456448c84a2df159ed08cfd",
+      "equal": false
+    }
+  ]
+}

@@ -2822,9 +2822,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 || self.trainer_encounter_intro.is_some()
                 || self.trainer_intro_text_pending.is_some();
             let mut frozen_slots: Vec<usize> = Vec::new();
-            if frozen {
+            // UpdateNPCSprite keeps existing walking/delay work running,
+            // but a ready ordinary walker waits for the player's stride.
+            // Keep it visible/occupied while pausing only its movement roll.
+            let player_mid_step = self.state.walk_counter != 0;
+            if frozen || player_mid_step {
                 for (i, n) in self.npc_states.iter_mut().enumerate() {
-                    if n.movement_type == NpcMovementType::Wander {
+                    let ready = n.walk_counter == 0 && n.delay_counter == 0
+                        && n.scripted_path.is_empty();
+                    if n.movement_type == NpcMovementType::Wander && (frozen || ready) {
                         n.movement_type = NpcMovementType::Stationary;
                         frozen_slots.push(i);
                     }

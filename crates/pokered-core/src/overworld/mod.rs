@@ -123,3 +123,6 @@ mod pokedex_rating;
 
 #[cfg(test)]
 mod tests_npc_availability;
+
+#[cfg(test)]
+mod tests_npc_ready_pause;
