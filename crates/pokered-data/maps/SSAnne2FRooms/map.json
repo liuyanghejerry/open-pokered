@@ -93,6 +93,7 @@
       "y": 2,
       "movement": "Stationary",
       "facing": "Right",
+      "movementByte2": 211,
       "range": 0,
       "textId": 1,
       "isTrainer": true,
@@ -107,6 +108,7 @@
       "y": 4,
       "movement": "Stationary",
       "facing": "Left",
+      "movementByte2": 210,
       "range": 0,
       "textId": 2,
       "isTrainer": true,
@@ -121,6 +123,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Right",
+      "movementByte2": 211,
       "range": 0,
       "textId": 3,
       "isTrainer": true,
@@ -135,6 +138,7 @@
       "y": 11,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 208,
       "range": 0,
       "textId": 4,
       "isTrainer": true,
@@ -149,6 +153,7 @@
       "y": 2,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 208,
       "range": 0,
       "textId": 5,
       "isTrainer": false
@@ -160,6 +165,7 @@
       "y": 1,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 6,
       "isTrainer": false,
@@ -172,6 +178,7 @@
       "y": 2,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 208,
       "range": 0,
       "textId": 7,
       "isTrainer": false
@@ -183,6 +190,7 @@
       "y": 1,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 208,
       "range": 0,
       "textId": 8,
       "isTrainer": false
@@ -194,6 +202,7 @@
       "y": 12,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 9,
       "isTrainer": false,
@@ -206,6 +215,7 @@
       "y": 12,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 208,
       "range": 0,
       "textId": 10,
       "isTrainer": false
@@ -217,6 +227,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 11,
       "isTrainer": false
@@ -228,6 +239,7 @@
       "y": 12,
       "movement": "Stationary",
       "facing": "Left",
+      "movementByte2": 210,
       "range": 0,
       "textId": 12,
       "isTrainer": false
@@ -239,6 +251,7 @@
       "y": 12,
       "movement": "Stationary",
       "facing": "Right",
+      "movementByte2": 211,
       "range": 0,
       "textId": 13,
       "isTrainer": false

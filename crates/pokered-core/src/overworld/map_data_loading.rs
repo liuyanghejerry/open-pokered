@@ -157,6 +157,7 @@ fn convert_npc(npc: &NpcJson) -> (NpcDefinition, PokemonNpcData) {
             .unwrap_or(0),
         trainer_set: npc.trainer_set.unwrap_or(0),
         item_id: npc.item_id.unwrap_or(0),
+        movement_byte2: npc.movement_byte2,
         end_battle_text: npc.end_battle_text.clone(),
     };
     (def, extra)

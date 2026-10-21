@@ -49,6 +49,7 @@
       "y": 3,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 1,
       "isTrainer": false

@@ -88,7 +88,7 @@ pub fn advance_stationary_facing_with_rng(npc: &mut NpcRuntimeState, player_movi
     mut random: impl FnMut() -> (u8, u8)) {
     if !npc.visible || npc.movement_type != NpcMovementType::Stationary
         || npc.walk_counter != 0 || !npc.scripted_path.is_empty()
-        || !matches!(npc.range, 0xD0..=0xD3 | 0xFC..=0xFF) { return; }
+        || !matches!(npc.range, 0..=2 | 0x10 | 0xD0..=0xD3 | 0xFC..=0xFF) { return; }
     if npc.delay_counter != 0 {
         npc.delay_counter -= 1;
         return;
@@ -98,12 +98,18 @@ pub fn advance_stationary_facing_with_rng(npc: &mut NpcRuntimeState, player_movi
     let index = if matches!(npc.range, 0xD0..=0xD3) {npc.range - 0xD0}
         else {direction_random >> 6};
     npc.facing = match npc.range {
-        0xFC => [Direction::Down, Direction::Up, Direction::Up, Direction::Down][index as usize],
-        0xFD => [Direction::Left, Direction::Right, Direction::Left, Direction::Right][index as usize],
+        1 | 0xFC => [Direction::Down, Direction::Up, Direction::Up, Direction::Down][index as usize],
+        2 | 0xFD => [Direction::Left, Direction::Right, Direction::Left, Direction::Right][index as usize],
         _ => [Direction::Down, Direction::Up, Direction::Left, Direction::Right][index as usize],
     };
     let delay = delay_random & 0x7f;
     npc.delay_counter = if delay == 0 {256} else {u16::from(delay)};
+}
+
+/// Keep the motion selector separate from trainer sight range. Legacy/custom
+/// maps without the original selector retain their existing interpretation.
+pub fn runtime_motion_selector(movement: NpcMovementType, range: u8, facing: Direction, original: Option<u8>) -> u8 {
+    original.unwrap_or_else(|| stationary_range(movement, range, facing))
 }
 
 pub fn stationary_range(movement: NpcMovementType, range: u8, facing: Direction) -> u8 {
@@ -189,8 +195,8 @@ pub fn load_map_npcs(npcs: &[NpcEntry]) -> Vec<NpcRuntimeState> {
             step_direction: None,
             scripted_frame: None,
             movement_type: convert_movement(npc.movement),
-            wander_axis: convert_wander_axis(npc.range),
-            range: stationary_range(convert_movement(npc.movement), npc.range, convert_facing(npc.facing)),
+            wander_axis: convert_wander_axis(npc.movement_byte2.unwrap_or(npc.range)),
+            range: runtime_motion_selector(convert_movement(npc.movement), npc.range, convert_facing(npc.facing), npc.movement_byte2),
             walk_counter: 0,
             delay_counter: 0,
             text_id: npc.text_id,
@@ -210,7 +216,7 @@ mod stationary_tests {
         for row in d["cases"].as_array().unwrap() {
             let mut n = load_map_npcs(pokered_data::npc_data::get_map_npcs(pokered_data::maps::MapId::PalletTown))[0].clone();
             n.visible=true;n.movement_type=NpcMovementType::Stationary;
-            n.range=match row["movement_byte2"].as_u64().unwrap() {0=>254,1=>252,2=>253,v=>v as u8};
+            n.range=row["movement_byte2"].as_u64().unwrap() as u8;
             n.facing=Direction::Up;n.walk_counter=0;n.delay_counter=0;n.scripted_path.clear();
             let origin=(n.x,n.y);let delay=row["delay"].as_u64().unwrap() as u8;
             advance_stationary_facing(&mut n,false,row["random_direction_byte"].as_u64().unwrap() as u8,delay);

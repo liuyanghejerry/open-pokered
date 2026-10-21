@@ -48,6 +48,7 @@
       "y": 5,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 1,
       "isTrainer": false
@@ -59,6 +60,7 @@
       "y": 8,
       "movement": "Wander",
       "facing": "Down",
+      "movementByte2": 0,
       "range": 0,
       "textId": 2,
       "isTrainer": false
@@ -70,6 +72,7 @@
       "y": 14,
       "movement": "Wander",
       "facing": "Down",
+      "movementByte2": 0,
       "range": 0,
       "textId": 3,
       "isTrainer": false

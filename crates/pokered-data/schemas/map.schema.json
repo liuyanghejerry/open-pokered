@@ -147,6 +147,12 @@
           "maximum": 255,
           "description": "Trainer sight range (0 for non-trainers)"
         },
+        "movementByte2": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Original NPC direction/axis selector, independent of trainer sight range"
+        },
         "textId": { "type": "integer", "minimum": 0 },
         "isTrainer": { "type": "boolean" },
         "trainerClass": {

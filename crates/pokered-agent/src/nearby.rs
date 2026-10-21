@@ -254,6 +254,7 @@ mod tests {
             trainer_class: is_trainer.then(|| "Youngster".to_string()),
             trainer_set: None,
             item_id,
+            movement_byte2: None,
             end_battle_text: None,
         }
     }

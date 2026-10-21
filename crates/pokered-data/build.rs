@@ -201,7 +201,7 @@ fn write_static_npc<W: Write>(out: &mut W, n: &JsonValue) {
     let end_battle_text = opt_str(n.get("endBattleText"));
     write!(
         out,
-        "StaticNpcJson {{ sprite_id: {}, sprite_name: {}, x: {}, y: {}, movement: {:?}, facing: {:?}, range: {}, text_id: {}, is_trainer: {}, trainer_class: {}, trainer_set: {}, item_id: {}, end_battle_text: {} }}, ",
+        "StaticNpcJson {{ sprite_id: {}, sprite_name: {}, x: {}, y: {}, movement: {:?}, facing: {:?}, range: {}, movement_byte2: {}, text_id: {}, is_trainer: {}, trainer_class: {}, trainer_set: {}, item_id: {}, end_battle_text: {} }}, ",
         json_u8(n.get("spriteId"), 0),
         sprite_name,
         json_u8(n.get("x"), 0),
@@ -209,6 +209,7 @@ fn write_static_npc<W: Write>(out: &mut W, n: &JsonValue) {
         json_str(n.get("movement"), ""),
         json_str(n.get("facing"), ""),
         json_u8(n.get("range"), 0),
+        opt_u8(n.get("movementByte2")),
         json_u8(n.get("textId"), 0),
         json_bool(n.get("isTrainer"), false),
         trainer_class,

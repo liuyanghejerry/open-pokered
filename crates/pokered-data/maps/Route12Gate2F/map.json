@@ -27,6 +27,7 @@
       "y": 4,
       "movement": "Wander",
       "facing": "Down",
+      "movementByte2": 1,
       "range": 1,
       "textId": 1,
       "isTrainer": false
