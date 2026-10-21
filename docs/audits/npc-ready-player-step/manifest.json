@@ -1,0 +1,65 @@
+{
+  "base_head": "13ed99a10d1dc0434e9a8f165a8a6d53c4a4e0a3",
+  "candidate_code_head": "e37573f8dfc034e52e52d1be273126ad10c6e162",
+  "scope": "Actual native SRAMboot/CONTINUE physical-key before/after; not original animation/audio/tcycle parity.",
+  "original_source": {
+    "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/movement.asm",
+    "sha256": "87939b64f3c4edacc5651d1f22b5a677967184bf19fef5879f2c274cf7b7596a",
+    "rule": "UpdateNPCSprite checks existing walking/delay first, then returns from its ready branch when wWalkCounter is nonzero."
+  },
+  "tests": {
+    "core_package_and_integration_passed": 3606,
+    "core_doctests_ignored": 1,
+    "app_library_passed": 386,
+    "app_library_ignored": 38,
+    "targeted_before_corrected": {
+      "passed": 3,
+      "failed": 2
+    },
+    "targeted_after": {
+      "passed": 5,
+      "failed": 0
+    }
+  },
+  "notes": [
+    "Native before/after SRAM/CONTINUE and physical keys only. No runtime setters/warps/snapshot loading.",
+    "Actual recorded drivers used accelerated TCP reading; public replay uses standard DebugClient. At speed0 physical frames are independent of wall latency.",
+    "Frame791 raw NPC state differs but its image is still identical; paired untouched whole160x144 screenshots use frame807 after the visible publication.",
+    "Core tests validate nonzero/zero player counters, continuing existing walking/delay and scripted paths; runtime observations report player Walking state and NPC walk_counter.",
+    "Game.close intentionally sendsSIGTERM after assertions; successful recording driver exits0."
+  ],
+  "files": {
+    "docs/audits/npc-ready-player-step/fixture.sav": {
+      "bytes": 32768,
+      "sha256": "277c2224f96c3159e073296465abd340637b0e654b48356b74db7e758333f6cc"
+    },
+    "docs/audits/npc-ready-player-step/replay.py": {
+      "bytes": 5175,
+      "sha256": "69d467d1e602596d8db6491e9e222f23a52d4de1396baf0eea75834ab76b833d"
+    },
+    "docs/audits/npc-ready-player-step/boot-commands.json": {
+      "bytes": 2321,
+      "sha256": "bbe8b241edb924b1831e75c1abe2797f2ae69c10c1ab5f3f76eceaf55deb975e"
+    },
+    "docs/audits/npc-ready-player-step/base-native.json.gz": {
+      "bytes": 5620,
+      "sha256": "a9a53e786e64d09dfcd40609659494506132e9d2da3a61b27caec6685a514294"
+    },
+    "docs/audits/npc-ready-player-step/comparison.json": {
+      "bytes": 2146,
+      "sha256": "dae47a5966058016938b54b9406a9c5801666005e1f3f969bf21ac855fab9161"
+    },
+    "docs/audits/npc-ready-player-step/fixed-native.json.gz": {
+      "bytes": 5278,
+      "sha256": "ea6fd6ec1ce4582588d844f96edf794dbbbc06f48e18d4090c1615015ad8cb91"
+    },
+    "docs/screenshots/npc-ready-player-step/before.png": {
+      "bytes": 27317,
+      "sha256": "4901f02bb05d5d091ea6c4acd56767df9b02d40cdfbc2d57448ac1d1e3b8434a"
+    },
+    "docs/screenshots/npc-ready-player-step/after.png": {
+      "bytes": 27369,
+      "sha256": "5b37588ff05347621b165636dd9de07c702cdd674df1ee63190b42a78416610e"
+    }
+  }
+}
