@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/jerry/develop/open-pokered/scripts/playthrough.py", line 2233, in main
+    fn(g)
+    ~~^^^
+  File "/home/jerry/develop/open-pokered/scripts/playthrough_late.py", line 538, in m18_rock_tunnel_entrance
+    field_move(g, "Cut")
+    ~~~~~~~~~~^^^^^^^^^^
+  File "/home/jerry/develop/open-pokered/scripts/playthrough_late.py", line 260, in field_move
+    assert menu and menu["kind"] == "party", menu
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'cursor': 1, 'items': ['Pokedex', 'Pokemon', 'Item', 'TrainerInfo', 'Save', 'Option', 'Exit'], 'kind': 'start', 'published_menu_rows': 144, 'ready_for_input': True}

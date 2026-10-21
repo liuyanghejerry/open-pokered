@@ -175,6 +175,17 @@ def open_start(g, entry):
             g.tap("start", 12)
             continue
         assert menu and menu["kind"] == "start", menu
+        # DisplayStartMenu draws before HandleMenuInput can accept a key.
+        # A remembered cursor may already point at the requested entry while
+        # publication is still pending; never spend the confirm edge there.
+        waited = 0
+        while not menu["ready_for_input"]:
+            if waited >= 120:
+                raise RuntimeError(f"start-menu input did not become ready: {menu}")
+            g.step(1)
+            waited += 1
+            menu = g.st().get("field_menu")
+            assert menu and menu["kind"] == "start", menu
         if menu["items"][menu["cursor"]] == entry:
             g.tap("a", 12)
             return
