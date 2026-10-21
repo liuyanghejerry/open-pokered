@@ -860,6 +860,7 @@ pub struct OverworldScreen<G: GameData = pokered_data::impl_traits::PokemonRedDa
     pub player_moving_direction: u8,
     pub map_data: Option<MapData<G::Tileset>>,
     pub npc_states: Vec<crate::overworld::npc_movement::NpcRuntimeState>,
+    pub npc_saved_state: super::npc_saved_state::NpcSavedState,
     pub npc_presentation: super::npc_presentation::NpcPresentation,
     pub field_viewport: super::npc_presentation::FieldViewport,
     pub player_presentation: super::npc_presentation::PlayerPresentation,
@@ -1391,6 +1392,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             state: OverworldState::new(start_map),
             map_data,
             npc_states,
+            npc_saved_state: Default::default(),
             npc_presentation: Default::default(),
             field_viewport: Default::default(),
             player_presentation: Default::default(),
@@ -3085,6 +3087,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             }
             let hidden_npc_ids = self.map_script_config.hidden_npc_ids();
             self.npc_presentation = Default::default();
+            self.npc_saved_state = Default::default();
             self.field_viewport = Default::default();
             self.player_presentation = Default::default();
             self.npc_states = self

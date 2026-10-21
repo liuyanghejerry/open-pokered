@@ -239,7 +239,7 @@ fn test_deserialize_name_with_terminator() {
 #[test]
 fn test_serialize_sprite_data_size() {
     let mut buf = Vec::new();
-    serialize_sprite_data_into(&mut buf);
+    serialize_sprite_data_into(&Default::default(), &mut buf);
     assert_eq!(buf.len(), SPRITE_DATA_SIZE);
     assert!(buf.iter().all(|&b| b == 0));
 }

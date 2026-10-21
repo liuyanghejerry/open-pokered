@@ -1,0 +1,19 @@
+{
+  "scope": "Offline legacy-native fixture preparation only; clear foreign sprite tables inherited when the old fixture player map was edited. Identical resulting SRAM is used for both actual master and candidate recordings. No runtime setters.",
+  "input_sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f",
+  "output_sha256": "034797f94d4dcbf4540275fe84db4c89ecad60fa0ec1362d46087fc4c365e4d2",
+  "cleared_sprite_offset": 11564,
+  "cleared_bytes": 512,
+  "old_first_two_picture_ids": [
+    14,
+    14
+  ],
+  "map_default_first_two_picture_ids": [
+    4,
+    4
+  ],
+  "checksum_offset": 13603,
+  "other_bytes_changed": [
+    13603
+  ]
+}

@@ -92,6 +92,8 @@ pub struct OverworldSnapshot {
     pub map_data: Option<MapData>,
     pub npc_states: Vec<NpcRuntimeState>,
     #[serde(default)]
+    pub npc_saved_state: crate::overworld::npc_saved_state::NpcSavedState,
+    #[serde(default)]
     pub npc_presentation: crate::overworld::npc_presentation::NpcPresentation,
     #[serde(default)]
     pub field_viewport: crate::overworld::npc_presentation::FieldViewport,
@@ -283,6 +285,7 @@ impl OverworldSnapshot {
             sampled_player_input: Some(screen.sampled_player_input.as_input()),
             map_data: None,
             npc_states: Vec::new(),
+            npc_saved_state: Default::default(),
             npc_presentation: Default::default(),
             field_viewport: Default::default(),
             player_presentation: Default::default(),
@@ -409,7 +412,7 @@ impl OverworldSnapshot {
         };
         snapshot_fields!(restore &mut snap, screen,
             player_last_stop_direction, player_moving_direction,
-            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_saved_state, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, source_foreground, source_foreground_mode, source_foreground_error, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,
@@ -462,7 +465,7 @@ impl OverworldSnapshot {
         snapshot_fields!(restore screen, self,
             player_last_stop_direction, player_moving_direction,
             wild_data_state,
-            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
+            frame_counter, field_loop_wait, bike_redraw_advance, check_player_turn, state, map_data, npc_states, npc_saved_state, npc_presentation, field_viewport, player_presentation, npc_pokemon_data, pending_dialogue,
             last_script_dialogue, retain_healing_text, retain_field_text, pending_choice, source_foreground, source_foreground_mode, source_foreground_error, script_money_box, script_coin_box, gift_box_number, pending_pokedex_entry, pending_naming_screen, naming_flash_frames,
             pending_party_select, party_select_requested, pending_set_nickname,
             pending_emotion_bubble, pending_healing_machine, last_map, last_map_entry,

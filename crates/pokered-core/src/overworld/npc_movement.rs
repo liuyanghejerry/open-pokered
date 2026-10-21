@@ -85,6 +85,7 @@ pub(super) fn step_within_screen(n: &NpcRuntimeState, player: (u16, u16)) -> boo
 fn with_available_npcs(
     npcs: &mut [NpcRuntimeState],
     player: (u16, u16),
+    mut saved: Option<&mut crate::save::sprite_data::SpriteData>,
     update: impl FnOnce(&mut [NpcRuntimeState]),
 ) {
     // Exclude unavailable objects from this engine pass while preserving
@@ -103,7 +104,11 @@ fn with_available_npcs(
     update(npcs);
     for slot in ready_walkers {
         let npc = &mut npcs[slot];
-        if npc.walk_counter == NPC_WALK_FRAMES && !step_within_screen(npc, player) {
+        if npc.walk_counter != NPC_WALK_FRAMES { continue; }
+        let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(npc.walking_direction());
+        let allowed = step_within_screen(npc, player) && saved.as_deref_mut().map_or(true, |data|
+            slot >= 15 || data.try_displacement(slot + 1, dx, dy));
+        if !allowed {
             // The engine only schedules the first pixel here; no coordinates
             // or published image have advanced. Retain the selected facing and
             // rejection delay, cancelling only the pending stride. Its pass
@@ -119,7 +124,8 @@ fn with_available_npcs(
 }
 
 /// Use the original four direction intervals, axis remapping and zero-delay
-/// wrap without changing the generic engine's default wandering policy.
+/// wrap in a stateless engine-boundary helper. The live game uses the stateful
+/// pass below so displacement counters survive foreground invocations.
 pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
     npcs: &mut [NpcRuntimeState],
     player_x: u16,
@@ -132,7 +138,7 @@ pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
     tileset: T,
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
 ) {
-    with_available_npcs(npcs, (player_x, player_y), |available| {
+    with_available_npcs(npcs, (player_x, player_y), None, |available| {
         dotzuki_engine::overworld::update_npc_movement_with_policy(
             available,
             player_x,
@@ -207,13 +213,14 @@ pub fn stationary_available(npc: &NpcRuntimeState, player: (u16, u16)) -> bool {
 
 /// Same movement pass, with game-specific stationary facing in the engine hook.
 pub fn update_npc_movement_with_stationary<T: dotzuki_engine::tileset::TilesetTrait>(
-    npcs: &mut [NpcRuntimeState], player_x: u16, player_y: u16,
+    npcs: &mut [NpcRuntimeState], saved: &mut crate::save::sprite_data::SpriteData,
+    player_x: u16, player_y: u16,
     player_dest: Option<(u16,u16)>, map_width_blocks: u8, map_height_blocks: u8,
     rng_value: u8, blocks: &[u8], tileset: T,
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
     stationary: impl FnMut(usize, &mut NpcRuntimeState),
 ) {
-    with_available_npcs(npcs, (player_x, player_y), |available| {
+    with_available_npcs(npcs, (player_x, player_y), Some(saved), |available| {
         dotzuki_engine::overworld::update_npc_movement_with_policy_and_stationary(available,
             player_x, player_y, player_dest, map_width_blocks, map_height_blocks,
             rng_value, blocks, tileset, provider,

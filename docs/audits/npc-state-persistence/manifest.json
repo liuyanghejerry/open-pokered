@@ -1,0 +1,33 @@
+{
+  "base": "c0d9d2f1dbe20865a77d0a81cd336a19fce6aa8e",
+  "code_head": "f4af738b59891b6e3beeb456996539775e8b4bfe",
+  "binary_sha256": "94e3d3b9eee985bcee829034280293c083f25d719754d3e923c28e138feedb29",
+  "actual_normal_boot_save_replay_pass": true,
+  "public_save_and_counter_replays_match_internal_observations_and_pngs": true,
+  "counter_fixture_difference_offsets": [
+    11838,
+    13603
+  ],
+  "core_passed": 3623,
+  "app_passed": 389,
+  "app_ignored": 38,
+  "original_controlled_cases": 132,
+  "scope": "Functional persistence and displacement rules only; raw table codec retains all512bytes. Live capture is a functional projection, not canonical instruction-clock ownership or raster/audio parity.",
+  "files": {
+    "docs/audits/npc-state-persistence/counter-eight.sav": "ef25d009cb4905b46a4224977c498082ababbd391d03c39cbd1aa2675069314e",
+    "docs/audits/npc-state-persistence/fixture-preparation.json": "ef182152ed80f168385bed00a4084ba4b160bf0055af4dbbfab399ee2b4e5b08",
+    "docs/audits/npc-state-persistence/replay-save.py": "74e254796f59068de9ebcd91863f589986158b9689069bd77ecdd726d01790e3",
+    "docs/audits/npc-state-persistence/counter-zero.sav": "71face56435c4257407cd948e35cf44b0cdaf2a9293daa3b1ad7ebdfc8dd7ae9",
+    "docs/audits/npc-state-persistence/original-format-import-native.json.gz": "bded6dcfbc28dfc1cefeb865cd1f862cd9027481dd72c04732a87a8f48c2a048",
+    "docs/audits/npc-state-persistence/replay-counters.py": "063745e0d6f7973fbbf0ee13d81c0b2f4f61c5c4878c085274beb53876a170c0",
+    "docs/audits/npc-state-persistence/original-controlled-probes.json.gz": "e86e750a770ba7d09234191cecce2959d60d26cfe28d79579de863b5b7e3d22e",
+    "docs/audits/npc-state-persistence/fixture.sav": "034797f94d4dcbf4540275fe84db4c89ecad60fa0ec1362d46087fc4c365e4d2",
+    "docs/audits/npc-state-persistence/base-native.json.gz": "67c0770d833291fc28f09d217fdf9c150642451a8d5a66ca2a6c725095d033b9",
+    "docs/audits/npc-state-persistence/comparison.json": "b9e75d674976416ca3aeb3a48a23bc0ffc9fe617730e0ff8d81fd59ec252143c",
+    "docs/audits/npc-state-persistence/README.md": "cf25066b0a2eef580f884e70e7e1b01772742699fd15a5ca0f6cd4064a426e3c",
+    "docs/audits/npc-state-persistence/counter-native.json.gz": "99ad3803346f3ccc2605091979bbffaf92c8c0fae04b87d8c10ac9c9d6697bec",
+    "docs/audits/npc-state-persistence/fixed-native.json.gz": "786b52d9a4753ce970c9e18216071777762b9040d98cc7f9b34a05ca02ce565c",
+    "docs/screenshots/npc-state-persistence/before.png": "5c6d0d98a37176f70a6b6ea0989add690ac32c90282a29647a9dcf83b80b2da4",
+    "docs/screenshots/npc-state-persistence/after.png": "4582453ef341a792c8b34364f5f334a8372cc8fc28619a44b0e5c0bb64bc9990"
+  }
+}
