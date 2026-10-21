@@ -277,6 +277,12 @@ fn normal_pet_talk(map: MapId, npc_text_id: u8) -> Field {
         field.set_flag_live("EVENT_BEAT_SILPH_CO_GIOVANNI", true);
         field.run_on_load();
     }
+    // A constructed talk fixture must approach before waiting for an idle
+    // pet: original offscreen walking counters freeze until it is in view.
+    let pet = field.npc_states.iter().find(|npc| npc.text_id == npc_text_id).unwrap();
+    field.state.player.x = pet.x;
+    field.state.player.y = pet.y + 1;
+    field.state.player.facing = Direction::Up;
     for _ in 0..512 {
         step(&mut field, 0);
         let npc = field

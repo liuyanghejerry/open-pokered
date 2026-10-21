@@ -305,10 +305,11 @@ fn wander_npc_has_no_radial_leash() {
 
     for frame in 0..1000u32 {
         let rng = (frame * 7 + 13) as u8;
+        let player = (npcs[0].x.saturating_sub(2), npcs[0].y);
         update_npc_movement(
             &mut npcs,
-            0,
-            0,
+            player.0,
+            player.1,
             None,
             20,
             20,
@@ -321,7 +322,8 @@ fn wander_npc_has_no_radial_leash() {
 
     // No radial assertion: an unleashed walker may be anywhere the map
     // allowed. Sanity: it stays on the map.
-    assert!(npcs[0].x < 20 && npcs[0].y < 20);
+    assert!(npcs[0].x < 40 && npcs[0].y < 40, "20 blocks span 40 step coordinates");
+    assert!(npcs[0].walk_counter != 0 || npcs[0].delay_counter != 0, "the visible walker must actually run");
 }
 
 #[test]
@@ -332,22 +334,28 @@ fn wander_npc_respects_axis() {
     npcs[0].wander_axis = dotzuki_engine::overworld::NpcWanderAxis::Vertical;
     for frame in 0..1000u32 {
         let rng = (frame * 7 + 13) as u8;
+        let player = (npcs[0].x.saturating_sub(2), npcs[0].y);
         update_npc_movement(
-            &mut npcs, 0, 0, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
+            &mut npcs, player.0, player.1, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
         );
     }
     assert_eq!(npcs[0].x, 10, "a vertical walker never changes column");
+    assert!(matches!(npcs[0].facing, Direction::Up | Direction::Down));
+    assert!(npcs[0].walk_counter != 0 || npcs[0].delay_counter != 0);
 
     // LEFT_RIGHT ($02): horizontal-only — y never changes.
     let mut npcs = vec![make_test_npc(10, 10, NpcMovementType::Wander)];
     npcs[0].wander_axis = dotzuki_engine::overworld::NpcWanderAxis::Horizontal;
     for frame in 0..1000u32 {
         let rng = (frame * 7 + 13) as u8;
+        let player = (npcs[0].x.saturating_sub(2), npcs[0].y);
         update_npc_movement(
-            &mut npcs, 0, 0, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
+            &mut npcs, player.0, player.1, None, 20, 20, rng, &[], TilesetId::Overworld, &provider(),
         );
     }
     assert_eq!(npcs[0].y, 10, "a horizontal walker never changes row");
+    assert!(matches!(npcs[0].facing, Direction::Left | Direction::Right));
+    assert!(npcs[0].walk_counter != 0 || npcs[0].delay_counter != 0);
 }
 
 #[test]
@@ -357,7 +365,7 @@ fn walking_npc_completes_step() {
     npcs[0].facing = Direction::Right;
 
     for _ in 0..NPC_WALK_FRAMES {
-        update_npc_movement(&mut npcs, 0, 0, None, 10, 10, 0, &[], TilesetId::Overworld, &provider());
+        update_npc_movement(&mut npcs, 2, 5, None, 10, 10, 0, &[], TilesetId::Overworld, &provider());
     }
 
     assert_eq!(npcs[0].x, 6, "NPC should have moved one tile right");
