@@ -26,9 +26,9 @@
       "original-phase-0.json.gz": "8999c8469853de71f54670854afe052b753e66d54b2bfded5a28a336bc617890",
       "original-phase-1.json.gz": "9d6d036bfe135b681d0f76cfa2613f135e96cbb2e71835a5d4c4d30a217ada36"
     },
-    "replay_sha256": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de"
+    "replay_sha256": "43cb3d0171c85a8a18de76c2e23c2ecf2b7ebc1b5657bda0949f49fc915e6bda"
   },
-  "component_checks": {
+  "component_checks_1246": {
     "full_core": {
       "passed": 3639,
       "failed": 0,
@@ -52,5 +52,84 @@
     "gba_log_sha256": "8c333a389520e63ec65ea4bfdf9f986d9a3e8f8b84f472fa8ecd5725f98a20dd",
     "diagnostic": "Initial GBA check invocation incorrectly supplied features for a dependency outside the nested workspace; corrected invocation passed. This was a command setup error, not a game failure.",
     "scope": "New component only, not wired into native PC flow. No new whole-game or GBA ROM timing parity claim."
-  }
+  },
+  "component_checks": {
+    "full_core": {
+      "passed": 3645,
+      "failed": 0,
+      "ignored": 1
+    },
+    "commands": [
+      {
+        "name": "core-all",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered",
+        "exit_code": 0
+      },
+      {
+        "name": "gba-core",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "check",
+          "--release",
+          "-p",
+          "pokered-core"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+        "exit_code": 0
+      },
+      {
+        "name": "app-check",
+        "command": [
+          "cargo",
+          "check",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "--features",
+          "debug-server"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered",
+        "exit_code": 0
+      }
+    ],
+    "log_sha256": {
+      "core-all": "332e6108363d472c209603abdbdb0c25dfcdbc20301d75eb247e017d13fbb325",
+      "gba-core": "677b37497568a492e449743d78fe951168d6f178e40a602878c268f01764921f",
+      "app-check": "dbc11b4ed0e795ca20242deb330b11441703408eddf9786880270781c9080a9b"
+    },
+    "front_picture_component_tests": 4,
+    "source_video_component_tests": 5,
+    "scope": "Pure uncalled components. Controlled owner/IRQ seam tests do not prove a runtime IRQ owner, native animation or whole-game timing parity."
+  },
+  "alignment": {
+    "proof": "alignment-work.json",
+    "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "species": 151,
+    "two_schedules_equal": true,
+    "foreground_by_dimensions": {
+      "55": 75816,
+      "66": 83064,
+      "77": 91592
+    },
+    "interlace_foreground": 26840,
+    "sha256": "0b168206439ecf7cff795b48c248dbcee3646aef6761b0a40f9037400be41bd3"
+  },
+  "video_copy": {
+    "proof": "copy-caller-49.json",
+    "source": "CopyVideoData in home/copy2.asm and DelayFrame in home/vblank.asm",
+    "implementation_origin": "Previously developed isolated caller in private3d9b6ac2a2681e20c8d6aa3fb6e2940dc7f4f4c7, moved with a small shared instruction/IRQ-receipt interface; no private clock/FLASH runtime copied.",
+    "actual_observation": "One additional sparse CopyVideoData.loop hook. Normaloriginalboot/CONTINUEphysicalPC, repeatedtwice, and entire151trial data remains exact againstpublishedoriginal. SevenremainingC andsource/dest/control receipts matchnativecaller controlledbus.",
+    "scope": "Loop/register/HRAM receipts. Not every foreground instruction or sourceISR execution proof. Other sizes/formats/refusal/wakeup are explicitly controlled unit fixtures."
+  },
+  "diagnostics_1247": [
+    "Two dense-hook observation attempts produced no valid recording and were terminated; SIGINT hook-handler traceback retained privately. Specific emulator cause unproven; no game bug inferred. Successful sparse observation then preserved the entire original baseline and repeated exactly.",
+    "Initial dense script also used unsupported individual H/L properties; corrected to documented HL. This setup mistake was not used as evidence."
+  ]
 }

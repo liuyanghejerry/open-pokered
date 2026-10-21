@@ -373,6 +373,14 @@ pub fn decode(data: &[u8]) -> Result<Picture, Error> {
     Ok(result)
 }
 impl Picture {
+    /// Foreground work from LoadUncompressedSpriteData entry through the
+    /// tail jump to CopyVideoData, including both alignments and interlacing.
+    /// No interrupt time, actual bank writes or VRAM-transfer scheduling is
+    /// performed here. The PC caller's source picture is unflipped.
+    pub fn alignment_foreground_tcycles(&self) -> u64 {
+        alignment_work(u64::from(self.width_tiles), u64::from(self.height_tiles))
+    }
+
     /// Canonical 7x7 column-major 2bpp VRAM picture, as produced by source
     /// LoadUncompressedSpriteData + InterlaceMergeSpriteBuffers.
     pub fn aligned_front(&self) -> [u8; 784] {
@@ -573,4 +581,124 @@ fn write_bits_work(offset: usize) -> u64 {
             3 => 8 + 8 + 8 + 8 + 8 + 8 + 12,
             _ => unreachable!("two-bit output offset"),
         }
+}
+
+// home/pics.asm LoadUncompressedSpriteData, through CALL ZeroSpriteBuffer.
+const ALIGNMENT_HEAD_T: u64 = 16
+    + 8
+    + 12
+    + 4
+    + 8
+    + 4
+    + 4
+    + 8
+    + 4
+    + 4
+    + 4
+    + 4
+    + 4
+    + 12
+    + 4
+    + 8
+    + 8
+    + 4
+    + 4
+    + 4
+    + 4
+    + 12
+    + 8
+    + 4
+    + 4
+    + 12
+    + 4
+    + 4
+    + 4
+    + 4
+    + 12
+    + 4
+    + 16
+    + 12
+    + 24;
+// ZeroSpriteBuffer's fixed 392-byte loop (last JR is not taken).
+const ZERO_BUFFER_T: u64 = 12 + PLANE_BYTES as u64 * (4 + 8 + 8 + 4 + 4 + 12) - 4 + 16;
+// InterlaceMergeSpriteBuffers, unflipped, through JP CopyVideoData.
+const INTERLACE_T: u64 =
+    4 + 16 + 16 + 12 + 12 + 12 + 8 + 12 + (PLANE_BYTES as u64 / 2) * (12 * 8 + 12 + 4 + 12 + 12)
+        - 4
+        + 16
+        + 4
+        + 12
+        + 12
+        + 12
+        + 8
+        + 12
+        + 4
+        + 16;
+fn alignment_work(width: u64, height: u64) -> u64 {
+    // AlignSpriteDataCentered copies height*8 bytes in every source column.
+    // The two final conditional branches each cost four fewer T-cycles.
+    let align = 12
+        + 8
+        + 4
+        + 8
+        + 12
+        + width
+            * (16 + 16 + 12 + 4 + height * 8 * (8 + 8 + 8 + 4 + 12) - 4
+                + 12
+                + 12
+                + 8
+                + 12
+                + 4
+                + 12)
+        - 4
+        + 16;
+    ALIGNMENT_HEAD_T
+        + ZERO_BUFFER_T
+        + (12 + 12 + 24)
+        + align
+        + 12
+        + 24
+        + ZERO_BUFFER_T
+        + (12 + 12 + 24)
+        + align
+        + 12
+        + 16
+        + INTERLACE_T
+}
+
+#[test]
+fn all_original_picture_alignment_work_matches_both_entry_schedules() {
+    let proof: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../docs/audits/hof-pc-load/alignment-work.json"
+    ))
+    .unwrap();
+    let records = proof["records"].as_array().unwrap();
+    assert_eq!(records.len(), 151);
+    let mut seen = [false; 256];
+    for record in records {
+        let species = record["species"].as_u64().unwrap() as usize;
+        assert!(!seen[species]);
+        seen[species] = true;
+        let dimensions = record["dimensions"].as_u64().unwrap() as u8;
+        let picture = Picture {
+            width_tiles: dimensions & 15,
+            height_tiles: dimensions >> 4,
+            planes: [[0; PLANE_BYTES]; 2],
+            work: Work::default(),
+        };
+        let phases = record["phases"].as_array().unwrap();
+        assert_eq!(phases.len(), 2);
+        for phase in phases {
+            assert_eq!(
+                picture.alignment_foreground_tcycles(),
+                phase["foreground_tcycles"].as_u64().unwrap(),
+                "source species {species}"
+            );
+            assert_eq!(
+                INTERLACE_T,
+                phase["interlace_tcycles"].as_u64().unwrap(),
+                "source interlace species {species}"
+            );
+        }
+    }
 }

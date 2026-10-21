@@ -6,34 +6,42 @@
       "pass": true,
       "repeat_exact": true,
       "trial_matches_published": true,
-      "original_recorded_head": "18f95a7a5f3dee17bf178574e8a38ef0c1a55e8b",
-      "portable_recorded_head": "b8151a57641aa9e489d2e7025646a8947d0b5c8e",
+      "copy_receipts_match": true,
+      "portable_recorded_head": "a71f338581c44ecc76f2b3e9d9266d76cffe6282",
       "portable_source_hashes": {
-        "docs/audits/hof-pc-load/replay-original.py": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de",
-        "crates/pokered-core/src/front_pic_decode.rs": "132b9bcbac80fb94cd655f0d20e17c5091315fbf8c050043b6db5d2486ed777e",
-        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14"
+        "docs/audits/hof-pc-load/replay-original.py": "43cb3d0171c85a8a18de76c2e23c2ecf2b7ebc1b5657bda0949f49fc915e6bda",
+        "crates/pokered-core/src/front_pic_decode.rs": "aed6fa1e4315db4468450164fd09dce06ca7e43b196c037ccc64f44cb0c3ce51",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14",
+        "crates/pokered-core/src/source_video/copy.rs": "c22355198761c1b311c93c243fa38cf0aed96042dc407ef376235441a54266b6",
+        "crates/pokered-core/src/source_video/delay.rs": "c4c827e42b47fd6435fee9ea32accac078323304395c0b396f0454e4f36ca45f",
+        "crates/pokered-core/src/source_video/mod.rs": "ec07b6da738e33379c12747584284498fdb0e58c5da390d7cb981cba934927fe",
+        "crates/pokered-core/src/source_video/tests.rs": "14f8b5a678e12de56287a7483f57abbfaaa7134220b9bf011fc27c171b6087ed"
       },
       "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
       "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
       "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c",
-      "recording_note": "Original-only replay with in-progress source files frozen at these hashes. Do not relabel as gameplay at the later component commit."
+      "recording_note": "Originalonly withinprogresssourcefiles frozen atthesehashes; not later native gameplay."
     },
     {
       "phase": 1,
       "pass": true,
       "repeat_exact": true,
       "trial_matches_published": true,
-      "original_recorded_head": "18f95a7a5f3dee17bf178574e8a38ef0c1a55e8b",
-      "portable_recorded_head": "b8151a57641aa9e489d2e7025646a8947d0b5c8e",
+      "copy_receipts_match": true,
+      "portable_recorded_head": "a71f338581c44ecc76f2b3e9d9266d76cffe6282",
       "portable_source_hashes": {
-        "docs/audits/hof-pc-load/replay-original.py": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de",
-        "crates/pokered-core/src/front_pic_decode.rs": "132b9bcbac80fb94cd655f0d20e17c5091315fbf8c050043b6db5d2486ed777e",
-        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14"
+        "docs/audits/hof-pc-load/replay-original.py": "43cb3d0171c85a8a18de76c2e23c2ecf2b7ebc1b5657bda0949f49fc915e6bda",
+        "crates/pokered-core/src/front_pic_decode.rs": "aed6fa1e4315db4468450164fd09dce06ca7e43b196c037ccc64f44cb0c3ce51",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14",
+        "crates/pokered-core/src/source_video/copy.rs": "c22355198761c1b311c93c243fa38cf0aed96042dc407ef376235441a54266b6",
+        "crates/pokered-core/src/source_video/delay.rs": "c4c827e42b47fd6435fee9ea32accac078323304395c0b396f0454e4f36ca45f",
+        "crates/pokered-core/src/source_video/mod.rs": "ec07b6da738e33379c12747584284498fdb0e58c5da390d7cb981cba934927fe",
+        "crates/pokered-core/src/source_video/tests.rs": "14f8b5a678e12de56287a7483f57abbfaaa7134220b9bf011fc27c171b6087ed"
       },
       "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
       "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
       "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c",
-      "recording_note": "Original-only replay with in-progress source files frozen at these hashes. Do not relabel as gameplay at the later component commit."
+      "recording_note": "Originalonly withinprogresssourcefiles frozen atthesehashes; not later native gameplay."
     }
   ]
 }

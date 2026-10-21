@@ -22,7 +22,7 @@ rom=args.rom; romhash=hashlib.sha256(rom.read_bytes()).hexdigest()
 assert romhash=='5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b'
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
 binary=args.native_binary; binaryhash=hashlib.sha256(binary.read_bytes()).hexdigest()
-guard_paths=[Path(__file__),R/'crates/pokered-core/src/front_pic_decode.rs',R/'crates/pokered-core/src/pc_screen.rs']
+guard_paths=[Path(__file__),R/'crates/pokered-core/src/front_pic_decode.rs',R/'crates/pokered-core/src/pc_screen.rs',*sorted((R/'crates/pokered-core/src/source_video').glob('*.rs'))]
 def source_hashes():return {str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in guard_paths}
 frozen_sources=source_hashes()
 base=(R/'docs/audits/hof-pc-cry/original-fixture.sav').read_bytes(); raw=bytearray(base)
@@ -39,6 +39,7 @@ checksum=0x2000+symbols['sMainDataCheckSum'][1]-0xa000;raw[checksum]=(~sum(raw[0
 raw=bytes(raw); fixture=E/f'original-151-phase-{args.phase_offset}-fixture.sav';fixture.write_bytes(raw)
 controls=json.loads(gzip.decompress((R/'docs/audits/hof-pc-cry/original-controls.json.gz').read_bytes()))
 case=next(c for c in controls['cases'] if c['mode']=='short-a')
+copy_cases=[]
 trials=[]
 assert rom.read_bytes()[0x40]==0xc3
 assert int.from_bytes(rom.read_bytes()[0x41:0x43],"little")==symbols["VBlank"][1]
@@ -46,7 +47,7 @@ assert rom.read_bytes()[symbols["DelayFrame"][1]-1]==0xd9
 assert rom.read_bytes()[symbols["_UncompressSpriteData"][1]-1]==0xc9
 for trial in [1,2]:
  p=PyBoy(str(rom),ram_file=io.BytesIO(raw),window='null',sound_emulated=False);p.set_emulation_speed(0)
- events=[];frames=[];tape=[];active=[False];ack=[0];interrupts=[];irq_start=[None]
+ events=[];frames=[];tape=[];active=[False];ack=[0];interrupts=[];irq_start=[None];copy_case={};copy_active=[False];copy_done=[False]
  def get(n):return int(p.memory[symbols[n][1]])
  def state():return {'tcycles':p._cycles(),'frame':p.frame_count,'mon':get('wHoFMonSpecies'),'bgp':int(p.memory[0xff47]),'dimensions':get('wMonHSpriteDim')}
  def hook(label):
@@ -58,8 +59,16 @@ for trial in [1,2]:
    item['uncompressed_planes_sha256']=hashlib.sha256(bytes(p.memory[start:start+size*2])).hexdigest()
   if label=='cry':
    start=symbols['vFrontPic'][1];item['front_2bpp']=bytes(p.memory[start:start+49*16]).hex()
+  if label=='vram' and not copy_done[0] and not copy_active[0]:
+   rf=p.register_file;copy_case.update(bank=rf.B,tiles=rf.C,source=(rf.D<<8)|rf.E,destination=rf.HL,bg_before=int(p.memory[0xffba]),loaded_before=int(p.memory[0xffb8]),loops=[]);copy_active[0]=True
+  if label=='normal' and copy_active[0]:copy_active[0]=False;copy_done[0]=True
   if label=='ack':ack[0]+=1
   events.append(item)
+
+ def copy_loop(_):
+  if copy_active[0]:
+   copy_case['loops'].append({'remaining':p.register_file.C,'source':int(p.memory[0xffc7])|(int(p.memory[0xffc8])<<8),'destination':int(p.memory[0xffc9])|(int(p.memory[0xffca])<<8),'bg':int(p.memory[0xffba]),'loaded_bank':int(p.memory[0xffb8])})
+ p.hook_register(*symbols['CopyVideoData.loop'],copy_loop,None)
  symbols['_UNCOMPRESS_RETURN']=(0,symbols['_UncompressSpriteData'][1]-1)
  def irq(label):
   if not active[0]:return
@@ -115,6 +124,8 @@ for trial in [1,2]:
    record['decompress_elapsed_tcycles']=end-start
    record['decompress_foreground_tcycles']=end-start-sum(q['reti']+16-q['entry']+36 for q in inside)
    assert record['decompress_foreground_tcycles']>0 and record['decompress_foreground_tcycles']%4==0
+  assert copy_done[0] and copy_case['tiles']==49
+  copy_cases.append(copy_case)
   trials.append({'events':events,'records':records,'inputs':tape,'interrupts':interrupts,'final_frame':p.frame_count})
   print({'trial':trial,'species':len(records),'final_frame':p.frame_count,'decompress_range':(min(x['decompress_frames'] for x in records),max(x['decompress_frames'] for x in records))},flush=True)
  finally:p.stop(save=False)
@@ -131,3 +142,11 @@ print('151 original pictures, two normal boots, exact repeat PASS',flush=True)
 expected=json.loads(gzip.decompress((R/f'docs/audits/hof-pc-load/original-phase-{args.phase_offset}.json.gz').read_bytes()))
 assert j['trial']==expected['trial'],'portable original replay differs from published events/records/interrupts/inputs'
 print('Portable replay matches all published original trial data exactly',flush=True)
+
+assert copy_cases[0]==copy_cases[1]
+assert [x['remaining']for x in copy_cases[0]['loops']]==[49,41,33,25,17,9,1]
+args.out.with_name(f'copy-caller-phase-{args.phase_offset}.json').write_text(json.dumps({'scope':'First HoF 49-tile CopyVideoData caller from normal original boot/CONTINUE and physical PC input. One additional readonly loop-site hook. Two independent repeats exact and every full151species baseline event/record/interrupt/input remains exact. Loop register/HRAM receipts only, not all instruction timings or ISR body proof.','all_pass':True,'source_ref':j['source_ref'],'case':copy_cases[0]},indent=2)+'\n')
+print('Sparse CopyVideoData49 loop trace PASS',copy_cases[0],flush=True)
+
+copy_reference=json.loads((R/'docs/audits/hof-pc-load/copy-caller-49.json').read_text())
+assert copy_cases[0]==copy_reference['case'],'first-copy register/request receipts differ'

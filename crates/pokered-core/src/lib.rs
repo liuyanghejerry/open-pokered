@@ -20,6 +20,7 @@ pub mod evolution_screen;
 pub mod game_state;
 pub mod foreground_input;
 pub mod front_pic_decode;
+pub mod source_video;
 pub mod gamefreak_splash;
 pub mod hof_ceremony;
 pub mod intro_scene;
