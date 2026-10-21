@@ -233,6 +233,16 @@ impl AudioOutput {
         }
     }
 
+    /// One existing native channel update plus passive supported work data.
+    pub fn update_frame_with_source_work(
+        &self,
+    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioClockError> {
+        self.manager
+            .lock()
+            .map_err(|_| crate::source_clock::AudioClockError::OutputUnavailable)?
+            .update_frame_with_source_work()
+    }
+
     pub fn update_frame(&self) {
         if let Ok(mut mgr) = self.manager.lock() {
             mgr.update_frame();
@@ -251,6 +261,67 @@ impl AudioOutput {
         #[cfg(feature = "web-audio")]
         if let Some(ref output) = self._output {
             output.try_resume();
+        }
+    }
+}
+
+#[cfg(test)]
+mod source_work_output_tests {
+    use super::*;
+    use crate::source_clock::AudioClockError;
+
+    #[test]
+    fn supported_and_unsupported_work_advance_one_real_output_and_preserve_pcm() {
+        for music in [MusicId::DUNGEON3, MusicId::SILPH_CO, MusicId::PALLET_TOWN] {
+            let ordinary = AudioOutput::new_pcm();
+            let clocked = AudioOutput::new_pcm();
+            ordinary.play_music(music);
+            clocked.play_music(music);
+            let mut supported = 0;
+            let mut rejected = 0;
+            let mut a = vec![0f32; 1470];
+            let mut b = vec![0f32; 1470];
+            for frame in 0..1200 {
+                if frame == 80 {
+                    ordinary.play_sfx(SfxId::PressAB);
+                    clocked.play_sfx(SfxId::PressAB);
+                }
+                ordinary.update_frame();
+                match clocked.update_frame_with_source_work() {
+                    Ok(work) => {
+                        assert!(work.cycles > 0);
+                        supported += 1;
+                    }
+                    Err(error) => {
+                        if music == MusicId::PALLET_TOWN {
+                            assert_eq!(error, AudioClockError::UnsupportedSoundBank);
+                        }
+                        rejected += 1;
+                    }
+                }
+                ordinary.render_pcm(&mut a);
+                clocked.render_pcm(&mut b);
+                assert_eq!(
+                    a, b,
+                    "{music:?} frame {frame}: accounting must preserve actual PCM"
+                );
+                let expected = ordinary.manager.lock().unwrap();
+                let actual = clocked.manager.lock().unwrap();
+                assert_eq!(actual.nr50(), expected.nr50());
+                for channel in 0..8 {
+                    assert_eq!(
+                        format!("{:?}", actual.sequencer.channels[channel]),
+                        format!("{:?}", expected.sequencer.channels[channel]),
+                        "{music:?} frame {frame} channel {channel}"
+                    );
+                }
+            }
+            if music == MusicId::PALLET_TOWN {
+                assert_eq!((supported, rejected), (0, 1200));
+            } else {
+                assert!(supported > 1000);
+                assert!(rejected > 0, "unprimed constructor must stay explicit");
+            }
         }
     }
 }
