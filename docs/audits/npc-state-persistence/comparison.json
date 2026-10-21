@@ -1,0 +1,34 @@
+{
+  "all_pass": true,
+  "heads": [
+    "c0d9d2f1dbe20865a77d0a81cd336a19fce6aa8e",
+    "f4af738b59891b6e3beeb456996539775e8b4bfe"
+  ],
+  "binary_sha256": [
+    "8004f8aac789ed51400abec00f3b03c9b3de69a39a90a970925d111f46b3b532",
+    "94e3d3b9eee985bcee829034280293c083f25d719754d3e923c28e138feedb29"
+  ],
+  "fixture_sha256": "034797f94d4dcbf4540275fe84db4c89ecad60fa0ec1362d46087fc4c365e4d2",
+  "input_and_readonly_command_tapes_equal_except_pids_and_capture_paths": true,
+  "all_compared_player_states_equal": true,
+  "npc_states_equal_until_quit": true,
+  "saved_npc": [
+    5,
+    25
+  ],
+  "before_continued_npc": [
+    5,
+    24
+  ],
+  "after_continued_npc": [
+    5,
+    25
+  ],
+  "continued_frame": 608,
+  "player": [
+    5,
+    21
+  ],
+  "source_head_binary_guards": true,
+  "scope": "Normal native SRAM boot, physical walking/SAVE menu, independent-process CONTINUE. No runtime setters/save commands/warp/snapshots/dialogue skip. Functional state restoration proof, not original raster/audio/instruction timing parity."
+}
