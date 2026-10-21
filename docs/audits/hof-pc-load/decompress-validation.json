@@ -1,0 +1,60 @@
+{
+  "scope": "Resumable unflipped source decompressor body and bank/SRAM wrapper only; not yet attached to runtime/renderer or actual shared IRQ owner. No player picture-load fix or gameplay regression claim.",
+  "base_commit": "3c93e0cbb9508c198e978464f7eeaa5059728801",
+  "code_sha256": {
+    "crates/pokered-core/src/front_pic_decode.rs": "3c48963d60bd35439ed7b342c5c898b6b1c00142e2577fc35e5f3a70c416e944",
+    "crates/pokered-core/src/front_pic_decode/caller.rs": "a24399a5126c40a5b6c9158521ee2ad7898d1c9f0b5596e3acf4f06b4f0900cd",
+    "crates/pokered-core/src/front_pic_decode/continuation/tests.rs": "a4b63a88c4314c1705f03f3605f5f3536f605d29e1f5b0652293d3acf4c6a4a3",
+    "crates/pokered-core/src/front_pic_decode/continuation.rs": "1bb957b9da91cc9297325bd046d4ec9cb2ad359723237154a32b1a2d1b7401df",
+    "crates/pokered-core/src/source_video/mod.rs": "c78b60d0b861a70ff480195e0a58acb78070d26a53579e6ec0a4f3ce92ec048c"
+  },
+  "local_checks": {
+    "core_tests": {
+      "passed": 3653,
+      "failed": 0,
+      "ignored": 1,
+      "new_tests": 8,
+      "suites": 42,
+      "command": "cargo test -p pokered-core"
+    },
+    "gba_no_std": {
+      "pass": true,
+      "command": "cargo +nightly-2025-12-07 check --release -p pokered-core",
+      "cwd": "crates/pokered-gba"
+    },
+    "original_sparse_points": {
+      "pass": true,
+      "sites_each_trial": 54512,
+      "cases": 6,
+      "entry_schedules": 2,
+      "independent_repeats_each": 2,
+      "all_baseline151_trial_data_unchanged": true
+    }
+  },
+  "test_scope": [
+    "All151 byte/stat/foreground-work oracles; natural modes1/2 sizes5/6/7 plus controlled syntheticmode0.",
+    "Exact original foreground offsets at six source sites across six natural representatives.",
+    "Controlled instruction bus refusal, serialization, error stickiness, partial grants and exact-prefix/instruction stream equality. These are not actual native IRQ or elapsed-frame evidence.",
+    "Wrapper actual-bus bank read, phase/access-time stores, source SRAM side effects, bank restoration and private output until finalRET."
+  ],
+  "log_sha256": {
+    "audit-1250-core-all.log": "a1746d7112b7b0777001b5f0b40c071b5986ed958fb499f4cefc6f63949ed432",
+    "audit-1250-gba-final-core.log": "454d1395fefe0f21224ed784db2386fbcf1d7de3f3260ab8e49174c98b15a652",
+    "audit-1250-source-points.log": "96b75560489a59a7d68d3aac7412650ac7d9979598d93530eab84ed30929f719",
+    "audit-1250-source-points-1.log": "96b75560489a59a7d68d3aac7412650ac7d9979598d93530eab84ed30929f719",
+    "audit-1250-decompress-caller-tests.log": "7a2fd9288a86c143a903e705b5de23368ff93e7658d575e262d76aadb1973b30",
+    "audit-1250-decompress-caller-tests-fixed.log": "e551ef0e331e9b7e5a63a4ce08b950d7418ef2050efe90d1453ce33e79f7d845"
+  },
+  "diagnostic": {
+    "log": "audit-1250-decompress-caller-tests.log",
+    "session11873_exit": 101,
+    "reason": "Initial test driver waited for phase12, while a successful step passes the internal body-return transition and executes POP in one call. Confirmed live test process1019089 was terminated with SIGTERM; test driver predicate corrected and bounded to prevent infinite wait. Not a gameplay bug or successful run.",
+    "corrected_suite": "audit-1250-decompress-caller-tests-fixed.log; 11pass; final fullcore includes additional partial-body-grant test."
+  },
+  "remaining": [
+    "resumable alignment/interlacing",
+    "canonical compressed asset access",
+    "common display/device/IRQ owner and runtime/renderer handoff",
+    "actual normal-input load/cry controls, paired frames, gameplay/GBA regressions and green CI PR"
+  ]
+}

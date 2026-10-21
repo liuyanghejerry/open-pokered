@@ -24,6 +24,7 @@ pub trait DisplayInstructionBus {
     /// Optional exact effect-free prefix. The owner must prove that no IRQ
     /// can interleave the accepted prefix; accesses/effects use execute.
     /// Returns an accepted instruction count, never an estimated duration.
+    /// An error accepts no instructions; a partial prefix returns its count.
     fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
         &mut self,
         _instructions: I,
