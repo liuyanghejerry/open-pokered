@@ -1,0 +1,37 @@
+{
+  "ROM_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "state_sha256": "7e072fe08a9291097fabe2c125177b480a80d1d2cbb8b8c9475aecd42596eeb1",
+  "provider_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/pyboy-pure-830/pyboy/__init__.py",
+  "provider_state_version": 29,
+  "scope": "Controlled historical pretrigger state loaded once before recording. Unmodified original ROM; physical Down19/release181; only read-only observation during201frame verdict; not ordinary-original-boot or fresh travel proof. Extra neutral frame is explicit pretrigger control, not timeline normalization.",
+  "runs": [
+    {
+      "phase": 0,
+      "trial": 1,
+      "frames": 201,
+      "switch_t": 8,
+      "seconds": 4.784483393013943
+    },
+    {
+      "phase": 0,
+      "trial": 2,
+      "frames": 201,
+      "switch_t": 8,
+      "seconds": 4.831523289962206
+    },
+    {
+      "phase": 1,
+      "trial": 1,
+      "frames": 201,
+      "switch_t": 7,
+      "seconds": 4.832086224982049
+    },
+    {
+      "phase": 1,
+      "trial": 2,
+      "frames": 201,
+      "switch_t": 7,
+      "seconds": 4.8149946730118245
+    }
+  ]
+}
