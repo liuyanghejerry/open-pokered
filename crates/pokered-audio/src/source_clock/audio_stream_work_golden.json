@@ -1,0 +1,1654 @@
+{
+  "scope": "Independent Audio3_PlayNextNote calls in original code, DI and one explicit WRAM command stream. Real parameter reads, real call/loop/return pointer RAM and physical RET boundary, no parameter-return injection. Native stream offsets are relocated only in the original input program. Test oracle only; no normal IRQ/APU sample/render claim.",
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "cases": [
+    {
+      "input": {
+        "label": "ch0-tempo160",
+        "channel": 0,
+        "data": [
+          237,
+          0,
+          160,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 192,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-tempo124",
+        "channel": 0,
+        "data": [
+          237,
+          0,
+          124,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 2,
+        "fraction": 232,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-tempo256",
+        "channel": 0,
+        "data": [
+          237,
+          1,
+          0,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 0,
+        "tempo": 256,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-call-note",
+        "channel": 0,
+        "data": [
+          253,
+          8,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2624,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 11,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 3,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-return-note",
+        "channel": 0,
+        "data": [
+          0,
+          0,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "ptr": 9,
+        "return_ptr": 3,
+        "flags1": 59
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 59,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2188,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-infinite-loop",
+        "channel": 0,
+        "data": [
+          254,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          193
+        ],
+        "relocations": [
+          2
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2632,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-call-return-duty-note",
+        "channel": 0,
+        "data": [
+          253,
+          8,
+          0,
+          236,
+          3,
+          192,
+          0,
+          0,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 3496,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 6,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-toggle-note",
+        "channel": 0,
+        "data": [
+          232,
+          161
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 3536,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 8,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 2,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-vibrato-note",
+        "channel": 0,
+        "data": [
+          234,
+          8,
+          34,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2600,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-volume-note",
+        "channel": 0,
+        "data": [
+          240,
+          119,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2404,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 3,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch0-initial-prefix",
+        "channel": 0,
+        "data": [
+          237,
+          0,
+          160,
+          240,
+          119,
+          236,
+          3,
+          232,
+          234,
+          8,
+          34,
+          214,
+          179,
+          230,
+          161
+        ],
+        "flags1": 0
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 0,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 7384,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 1,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 15,
+        "return_ptr": 0,
+        "delay": 7,
+        "fraction": 128,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-tempo160",
+        "channel": 1,
+        "data": [
+          237,
+          0,
+          160,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 192,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-tempo124",
+        "channel": 1,
+        "data": [
+          237,
+          0,
+          124,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 2,
+        "fraction": 232,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-tempo256",
+        "channel": 1,
+        "data": [
+          237,
+          1,
+          0,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2588,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 0,
+        "tempo": 256,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-call-note",
+        "channel": 1,
+        "data": [
+          253,
+          8,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2624,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 11,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 3,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-return-note",
+        "channel": 1,
+        "data": [
+          0,
+          0,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "ptr": 9,
+        "return_ptr": 3,
+        "flags1": 59
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 59,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2188,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-infinite-loop",
+        "channel": 1,
+        "data": [
+          254,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          193
+        ],
+        "relocations": [
+          2
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2632,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-call-return-duty-note",
+        "channel": 1,
+        "data": [
+          253,
+          8,
+          0,
+          236,
+          3,
+          192,
+          0,
+          0,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 3496,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 6,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-toggle-note",
+        "channel": 1,
+        "data": [
+          232,
+          161
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 3536,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 8,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 2,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-vibrato-note",
+        "channel": 1,
+        "data": [
+          234,
+          8,
+          34,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2600,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-volume-note",
+        "channel": 1,
+        "data": [
+          240,
+          119,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2404,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 3,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch1-initial-prefix",
+        "channel": 1,
+        "data": [
+          237,
+          0,
+          160,
+          240,
+          119,
+          236,
+          3,
+          232,
+          234,
+          8,
+          34,
+          214,
+          179,
+          230,
+          161
+        ],
+        "flags1": 0
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 0,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 7384,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 179,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 1,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 15,
+        "return_ptr": 0,
+        "delay": 7,
+        "fraction": 128,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-tempo160",
+        "channel": 2,
+        "data": [
+          237,
+          0,
+          160,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2496,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 192,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-tempo124",
+        "channel": 2,
+        "data": [
+          237,
+          0,
+          124,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2496,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 2,
+        "fraction": 232,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-tempo256",
+        "channel": 2,
+        "data": [
+          237,
+          1,
+          0,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2496,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 0,
+        "tempo": 256,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-call-note",
+        "channel": 2,
+        "data": [
+          253,
+          8,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2532,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 11,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 3,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-return-note",
+        "channel": 2,
+        "data": [
+          0,
+          0,
+          0,
+          192,
+          0,
+          0,
+          0,
+          0,
+          193,
+          255
+        ],
+        "ptr": 9,
+        "return_ptr": 3,
+        "flags1": 59
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 59,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2096,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 4,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-infinite-loop",
+        "channel": 2,
+        "data": [
+          254,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          193
+        ],
+        "relocations": [
+          2
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2540,
+        "note": 193,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 9,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-call-return-duty-note",
+        "channel": 2,
+        "data": [
+          253,
+          8,
+          0,
+          236,
+          3,
+          192,
+          0,
+          0,
+          255
+        ],
+        "relocations": [
+          1
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 3404,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 6,
+        "return_ptr": 3,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-toggle-note",
+        "channel": 2,
+        "data": [
+          232,
+          161
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 4408,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 8,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 2,
+        "return_ptr": 0,
+        "delay": 6,
+        "fraction": 16,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-vibrato-note",
+        "channel": 2,
+        "data": [
+          234,
+          8,
+          34,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2508,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 4,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-volume-note",
+        "channel": 2,
+        "data": [
+          240,
+          119,
+          192
+        ]
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 57,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 2312,
+        "note": 192,
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 9,
+          "vibrato_delay": 4,
+          "vibrato_reload": 4
+        },
+        "next_ptr": 3,
+        "return_ptr": 0,
+        "delay": 3,
+        "fraction": 40,
+        "tempo": 124,
+        "SP": 57296
+      },
+      "twice_identical": true
+    },
+    {
+      "input": {
+        "label": "ch2-initial-prefix",
+        "channel": 2,
+        "data": [
+          237,
+          0,
+          160,
+          240,
+          119,
+          236,
+          3,
+          232,
+          234,
+          8,
+          34,
+          214,
+          179,
+          230,
+          161
+        ],
+        "flags1": 0
+      },
+      "initial": {
+        "state": {
+          "speed": 6,
+          "volume": 32,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 0,
+          "vibrato_delay": 0
+        },
+        "vibrato_reload": 4,
+        "fraction": 64,
+        "tempo": 124,
+        "frequency_low": 0
+      },
+      "result": {
+        "cycles": 8296,
+        "note": 161,
+        "state": {
+          "speed": 6,
+          "volume": 96,
+          "duty": 192,
+          "octave": 6,
+          "flags1": 1,
+          "vibrato_delay": 8,
+          "vibrato_reload": 8
+        },
+        "next_ptr": 15,
+        "return_ptr": 0,
+        "delay": 7,
+        "fraction": 128,
+        "tempo": 160,
+        "SP": 57296
+      },
+      "twice_identical": true
+    }
+  ]
+}

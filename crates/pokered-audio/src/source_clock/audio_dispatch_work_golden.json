@@ -1,0 +1,30 @@
+{
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "16 live original Audio3 dispatch calls,8 isolated inactive/music/SFX/paired/mute branches. Independent channel-effect costs compose the caller. Initial suppressed-callback-error run rejected; isolateddata rerun with exactreturnSP guard. Channel-effect inputs are test evidence, not native scheduleconstants.",
+  "cases": [
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[3268,376,2128,0,0,0,0,0],"cycles":6648,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[3268,5008,376,0,0,0,0,0],"cycles":9528,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,376,0,0,0,0,0],"cycles":2004,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,760,0,0,0,0,0],"cycles":2388,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,476,0,0,0,0,0],"cycles":2104,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,752,0,0,0,0,0],"cycles":2380,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[3860,376,476,0,0,0,0,0],"cycles":5588,"mute_after":0},
+    {"sound_ids":[243,243,243,0,0,0,0,0],"mute":0,"effect_cycles":[376,376,760,0,0,0,0,0],"cycles":2388,"mute_after":0},
+    {"sound_ids":[0,0,0,0,0,0,0,0],"mute":0,"effect_cycles":[0,0,0,0,0,0,0,0],"cycles":660,"mute_after":0},
+    {"sound_ids":[1,1,1,0,0,0,0,0],"mute":0,"effect_cycles":[408,408,408,0,0,0,0,0],"cycles":2100,"mute_after":0},
+    {"sound_ids":[1,1,1,0,0,0,0,0],"mute":1,"effect_cycles":[0,0,0,0,0,0,0,0],"cycles":932,"mute_after":129},
+    {"sound_ids":[1,1,1,0,0,0,0,0],"mute":128,"effect_cycles":[0,0,0,0,0,0,0,0],"cycles":852,"mute_after":128},
+    {"sound_ids":[1,1,1,0,0,0,0,0],"mute":129,"effect_cycles":[0,0,0,0,0,0,0,0],"cycles":852,"mute_after":129},
+    {"sound_ids":[0,0,0,0,1,0,0,0],"mute":128,"effect_cycles":[0,0,0,0,368,0,0,0],"cycles":1072,"mute_after":128},
+    {"sound_ids":[1,0,0,0,1,0,0,0],"mute":0,"effect_cycles":[144,0,0,0,368,0,0,0],"cycles":1288,"mute_after":0},
+    {"sound_ids":[1,1,1,1,1,1,1,1],"mute":0,"effect_cycles":[144,144,144,144,368,368,368,368],"cycles":3172,"mute_after":0}
+  ]
+}

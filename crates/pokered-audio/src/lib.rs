@@ -14,6 +14,7 @@ extern crate alloc;
 pub use dotzuki_audio::*;
 
 pub mod audio_manager;
+pub mod source_clock;
 #[cfg(any(test, target_os = "none"))]
 mod gba_psg;
 pub mod music_data;

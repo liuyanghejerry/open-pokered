@@ -293,6 +293,27 @@ impl AudioManager {
         true
     }
 
+    /// Advance the existing sequencer exactly once and report supported
+    /// source work. Unsupported music/effects still receive that same tick;
+    /// they never acquire an invented IRQ duration or a second update.
+    pub fn update_frame_with_source_work(
+        &mut self,
+    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioClockError> {
+        use crate::source_clock::{AudioClockError, PreparedAudioFrame};
+        let prepared = if matches!(
+            self.engine.last_music_id(),
+            Some(MusicId::SILPH_CO | MusicId::DUNGEON3)
+        ) && !self.engine.is_fading()
+            && !self.low_health_alarm_enabled
+        {
+            PreparedAudioFrame::from_audio3(&self.engine.sequencer)
+        } else {
+            Err(AudioClockError::UnsupportedSoundBank)
+        };
+        self.update_frame();
+        prepared?.finish(&self.engine.sequencer)
+    }
+
     /// Call once per VBlank (~60 Hz). The engine advances fade → master
     /// volume → sequencer; the alarm then writes pulse-1 registers *after*
     /// the sequencer so it overrides channel 1, exactly as the original's

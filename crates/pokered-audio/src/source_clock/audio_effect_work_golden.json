@@ -1,0 +1,677 @@
+{
+  "scope": "48 original Audio3 perchannel effect entries from departure VBlank. Exact callerreturn/SPchecked. Frequency low byte captured for vibrato clamp branches;nextnote parsing stillunmodeled.",
+  "cases": [
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 3,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 9,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 3,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 2,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 8,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 7,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 2,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 1,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 3268
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 7,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 1,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 2128
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 6,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 6,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 64,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 5,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 7,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 5,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 63,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 7,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 4,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 4,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 3,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 62,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 3,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 3,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 2,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 61,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 2,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 2,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 1,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 60,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 1,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 3,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 206
+      },
+      "cycles": 3268
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 1,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 5008
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 59,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 3,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 6,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 12,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 10,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 58,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 2,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 5,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 7,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 11,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 9,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 57,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 1,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 4,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 10,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 56,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 760
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 3,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 9,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 7,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 55,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 17,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 476
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 2,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 8,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 6,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 54,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 752
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 1,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 3,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 238
+      },
+      "cycles": 3860
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 7,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 5,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 53,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 17,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 476
+    },
+    {
+      "channel": 0,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 6,
+        "wChannelFlags1": 9,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 8,
+        "wChannelVibratoExtents": 17,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 12
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 1,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 6,
+        "wChannelFlags1": 0,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 4,
+        "wChannelVibratoExtents": 33,
+        "wChannelVibratoRates": 33,
+        "wChannelFrequencyLowBytes": 136
+      },
+      "cycles": 376
+    },
+    {
+      "channel": 2,
+      "paired_sfx_active": false,
+      "state": {
+        "wChannelNoteDelayCounters": 52,
+        "wChannelFlags1": 8,
+        "wChannelFlags2": 0,
+        "wChannelVibratoDelayCounters": 0,
+        "wChannelVibratoExtents": 16,
+        "wChannelVibratoRates": 16,
+        "wChannelFrequencyLowBytes": 57
+      },
+      "cycles": 760
+    }
+  ]
+}
