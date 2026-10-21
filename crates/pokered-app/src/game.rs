@@ -2063,10 +2063,19 @@ impl PokemonGame {
     // The event-flag bitset serializes directly into the original
     // 320-byte SRAM region (wEventFlags, NUM_EVENTS = $A00 bits).
     save.game_data.event_flags = overworld.unified_flags().as_bytes().to_vec();
-    save.sprite_data = overworld.npc_saved_state.capture(current_map, &overworld.npc_states, (player.x, player.y));
-    save.game_data.num_sprites = overworld.npc_states.len().min(15) as u8;
-    for (entry, npc) in save.game_data.map_sprite_data.iter_mut().zip(&overworld.npc_states) {
-        *entry = (npc.range, npc.text_id);
+    if overworld.map_data.as_ref().is_some_and(|map| map.id == current_map) {
+        save.sprite_data = overworld.npc_saved_state.capture(current_map, &overworld.npc_states, (player.x, player.y));
+        save.game_data.num_sprites = overworld.npc_states.len().min(15) as u8;
+        for (entry, npc) in save.game_data.map_sprite_data.iter_mut().zip(&overworld.npc_states) {
+            *entry = (npc.range, npc.text_id);
+        }
+    } else {
+        // finish_hof_ceremony retargets the ending save to Pallet Town before
+        // rebuilding the map. The original special warp reloads its actors;
+        // never save the Hall of Fame's sprite slots as Pallet Town's NPCs.
+        save.sprite_data = Default::default();
+        save.game_data.num_sprites = 0;
+        save.game_data.map_sprite_data.fill((0, 0));
     }
     overworld.write_system_save_state(&mut save.game_data);
 

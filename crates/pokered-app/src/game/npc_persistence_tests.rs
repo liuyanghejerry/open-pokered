@@ -55,3 +55,26 @@ fn production_save_writer_exports_a_waiting_actor_at_its_live_position() {
     assert_eq!(imported.sprite_data.second[1][4], 29);
     assert_eq!(&imported.sprite_data.second[1][2..4], &[8, 8]);
 }
+
+#[test]
+fn ending_map_retarget_does_not_save_hall_of_fame_actors_into_pallet_town() {
+    let mut field = OverworldScreen::new(MapId::HallOfFame, None, PokemonRedData);
+    field
+        .npc_saved_state
+        .prepare(MapId::HallOfFame, &field.npc_states);
+    // Same map retarget as finish_hof_ceremony, before rebuilding map_data.
+    field.state.current_map = MapId::PalletTown;
+    field.state.player.x = 5;
+    field.state.player.y = 6;
+    let mut save = SaveData::new();
+    PokemonGame::apply_live_state_to_save(&mut save, &field, "RED", "BLUE");
+    let imported = import_sram(&export_sram(&save)).unwrap();
+    assert_eq!(imported.game_data.position.map_id, MapId::PalletTown as u8);
+    assert_eq!(imported.sprite_data, Default::default());
+    assert_eq!(imported.game_data.num_sprites, 0);
+    assert!(imported
+        .game_data
+        .map_sprite_data
+        .iter()
+        .all(|entry| *entry == (0, 0)));
+}
