@@ -1,0 +1,7 @@
+{
+  "crates/pokered-core/tests/fixtures/original_trainer_signature_moves.json": "1f4ee195784fa6ff73d43f013bf1c3d722de61ad9437c57985feef59cc6b8e2c",
+  "crates/pokered-app/tests/trainer_signature_boot.rs": "dc57c3cf33338d4e5c1e5626e7d84ebe64782693f2173266b5bad2d05526249d",
+  "crates/pokered-core/tests/trainer_signature_moves.rs": "76ae2a3b96896ce9e3467427763a65c664dd66b4873aff549a09bb6381978ae0",
+  "docs/audits/trainer-signature-moves/base-native.json": "0cab6ad761d68a0631c36afedc25728972e79481bdb1cbf21ebc784fed99db27",
+  "docs/audits/trainer-signature-moves/fixed-native.json": "8712f65eaf387deb8fe6c137f152707fd48ebd99e8298fa6b220e52c9d96fd9c"
+}

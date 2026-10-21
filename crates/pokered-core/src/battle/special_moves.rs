@@ -7,10 +7,10 @@
 //!   table index, so a gym leader's party is identifiable from the class alone.
 //! * The special move always overwrites MOVE SLOT 3 (index 2) of the target
 //!   party member (`wEnemyMon1Moves + 2` / `wEnemyMon5Moves + 2`).
-//! * The champion rival's starter counter-move is keyed on `wRivalStarter`
-//!   (STARTER1..3): Grass starter ⇒ rival Fire ⇒ MEGA_DRAIN, and so on — the
-//!   mapping below inverts from the rival's actual final starter species, which
-//!   the port knows directly.
+//! * The champion rival's starter move is keyed on `wRivalStarter`, the rival's
+//!   own original starter species (not the player's). Here the final evolved
+//!   species identifies that same branch: Venusaur => MEGA_DRAIN,
+//!   Charizard => FIRE_BLAST, Blastoise => BLIZZARD.
 
 use crate::alloc_prelude::*;
 use crate::battle::state::Pokemon;
@@ -45,19 +45,19 @@ pub fn apply_trainer_special_moves(class: TrainerClass, party: &mut [Pokemon]) {
         return;
     }
     // Champion rival (RIVAL3): Pidgeot (1st) gets SKY_ATTACK, and the rival's
-    // starter (6th) gets the counter-move keyed to the player's starter.
+    // starter (6th) gets the signature move keyed to the rival's own starter.
     if class == TrainerClass::Rival3 {
         if let Some(mon) = party.first_mut() {
             set_slot3(mon, MoveId::SkyAttack);
         }
         if let Some(mon) = party.get_mut(5) {
-            let counter = match mon.species {
-                Species::Venusaur => MoveId::FireBlast,  // player took Squirtle ⇒ rival Grass
-                Species::Charizard => MoveId::Blizzard,  // player took Bulbasaur ⇒ rival Fire
-                Species::Blastoise => MoveId::MegaDrain, // player took Charmander ⇒ rival Water
+            let signature = match mon.species {
+                Species::Venusaur => MoveId::MegaDrain,
+                Species::Charizard => MoveId::FireBlast,
+                Species::Blastoise => MoveId::Blizzard,
                 _ => MoveId::Blizzard,
             };
-            set_slot3(mon, counter);
+            set_slot3(mon, signature);
         }
     }
 }
@@ -77,11 +77,11 @@ mod tests {
     }
 
     #[test]
-    fn brock_first_mon_gets_bide() {
+    fn brock_second_mon_gets_bide() {
         let mut p = party_of(&[(Species::Geodude, 12), (Species::Onix, 14)]);
         apply_trainer_special_moves(TrainerClass::Brock, &mut p);
-        assert_eq!(p[0].moves[2], MoveId::Bide, "Brock's Geodude: BIDE in slot 3");
-        assert_eq!(p[1].moves[2], MoveId::None, "the rest untouched");
+        assert_eq!(p[1].moves[2], MoveId::Bide, "Brock's Onix: BIDE in slot 3");
+        assert_eq!(p[0].moves[2], MoveId::None, "Geodude untouched");
     }
 
     #[test]
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn champion_rival_gets_sky_attack_and_counter() {
+    fn champion_rival_gets_sky_attack_and_starter_signature() {
         let mut p = party_of(&[
             (Species::Pidgeot, 61),
             (Species::Alakazam, 59),
@@ -111,7 +111,7 @@ mod tests {
         ]);
         apply_trainer_special_moves(TrainerClass::Rival3, &mut p);
         assert_eq!(p[0].moves[2], MoveId::SkyAttack, "Pidgeot: SKY ATTACK");
-        assert_eq!(p[5].moves[2], MoveId::FireBlast, "Grass starter ⇒ FIRE_BLAST");
+        assert_eq!(p[5].moves[2], MoveId::MegaDrain, "Grass starter ⇒ MEGA_DRAIN");
     }
 
     #[test]
