@@ -86,6 +86,8 @@ mod tests_movement;
 #[cfg(test)]
 mod tests_npc;
 #[cfg(test)]
+mod tests_name_rater;
+#[cfg(test)]
 mod tests_npc_overlap;
 #[cfg(test)]
 mod tests_presentation;
