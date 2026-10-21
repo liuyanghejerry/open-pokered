@@ -1,0 +1,18 @@
+{
+  "scope": "Offline construction from consistent original Viridian main data; ready actor at19,30/player20,30, coherent pixels and counter values. No actual driver runtime setters; not a fresh-game fixture.",
+  "sha256": "81b69c07a11316ffd6c0c2fd6cb3330c47bd768fa06cfb734815ef9cd9ce91ea",
+  "actor": [
+    19,
+    30
+  ],
+  "player": [
+    20,
+    30
+  ],
+  "status": 1,
+  "displacement_yx": [
+    18,
+    14
+  ],
+  "unused_ready_delay_byte": 13
+}

@@ -1,0 +1,48 @@
+{
+  "code_head": "c0dfeba7d5f2e54207e4a369a8fd7bf314377cba",
+  "checks": {
+    "core-all-v2": {
+      "passed": 3632,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "1306eb40814712391be3539688bc3ddf0860a7196262550d49c1b33deb258641"
+    },
+    "app-lib-v2": {
+      "passed": 400,
+      "failed": 0,
+      "ignored": 40,
+      "log_sha256": "feeb0ac567767bb277972a81e5d8927f2d32ea87f1733e755ab2e3fd446564cc"
+    },
+    "audio": {
+      "passed": 131,
+      "failed": 0,
+      "ignored": 0,
+      "log_sha256": "7f8d0c438a7c332a5a752df96ca352051dd7f10fbe348b19c84e633befbeb9ba"
+    }
+  },
+  "native_build": [
+    {
+      "name": "audio",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-audio"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "native-build",
+      "command": [
+        "cargo",
+        "build",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "debug-server"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "terminated_app_attempt": "First app run received SIGTERM before completion, not counted as pass. Complete four-thread rerun is app-lib-v2."
+}
