@@ -1,0 +1,16 @@
+{
+  "0": {
+    "original_repeats_equal": true,
+    "all_pixels_match": true,
+    "pixels_equal_frames": 201,
+    "event_sequence_matches": true,
+    "player_boulder_coordinate_sequence_matches": true
+  },
+  "1": {
+    "original_repeats_equal": true,
+    "all_pixels_match": true,
+    "pixels_equal_frames": 201,
+    "event_sequence_matches": true,
+    "player_boulder_coordinate_sequence_matches": true
+  }
+}

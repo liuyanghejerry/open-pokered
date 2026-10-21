@@ -1,0 +1,14 @@
+{
+  "0": {
+    "repeated_trace": true,
+    "historical_original_different_frames": 0,
+    "historical_native_different_frames": 27,
+    "switch_t": 8
+  },
+  "1": {
+    "repeated_trace": true,
+    "historical_original_different_frames": 27,
+    "historical_native_different_frames": 0,
+    "switch_t": 7
+  }
+}

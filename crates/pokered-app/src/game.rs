@@ -11073,6 +11073,16 @@ mod link_stats_cry_fidelity_tests {
             let mut g=PokemonGame::new_with_options(GameVersion::Red,Some(path),None,None,false,None,false,true,
                 #[cfg(feature="debug-server")] None);
             let idle=InputState::new(); let mut saw_menu=false;
+            // Menus now publish their entry before accepting input. Preserve
+            // real held/released edges instead of bypassing the input guard.
+            fn tap(game: &mut PokemonGame, key: GbButton, idle_frames: usize) {
+                let mut input = button(key);
+                for _ in 0..3 {
+                    game.update(&input);
+                    input.begin_frame();
+                }
+                for _ in 0..idle_frames { game.update(&InputState::new()); }
+            }
             let scenario=std::env::var("FIDELITY_DUST_SCENARIO").unwrap_or_default();
             let victory_hole=scenario=="victory-hole";
             let victory_switch=match scenario.as_str() {
@@ -11110,20 +11120,21 @@ mod link_stats_cry_fidelity_tests {
             let mut start_input=button(GbButton::Start);
             g.update(&start_input);start_input.begin_frame();g.update(&start_input);start_input.begin_frame();g.update(&start_input);
             assert_eq!(g.state.screen,GameScreen::StartMenu);
+            for _ in 0..60 { g.update(&idle); }
             for _ in 0..7 {
                 if g.start_menu.current_item()==pokered_core::start_menu::StartMenuItem::Pokemon {break;}
-                g.update(&button(GbButton::Down));g.update(&idle);
+                tap(&mut g,GbButton::Down,30);
             }
-            g.update(&button(GbButton::A));g.update(&idle);
+            tap(&mut g,GbButton::A,60);
             assert_eq!(g.state.screen,GameScreen::PartyScreen);
             for _ in 0..6 {
                 if g.party_screen.cursor()==0 {break;}
-                g.update(&button(GbButton::Up));g.update(&idle);
+                tap(&mut g,GbButton::Up,30);
             }
-            g.update(&button(GbButton::A));g.update(&idle);
-            for _ in 0..3 {g.update(&button(GbButton::Down));g.update(&idle);}
+            tap(&mut g,GbButton::A,60);
+            for _ in 0..3 {tap(&mut g,GbButton::Down,30);}
             assert_eq!(g.party_screen.phase(),PartyScreenPhase::ActionMenu {cursor:3});
-            g.update(&button(GbButton::A));g.update(&idle);
+            tap(&mut g,GbButton::A,60);
             for t in 0..1000 {
                 if g.state.screen==GameScreen::Overworld && g.overworld.strength_active && g.overworld.pending_dialogue.is_none() {break;}
                 let advance=button(GbButton::A);g.update(if t%20==19 {&advance} else {&idle});
@@ -11180,12 +11191,17 @@ mod link_stats_cry_fidelity_tests {
             for _ in 0..extra {g.update(&idle);}
             let start_at=std::env::var("FIDELITY_DUST_START_AT").ok().map(|s|s.parse::<i32>().unwrap());
             let start_frames=std::env::var("FIDELITY_DUST_START_FRAMES").ok().map(|s|s.parse::<i32>().unwrap()).unwrap_or(40);
+            // Keep the physical hold length explicit when replaying reference
+            // fixtures: the historical 2F setup held DOWN for 19, not 16 frames.
+            let hold_frames=std::env::var("FIDELITY_DUST_HOLD_FRAMES")
+                .ok().map(|s|s.parse::<i32>().unwrap()).unwrap_or(16);
+            assert!((1..200).contains(&hold_frames));
             let mut input=InputState::new();let mut rows=Vec::new();
             for t in -1i32..200 {
                 if t>=0 {
                     input.begin_frame();
                     if t==0 && !menu_return_probe {input.press(trigger);}
-                    if t==16 {input.release(trigger);}
+                    if t==hold_frames {input.release(trigger);}
                     if start_at==Some(t) {input.press(GbButton::Start);}
                     if start_at.map(|v|v+start_frames)==Some(t) {input.release(GbButton::Start);}
                     g.update(&input);
