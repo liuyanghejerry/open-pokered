@@ -120,3 +120,25 @@ this change is covered by the complete PC controls and full core/app tests.
 This audit establishes cry ordering and input sampling, not complete PC palette,
 loading, instruction, raster, or whole-game parity. All original CI jobs remain
 required before merge.
+
+## Full-store stress follow-up
+
+The first GBA CI stress run exposed an outdated test assumption: the driver
+counted an A pressed during the cry as a visited record, although that A is now
+correctly ignored. It now waits for the actual viewer's sound wait to finish
+before checking the expected species and sending A. The original 300-record
+check, species order, 16-frame input cooldown, 18,000-frame bound, heap/stack
+thresholds and final full-store SRAM checks remain intact.
+
+A third cold-boot app test constructs the 50-team/6-member SRAM offline, boots
+normally and visits all 300 records with real cries in 15,850 frames. All three
+HoF app tests pass (`full-store-tests.log.gz`). The broad GBA scenario ROM also
+passes all 13 cases, including 330 move animations, 300 HoF records and the
+full-store SRAM save/reload (`gba-memory.log.gz`). Minimum contiguous heap is
+4,416 B and untouched stack is 8,724 B, both above the unchanged 4,096 B gates.
+This is a controlled stress fixture, not original/native frame timing parity.
+
+The follow-up changes only tests, the stress driver, its resolved GBA lockfile
+and these records. The player-facing cry fix and previously recorded native
+before/after product sources are unchanged. `validation.json` preserves the
+checks and exact source/ROM hashes used by the local stress run.

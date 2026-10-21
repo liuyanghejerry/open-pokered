@@ -71,5 +71,39 @@
     "Initial original direct up-route hit a fence; computed walkable route and repeated physical walk. Retained failed log.",
     "Early original metadata scope inherited an actor-trace docstring; corrected metadata and repeated, proving events/inputs unchanged."
   ],
-  "scope": "New4core/2app tests are included in full3636/402 counts, not additional unique tests. Previous latest master67af has fullfresh49PASS; this bounded PC-only fix was verified by actualPC/input/PCM controls and fullCore/App rather than relabeling that old fresh as a candidate run."
+  "scope": "New4core/2app tests are included in full3636/402 counts, not additional unique tests. Previous latest master67af has fullfresh49PASS; this bounded PC-only fix was verified by actualPC/input/PCM controls and fullCore/App rather than relabeling that old fresh as a candidate run.",
+  "followup_ci_driver": {
+    "old_ci_failure": "GBA stress driver incremented its expected HoF record after A even when the viewer was still waiting for the cry.",
+    "fix": "Poll actual viewer waiting_for_sound before scheduling input or counting a record. Original species/order/count checks, cooldown, 18000-frame bound and memory thresholds retained.",
+    "host_command": "cargo test -p pokered-app --lib --features debug-server hof_pc_cry -- --test-threads=2 --nocapture",
+    "host_passed": 3,
+    "full_store_records": 300,
+    "full_store_frames": 15850,
+    "host_log_sha256": "160eee99ec50ccc7b8643a9e8a5ad0da573a7e22196244cef372473bde490618",
+    "gba": {
+      "pass": true,
+      "suite": "scenarios",
+      "cases": 13,
+      "frames": 327360,
+      "seconds": 373.46795515494887,
+      "min_heap": 4416,
+      "min_stack": 8724,
+      "head": "2e2b501e92aaeabd5ae7c1fceb0ae9c0618a018b",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "fb8c502174e59d07d454aeb6810ca7c22bc833bc1fad7edcfda4b5f7af5b9c20",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-app/src/game/hof_pc_cry_tests.rs": "a8b641b8099ceb4546c2ce7b1567748c1582f04771a5e3cb76bebc76ade2c2c3",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14"
+      },
+      "source_head_binary_rom_frozen": true,
+      "scope": "Controlled GBA memory fixture with internally seeded game state, actual runtime sound waits; NOT physical normal-boot gameplay parity. Canonical ROM opened directly, no ROM copy."
+    },
+    "gba_log_sha256": "23fd00c548503aa783a12a8aff9a841db69361975266df8faec2b0f704546e3c",
+    "gba_build": "cargo +nightly-2025-12-07 build --release --features memory-scenarios; agb-gbafix canonical ELF, same shared target",
+    "emulator": "Existing libmGBA 0.10.5 / audit-1191-mgba-bridge.c, original scripts.gba_memory.Evidence gates. Direct canonical ROM open, isolated fresh test SRAM, no ROM copy.",
+    "tooling_tests": "python3 -m unittest scripts.test_gba_memory: 9 passed",
+    "lockfile": "GBA Cargo.lock regenerated to resolve the already-declared pokered-audio engine pin 8a6e alongside web engine pin4fab; no manifest/revision changes.",
+    "scope": "Controlled stress fixture; not original/native animation timing parity or a new full mainline run. Product code and native before/after recordings remain at code_head1ff8; followup changes test driver/tests/lockfile/docs only."
+  }
 }

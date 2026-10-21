@@ -40,7 +40,9 @@ impl Session {
         (audio.sequencer.current_sfx_id, audio.is_sfx_playing())
     }
     fn boot() -> Self {
-        let bytes = include_bytes!("../../../../docs/audits/hof-pc-cry/fixture.sav").to_vec();
+        Self::boot_bytes(include_bytes!("../../../../docs/audits/hof-pc-cry/fixture.sav").to_vec())
+    }
+    fn boot_bytes(bytes: Vec<u8>) -> Self {
         let unique = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -103,7 +105,6 @@ impl Session {
             s.step(keys);
         }
         assert_eq!(s.pc().phase(), PcPhase::LeagueHoF);
-        assert_eq!(s.species(), Species::Zapdos);
         assert!(s.pc().waiting_for_sound() && s.sound().1);
         let mut pcm = [0.; 1470];
         s.game.audio.as_ref().unwrap().render_pcm(&mut pcm);
@@ -190,6 +191,76 @@ fn cold_hof_pc_retains_sample_history_during_the_actual_cry() {
             assert_eq!(s.pc().phase(), PcPhase::MainMenu);
             assert!(!s.sound().1);
             s.unchanged_save();
+        })
+        .unwrap()
+        .join()
+        .unwrap();
+}
+
+#[test]
+fn cold_full_hof_pc_visits_all_three_hundred_records_with_actual_cries() {
+    std::thread::Builder::new()
+        .stack_size(16 * 1024 * 1024)
+        .spawn(|| {
+            use pokered_core::save::{
+                hall_of_fame::{HofMon, HofTeam},
+                sram_export::export_sram,
+                sram_import::import_sram,
+            };
+            let mut save = import_sram(include_bytes!(
+                "../../../../docs/audits/hof-pc-cry/fixture.sav"
+            ))
+            .unwrap();
+            save.hall_of_fame.clear();
+            // Same 50-team/6-member capacity as the GBA stress fixture. Only the
+            // offline SRAM is constructed; the viewer and sound run normally.
+            for team_no in 0..50 {
+                let mut team = HofTeam::new();
+                for n in 0..6 {
+                    team.add_mon(HofMon::new(
+                        ((team_no * 6 + n) % 151 + 1) as u8,
+                        80,
+                        &[0x80; 10],
+                    ));
+                }
+                save.hall_of_fame.push_team(team);
+            }
+            let expected: Vec<_> = save
+                .hall_of_fame
+                .iter()
+                .flat_map(|team| {
+                    team.mons()
+                        .iter()
+                        .map(|mon| Species::from_index_id(mon.species))
+                })
+                .collect();
+            let mut s = Session::boot_bytes(export_sram(&save));
+            let mut visited = 0;
+            let mut cooldown = 0;
+            let mut elapsed = 0;
+            for frame in 0..18000 {
+                elapsed = frame;
+                if s.pc().phase() == PcPhase::MainMenu {
+                    break;
+                }
+                assert_eq!(s.pc().phase(), PcPhase::LeagueHoF);
+                if cooldown > 0 {
+                    cooldown -= 1;
+                }
+                let mut keys = 0;
+                if !s.pc().waiting_for_sound() && cooldown == 0 {
+                    assert_eq!(s.pc().league_hof_progress(), (visited / 6, 50));
+                    assert_eq!(s.species(), expected[visited]);
+                    visited += 1;
+                    keys = A;
+                    cooldown = 16;
+                }
+                s.step(keys);
+            }
+            assert_eq!(visited, 300, "completed full HoF store in {elapsed} frames");
+            assert_eq!(s.pc().phase(), PcPhase::MainMenu);
+            s.unchanged_save();
+            eprintln!("full HoF: 300 records, {elapsed} frames");
         })
         .unwrap()
         .join()

@@ -685,9 +685,17 @@ version = "0.10.1"
 source = "git+https://github.com/liuyanghejerry/dotzuki?rev=4fab4ae33fdf11d35fbc8605fd73aab09452bf33#4fab4ae33fdf11d35fbc8605fd73aab09452bf33"
 dependencies = [
  "bitflags 2.13.2",
- "log",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "dotzuki-audio"
+version = "0.10.1"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8#8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8"
+dependencies = [
+ "bitflags 2.13.2",
+ "log",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -773,7 +781,7 @@ name = "dotzuki-web"
 version = "0.10.1"
 source = "git+https://github.com/liuyanghejerry/dotzuki?rev=4fab4ae33fdf11d35fbc8605fd73aab09452bf33#4fab4ae33fdf11d35fbc8605fd73aab09452bf33"
 dependencies = [
- "dotzuki-audio",
+ "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=4fab4ae33fdf11d35fbc8605fd73aab09452bf33)",
  "dotzuki-engine",
  "dotzuki-engine-dsl",
  "dotzuki-renderer",
@@ -2188,7 +2196,7 @@ dependencies = [
  "agb",
  "bitflags 2.13.2",
  "critical-section",
- "dotzuki-audio",
+ "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8)",
 ]
 
 [[package]]

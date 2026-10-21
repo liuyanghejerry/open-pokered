@@ -469,13 +469,22 @@ impl Scenarios {
             }
             8 => {
                 assert!(elapsed < 18000, "PC Hall of Fame viewer timed out");
+                let Some(pc) = game.pc_screen.as_ref() else {
+                    return;
+                };
+                // Each HoF picture waits for its real cry before polling A/B.
+                // Keep the expected record until that wait has completed; an
+                // ignored A is not a visited mon. Check readiness every frame
+                // without extending the existing 16-frame input cooldown.
+                if pc.phase() == pokered_core::pc_screen::PcPhase::LeagueHoF
+                    && pc.waiting_for_sound()
+                {
+                    return;
+                }
                 if frame < self.next_input {
                     return;
                 }
                 self.next_input = frame + 16;
-                let Some(pc) = game.pc_screen.as_ref() else {
-                    return;
-                };
                 use pokered_core::pc_screen::PcPhase;
                 match pc.phase() {
                     PcPhase::MainMenu if self.case == 300 => {}
