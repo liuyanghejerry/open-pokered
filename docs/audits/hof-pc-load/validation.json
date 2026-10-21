@@ -1,0 +1,56 @@
+{
+  "status": "component-only; player-facing HoF load/whiteout/clock integration NOT COMPLETE",
+  "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "codec_source": "home/uncompress.asm and FillMemory in home/tilemap.asm",
+  "fixture_format": "151 records: speciesu8,lengthu16LE,canonicalgeneratedfront.pic bytes,784 original unflipped aligned49tile VRAM bytes,foregroundu64LE. Nonfont sprite assets only, not ROM copies.",
+  "fixture_sha256": "234193f82548bbc7d71a7a243cc6cfd8dc0f5b836ef516bf4f70c0ad0bedea2c",
+  "fixture_bytes": 176089,
+  "original_methods": "Two normalboot/CONTINUE physicalPC schedules, second adds1neutralframe beforefirstshowA. Eachschedule repeatedtwiceexact. All151species match, finalframe18586. Readonlyhooks andVRAM-frontgraphicreads only. Offline26team SRAMfixture. No runtime state setters/snapshots/warp/fontimages.",
+  "work_oracle": "Wrapperentry->RET+16, minuswholeVBlankbodyandRETI+16+interrupt20/vectorJP16. ActualvectorJPVBlank/opcodesverified.151foregroundvalues equalacrossschedules;110elapsedvalues differ. Source CPUcosts derived instructionbyinstruction, notfit tospecies.",
+  "ranges": {
+    "foreground_tcycles": [
+      1008692,
+      2769880
+    ],
+    "load_to_cry_frames": [
+      30,
+      59
+    ]
+  },
+  "limits": "No flipped codec work, general interrupt vector oracle, full boot/RNG/audio timing or actualnative all151gameplay parity claimed. Rust mode0 uses a synthetic1x1 zero fixture; all151naturalfrontassets usemodes1/2. Initial test incorrectly expectedmode0innatural151; failure preserved privately, replaced with explicitcontrolledmode0case.",
+  "portable_original": {
+    "phase0": "BothnormalboottrialsPASS andexactpublishedtrialmatch; audit-1246-portable-final-source-0.log",
+    "phase1": "BothnormalboottrialsPASS andexactpublishedtrialmatch; audit-1246-portable-final-source-1.log",
+    "scope": "Originalonly. ROOTsource/head/sole-native-binary/ROM/fixture guardsPASS. Nativebinarynotexecuted.",
+    "proof_sha256": {
+      "original-phase-0.json.gz": "8999c8469853de71f54670854afe052b753e66d54b2bfded5a28a336bc617890",
+      "original-phase-1.json.gz": "9d6d036bfe135b681d0f76cfa2613f135e96cbb2e71835a5d4c4d30a217ada36"
+    },
+    "replay_sha256": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de"
+  },
+  "component_checks": {
+    "full_core": {
+      "passed": 3639,
+      "failed": 0,
+      "ignored": 1
+    },
+    "full_core_log_sha256": "845f619d70d6bcc2ea42c6a99c2917ab72b7ff5b8d4b44c70b8e51b5e650fc8f",
+    "core_command": "cargo test -p pokered-core",
+    "component_tests": 3,
+    "component_modes": [
+      0,
+      74,
+      77
+    ],
+    "component_sizes_5_6_7": [
+      48,
+      48,
+      55
+    ],
+    "gba_command": "cargo +nightly-2025-12-07 check --release -p pokered-core (cwd crates/pokered-gba, same shared target)",
+    "gba_exit": 0,
+    "gba_log_sha256": "8c333a389520e63ec65ea4bfdf9f986d9a3e8f8b84f472fa8ecd5725f98a20dd",
+    "diagnostic": "Initial GBA check invocation incorrectly supplied features for a dependency outside the nested workspace; corrected invocation passed. This was a command setup error, not a game failure.",
+    "scope": "New component only, not wired into native PC flow. No new whole-game or GBA ROM timing parity claim."
+  }
+}

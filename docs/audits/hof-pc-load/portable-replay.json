@@ -1,0 +1,39 @@
+{
+  "all_pass": true,
+  "cases": [
+    {
+      "phase": 0,
+      "pass": true,
+      "repeat_exact": true,
+      "trial_matches_published": true,
+      "original_recorded_head": "18f95a7a5f3dee17bf178574e8a38ef0c1a55e8b",
+      "portable_recorded_head": "b8151a57641aa9e489d2e7025646a8947d0b5c8e",
+      "portable_source_hashes": {
+        "docs/audits/hof-pc-load/replay-original.py": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de",
+        "crates/pokered-core/src/front_pic_decode.rs": "132b9bcbac80fb94cd655f0d20e17c5091315fbf8c050043b6db5d2486ed777e",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14"
+      },
+      "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c",
+      "recording_note": "Original-only replay with in-progress source files frozen at these hashes. Do not relabel as gameplay at the later component commit."
+    },
+    {
+      "phase": 1,
+      "pass": true,
+      "repeat_exact": true,
+      "trial_matches_published": true,
+      "original_recorded_head": "18f95a7a5f3dee17bf178574e8a38ef0c1a55e8b",
+      "portable_recorded_head": "b8151a57641aa9e489d2e7025646a8947d0b5c8e",
+      "portable_source_hashes": {
+        "docs/audits/hof-pc-load/replay-original.py": "5b0fb2811effe62536636312598ea4fd4c87146fe7a8aa3af1b14017711a14de",
+        "crates/pokered-core/src/front_pic_decode.rs": "132b9bcbac80fb94cd655f0d20e17c5091315fbf8c050043b6db5d2486ed777e",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14"
+      },
+      "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c",
+      "recording_note": "Original-only replay with in-progress source files frozen at these hashes. Do not relabel as gameplay at the later component commit."
+    }
+  ]
+}
