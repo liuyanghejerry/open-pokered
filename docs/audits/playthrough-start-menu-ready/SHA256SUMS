@@ -1,0 +1,14 @@
+b745cff669df52e8ec81bb941576e49e5e92f0b58d612a09260badff10099b76  docs/audits/playthrough-start-menu-ready/README.md
+fd4422a8abe7ac04ee8e2c00284124e6badf7a225e346ceb9e758d316d6375a4  docs/audits/playthrough-start-menu-ready/base-0.json.gz
+121299353968d1b0e02d3d0b406facf43ae4616d26554c62e975a0c5a21b7e96  docs/audits/playthrough-start-menu-ready/base-1.json.gz
+221e65cbfd179b9befbc545d2f69ef42e1683dfb37459d19b9ed65802106b086  docs/audits/playthrough-start-menu-ready/base-2.json.gz
+946e258c4bc82db27f3945573ccb79d400e79700c5f66373a359190cab836f60  docs/audits/playthrough-start-menu-ready/base-3.json.gz
+0d3961fb312aedd4bc4313e3f12f073fe5ce092928940fe0a199a1f2218cc08e  docs/audits/playthrough-start-menu-ready/comparison.json
+1f00b7e61f87eb9f529553d266b47c39c869d3179251df7e3f28bb22c534eb60  docs/audits/playthrough-start-menu-ready/driver-tests.log.gz
+abf1d940a9cec96f035203030d4eb0dcbe0efd93f3ca59c3573426986812935d  docs/audits/playthrough-start-menu-ready/fixed-0.json.gz
+3741ebb2c17ee336dbe0274b5a6b2489bba9104ff0a3b69f1fe1fb11d3de4b08  docs/audits/playthrough-start-menu-ready/fixed-1.json.gz
+e35da23d13476182a59758301dcb9b427e154b614c75105a5114c31bce0da1df  docs/audits/playthrough-start-menu-ready/fixed-2.json.gz
+8429b5cb24f5dbf91e6ac54f0d3e950a6061b5760b89dc1127c4520bf94a7c7e  docs/audits/playthrough-start-menu-ready/fixed-3.json.gz
+fbe89e17fe86bc789fb768435fd05958465a22f076109c9673942fbe5bad09d4  docs/audits/playthrough-start-menu-ready/original-failure-state.json.gz
+1869ff71582df3cf7966636ee12933d819a7aacdb28f922301bc63e0c7a29cde  docs/audits/playthrough-start-menu-ready/original-failure.txt
+c52892799370b579e9841606c7d5c1b9610c6252573198de1a99883e762490ea  docs/audits/playthrough-start-menu-ready/replay.py

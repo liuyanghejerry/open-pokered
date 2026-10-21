@@ -1,0 +1,326 @@
+{
+  "base": [
+    {
+      "phase": 0,
+      "after_helper": {
+        "cursor": 1,
+        "items": [
+          "Pokedex",
+          "Pokemon",
+          "Item",
+          "TrainerInfo",
+          "Save",
+          "Option",
+          "Exit"
+        ],
+        "kind": "start",
+        "published_menu_rows": 144,
+        "ready_for_input": true
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3014,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 0,
+          "ready_for_input": false
+        }
+      }
+    },
+    {
+      "phase": 1,
+      "after_helper": {
+        "cursor": 1,
+        "items": [
+          "Pokedex",
+          "Pokemon",
+          "Item",
+          "TrainerInfo",
+          "Save",
+          "Option",
+          "Exit"
+        ],
+        "kind": "start",
+        "published_menu_rows": 144,
+        "ready_for_input": true
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3014,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 0,
+          "ready_for_input": false
+        }
+      }
+    },
+    {
+      "phase": 2,
+      "after_helper": {
+        "cursor": 1,
+        "items": [
+          "Pokedex",
+          "Pokemon",
+          "Item",
+          "TrainerInfo",
+          "Save",
+          "Option",
+          "Exit"
+        ],
+        "kind": "start",
+        "published_menu_rows": 144,
+        "ready_for_input": true
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3016,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 0,
+          "ready_for_input": false
+        }
+      }
+    },
+    {
+      "phase": 3,
+      "after_helper": {
+        "cursor": 1,
+        "items": [
+          "Pokedex",
+          "Pokemon",
+          "Item",
+          "TrainerInfo",
+          "Save",
+          "Option",
+          "Exit"
+        ],
+        "kind": "start",
+        "published_menu_rows": 144,
+        "ready_for_input": true
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3016,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 0,
+          "ready_for_input": false
+        }
+      }
+    }
+  ],
+  "fixed": [
+    {
+      "phase": 0,
+      "after_helper": {
+        "cursor": 0,
+        "field_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "flash_notice": false,
+        "kind": "party",
+        "known_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "machine_learning_phase": null,
+        "mode": "Normal",
+        "phase": "Browsing",
+        "rare_candy_phase": null
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3025,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 144,
+          "ready_for_input": true
+        }
+      }
+    },
+    {
+      "phase": 1,
+      "after_helper": {
+        "cursor": 0,
+        "field_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "flash_notice": false,
+        "kind": "party",
+        "known_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "machine_learning_phase": null,
+        "mode": "Normal",
+        "phase": "Browsing",
+        "rare_candy_phase": null
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3025,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 144,
+          "ready_for_input": true
+        }
+      }
+    },
+    {
+      "phase": 2,
+      "after_helper": {
+        "cursor": 0,
+        "field_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "flash_notice": false,
+        "kind": "party",
+        "known_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "machine_learning_phase": null,
+        "mode": "Normal",
+        "phase": "Browsing",
+        "rare_candy_phase": null
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3027,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 144,
+          "ready_for_input": true
+        }
+      }
+    },
+    {
+      "phase": 3,
+      "after_helper": {
+        "cursor": 0,
+        "field_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "flash_notice": false,
+        "kind": "party",
+        "known_moves": [
+          "Fly",
+          "Cut",
+          "Surf",
+          "Strength"
+        ],
+        "machine_learning_phase": null,
+        "mode": "Normal",
+        "phase": "Browsing",
+        "rare_candy_phase": null
+      },
+      "first_confirm_after_reopen": {
+        "frame_before": 3027,
+        "screen": "start-menu",
+        "field_menu": {
+          "cursor": 1,
+          "items": [
+            "Pokedex",
+            "Pokemon",
+            "Item",
+            "TrainerInfo",
+            "Save",
+            "Option",
+            "Exit"
+          ],
+          "kind": "start",
+          "published_menu_rows": 144,
+          "ready_for_input": true
+        }
+      }
+    }
+  ]
+}
