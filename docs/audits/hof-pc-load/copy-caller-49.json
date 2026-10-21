@@ -1,0 +1,64 @@
+{
+  "scope": "First HoF 49-tile CopyVideoData caller from normal original boot/CONTINUE and physical PC input. One additional readonly loop-site hook. Two independent repeats exact and every full151species baseline event/record/interrupt/input remains exact. Loop register/HRAM receipts only, not all instruction timings or ISR body proof.",
+  "all_pass": true,
+  "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "case": {
+    "bank": 29,
+    "tiles": 49,
+    "source": 41352,
+    "destination": 36864,
+    "bg_before": 1,
+    "loaded_before": 29,
+    "loops": [
+      {
+        "remaining": 49,
+        "source": 41352,
+        "destination": 36864,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 41,
+        "source": 41480,
+        "destination": 36992,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 33,
+        "source": 41608,
+        "destination": 37120,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 25,
+        "source": 41736,
+        "destination": 37248,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 17,
+        "source": 41864,
+        "destination": 37376,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 9,
+        "source": 41992,
+        "destination": 37504,
+        "bg": 0,
+        "loaded_bank": 29
+      },
+      {
+        "remaining": 1,
+        "source": 42120,
+        "destination": 37632,
+        "bg": 0,
+        "loaded_bank": 29
+      }
+    ]
+  }
+}
