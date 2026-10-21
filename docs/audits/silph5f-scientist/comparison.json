@@ -1,0 +1,18 @@
+{
+  "before_source": "a2f1189ceb4074937222b9257267fd79348dff05",
+  "after_source": "91a89b70f7d2adf38c86ee1797be054c66e82de4",
+  "before_binary_sha256": "da8d9f9f0619b4c994d27ca74dbc492419bd30bcad4466aec7f4a33bd9cb5b24",
+  "after_binary_sha256": "e7cc457b59bdc7b2d2a189efca0faa09c7c24ef03c44179267f588e4e1f64a78",
+  "fixture_sha256": "54b964a88a69858a76b456dd2c76bebcfe94e3baed954a69b31f3c9fce449d71",
+  "reference_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "reference_file": "text/SilphCo5F.asm",
+  "reference_label": "_SilphCo5FScientistAfterBattleText",
+  "reference_ending": "catch anything!",
+  "matched_page_frames": [
+    1123,
+    1306
+  ],
+  "pretrigger_and_final_states_equal": true,
+  "first_page_PNG_equal": true,
+  "scope": "Native controlled offlineSRAM and physical dialogue; source-level original text verification; no original emulator or freshbattle/travel verdict. Earlier wrongRocker and facingpreparation attempts excluded."
+}
