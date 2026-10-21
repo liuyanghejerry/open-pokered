@@ -152,17 +152,7 @@ impl NpcPresentation {
         self.player_walking && n.walk_counter == 0 && n.delay_counter == 0
     }
     pub fn step_within_screen(&self, n: &NpcRuntimeState) -> bool {
-        let (dx, dy) = match n.walking_direction() {
-            Direction::Down => (0, 1),
-            Direction::Up => (0, -1),
-            Direction::Left => (-1, 0),
-            Direction::Right => (1, 0),
-        };
-        let x =
-            (64 + (i32::from(n.x) - i32::from(self.scan_player.0)) * 16 - self.scan_camera.0) as u8;
-        let y =
-            (60 + (i32::from(n.y) - i32::from(self.scan_player.1)) * 16 - self.scan_camera.1) as u8;
-        y.wrapping_add(4).wrapping_add(dy as u8) < 128 && x.wrapping_add(dx as u8) < 144
+        super::npc_movement::step_within_screen(n, self.scan_player)
     }
     pub fn started_wander_image(&mut self, slot: usize, n: &NpcRuntimeState) {
         if let Some(image) = self.images.get_mut(slot) {

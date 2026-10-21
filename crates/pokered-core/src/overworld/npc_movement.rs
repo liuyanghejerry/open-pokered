@@ -71,6 +71,17 @@ pub(super) fn coordinate_available(n: &NpcRuntimeState, player: (u16, u16)) -> b
     axis_available(player.0 as u8, x, 9) && axis_available(player.1 as u8, y, 8)
 }
 
+/// InitializeSpriteScreenPosition followed by CanWalkOntoTile's one-pixel
+/// direction probe. This is stricter than sprite availability: an available
+/// actor must reject an outward stride before starting its animation.
+pub(super) fn step_within_screen(n: &NpcRuntimeState, player: (u16, u16)) -> bool {
+    let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(n.walking_direction());
+    let x = (n.x as u8).wrapping_add(4).wrapping_sub(player.0 as u8).rotate_left(4);
+    // YPixels subtracts four; CanWalkOntoTile adds them back before its probe.
+    let y = (n.y as u8).wrapping_add(4).wrapping_sub(player.1 as u8).rotate_left(4);
+    y.wrapping_add(dy as u8) < 0x80 && x.wrapping_add(dx as u8) < 0x90
+}
+
 fn with_available_npcs(
     npcs: &mut [NpcRuntimeState],
     player: (u16, u16),
@@ -79,13 +90,29 @@ fn with_available_npcs(
     // Exclude unavailable objects from this engine pass while preserving
     // raw slot indices. Restore persisted visibility after movement returns.
     let mut excluded = Vec::new();
+    let mut ready_walkers = Vec::new();
     for (slot, npc) in npcs.iter_mut().enumerate() {
         if npc.visible && !coordinate_available(npc, player) {
             npc.visible = false;
             excluded.push(slot);
+        } else if npc.visible && npc.movement_type == NpcMovementType::Wander
+            && npc.walk_counter == 0 && npc.delay_counter == 0 && npc.scripted_path.is_empty() {
+            ready_walkers.push(slot);
         }
     }
     update(npcs);
+    for slot in ready_walkers {
+        let npc = &mut npcs[slot];
+        if npc.walk_counter == NPC_WALK_FRAMES && !step_within_screen(npc, player) {
+            // The engine only schedules the first pixel here; no coordinates
+            // or published image have advanced. Retain the selected facing and
+            // rejection delay, cancelling only the pending stride. Its pass
+            // builds occupancy before scheduling, so later slots observe the
+            // same occupied tiles whether this attempt succeeds or fails.
+            npc.walk_counter = 0;
+            npc.step_direction = None;
+        }
+    }
     for slot in excluded {
         npcs[slot].visible = true;
     }
