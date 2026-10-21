@@ -742,6 +742,22 @@ impl PcScreen {
         self.observe_rating_input(buttons);
         // hFrameCounter advances even while Delay20/list redraw protects input.
         self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
+        if before == PcPhase::LeagueHoF {
+            // HoFDisplayMonInfo tail-calls PlayCry/WaitForSoundToFinish.
+            // That wait does not sample Joypad. Keep the PC caller's sampled
+            // history so a B held during the cry is seen by the first later
+            // WaitForTextScrollButtonPress poll, while a short released pulse
+            // is lost. This consumer retains hJoy7=0 (new presses only).
+            if self.waiting_for_cry && sound_playing == Some(true) {
+                return (PcScreenAction::Continue, MenuInput { up:false, down:false, a:false, b:false });
+            }
+            self.waiting_for_cry = false;
+            let pressed = buttons & !self.ordinary_menu_last_buttons;
+            self.ordinary_menu_last_buttons = buttons;
+            let used = MenuInput { a:pressed & 1 != 0, b:pressed & 2 != 0,
+                up:pressed & 64 != 0, down:pressed & 128 != 0 };
+            return (self.update_league_hof(used), used);
+        }
         if before == PcPhase::ItemList {
             // HandleItemListSwapping does not sample Joypad during Delay20
             // or the subsequent list redraw/HandleMenuInput Delay3 pair.
@@ -916,7 +932,7 @@ impl PcScreen {
 
     fn queue_league_mon_cry(&mut self) {
         if let Some((_, mon)) = self.league_hof_mon() {
-            self.sfx.push(PcSfx::Cry(mon.species));
+            self.start_mon_cry(mon.species);
         }
     }
 
@@ -3615,4 +3631,94 @@ mod tests {
         assert!(s.take_sfx().is_empty());
     }
 
+
+    // Constructed PC/component inputs; normal startup/PCM recordings are separate.
+    fn open_voiced_hof(w: &mut World) -> PcScreen {
+        let mut s = PcScreen::new(PcEntry::PokemonCenter, &hof_open_ctx());
+        open_pokemon_center(&mut s, w);
+        s.update_frame(DOWN, &mut w.ctx());
+        s.update_frame(DOWN, &mut w.ctx());
+        s.update_frame(A, &mut w.ctx());
+        for _ in 0..8 {
+            s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
+            if s.phase() == PcPhase::LeagueHoF { break; }
+            s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
+        }
+        assert_eq!(s.phase(), PcPhase::LeagueHoF);
+        assert!(s.waiting_for_sound());
+        assert_eq!(s.league_hof_mon().unwrap().1.level, 50);
+        s.take_sfx();
+        s
+    }
+
+    #[test]
+    fn league_cry_wait_discards_released_a_or_b_and_accepts_a_after_sound() {
+        for held in [PcHeldInput { a:true, ..Default::default() }, PcHeldInput { b:true, ..Default::default() }] {
+            let mut w = World::new();
+            let mut s = open_voiced_hof(&mut w);
+            let input = MenuInput { a:held.a, b:held.b, up:false, down:false };
+            let (_, used) = s.update_frame_with_held_input(input, held, &mut w.ctx(), Some(true));
+            assert!(!used.a && !used.b);
+            s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(true));
+            s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
+            assert_eq!(s.phase(), PcPhase::LeagueHoF);
+            assert_eq!(s.league_hof_mon().unwrap().1.level, 50);
+            assert!(!s.waiting_for_sound());
+            assert!(s.take_sfx().is_empty());
+            s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
+            assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
+            assert!(s.waiting_for_sound());
+            assert_eq!(s.take_sfx(), vec![PcSfx::Cry(Species::Pikachu)]);
+        }
+    }
+
+    #[test]
+    fn league_reads_b_held_during_sound_at_the_first_later_poll() {
+        let mut w = World::new();
+        let mut s = open_voiced_hof(&mut w);
+        let held = PcHeldInput { b:true, ..Default::default() };
+        for _ in 0..100 {
+            s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(true));
+            assert_eq!(s.phase(), PcPhase::LeagueHoF);
+        }
+        // Host per-frame B edge is already gone, but source Joypad has not
+        // sampled it yet: the first post-cry poll must still read that B.
+        let (_, used) = s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(false));
+        assert!(used.b);
+        assert_eq!(s.phase(), PcPhase::MainMenu);
+        assert!(s.take_sfx().is_empty());
+    }
+
+    #[test]
+    fn league_keeps_caller_a_history_until_release_is_actually_sampled() {
+        let mut w = World::new();
+        let mut s = open_voiced_hof(&mut w);
+        let held = PcHeldInput { a:true, ..Default::default() };
+        s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(true));
+        for _ in 0..100 { s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(true)); }
+        let (_, used) = s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(false));
+        assert!(!used.a);
+        assert_eq!(s.league_hof_mon().unwrap().1.level, 50);
+        s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
+        s.update_frame_with_held_input(A, held, &mut w.ctx(), Some(false));
+        assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
+        assert!(s.waiting_for_sound());
+    }
+
+    #[test]
+    fn league_waits_again_for_every_new_mon_and_b_wins_mixed_ack() {
+        let mut w = World::new();
+        let mut s = open_voiced_hof(&mut w);
+        s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
+        s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
+        assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
+        assert!(s.waiting_for_sound());
+        s.take_sfx();
+        let held = PcHeldInput { a:true, b:true, ..Default::default() };
+        s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(true));
+        assert_eq!(s.phase(), PcPhase::LeagueHoF);
+        s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(false));
+        assert_eq!(s.phase(), PcPhase::MainMenu);
+        assert!(s.take_sfx().is_empty());
+    }
 }

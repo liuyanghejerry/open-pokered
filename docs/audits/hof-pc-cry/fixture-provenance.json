@@ -1,0 +1,19 @@
+{
+  "scope": "Disclosed offline native fixture at Pewter PC13,4. Bank0 HOF window from natural NEW GAME/m49 ending on merged67afd59f tree; no runtime state mutation. Original coherent Viridian control fixture is recorded separately.",
+  "ending_sha256": "913a27e4d4093a0171f75772bc917574e0b1a961286913e116882f1bb152828e",
+  "cases": [
+    {
+      "role": "native",
+      "base": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/pc-before-45/box-stats.sav",
+      "base_sha256": "d1de0b7e695206055bafad2c446f10fd7051d72c2070dc247e2852e13f4d846e",
+      "output": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1243-hof-native-fixture.sav",
+      "sha256": "6133c20d0e896d577fdaef4a08f2ca9cd7c49a1c2c34af3d9b411de0675df823",
+      "map": 58,
+      "xy": [
+        13,
+        4
+      ],
+      "mutations": "Offline HOF bank0 4800-byte window copied from natural1242ending; numHoF=1 and EVENT_GOT_POKEDEX bit37; original main checksum recomputed; no runtime setters."
+    }
+  ]
+}
