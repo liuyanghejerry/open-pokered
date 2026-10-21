@@ -1,0 +1,192 @@
+[
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  },
+  {
+    "cmd": "press_sequence",
+    "buttons": [
+      "a"
+    ]
+  },
+  {
+    "cmd": "step_frames",
+    "count": 31
+  }
+]

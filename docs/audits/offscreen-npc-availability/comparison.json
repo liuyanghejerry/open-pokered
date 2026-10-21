@@ -1,0 +1,115 @@
+{
+  "scope": "Actual normal native SRAM boot/CONTINUE, same physical commands and frame numbers. No runtime setters/warps/snapshot load. Before/after functional evidence, not original timing/raster/audio parity.",
+  "base_head": "2ae12ed68780eedbfa6fe72e74d09fc30b65091c",
+  "candidate_head": "0ca514fcf0f38c1d892321ac8c376f575de4cc2d",
+  "commands_identical_except_capture_output_directory": true,
+  "player_states_and_observation_frames_identical": true,
+  "base_idle_start_npcs": [
+    {
+      "facing": "Down",
+      "home_x": 5,
+      "home_y": 24,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 5,
+      "y": 25
+    },
+    {
+      "facing": "Right",
+      "home_x": 15,
+      "home_y": 13,
+      "npc_index": 1,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 2,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 16,
+      "y": 13
+    }
+  ],
+  "candidate_idle_start_npcs": [
+    {
+      "facing": "Down",
+      "home_x": 5,
+      "home_y": 24,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 5,
+      "y": 24
+    },
+    {
+      "facing": "Left",
+      "home_x": 15,
+      "home_y": 13,
+      "npc_index": 1,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 2,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 15,
+      "y": 13
+    }
+  ],
+  "base_changed_idle_observations": 19,
+  "candidate_changed_idle_observations": 0,
+  "candidate_npc0_nearby_changed_observations": 96,
+  "candidate_npc1_remained_frozen": true,
+  "frames": {
+    "idle_start": 672,
+    "before_approach": 800,
+    "arrived": 832,
+    "last": 928
+  },
+  "images": [
+    {
+      "file": "nearby-063.png",
+      "before_sha256": "357761ff9d3df51081d9d7bd210c17eb36995d529591ddd83c27e6000b2f641c",
+      "after_sha256": "a53fba4a226ba1c2c4c82d0cf60e136fe68945ad4042b213134f3747d2da4466",
+      "equal": false
+    },
+    {
+      "file": "nearby-015.png",
+      "before_sha256": "0eb5deb4429c56c84400eb493a1811c2c289b96f6abe469b052cc6f41d4798c4",
+      "after_sha256": "0eb5deb4429c56c84400eb493a1811c2c289b96f6abe469b052cc6f41d4798c4",
+      "equal": true
+    },
+    {
+      "file": "nearby-031.png",
+      "before_sha256": "357761ff9d3df51081d9d7bd210c17eb36995d529591ddd83c27e6000b2f641c",
+      "after_sha256": "a53fba4a226ba1c2c4c82d0cf60e136fe68945ad4042b213134f3747d2da4466",
+      "equal": false
+    },
+    {
+      "file": "before-approach.png",
+      "before_sha256": "81592a3befc69fb5a65090b695c5223c77f93ad38b0519610108084ae3b2b1d6",
+      "after_sha256": "81592a3befc69fb5a65090b695c5223c77f93ad38b0519610108084ae3b2b1d6",
+      "equal": true
+    },
+    {
+      "file": "nearby-000.png",
+      "before_sha256": "1c4769714de4313dc89cc44fd3a7a6bf5535d7bfb6de3784aad746b2a20937e8",
+      "after_sha256": "1c4769714de4313dc89cc44fd3a7a6bf5535d7bfb6de3784aad746b2a20937e8",
+      "equal": true
+    },
+    {
+      "file": "nearby-095.png",
+      "before_sha256": "bb235bf1858e4857e6368ad2dabb0703fa65fc8c5087ab982703a2949fc72c5c",
+      "after_sha256": "0eb5deb4429c56c84400eb493a1811c2c289b96f6abe469b052cc6f41d4798c4",
+      "equal": false
+    }
+  ],
+  "base_binary_sha256": "4c6e582156fec09fe36f7ec0e08d8043c5a95126bdebbc5aa540b6e48ae2367b",
+  "candidate_binary_sha256": "cde8b9f6192afa10b4019bfad8933452c3088058c532b8cf7b54355d60e567d8",
+  "fixture_sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f",
+  "all_guards_passed": true
+}

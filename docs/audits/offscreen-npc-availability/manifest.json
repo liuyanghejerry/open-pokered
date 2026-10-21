@@ -1,0 +1,72 @@
+{
+  "base_head": "2ae12ed68780eedbfa6fe72e74d09fc30b65091c",
+  "candidate_code_head": "0ca514fcf0f38c1d892321ac8c376f575de4cc2d",
+  "scope": "Actual normal native SRAM boot/CONTINUE, same physical commands and frame numbers. No runtime setters/warps/snapshot load. Before/after functional evidence, not original timing/raster/audio parity.",
+  "test_results": {
+    "core_all_passed": 3601,
+    "core_all_ignored": 1,
+    "app_library_passed": 386,
+    "app_library_ignored": 38
+  },
+  "original_source": {
+    "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/movement.asm",
+    "sha256": "87939b64f3c4edacc5651d1f22b5a677967184bf19fef5879f2c274cf7b7596a"
+  },
+  "notes": [
+    "Actual scripts used accelerated TCP reads; committed replay uses ordinary DebugClient. Physical input frames and Game behavior remain identical at speed0.",
+    "get_npcs exposes position/facing/walk_counter; delay_counter freeze covered by core tests.",
+    "Game.close intentionally terminates headless process with SIGTERM after successful assertions; driver exits0.",
+    "Before/after PNGs are untouched whole160x144 frame864, same player position5,20.",
+    "Only standalone game logic change is the candidate commit; later documentation does not alter the executable."
+  ],
+  "files": {
+    "docs/audits/offscreen-npc-availability/extended-summary.json": {
+      "bytes": 979,
+      "sha256": "0da0cd971261c1e033ffcc73553b8fe2a010f9419ba3a7bd8970039a053d3f81"
+    },
+    "docs/audits/offscreen-npc-availability/fixture.sav": {
+      "bytes": 32768,
+      "sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f"
+    },
+    "docs/audits/offscreen-npc-availability/replay.py": {
+      "bytes": 6537,
+      "sha256": "3a55e12befb9df43adfb9482b5c07f0d586a91f2999859ea2d1028b36f54214f"
+    },
+    "docs/audits/offscreen-npc-availability/boot-commands.json": {
+      "bytes": 2321,
+      "sha256": "bbe8b241edb924b1831e75c1abe2797f2ae69c10c1ab5f3f76eceaf55deb975e"
+    },
+    "docs/audits/offscreen-npc-availability/base-native.json.gz": {
+      "bytes": 4910,
+      "sha256": "d03c3f15f551bd12dcc60340a3cdee4b1950c3fcac7e89566d44afe6076ba27f"
+    },
+    "docs/audits/offscreen-npc-availability/comparison.json": {
+      "bytes": 3632,
+      "sha256": "7681b46ba57792e9c3a983250a704c272aaa5d015e1903c52dcefbbe76656362"
+    },
+    "docs/audits/offscreen-npc-availability/fixture-provenance.json": {
+      "bytes": 813,
+      "sha256": "62d3aff1861a3e1f51745b37b1be8970cbe3744c7bd79058469970d190e0f5e3"
+    },
+    "docs/audits/offscreen-npc-availability/fixed-extended.json.gz": {
+      "bytes": 10093,
+      "sha256": "32ff495f33f5a65d2b4ed4411ec805fb818c7ecfbd1f763334ab6ddba05a9fcd"
+    },
+    "docs/audits/offscreen-npc-availability/fixed-native.json.gz": {
+      "bytes": 4654,
+      "sha256": "50594b6e24ce37447e28f7fe25ba4ab879742093ec9a38731cad5b94b5b103cb"
+    },
+    "docs/screenshots/offscreen-npc-availability/resumed.png": {
+      "bytes": 60144,
+      "sha256": "95bd02070f7586e531f43a30b7058dd567b4874bf898bb026d6f5fea4c3e1891"
+    },
+    "docs/screenshots/offscreen-npc-availability/before.png": {
+      "bytes": 57619,
+      "sha256": "357761ff9d3df51081d9d7bd210c17eb36995d529591ddd83c27e6000b2f641c"
+    },
+    "docs/screenshots/offscreen-npc-availability/after.png": {
+      "bytes": 57345,
+      "sha256": "a53fba4a226ba1c2c4c82d0cf60e136fe68945ad4042b213134f3747d2da4466"
+    }
+  }
+}

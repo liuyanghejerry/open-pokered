@@ -1,0 +1,47 @@
+{
+  "observations": 900,
+  "max_nearby_npc0_walk_counter": 16,
+  "final": {
+    "stage": "second-nearby",
+    "frame": 1632,
+    "state": {
+      "screen": "overworld",
+      "map_name": "Route1",
+      "player_x": 5,
+      "player_y": 21,
+      "player_facing": "Down",
+      "player_movement_state": "Idle",
+      "dialogue": null,
+      "warp_fade": "Idle"
+    },
+    "npcs": [
+      {
+        "facing": "Down",
+        "home_x": 5,
+        "home_y": 24,
+        "npc_index": 0,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 1,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 5,
+        "y": 25
+      },
+      {
+        "facing": "Left",
+        "home_x": 15,
+        "home_y": 13,
+        "npc_index": 1,
+        "scripted_path_remaining": 0,
+        "sprite_id": 4,
+        "text_id": 2,
+        "visible": true,
+        "walk_counter": 0,
+        "x": 15,
+        "y": 13
+      }
+    ]
+  },
+  "all_guards_passed": true
+}
