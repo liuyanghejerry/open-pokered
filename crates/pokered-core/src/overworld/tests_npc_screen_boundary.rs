@@ -5,18 +5,16 @@ use pokered_data::{impl_traits::PokemonRedData, maps::MapId};
 
 fn field(direction: Direction, edge: bool) -> OverworldScreen {
     let mut field = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
-    let (dx, dy, frame) = match direction {
-        Direction::Down => (0, if edge { 4 } else { 3 }, 0),
-        Direction::Up => (0, if edge { -4 } else { -3 }, 3),
-        Direction::Left => (if edge { -4 } else { -3 }, 0, 2),
-        Direction::Right => (if edge { 5 } else { 4 }, 0, 1),
+    let (dx, dy, selector) = match direction {
+        Direction::Down => (0, if edge { 4 } else { 3 }, 0xD0),
+        Direction::Up => (0, if edge { -4 } else { -3 }, 0xD1),
+        Direction::Left => (if edge { -4 } else { -3 }, 0, 0xD2),
+        Direction::Right => (if edge { 5 } else { 4 }, 0, 0xD3),
     };
     let x = if direction == Direction::Up { 5 } else { 6 };
     field.state.player.x = (x - dx) as u16;
     let y = if direction == Direction::Up { 25 } else { 24 };
     field.state.player.y = (y - dy) as u16;
-    field.frame_counter = frame;
-    field.frame_counter = field.frame_counter.wrapping_sub(1);
     field.npc_states[1].visible = false;
     let npc = &mut field.npc_states[0];
     npc.x = x as u16;
@@ -26,6 +24,8 @@ fn field(direction: Direction, edge: bool) -> OverworldScreen {
     npc.step_direction = None;
     npc.scripted_path.clear();
     npc.wander_axis = NpcWanderAxis::Any;
+    // Source forced-direction selectors consume a draw without depending on its value.
+    npc.range = selector;
     npc.movement_type = NpcMovementType::Wander;
     npc.visible = true;
     let (sx, sy) = player_movement::direction_delta(direction);

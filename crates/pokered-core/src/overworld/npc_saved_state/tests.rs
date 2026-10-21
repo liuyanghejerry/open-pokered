@@ -105,6 +105,7 @@ fn field() -> OverworldScreen {
     let mut field = OverworldScreen::new(MapId::Route1, None, PokemonRedData);
     field.state.player.x = 6;
     field.state.player.y = 24;
+    field.npc_states[0].range = 0xD0;
     field
         .npc_saved_state
         .prepare(MapId::Route1, &field.npc_states);
@@ -115,7 +116,7 @@ fn field() -> OverworldScreen {
 #[test]
 fn exhausted_displacement_rejects_live_ready_walker_without_replacing_facing_or_delay() {
     let mut field = field();
-    // Frame one chooses Down; (5,25) is known walkable and within the screen.
+    // The source movement selector forces Down; (5,25) is known walkable and within the screen.
     field.npc_saved_state.data.second[1][2] = 0;
     field.update_frame(OverworldInput::none());
     assert_eq!(field.npc_states[0].walk_counter, 0);

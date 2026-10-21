@@ -75,7 +75,11 @@ pub(super) fn coordinate_available(n: &NpcRuntimeState, player: (u16, u16)) -> b
 /// direction probe. This is stricter than sprite availability: an available
 /// actor must reject an outward stride before starting its animation.
 pub(super) fn step_within_screen(n: &NpcRuntimeState, player: (u16, u16)) -> bool {
-    let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(n.walking_direction());
+    step_within_screen_toward(n, player, n.walking_direction())
+}
+
+fn step_within_screen_toward(n: &NpcRuntimeState, player: (u16, u16), direction: Direction) -> bool {
+    let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(direction);
     let x = (n.x as u8).wrapping_add(4).wrapping_sub(player.0 as u8).rotate_left(4);
     // YPixels subtracts four; CanWalkOntoTile adds them back before its probe.
     let y = (n.y as u8).wrapping_add(4).wrapping_sub(player.1 as u8).rotate_left(4);
@@ -86,6 +90,7 @@ fn with_available_npcs(
     npcs: &mut [NpcRuntimeState],
     player: (u16, u16),
     mut saved: Option<&mut crate::save::sprite_data::SpriteData>,
+    validate_after: bool,
     update: impl FnOnce(&mut [NpcRuntimeState]),
 ) {
     // Exclude unavailable objects from this engine pass while preserving
@@ -96,7 +101,7 @@ fn with_available_npcs(
         if npc.visible && !coordinate_available(npc, player) {
             npc.visible = false;
             excluded.push(slot);
-        } else if npc.visible && npc.movement_type == NpcMovementType::Wander
+        } else if validate_after && npc.visible && npc.movement_type == NpcMovementType::Wander
             && npc.walk_counter == 0 && npc.delay_counter == 0 && npc.scripted_path.is_empty() {
             ready_walkers.push(slot);
         }
@@ -138,7 +143,7 @@ pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
     tileset: T,
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
 ) {
-    with_available_npcs(npcs, (player_x, player_y), None, |available| {
+    with_available_npcs(npcs, (player_x, player_y), None, true, |available| {
         dotzuki_engine::overworld::update_npc_movement_with_policy(
             available,
             player_x,
@@ -211,20 +216,88 @@ pub fn stationary_available(npc: &NpcRuntimeState, player: (u16, u16)) -> bool {
     npc.visible && (-4..=5).contains(&dx) && (-4..=4).contains(&dy)
 }
 
-/// Same movement pass, with game-specific stationary facing in the engine hook.
-pub fn update_npc_movement_with_stationary<T: dotzuki_engine::tileset::TilesetTrait>(
+/// Events whose random draws share the ordinary walkers' slot-order stream.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum NpcMovementEvent {
+    Stationary,
+    Finished,
+}
+
+/// Original eight-bit countdown: storing zero waits 256 foreground updates.
+pub(super) fn movement_delay(random: u8) -> u16 {
+    match random & 0x7f { 0 => 256, delay => u16::from(delay) }
+}
+
+struct PokeredMovementHooks<'a, R, F> {
+    saved: &'a mut crate::save::sprite_data::SpriteData,
+    player: (u16, u16),
+    random: R,
+    event: F,
+}
+
+impl<R, F> dotzuki_engine::overworld::NpcMovementHooks for PokeredMovementHooks<'_, R, F>
+where
+    R: FnMut() -> u8,
+    F: FnMut(usize, &mut NpcRuntimeState, NpcMovementEvent, &mut dyn FnMut() -> u8),
+{
+    fn choose_direction(&mut self, _slot: usize, npc: &NpcRuntimeState) -> Option<Direction> {
+        use dotzuki_engine::overworld::NpcWanderAxis;
+        use Direction::{Down, Left, Right, Up};
+        // TryWalking calls Random even when movement byte 2 forces a direction.
+        let random = (self.random)();
+        let index = usize::from(random >> 6);
+        Some(if matches!(npc.range, 0xD0..=0xD3) {
+            [Down, Up, Left, Right][usize::from(npc.range - 0xD0)]
+        } else {
+            match npc.wander_axis {
+                NpcWanderAxis::Any => [Down, Up, Left, Right][index],
+                NpcWanderAxis::Horizontal => [Left, Right, Left, Right][index],
+                NpcWanderAxis::Vertical => [Down, Up, Up, Down][index],
+            }
+        })
+    }
+
+    fn can_start_step(&mut self, slot: usize, npc: &NpcRuntimeState, direction: Direction) -> bool {
+        let (dx, dy) = dotzuki_engine::overworld::player_movement::direction_delta(direction);
+        step_within_screen_toward(npc, self.player, direction)
+            && (slot >= 15 || self.saved.try_displacement(slot + 1, dx, dy))
+    }
+
+    fn step_blocked(&mut self, _slot: usize, npc: &mut NpcRuntimeState) {
+        npc.delay_counter = movement_delay((self.random)());
+        npc.step_direction = None;
+    }
+
+    fn step_finished(&mut self, slot: usize, npc: &mut NpcRuntimeState,
+        _direction: Direction, scripted: bool) {
+        if !scripted && npc.movement_type != NpcMovementType::FixedPath {
+            (self.event)(slot, npc, NpcMovementEvent::Finished, &mut self.random);
+        }
+    }
+
+    fn stationary(&mut self, slot: usize, npc: &mut NpcRuntimeState) {
+        (self.event)(slot, npc, NpcMovementEvent::Stationary, &mut self.random);
+    }
+}
+
+/// Draw directions when ready, failure delays immediately, and successful-step
+/// delays only at completion. All actors consume one stream in sprite order.
+pub(super) fn update_npc_movement_with_rng<T: dotzuki_engine::tileset::TilesetTrait>(
     npcs: &mut [NpcRuntimeState], saved: &mut crate::save::sprite_data::SpriteData,
     player_x: u16, player_y: u16,
     player_dest: Option<(u16,u16)>, map_width_blocks: u8, map_height_blocks: u8,
-    rng_value: u8, blocks: &[u8], tileset: T,
+    blocks: &[u8], tileset: T,
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
-    stationary: impl FnMut(usize, &mut NpcRuntimeState),
+    random: impl FnMut() -> u8,
+    event: impl FnMut(usize, &mut NpcRuntimeState, NpcMovementEvent, &mut dyn FnMut() -> u8),
 ) {
-    with_available_npcs(npcs, (player_x, player_y), Some(saved), |available| {
-        dotzuki_engine::overworld::update_npc_movement_with_policy_and_stationary(available,
+    let mut hooks = PokeredMovementHooks { saved, player: (player_x, player_y), random, event };
+    // Acceptance must run inside each actor's attempt. A post-pass rejection
+    // would consume its failure draw after subsequent actors have already run.
+    with_available_npcs(npcs, (player_x, player_y), None, false, |available| {
+        dotzuki_engine::overworld::update_npc_movement_with_hooks(available,
             player_x, player_y, player_dest, map_width_blocks, map_height_blocks,
-            rng_value, blocks, tileset, provider,
-            dotzuki_engine::overworld::NpcWanderPolicy::Classic, stationary);
+            blocks, tileset, provider, &mut hooks);
     });
 }
 
@@ -323,3 +396,6 @@ mod stationary_tests {
         n.visible=false;advance_stationary_facing(&mut n,false,64,1);assert_eq!(n.delay_counter,1);
     }
 }
+
+#[cfg(test)]
+mod random_schedule_tests;
