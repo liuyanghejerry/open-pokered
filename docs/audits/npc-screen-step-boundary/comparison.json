@@ -1,0 +1,140 @@
+{
+  "scope": "Normal native SRAM/CONTINUE, equal physical tape/readonly calls and all 900 player states. Source boundary rule oracle; not original timing/raster/audio parity.",
+  "all_pass": true,
+  "first_npc_difference_frame": 1109,
+  "before_violations": [
+    {
+      "before": {
+        "stage": "nearby",
+        "frame": 1108,
+        "state": {
+          "screen": "overworld",
+          "map_name": "Route1",
+          "player_x": 5,
+          "player_y": 20,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "dialogue": null,
+          "warp_fade": "Idle"
+        },
+        "npcs": [
+          {
+            "facing": "Up",
+            "home_x": 5,
+            "home_y": 24,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 5,
+            "y": 24
+          },
+          {
+            "facing": "Left",
+            "home_x": 15,
+            "home_y": 13,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 15,
+            "y": 13
+          }
+        ]
+      },
+      "after": {
+        "stage": "nearby",
+        "frame": 1109,
+        "state": {
+          "screen": "overworld",
+          "map_name": "Route1",
+          "player_x": 5,
+          "player_y": 20,
+          "player_facing": "Down",
+          "player_movement_state": "Idle",
+          "dialogue": null,
+          "warp_fade": "Idle"
+        },
+        "npcs": [
+          {
+            "facing": "Down",
+            "home_x": 5,
+            "home_y": 24,
+            "npc_index": 0,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 1,
+            "visible": true,
+            "walk_counter": 16,
+            "x": 5,
+            "y": 24
+          },
+          {
+            "facing": "Left",
+            "home_x": 15,
+            "home_y": 13,
+            "npc_index": 1,
+            "scripted_path_remaining": 0,
+            "sprite_id": 4,
+            "text_id": 2,
+            "visible": true,
+            "walk_counter": 0,
+            "x": 15,
+            "y": 13
+          }
+        ]
+      }
+    }
+  ],
+  "after_violations": [],
+  "paired_png_differences": [
+    "nearby-280.png",
+    "nearby-281.png",
+    "nearby-282.png",
+    "nearby-283.png",
+    "nearby-284.png",
+    "nearby-285.png",
+    "nearby-286.png",
+    "nearby-287.png",
+    "nearby-288.png",
+    "nearby-289.png",
+    "nearby-290.png",
+    "nearby-291.png",
+    "nearby-292.png",
+    "nearby-293.png",
+    "nearby-294.png",
+    "nearby-295.png",
+    "nearby-296.png",
+    "nearby-297.png",
+    "nearby-298.png",
+    "nearby-299.png",
+    "nearby-300.png",
+    "nearby-301.png",
+    "nearby-302.png",
+    "nearby-303.png",
+    "nearby-304.png",
+    "nearby-305.png",
+    "nearby-306.png",
+    "nearby-307.png",
+    "nearby-308.png",
+    "nearby-309.png",
+    "nearby-511.png",
+    "nearby-639.png"
+  ],
+  "heads": [
+    "2b70fa73fe7a17c9b3bd9a652504d82ad452dec5",
+    "3f325c4daf2852ba67828bbe03975014fec9ab5f"
+  ],
+  "binaries": [
+    "a374c209765c22bffd3c9675f2445c560e3b4def1cac870ef04b45d6764ff062",
+    "8004f8aac789ed51400abec00f3b03c9b3de69a39a90a970925d111f46b3b532"
+  ],
+  "fixture_sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f",
+  "identical_commands_except_capture_paths": true,
+  "all_player_states_equal": true,
+  "all_guards_pass": true
+}

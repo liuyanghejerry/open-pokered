@@ -1,0 +1,40 @@
+{
+  "base": "2b70fa73fe7a17c9b3bd9a652504d82ad452dec5",
+  "code_head": "3f325c4daf2852ba67828bbe03975014fec9ab5f",
+  "base_binary_sha256": "a374c209765c22bffd3c9675f2445c560e3b4def1cac870ef04b45d6764ff062",
+  "fixed_binary_sha256": "8004f8aac789ed51400abec00f3b03c9b3de69a39a90a970925d111f46b3b532",
+  "fixture_sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f",
+  "selected_frame": 1113,
+  "raw_pngs_unmodified": true,
+  "pixel_difference": {
+    "pixels": 136,
+    "bbox": [
+      65,
+      125,
+      79,
+      140
+    ]
+  },
+  "normal_boot_evidence": "Both native runs: ordinary SRAM/CONTINUE + physical keys + readonly observations; source/HEAD/binary frozen. No warp/setters/snapshot/restore/dialogue skipping.",
+  "original_logic_probes": "Unmodified original ROM, controlled RAM/register inputs with a loaded state, twice for each of eight cases. Unit-level source oracle only; not natural gameplay/timing/raster evidence.",
+  "original_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "original_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "movement_asm_sha256": "87939b64f3c4edacc5651d1f22b5a677967184bf19fef5879f2c274cf7b7596a",
+  "validation": {
+    "core_passed": 3610,
+    "core_doc_ignored": 1,
+    "app_passed": 386,
+    "app_ignored": 38,
+    "public_replay_observations": 900,
+    "public_replay_matches_internal_capture": true
+  },
+  "files": {
+    "docs/audits/npc-screen-step-boundary/replay.py": "ebc77f7ff13fe5628f5253580c3ae0cf0816aa9bb13b30de76591c29187fc625",
+    "docs/audits/npc-screen-step-boundary/base-native.json.gz": "0927977f62240c5984f508463a911400c2073a77aa9411f33c90a88ab6d4c8c6",
+    "docs/audits/npc-screen-step-boundary/comparison.json": "6bc27ad9a3804a5051fe80ed3006362122838c43953b47c393af9934110e751d",
+    "docs/audits/npc-screen-step-boundary/original-controlled-probes.json": "ef55cfcc9e1fa90f7c08a1080f6c3430b4e5d9ab93e417337b8d3aa82ee06b1f",
+    "docs/audits/npc-screen-step-boundary/fixed-native.json.gz": "fd59fa4d279ca55ce20db8fe63b48a4b0d7753ca9f0de935cfb9914a6d89348f",
+    "docs/screenshots/npc-screen-step-boundary/before.png": "357761ff9d3df51081d9d7bd210c17eb36995d529591ddd83c27e6000b2f641c",
+    "docs/screenshots/npc-screen-step-boundary/after.png": "99a796a875b4df78493b552346efa987c9ef6bf61465aaec25b4b7c6ed8ec75d"
+  }
+}

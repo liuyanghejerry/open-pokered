@@ -1,0 +1,198 @@
+{
+  "scope": "Original CanWalkOntoTile called from normal NPC update; controlled tile/vector/pixel inputs and other sprite image indices disabled to isolate screen-bound checks; ROM unchanged. Logic probe, not rendered natural-wander PASS.",
+  "rom_sha1": "ea9bcae617fdf159b045185467ae58b2e4a48b9a",
+  "cases": [
+    {
+      "label": "left_inside",
+      "expected_allowed": true,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 16,
+          "y": 60,
+          "dx": -1,
+          "dy": 0
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": true,
+          "status": 1,
+          "vectors": [
+            0,
+            1
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "left_edge",
+      "expected_allowed": false,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 0,
+          "y": 60,
+          "dx": -1,
+          "dy": 0
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": false,
+          "status": 2,
+          "vectors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "right_inside",
+      "expected_allowed": true,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 128,
+          "y": 60,
+          "dx": 1,
+          "dy": 0
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": true,
+          "status": 1,
+          "vectors": [
+            0,
+            1
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "right_edge",
+      "expected_allowed": false,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 144,
+          "y": 60,
+          "dx": 1,
+          "dy": 0
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": false,
+          "status": 2,
+          "vectors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "up_inside",
+      "expected_allowed": true,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 64,
+          "y": 12,
+          "dx": 0,
+          "dy": -1
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": true,
+          "status": 1,
+          "vectors": [
+            0,
+            1
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "up_edge",
+      "expected_allowed": false,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 64,
+          "y": 252,
+          "dx": 0,
+          "dy": -1
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": false,
+          "status": 2,
+          "vectors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "down_inside",
+      "expected_allowed": true,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 64,
+          "y": 108,
+          "dx": 0,
+          "dy": 1
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": true,
+          "status": 1,
+          "vectors": [
+            0,
+            1
+          ]
+        }
+      ],
+      "repeat_exact": true
+    },
+    {
+      "label": "down_edge",
+      "expected_allowed": false,
+      "events": [
+        {
+          "routine": "CanWalkOntoTile",
+          "tile": 0,
+          "x": 64,
+          "y": 124,
+          "dx": 0,
+          "dy": 1
+        },
+        {
+          "routine": "TryWalking.afterCanWalk",
+          "allowed": false,
+          "status": 2,
+          "vectors": [
+            0,
+            0
+          ]
+        }
+      ],
+      "repeat_exact": true
+    }
+  ]
+}
