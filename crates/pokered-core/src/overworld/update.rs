@@ -2786,11 +2786,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if self.map_data.is_some() { self.hasten_followed_npc(); }
         self.npc_saved_state.prepare(self.state.current_map, &self.npc_states);
         if let Some(ref map) = self.map_data {
-            let rng_value = (self
-                .frame_counter
-                .wrapping_mul(1103515245)
-                .wrapping_add(12345)
-                >> 16) as u8;
             let player_dest = if let Some(jump) = self.ledge_jump {
                 Some(jump.landing_position())
             } else if let Some(step) = self.field_move_step {
@@ -2867,7 +2862,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     }
                 }
             }
-            npc_movement::update_npc_movement_with_stationary(
+            npc_movement::update_npc_movement_with_rng(
                 &mut self.npc_states,
                 &mut self.npc_saved_state.data,
                 self.state.player.x,
@@ -2875,13 +2870,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 player_dest,
                 map.width,
                 map.height,
-                rng_value,
                 &map.blocks,
                 map.tileset,
                 &collision::PokemonCollisionProvider::new(self.state.current_map, map.tileset),
-                |slot, n| {
-                    if (self.link_opponent.is_some() && n.text_id == 1)
-                        || frozen_slots.contains(&slot)
+                || {
+                    use rand::Rng;
+                    self.rng.gen()
+                },
+                |slot, n, event, random| {
+                    if self.link_opponent.is_some() && n.text_id == 1 { return; }
+                    if event == npc_movement::NpcMovementEvent::Finished {
+                        n.delay_counter = npc_movement::movement_delay(random());
+                        return;
+                    }
+                    if frozen_slots.contains(&slot)
                         || !npc_movement::stationary_available(n, (self.state.player.x, self.state.player.y)) {
                         return;
                     }
@@ -2897,8 +2899,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             | script_bridge::ScriptEffect::FollowNpc { .. }));
                     if !stationary_field_tick || controlled_slot == Some(slot) { return; }
                     npc_movement::advance_stationary_facing_with_rng(n, self.state.walk_counter != 0, || {
-                        use rand::Rng;
-                        (self.rng.gen(), self.rng.gen())
+                        (random(), random())
                     });
                 },
             );

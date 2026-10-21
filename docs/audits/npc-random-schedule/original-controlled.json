@@ -1,0 +1,389 @@
+{
+  "scope": "Controlled original-ROM component probes, NOT normal-startup gameplay evidence.\nLoad a component state and construct NPC/register inputs; instrument original\nRandom call sites without replacing Random or its output. ROM bytes unchanged.\n",
+  "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "rom_unchanged": true,
+  "cases": [
+    {
+      "mode": "ordinary_success",
+      "repeat_exact": true,
+      "events": [
+        {
+          "event": "constructed_ready",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "ready_random",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "ready_random_return",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_input",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_return",
+          "carry": false,
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "finish_random",
+          "state": {
+            "status": 3,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              25
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 14,
+            "frame": 32
+          }
+        },
+        {
+          "event": "finish_random_return",
+          "state": {
+            "status": 3,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              25
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 18,
+            "frame": 32
+          }
+        },
+        {
+          "event": "walk_return",
+          "state": {
+            "status": 2,
+            "walk_counter": 0,
+            "delay": 18,
+            "map_yx": [
+              34,
+              25
+            ],
+            "vectors_yx": [
+              0,
+              0
+            ],
+            "random_add": 18,
+            "frame": 32
+          }
+        }
+      ]
+    },
+    {
+      "mode": "ordinary_failure",
+      "repeat_exact": true,
+      "events": [
+        {
+          "event": "constructed_ready",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "ready_random",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "ready_random_return",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_input",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "failed_random",
+          "state": {
+            "status": 2,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              0
+            ],
+            "random_add": 218,
+            "frame": 0
+          }
+        },
+        {
+          "event": "failed_random_return",
+          "state": {
+            "status": 2,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              0
+            ],
+            "random_add": 230,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_return",
+          "carry": true,
+          "state": {
+            "status": 2,
+            "walk_counter": 0,
+            "delay": 102,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              0
+            ],
+            "random_add": 230,
+            "frame": 0
+          }
+        }
+      ]
+    },
+    {
+      "mode": "scripted_success",
+      "repeat_exact": true,
+      "events": [
+        {
+          "event": "constructed_ready",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "ready_direction_join",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              1,
+              0
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_input",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "can_walk_return",
+          "carry": false,
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              24
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 213,
+            "frame": 0
+          }
+        },
+        {
+          "event": "script_return",
+          "state": {
+            "status": 1,
+            "walk_counter": 0,
+            "delay": 13,
+            "map_yx": [
+              34,
+              25
+            ],
+            "vectors_yx": [
+              0,
+              1
+            ],
+            "random_add": 9,
+            "frame": 32
+          }
+        }
+      ]
+    }
+  ]
+}

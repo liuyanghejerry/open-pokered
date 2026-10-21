@@ -1,0 +1,48 @@
+{
+  "all_pass": true,
+  "same_fixture": "ef25d009cb4905b46a4224977c498082ababbd391d03c39cbd1aa2675069314e",
+  "same_physical_tape_and_observation_schedule": true,
+  "player_and_frame_schedule_equal": true,
+  "observations_each": 513,
+  "before_head": "052a538e092b43a812b9a53ac945bdc5f5bbb859",
+  "after_head": "c0dfeba7d5f2e54207e4a369a8fd7bf314377cba",
+  "before_binary": "94e3d3b9eee985bcee829034280293c083f25d719754d3e923c28e138feedb29",
+  "after_binary": "79f789f7be9bc417b45584443cea652fc664686b1ba8bedbb284d26ca8d5c7ed",
+  "first_npc_difference": [
+    142,
+    750,
+    {
+      "facing": "Down",
+      "home_x": 5,
+      "home_y": 24,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 16,
+      "x": 5,
+      "y": 24
+    },
+    {
+      "facing": "Up",
+      "home_x": 5,
+      "home_y": 24,
+      "npc_index": 0,
+      "scripted_path_remaining": 0,
+      "sprite_id": 4,
+      "text_id": 1,
+      "visible": true,
+      "walk_counter": 0,
+      "x": 5,
+      "y": 24
+    }
+  ],
+  "different_npc_observations": 212,
+  "different_whole_screenshots_offsets": [
+    256
+  ],
+  "selected_screenshot_offset": 256,
+  "all_source_head_binary_guards_pass": true,
+  "scope": "Native normal startup/input pairing; controlled component/original traces establish RNG call scheduling separately. No original/native seed, DIV, raster or cycle parity claim."
+}

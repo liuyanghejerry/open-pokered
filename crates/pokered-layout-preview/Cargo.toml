@@ -9,10 +9,10 @@ edition.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
-dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
-dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
-dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "e533a3d23a0cdbed1524a1ac91184733da4a6f7e" }
+dotzuki-renderer = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "4fab4ae33fdf11d35fbc8605fd73aab09452bf33" }
+dotzuki-engine = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "4fab4ae33fdf11d35fbc8605fd73aab09452bf33" }
+dotzuki-ui = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "4fab4ae33fdf11d35fbc8605fd73aab09452bf33" }
+dotzuki-engine-dsl = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "4fab4ae33fdf11d35fbc8605fd73aab09452bf33" }
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
