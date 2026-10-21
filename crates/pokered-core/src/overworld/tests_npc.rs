@@ -393,6 +393,7 @@ fn make_trainer_extra() -> PokemonNpcData {
         trainer_class: 9,
         trainer_set: 1,
         item_id: 0,
+        movement_byte2: None,
         end_battle_text: None,
     }
 }
@@ -403,6 +404,7 @@ fn make_item_extra(item_id: u8) -> PokemonNpcData {
         trainer_class: 0,
         trainer_set: 0,
         item_id,
+        movement_byte2: None,
         end_battle_text: None,
     }
 }
@@ -413,6 +415,7 @@ fn no_extra() -> PokemonNpcData {
         trainer_class: 0,
         trainer_set: 0,
         item_id: 0,
+        movement_byte2: None,
         end_battle_text: None,
     }
 }
@@ -626,6 +629,7 @@ fn header_matches_kth_trainer_npc() {
             trainer_class: 0,
             trainer_set: 0,
             item_id: 0,
+            movement_byte2: None,
             end_battle_text: None,
         },
         make_trainer_extra(),
@@ -2197,5 +2201,69 @@ fn fuji_rescue_arrives_facing_up_from_each_legal_approach() {
         assert_eq!((field.state.player.x,field.state.player.y),(3,7));
         assert_eq!(field.state.player.facing,Direction::Up,"approach ({x},{y}) {facing:?}");
         assert!(field.unified_flags().get_flag("EVENT_RESCUED_MR_FUJI"));
+    }
+}
+
+/// Reference object-event rows verify both shipping and compatibility loaders.
+/// This is a data/runtime integration test; RNG is supplied explicitly below.
+#[test]
+fn original_npc_motion_selectors_reach_both_runtime_loaders() {
+    use pokered_data::map_data_loader::{get_map_json, resolve_map_id};
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("original_npc_motion.json")).unwrap();
+    let mut count = 0;
+    for (name, rows) in oracle["maps"].as_object().unwrap() {
+        let id = resolve_map_id(name).unwrap();
+        let json = get_map_json(id).unwrap();
+        let (map, extra) = super::map_data_loading::load_full_map_data_concrete(id);
+        let live = super::screen::build_npc_runtime_states(&map.npcs, &extra, &[]);
+        let compatibility = load_map_npcs(get_map_npcs(id));
+        assert_eq!(live.len(), rows.as_array().unwrap().len(), "{name}");
+        for (index, row) in rows.as_array().unwrap().iter().enumerate() {
+            let selector = row[3].as_u64().unwrap() as u8;
+            let movement = if row[2].as_bool().unwrap() { NpcMovementType::Stationary } else { NpcMovementType::Wander };
+            assert_eq!(json.npcs[index].movement_byte2, Some(selector), "{name}/{index}");
+            assert_eq!(map.npcs[index].range, json.npcs[index].range, "sight range {name}/{index}");
+            for npc in [&live[index], &compatibility[index]] {
+                assert_eq!((npc.x, npc.y), (row[0].as_u64().unwrap() as u16, row[1].as_u64().unwrap() as u16), "{name}/{index}");
+                assert_eq!(npc.range, selector, "{name}/{index}");
+                assert_eq!(npc.movement_type, movement, "{name}/{index}");
+                assert_eq!(npc.wander_axis, convert_wander_axis(selector), "{name}/{index}");
+            }
+            count += 1;
+        }
+    }
+    assert_eq!(count, 918);
+}
+
+#[test]
+fn original_none_and_boulder_turn_without_translating_and_trainers_restore_fixed_facing() {
+    use pokered_data::impl_traits::PokemonRedData;
+    for (id, selector) in [(MapId::Museum2F, 255), (MapId::VictoryRoad3F, 16), (MapId::Route10, 209)] {
+        let field = OverworldScreen::new(id, None, PokemonRedData);
+        let npc = field.npc_states.iter().find(|n| n.range == selector).unwrap();
+        for (random, direction) in [(0, Direction::Down), (64, Direction::Up), (128, Direction::Left), (192, Direction::Right)] {
+            let mut npc = npc.clone();
+            npc.visible = true;
+            npc.facing = Direction::Left; // e.g. after talking to the player
+            npc.delay_counter = 0;
+            let position = (npc.x, npc.y);
+            advance_stationary_facing(&mut npc, false, random, 19);
+            assert_eq!(npc.facing, if selector == 209 { Direction::Up } else { direction });
+            assert_eq!((npc.x, npc.y), position);
+            assert_eq!(npc.walk_counter, 0);
+            assert_eq!(npc.delay_counter, 19);
+        }
+    }
+}
+
+#[test]
+fn absent_original_selector_preserves_legacy_map_motion() {
+    for (movement, range, facing) in [
+        (NpcMovementType::Stationary, 0, Direction::Left),
+        (NpcMovementType::Stationary, 1, Direction::Down),
+        (NpcMovementType::Stationary, 2, Direction::Right),
+        (NpcMovementType::Wander, 2, Direction::Left),
+    ] {
+        assert_eq!(runtime_motion_selector(movement, range, facing, None), stationary_range(movement, range, facing));
     }
 }

@@ -63,6 +63,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 16,
       "range": 0,
       "textId": 1,
       "isTrainer": false
@@ -74,6 +75,7 @@
       "y": 15,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 16,
       "range": 0,
       "textId": 2,
       "isTrainer": false
@@ -85,6 +87,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 16,
       "range": 0,
       "textId": 3,
       "isTrainer": false
@@ -96,6 +99,7 @@
       "y": 14,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 16,
       "range": 0,
       "textId": 4,
       "isTrainer": false
@@ -107,6 +111,7 @@
       "y": 6,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 5,
       "isTrainer": false
@@ -118,6 +123,7 @@
       "y": 6,
       "movement": "Stationary",
       "facing": "Down",
+      "movementByte2": 255,
       "range": 255,
       "textId": 6,
       "isTrainer": false

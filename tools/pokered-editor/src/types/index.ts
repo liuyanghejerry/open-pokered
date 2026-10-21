@@ -39,6 +39,7 @@ export interface NpcJson {
   movement: string
   facing: string
   range: number
+  movementByte2?: number
   textId: number
   isTrainer: boolean
   trainerClass?: string

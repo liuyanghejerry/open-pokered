@@ -10,6 +10,33 @@ use alloc::rc::Rc;
 mod cache_tests {
     use super::*;
     #[test]
+    fn embedded_npc_motion_selectors_match_json_and_survive_serialization() {
+        let mut count = 0;
+        for (name, source) in MAP_TABLE {
+            let json: MapJson = serde_json::from_str(&std::fs::read_to_string(
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("maps").join(name).join("map.json"),
+            ).unwrap()).unwrap();
+            let owned = MapJson::from(*source);
+            assert_eq!(owned.npcs.len(), json.npcs.len(), "{name}");
+            for (actual, expected) in owned.npcs.iter().zip(&json.npcs) {
+                assert_eq!(actual.movement_byte2, expected.movement_byte2, "{name}");
+                assert_eq!(actual.range, expected.range, "{name}");
+                let encoded = serde_json::to_string(actual).unwrap();
+                let decoded: crate::map_json::NpcJson = serde_json::from_str(&encoded).unwrap();
+                assert_eq!(decoded.movement_byte2, expected.movement_byte2, "{name}");
+                let mut legacy = serde_json::to_value(actual).unwrap();
+                legacy.as_object_mut().unwrap().remove("movementByte2");
+                let legacy: crate::map_json::NpcJson = serde_json::from_value(legacy).unwrap();
+                assert_eq!(legacy.movement_byte2, None);
+                assert_eq!(legacy.range, expected.range);
+                count += 1;
+            }
+        }
+        assert_eq!(count, 918);
+    }
+
+    #[test]
     fn visiting_every_map_releases_evicted_metadata_and_preserves_live_handles() {
         let mut cache = EmbeddedMapCache::default();
         let first = cache.get(MAP_TABLE[0].0).unwrap();

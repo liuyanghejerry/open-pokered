@@ -1,0 +1,98 @@
+{
+  "scope": "Native ordinary boot/CONTINUE and physical neutral input, offline SRAM Route10(3,59), seed42. Functional idle facing check, not an animation parity PASS or fresh playthrough.",
+  "base_binary_source": "efff758f (no crates/scripts/Cargo difference against master506f; master adds audit documents only)",
+  "frame": 2000,
+  "route10": {
+    "before": {
+      "binary_sha256": "567ff47d0fde3be1b8ebad487b7c2d17dffa94d176049f8650b4b60b15008bd0",
+      "fixture_sha256": "e3aef3e8c2cee1f9eb2658bfd45fbc92db2cd62b778582fd632206131021b6ef",
+      "map_sha256": "ea9dc656e40a0f0380f797404609b869b023599379bf508ace425b022ed5f709",
+      "hiker_facings": [
+        "Right",
+        "Right",
+        "Right",
+        "Right",
+        "Right",
+        "Right",
+        "Left",
+        "Left",
+        "Left",
+        "Left",
+        "Left",
+        "Right",
+        "Right",
+        "Right",
+        "Left",
+        "Left",
+        "Left"
+      ],
+      "frames": [
+        2000,
+        2032,
+        2064,
+        2096,
+        2128,
+        2160,
+        2192,
+        2224,
+        2256,
+        2288,
+        2320,
+        2352,
+        2384,
+        2416,
+        2448,
+        2480,
+        2512
+      ]
+    },
+    "after": {
+      "binary_sha256": "2379d0934fa74c7c79dd785629a71d0e684f2230d563566827f87c1dd6089411",
+      "fixture_sha256": "e3aef3e8c2cee1f9eb2658bfd45fbc92db2cd62b778582fd632206131021b6ef",
+      "map_sha256": "07704f3b5b8b43774d82fd3eb573eaa33dc7aa5261c37b5aa986b820c3fdd5dd",
+      "hiker_facings": [
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up",
+        "Up"
+      ],
+      "frames": [
+        2000,
+        2032,
+        2064,
+        2096,
+        2128,
+        2160,
+        2192,
+        2224,
+        2256,
+        2288,
+        2320,
+        2352,
+        2384,
+        2416,
+        2448,
+        2480,
+        2512
+      ],
+      "final_build_capture": true
+    }
+  },
+  "museum_control": {
+    "17_absolute_frame_npc_state_and_rgb_captures_identical": true
+  },
+  "correction": "All251 NONE objects already had range255 and random facing. Actual motion-selector changes:210 stationary fixed-facing objects withrange2 (208 automatic trainers plus Nugget Bridge/Fossil scripted trainers), and21 boulders. Two link opponents were already Stationary withrange254 (random-facing alias); newselector0 preserves behavior, not a missing movement-class fix."
+}

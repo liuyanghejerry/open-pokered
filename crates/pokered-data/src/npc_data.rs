@@ -39,6 +39,7 @@ pub struct NpcEntry {
     pub movement: NpcMovement,
     pub facing: NpcFacing,
     pub range: u8,
+    pub movement_byte2: Option<u8>,
     pub text_id: u8,
     pub is_trainer: bool,
     pub trainer_class: u8,
@@ -130,6 +131,7 @@ fn convert_npc(npc: &NpcJson) -> NpcEntry {
         movement: parse_movement(&npc.movement),
         facing: parse_facing(&npc.facing),
         range: npc.range,
+        movement_byte2: npc.movement_byte2,
         text_id: npc.text_id,
         is_trainer: npc.is_trainer,
         trainer_class: npc

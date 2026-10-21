@@ -55,6 +55,7 @@ fn make_npc(
         trainer_class,
         trainer_set: if is_trainer { 1 } else { 0 },
         item_id,
+        movement_byte2: None,
         end_battle_text: None,
     };
     (npc, data)

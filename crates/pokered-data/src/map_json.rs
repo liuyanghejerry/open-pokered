@@ -103,6 +103,9 @@ pub struct NpcJson {
     /// Facing direction: "Down", "Up", "Left", "Right"
     pub facing: String,
     pub range: u8,
+    /// Original direction/axis selector, independent of trainer sight range.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub movement_byte2: Option<u8>,
     pub text_id: u8,
     pub is_trainer: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -255,6 +258,7 @@ pub struct StaticNpcJson {
     pub movement: &'static str,
     pub facing: &'static str,
     pub range: u8,
+    pub movement_byte2: Option<u8>,
     pub text_id: u8,
     pub is_trainer: bool,
     pub trainer_class: Option<&'static str>,
@@ -388,6 +392,7 @@ impl From<&StaticNpcJson> for NpcJson {
             movement: s.movement.to_string(),
             facing: s.facing.to_string(),
             range: s.range,
+            movement_byte2: s.movement_byte2,
             text_id: s.text_id,
             is_trainer: s.is_trainer,
             trainer_class: s.trainer_class.map(str::to_string),

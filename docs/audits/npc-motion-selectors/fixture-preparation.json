@@ -1,0 +1,21 @@
+{
+  "base": "docs/audits/name-rater-flow/fixture.sav",
+  "changed_offsets": {
+    "map": "0x260a",
+    "y": "0x260d",
+    "x": "0x260e",
+    "y_parity": "0x260f",
+    "x_parity": "0x2610"
+  },
+  "checksum": "bank1 complement of [0x2598,0x3523), written0x3523",
+  "route10": {
+    "map": 21,
+    "x": 3,
+    "y": 59
+  },
+  "museum": {
+    "map": 53,
+    "x": 11,
+    "y": 7
+  }
+}

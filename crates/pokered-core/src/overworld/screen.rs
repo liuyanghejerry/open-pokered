@@ -52,6 +52,8 @@ pub struct PokemonNpcData {
     pub trainer_class: u8,
     pub trainer_set: u8,
     pub item_id: u8,
+    #[serde(default)]
+    pub movement_byte2: Option<u8>,
     /// One-shot victory quip shown after this trainer is beaten in a sight or
     /// talk battle (original per-map `TrainerHeader` `TextEndBattle`). `None`
     /// for non-trainers or trainers with no converted text. Sight/talk battles
@@ -3274,13 +3276,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
 pub(crate) fn build_npc_runtime_states(
     npcs: &[NpcDefinition],
-    _npc_pokemon_data: &[PokemonNpcData],
+    npc_pokemon_data: &[PokemonNpcData],
     hidden_npc_ids: &[u8],
 ) -> Vec<crate::overworld::npc_movement::NpcRuntimeState> {
     npcs.iter()
         .enumerate()
         .map(|(i, npc)| {
             let visible = !hidden_npc_ids.contains(&npc.text_id);
+            let original_motion = npc_pokemon_data.get(i).and_then(|data| data.movement_byte2);
             crate::overworld::npc_movement::NpcRuntimeState {
                 npc_index: i as u8,
                 sprite_id: npc.sprite_id,
@@ -3292,8 +3295,8 @@ pub(crate) fn build_npc_runtime_states(
                 step_direction: None,
                 scripted_frame: None,
                 movement_type: npc.movement,
-                wander_axis: crate::overworld::npc_movement::convert_wander_axis(npc.range),
-                range: crate::overworld::npc_movement::stationary_range(npc.movement, npc.range, npc.facing),
+                wander_axis: crate::overworld::npc_movement::convert_wander_axis(original_motion.unwrap_or(npc.range)),
+                range: crate::overworld::npc_movement::runtime_motion_selector(npc.movement, npc.range, npc.facing, original_motion),
                 walk_counter: 0,
                 delay_counter: 0,
                 text_id: npc.text_id,

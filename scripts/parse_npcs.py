@@ -138,7 +138,14 @@ DIRECTION_MAP = {
     'UP': ('Stationary', 'Up', 0),
     'LEFT': ('Stationary', 'Left', 0),
     'RIGHT': ('Stationary', 'Right', 0),
-    'NONE': ('Stationary', 'Down', 0),    # NONE = faces down, stationary
+    'BOULDER_MOVEMENT_BYTE_2': ('Stationary', 'Down', 0),
+    'NONE': ('Stationary', 'Down', 0),    # initial facing; NONE can turn randomly
+}
+
+MOVEMENT_BYTE2 = {
+    'ANY_DIR': 0, 'UP_DOWN': 1, 'LEFT_RIGHT': 2,
+    'BOULDER_MOVEMENT_BYTE_2': 0x10,
+    'DOWN': 0xD0, 'UP': 0xD1, 'LEFT': 0xD2, 'RIGHT': 0xD3, 'NONE': 0xFF,
 }
 
 def parse_object_event(args, index):
@@ -159,12 +166,16 @@ def parse_object_event(args, index):
     else:
         mv_type, facing, range_code = DIRECTION_MAP.get(dir_const, ('Stationary', 'Down', 0))
 
+    if walk_stay == 'STAY':
+        mv_type = 'Stationary'
+
     npc = {
         'x': x, 'y': y,
         'sprite': sprite_rust,
         'movement': mv_type,
         'facing': facing,
         'range': range_code,
+        'movement_byte2': MOVEMENT_BYTE2[dir_const],
         'text_id': index,
         'is_trainer': False,
         'trainer_class': 'Nobody',
@@ -331,6 +342,7 @@ def npc_to_rust(npc):
         f"    NpcEntry {{\n"
         f"        sprite_id: 0x{sprite_u8:02X}, x: {npc['x']}, y: {npc['y']},\n"
         f"        movement: NpcMovement({mv}), facing: NpcFacing({face}),\n"
+        f"        movement_byte2: Some({npc['movement_byte2']}),\n"
         f"        range: {npc['range']}, text_id: {npc['text_id']},\n"
         f"        is_trainer: {'true' if npc['is_trainer'] else 'false'},\n"
         f"        trainer_class: {trainer_u8}, trainer_set: {npc['trainer_set']},\n"
@@ -452,6 +464,7 @@ def write_npc_mod(parts, all_maps, out_dir):
     lines.append("    pub movement: NpcMovement,\n")
     lines.append("    pub facing: NpcFacing,\n")
     lines.append("    pub range: u8,\n")
+    lines.append("    pub movement_byte2: Option<u8>,\n")
     lines.append("    pub text_id: u8,\n")
     lines.append("    pub is_trainer: bool,\n")
     lines.append("    pub trainer_class: u8,\n")
