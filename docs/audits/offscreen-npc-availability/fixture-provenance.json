@@ -1,0 +1,24 @@
+{
+  "scope": "Offline32KiB SRAM construction for normalCONTINUE; Route1(5,19), one physical step to the visibility boundary. Repel is volatile WRAM, so it is not fabricated in SRAM. No runtime setters or snapshot loading.",
+  "fixture": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1236-offscreen-fixture.sav",
+  "sha256": "34f90faf39453d82a8bbc8c47eb3534026c419a9c0a5a2ff52613f458d77902f",
+  "changes": {
+    "wCurMap": {
+      "offset": 9738,
+      "before": 12,
+      "after": 12
+    },
+    "wYCoord": {
+      "offset": 9741,
+      "before": 2,
+      "after": 19
+    },
+    "wXCoord": {
+      "offset": 9742,
+      "before": 2,
+      "after": 5
+    }
+  },
+  "checksum_offset": 13603,
+  "source": "Original save section symbols and Route1 index verified in audit1235 fixture generator."
+}

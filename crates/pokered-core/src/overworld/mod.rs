@@ -120,3 +120,6 @@ pub use screen::*;
 mod tests_silph_departure;
 
 mod pokedex_rating;
+
+#[cfg(test)]
+mod tests_npc_availability;

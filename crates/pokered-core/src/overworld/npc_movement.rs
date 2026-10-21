@@ -44,6 +44,53 @@ pub fn npc_in_front_of_player<'a, M: dotzuki_engine::map::MapTrait,
     aligned_at(tx, ty)
 }
 
+pub(super) fn axis_available(player: u8, sprite: u8, span: u8) -> bool {
+    sprite == player || (sprite > player && sprite <= player.wrapping_add(span))
+}
+
+/// CheckSpriteAvailability's raw-byte rectangle, shared by image production
+/// and motion. Engine coordinates retain the origin while a stride is active;
+/// source sprite coordinates already name its destination. Scripted paths
+/// bypass this rectangle, as movement byte1 values below WALK do originally.
+pub(super) fn coordinate_available(n: &NpcRuntimeState, player: (u16, u16)) -> bool {
+    if n.movement_type == super::NpcMovementType::FixedPath || !n.scripted_path.is_empty() {
+        return true;
+    }
+    let (dx, dy) = if n.walk_counter > 0 {
+        match n.walking_direction() {
+            Direction::Down => (0, 1),
+            Direction::Up => (0, -1),
+            Direction::Left => (-1, 0),
+            Direction::Right => (1, 0),
+        }
+    } else {
+        (0, 0)
+    };
+    let x = (n.x as u8).wrapping_add(4).wrapping_add(dx as u8);
+    let y = (n.y as u8).wrapping_add(4).wrapping_add(dy as u8);
+    axis_available(player.0 as u8, x, 9) && axis_available(player.1 as u8, y, 8)
+}
+
+fn with_available_npcs(
+    npcs: &mut [NpcRuntimeState],
+    player: (u16, u16),
+    update: impl FnOnce(&mut [NpcRuntimeState]),
+) {
+    // Exclude unavailable objects from this engine pass while preserving
+    // raw slot indices. Restore persisted visibility after movement returns.
+    let mut excluded = Vec::new();
+    for (slot, npc) in npcs.iter_mut().enumerate() {
+        if npc.visible && !coordinate_available(npc, player) {
+            npc.visible = false;
+            excluded.push(slot);
+        }
+    }
+    update(npcs);
+    for slot in excluded {
+        npcs[slot].visible = true;
+    }
+}
+
 /// Use the original four direction intervals, axis remapping and zero-delay
 /// wrap without changing the generic engine's default wandering policy.
 pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
@@ -58,19 +105,21 @@ pub fn update_npc_movement<T: dotzuki_engine::tileset::TilesetTrait>(
     tileset: T,
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
 ) {
-    dotzuki_engine::overworld::update_npc_movement_with_policy(
-        npcs,
-        player_x,
-        player_y,
-        player_dest,
-        map_width_blocks,
-        map_height_blocks,
-        rng_value,
-        blocks,
-        tileset,
-        provider,
-        dotzuki_engine::overworld::NpcWanderPolicy::Classic,
-    );
+    with_available_npcs(npcs, (player_x, player_y), |available| {
+        dotzuki_engine::overworld::update_npc_movement_with_policy(
+            available,
+            player_x,
+            player_y,
+            player_dest,
+            map_width_blocks,
+            map_height_blocks,
+            rng_value,
+            blocks,
+            tileset,
+            provider,
+            dotzuki_engine::overworld::NpcWanderPolicy::Classic,
+        );
+    });
 }
 
 /// STAY reaches TryWalking's direction selection but cannot translate.
@@ -137,10 +186,12 @@ pub fn update_npc_movement_with_stationary<T: dotzuki_engine::tileset::TilesetTr
     provider: &impl dotzuki_engine::overworld::CollisionProvider<T>,
     stationary: impl FnMut(usize, &mut NpcRuntimeState),
 ) {
-    dotzuki_engine::overworld::update_npc_movement_with_policy_and_stationary(npcs,
-        player_x, player_y, player_dest, map_width_blocks, map_height_blocks,
-        rng_value, blocks, tileset, provider,
-        dotzuki_engine::overworld::NpcWanderPolicy::Classic, stationary);
+    with_available_npcs(npcs, (player_x, player_y), |available| {
+        dotzuki_engine::overworld::update_npc_movement_with_policy_and_stationary(available,
+            player_x, player_y, player_dest, map_width_blocks, map_height_blocks,
+            rng_value, blocks, tileset, provider,
+            dotzuki_engine::overworld::NpcWanderPolicy::Classic, stationary);
+    });
 }
 
 // ── Pokémon-Specific Conversions ───────────────────────────────────

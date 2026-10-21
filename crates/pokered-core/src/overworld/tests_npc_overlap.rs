@@ -73,7 +73,7 @@ fn assert_column_walkable(screen: &OverworldScreen, tiles: &[(u16, u16)]) {
     }
 }
 
-/// Steering sanity: with the player far away and idle, the steered frame
+/// Steering sanity: with the player in view and idle, the steered frame
 /// really does start the Fisher walking LEFT (proves the rng steering and
 /// that the target tile is enterable — the overlap tests are only
 /// meaningful if the roll they gate would otherwise move).
@@ -81,8 +81,8 @@ fn assert_column_walkable(screen: &OverworldScreen, tiles: &[(u16, u16)]) {
 fn wander_roll_steering_moves_fisher_left() {
     let mut screen = screen_with_fisher_at(12, 14);
     assert_column_walkable(&screen, &[(11, 14), (12, 14)]);
-    screen.state.player.x = 5;
-    screen.state.player.y = 5;
+    screen.state.player.x = 10;
+    screen.state.player.y = 12;
     screen.frame_counter = frame_rolling_direction(2, 2); // Left
     screen.update_frame(neutral());
 

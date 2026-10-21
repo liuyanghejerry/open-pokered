@@ -124,26 +124,8 @@ impl NpcPresentation {
     }
     /// CheckSpriteAvailability updates the image before the walking counter;
     /// while the player walks it leaves the previous image in place.
-    fn axis_available(player: u8, sprite: u8, span: u8) -> bool {
-        sprite == player || (sprite > player && sprite <= player.wrapping_add(span))
-    }
     fn coordinate_available(n: &NpcRuntimeState, player: (u16, u16)) -> bool {
-        if n.movement_type == super::NpcMovementType::FixedPath || !n.scripted_path.is_empty() {
-            return true;
-        }
-        let (dx, dy) = if n.walk_counter > 0 {
-            match n.walking_direction() {
-                Direction::Down => (0, 1),
-                Direction::Up => (0, -1),
-                Direction::Left => (-1, 0),
-                Direction::Right => (1, 0),
-            }
-        } else {
-            (0, 0)
-        };
-        let x = (n.x as u8).wrapping_add(4).wrapping_add(dx as u8);
-        let y = (n.y as u8).wrapping_add(4).wrapping_add(dy as u8);
-        Self::axis_available(player.0 as u8, x, 9) && Self::axis_available(player.1 as u8, y, 8)
+        super::npc_movement::coordinate_available(n, player)
     }
     pub fn initialize_script_position(&mut self, slot: usize, n: &NpcRuntimeState) {
         let x = (n.x as u8)
@@ -453,9 +435,9 @@ mod tests {
     }
     #[test]
     fn visibility_preserves_the_original_unsigned_byte_wrap() {
-        assert!(NpcPresentation::axis_available(250, 250, 9));
-        assert!(!NpcPresentation::axis_available(250, 251, 9));
-        assert!(!NpcPresentation::axis_available(250, 3, 9));
+        assert!(super::super::npc_movement::axis_available(250, 250, 9));
+        assert!(!super::super::npc_movement::axis_available(250, 251, 9));
+        assert!(!super::super::npc_movement::axis_available(250, 3, 9));
     }
     #[test]
     fn two_stage_publication_matches_complete_original_rendered_walks() {
