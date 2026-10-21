@@ -1,0 +1,38 @@
+{
+  "source": "audit-1138-victory3f-fixture.sav",
+  "changes": [
+    {
+      "offset": "0x260a",
+      "old": 198,
+      "new": 210
+    },
+    {
+      "offset": "0x260d",
+      "old": 15,
+      "new": 4
+    },
+    {
+      "offset": "0x260e",
+      "old": 21,
+      "new": 8
+    },
+    {
+      "offset": "0x2610",
+      "old": 1,
+      "new": 8
+    },
+    {
+      "offset": "0x2ad7",
+      "old": 0,
+      "new": 60
+    },
+    {
+      "offset": "0x3523",
+      "old": 66,
+      "new": 11
+    }
+  ],
+  "scope": "Native-compatible offlineSRAM player8,4 and beaten5Ftrainerflags. Native load canonicalizes map/view metadata; facingUp established with physical keys. Not an original-ROM-compatible fixture or a freshbattle/travel proof.",
+  "sha256": "54b964a88a69858a76b456dd2c76bebcfe94e3baed954a69b31f3c9fce449d71",
+  "correction": "Scene trigger npc3 is1-based: scientist native npc_index2 at8,3; position8,4, physicalUP beforeA. Previous18,11 fixture contactedRocker and isexcluded."
+}
