@@ -1,0 +1,100 @@
+{
+  "reference": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_files": {
+    "data/trainers/special_moves.asm": "9eb24518fe6fe532c1721ef2bb4375a79f9110f77e2ed850c73562a758a2f015",
+    "engine/battle/read_trainer_party.asm": "24064f80192e888056bfe7efdd8cb463fc239be545712fceaeabbe1c97d39822",
+    "home/array.asm": "518f6f0e0332c8442453f9e5b48d5c47f6c4b09aa27b95ba751ff78a80bc0a1e",
+    "constants/pokemon_constants.asm": "0914f9edb2bb72788d0e7b1e4ae7dedef2bb2f29533363375f8d874fec41e604"
+  },
+  "index_rule": "LoneMoves raw first byte is passed unchanged to AddNTimes from wEnemyMon1Moves+2: zero-based party offset. Only the LoneAttackNo table selector is decremented.",
+  "slot": 2,
+  "lone_moves": [
+    {
+      "class": "Brock",
+      "gym_no": 1,
+      "party_index": 0,
+      "target": 1,
+      "species": "Onix",
+      "move": "Bide"
+    },
+    {
+      "class": "Misty",
+      "gym_no": 2,
+      "party_index": 0,
+      "target": 1,
+      "species": "Starmie",
+      "move": "Bubblebeam"
+    },
+    {
+      "class": "LtSurge",
+      "gym_no": 3,
+      "party_index": 0,
+      "target": 2,
+      "species": "Raichu",
+      "move": "Thunderbolt"
+    },
+    {
+      "class": "Erika",
+      "gym_no": 4,
+      "party_index": 0,
+      "target": 2,
+      "species": "Vileplume",
+      "move": "MegaDrain"
+    },
+    {
+      "class": "Koga",
+      "gym_no": 5,
+      "party_index": 0,
+      "target": 3,
+      "species": "Weezing",
+      "move": "Toxic"
+    },
+    {
+      "class": "Sabrina",
+      "gym_no": 6,
+      "party_index": 0,
+      "target": 3,
+      "species": "Alakazam",
+      "move": "Psywave"
+    },
+    {
+      "class": "Blaine",
+      "gym_no": 7,
+      "party_index": 0,
+      "target": 3,
+      "species": "Arcanine",
+      "move": "FireBlast"
+    },
+    {
+      "class": "Giovanni",
+      "gym_no": 8,
+      "party_index": 2,
+      "target": 4,
+      "species": "Rhydon",
+      "move": "Fissure"
+    }
+  ],
+  "champion_moves": [
+    {
+      "starter_constant": "STARTER1",
+      "starter_species": "Charmander",
+      "species": "Charizard",
+      "party_index": 2,
+      "move": "FireBlast"
+    },
+    {
+      "starter_constant": "STARTER2",
+      "starter_species": "Squirtle",
+      "species": "Blastoise",
+      "party_index": 0,
+      "move": "Blizzard"
+    },
+    {
+      "starter_constant": "STARTER3",
+      "starter_species": "Bulbasaur",
+      "species": "Venusaur",
+      "party_index": 1,
+      "move": "MegaDrain"
+    }
+  ]
+}

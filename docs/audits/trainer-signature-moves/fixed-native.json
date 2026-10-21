@@ -1,0 +1,751 @@
+{
+  "base_source": "a0324ea6a675184e7e5d8b8ce07bb62f6dd84886",
+  "scope": "Offline SRAM, ordinary boot/CONTINUE and physical input only after PokemonGame construction; readonly battle roster observed before first action. Functional battle-entry evidence, not original animation parity or fresh travel.",
+  "cases": [
+    {
+      "battle_frame": 1477,
+      "case": "Brock",
+      "map": "PewterGym",
+      "party": [
+        {
+          "moves": [
+            "Tackle",
+            "DefenseCurl",
+            "None",
+            "None"
+          ],
+          "species": "Geodude"
+        },
+        {
+          "moves": [
+            "Tackle",
+            "Screech",
+            "Bide",
+            "None"
+          ],
+          "species": "Onix"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1541,
+      "case": "Misty",
+      "map": "CeruleanGym",
+      "party": [
+        {
+          "moves": [
+            "Tackle",
+            "WaterGun",
+            "None",
+            "None"
+          ],
+          "species": "Staryu"
+        },
+        {
+          "moves": [
+            "Tackle",
+            "WaterGun",
+            "Bubblebeam",
+            "None"
+          ],
+          "species": "Starmie"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1733,
+      "case": "LtSurge",
+      "map": "VermilionGym",
+      "party": [
+        {
+          "moves": [
+            "Tackle",
+            "Screech",
+            "Sonicboom",
+            "None"
+          ],
+          "species": "Voltorb"
+        },
+        {
+          "moves": [
+            "Thundershock",
+            "Growl",
+            "ThunderWave",
+            "QuickAttack"
+          ],
+          "species": "Pikachu"
+        },
+        {
+          "moves": [
+            "Thundershock",
+            "Growl",
+            "Thunderbolt",
+            "None"
+          ],
+          "species": "Raichu"
+        }
+      ]
+    },
+    {
+      "battle_frame": 2117,
+      "case": "Erika",
+      "map": "CeladonGym",
+      "party": [
+        {
+          "moves": [
+            "RazorLeaf",
+            "Wrap",
+            "Poisonpowder",
+            "SleepPowder"
+          ],
+          "species": "Victreebel"
+        },
+        {
+          "moves": [
+            "Constrict",
+            "Bind",
+            "None",
+            "None"
+          ],
+          "species": "Tangela"
+        },
+        {
+          "moves": [
+            "PetalDance",
+            "Poisonpowder",
+            "MegaDrain",
+            "SleepPowder"
+          ],
+          "species": "Vileplume"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1541,
+      "case": "Koga",
+      "map": "FuchsiaGym",
+      "party": [
+        {
+          "moves": [
+            "Tackle",
+            "Smog",
+            "Sludge",
+            "Smokescreen"
+          ],
+          "species": "Koffing"
+        },
+        {
+          "moves": [
+            "Disable",
+            "PoisonGas",
+            "Minimize",
+            "Sludge"
+          ],
+          "species": "Muk"
+        },
+        {
+          "moves": [
+            "Tackle",
+            "Smog",
+            "Sludge",
+            "Smokescreen"
+          ],
+          "species": "Koffing"
+        },
+        {
+          "moves": [
+            "Smog",
+            "Sludge",
+            "Toxic",
+            "Selfdestruct"
+          ],
+          "species": "Weezing"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1541,
+      "case": "Sabrina",
+      "map": "SaffronGym",
+      "party": [
+        {
+          "moves": [
+            "Disable",
+            "Psybeam",
+            "Recover",
+            "PsychicM"
+          ],
+          "species": "Kadabra"
+        },
+        {
+          "moves": [
+            "Confusion",
+            "Barrier",
+            "LightScreen",
+            "Doubleslap"
+          ],
+          "species": "MrMime"
+        },
+        {
+          "moves": [
+            "Poisonpowder",
+            "LeechLife",
+            "StunSpore",
+            "Psybeam"
+          ],
+          "species": "Venomoth"
+        },
+        {
+          "moves": [
+            "Psybeam",
+            "Recover",
+            "Psywave",
+            "Reflect"
+          ],
+          "species": "Alakazam"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1349,
+      "case": "Blaine",
+      "map": "CinnabarGym",
+      "party": [
+        {
+          "moves": [
+            "Ember",
+            "Leer",
+            "TakeDown",
+            "Agility"
+          ],
+          "species": "Growlithe"
+        },
+        {
+          "moves": [
+            "TailWhip",
+            "Stomp",
+            "Growl",
+            "FireSpin"
+          ],
+          "species": "Ponyta"
+        },
+        {
+          "moves": [
+            "TailWhip",
+            "Stomp",
+            "Growl",
+            "FireSpin"
+          ],
+          "species": "Rapidash"
+        },
+        {
+          "moves": [
+            "Roar",
+            "Ember",
+            "FireBlast",
+            "TakeDown"
+          ],
+          "species": "Arcanine"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1669,
+      "case": "Giovanni",
+      "map": "ViridianGym",
+      "party": [
+        {
+          "moves": [
+            "Stomp",
+            "TailWhip",
+            "FuryAttack",
+            "HornDrill"
+          ],
+          "species": "Rhyhorn"
+        },
+        {
+          "moves": [
+            "Growl",
+            "Dig",
+            "SandAttack",
+            "Slash"
+          ],
+          "species": "Dugtrio"
+        },
+        {
+          "moves": [
+            "Scratch",
+            "TailWhip",
+            "BodySlam",
+            "PoisonSting"
+          ],
+          "species": "Nidoqueen"
+        },
+        {
+          "moves": [
+            "Tackle",
+            "HornAttack",
+            "PoisonSting",
+            "Thrash"
+          ],
+          "species": "Nidoking"
+        },
+        {
+          "moves": [
+            "Stomp",
+            "TailWhip",
+            "Fissure",
+            "HornDrill"
+          ],
+          "species": "Rhydon"
+        }
+      ]
+    },
+    {
+      "battle_frame": 965,
+      "case": "HideoutGiovanni",
+      "map": "RocketHideoutB4F",
+      "party": [
+        {
+          "moves": [
+            "Screech",
+            "Bind",
+            "RockThrow",
+            "Rage"
+          ],
+          "species": "Onix"
+        },
+        {
+          "moves": [
+            "HornAttack",
+            "None",
+            "None",
+            "None"
+          ],
+          "species": "Rhyhorn"
+        },
+        {
+          "moves": [
+            "CometPunch",
+            "Rage",
+            "Bite",
+            "None"
+          ],
+          "species": "Kangaskhan"
+        }
+      ]
+    },
+    {
+      "battle_frame": 1477,
+      "case": "SilphGiovanni",
+      "map": "SilphCo11F",
+      "party": [
+        {
+          "moves": [
+            "HornAttack",
+            "PoisonSting",
+            "FocusEnergy",
+            "FuryAttack"
+          ],
+          "species": "Nidorino"
+        },
+        {
+          "moves": [
+            "CometPunch",
+            "Rage",
+            "Bite",
+            "TailWhip"
+          ],
+          "species": "Kangaskhan"
+        },
+        {
+          "moves": [
+            "HornAttack",
+            "Stomp",
+            "TailWhip",
+            "None"
+          ],
+          "species": "Rhyhorn"
+        },
+        {
+          "moves": [
+            "Scratch",
+            "TailWhip",
+            "BodySlam",
+            "PoisonSting"
+          ],
+          "species": "Nidoqueen"
+        }
+      ]
+    },
+    {
+      "battle_frame": 2245,
+      "case": "Charizard",
+      "map": "ChampionsRoom",
+      "party": [
+        {
+          "moves": [
+            "Whirlwind",
+            "WingAttack",
+            "SkyAttack",
+            "MirrorMove"
+          ],
+          "species": "Pidgeot"
+        },
+        {
+          "moves": [
+            "Psybeam",
+            "Recover",
+            "PsychicM",
+            "Reflect"
+          ],
+          "species": "Alakazam"
+        },
+        {
+          "moves": [
+            "TailWhip",
+            "FuryAttack",
+            "HornDrill",
+            "Leer"
+          ],
+          "species": "Rhydon"
+        },
+        {
+          "moves": [
+            "Barrage",
+            "Hypnosis",
+            "Stomp",
+            "None"
+          ],
+          "species": "Exeggutor"
+        },
+        {
+          "moves": [
+            "DragonRage",
+            "Leer",
+            "HydroPump",
+            "HyperBeam"
+          ],
+          "species": "Gyarados"
+        },
+        {
+          "moves": [
+            "Rage",
+            "Slash",
+            "FireBlast",
+            "FireSpin"
+          ],
+          "species": "Charizard"
+        }
+      ]
+    },
+    {
+      "battle_frame": 2245,
+      "case": "Blastoise",
+      "map": "ChampionsRoom",
+      "party": [
+        {
+          "moves": [
+            "Whirlwind",
+            "WingAttack",
+            "SkyAttack",
+            "MirrorMove"
+          ],
+          "species": "Pidgeot"
+        },
+        {
+          "moves": [
+            "Psybeam",
+            "Recover",
+            "PsychicM",
+            "Reflect"
+          ],
+          "species": "Alakazam"
+        },
+        {
+          "moves": [
+            "TailWhip",
+            "FuryAttack",
+            "HornDrill",
+            "Leer"
+          ],
+          "species": "Rhydon"
+        },
+        {
+          "moves": [
+            "Roar",
+            "Ember",
+            "Leer",
+            "TakeDown"
+          ],
+          "species": "Arcanine"
+        },
+        {
+          "moves": [
+            "Barrage",
+            "Hypnosis",
+            "Stomp",
+            "None"
+          ],
+          "species": "Exeggutor"
+        },
+        {
+          "moves": [
+            "Bite",
+            "Withdraw",
+            "Blizzard",
+            "HydroPump"
+          ],
+          "species": "Blastoise"
+        }
+      ]
+    },
+    {
+      "battle_frame": 2245,
+      "case": "Venusaur",
+      "map": "ChampionsRoom",
+      "party": [
+        {
+          "moves": [
+            "Whirlwind",
+            "WingAttack",
+            "SkyAttack",
+            "MirrorMove"
+          ],
+          "species": "Pidgeot"
+        },
+        {
+          "moves": [
+            "Psybeam",
+            "Recover",
+            "PsychicM",
+            "Reflect"
+          ],
+          "species": "Alakazam"
+        },
+        {
+          "moves": [
+            "TailWhip",
+            "FuryAttack",
+            "HornDrill",
+            "Leer"
+          ],
+          "species": "Rhydon"
+        },
+        {
+          "moves": [
+            "DragonRage",
+            "Leer",
+            "HydroPump",
+            "HyperBeam"
+          ],
+          "species": "Gyarados"
+        },
+        {
+          "moves": [
+            "Roar",
+            "Ember",
+            "Leer",
+            "TakeDown"
+          ],
+          "species": "Arcanine"
+        },
+        {
+          "moves": [
+            "RazorLeaf",
+            "Growth",
+            "MegaDrain",
+            "Solarbeam"
+          ],
+          "species": "Venusaur"
+        }
+      ]
+    }
+  ],
+  "diff": [
+    {
+      "case": "Brock",
+      "changes": [
+        {
+          "member": 0,
+          "slot": 2,
+          "before": "Bide",
+          "after": "None"
+        },
+        {
+          "member": 1,
+          "slot": 2,
+          "before": "None",
+          "after": "Bide"
+        }
+      ]
+    },
+    {
+      "case": "Misty",
+      "changes": [
+        {
+          "member": 0,
+          "slot": 2,
+          "before": "Bubblebeam",
+          "after": "None"
+        },
+        {
+          "member": 1,
+          "slot": 2,
+          "before": "Harden",
+          "after": "Bubblebeam"
+        }
+      ]
+    },
+    {
+      "case": "LtSurge",
+      "changes": [
+        {
+          "member": 1,
+          "slot": 2,
+          "before": "Thunderbolt",
+          "after": "ThunderWave"
+        },
+        {
+          "member": 2,
+          "slot": 2,
+          "before": "ThunderWave",
+          "after": "Thunderbolt"
+        }
+      ]
+    },
+    {
+      "case": "Erika",
+      "changes": [
+        {
+          "member": 1,
+          "slot": 2,
+          "before": "MegaDrain",
+          "after": "None"
+        },
+        {
+          "member": 2,
+          "slot": 2,
+          "before": "StunSpore",
+          "after": "MegaDrain"
+        }
+      ]
+    },
+    {
+      "case": "Koga",
+      "changes": [
+        {
+          "member": 2,
+          "slot": 2,
+          "before": "Toxic",
+          "after": "Sludge"
+        },
+        {
+          "member": 3,
+          "slot": 2,
+          "before": "Smokescreen",
+          "after": "Toxic"
+        }
+      ]
+    },
+    {
+      "case": "Sabrina",
+      "changes": [
+        {
+          "member": 2,
+          "slot": 2,
+          "before": "Psywave",
+          "after": "StunSpore"
+        },
+        {
+          "member": 3,
+          "slot": 2,
+          "before": "PsychicM",
+          "after": "Psywave"
+        }
+      ]
+    },
+    {
+      "case": "Blaine",
+      "changes": [
+        {
+          "member": 2,
+          "slot": 2,
+          "before": "FireBlast",
+          "after": "Growl"
+        },
+        {
+          "member": 3,
+          "slot": 2,
+          "before": "Leer",
+          "after": "FireBlast"
+        }
+      ]
+    },
+    {
+      "case": "Giovanni",
+      "changes": [
+        {
+          "member": 3,
+          "slot": 2,
+          "before": "Fissure",
+          "after": "PoisonSting"
+        },
+        {
+          "member": 4,
+          "slot": 2,
+          "before": "FuryAttack",
+          "after": "Fissure"
+        }
+      ]
+    },
+    {
+      "case": "HideoutGiovanni",
+      "changes": []
+    },
+    {
+      "case": "SilphGiovanni",
+      "changes": [
+        {
+          "member": 3,
+          "slot": 2,
+          "before": "Fissure",
+          "after": "BodySlam"
+        }
+      ]
+    },
+    {
+      "case": "Charizard",
+      "changes": [
+        {
+          "member": 5,
+          "slot": 2,
+          "before": "Blizzard",
+          "after": "FireBlast"
+        }
+      ]
+    },
+    {
+      "case": "Blastoise",
+      "changes": [
+        {
+          "member": 5,
+          "slot": 2,
+          "before": "MegaDrain",
+          "after": "Blizzard"
+        }
+      ]
+    },
+    {
+      "case": "Venusaur",
+      "changes": [
+        {
+          "member": 5,
+          "slot": 2,
+          "before": "FireBlast",
+          "after": "MegaDrain"
+        }
+      ]
+    }
+  ]
+}
