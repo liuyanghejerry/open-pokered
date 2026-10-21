@@ -1,4 +1,4 @@
-//! Source Audio3 instruction work on the live native sequencer state.
+//! Source Audio1/Audio3 instruction work on the live native sequencer state.
 //!
 //! The native sequencer remains the only channel owner. This port describes
 //! the branch work of its supported update, then checks the actual native
@@ -51,12 +51,15 @@ pub(crate) struct PreparedAudioFrame {
 }
 
 impl PreparedAudioFrame {
-    /// This bounded port handles Silph and Rock Tunnel music after the first
+    /// This bounded port handles Silph, Rock Tunnel and Pokecenter music after the first
     /// ordinary native tick. Noise rests/termination and finite loops are
     /// included, together with finite PressAB and its paired music branches.
+    /// Audio1/3 update code is identical after symbol normalization at the
+    /// pinned original revision. Only their PlaySound header selection differs;
+    /// this method observes an existing sequencer and does not start sounds.
     /// Other SFX/drums/pitch-slide/duty-rotation stop explicitly.
     /// No inactive voice is substituted for an active unsupported channel.
-    pub fn from_audio3(seq: &Sequencer) -> Result<Self, AudioClockError> {
+    pub fn from_shared_music(seq: &Sequencer) -> Result<Self, AudioClockError> {
         for i in 4..8 {
             let ch = &seq.channels[i];
             if ch.active
@@ -325,6 +328,123 @@ impl PreparedAudioFrame {
 #[cfg(test)]
 mod native_owner_tests {
     use crate::{audio_manager::AudioManager, music_data::MusicId};
+
+    #[test]
+    fn unsupported_pokecenter_effect_and_other_music_still_tick_once() {
+        use crate::{sfx_data::SfxId, source_clock::AudioClockError};
+        for unsupported_effect in [false, true] {
+            let mut ordinary = AudioManager::new();
+            let mut clocked = AudioManager::new();
+            let music = if unsupported_effect {
+                MusicId::POKECENTER
+            } else {
+                MusicId::PALLET_TOWN
+            };
+            for manager in [&mut ordinary, &mut clocked] {
+                manager.play_music(music);
+                manager.update_frame();
+                if unsupported_effect {
+                    manager.play_sfx(SfxId::Pokeflute);
+                }
+            }
+            ordinary.update_frame();
+            let result = clocked.update_frame_with_source_work();
+            if unsupported_effect {
+                assert!(matches!(result, Err(AudioClockError::ActiveSfx(_))));
+            } else {
+                assert_eq!(result, Err(AudioClockError::UnsupportedSoundBank));
+            }
+            for channel in 0..8 {
+                assert_eq!(
+                    std::format!("{:?}", ordinary.sequencer.channels[channel]),
+                    std::format!("{:?}", clocked.sequencer.channels[channel]),
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pokecenter_work_matches_ten_thousand_original_updates() {
+        // Controlled unit oracle: original readonly channel inputs are placed
+        // into a native sequencer. This is not a normal-boot gameplay test.
+        let bytes =
+            include_bytes!("../../../../docs/audits/hof-pc-load/pokecenter-audio-cases.bin");
+        assert_eq!(u32::from_le_bytes(bytes[..4].try_into().unwrap()), 10000);
+        let mut at = 4;
+        for tick in 0..10000 {
+            let mut manager = AudioManager::new();
+            manager.play_music(MusicId::POKECENTER);
+            manager.update_frame();
+            manager.sequencer.music_tempo =
+                u16::from_be_bytes(bytes[at..at + 2].try_into().unwrap());
+            at += 2;
+            let expected = u32::from_le_bytes(bytes[at..at + 4].try_into().unwrap());
+            at += 4;
+            for channel in 0..3 {
+                let ch = &mut manager.sequencer.channels[channel];
+                ch.ptr = u16::from_le_bytes(bytes[at..at + 2].try_into().unwrap()) as usize;
+                ch.return_ptr =
+                    u16::from_le_bytes(bytes[at + 2..at + 4].try_into().unwrap()) as usize;
+                at += 4;
+                let f = &bytes[at..at + 14];
+                ch.flags1 = dotzuki_audio::ChannelFlags1::from_bits_retain(f[0]);
+                ch.flags2 = dotzuki_audio::ChannelFlags2::from_bits_retain(f[1]);
+                ch.duty_cycle = f[2] >> 6;
+                ch.vibrato.delay_counter = f[3];
+                ch.vibrato.extent = f[4];
+                ch.vibrato.rate = f[5];
+                ch.freq_lo_saved = f[6];
+                ch.vibrato.delay_reload = f[7];
+                ch.delay_counter = f[8];
+                ch.loop_counter = f[9];
+                ch.note_speed = f[10];
+                ch.delay_frac = f[11];
+                ch.octave = f[12];
+                ch.volume_envelope = if channel == 2 { f[13] >> 1 } else { f[13] };
+                at += 14;
+            }
+            let actual = manager
+                .update_frame_with_source_work()
+                .unwrap_or_else(|e| panic!("tick {tick}: {e:?}"));
+            assert_eq!(actual.cycles, expected, "original tick {tick}");
+        }
+        assert_eq!(at, bytes.len());
+    }
+
+    #[test]
+    fn pokecenter_shared_update_covers_song_and_confirmation_phases() {
+        use crate::sfx_data::SfxId;
+        for confirmation in [false, true] {
+            let mut ordinary = AudioManager::new();
+            let mut clocked = AudioManager::new();
+            ordinary.play_music(MusicId::POKECENTER);
+            clocked.play_music(MusicId::POKECENTER);
+            ordinary.update_frame();
+            clocked.update_frame();
+            for frame in 1..=20000 {
+                if confirmation && frame % 37 == 0 {
+                    ordinary.play_sfx(SfxId::PressAB);
+                    clocked.play_sfx(SfxId::PressAB);
+                }
+                ordinary.update_frame();
+                let work = clocked.update_frame_with_source_work().unwrap_or_else(|e| {
+                    panic!("finish frame {frame}, confirmation {confirmation}: {e:?}")
+                });
+                assert!(work.cycles > 0);
+                assert_eq!(
+                    ordinary.sequencer.music_tempo,
+                    clocked.sequencer.music_tempo
+                );
+                for channel in 0..8 {
+                    assert_eq!(
+                        std::format!("{:?}", ordinary.sequencer.channels[channel]),
+                        std::format!("{:?}", clocked.sequencer.channels[channel]),
+                        "frame {frame}, channel {channel}, confirmation {confirmation}",
+                    );
+                }
+            }
+        }
+    }
 
     #[test]
     fn dungeon3_native_clock_covers_every_song_phase() {

@@ -302,11 +302,11 @@ impl AudioManager {
         use crate::source_clock::{AudioClockError, PreparedAudioFrame};
         let prepared = if matches!(
             self.engine.last_music_id(),
-            Some(MusicId::SILPH_CO | MusicId::DUNGEON3)
+            Some(MusicId::SILPH_CO | MusicId::DUNGEON3 | MusicId::POKECENTER)
         ) && !self.engine.is_fading()
             && !self.low_health_alarm_enabled
         {
-            PreparedAudioFrame::from_audio3(&self.engine.sequencer)
+            PreparedAudioFrame::from_shared_music(&self.engine.sequencer)
         } else {
             Err(AudioClockError::UnsupportedSoundBank)
         };

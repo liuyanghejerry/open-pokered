@@ -1,0 +1,62 @@
+{
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_sha256": {
+    "audio/engine_1.asm": "0d06a1e2194d3b39de4183336da2c4ead6fba32f197ddbe70312ad025a19e0b4",
+    "audio/engine_3.asm": "c75c83bba9aae71e885be80596eac03ffee42f9481c84c7771577ec86c094a77"
+  },
+  "normalized_equal": true,
+  "normalization": "Replace Audio1/3, SFX_Headers_1/3, MAX_SFX_ID_1/3 with common names; omit different first descriptive comment. Entire remaining engines identical, including update helpers. PlaySound header tables and MAX IDs retain different meaning and are outside this existing-channel work port.",
+  "normalized_sha256": "7ceaf665acc54edb4334d2cfc6f9ea8ef6bf0b9c9c759bffedce068a9fa247dd",
+  "original_replay": {
+    "normal_boot_continue_physical_inputs": true,
+    "readonly_hooks": [
+      "Audio1_UpdateMusic entry",
+      "RET before Audio1_ApplyMusicAffects"
+    ],
+    "independent_trials": 2,
+    "updates_each": 10000,
+    "trials_exact": true,
+    "distinct_cycle_totals": 58,
+    "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "recorded_head": "5fd94bc1bde54d5b6baa70965d0a57792c4315f9",
+    "native_binary_guard_only_not_run": true,
+    "portable_script_sha256": "1cb5bb7bf1bdf600d43655ebafad2c48d543b74efd7a54e243d98b53a79301fb",
+    "trace": "original-pokecenter-updates.json.gz",
+    "trace_sha256": "84d644875b46c8821cb2f1189b2ffd26d9061742cccce6a5ee8691eec7c7b738"
+  },
+  "fixture": {
+    "path": "pokecenter-audio-cases.bin",
+    "sha256": "d46aa2fd6e45223583c73c1f84fe5f4a1f8dc3e46bf4b4e7117857a3c6086c53",
+    "length": 600004,
+    "format": "u32LE record count, then 10000 records: u16BE tempo, u32LE update T-cycles, 3 channel blocks. Channel: u16LE stream offset, u16LE return offset (zero for unset), then 14 bytes in listed order. Offsets relative to each source Pokecenter channel start; original source pointers and native converted stream offsets have same positions.",
+    "channel_fields": [
+      "wChannelFlags1",
+      "wChannelFlags2",
+      "wChannelDutyCycles",
+      "wChannelVibratoDelayCounters",
+      "wChannelVibratoExtents",
+      "wChannelVibratoRates",
+      "wChannelFrequencyLowBytes",
+      "wChannelVibratoDelayCounterReloadValues",
+      "wChannelNoteDelayCounters",
+      "wChannelLoopCounters",
+      "wChannelNoteSpeeds",
+      "wChannelNoteDelayCountersFractionalPart",
+      "wChannelOctaves",
+      "wChannelVolumes"
+    ]
+  },
+  "limits": [
+    "Native oracle tests explicitly construct channel state from readonly source inputs; they are controlled unit tests, not native boot/playback evidence.",
+    "Source timing records cover Pokecenter without active SFX. Confirmation overlap covered by native ordinary-versus-clocked owner comparison and existing PressAB source helper fixtures; no new source overlap parity claim.",
+    "No HoF picture-load scheduler/device/IRQ integration or player-visible fix claimed.",
+    "Original boot/DIV phase not recovered."
+  ],
+  "local_validation": {
+    "audio_tests": "134 passed, 0 failed; audit-1249-audio-all.log",
+    "expanded_output_pcm_test": "Four songs including Pokecenter, 1200 frames each, PressAB at frame80; exact PCM and channel state. 1 passed after adding Pokecenter; audit-1249-pokecenter-pcm.log",
+    "gba_no_std": "cargo +nightly-2025-12-07 check --release -p pokered-audio, nested GBA workspace; exit0; audit-1249-gba-audio.log",
+    "original_portable_replay": "2 normal boots x10000 updates; exact repeat and all packed fixture bytes match; exit0; audit-1249-portable-pokecenter.log",
+    "actual_native_picture_load": "NOT implemented or verified"
+  }
+}
