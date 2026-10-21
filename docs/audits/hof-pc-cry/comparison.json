@@ -1,0 +1,31 @@
+{
+  "all_pass": true,
+  "scope": "Native normalboot/CONTINUE paired physical tape; exactsamefullinput andstate/frame/player/phase schedule. Independentsourcecontrols establish originalcry/inputsemantics, notsource/nativeabsolute-frameparity.",
+  "same_fixture": "6133c20d0e896d577fdaef4a08f2ca9cd7c49a1c2c34af3d9b411de0675df823",
+  "before_head": "67afd59fce3e25f3fc112aa1c0ac7f3d4d60d4ae",
+  "after_head": "1ff8ee7330b31f6db204b7e8b684bd0821f7f70f",
+  "before_binary": "79f789f7be9bc417b45584443cea652fc664686b1ba8bedbb284d26ca8d5c7ed",
+  "after_binary": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+  "full_input_frames": 877,
+  "same_physical_tape_and_observation_schedule": true,
+  "state_observations_each": 58,
+  "first_cry_frame": 778,
+  "early_a_frame": 779,
+  "late_a_frame": 876,
+  "before_early_a": {
+    "id": 46,
+    "playing": true
+  },
+  "after_early_a": {
+    "id": 43,
+    "playing": true
+  },
+  "after_late_a": {
+    "id": 46,
+    "playing": true
+  },
+  "pre_input_frames_pixel_equal": true,
+  "after_early_a_keeps_first_mon_picture": true,
+  "after_late_a_matches_before_second_mon_picture": true,
+  "source_head_binary_guards": true
+}

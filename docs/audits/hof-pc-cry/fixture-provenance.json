@@ -1,5 +1,5 @@
 {
-  "scope": "Disclosed offline native fixture at Pewter PC13,4. Bank0 HOF window from natural NEW GAME/m49 ending on merged67afd59f tree; no runtime state mutation. Original coherent Viridian control fixture is recorded separately.",
+  "scope": "Offline disclosed fixtures, not fresh playthrough or source/native map-header equivalence. Native base atPewterPC13,4; original realViridian header/player20,30 retains its own coherent actor tables.",
   "ending_sha256": "913a27e4d4093a0171f75772bc917574e0b1a961286913e116882f1bb152828e",
   "cases": [
     {
@@ -12,6 +12,19 @@
       "xy": [
         13,
         4
+      ],
+      "mutations": "Offline HOF bank0 4800-byte window copied from natural1242ending; numHoF=1 and EVENT_GOT_POKEDEX bit37; original main checksum recomputed; no runtime setters."
+    },
+    {
+      "role": "original",
+      "base": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1241-source-wander-fixture.sav",
+      "base_sha256": "81b69c07a11316ffd6c0c2fd6cb3330c47bd768fa06cfb734815ef9cd9ce91ea",
+      "output": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1243-hof-original-fixture.sav",
+      "sha256": "c3548eacb4e47d20ce0ee6b5d8e7360c6c7cb13bf8338711dd26a8b333a7ed72",
+      "map": 1,
+      "xy": [
+        20,
+        30
       ],
       "mutations": "Offline HOF bank0 4800-byte window copied from natural1242ending; numHoF=1 and EVENT_GOT_POKEDEX bit37; original main checksum recomputed; no runtime setters."
     }

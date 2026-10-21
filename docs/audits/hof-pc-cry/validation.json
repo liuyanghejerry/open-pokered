@@ -1,0 +1,75 @@
+{
+  "code_head": "1ff8ee7330b31f6db204b7e8b684bd0821f7f70f",
+  "local_checks": {
+    "core-tests": {
+      "passed": 72,
+      "failed": 0,
+      "ignored": 0,
+      "log_sha256": "63fa7f3922c2bc0314ec4becd403314319e5cf8b6573784e185a5817ddbf13a1"
+    },
+    "app-tests": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "log_sha256": "febf8ae871f079a7de5b22e26da3cd8aef79e9726b74fdd15d57be3b00c0c603"
+    },
+    "core-all": {
+      "passed": 3636,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "527416331cbe213ca6fb03c203ff8ed3edba8dd4ec8e098e1d2eff4f6eeba6b9"
+    },
+    "app-all": {
+      "passed": 402,
+      "failed": 0,
+      "ignored": 40,
+      "log_sha256": "a5814602e09af6ba249eb6af205da4d3ac6996093b5c434eaf4ea8c35a73c3da"
+    }
+  },
+  "build_and_full_commands": [
+    {
+      "name": "core-all",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "app-all",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--lib",
+        "--features",
+        "debug-server",
+        "--",
+        "--test-threads=4"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "native-build",
+      "command": [
+        "cargo",
+        "build",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "debug-server"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "source_four_controls": "Each original mode ran twice and compared exactly. Standalone fixed-tape replay then matched every original hook event and named observation for all four modes.",
+  "diagnostics": [
+    "Initial native setup did not enter PC; no gameplay conclusion. Corrected physical-facing/interact input setup, retained failed log.",
+    "Initial original direct up-route hit a fence; computed walkable route and repeated physical walk. Retained failed log.",
+    "Early original metadata scope inherited an actor-trace docstring; corrected metadata and repeated, proving events/inputs unchanged."
+  ],
+  "scope": "New4core/2app tests are included in full3636/402 counts, not additional unique tests. Previous latest master67af has fullfresh49PASS; this bounded PC-only fix was verified by actualPC/input/PCM controls and fullCore/App rather than relabeling that old fresh as a candidate run."
+}
