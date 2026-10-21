@@ -45,7 +45,7 @@ CARGO_INCREMENTAL=0 cargo build --locked -p pokered-app --bin pokered-app --feat
 python3 "$HARNESS_DIR/replay.py" --repo "$PWD" \
   --binary "$CARGO_TARGET_DIR/debug/pokered-app" --out "$HARNESS_DIR/before"
 
-git switch fix/offscreen-npc-updates
+git switch --detach 0ca514fcf0f38c1d892321ac8c376f575de4cc2d
 CARGO_INCREMENTAL=0 cargo build --locked -p pokered-app --bin pokered-app --features debug-server
 python3 "$HARNESS_DIR/replay.py" --repo "$PWD" \
   --binary "$CARGO_TARGET_DIR/debug/pokered-app" --out "$HARNESS_DIR/after" --expect-freeze
