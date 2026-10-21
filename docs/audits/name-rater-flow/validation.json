@@ -1,0 +1,25 @@
+{
+  "before_targeted": {
+    "passed": 8,
+    "failed": 4,
+    "new_scene_cases_passed": 3,
+    "new_scene_cases_failed": 4,
+    "expected_exit": 101
+  },
+  "after_targeted": {
+    "passed": 12,
+    "failed": 0
+  },
+  "full_core": {
+    "passed": 3179,
+    "failed": 0,
+    "ignored": 0
+  },
+  "after_master_integration_targeted": {
+    "passed": 12,
+    "failed": 0
+  },
+  "actual_SRAM_replays": "3 before onmaster7a1659 +3 fixed on d866ee; everyrun normalboot/CONTINUE/menu+naming+actualSAVE. Two independentCONTINUE runs confirmSPROUT/A; portabledefaultempty+latestintegratedactual-save-A replaypassed.",
+  "source_master_integrated": "ea6833c5c2fd3200fb6c78361c4acb5ea2e3027d",
+  "scope": "Corecrate and boundednativeNameRaterflows; not workspace/fresh49/originalemulator/GBAUI whole-goal PASS."
+}

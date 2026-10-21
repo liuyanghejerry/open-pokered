@@ -1,0 +1,10 @@
+{
+  "sha256": "e3fc54428d362b3b6c401978da81ab620ef244c504096d5492142d11490c6193",
+  "scope": "Offline nativeSRAM playerNameRatersHouse5,4; own firstmonOT name/idalready matches player; explicitnicknameSPROUT. No runtime setters. Not normaltravel.",
+  "offsets": {
+    "map": "0x260a",
+    "y": "0x260d",
+    "x": "0x260e",
+    "nickname": "0x307e"
+  }
+}

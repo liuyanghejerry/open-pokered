@@ -24,16 +24,16 @@ game_scene NameRatersHouse {
           @if (!partyMonCanRename(slot)) {
             showText(getPartyMonName(slot) + @t(", is it?\nThat is a truly\nimpeccable name!\n\nTake good care of\n", "，是吗？\n这真是无可挑剔的名字！\n\n请好好照顾") + getPartyMonName(slot) + "!")
           } @else {
-            @speaker("") {
-              @t("That is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?", "这个名字还不错！\n\n但是，要不要我给它起一个更好\n的名字？\n\n你觉得怎么样？")
-            }
+            showText(getPartyMonName(slot) + @t(", is it?\nThat is a decent nickname!\n\nBut, would you like me to\ngive it a nicer name?\n\nHow about it?", "，是吗？\n这个名字还不错！\n\n但是，要不要我给它起一个更好\n的名字？\n\n你觉得怎么样？"))
             @choice {
               @option(@t("YES", "是")) {
                 @speaker("") { @t("Fine! What should we name\nit?", "好！你想给它起什么名字？") }
                 newName = openNamingScreen("")
-                setPartyNickname(slot, newName)
-                @speaker("") {
-                  @t("OK! This POKeMON has been\nrenamed!\n\nThat's a better name than\nbefore!", "OK！这只宝可梦已经改名了！\n\n比原来的名字好多了！")
+                @if (newName != "") {
+                  setPartyNickname(slot, newName)
+                  showText(@t("OK! This POKeMON has been\nrenamed ", "OK！这只宝可梦已经改名为") + newName + @t("!\n\nThat's a better name than\nbefore!", "！\n\n比原来的名字好多了！"))
+                } @else {
+                  @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
                 }
               }
               @option(@t("NO", "否")) {
@@ -41,6 +41,8 @@ game_scene NameRatersHouse {
               }
             }
           }
+        } @else {
+          @speaker("") { @t("Fine! Come any time you\nlike!", "好！随时欢迎再来！") }
         }
       }
       @option(@t("NO", "否")) {

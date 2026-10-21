@@ -1,0 +1,151 @@
+{
+  "base": "7a1659aefe0cfd754c1c7647b2b63817cae78e96",
+  "after": "d866ee669852fefa232e40e97ee30ec821110e23",
+  "before_binary_sha256": "da8d9f9f0619b4c994d27ca74dbc492419bd30bcad4466aec7f4a33bd9cb5b24",
+  "after_binary_sha256": "32f5bc88886a612f0be565bf442b2b6ecab9ca4d142d8f7682b687fad5b37d3e",
+  "fixture_sha256": "e3fc54428d362b3b6c401978da81ab620ef244c504096d5492142d11490c6193",
+  "original_source": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "scope": "Source-level original branches, ordinary nativeCLI boot/CONTINUE/physicalkeys/SAVE from offlineSRAM. No originalemulator/freshtravel/animationPASS. All screenshots raw actual frames; no resampling.",
+  "pairs": [
+    {
+      "case": "party-cancel",
+      "label": "after-party-cancel",
+      "frame": 2183,
+      "before_text": null,
+      "after_text": "Fine! Come any time you like!",
+      "whole_frame_difference_bbox": [
+        0,
+        44,
+        160,
+        144
+      ],
+      "map_ROI_0_0_160_96_equal": false,
+      "party_block_after_real_SAVE_equal": true,
+      "saved_nickname_bytes": [
+        146,
+        143,
+        145,
+        142,
+        148,
+        147,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "case": "empty",
+      "label": "offer-first",
+      "frame": 2183,
+      "before_text": "That is a decent nickname!",
+      "after_text": "SPROUT, is it? That is a decent nickname!",
+      "whole_frame_difference_bbox": [
+        8,
+        115,
+        136,
+        134
+      ],
+      "map_ROI_0_0_160_96_equal": true,
+      "party_block_after_real_SAVE_equal": true,
+      "saved_nickname_bytes": [
+        146,
+        143,
+        145,
+        142,
+        148,
+        147,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "case": "empty",
+      "label": "after-naming",
+      "frame": 5183,
+      "before_text": "OK! This POKeMON has been renamed!",
+      "after_text": "Fine! Come any time you like!",
+      "whole_frame_difference_bbox": [
+        8,
+        115,
+        132,
+        134
+      ],
+      "map_ROI_0_0_160_96_equal": true,
+      "party_block_after_real_SAVE_equal": true,
+      "saved_nickname_bytes": [
+        146,
+        143,
+        145,
+        142,
+        148,
+        147,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "case": "rename",
+      "label": "offer-first",
+      "frame": 2183,
+      "before_text": "That is a decent nickname!",
+      "after_text": "SPROUT, is it? That is a decent nickname!",
+      "whole_frame_difference_bbox": [
+        8,
+        115,
+        136,
+        134
+      ],
+      "map_ROI_0_0_160_96_equal": true,
+      "party_block_after_real_SAVE_equal": true,
+      "saved_nickname_bytes": [
+        128,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    },
+    {
+      "case": "rename",
+      "label": "after-naming",
+      "frame": 5383,
+      "before_text": "OK! This POKeMON has been renamed!",
+      "after_text": "OK! This POKeMON has been renamed A!",
+      "whole_frame_difference_bbox": [
+        45,
+        127,
+        56,
+        134
+      ],
+      "map_ROI_0_0_160_96_equal": true,
+      "party_block_after_real_SAVE_equal": true,
+      "saved_nickname_bytes": [
+        128,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ]
+    }
+  ]
+}
