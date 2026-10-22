@@ -25,11 +25,91 @@ pub enum GameScreenTag {
     Battle,
 }
 
+#[cfg(test)]
+mod display_clock_tests {
+    use super::*;
+    use pokered_core::overworld::display_work_time::NATIVE_FRAME_T_CYCLES;
+    use pokered_core::{data::wild_data::GameVersion, overworld::OverworldScreen};
+    use pokered_data::{impl_traits::PokemonRedData, maps::MapId};
+    use pokered_renderer::input::InputState;
+
+    fn on_game_thread(test: impl FnOnce() + Send + 'static) {
+        std::thread::Builder::new()
+            .stack_size(16 * 1024 * 1024)
+            .spawn(test)
+            .unwrap()
+            .join()
+            .unwrap();
+    }
+    fn fixture() -> PokemonGame {
+        let mut game = PokemonGame::new_with_options(
+            GameVersion::Red,
+            None,
+            None,
+            None,
+            false,
+            None,
+            false,
+            true,
+            #[cfg(feature = "debug-server")]
+            None,
+        );
+        game.audio = None;
+        game.overworld = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+        game.overworld.state.player.x = 5;
+        game.overworld.state.player.y = 6;
+        game.state.screen = GameScreen::Overworld;
+        game
+    }
+    #[test]
+    fn global_updates_and_snapshot_restore_preserve_the_same_display_time() {
+        on_game_thread(|| {
+            let mut game = fixture();
+            for _ in 0..8 {
+                game.update(&InputState::new());
+            }
+            assert_eq!(game.source_display.elapsed(), 8 * NATIVE_FRAME_T_CYCLES);
+            let snapshot = game.agent_save_state().unwrap();
+            assert_eq!(snapshot.version, 2);
+            let expected = snapshot_hash(&snapshot);
+            for _ in 0..9 {
+                game.update(&InputState::new());
+            }
+            game.agent_restore_state(&snapshot).unwrap();
+            assert_eq!(snapshot_hash(&game.agent_save_state().unwrap()), expected);
+            game.update(&InputState::new());
+            assert_eq!(game.source_display.elapsed(), 9 * NATIVE_FRAME_T_CYCLES);
+        });
+    }
+    #[test]
+    fn legacy_snapshot_gets_explicit_fixed_native_projection() {
+        on_game_thread(|| {
+            let mut game = fixture();
+            for _ in 0..5 {
+                game.update(&InputState::new());
+            }
+            let mut value = serde_json::to_value(game.agent_save_state().unwrap()).unwrap();
+            value.as_object_mut().unwrap().remove("source_display");
+            value["version"] = 1.into();
+            let legacy: GameSnapshot = serde_json::from_value(value).unwrap();
+            assert!(legacy.source_display.is_none());
+            game.agent_restore_state(&legacy).unwrap();
+            assert_eq!(
+                game.source_display.elapsed(),
+                legacy.frame_count * NATIVE_FRAME_T_CYCLES
+            );
+            assert!(game.agent_save_state().unwrap().source_display.is_some());
+        });
+    }
+}
+
 /// The full runtime snapshot for frame-level fork/restore.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameSnapshot {
     pub version: u32,
     pub frame_count: u64,
+    #[serde(default)]
+    pub source_display: Option<pokered_core::overworld::display_work_time::DisplayWorkTime>,
     pub screen: GameScreenTag,
     pub save_data: SaveData,
     pub overworld: OverworldSnapshot,
@@ -92,10 +172,9 @@ impl PokemonGame {
     pub fn set_seed(&mut self, seed: u64) {
         self.seed = Some(seed);
         self.overworld.set_rng_seed(seed);
-        self.battle.rng =
-            pokered_core::battle::pokered_rules::runtime::StdBattleRng::from_seed(
-                seed.wrapping_add(0x9E3779B97F4A7C15),
-            );
+        self.battle.rng = pokered_core::battle::pokered_rules::runtime::StdBattleRng::from_seed(
+            seed.wrapping_add(0x9E3779B97F4A7C15),
+        );
     }
 
     fn screen_tag(&self) -> Result<GameScreenTag, StateError> {
@@ -136,8 +215,9 @@ impl PokemonGame {
         self.check_not_mid_movie()?;
         self.apply_overworld_game_data_requests();
         Ok(GameSnapshot {
-            version: 1,
+            version: 2,
             frame_count: self.frame_count,
+            source_display: Some(self.source_display.clone()),
             screen,
             save_data: self.save_data.clone(),
             overworld: OverworldSnapshot::capture(&self.overworld),
@@ -177,14 +257,19 @@ impl PokemonGame {
         // Menu continuations are outside this overworld/battle snapshot.
         // Drop the abandoned timeline before later party inputs can resume it.
         self.clear_rare_candy_continuation();
+        self.field_flash = None;
         self.pending_softboiled_user = None;
-        self.party_flash_text = None;
         self.clear_post_capture_continuation();
         self.state.screen = match snapshot.screen {
             GameScreenTag::Overworld => GameScreen::Overworld,
             GameScreenTag::Battle => GameScreen::Battle,
         };
         self.frame_count = snapshot.frame_count;
+        self.source_display = snapshot.source_display.clone().unwrap_or_else(|| {
+            pokered_core::overworld::display_work_time::DisplayWorkTime::legacy_native_projection(
+                snapshot.frame_count,
+            )
+        });
         self.save_data = snapshot.save_data.clone();
         snapshot.overworld.restore_into(&mut self.overworld);
         snapshot.battle.restore_into(&mut self.battle);

@@ -1,0 +1,31 @@
+{
+  "source_repeats_equal": true,
+  "all241PNGs_each_equal1157": true,
+  "short_tick_intervals": [
+    {
+      "t": 163,
+      "T_cycles": 66188,
+      "lcdc": 99,
+      "ly": 0
+    },
+    {
+      "t": 165,
+      "T_cycles": 18020,
+      "lcdc": 227,
+      "ly": 0
+    }
+  ],
+  "source_capture161_to196_T_cycles": 2401600,
+  "native_capture161_to194_T_cycles": 2317392,
+  "source_white_wrapper_to_LoadGBPal_entry_T": 2473568,
+  "native_WhitePalettes_stage_to_LoadMapPalettes_stage_T": 2448876,
+  "proxy_difference_T": 24692,
+  "proxy_difference_nominal70224_frames": 0.351617680565049,
+  "warning": "Milestones are different routines/entry phases, not matched palette-write instructions. Capture intervals are not physical exposure intervals. No fidelity PASS/FAIL is derived from these proxies. Raw35vs33 tick count is not a proven two-physical-frame player-visible duration bug. Normalize timestamps and raster/presentation boundaries first.",
+  "root_master_baseline_source": {
+    "party_flash_text": "On text return: flash_lit_frames=FLASH_WHITE_FRAMES, immediately transition Overworld",
+    "engine_e533_FLASH_WHITE_FRAMES": 3,
+    "complete_restore_path": "private/unmerged; do not describe private33-frame effect as shipped master behavior"
+  },
+  "next_priority": "Verify current master ordinary baseline and publish the actual missing restore sequence as a focused PR after source comparison/CI, while keeping normalized timing and broader fidelity audits open; do not gate solely on raw emulator tick counts."
+}

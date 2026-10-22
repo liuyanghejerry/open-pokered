@@ -383,3 +383,5 @@ mod front_pic_fidelity_tests {
 }
 
 pub(crate) use menu::draw_party_screen_base;
+
+pub(crate) use overworld::draw_overworld_background;

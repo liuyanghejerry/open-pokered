@@ -1,0 +1,140 @@
+{
+  "scope": "RockTunnel1F normal Continue → START → Pokemon → FLASH → acknowledge; 240 consecutive frames in each of two independent processes before and after; no runtime setters. This proves this fixture, not all-map or cycle-exact parity.",
+  "base": "89ff9da62cdddd949b50ef714420046b0fe7b06f",
+  "candidate_runtime": "374fcb9f1d84a47526b3cbc3798a04fc8d6e07cb",
+  "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+  "seed": 42,
+  "input": "A on capture indices 0, 1, 160, 161; otherwise no input; one native update per capture",
+  "original_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "runs": {
+    "audit-1165-native-before-1": {
+      "source": "89ff9da62cdddd949b50ef714420046b0fe7b06f",
+      "binary_sha256": "4688f7ff8558831f4c203463d4d4c8c90281cc0a5e42cfc5fb4e7d679baddf10",
+      "result_sha256": "53c07c0f6ad2a6954b281d11170d302d63ad1fd5b032637af1bfcfa6882e3b12",
+      "manifest_sha256": "1f0a57efe5433c8e005bdfc3e07cb8512376d0b0931a0ad288bc1b9623770352",
+      "commands": {
+        "get_state": 296,
+        "press_sequence": 22,
+        "step_frames": 24,
+        "wait_until": 2,
+        "press_timeline": 242,
+        "capture_frame": 241
+      },
+      "frames": 240,
+      "exit": -15,
+      "exit_reason": "harness Game.close() intentionally sends SIGTERM after successful observation"
+    },
+    "audit-1166-native-before-2": {
+      "source": "89ff9da62cdddd949b50ef714420046b0fe7b06f",
+      "binary_sha256": "4688f7ff8558831f4c203463d4d4c8c90281cc0a5e42cfc5fb4e7d679baddf10",
+      "result_sha256": "ccc89845f9d7a90cd0966c2c6ff75bee3fa412e7cb6f82bc3d42a8efc49bf9ee",
+      "manifest_sha256": "1f0a57efe5433c8e005bdfc3e07cb8512376d0b0931a0ad288bc1b9623770352",
+      "commands": {
+        "get_state": 296,
+        "press_sequence": 22,
+        "step_frames": 24,
+        "wait_until": 2,
+        "press_timeline": 242,
+        "capture_frame": 241
+      },
+      "frames": 240,
+      "exit": -15,
+      "exit_reason": "harness Game.close() intentionally sends SIGTERM after successful observation"
+    },
+    "audit-1166-native-after-1": {
+      "source": "374fcb9f1d84a47526b3cbc3798a04fc8d6e07cb",
+      "binary_sha256": "fdef73539b8e4dadf6710fae6d71419b6d70bfe92720e331be18f699c4903a61",
+      "result_sha256": "e4f56a397e57d52af975888c79b53c9e3ebcf402036d1d61080b7f13275d02f1",
+      "manifest_sha256": "882595b260a0acc7c03c916c6ee468582cbb7161b90661bd438e6186c19dc4ba",
+      "commands": {
+        "get_state": 296,
+        "press_sequence": 22,
+        "step_frames": 24,
+        "wait_until": 2,
+        "press_timeline": 242,
+        "capture_frame": 241
+      },
+      "frames": 240,
+      "exit": -15,
+      "exit_reason": "harness Game.close() intentionally sends SIGTERM after successful observation"
+    },
+    "audit-1166-native-after-2": {
+      "source": "374fcb9f1d84a47526b3cbc3798a04fc8d6e07cb",
+      "binary_sha256": "fdef73539b8e4dadf6710fae6d71419b6d70bfe92720e331be18f699c4903a61",
+      "result_sha256": "da9dfcf6d5442047ca8d7bb4cf2386bf0fb4aa640c9679271b96327ccabb43b2",
+      "manifest_sha256": "882595b260a0acc7c03c916c6ee468582cbb7161b90661bd438e6186c19dc4ba",
+      "commands": {
+        "get_state": 296,
+        "press_sequence": 22,
+        "step_frames": 24,
+        "wait_until": 2,
+        "press_timeline": 242,
+        "capture_frame": 241
+      },
+      "frames": 240,
+      "exit": -15,
+      "exit_reason": "harness Game.close() intentionally sends SIGTERM after successful observation"
+    }
+  },
+  "screenshots": [
+    {
+      "path": "docs/screenshots/flash-map-restoration/before-0159.png",
+      "sha256": "c516f4158edd9320b9227fbd53a5abccffb8effed091757bf4dc841fb9a8267e",
+      "capture_index": 159,
+      "native_frame": 924
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/before-0174.png",
+      "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559",
+      "capture_index": 174,
+      "native_frame": 939
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/before-0194.png",
+      "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559",
+      "capture_index": 194,
+      "native_frame": 959
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/before-0200.png",
+      "sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559",
+      "capture_index": 200,
+      "native_frame": 965
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/after-0159.png",
+      "sha256": "c516f4158edd9320b9227fbd53a5abccffb8effed091757bf4dc841fb9a8267e",
+      "capture_index": 159,
+      "native_frame": 924
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/after-0174.png",
+      "sha256": "0ef06ad72321bb90c24a83e1eb7a60e6d9468772639feb4d9be498bfe8da5aa6",
+      "capture_index": 174,
+      "native_frame": 939
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/after-0194.png",
+      "sha256": "52e05ab3f92385f224983cba92d64c6a1fe9523f4b617424786da333e9eedf08",
+      "capture_index": 194,
+      "native_frame": 959
+    },
+    {
+      "path": "docs/screenshots/flash-map-restoration/after-0200.png",
+      "sha256": "52e05ab3f92385f224983cba92d64c6a1fe9523f4b617424786da333e9eedf08",
+      "capture_index": 200,
+      "native_frame": 965
+    }
+  ],
+  "timing_limit": "Raw emulator ticks are not constant physical durations across LCD-off/restart. The original 35 vs native 33 white capture counts are not a proven two-physical-frame difference. Full matched palette-write/raster timing and common IRQ integration remain open.",
+  "before_repeat_full_records_equal": true,
+  "after_repeat_full_records_equal": true,
+  "regression": {
+    "core": "3192 passed after performance correction",
+    "app_debug": "393 passed, 39 existing ignored, 0 failed",
+    "mobile": "cargo check --offline --locked -p pokered-app --no-default-features --features mobile: PASS",
+    "bare_no_default": "Invalid hosted feature combination: unresolved preexisting dotzuki_renderer::mon_icon without resource; recorded, not passed",
+    "GBA": "Actual thumbv4t no_std release check PASS; temporary local standalone workspace/lock metadata restored exactly. Original CI gates still required"
+  },
+  "performance_followup": "flash-map-restoration-performance.json"
+}

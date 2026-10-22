@@ -1026,7 +1026,12 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None, None);
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None, false);
+}
+
+/// Retained map BG while the field-menu return still owns cleared OBJ state.
+pub(crate) fn draw_overworld_background(screen: &mut OverworldScreen, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer, language: pokered_core::game_state::Lang) {
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None, true);
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -1036,7 +1041,7 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None, None);
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None, None, false);
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -1058,6 +1063,7 @@ pub(crate) fn draw_overworld_cached_with(
         Some(scroll_background),
         Some(reuse_composited),
         same_frame_map_hash,
+        false,
     );
 }
 
@@ -1070,6 +1076,7 @@ fn draw_overworld_impl(
     mut scroll_background: Option<&mut ScrollIndexedPixels<'_>>,
     reuse_composited_hint: Option<bool>,
     same_frame_map_hash: Option<u32>,
+    hide_actors: bool,
 ) {
     if let Some(cache) = background_cache.as_deref_mut() {
         cache.require_full_present();
@@ -1480,7 +1487,8 @@ fn draw_overworld_impl(
                     && fly.is_none_or(|s| s.is_done())
             };
             let player_visible =
-                player_visible && fly_player_visible && screen.field_move_restore.is_none();
+                player_visible && fly_player_visible && screen.field_move_restore.is_none() && !hide_actors
+                    && !screen.player_presentation.image_suppressed(screen.state.current_map);
 
             let (frame, flip_h) = if published_player.is_some() || screen.state.player.movement_state == MovementState::Walking
                 || screen.state.player.movement_state == MovementState::Jumping
@@ -1673,12 +1681,15 @@ fn draw_overworld_impl(
             }
         }
         for (npc_slot, npc) in screen.npc_states.iter().enumerate() {
+            if hide_actors { break; }
             // Keep the final LCD boulder pose while its hide event commits.
             let retained_boulder=screen.boulder_push.is_some_and(|p|p.npc_index==npc_slot);
             let pose=if retained_boulder { None } else { screen.npc_presentation.pose(screen.state.current_map,npc_slot) };
             if screen.field_move_restore.is_some() {
                 break;
             }
+            if screen.npc_presentation.image_suppressed(screen.state.current_map, npc_slot)
+                && !retained_boulder { continue; }
             if !pose.map_or(npc.visible, |p| p.visible) && !retained_boulder {
                 continue;
             }
@@ -2954,6 +2965,52 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn cleared_oam_and_later_publication_invalidate_cached_actor_pixels() {
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().expect("test graphics");
+        let mut full_resources = Some(ResourceManager::new(root.clone()));
+        let mut cached_resources = Some(ResourceManager::new(root));
+        let mut s = screen_on(MapId::PalletTown);
+        s.state.player.x = 10;
+        s.state.player.y = 12;
+        s.publish_npc_frame(false);
+        let map = s.state.current_map;
+        let mut background = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        draw_overworld_background(&mut s, &mut full_resources, &mut background,
+            pokered_core::game_state::Lang::En);
+        let mut cache = OverworldBackgroundCache::new(160,144);
+        let mut incremental = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let roi = |fb: &FrameBuffer| {
+            (60..76).flat_map(|y| (64..80).map(move |x| fb.get_pixel(x,y))).collect::<Vec<_>>()
+        };
+        let baseline = roi(&background);
+        let mut check = |s: &mut OverworldScreen, empty: bool| {
+            let mut full = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+            draw_overworld(s, &mut full_resources, &mut full, pokered_core::game_state::Lang::En);
+            let reuse = can_reuse_composited_frame(s);
+            draw_overworld_cached_with(s, &mut cached_resources, &mut incremental,
+                pokered_core::game_state::Lang::En, &mut cache,
+                &mut |_,_,_,_,_,_| unreachable!("no scroll in this case"), reuse, None);
+            assert_eq!(full.packed(), incremental.packed(), "OAM change must invalidate old actor ink");
+            assert_eq!(roi(&full) == baseline, empty);
+        };
+        check(&mut s,false);
+        s.player_presentation.clear_shadow_oam(map);
+        s.npc_presentation.clear_shadow_oam(map);
+        check(&mut s,false); // shadow write does not change hardware
+        s.player_presentation.publish_cleared_oam(map);
+        s.npc_presentation.publish_cleared_oam(map);
+        check(&mut s,true);
+        s.player_presentation.tick(s.state.player.facing,false);
+        s.npc_presentation.update_images_before_movement(&s.npc_states);
+        check(&mut s,true); // prepared image is not a published image
+        s.publish_npc_frame(false);
+        check(&mut s,true);
+        s.publish_npc_frame(false);
+        check(&mut s,false);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

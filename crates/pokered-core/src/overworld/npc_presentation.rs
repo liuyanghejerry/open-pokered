@@ -24,6 +24,8 @@ pub struct NpcScreenPose {
 }
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct NpcPresentation {
+    #[serde(default)]
+    oam_cleared: bool,
     map: Option<MapId>,
     images: Vec<NpcImage>,
     poses: Vec<NpcScreenPose>,
@@ -71,6 +73,7 @@ impl NpcPresentation {
         image_override: Option<(usize, Direction)>,
     ) {
         if self.map != Some(map) || self.images.len() != npcs.len() {
+            if self.map != Some(map) { self.oam_cleared = false; }
             self.map = Some(map);
             self.images = npcs
                 .iter()
@@ -84,6 +87,7 @@ impl NpcPresentation {
             self.follow_animation = vec![(0, 0); npcs.len()];
             self.poses.clear();
             self.shadow_poses.clear();
+
         }
         self.player_walking = player_walking;
         self.scan_player = player;
@@ -120,6 +124,7 @@ impl NpcPresentation {
         }
         if self.poses.is_empty() {
             self.poses.clone_from(&self.shadow_poses);
+            if self.oam_cleared { for pose in &mut self.poses { pose.visible = false; } }
         }
     }
     /// CheckSpriteAvailability updates the image before the walking counter;
@@ -199,6 +204,24 @@ impl NpcPresentation {
             };
         }
     }
+    /// ClearSprites changes the shadow page, not the currently published pose.
+    pub fn clear_shadow_oam(&mut self, map: MapId) {
+        if self.map != Some(map) { *self = Self::default(); self.map = Some(map); }
+        self.oam_cleared = true;
+        for pose in &mut self.shadow_poses { pose.visible = false; }
+    }
+    /// Called after the real DMA child has copied the cleared page.
+    pub fn publish_cleared_oam(&mut self, map: MapId) {
+        assert_eq!(self.map, Some(map));
+        for pose in &mut self.poses { pose.visible = false; }
+    }
+    pub fn suppress_current_images(&mut self) {
+        for image in &mut self.images { image.visible = false; }
+    }
+    pub fn image_suppressed(&self, map: MapId, slot: usize) -> bool {
+        self.map == Some(map) && self.oam_cleared
+            && self.poses.get(slot).is_none_or(|pose| !pose.visible)
+    }
     pub fn pose(&self, map: MapId, slot: usize) -> Option<NpcScreenPose> {
         (self.map == Some(map))
             .then(|| self.poses.get(slot).copied())
@@ -209,6 +232,39 @@ impl NpcPresentation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cleared_npc_hardware_waits_for_both_publication_stages_and_roundtrips() {
+        let mut n = human();
+        n.walk_counter = 0;
+        n.delay_counter = 1;
+        let map = MapId::ViridianCity;
+        let mut p = NpcPresentation::default();
+        p.publish(map, &[n.clone()], (20,30), (0,0), false);
+        assert!(p.pose(map,0).unwrap().visible);
+        p.clear_shadow_oam(map);
+        assert!(p.pose(map,0).unwrap().visible, "shadow write is not DMA");
+        p.publish_cleared_oam(map);
+        assert!(p.image_suppressed(map,0));
+        p.suppress_current_images();
+        p.update_images_before_movement(&[n.clone()]);
+        assert!(p.image_suppressed(map,0), "new ImageIndex is not hardware publication");
+        p.publish(map, &[n.clone()], (20,30), (0,0), false);
+        assert!(p.image_suppressed(map,0));
+        let mut restored: NpcPresentation = serde_json::from_str(&serde_json::to_string(&p).unwrap()).unwrap();
+        p.publish(map, &[n.clone()], (20,30), (0,0), false);
+        restored.publish(map, &[n.clone()], (20,30), (0,0), false);
+        assert_eq!(p, restored);
+        assert!(!p.image_suppressed(map,0));
+        let mut cold = NpcPresentation::default();
+        cold.clear_shadow_oam(map);
+        cold.publish_cleared_oam(map);
+        assert!(cold.image_suppressed(map,0));
+        cold.publish(map, &[n.clone()], (20,30), (0,0), false);
+        assert!(cold.image_suppressed(map,0), "cold bootstrap must not bypass the cleared page");
+        cold.publish(map, &[n], (20,30), (0,0), false);
+        assert!(!cold.image_suppressed(map,0));
+    }
+
     #[test]
     fn stationary_images_and_delays_match_original_update_sequences() {
         let oracle: serde_json::Value = serde_json::from_str(include_str!("stationary_sequence_golden.json")).unwrap();
@@ -668,6 +724,8 @@ pub struct PlayerImage {
 /// distance. Its image persists across held-direction steps and OAM stages.
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PlayerPresentation {
+    #[serde(default)]
+    oam_cleared: bool,
     map: Option<MapId>,
     intra: u8,
     phase: u8,
@@ -710,6 +768,19 @@ impl PlayerPresentation {
             phase: self.phase,
         });
     }
+    pub fn clear_shadow_oam(&mut self, map: MapId) {
+        if self.map != Some(map) { *self = Self::default(); self.map = Some(map); }
+        self.oam_cleared = true;
+        self.shadow = None;
+    }
+    pub fn publish_cleared_oam(&mut self, map: MapId) {
+        assert_eq!(self.map, Some(map));
+        self.displayed = None;
+    }
+    pub fn suppress_current_image(&mut self) { self.current = None; }
+    pub fn image_suppressed(&self, map: MapId) -> bool {
+        self.map == Some(map) && self.oam_cleared && self.displayed.is_none()
+    }
     pub fn image(&self, map: MapId) -> Option<PlayerImage> {
         (self.map == Some(map)).then_some(self.displayed).flatten()
     }
@@ -718,6 +789,31 @@ impl PlayerPresentation {
 #[cfg(test)]
 mod player_tests {
     use super::*;
+    #[test]
+    fn clearing_shadow_then_dma_does_not_publish_the_new_player_image() {
+        let map = MapId::ViridianCity;
+        let mut p = PlayerPresentation::default();
+        p.publish(map, Direction::Down, false, false);
+        assert!(p.image(map).is_some());
+        p.clear_shadow_oam(map);
+        assert!(p.image(map).is_some(), "clearing shadow must retain old hardware");
+        p.publish_cleared_oam(map);
+        assert!(p.image_suppressed(map));
+        p.suppress_current_image();
+        p.tick(Direction::Left,false);
+        assert!(p.image_suppressed(map));
+        p.publish(map,Direction::Left,false,false);
+        assert!(p.image_suppressed(map));
+        let mut restored: PlayerPresentation = serde_json::from_str(&serde_json::to_string(&p).unwrap()).unwrap();
+        p.publish(map,Direction::Left,false,false);
+        restored.publish(map,Direction::Left,false,false);
+        assert_eq!(p,restored);
+        assert!(!p.image_suppressed(map));
+        assert_eq!(p.image(map).unwrap().facing,Direction::Left);
+        p.publish(MapId::PalletTown,Direction::Up,false,false);
+        assert!(!p.image_suppressed(MapId::PalletTown), "map reload owns a new pipeline");
+    }
+
     #[test]
     fn player_animation_and_publication_match_original_across_two_steps() {
         let golden: serde_json::Value =

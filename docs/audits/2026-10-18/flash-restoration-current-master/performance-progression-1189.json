@@ -1,0 +1,152 @@
+{
+  "scope": "Seeded diagnostic GBA controller, real START/Pokemon/FLASH input twice per exact-source ROM; not ordinary-SAVE GBA or fresh playthrough proof. Native ordinary-SAVE replays are separate.",
+  "baseline_source": "b51b5b3fdc18e84716b53890f38a46d9ba965851",
+  "final_source": "dda4fafab2e0fecff483a33755348fad490923bd",
+  "runs": [
+    {
+      "name": "1188-flash-integrated-gba",
+      "source": "b51b5b3fdc18e84716b53890f38a46d9ba965851",
+      "ROM_sha256": "617edb76ba9489ad4f9b6eff5764b703bc502ced3eaf9844f64f3cf66776c1f4",
+      "elf_sha256": "9544157e285043829fcaf717ac7e497cbfb84e8462d71b7d9968fb2e749cf7ea",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "cases": [
+        [
+          "0",
+          "45",
+          "690302",
+          "49784",
+          "11836"
+        ],
+        [
+          "1",
+          "45",
+          "685804",
+          "49784",
+          "11836"
+        ]
+      ],
+      "seconds": [
+        2.6332931518554688,
+        2.6161346435546875
+      ]
+    },
+    {
+      "name": "1189-lcd-runner-gba",
+      "source": "edde612fb4288441230768615e820734f9b8a8ad",
+      "ROM_sha256": "e57e1d7cbcb4cdb701e00e44e6a56a2a878b56bff5bf1a663918981e12727e10",
+      "elf_sha256": "d894744a9e028717ee6702557aee7b7c1cd78de395a0144020353631219ab52f",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "cases": [
+        [
+          "0",
+          "45",
+          "663983",
+          "49784",
+          "11836"
+        ],
+        [
+          "1",
+          "45",
+          "663805",
+          "49784",
+          "11836"
+        ]
+      ],
+      "seconds": [
+        2.5328941345214844,
+        2.532215118408203
+      ]
+    },
+    {
+      "name": "1189-video-runner-gba",
+      "source": "082956633baded77116b15c7a4c6bd252fc22a4d",
+      "ROM_sha256": "8e6ce3db1440da22bfc17bb08cc8cd7b1d311d6c53b1c58e980dfaa985598f80",
+      "elf_sha256": "15f66c6e678c1df607449132833f366d08dbb2614bf5cbbcee953e0aae90d13c",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "cases": [
+        [
+          "0",
+          "45",
+          "624159",
+          "49784",
+          "11836"
+        ],
+        [
+          "1",
+          "45",
+          "623973",
+          "49784",
+          "11836"
+        ]
+      ],
+      "seconds": [
+        2.3809776306152344,
+        2.380268096923828
+      ]
+    },
+    {
+      "name": "1189-copy-runner-gba",
+      "source": "4bd17ef74bb1ee5633d1245cc6e6d04d271d392b",
+      "ROM_sha256": "6038c6941e2e6f3ef3ede54fc5d1c5d4bca2359912f0e0c319555a023dfd7fea",
+      "elf_sha256": "ba563e3f0d749d7aab33fc09a00306ba762058d0efb7a978b37fa3ed4dfb4213",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "cases": [
+        [
+          "0",
+          "45",
+          "597805",
+          "49784",
+          "11836"
+        ],
+        [
+          "1",
+          "45",
+          "602031",
+          "49784",
+          "11836"
+        ]
+      ],
+      "seconds": [
+        2.280445098876953,
+        2.2965660095214844
+      ]
+    },
+    {
+      "name": "1189-pattern-inline-gba",
+      "source": "dda4fafab2e0fecff483a33755348fad490923bd",
+      "ROM_sha256": "d39d59c77f623b835a8e0f5baa5fe31da0bed794d6d68a2c2deb4c200d92c4f3",
+      "elf_sha256": "be76a07edfd1ff619a725dff624c7ce1850e584579801e693f4b63b1e35428e9",
+      "controller_patch_sha256": "1fc3a3a3c9eb7277fe6efc87b82b9bef0412733d15d229cb8d1bd712d5d21a7c",
+      "cases": [
+        [
+          "0",
+          "45",
+          "563400",
+          "49784",
+          "11820"
+        ],
+        [
+          "1",
+          "45",
+          "563142",
+          "49784",
+          "11820"
+        ]
+      ],
+      "seconds": [
+        2.149200439453125,
+        2.1482162475585938
+      ]
+    }
+  ],
+  "improvement_percent": [
+    18.3835480702649,
+    17.885868265568583
+  ],
+  "source_instructions_and_bus_accesses_preserved": true,
+  "core_focus_tests_passed": 56,
+  "final_stack_margin": 11820,
+  "baseline_stack_margin": 11836,
+  "shared_target_only": true,
+  "no_extra_native_binary_copies": true
+}

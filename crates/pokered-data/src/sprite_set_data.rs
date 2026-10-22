@@ -318,3 +318,63 @@ impl SpriteSetId {
         &SPRITE_SETS[self as usize]
     }
 }
+
+/// GetMapSpriteSetID / GetSplitMapSpriteSetID. Return None for interior maps.
+/// Source Route20 has its own coastline branches, not a rectangular split.
+pub fn sprite_set_at(map: crate::maps::MapId, x: u16, y: u16) -> Option<SpriteSetId> {
+    use crate::maps::MapId;
+    MAP_SPRITE_SETS.get(map as usize).map(|entry| match *entry {
+        MapSpriteSetRef::Direct(set) => set,
+        MapSpriteSetRef::Split(index) => {
+            if map == MapId::Route20 {
+                if x < 43 {
+                    SpriteSetId::PalletViridian
+                } else if x >= 62 || y < if x >= 55 { 8 } else { 13 } {
+                    SpriteSetId::Fuchsia
+                } else {
+                    SpriteSetId::PalletViridian
+                }
+            } else {
+                let split = &SPLIT_MAP_SPRITE_SETS[index as usize];
+                let coordinate = match split.direction {
+                    SplitDirection::NorthSouth => y,
+                    SplitDirection::EastWest => x,
+                };
+                if coordinate < u16::from(split.coordinate) {
+                    split.set_north_or_west
+                } else {
+                    split.set_south_or_east
+                }
+            }
+        }
+    })
+}
+
+#[cfg(test)]
+mod selected_sprite_set_tests {
+    use super::*;
+    use crate::maps::MapId;
+    #[test]
+    fn route_twenty_coastline_and_interior_do_not_use_a_rectangular_split() {
+        for (x, y, expected) in [
+            (42, 0, SpriteSetId::PalletViridian),
+            (43, 12, SpriteSetId::Fuchsia),
+            (43, 13, SpriteSetId::PalletViridian),
+            (54, 12, SpriteSetId::Fuchsia),
+            (55, 12, SpriteSetId::PalletViridian),
+            (55, 7, SpriteSetId::Fuchsia),
+            (61, 8, SpriteSetId::PalletViridian),
+            (62, 30, SpriteSetId::Fuchsia),
+        ] {
+            assert_eq!(
+                sprite_set_at(MapId::Route20, x, y),
+                Some(expected),
+                "{x},{y}"
+            );
+        }
+        assert_eq!(
+            sprite_set_at(MapId::OaksLab, 0, 0),
+            core::option::Option::None
+        );
+    }
+}
