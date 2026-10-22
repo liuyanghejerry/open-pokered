@@ -129,7 +129,7 @@ fn changed_native_program_and_unsupported_source_context_reject_before_clock_or_
         }),
         Err(AudioAdmissionError::Admission(_))
     ));
-    let before = work.clone();
+    let mut before = work.clone();
     let original = m.sequencer.channels[0].data[0];
     m.sequencer.channels[0].data[0] ^= 1;
     let native = state(&m);
@@ -137,15 +137,22 @@ fn changed_native_program_and_unsupported_source_context_reject_before_clock_or_
         m.resume_source_audio_frame(&mut work, |_| -> Result<(), ()> {
             panic!("stale native stream")
         }),
-        Err(AudioAdmissionError::Preflight(
+        Err(AudioAdmissionError::SourceFailed(
             AudioClockError::NativeStateMismatch(_)
         ))
     ));
+    before.source_failed = Some(AudioClockError::NativeStateMismatch(0));
     assert_eq!(work, before);
     assert_eq!(state(&m), native);
     m.sequencer.channels[0].data[0] = original;
-    m.resume_source_audio_frame(&mut work, |_| Ok::<(), ()>(()))
-        .unwrap();
+    assert!(matches!(
+        m.resume_source_audio_frame(&mut work, |_| -> Result<(), ()> {
+            panic!("terminal failure must not resume after restoring the stream")
+        }),
+        Err(AudioAdmissionError::SourceFailed(
+            AudioClockError::NativeStateMismatch(_)
+        ))
+    ));
     for (bank, mute) in [(0, 0), (8, 0), (31, 0), (2, 1)] {
         assert!(m.begin_source_audio_frame(bank, mute).is_err());
     }

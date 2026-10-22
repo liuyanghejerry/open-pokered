@@ -692,7 +692,7 @@ dependencies = [
 [[package]]
 name = "dotzuki-audio"
 version = "0.10.1"
-source = "git+https://github.com/liuyanghejerry/dotzuki?rev=8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8#8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8"
+source = "git+https://github.com/liuyanghejerry/dotzuki?rev=a4f500c831aa7a2eaa725a471e9e225d29b271d5#a4f500c831aa7a2eaa725a471e9e225d29b271d5"
 dependencies = [
  "bitflags 2.13.2",
  "log",
@@ -2196,7 +2196,7 @@ dependencies = [
  "agb",
  "bitflags 2.13.2",
  "critical-section",
- "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8)",
+ "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=a4f500c831aa7a2eaa725a471e9e225d29b271d5)",
 ]
 
 [[package]]

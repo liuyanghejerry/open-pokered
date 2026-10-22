@@ -3,6 +3,8 @@
 //! here. Next-note/duty-rotation/pitch-slide paths remain explicit unsupported.
 pub use super::audio_work::ChannelEffectWorkInput;
 use super::{AudioClockError, AudioFrameWork};
+#[path = "timer_bus.rs"]
+pub mod bus;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
     any(test, feature = "source-clock-serde"),

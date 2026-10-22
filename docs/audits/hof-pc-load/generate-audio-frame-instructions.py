@@ -15,6 +15,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'symbols', 'native_inputs', 'output'):
         p.add_argument(name, type=Path)
+    p.add_argument('--apu', action='store_true', help='Record actual APU accesses instead of duplicating the CPU trace')
     args = p.parse_args()
     spec = importlib.util.spec_from_file_location('oracle', Path(__file__).with_name('generate-timer-instructions.py'))
     o = importlib.util.module_from_spec(spec)
@@ -28,6 +29,7 @@ def main():
             bank, address = bits[0].split(':')
             symbols[bits[1]] = (int(bank, 16), int(address, 16))
     cases = []
+    baseline_traces = {}
     for row in json.loads(args.native_inputs.read_text())['frames']:
         work = row['work']; start = work['start']; bank = work['bank']
         prefix = 'Audio1' if bank == 2 else 'Audio3'
@@ -51,7 +53,7 @@ def main():
             put(name, index*2, value & 255); put(name, index*2+1, value >> 8)
         put('wMuteAudioAndPauseMusic', 0, 0)
         put('wStereoPanning', 0, start['panning'])
-        put('wMusicWaveInstrument', 0, 0)  # Controlled instrument; never affects the CPU branch path.
+        put('wMusicWaveInstrument', 0, start['voices'][2]['wave_instrument'] if args.apu else 0)
         put('wFrequencyModifier', 0, start['frequency_modifier'] & 255)
         for name, value in [('wMusicTempo', start['music_tempo']), ('wSfxTempo', start['sfx_tempo'])]:
             put(name, 0, value >> 8); put(name, 1, value & 255)
@@ -126,16 +128,49 @@ def main():
                     else: break
             base += len(data) + 16
         entry = symbols[prefix+'_UpdateMusic'][1]
-        try:
-            trace, regs, final = o.run(rom, bank, dict(mute=0, sound_ids=work['ids'], effects=[None]*8),
-                entry=entry, memory=memory, capture=True, strict_memory=True, instruction_limit=20000)
-        except Exception as exc:
-            raise AssertionError(f"{work['song']} confirm{row['confirmation']} frame{row['frame']}: {exc}") from exc
-        cases.append(dict(song=work['song'], confirmation=row['confirmation'], frame=row['frame'],
-                          cycles=sum(t for _, t in trace), trace=trace))
+        contexts = [(0x77, 0), (0x25, 0xa5), (0, 0xff)] if args.apu else [(0x77, 0)]
+        for nr50, nr51 in contexts:
+            memory[0xff24], memory[0xff25] = nr50, nr51
+            reads, writes = [], []
+            try:
+                trace, regs, final = o.run(rom, bank, dict(mute=0, sound_ids=work['ids'], effects=[None]*8),
+                    entry=entry, memory=memory, capture=True, strict_memory=True, instruction_limit=20000,
+                    read_events=reads if args.apu else None, write_events=writes if args.apu else None)
+            except Exception as exc:
+                raise AssertionError(f"{work['song']} confirm{row['confirmation']} frame{row['frame']}: {exc}") from exc
+            if args.apu:
+                # Reusing the CPU fixture must be proved for every port/wave
+                # variant, not inferred from equal aggregate cycle counts.
+                key = (work['song'], row['confirmation'], row['frame'])
+                if key not in baseline_traces:
+                    assert 'initial_wave_override' not in row
+                    baseline_traces[key] = trace
+                else:
+                    assert trace == baseline_traces[key], (key, row.get('initial_wave_override'), nr50, nr51)
+            case = dict(song=work['song'], confirmation=row['confirmation'], frame=row['frame'],
+                        cycles=sum(t for _, t in trace))
+            if args.apu:
+                accesses = sorted([(i, pc, trace[i][1]-4, 'read', a, v) for i, pc, a, v in reads]
+                                + [(i, pc, trace[i][1]-4, 'write', a, v) for i, pc, a, v in writes])
+                # Supported APU access opcodes independently determine their bus phase.
+                for i, pc, offset, kind, address, value in accesses:
+                    opcode = rom_byte(pc)
+                    expected = {0xf0:(8,'read'), 0xe0:(8,'write'), 0x72:(4,'write'),
+                                0x77:(4,'write'), 0x73:(4,'write'), 0x22:(4,'write'),
+                                0xea:(12,'write'), 0xfa:(12,'read')}[opcode]
+                    assert (offset, kind) == expected, (pc, opcode, offset, kind)
+                case.update(nr50=nr50, nr51=nr51, accesses=accesses)
+                if 'initial_wave_override' in row:
+                    case['initial_wave_override'] = row['initial_wave_override']
+            else:
+                case['trace'] = trace
+            cases.append(case)
     args.output.write_text(json.dumps(dict(scope=__doc__, rom_sha256=o.ROM_SHA,
         input_sha256=hashlib.sha256(args.native_inputs.read_bytes()).hexdigest(), cases=cases), separators=(',', ':'))+'\n')
-    print(f'{len(cases)} strict-memory original whole updates, {sum(len(c["trace"]) for c in cases)} instructions')
+    if args.apu:
+        print(f'{len(cases)} strict-memory original whole updates, {sum(len(c["accesses"]) for c in cases)} APU accesses')
+    else:
+        print(f'{len(cases)} strict-memory original whole updates, {sum(len(c["trace"]) for c in cases)} instructions')
 
 
 if __name__ == '__main__':

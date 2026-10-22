@@ -472,12 +472,31 @@ impl AudioManager {
         if bank != song.bank()
             || mute != 0
             || self.engine.is_fading()
+            || self.engine.has_post_frame_hook()
             || self.low_health_alarm_enabled
             || self.music_after_sfx.is_some()
+            || self.engine.sequencer.pending_nr50.is_some()
         {
             return Err(AudioClockError::UnsupportedSoundBank);
         }
         Ok(song)
+    }
+
+    fn source_frame_resume_error<E>(
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        error: crate::source_clock::AudioClockError,
+    ) -> crate::source_clock::AudioAdmissionError<
+        crate::source_clock::frame_instructions::FrameStepError<E>,
+    > {
+        use crate::source_clock::AudioAdmissionError;
+        if work.cycles() == 0 {
+            AudioAdmissionError::Preflight(error)
+        } else {
+            // Earlier resumes already advanced the owner and may have written
+            // the APU. The frame cannot fall back to a fresh ordinary update.
+            work.source_failed = Some(error);
+            AudioAdmissionError::SourceFailed(error)
+        }
     }
 
     /// Inspect one existing native sequencer. Actual source bank/mute must be
@@ -517,20 +536,27 @@ impl AudioManager {
         >,
     > {
         use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
+        if work.has_bus_output() {
+            return Err(AudioAdmissionError::WrongMode);
+        }
+        if let Some(error) = work.source_failed {
+            return Err(AudioAdmissionError::SourceFailed(error));
+        }
         if let Some(result) = work.committed {
             return result.map_err(AudioAdmissionError::Advanced);
         }
         let song = self
             .source_frame_song(work.bank(), work.mute())
-            .map_err(AudioAdmissionError::Preflight)?;
+            .map_err(|error| Self::source_frame_resume_error(work, error))?;
         if song != work.song() || !work.matches_native(&self.engine.sequencer) {
-            return Err(AudioAdmissionError::Preflight(
+            return Err(Self::source_frame_resume_error(
+                work,
                 AudioClockError::NativeStateMismatch(0),
             ));
         }
         let prepared = self
             .prepare_source_frame()
-            .map_err(AudioAdmissionError::Preflight)?;
+            .map_err(|error| Self::source_frame_resume_error(work, error))?;
         while !work.finished() {
             work.try_step(&self.engine.sequencer, &mut execute)
                 .map_err(AudioAdmissionError::Admission)?;
@@ -540,11 +566,93 @@ impl AudioManager {
                 cycles: work.cycles(),
             })
         {
-            return Err(AudioAdmissionError::Preflight(
+            let error = AudioClockError::NativeStateMismatch(0);
+            work.source_failed = Some(error);
+            return Err(AudioAdmissionError::SourceFailed(error));
+        }
+        self.update_frame();
+        let result = prepared.finish(&self.engine.sequencer);
+        work.committed = Some(result);
+        result.map_err(AudioAdmissionError::Advanced)
+    }
+
+    /// Begin a frame whose real APU accesses are owned by the external source
+    /// timeline. The ordinary batch-output API cannot resume this cursor.
+    pub fn begin_source_audio_frame_with_bus(
+        &self,
+        bank: u8,
+        mute: u8,
+    ) -> Result<
+        crate::source_clock::frame_instructions::SourceAudioFrame,
+        crate::source_clock::AudioClockError,
+    > {
+        let song = self.source_frame_song(bank, mute)?;
+        self.prepare_source_frame()?;
+        crate::source_clock::frame_instructions::SourceAudioFrame::new_with_bus(
+            &self.engine.sequencer,
+            song,
+            bank,
+            mute,
+        )
+    }
+
+    /// Continue the one source cursor and apply accesses to this manager's APU.
+    /// The owner admits each complete instruction before advancing its timeline,
+    /// performs any access at its given offset, and returns the actual read byte.
+    /// It must retain exclusive IRQ/APU ownership across refusal and resumption.
+    /// After the source RET, advance only the native logical state once: no
+    /// ordinary batch register writes, manager fade or hook is replayed.
+    pub fn resume_source_audio_frame_with_bus<E>(
+        &mut self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        mut execute: impl FnMut(
+            &mut crate::apu::Apu,
+            crate::source_clock::apu_bus::ApuInstruction,
+        ) -> Result<Option<u8>, E>,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<E>,
+        >,
+    > {
+        use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
+        if !work.has_bus_output() {
+            return Err(AudioAdmissionError::WrongMode);
+        }
+        if let Some(error) = work.source_failed {
+            return Err(AudioAdmissionError::SourceFailed(error));
+        }
+        if let Some(result) = work.committed {
+            return result.map_err(AudioAdmissionError::Advanced);
+        }
+        let song = self
+            .source_frame_song(work.bank(), work.mute())
+            .map_err(|error| Self::source_frame_resume_error(work, error))?;
+        if song != work.song() || !work.matches_native(&self.engine.sequencer) {
+            return Err(Self::source_frame_resume_error(
+                work,
                 AudioClockError::NativeStateMismatch(0),
             ));
         }
-        self.update_frame();
+        let prepared = self
+            .prepare_source_frame()
+            .map_err(|error| Self::source_frame_resume_error(work, error))?;
+        while !work.finished() {
+            work.try_step_with_bus(&self.engine.sequencer, |op| {
+                execute(&mut self.engine.apu, op)
+            })
+            .map_err(AudioAdmissionError::Admission)?;
+        }
+        if prepared.work()
+            != (AudioFrameWork {
+                cycles: work.cycles(),
+            })
+        {
+            let error = AudioClockError::NativeStateMismatch(0);
+            work.source_failed = Some(error);
+            return Err(AudioAdmissionError::SourceFailed(error));
+        }
+        let _already_applied_nr50 = self.engine.sequencer.advance_frame_without_output();
         let result = prepared.finish(&self.engine.sequencer);
         work.committed = Some(result);
         result.map_err(AudioAdmissionError::Advanced)
@@ -630,3 +738,10 @@ mod source_timer_tests;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod source_frame_tests;
+
+#[cfg(test)]
+mod source_frame_bus_tests;
+
+#[cfg(test)]
+#[path = "audio_manager/source_bus_guard_tests.rs"]
+mod source_bus_guard_tests;

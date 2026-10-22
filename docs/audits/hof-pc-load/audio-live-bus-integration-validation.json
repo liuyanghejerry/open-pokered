@@ -1,0 +1,180 @@
+{
+  "scope": "Supported complete audio calls through the manager-owned APU; no Game/HoF, complete IRQ, original boot or physical PCM equivalence claim.",
+  "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "contexts": 957,
+  "original_cpu_contexts": 311,
+  "original_cpu_instructions": 205206,
+  "additional_wave_contexts": 8,
+  "initial_nr_port_variants": 3,
+  "apu_accesses": 10101,
+  "consecutive_native_frames": 1536,
+  "suspension_instruction_slices": [
+    1,
+    17,
+    31
+  ],
+  "artifacts": {
+    "crates/pokered-audio/src/source_clock/frame_bus_golden.json": {
+      "sha256": "f2c28563708fdceeb3e735ae786d8d6c10ed73782455c401f00ff35eebf6bf27",
+      "bytes": 417006
+    },
+    "crates/pokered-audio/src/source_clock/frame_work_golden.json": {
+      "sha256": "2a2d88c511eb641fc33e507d62f7af9549950dd9219b7e27645a3b7d254555e8",
+      "bytes": 2142210
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-frame-bus-tests.log": {
+      "sha256": "168a4a0e1bc3a94be46448e8a2144c66442422ec469a244fb8a825736d3213ce",
+      "bytes": 1021
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-native-frame-wave-inputs.json": {
+      "sha256": "713e553f1a8a36e3bed9f50df8875ca0038f333c05afcc34eab47bd418a63b6f",
+      "bytes": 1825546
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-live-manager-guards.log": {
+      "sha256": "fd43bd605f8bc47d4a57215bcb4fac7c36414881384e36f51082a29fb30dd1ca",
+      "bytes": 2029
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-live-manager-cpu-guard.log": {
+      "sha256": "d99bf2437c35db65beedc169f43c9953eae2023515145c72c7bc7e50c743a35f",
+      "bytes": 891
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-frame-bus-generator.log": {
+      "sha256": "46a30159d7a75805c20dbd9e0dc25a8b7814e38ae73eae1ff90f157413bbe03b",
+      "bytes": 61
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-live-manager-review.json": {
+      "sha256": "d430bfea4b3b10e33ab8f0324bbbe07f0cb569cbadf17c4b6a666a546a995b58",
+      "bytes": 2633
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-changed-rustfmt.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-audio-full-tests.log": {
+      "sha256": "421331cfcd00fdeab201832338af01d500b0ba353b93ee2ecb2dd6162d186593",
+      "bytes": 19137
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-gba-audio-check.log": {
+      "sha256": "a552c62d4652d6ee6dc38a6f89e7aa6f890fbcdecaa7344a80f13171e4445c16",
+      "bytes": 846
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-gba-audio-serde-check.log": {
+      "sha256": "84658b5a0ed6514cd8feab8584f203c597f513086b0d40cbec9f10183cb3e512",
+      "bytes": 483
+    },
+    ".task-tmp/fidelity-39-plus/audit-1275-audio-fmt-check.log": {
+      "sha256": "70a53b919023e89306beccb487038cb2b015b93fdee4b54ddf99c6d1c8fa4bf8",
+      "bytes": 138354
+    }
+  },
+  "checks": [
+    {
+      "filter": "audio_manager::source_frame_bus_tests",
+      "passed": true,
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "elapsed_seconds": 20.09,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-frame-bus-tests.log"
+    },
+    {
+      "filter": "source_bus_guard_tests",
+      "passed": true,
+      "tests_passed": 10,
+      "tests_failed": 0,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-live-manager-guards.log",
+      "log_sha256": "fd43bd605f8bc47d4a57215bcb4fac7c36414881384e36f51082a29fb30dd1ca"
+    },
+    {
+      "filter": "changed_native_program_and_unsupported_source_context_reject_before_clock_or_tick",
+      "passed": true,
+      "tests_passed": 1,
+      "tests_failed": 0,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-live-manager-cpu-guard.log",
+      "log_sha256": "d99bf2437c35db65beedc169f43c9953eae2023515145c72c7bc7e50c743a35f"
+    },
+    {
+      "command": "cargo test -p pokered-audio --offline",
+      "cwd": "/home/jerry/develop/open-pokered",
+      "environment": {
+        "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+        "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_PROFILE_TEST_DEBUG": "0",
+        "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+        "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+      },
+      "passed": true,
+      "tests_passed": 191,
+      "tests_failed": 0,
+      "tests_ignored": 0,
+      "elapsed_seconds": 101.78,
+      "doctests_passed": 0,
+      "doctests_failed": 0,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-audio-full-tests.log",
+      "feature_scope": "Default features; serde serialization assertions also run under cfg(test). This is not a full --features source-clock-serde test run."
+    },
+    {
+      "command": "cargo +nightly-2025-12-07 check --release -p pokered-audio --offline",
+      "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+      "environment": {
+        "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+        "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_PROFILE_TEST_DEBUG": "0",
+        "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+        "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+      },
+      "passed": true,
+      "elapsed_seconds": 3.85,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-gba-audio-check.log",
+      "warnings": "One existing dead_code warning; no errors."
+    },
+    {
+      "command": "cargo +nightly-2025-12-07 check --manifest-path ../pokered-audio/Cargo.toml --release --features source-clock-serde --offline",
+      "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+      "environment": {
+        "CARGO_HOME": "/home/jerry/.cache/open-pokered-fidelity/1030-tile-candidate-cargo-home",
+        "CARGO_TARGET_DIR": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target",
+        "CARGO_INCREMENTAL": "0",
+        "CARGO_PROFILE_DEV_DEBUG": "0",
+        "CARGO_PROFILE_TEST_DEBUG": "0",
+        "CARGO_PROFILE_DEV_OPT_LEVEL": "0",
+        "CARGO_PROFILE_TEST_OPT_LEVEL": "0"
+      },
+      "passed": true,
+      "elapsed_seconds": 4.6,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-gba-audio-serde-check.log",
+      "warnings": "One existing dead_code warning; no errors."
+    }
+  ],
+  "native_input_sha256_matches_frame_fixture": true,
+  "native_input_rows": 319,
+  "all_port_and_wave_variants_match_whole_baseline_cpu_trace": true,
+  "reproduction": {
+    "exporter": "cargo run -p pokered-audio --features source-clock-serde --locked --offline --example export_source_audio_frames -- .task-tmp/fidelity-39-plus/audit-1275-native-frame-wave-inputs.json --wave-variants",
+    "generator": "python3 docs/audits/hof-pc-load/generate-audio-frame-instructions.py .task-tmp/fidelity-39-plus/victory-95-source-setup-1f/reference.gbc .task-tmp/stats-59-reference-sgvaaq/pokered.sym .task-tmp/fidelity-39-plus/audit-1275-native-frame-wave-inputs.json crates/pokered-audio/src/source_clock/frame_bus_golden.json --apu",
+    "environment": "Reuse the documented existing CARGO_HOME/CARGO_TARGET_DIR; incremental=0 and DEV/TEST debug=0, opt-level=0."
+  },
+  "formatting": {
+    "changed_rust_files": 23,
+    "changed_rustfmt_check_passed": true,
+    "changed_rustfmt_exit_code": 0,
+    "log": ".task-tmp/fidelity-39-plus/audit-1275-changed-rustfmt.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "whole_crate_cargo_fmt_check_passed": false,
+    "whole_crate_reason": "Existing formatting differences in six files outside this patch; not reformatted as part of this change.",
+    "unchanged_files": [
+      "crates/pokered-audio/src/audio_format_tests.rs",
+      "crates/pokered-audio/src/audio_manager_tests.rs",
+      "crates/pokered-audio/src/lib.rs",
+      "crates/pokered-audio/src/output.rs",
+      "crates/pokered-audio/src/output_gba.rs",
+      "crates/pokered-audio/src/sfx_data.rs"
+    ],
+    "whole_crate_log": ".task-tmp/fidelity-39-plus/audit-1275-audio-fmt-check.log",
+    "whole_crate_log_timing": "Captured before the source_clock/mod.rs module-order correction. That changed file then passed the final 23-file rustfmt check; the six unchanged-file baseline differences remain outside this patch."
+  },
+  "final_checks_complete": true
+}

@@ -1,6 +1,7 @@
 //! Retained source music-command work through note-length entry. Converted native
 //! stream offsets are used only for reading the one owner's stream; no ROM code
 //! is interpreted at runtime and no native channel or APU is updated here.
+use super::apu_bus::ApuInstruction;
 pub use super::audio_note_dispatch_work::MusicCommandState;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,6 +46,7 @@ pub enum StreamInputError {
     UnsupportedCommand(u8),
     ChannelEndUnsupported,
     CommandLimit,
+    MissingWave,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StreamStepError<E> {
@@ -202,6 +204,18 @@ impl StreamInstructions {
         data: &[u8],
         execute: impl FnOnce(u8) -> Result<(), E>,
     ) -> Result<bool, StreamStepError<E>> {
+        self.try_step_with_bus(data, |instruction| {
+            execute(instruction.tcycles).map(|()| None)
+        })
+    }
+    /// Offer the original instruction and its live APU access to the single
+    /// clock owner. Every volume command writes its just-fetched parameter;
+    /// the retained final master_volume is not a replacement for those writes.
+    pub fn try_step_with_bus<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, StreamStepError<E>> {
         if let Stage::Unsupported(error) = self.stage {
             return Err(StreamStepError::Input(error));
         }
@@ -220,7 +234,12 @@ impl StreamInstructions {
             None
         };
         let cycles = self.next_cycles().expect("live command instruction");
-        execute(cycles).map_err(StreamStepError::Clock)?;
+        let instruction = if self.stage == Stage::MasterVolume(0) {
+            ApuInstruction::write(cycles, 0xff24, self.last)
+        } else {
+            ApuInstruction::plain(cycles)
+        };
+        execute(instruction).map_err(StreamStepError::Clock)?;
         self.advance(byte);
         self.cycles += u32::from(cycles);
         Ok(self.finished())
