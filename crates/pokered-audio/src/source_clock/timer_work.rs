@@ -57,7 +57,7 @@ impl EffectInstructionWork {
     pub fn finished(&self) -> bool {
         self.stage == EffectStage::Done
     }
-    fn peek(&self) -> Option<u8> {
+    pub(crate) fn peek(&self) -> Option<u8> {
         use EffectStage::*;
         let i = self.input;
         Some(match self.stage {

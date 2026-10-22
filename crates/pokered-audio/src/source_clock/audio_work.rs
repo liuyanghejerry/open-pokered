@@ -153,6 +153,22 @@ pub fn noise_channel_end_work() -> u32 {
     entry + read_and_return_test + clear_noise_flags + no_cry_and_stop
 }
 
+/// Same common Audio1/3 noise-ending code, including the actual pulse-ID cry
+/// checks. Only non-cry ending paths are accepted; no bank is guessed here.
+pub fn noise_channel_end_work_with_sfx(source_id: u8) -> Option<u32> {
+    if (20..134).contains(&source_id) {
+        return None;
+    }
+    let cry_check = 16
+        + 8
+        + if source_id < 20 {
+            8 + 12
+        } else {
+            12 + 16 + 8 + if source_id == 134 { 12 } else { 8 + 8 + 12 }
+        };
+    Some(noise_channel_end_work() - (16 + 8 + 8 + 12) + cry_check)
+}
+
 #[cfg(test)]
 mod noise_tests {
     use super::super::{

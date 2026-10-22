@@ -88,6 +88,13 @@ impl NotePreparation {
             None
         }
     }
+    pub fn channel_end_context(&self) -> Option<(u8, StreamResult)> {
+        if let Stage::Stream(work) = &self.stage {
+            work.channel_end_context()
+        } else {
+            None
+        }
+    }
     pub fn cycles(&self) -> u32 {
         self.cycles
     }

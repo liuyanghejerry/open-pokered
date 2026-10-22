@@ -1,5 +1,6 @@
 //! Retained supported Audio1/3_PlayNextNote body, including its actual final RET.
 //! No native frame commit, APU bus scheduling, IRQ epilogue or Game hookup occurs.
+use super::channel_end_instructions::{ChannelEndInput, ChannelEndInstructions, ChannelEndResult};
 use super::note_pitch_instructions::{NotePitchInput, NotePitchInstructions, NotePitchResult};
 use super::note_preparation::{
     NotePreparation, PreparationBoundary, PreparationInput, PreparationResult,
@@ -30,6 +31,25 @@ pub struct MusicNoteResult {
     pub wave_return_frequency: Option<u16>,
     pub cycles: u32,
 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
+pub struct MusicEndResult {
+    pub stream: super::note_stream_instructions::StreamResult,
+    pub ending: ChannelEndResult,
+    pub cycles: u32,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
+pub enum MusicNoteOutcome {
+    Note(MusicNoteResult),
+    End(MusicEndResult),
+}
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(
     any(test, feature = "source-clock-serde"),
@@ -45,6 +65,15 @@ enum Stage {
         preparation: PreparationResult,
         pitch: NotePitchResult,
     },
+    Ending {
+        stream: super::note_stream_instructions::StreamResult,
+        work: ChannelEndInstructions,
+    },
+    EndReturn {
+        stream: super::note_stream_instructions::StreamResult,
+        ending: ChannelEndResult,
+    },
+    EndDone(MusicEndResult),
     Done(MusicNoteResult),
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -71,9 +100,11 @@ impl MusicNoteInstructions {
             cycles: 0,
         })
     }
-    pub fn result(&self) -> Option<MusicNoteResult> {
+    pub fn result(&self) -> Option<MusicNoteOutcome> {
         if let Stage::Done(result) = self.stage {
-            Some(result)
+            Some(MusicNoteOutcome::Note(result))
+        } else if let Stage::EndDone(result) = self.stage {
+            Some(MusicNoteOutcome::End(result))
         } else {
             None
         }
@@ -116,6 +147,29 @@ impl MusicNoteInstructions {
                             work: pitch,
                         })
                     }
+                } else if let Some((channel, stream)) = work.channel_end_context() {
+                    // A noise ending under non-cry SFX reads no missing pan,
+                    // saved-volume, disable-output or source pointer word.
+                    // Broader endings retain the explicit unsupported boundary.
+                    if channel == 3 && !(20..134).contains(&self.input.source_sfx_id) {
+                        Some(Stage::Ending {
+                            stream,
+                            work: ChannelEndInstructions::new(ChannelEndInput {
+                                bank: self.input.bank,
+                                channel,
+                                source_sfx_id: self.input.source_sfx_id,
+                                flags1: stream.state.flags1,
+                                flags2: self.input.preparation.flags2,
+                                disable_output: None,
+                                saved_volume: None,
+                                panning: None,
+                                command_ptr: None,
+                            })
+                            .expect("noise/non-cry tail reads no optional state"),
+                        })
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -139,13 +193,31 @@ impl MusicNoteInstructions {
                     cycles: self.cycles + 16,
                 }))
             }
-            Stage::Done(_) => return Ok(true),
+            Stage::Ending { stream, work } => {
+                if work.try_step(clock).map_err(StreamStepError::Clock)? {
+                    Some(Stage::EndReturn {
+                        stream: *stream,
+                        ending: work.result().expect("ending tail RET"),
+                    })
+                } else {
+                    None
+                }
+            }
+            Stage::EndReturn { stream, ending } => {
+                clock(16).map_err(StreamStepError::Clock)?;
+                Some(Stage::EndDone(MusicEndResult {
+                    stream: *stream,
+                    ending: *ending,
+                    cycles: self.cycles + 16,
+                }))
+            }
+            Stage::Done(_) | Stage::EndDone(_) => return Ok(true),
         };
         self.cycles += u32::from(accepted);
         if let Some(stage) = transition {
             self.stage = stage;
         }
-        Ok(matches!(self.stage, Stage::Done(_)))
+        Ok(matches!(self.stage, Stage::Done(_) | Stage::EndDone(_)))
     }
 }
 
@@ -191,10 +263,71 @@ mod tests {
                 cycles += u32::from(t);
                 assert_eq!(w.cycles(), cycles);
             }
-            assert_eq!(w.result(), Some(c.result), "case {index}");
+            assert_eq!(
+                w.result(),
+                Some(MusicNoteOutcome::Note(c.result)),
+                "case {index}"
+            );
             assert!(w
                 .try_step(&data, |_| -> Result<(), ()> {
                     panic!("completed body cannot replay RET or a native update")
+                })
+                .unwrap());
+        }
+    }
+}
+
+#[cfg(test)]
+mod ending_tests {
+    use super::*;
+    #[derive(serde::Deserialize)]
+    struct Case {
+        input: MusicNoteInput,
+        data: alloc::vec::Vec<u8>,
+        result: MusicEndResult,
+        trace: alloc::vec::Vec<(u16, u8)>,
+    }
+    #[derive(serde::Deserialize)]
+    struct Fixture {
+        cases: alloc::vec::Vec<Case>,
+    }
+    #[test]
+    fn noise_end_handoff_matches_whole_source_without_zero_clock_transitions_or_fake_length() {
+        let f: Fixture =
+            serde_json::from_str(include_str!("music_channel_end_instructions_golden.json"))
+                .unwrap();
+        assert_eq!(f.cases.len(), 88);
+        for (index, c) in f.cases.into_iter().enumerate() {
+            let mut w = MusicNoteInstructions::new(c.input).unwrap();
+            let mut elapsed = 0;
+            for (pc, t) in c.trace {
+                assert_eq!(w.result(), None);
+                let frozen = w.clone();
+                assert_eq!(
+                    w.try_step(&c.data, |_| Err("yield")),
+                    Err(StreamStepError::Clock("yield"))
+                );
+                assert_eq!(w, frozen);
+                w = serde_json::from_str(&serde_json::to_string(&w).unwrap()).unwrap();
+                let mut calls = 0;
+                w.try_step(&c.data, |actual| {
+                    calls += 1;
+                    assert_eq!(actual, t, "case {index} source PC {pc:04x}");
+                    Ok::<(), ()>(())
+                })
+                .unwrap();
+                assert_eq!(calls, 1);
+                elapsed += u32::from(t);
+                assert_eq!(w.cycles(), elapsed);
+            }
+            assert_eq!(
+                w.result(),
+                Some(MusicNoteOutcome::End(c.result)),
+                "case {index}"
+            );
+            assert!(w
+                .try_step(&c.data, |_| -> Result<(), ()> {
+                    panic!("completed ending")
                 })
                 .unwrap());
         }

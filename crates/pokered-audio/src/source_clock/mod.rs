@@ -10,13 +10,16 @@ mod audio_note_dispatch_work;
 mod audio_output_work;
 mod audio_stream_work;
 mod audio_work;
-mod press_ab_work;
+pub mod channel_end_instructions;
 pub mod channel_output_instructions;
+pub mod frame_instructions;
 pub mod music_note_instructions;
 pub mod note_math_instructions;
-pub mod note_stream_instructions;
-pub mod note_preparation;
 pub mod note_pitch_instructions;
+pub mod note_preparation;
+pub mod note_stream_instructions;
+pub mod press_ab_instructions;
+mod press_ab_work;
 pub mod timer_work;
 
 use crate::{sequencer::Sequencer, NOTE_FREQUENCIES};
@@ -189,12 +192,15 @@ impl PreparedAudioFrame {
                 frequency_low: ch.freq_lo_saved,
             };
             if ch.delay_counter == 1 {
-                if i == 3
-                    && ch.flags1.bits() & 2 == 0
-                    && ch.data.get(ch.ptr) == Some(&0xff)
-                    && !seq.channels[4..].iter().any(|sfx| sfx.active)
-                {
-                    effects[i] = 8 + 12 + 8 + 8 + 8 + 16 + audio_work::noise_channel_end_work();
+                if i == 3 && ch.flags1.bits() & 2 == 0 && ch.data.get(ch.ptr) == Some(&0xff) {
+                    effects[i] = 8
+                        + 12
+                        + 8
+                        + 8
+                        + 8
+                        + 16
+                        + audio_work::noise_channel_end_work_with_sfx(source_sfx)
+                            .ok_or(AudioClockError::UnsupportedEffect(3))?;
                     expected[i] = Some(ExpectedDelay {
                         ended_ptr: Some(ch.ptr + 1),
                         delay: 0,

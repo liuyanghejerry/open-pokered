@@ -121,11 +121,8 @@ impl AudioManager {
             return;
         }
         if (SfxId::Peck as u8..=SfxId::SilphScope as u8).contains(&(id as u8)) {
-            self.engine.play_sfx_with_modifiers(
-                id,
-                pitch_mod as i16,
-                0x80 + tempo_mod as u16,
-            );
+            self.engine
+                .play_sfx_with_modifiers(id, pitch_mod as i16, 0x80 + tempo_mod as u16);
         } else {
             self.engine.play_sfx(id);
         }
@@ -136,7 +133,8 @@ impl AudioManager {
     pub fn play_badge_bank_quirk(&mut self) {
         let noise = sfx_data::get_sfx_track(SfxId::BallPoof).channels[3].unwrap();
         self.sequencer.frequency_modifier = 0;
-        self.sequencer.play_sfx(SfxId::BallPoof as u8, &[noise.to_vec()], 3, 0x0100);
+        self.sequencer
+            .play_sfx(SfxId::BallPoof as u8, &[noise.to_vec()], 3, 0x0100);
     }
 
     /// Audio2's PlayApplyingAttackSound: select from the original presentation
@@ -144,10 +142,16 @@ impl AudioManager {
     /// explicitly permits to use modifiers (unlike the Audio1/3 plain-SFX path).
     pub fn play_applying_attack_sound(&mut self, effectiveness: u8) {
         let factor = effectiveness & 0x7f;
-        if factor == 0 { return; }
-        let (id, pitch, tempo) = if factor == 10 { (SfxId::Damage, 0x20, 0x30) }
-            else if factor > 10 { (SfxId::SuperEffective, 0xe0, 0xff) }
-            else { (SfxId::NotVeryEffective, 0x50, 0x01) };
+        if factor == 0 {
+            return;
+        }
+        let (id, pitch, tempo) = if factor == 10 {
+            (SfxId::Damage, 0x20, 0x30)
+        } else if factor > 10 {
+            (SfxId::SuperEffective, 0xe0, 0xff)
+        } else {
+            (SfxId::NotVeryEffective, 0x50, 0x01)
+        };
         if !self.alarm_suppresses_sfx(id) {
             self.engine.play_sfx_with_modifiers(id, pitch, 0x80 + tempo);
         }
@@ -245,10 +249,8 @@ impl AudioManager {
     /// Route22 rival battle (scripts/Route22.asm:333).
     pub fn play_meet_rival_alternate_start_and_tempo(&mut self) {
         self.play_meet_rival_alternate_start();
-        self.sequencer.override_channel_stream(
-            CHAN1,
-            music_data::MEETRIVAL_CH1_ALTERNATE_START_AND_TEMPO,
-        );
+        self.sequencer
+            .override_channel_stream(CHAN1, music_data::MEETRIVAL_CH1_ALTERNATE_START_AND_TEMPO);
     }
 
     /// `Music_Cities1AlternateTempo` (audio/alternate_tempo.asm:37-50): fade
@@ -453,6 +455,101 @@ impl AudioManager {
         result.map(Some).map_err(AudioAdmissionError::Advanced)
     }
 
+    fn source_frame_song(
+        &self,
+        bank: u8,
+        mute: u8,
+    ) -> Result<
+        crate::source_clock::frame_instructions::SourceSong,
+        crate::source_clock::AudioClockError,
+    > {
+        use crate::source_clock::{frame_instructions::SourceSong, AudioClockError};
+        let song = self
+            .engine
+            .last_music_id()
+            .and_then(SourceSong::from_music)
+            .ok_or(AudioClockError::UnsupportedSoundBank)?;
+        if bank != song.bank()
+            || mute != 0
+            || self.engine.is_fading()
+            || self.low_health_alarm_enabled
+            || self.music_after_sfx.is_some()
+        {
+            return Err(AudioClockError::UnsupportedSoundBank);
+        }
+        Ok(song)
+    }
+
+    /// Inspect one existing native sequencer. Actual source bank/mute must be
+    /// supplied by the interrupt owner; no inferred default source byte is used.
+    pub fn begin_source_audio_frame(
+        &self,
+        bank: u8,
+        mute: u8,
+    ) -> Result<
+        crate::source_clock::frame_instructions::SourceAudioFrame,
+        crate::source_clock::AudioClockError,
+    > {
+        let song = self.source_frame_song(bank, mute)?;
+        self.prepare_source_frame()?;
+        crate::source_clock::frame_instructions::SourceAudioFrame::new(
+            &self.engine.sequencer,
+            song,
+            bank,
+            mute,
+        )
+    }
+
+    /// Resume real source instructions under this exclusive borrow until the
+    /// owner refuses one, or the full source RET completes. Accepted CPU time
+    /// is not rolled back. Native audio commits once after that RET, and its
+    /// outcome is retained. The callback must refuse before clocking and must
+    /// not reenter the same manager/output. Physical APU writes and IRQ return
+    /// are not scheduled by this API; the caller owns IRQ/foreground exclusion.
+    pub fn resume_source_audio_frame<E>(
+        &mut self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        mut execute: impl FnMut(u8) -> Result<(), E>,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<E>,
+        >,
+    > {
+        use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
+        if let Some(result) = work.committed {
+            return result.map_err(AudioAdmissionError::Advanced);
+        }
+        let song = self
+            .source_frame_song(work.bank(), work.mute())
+            .map_err(AudioAdmissionError::Preflight)?;
+        if song != work.song() || !work.matches_native(&self.engine.sequencer) {
+            return Err(AudioAdmissionError::Preflight(
+                AudioClockError::NativeStateMismatch(0),
+            ));
+        }
+        let prepared = self
+            .prepare_source_frame()
+            .map_err(AudioAdmissionError::Preflight)?;
+        while !work.finished() {
+            work.try_step(&self.engine.sequencer, &mut execute)
+                .map_err(AudioAdmissionError::Admission)?;
+        }
+        if prepared.work()
+            != (AudioFrameWork {
+                cycles: work.cycles(),
+            })
+        {
+            return Err(AudioAdmissionError::Preflight(
+                AudioClockError::NativeStateMismatch(0),
+            ));
+        }
+        self.update_frame();
+        let result = prepared.finish(&self.engine.sequencer);
+        work.committed = Some(result);
+        result.map_err(AudioAdmissionError::Advanced)
+    }
+
     /// Call once per VBlank (~60 Hz). The engine advances fade → master
     /// volume → sequencer; the alarm then writes pulse-1 registers *after*
     /// the sequencer so it overrides channel 1, exactly as the original's
@@ -530,3 +627,6 @@ mod source_admission_tests;
 
 #[cfg(all(test, not(target_os = "none")))]
 mod source_timer_tests;
+
+#[cfg(all(test, not(target_os = "none")))]
+mod source_frame_tests;

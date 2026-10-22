@@ -17,7 +17,7 @@ FIELDS = {'note_delay':0xc0b6, 'flags1':0xc02e, 'flags2':0xc036,
           'vibrato_rate':0xc05e, 'frequency_low':0xc066}
 
 
-def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=None, stop_pc=None, capture=False, initial_stack=None):
+def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=None, stop_pc=None, capture=False, initial_stack=None, strict_memory=False, instruction_limit=2000):
     r = {x:0 for x in 'ABCDEHL'}
     r['C'] = channel or 0
     r.update(registers or {})
@@ -36,6 +36,8 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
     def read(address):
         if 0x4000 <= address < 0x8000:
             return rom[bank*0x4000+address-0x4000]
+        if strict_memory and address not in m:
+            raise AssertionError(f'unprovided memory read {address:04x} at {pc:04x}')
         return m.get(address, 0)
 
     def fetch():
@@ -54,7 +56,7 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
     def sethl(value):
         r['H'], r['L'] = value>>8 & 255, value & 255
 
-    for _ in range(2000):
+    for _ in range(instruction_limit):
         if pc == stop_pc: return (trace,dict(r,F=(128 if z else 0)|(16 if carry else 0)),m) if capture else trace
         start = pc
         op = fetch()
@@ -97,8 +99,8 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
             r['A'] = read(word()); t = 16
         elif op in (0x77,0x72,0x73,0x70):
             m[hl()] = r[{0x77:'A',0x72:'D',0x73:'E',0x70:'B'}[op]]; t = 8
-        elif op in (0x79,0x7a,0x7b,0x57,0x6f,0x50,0x5f,0x68,0x7d,0x5d,0x54,0x78,0x47):
-            dst, src = {0x79:('A','C'),0x7a:('A','D'),0x7b:('A','E'),0x57:('D','A'),0x6f:('L','A'),0x50:('D','B'),0x5f:('E','A'),0x68:('L','B'),0x7d:('A','L'),0x5d:('E','L'),0x54:('D','H'),0x78:('A','B'),0x47:('B','A')}[op]
+        elif op in (0x79,0x7a,0x7b,0x57,0x6f,0x50,0x5f,0x68,0x7d,0x5d,0x54,0x78,0x47,0x59):
+            dst, src = {0x79:('A','C'),0x7a:('A','D'),0x7b:('A','E'),0x57:('D','A'),0x6f:('L','A'),0x50:('D','B'),0x5f:('E','A'),0x68:('L','B'),0x7d:('A','L'),0x5d:('E','L'),0x54:('D','H'),0x78:('A','B'),0x47:('B','A'),0x59:('E','C')}[op]
             r[dst] = r[src]; t = 4
         elif op in (0x87,0x88):
             value=r['A']+(r['A'] if op==0x87 else r['B'])+(int(carry) if op==0x88 else 0)
@@ -154,6 +156,14 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
             v=stack.pop();hi,lo={0xe1:('H','L'),0xd1:('D','E'),0xc1:('B','C')}[op];r[hi],r[lo]=v>>8,v&255;t=12
         elif op == 0xf1:
             v=stack.pop();r['A']=v>>8;z,carry=bool(v&128),bool(v&16);t=12
+        elif op == 0xd8:
+            if carry:
+                if stack:pc=stack.pop()
+                else:done=True
+                t=20
+            else:t=8
+        elif op in (0xd6,0xde):
+            v=fetch();value=r['A']-v-(int(carry) if op==0xde else 0);carry=value<0;r['A']=value&255;z=r['A']==0;t=8
         elif op == 0xc9:
             if stack: pc = stack.pop()
             else: done = True
