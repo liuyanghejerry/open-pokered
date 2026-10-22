@@ -9,6 +9,8 @@
 //! accesses or model an entire picture-load/VRAM transfer. Those integrations
 //! are still required before the PC transition can use its work receipt.
 const PLANE_BYTES: usize = 7 * 7 * 8;
+pub mod caller;
+pub mod continuation;
 // Constant basic blocks, written as their instruction timings. Conditional
 // work below depends on the actual compressed stream and decoded state.
 const STORE_POINTER_T: u64 = 4 + 16 + 16 + 4 + 16 + 16 + 16;
@@ -20,13 +22,13 @@ const WRAPPER_T: u64 = 4 + 12 + 16 + 4 + 12 + 16 + 8 + 16 + 4 + 16 + 24 + 12 + 1
 const CLEAR_BUFFERS_T: u64 =
     16 + 4 + (PLANE_BYTES as u64 * 2) * (4 + 8 + 8 + 4 + 4 + 12) - 4 + 12 + 16;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Error {
     Truncated,
     Dimensions,
     RunLength,
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct Work {
     pub input_bits: usize,
     pub foreground_tcycles: u64,

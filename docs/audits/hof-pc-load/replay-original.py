@@ -12,6 +12,7 @@ parser.add_argument('--sym',type=Path,required=True)
 parser.add_argument('--native-binary',type=Path,required=True,help='Sole binary, read only, for the recording freeze guard')
 parser.add_argument('--phase-offset',type=int,choices=[0,1],default=0)
 parser.add_argument('--out',type=Path,required=True)
+parser.add_argument('--decompress-points',action='store_true',help='Also observe six sparse source entry sites for each mode/size representative')
 args=parser.parse_args()
 R=Path(__file__).resolve().parents[3];E=args.out.parent;E.mkdir(parents=True,exist_ok=True)
 symbols={}
@@ -22,13 +23,37 @@ rom=args.rom; romhash=hashlib.sha256(rom.read_bytes()).hexdigest()
 assert romhash=='5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b'
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
 binary=args.native_binary; binaryhash=hashlib.sha256(binary.read_bytes()).hexdigest()
-guard_paths=[Path(__file__),R/'crates/pokered-core/src/front_pic_decode.rs',R/'crates/pokered-core/src/pc_screen.rs',*sorted((R/'crates/pokered-core/src/source_video').glob('*.rs'))]
+guard_paths=[Path(__file__),R/'crates/pokered-core/src/front_pic_decode.rs',*sorted((R/'crates/pokered-core/src/front_pic_decode').rglob('*.rs')),R/'crates/pokered-core/src/pc_screen.rs',*sorted((R/'crates/pokered-core/src/source_video').glob('*.rs'))]
 def source_hashes():return {str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in guard_paths}
 frozen_sources=source_hashes()
 base=(R/'docs/audits/hof-pc-cry/original-fixture.sav').read_bytes(); raw=bytearray(base)
-cases=(R/'docs/audits/hof-pc-load/front-codec-cases.bin').read_bytes();ids=[];at=0
+def first_plane_mode(data):
+ bit_at=8
+ def bit():
+  nonlocal bit_at
+  value=(data[bit_at//8]>>(7-bit_at%8))&1;bit_at+=1;return value
+ bit() # first plane selection
+ literal=bit()!=0;cursor=0;total=(data[0]>>4)*(data[0]&15)*32
+ while cursor<total:
+  if literal:
+   while cursor<total:
+    group=bit()*2+bit()
+    if group==0:break
+    cursor+=1
+  else:
+   ones=0
+   while bit():
+    ones+=1;assert ones<16
+   number=0
+   for _ in range(ones+1):number=number*2+bit()
+   cursor+=min((1<<(ones+1))-1+number,total-cursor)
+  literal=not literal
+ return 1+bit() if bit() else 0
+cases=(R/'docs/audits/hof-pc-load/front-codec-cases.bin').read_bytes();ids=[];at=0;point_representatives={};compressed={}
 while at<len(cases):
- ids.append(cases[at]);length=int.from_bytes(cases[at+1:at+3],'little');at+=3+length+784+8
+ species=cases[at];ids.append(species);length=int.from_bytes(cases[at+1:at+3],'little');data=cases[at+3:at+3+length];compressed[species]=data
+ point_representatives.setdefault((first_plane_mode(data),data[0]),species)
+ at+=3+length+784+8
 assert len(ids)==151 and len(set(ids))==151
 hof=symbols['sHallOfFame'][1]-0xa000; raw[hof:hof+4800]=b'\xff'*4800
 for i,species in enumerate(ids):
@@ -40,6 +65,8 @@ raw=bytes(raw); fixture=E/f'original-151-phase-{args.phase_offset}-fixture.sav';
 controls=json.loads(gzip.decompress((R/'docs/audits/hof-pc-cry/original-controls.json.gz').read_bytes()))
 case=next(c for c in controls['cases'] if c['mode']=='short-a')
 copy_cases=[]
+point_trials=[]
+point_species=set(point_representatives.values())
 trials=[]
 assert rom.read_bytes()[0x40]==0xc3
 assert int.from_bytes(rom.read_bytes()[0x41:0x43],"little")==symbols["VBlank"][1]
@@ -68,6 +95,32 @@ for trial in [1,2]:
  def copy_loop(_):
   if copy_active[0]:
    copy_case['loops'].append({'remaining':p.register_file.C,'source':int(p.memory[0xffc7])|(int(p.memory[0xffc8])<<8),'destination':int(p.memory[0xffc9])|(int(p.memory[0xffca])<<8),'bg':int(p.memory[0xffba]),'loaded_bank':int(p.memory[0xffb8])})
+ if args.decompress_points:
+  point_rows=[];point_current=[None]
+  point_sites=['ReadNextInputBit','WriteSpriteBitsToBuffer','MoveToNextBufferPosition','SpriteDifferentialDecode.decodeNextByteLoop','DifferentialDecodeNybble','XorSpriteChunks.xorChunksLoop']
+  def point_hook(tag):
+   if tag=='start':
+    assert point_current[0]is None
+    species=get('wHoFMonSpecies')
+    if not active[0]or species not in point_species:return
+    assert get('wSpriteFlipped')==0
+    point_current[0]={'species':species,'start':p._cycles(),'irq_index':len(interrupts),'points':[]}
+    return
+   row=point_current[0]
+   if row is None:return
+   assert irq_start[0]is None
+   start=row['start'];now=p._cycles()
+   used=interrupts[row['irq_index']:]
+   assert all(start<=q['entry']-36 and q['reti']+16<=now for q in used)
+   foreground=now-start-sum(q['reti']+16-q['entry']+36 for q in used)
+   if tag=='return':
+    row['body_tcycles']=foreground;del row['start'];del row['irq_index'];point_rows.append(row);point_current[0]=None
+   else:row['points'].append([tag,foreground])
+  body_return=symbols['_UncompressSpriteData'][1]-7
+  assert rom.read_bytes()[body_return]==0xf1 # POP AF, immediately after CALL body
+  p.hook_register(*symbols['_UncompressSpriteData'],point_hook,'start')
+  p.hook_register(0,body_return,point_hook,'return')
+  for tag,symbol in enumerate(point_sites):p.hook_register(*symbols[symbol],point_hook,tag)
  p.hook_register(*symbols['CopyVideoData.loop'],copy_loop,None)
  symbols['_UNCOMPRESS_RETURN']=(0,symbols['_UncompressSpriteData'][1]-1)
  def irq(label):
@@ -126,6 +179,12 @@ for trial in [1,2]:
    assert record['decompress_foreground_tcycles']>0 and record['decompress_foreground_tcycles']%4==0
   assert copy_done[0] and copy_case['tiles']==49
   copy_cases.append(copy_case)
+  if args.decompress_points:
+   assert {row['species']for row in point_rows}==point_species
+   for row in point_rows:
+    record=next(r for r in records if r['species']==row['species'])
+    assert row['body_tcycles']+188==record['decompress_foreground_tcycles']
+   point_trials.append(point_rows)
   trials.append({'events':events,'records':records,'inputs':tape,'interrupts':interrupts,'final_frame':p.frame_count})
   print({'trial':trial,'species':len(records),'final_frame':p.frame_count,'decompress_range':(min(x['decompress_frames'] for x in records),max(x['decompress_frames'] for x in records))},flush=True)
  finally:p.stop(save=False)
@@ -150,3 +209,14 @@ print('Sparse CopyVideoData49 loop trace PASS',copy_cases[0],flush=True)
 
 copy_reference=json.loads((R/'docs/audits/hof-pc-load/copy-caller-49.json').read_text())
 assert copy_cases[0]==copy_reference['case'],'first-copy register/request receipts differ'
+
+if args.decompress_points:
+ assert point_trials[0]==point_trials[1]
+ packed=bytearray(len(point_trials[0]).to_bytes(2,'little'))
+ for row in point_trials[0]:
+  packed+=bytes([row['species']])+row['body_tcycles'].to_bytes(4,'little')+len(row['points']).to_bytes(4,'little')
+  for tag,offset in row['points']:packed+=bytes([tag])+offset.to_bytes(4,'little')
+ assert packed==(R/'docs/audits/hof-pc-load/decompress-points.bin').read_bytes(),'source decompressor entry points differ from published fixture'
+ args.out.with_name('decompress-points.bin').write_bytes(packed)
+ args.out.with_name('decompress-points-proof.json').write_text(json.dumps({'scope':'Six sparse source entry sites at actual foreground instruction boundaries for first representative of each natural mode/size. Normal boot/CONTINUE, physical PC inputs; readonly hooks, no runtime writes or font capture. Whole baseline trial remains exact; two independent repeats exact. IRQ time removed from entry offsets using actual VBlank entry/RETI receipts. Not native gameplay/IRQ parity.','source_ref':j['source_ref'],'sites':point_sites,'representatives':[{'species':row['species'],'body_tcycles':row['body_tcycles'],'points':len(row['points'])}for row in point_trials[0]],'all_pass':True,'repeat_exact':True,'baseline_exact':True,'rom_head_binary_fixture_frozen':True,'source_hashes':j['source_hashes'],'head':j['head'],'rom_sha256':j['rom_sha256'],'native_binary_sha256':j['native_binary_sha256'],'fixture_sha256':j['fixture_sha256'],'phase_offset':args.phase_offset,'packed_sha256':hashlib.sha256(packed).hexdigest(),'packed_bytes':len(packed)},indent=2)+'\n')
+ print('Sparse decompressor entry-point trace PASS',len(point_trials[0]),sum(len(row['points'])for row in point_trials[0]),flush=True)

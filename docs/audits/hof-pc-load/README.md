@@ -125,3 +125,52 @@ guards source files, HEAD, binary, ROM and SRAM throughout recording; it perform
 no runtime writes, warps or snapshot restores and captures no original fonts.
 The existing SRAM fixture is loaded offline. **Actual PC picture loading,
 shared display/IRQ scheduling and matched before/after gameplay remain open.**
+
+
+### Resumable decompression, still awaiting runtime attachment
+
+`front_pic_decode::continuation::DecompressWork` executes the unflipped
+`_UncompressSpriteData` body through the shared instruction bus. It owns the
+compressed asset, 784 private plane bytes and a queue capped at 256 instruction
+lengths. It prepares at most one bounded block ahead, keeps partial bytes
+private, and exposes output only after the final RET is accepted. The attached
+IRQ owner must not read this private scratch. The body owns no clock, device,
+interrupt service, bank-switch effects or entire-load timeout.
+
+`front_pic_decode::caller::DecompressCallerWork` supplies the actual outer bank
+and SRAM stores on that same bus. It reads the attached owner's loaded ROM bank
+and restores that receipt. As in the original, SRAM remains enabled on bank0;
+the wrapper does not invent a prior bank or restore controls the source leaves
+changed. Output stays private until the wrapper's final RET. The 188 wrapper
+T-cycles are executed instruction by instruction, not added as an idle delay.
+
+Every one of the 151 images matches the previously recorded original bytes and
+foreground work. Controlled bus tests cover refusal, serialized continuation,
+malformed inputs, per-instruction versus exact-prefix execution, all wrapper
+accesses and partial body grants. Prefix batching accepts an instruction count
+only when the attached owner can prove no IRQ interleaves it; an owner without
+that proof falls back to individual instructions. These are controlled seams,
+not elapsed-time or native gameplay evidence.
+
+The [sparse original entry trace](decompress-points-proof.json) covers 54,512
+ordered sites across both natural modes and all three stock dimensions. Each
+point's foreground offset matches the new continuation. Both existing entry
+schedules were independently replayed twice, with identical points and the
+entire published 151-image trial unchanged. This proves the observed entry
+boundaries; it is not a trace of every source instruction or native device-phase
+parity. Reproduce the points with the existing replay command plus
+`--decompress-points`; the script checks the complete packed fixture too.
+
+The first wrapper-refusal test driver initially waited for an internal boundary
+that a successful `step` immediately passes. That test process was terminated,
+the driver predicate was corrected to observe the pending instruction, and the
+corrected suite was rerun. It is retained as a test-driver diagnostic, not a
+player bug or a successful earlier run.
+
+[Component validation and limits](decompress-validation.json) record the local
+checks separately from gameplay evidence.
+
+**The actual HoF transition remains unfixed.** Remaining work includes resumable
+alignment/interlacing, canonical compressed-asset access, the shared display/IRQ
+owner and runtime/renderer handoff, physical A/B controls during load, matched
+before/after frames and appropriate gameplay/GBA regression.

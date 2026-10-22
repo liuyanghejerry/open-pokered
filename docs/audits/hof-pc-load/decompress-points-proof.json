@@ -1,0 +1,186 @@
+{
+  "scope": "Original readonly decompressor entry points; no native gameplay or original/native device-phase parity claimed. Packed rows are species, body T-cycles, count, then (tag, foreground offset) at each observed entry. u16LE case count; u8 species/tag; other integers u32LE.",
+  "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "sites": [
+    "ReadNextInputBit",
+    "WriteSpriteBitsToBuffer",
+    "MoveToNextBufferPosition",
+    "SpriteDifferentialDecode.decodeNextByteLoop",
+    "DifferentialDecodeNybble",
+    "XorSpriteChunks.xorChunksLoop"
+  ],
+  "representatives": [
+    {
+      "species": 1,
+      "body_tcycles": 2609668,
+      "points": 13119
+    },
+    {
+      "species": 3,
+      "body_tcycles": 1136008,
+      "points": 5839
+    },
+    {
+      "species": 6,
+      "body_tcycles": 1183864,
+      "points": 5685
+    },
+    {
+      "species": 9,
+      "body_tcycles": 1821716,
+      "points": 9011
+    },
+    {
+      "species": 14,
+      "body_tcycles": 1632388,
+      "points": 8435
+    },
+    {
+      "species": 20,
+      "body_tcycles": 2357652,
+      "points": 12423
+    }
+  ],
+  "packed_sha256": "f043b3cf730c44066ffea71c471ba1b0e2b331daf6859dd26d97b1844d8886da",
+  "packed_bytes": 272616,
+  "two_entry_schedules_same_points": true,
+  "phases": [
+    {
+      "scope": "Six sparse source entry sites at actual foreground instruction boundaries for first representative of each natural mode/size. Normal boot/CONTINUE, physical PC inputs; readonly hooks, no runtime writes or font capture. Whole baseline trial remains exact; two independent repeats exact. IRQ time removed from entry offsets using actual VBlank entry/RETI receipts. Not native gameplay/IRQ parity.",
+      "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "sites": [
+        "ReadNextInputBit",
+        "WriteSpriteBitsToBuffer",
+        "MoveToNextBufferPosition",
+        "SpriteDifferentialDecode.decodeNextByteLoop",
+        "DifferentialDecodeNybble",
+        "XorSpriteChunks.xorChunksLoop"
+      ],
+      "representatives": [
+        {
+          "species": 1,
+          "body_tcycles": 2609668,
+          "points": 13119
+        },
+        {
+          "species": 3,
+          "body_tcycles": 1136008,
+          "points": 5839
+        },
+        {
+          "species": 6,
+          "body_tcycles": 1183864,
+          "points": 5685
+        },
+        {
+          "species": 9,
+          "body_tcycles": 1821716,
+          "points": 9011
+        },
+        {
+          "species": 14,
+          "body_tcycles": 1632388,
+          "points": 8435
+        },
+        {
+          "species": 20,
+          "body_tcycles": 2357652,
+          "points": 12423
+        }
+      ],
+      "all_pass": true,
+      "repeat_exact": true,
+      "baseline_exact": true,
+      "rom_head_binary_fixture_frozen": true,
+      "source_hashes": {
+        "docs/audits/hof-pc-load/replay-original.py": "c4d9b2b65727088972d9668e1c1e6fc861d560381e505b40f70dbd27c40e1273",
+        "crates/pokered-core/src/front_pic_decode.rs": "2bf99db62f0c12e1498f50633353aa47acc056ee314470818f8dc75e1f306977",
+        "crates/pokered-core/src/front_pic_decode/continuation/tests.rs": "f2c654a4912497b0d79b7922dc17106bbcc8020e102f51b0e55dab0deb744610",
+        "crates/pokered-core/src/front_pic_decode/continuation.rs": "6d9f98f06283781239df3ae4546a2c88e000a5bb8c9bc5bda247d473606a938a",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14",
+        "crates/pokered-core/src/source_video/copy.rs": "c22355198761c1b311c93c243fa38cf0aed96042dc407ef376235441a54266b6",
+        "crates/pokered-core/src/source_video/delay.rs": "c4c827e42b47fd6435fee9ea32accac078323304395c0b396f0454e4f36ca45f",
+        "crates/pokered-core/src/source_video/mod.rs": "ec07b6da738e33379c12747584284498fdb0e58c5da390d7cb981cba934927fe",
+        "crates/pokered-core/src/source_video/tests.rs": "14f8b5a678e12de56287a7483f57abbfaaa7134220b9bf011fc27c171b6087ed"
+      },
+      "packed_sha256": "f043b3cf730c44066ffea71c471ba1b0e2b331daf6859dd26d97b1844d8886da",
+      "packed_bytes": 272616,
+      "phase_offset": 0,
+      "head": "3c93e0cbb9508c198e978464f7eeaa5059728801",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c"
+    },
+    {
+      "scope": "Six sparse source entry sites at actual foreground instruction boundaries for first representative of each natural mode/size. Normal boot/CONTINUE, physical PC inputs; readonly hooks, no runtime writes or font capture. Whole baseline trial remains exact; two independent repeats exact. IRQ time removed from entry offsets using actual VBlank entry/RETI receipts. Not native gameplay/IRQ parity.",
+      "source_ref": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "sites": [
+        "ReadNextInputBit",
+        "WriteSpriteBitsToBuffer",
+        "MoveToNextBufferPosition",
+        "SpriteDifferentialDecode.decodeNextByteLoop",
+        "DifferentialDecodeNybble",
+        "XorSpriteChunks.xorChunksLoop"
+      ],
+      "representatives": [
+        {
+          "species": 1,
+          "body_tcycles": 2609668,
+          "points": 13119
+        },
+        {
+          "species": 3,
+          "body_tcycles": 1136008,
+          "points": 5839
+        },
+        {
+          "species": 6,
+          "body_tcycles": 1183864,
+          "points": 5685
+        },
+        {
+          "species": 9,
+          "body_tcycles": 1821716,
+          "points": 9011
+        },
+        {
+          "species": 14,
+          "body_tcycles": 1632388,
+          "points": 8435
+        },
+        {
+          "species": 20,
+          "body_tcycles": 2357652,
+          "points": 12423
+        }
+      ],
+      "all_pass": true,
+      "repeat_exact": true,
+      "baseline_exact": true,
+      "rom_head_binary_fixture_frozen": true,
+      "source_hashes": {
+        "docs/audits/hof-pc-load/replay-original.py": "225e79b0ec5680f059a96568df1dd64797b66268d89ee605340a6415777f2f18",
+        "crates/pokered-core/src/front_pic_decode.rs": "2bf99db62f0c12e1498f50633353aa47acc056ee314470818f8dc75e1f306977",
+        "crates/pokered-core/src/front_pic_decode/continuation/tests.rs": "26fc9852b38ef69764e585ad2b52c702a071103b35ff79e9cef09fd33d95b86e",
+        "crates/pokered-core/src/front_pic_decode/continuation.rs": "6d9f98f06283781239df3ae4546a2c88e000a5bb8c9bc5bda247d473606a938a",
+        "crates/pokered-core/src/pc_screen.rs": "79d9ee0df562f980e52f3a03510dd6b5a808201520916ee411d6d9d7edc06e14",
+        "crates/pokered-core/src/source_video/copy.rs": "c22355198761c1b311c93c243fa38cf0aed96042dc407ef376235441a54266b6",
+        "crates/pokered-core/src/source_video/delay.rs": "c4c827e42b47fd6435fee9ea32accac078323304395c0b396f0454e4f36ca45f",
+        "crates/pokered-core/src/source_video/mod.rs": "ec07b6da738e33379c12747584284498fdb0e58c5da390d7cb981cba934927fe",
+        "crates/pokered-core/src/source_video/tests.rs": "14f8b5a678e12de56287a7483f57abbfaaa7134220b9bf011fc27c171b6087ed"
+      },
+      "packed_sha256": "f043b3cf730c44066ffea71c471ba1b0e2b331daf6859dd26d97b1844d8886da",
+      "packed_bytes": 272616,
+      "phase_offset": 1,
+      "head": "3c93e0cbb9508c198e978464f7eeaa5059728801",
+      "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+      "native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "fixture_sha256": "ecf619e36d983bbcfb4b1901503e61823a85cac898fee4c326fcac5234d3304c"
+    }
+  ],
+  "limits": [
+    "Only six sparse sites observed; this is not a trace of every original instruction.",
+    "Six natural size/mode representatives supply 54512 sites per trial. All151 species retain separate final byte/work oracle coverage.",
+    "Original recordings froze the listed code identities at record time. Later native batching and wrapper work is checked against those immutable points; no relabeling as native gameplay."
+  ]
+}
