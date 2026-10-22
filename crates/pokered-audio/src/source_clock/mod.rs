@@ -33,6 +33,18 @@ pub struct AudioFrameWork {
     pub cycles: u32,
 }
 
+/// Whether a guarded native audio update actually advanced. Only Preflight
+/// and Admission may be retried without consuming a native sequencer tick.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AudioAdmissionError<E> {
+    /// Unsupported input: the callback was not called and nothing advanced.
+    Preflight(AudioClockError),
+    /// The callback refused execution; nothing in the native manager advanced.
+    Admission(E),
+    /// One native update already happened. Retrying would duplicate that tick.
+    Advanced(AudioClockError),
+}
+
 #[derive(Clone, Copy)]
 struct ExpectedDelay {
     delay: u8,
@@ -51,6 +63,10 @@ pub(crate) struct PreparedAudioFrame {
 }
 
 impl PreparedAudioFrame {
+    pub(crate) fn work(&self) -> AudioFrameWork {
+        self.work
+    }
+
     /// This bounded port handles Silph, Rock Tunnel and Pokecenter music after the first
     /// ordinary native tick. Noise rests/termination and finite loops are
     /// included, together with finite PressAB and its paired music branches.
