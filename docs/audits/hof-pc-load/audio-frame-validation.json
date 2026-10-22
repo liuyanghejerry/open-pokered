@@ -1,0 +1,29 @@
+{
+  "scope": "Supported whole Audio1/3 CPU update and exactly one existing native commit; HoF PC CONFIRMED UNFIXED / UNWIRED.",
+  "original_frames": 311,
+  "original_instructions": 205206,
+  "native_frames_pcm_compared": 1536,
+  "audio_tests_passed": 164,
+  "strict_original_memory_reads": true,
+  "golden_regeneration": "byte-identical with independent header validation",
+  "checks": {
+    "audit-1272-audio-256.log": "ddb24627fde058e39ddd79e3689ad8123c2d1c201977f393c4837a660aa9f3e2",
+    "audit-1272-gba-default.log": "30e9b3657f13236acd3211787c9af240bbcb07921a15f36c4d754b609f7486f8",
+    "audit-1272-gba-serde.log": "832cabaedf162be4d1681fb30d3aadcc52b813ab782209491e09ae034c77779e"
+  },
+  "artifacts": {
+    "crates/pokered-audio/src/source_clock/frame_work_golden.json": "2a2d88c511eb641fc33e507d62f7af9549950dd9219b7e27645a3b7d254555e8",
+    "docs/audits/hof-pc-load/generate-audio-frame-instructions.py": "24e10da1671183ed5079a0019239c8c58ee1846b85a9af2f404479029e8e5de2",
+    "crates/pokered-audio/examples/export_source_audio_frames.rs": "3e6483949eee96a45738696ffcae0be89c6b290d8a36299f9fe93b5a25e87d98"
+  },
+  "remaining": [
+    "actual source WRAM and APU port producers",
+    "per-write physical APU timing",
+    "enclosing IRQ/foreground ownership",
+    "Game hookup and ordinary-input end-to-end proof"
+  ],
+  "worktrees_added": 0,
+  "targets_added": 0,
+  "game_binaries_built": 0,
+  "rom_copies_added": 0
+}

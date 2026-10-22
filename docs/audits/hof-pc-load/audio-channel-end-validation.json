@@ -1,0 +1,39 @@
+{
+  "scope": "CPU ending tails and bounded noise-ending handoff only; HoF PC issue CONFIRMED UNFIXED / UNWIRED.",
+  "full_audio_tests": 158,
+  "cases": {
+    "ending_tails": 660,
+    "whole_noise_music_endings": 88
+  },
+  "checks": {
+    "audit-1269-audio-final.log": {
+      "pass": true,
+      "sha256": "9dff571bc8f43f45073ec33a4241630e066b83bcba2fee43cbfdcaa0d9627098"
+    },
+    "audit-1269-gba-serde.log": {
+      "pass": true,
+      "sha256": "7f29839088727ffd90df9e7be0e0096d6c998d0b93d86fb5fa12d32ae1ce96b5"
+    },
+    "audit-1269-gba-default.log": {
+      "pass": true,
+      "sha256": "f13ef2db601cb4386758ed6f93f1857d4cb5ebdf90b587c6680787e69f259a71"
+    }
+  },
+  "source_state_policy": "Only paths that read optional original state require it; no fabricated default pointer/volume/pan/disable byte. Original source pointer is a u16 word, not a native stream offset.",
+  "api": "MusicNoteInstructions.result now distinguishes MusicNoteOutcome::Note and ::End. No Game callers yet.",
+  "remaining": [
+    "finite PressAB note body",
+    "full frame and one native commit",
+    "source original-state/port producers and physical APU timing",
+    "shared IRQ/foreground/Game hookup",
+    "ordinary-input end-to-end proof"
+  ],
+  "artifact_sha256": {
+    "crates/pokered-audio/src/source_clock/channel_end_instructions_golden.json": "c98da08734220c3597e753d6e4e0414d74215c84d5cdb2c85e17d5ba7cbc78dc",
+    "crates/pokered-audio/src/source_clock/music_channel_end_instructions_golden.json": "a1595ea5544f4a5a2ef58674055bc058aa7b91de81de6c74b53080f3e517184c",
+    "docs/audits/hof-pc-load/generate-channel-end-instructions.py": "22f303be3fd4eba1965d62ad6649108cfd9f5d7c87c35dd9799e9e986821510c",
+    "docs/audits/hof-pc-load/generate-music-channel-end-instructions.py": "c4c56c52d6ad6a07671e6f0ac683fa6d47c7a8873a4e076e775152616d2b2e34",
+    "docs/audits/hof-pc-load/generate-timer-instructions.py": "4078b3a5e760d63642b30c5af0629433cdfa5a9d721730c67307664522733333"
+  },
+  "fixture_reproducibility": "All nine generated fixture outputs byte-identical, including prior whole normal notes."
+}

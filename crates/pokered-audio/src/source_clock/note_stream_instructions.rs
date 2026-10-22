@@ -183,6 +183,17 @@ impl StreamInstructions {
     pub fn result(&self) -> Option<StreamResult> {
         self.finished().then_some(self.output)
     }
+    /// Exact handoff after sound_ret's failed SOUND_CALL branch. This is an
+    /// ending opcode, not a completed musical note or a fabricated return.
+    pub fn channel_end_context(&self) -> Option<(u8, StreamResult)> {
+        if self.stage == Stage::Unsupported(StreamInputError::ChannelEndUnsupported) {
+            let mut stream = self.output;
+            stream.note = self.command;
+            Some((self.channel, stream))
+        } else {
+            None
+        }
+    }
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
