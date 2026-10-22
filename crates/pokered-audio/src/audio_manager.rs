@@ -345,6 +345,114 @@ impl AudioManager {
             .map_err(AudioAdmissionError::Advanced)
     }
 
+    fn source_timer_context(
+        &self,
+        bank: u8,
+        mute: u8,
+    ) -> Result<
+        crate::source_clock::timer_work::TimerFrameContext,
+        crate::source_clock::AudioClockError,
+    > {
+        use crate::source_clock::{
+            timer_work::{ChannelEffectWorkInput, TimerFrameContext},
+            AudioClockError,
+        };
+        self.prepare_source_frame()?;
+        let expected_bank = match self.engine.last_music_id() {
+            Some(MusicId::POKECENTER) => 2,
+            Some(MusicId::SILPH_CO | MusicId::DUNGEON3) => 31,
+            _ => return Err(AudioClockError::UnsupportedSoundBank),
+        };
+        if bank != expected_bank || mute != 0 || self.music_after_sfx.is_some() {
+            return Err(AudioClockError::UnsupportedSoundBank);
+        }
+        let seq = &self.engine.sequencer;
+        let context = TimerFrameContext {
+            bank,
+            mute,
+            sound_ids: core::array::from_fn(|i| {
+                if seq.channels[i].active {
+                    seq.channels[i].sound_id
+                } else {
+                    0
+                }
+            }),
+            effects: core::array::from_fn(|i| {
+                let ch = &seq.channels[i];
+                ch.active.then(|| ChannelEffectWorkInput {
+                    channel: i as u8,
+                    paired_sfx_active: i < 4 && seq.channels[i + 4].active,
+                    note_delay: ch.delay_counter,
+                    flags1: ch.flags1.bits(),
+                    flags2: ch.flags2.bits(),
+                    vibrato_delay: ch.vibrato.delay_counter,
+                    vibrato_extent: ch.vibrato.extent,
+                    vibrato_rate: ch.vibrato.rate,
+                    frequency_low: ch.freq_lo_saved,
+                })
+            }),
+        };
+        Ok(context)
+    }
+
+    /// Prepare retained Audio1/3 timer instructions from the one native
+    /// sequencer. The interrupt owner supplies its actual bank/mute bytes.
+    /// Next-note frames remain unsupported by this cursor, rather than
+    /// silently receiving aggregate work or an inactive replacement channel.
+    pub fn begin_source_timer_frame(
+        &self,
+        bank: u8,
+        mute: u8,
+    ) -> Result<crate::source_clock::timer_work::TimerFrameWork, crate::source_clock::AudioClockError>
+    {
+        crate::source_clock::timer_work::TimerFrameWork::new(self.source_timer_context(bank, mute)?)
+    }
+
+    /// Accept at most one complete CPU instruction, then commit the existing
+    /// native manager exactly once after RET. A refusal must occur before the
+    /// callback advances its clock. Accepted instructions are never rolled back.
+    /// Keep this cursor through IRQ suspension and do not run an ordinary audio
+    /// update in parallel. APU write timestamps are not supplied by this API.
+    pub fn step_source_timer_frame<E>(
+        &mut self,
+        work: &mut crate::source_clock::timer_work::TimerFrameWork,
+        execute: impl FnOnce(u8) -> Result<(), E>,
+    ) -> Result<
+        Option<crate::source_clock::AudioFrameWork>,
+        crate::source_clock::AudioAdmissionError<E>,
+    > {
+        use crate::source_clock::{AudioAdmissionError, AudioClockError};
+        if let Some(result) = work.committed {
+            return result.map(Some).map_err(AudioAdmissionError::Advanced);
+        }
+        let context = self
+            .source_timer_context(work.context().bank, work.context().mute)
+            .map_err(AudioAdmissionError::Preflight)?;
+        if &context != work.context() {
+            return Err(AudioAdmissionError::Preflight(
+                AudioClockError::NativeStateMismatch(0),
+            ));
+        }
+        let prepared = self
+            .prepare_source_frame()
+            .map_err(AudioAdmissionError::Preflight)?;
+        if !work
+            .try_step(execute)
+            .map_err(AudioAdmissionError::Admission)?
+        {
+            return Ok(None);
+        }
+        if work.cycles() != prepared.work().cycles {
+            return Err(AudioAdmissionError::Preflight(
+                AudioClockError::NativeStateMismatch(0),
+            ));
+        }
+        self.update_frame();
+        let result = prepared.finish(&self.engine.sequencer);
+        work.committed = Some(result);
+        result.map(Some).map_err(AudioAdmissionError::Advanced)
+    }
+
     /// Call once per VBlank (~60 Hz). The engine advances fade → master
     /// volume → sequencer; the alarm then writes pulse-1 registers *after*
     /// the sequencer so it overrides channel 1, exactly as the original's
@@ -419,3 +527,6 @@ impl Default for AudioManager {
 
 #[cfg(all(test, not(target_os = "none")))]
 mod source_admission_tests;
+
+#[cfg(all(test, not(target_os = "none")))]
+mod source_timer_tests;
