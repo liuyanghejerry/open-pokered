@@ -272,7 +272,7 @@ mod source_work_output_tests {
 
     #[test]
     fn supported_and_unsupported_work_advance_one_real_output_and_preserve_pcm() {
-        for music in [MusicId::DUNGEON3, MusicId::SILPH_CO, MusicId::PALLET_TOWN] {
+        for music in [MusicId::DUNGEON3, MusicId::SILPH_CO, MusicId::POKECENTER, MusicId::PALLET_TOWN] {
             let ordinary = AudioOutput::new_pcm();
             let clocked = AudioOutput::new_pcm();
             ordinary.play_music(music);

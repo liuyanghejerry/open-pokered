@@ -78,3 +78,50 @@ aggregate picture-load timeout. The real caller must execute whiteout and
 screen-clear waits, header/loading work, shared-device/IRQ scheduling, VRAM
 request service, palette restoration and cry/input sequencing. The native PC
 still changes its picture immediately; this foundation does not close that gap.
+
+
+### Pokecenter audio work for the pending runtime integration
+
+`AudioManager::update_frame_with_source_work` also accepts `MusicId::POKECENTER`.
+This extends the existing live-sequencer work calculation; it does not create a
+second sequencer or an independent PC clock. Other songs, unsupported effects,
+fades and low-health alarm paths still reject work explicitly and tick the real
+manager exactly once. The first unprimed constructor tick remains unsupported.
+
+The pinned original Audio1 and Audio3 engines are identical after normalizing
+engine/header/MAX-ID names and removing their first descriptive comment. This
+supports sharing update helpers, **not** sharing their different PlaySound
+header tables. Source hashes and the exact normalization are in
+[pokecenter-audio-proof.json](pokecenter-audio-proof.json).
+
+Two independent original normal boots, CONTINUE and physical PC-menu approaches
+then idle for 10,000 updates each. Readonly entry/RET hooks observe channel inputs
+and update T-cycles. The [complete readonly trace](original-pokecenter-updates.json.gz) retains both
+input tape and guarded source identities. Both repeats match exactly; all 10,000 records also match
+the native work calculation in an explicitly **controlled unit fixture**. That
+test constructs channels from the original inputs and is not evidence of native
+normal-boot timing parity. The 600,004-byte packed fixture stores three channels'
+inputs and total cycles, not ROM data or recorded audio.
+
+A separate native test runs the ordinary manager and the clocked manager for
+20,000 frames without SFX and 20,000 with periodic PressAB, comparing every
+channel after every tick. This proves the work observer leaves the real update
+unchanged. The output adapter also compares exact PCM for 1,200 frames per
+song (including Pokecenter and PressAB). The new original trace covers music without active SFX; it does not
+establish new original-versus-native PressAB overlap parity.
+
+Reproduce the original trace and check every published fixture record:
+
+```sh
+uv run --offline --python 3.12 --with pyboy==2.8.1 python \
+  docs/audits/hof-pc-load/replay-pokecenter-audio.py \
+  --rom /path/to/reference.gbc --sym /path/to/pokered.sym \
+  --native-binary /path/to/the/sole/pokered-app \
+  --out /path/to/scratch/pokecenter-original.json.gz
+```
+
+The supplied native binary is hash-guarded only, never run or copied. The script
+guards source files, HEAD, binary, ROM and SRAM throughout recording; it performs
+no runtime writes, warps or snapshot restores and captures no original fonts.
+The existing SRAM fixture is loaded offline. **Actual PC picture loading,
+shared display/IRQ scheduling and matched before/after gameplay remain open.**
