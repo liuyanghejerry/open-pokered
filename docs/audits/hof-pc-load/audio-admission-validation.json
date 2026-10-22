@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-22T01:52:33.502450+00:00",
+  "scope": "Pure shared-native-audio admission interface; not source instruction/clock/IRQ continuation, full ISR, gameplay/PPU phase or actual HoF loading fix.",
+  "changes": "A readonly shared preparation helper preserves the legacy update_frame_with_source_work always-tick-once behavior. New try_update_frame_with_source_work prepares without mutation, invokes one FnOnce owner admission under the existing mutable manager borrow, then updates once and checks postconditions. Hosted PCM output forwards under existing lock; no second sequencer/clock or persisted shadow input state.",
+  "errors": {
+    "Preflight": "No admission callback and no native update.",
+    "Admission": "Callback refused; native manager unchanged. Callback-owned clock/progress is not rolled back or owned here.",
+    "Advanced": "One native update already happened before postcondition failure; caller must retain this outcome and not retry."
+  },
+  "tests": {
+    "new": 4,
+    "manager_song_cases": "POKECENTER/SILPH_CO/DUNGEON3, each with/without periodic PressAB; 96 admitted updates and192 denials per configuration, full channel state and real PCM compared to one ordinary update/control.",
+    "unsupported_cases": "Other bank, unprimed constructor, PokeFlute, fade, alarm, cry. Three preflight retries each with no callback/update;20laterordinaryupdates match, including fade/deferred state.",
+    "postcondition_failure": "Controlled pending-resume conflict deliberately outside supported source state; Advanced NativeStateMismatch vs one ordinary update, no rollback/second tick. Not a gameplay fixture or support claim.",
+    "hosted_output": "POKECENTER40denial+admitted pairs and PALLET40unsupportedpreflights, shared channel state and actual PCM parity."
+  },
+  "audio": {
+    "passed": 138,
+    "failed": 0,
+    "log_sha256": "5f6923efacd3c90bf8f642b9790d92be5dcf2ac90fba2fb78090caf16b45f7fb",
+    "existing_original_10000_pokecenter_updates": "PASS as part of entire package suite; cycle calculation untouched."
+  },
+  "gba_no_std": {
+    "status": "PASS",
+    "package": "pokered-audio",
+    "log_sha256": "43bbb77461ab9bad6515d0799bf06f6715e9c42c533e79e2218e8b02e6e9ab68"
+  },
+  "source_sha256": {
+    "crates/pokered-audio/src/audio_manager.rs": "60bc1d6eeb4fbc1058a6e5f0f4d18a4cb17c1aa24a69a0cee7d90d25771b5921",
+    "crates/pokered-audio/src/source_clock/mod.rs": "084c148add3c119b37a9244c66476c69ae8d0d55926b1564d3a15bfa267cf6a2",
+    "crates/pokered-audio/src/output.rs": "69da3c5b6aa5e12e92f95f7dfaef386f41b2b075a0c50aa29bcc67152f0b43f0",
+    "crates/pokered-audio/src/audio_manager/source_admission_tests.rs": "7c03413bbb0e9a70010dcb79e19fa5389027e5fac0dc0c6a8a7eba07c6f11457",
+    "crates/pokered-audio/src/output/source_admission_output_tests.rs": "6290fe01337b7413e291d0d26b47e8e389e9a3dbb74d26b8f6359445ba7a4b44"
+  },
+  "new_original_recording": false,
+  "remaining": [
+    "The admission callback is not a serializable source instruction stream and aggregate AudioFrameWork cycles do not establish source port-write/APU timing or budget crossing. Caller must retain real instruction progress/one-update outcome and IRQ exclusion.",
+    "No new caller wired into PokemonGame. GBA AudioOutput retains existing wall-VBlank catch-up path; no GBA source-owner bridge is claimed.",
+    "Source FadeOutAudio/audio dispatch, unsupported sound cases, playtime/ignore-input/joypad/full return, native persistent Game/device/audio/boot+SP producers and renderer/picture handoff still required.",
+    "Actual normalboot/CONTINUE physical-input player fix, matched before/after screenshots, native/GBA regressions and broader fidelity audit still required."
+  ],
+  "new_worktrees_targets_game_binary_or_ROM_copies": false
+}

@@ -243,6 +243,21 @@ impl AudioOutput {
             .update_frame_with_source_work()
     }
 
+    /// Guard one native update while holding the existing manager's lock.
+    /// The callback admits work only; it must not re-enter this output/manager.
+    /// Aggregate work remains passive metadata, not a source clock/IRQ service.
+    pub fn try_update_frame_with_source_work<E>(
+        &self,
+        admit: impl FnOnce(crate::source_clock::AudioFrameWork) -> Result<(), E>,
+    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioAdmissionError<E>>
+    {
+        use crate::source_clock::{AudioAdmissionError, AudioClockError};
+        self.manager
+            .lock()
+            .map_err(|_| AudioAdmissionError::Preflight(AudioClockError::OutputUnavailable))?
+            .try_update_frame_with_source_work(admit)
+    }
+
     pub fn update_frame(&self) {
         if let Ok(mut mgr) = self.manager.lock() {
             mgr.update_frame();
@@ -325,3 +340,6 @@ mod source_work_output_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod source_admission_output_tests;

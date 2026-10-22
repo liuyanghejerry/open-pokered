@@ -293,14 +293,11 @@ impl AudioManager {
         true
     }
 
-    /// Advance the existing sequencer exactly once and report supported
-    /// source work. Unsupported music/effects still receive that same tick;
-    /// they never acquire an invented IRQ duration or a second update.
-    pub fn update_frame_with_source_work(
-        &mut self,
-    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioClockError> {
+    fn prepare_source_frame(
+        &self,
+    ) -> Result<crate::source_clock::PreparedAudioFrame, crate::source_clock::AudioClockError> {
         use crate::source_clock::{AudioClockError, PreparedAudioFrame};
-        let prepared = if matches!(
+        if matches!(
             self.engine.last_music_id(),
             Some(MusicId::SILPH_CO | MusicId::DUNGEON3 | MusicId::POKECENTER)
         ) && !self.engine.is_fading()
@@ -309,9 +306,43 @@ impl AudioManager {
             PreparedAudioFrame::from_shared_music(&self.engine.sequencer)
         } else {
             Err(AudioClockError::UnsupportedSoundBank)
-        };
+        }
+    }
+
+    /// Advance the existing sequencer exactly once and report supported
+    /// source work. Unsupported music/effects still receive that same tick;
+    /// they never acquire an invented IRQ duration or a second update.
+    pub fn update_frame_with_source_work(
+        &mut self,
+    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioClockError> {
+        let prepared = self.prepare_source_frame();
         self.update_frame();
         prepared?.finish(&self.engine.sequencer)
+    }
+
+    /// Inspect supported work without mutation, obtain the owner's admission,
+    /// then advance the one existing manager exactly once. The exclusive borrow
+    /// keeps music/SFX state fixed between preparation and commit.
+    ///
+    /// Preflight/Admission errors advance nothing. Advanced means a native tick
+    /// already occurred, including a failed postcondition; the owner must retain
+    /// that outcome rather than retry. This API does not clock source instructions,
+    /// reserve a frame, model an IRQ or make aggregate cycles resumable. The
+    /// caller still owns instruction progress and IRQ/foreground exclusion.
+    pub fn try_update_frame_with_source_work<E>(
+        &mut self,
+        admit: impl FnOnce(crate::source_clock::AudioFrameWork) -> Result<(), E>,
+    ) -> Result<crate::source_clock::AudioFrameWork, crate::source_clock::AudioAdmissionError<E>>
+    {
+        use crate::source_clock::AudioAdmissionError;
+        let prepared = self
+            .prepare_source_frame()
+            .map_err(AudioAdmissionError::Preflight)?;
+        admit(prepared.work()).map_err(AudioAdmissionError::Admission)?;
+        self.update_frame();
+        prepared
+            .finish(&self.engine.sequencer)
+            .map_err(AudioAdmissionError::Advanced)
     }
 
     /// Call once per VBlank (~60 Hz). The engine advances fade → master
@@ -385,3 +416,6 @@ impl Default for AudioManager {
         Self::new()
     }
 }
+
+#[cfg(all(test, not(target_os = "none")))]
+mod source_admission_tests;
