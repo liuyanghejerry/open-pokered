@@ -1,0 +1,36 @@
+{
+  "scope": "Pending full next-note body component only; HoF PC loading remains confirmed unfixed/unwired.",
+  "case_counts": {
+    "multiply": 1044,
+    "frequency": 264,
+    "note_length": 778
+  },
+  "aggregate_compatibility": "Old arithmetic, note length and source-song tests retained; helpers use instruction cursors.",
+  "full_audio_suite": 147,
+  "checks": {
+    "audit-1266-note-math-final.log": {
+      "pass": true,
+      "sha256": "c82a0f77adce453784cf4fc03e258545545068585e74a90cf122e13ce40f634b"
+    },
+    "audit-1266-note-math-gba.log": {
+      "pass": true,
+      "sha256": "d7e5d42c3560e4a49d3112eb4241b4c190f1fcd292747175e953f8edc44eb677"
+    },
+    "audit-1266-note-math-gba-default.log": {
+      "pass": true,
+      "sha256": "bb77f1cd35065189d9debb604e99ad6f17714b52f988a997f77701718e824336"
+    }
+  },
+  "remaining": [
+    "stream command dispatch/calls/loops",
+    "note pitch/channel output",
+    "full frame/native/common IRQ integration",
+    "real APU/ports timing",
+    "Game ordinary-input end-to-end verification"
+  ],
+  "artifact_sha256": {
+    "crates/pokered-audio/src/source_clock/note_math_instructions_golden.json": "cd4caca49e80f6e08f90836a3b2723518904abaacade3d6e9c9cbd134fc252ab",
+    "docs/audits/hof-pc-load/generate-note-math-instructions.py": "e7de564fc814625816d98af10a177d3a42934f13e2b329a4012ae2f306acb640",
+    "docs/audits/hof-pc-load/generate-timer-instructions.py": "defd40b97a885b133dd836e59f6e75c2aa1e32088d4bb8ba49345d82491b9cc7"
+  }
+}

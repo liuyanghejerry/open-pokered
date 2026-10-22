@@ -1,43 +1,15 @@
 //! Original audio arithmetic results and instruction work, separate from playback.
 
-pub fn multiply_add_work(mut factor: u8, mut value: u16, low: u8) -> (u16, u32) {
-    let mut result = u16::from(low);
-    let mut cycles = 8;
-    loop {
-        let bit = factor & 1;
-        factor >>= 1;
-        cycles += 8;
-        if bit == 0 {
-            cycles += 12;
-        } else {
-            cycles += 8 + 8;
-            result = result.wrapping_add(value);
-        }
-        value = value.wrapping_shl(1);
-        cycles += 8 + 8 + 4;
-        if factor == 0 {
-            cycles += 12;
-            break;
-        } else {
-            cycles += 8 + 12;
-        }
-    }
-    (result, cycles + 16)
+pub fn multiply_add_work(factor: u8, value: u16, low: u8) -> (u16, u32) {
+    let mut work = super::note_math_instructions::MultiplyAddInstructions::new(factor, value, low);
+    let cycles = work.by_ref().map(u32::from).sum();
+    (work.result().expect("completed multiply"), cycles)
 }
 
-pub fn calculate_frequency_work(mut pitch: u16, mut octave: u8) -> (u16, u32) {
-    let mut cycles = 8 + 4 + 8 + 4 + 4 + 12 + 8 + 8 + 8 + 8 + 4;
-    loop {
-        cycles += 8;
-        if octave == 7 {
-            cycles += 12;
-            break;
-        }
-        cycles += 8 + 8 + 8 + 4 + 12;
-        pitch = ((pitch as i16) >> 1) as u16;
-        octave = octave.wrapping_add(1);
-    }
-    (pitch.wrapping_add(0x0800), cycles + 8 + 4 + 4 + 16)
+pub fn calculate_frequency_work(pitch: u16, octave: u8) -> (u16, u32) {
+    let mut work = super::note_math_instructions::FrequencyInstructions::new(pitch, octave);
+    let cycles = work.by_ref().map(u32::from).sum();
+    (work.result().expect("completed frequency"), cycles)
 }
 
 pub fn next_music_byte_work_cycles() -> u32 {
@@ -55,29 +27,22 @@ pub fn music_note_length_work(
     flags1: u8,
     flags2: u8,
 ) -> Option<(u8, u8, u32)> {
-    if channel >= 4
-        || (channel == 3 && (flags1 & 4 == 0 || flags2 & 1 != 0))
-        || (channel != 3 && flags2 & 1 == 0 && flags1 & 4 != 0)
-    {
-        return None;
+    use super::note_math_instructions::{NoteLengthInput, NoteLengthInstructions};
+    let mut work = NoteLengthInstructions::new(NoteLengthInput {
+        channel,
+        note,
+        speed,
+        fraction,
+        tempo,
+        flags1,
+        flags2,
+    })?;
+    while !work.finished() {
+        work.try_step(|_| Ok::<(), core::convert::Infallible>(()))
+            .unwrap();
     }
-    let (length, first) = multiply_add_work(speed, u16::from((note & 15) + 1), 0);
-    let (delay, second) = multiply_add_work(length as u8, tempo, fraction);
-    let prefix = 4 + 16 + 8 + 4 + 8 + 4 + 4 + 12 + 8 + 8 + 4 + 24;
-    let middle = 4 + 8 + 8 + 16 + 4 + 16 + 4 + 12 + 4 + 8 + 12 + 8 + 8 + 24;
-    let mut suffix = 4 + 4 + 12 + 8 + 8 + 4 + 12 + 8 + 8 + 12 + 8 + 12;
-    if flags2 & 1 != 0 {
-        suffix += 12;
-    } else if flags1 & 4 != 0 {
-        suffix += 8 + 12 + 8 + 12 + 8 + 12 + 16;
-    } else {
-        suffix += 8 + 12 + 8 + 12 + 12;
-    }
-    Some((
-        delay as u8,
-        (delay >> 8) as u8,
-        prefix + first + middle + second + suffix,
-    ))
+    let (fraction, delay) = work.result()?;
+    Some((fraction, delay, work.cycles()))
 }
 
 #[cfg(test)]

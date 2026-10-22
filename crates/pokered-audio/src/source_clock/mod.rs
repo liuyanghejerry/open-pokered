@@ -11,6 +11,12 @@ mod audio_output_work;
 mod audio_stream_work;
 mod audio_work;
 mod press_ab_work;
+pub mod channel_output_instructions;
+pub mod music_note_instructions;
+pub mod note_math_instructions;
+pub mod note_stream_instructions;
+pub mod note_preparation;
+pub mod note_pitch_instructions;
 pub mod timer_work;
 
 use crate::{sequencer::Sequencer, NOTE_FREQUENCIES};

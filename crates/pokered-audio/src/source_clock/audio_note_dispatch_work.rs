@@ -1,7 +1,10 @@
 //! Music command dispatch through entry to note-length handling.
-use super::audio_math_work::next_music_byte_work_cycles;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct MusicCommandState {
     pub speed: u8,
     pub volume: u8,
@@ -16,83 +19,50 @@ pub struct MusicCommandState {
 pub fn music_dispatch_work(
     channel: u8,
     bytes: &[u8],
-    mut state: MusicCommandState,
+    state: MusicCommandState,
     vibrato_reload: u8,
 ) -> Option<(MusicCommandState, u8, usize, u32)> {
+    use super::note_stream_instructions::{StreamInput, StreamInstructions};
     if channel >= 4 {
         return None;
     }
-    state.flags1 &= !(16 | 32);
-    state.vibrato_delay = vibrato_reload;
-    let mut cycles = 12 + 8 + 8 + 12 + 8 + 8 + 12 + 8 + 16 + 16 + 24;
-    let mut cursor = 0;
+    // This legacy linear API deliberately excludes controls: its caller accounts
+    // for those separately. The retained stream cursor itself handles controls.
+    let mut ptr = 0;
     loop {
-        let command = *bytes.get(cursor)?;
-        cursor += 1;
-        if command == 0xff || command == 0xfd || command == 0xfe {
-            return None;
-        }
-        cycles += 24 + next_music_byte_work_cycles() + 4 + 8 + 16;
-        cycles += 8 + 16 + 8 + 16; // failed call and loop dispatch
-        if command & 0xf0 == 0xd0 {
-            cycles += 8 + 8 + 12; // successful note_type dispatch
-            state.speed = command & 15;
-            cycles += 4 + 8 + 8 + 12 + 8 + 8 + 4 + 8 + 8;
-            if channel == 3 {
-                cycles += 4 + 16; // JR z taken; noise has no parameter byte.
-                continue;
+        let command = *bytes.get(ptr)?;
+        ptr += 1;
+        match command {
+            0xd0..=0xdf => {
+                if channel != 3 {
+                    bytes.get(ptr)?;
+                    ptr += 1;
+                }
             }
-            let parameter = *bytes.get(cursor)?;
-            cursor += 1;
-            cycles += 24 + next_music_byte_work_cycles() + 4 + 4 + 8;
-            if channel == 2 {
-                cycles += 12 + 12 + 4 + 8 + 8 + 4 + 8 + 8 + 4;
-                state.volume = (parameter & 0x30) << 1;
-            } else {
-                cycles += 8 + 8 + 12;
-                state.volume = parameter;
+            0xec => {
+                bytes.get(ptr)?;
+                ptr += 1;
             }
-            cycles += 8 + 12 + 8 + 8 + 16;
-            continue;
+            0xe0..=0xe7 => (),
+            0x00..=0xcf => break,
+            _ => return None,
         }
-        cycles += 8 + 8 + 16;
-        // toggle-perfect-pitch reloads D into A before comparing; vibrato and
-        // pitch-slide then compare the same command.
-        cycles += 4 + 8 + 12 + 8 + 12 + 8 + 12;
-        if command == 0xec {
-            cycles += 8 + 8;
-            let parameter = *bytes.get(cursor)?;
-            cursor += 1;
-            state.duty = (parameter & 3) << 6;
-            cycles += 24 + next_music_byte_work_cycles() + 4 + 4 + 8 + 8 + 12 + 8 + 8 + 16;
-            continue;
-        }
-        // Duty, tempo, stereo, unknown-EF, duty-pattern, volume, execute-music.
-        cycles += 7 * (8 + 12);
-        if command & 0xf8 == 0xe0 {
-            state.octave = command & 15;
-            cycles += 8 + 8 + 8 + 12 + 8 + 8 + 4 + 8 + 8 + 16;
-            continue;
-        }
-        if command >= 0xe0 {
-            return None;
-        }
-        cycles += 8 + 8 + 12; // failed octave dispatch
-        cycles += 8 + 12; // sfx-note comparison
-        if command & 0xf0 == 0x20 {
-            cycles += 4 + 8 + 12 - 4; // sfx-note match uses an untaken JR nz
-        }
-        cycles += 4 + 8 + 12; // pitch sweep: music channel
-        if channel == 3 {
-            if command < 0xc0 {
-                return None;
-            } // Drum paths are separate.
-            cycles += 4 + 8 + 8 + 4 + 8 + 8 + 8 + 12;
-        } else {
-            cycles += 4 + 8 + 12;
-        } // ordinary note or noise rest
-        return Some((state, command, cursor, cycles));
     }
+    let mut work = StreamInstructions::new(StreamInput {
+        channel,
+        ptr: 0,
+        return_ptr: 0,
+        loop_counter: 0,
+        state,
+        vibrato_reload,
+    })
+    .ok()?;
+    while !work.finished() {
+        work.try_step(bytes, |_| Ok::<(), core::convert::Infallible>(()))
+            .ok()?;
+    }
+    let result = work.result()?;
+    Some((result.state, result.note, result.next_ptr, work.cycles()))
 }
 
 #[cfg(test)]
