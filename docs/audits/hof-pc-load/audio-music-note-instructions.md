@@ -31,7 +31,7 @@ Independent bounded test interpretation of the pinned original ROM covers:
 * 310 channel-setup traces in both banks, including register-pointer, duty/length,
   stereo/panning, waveform copying and cry carry edges.
 * 700 note-pitch continuations, including rests, paired sound channels, perfect
-  pitch, clamp/byte-wrap cases and global cry IDs.
+  pitch, octave and cry-modifier carry boundaries and global cry IDs.
 * 538 complete music-note calls, from actual entry through final RET, including
   command controls, noise rests, tempo resets and paired/cry configurations.
 
