@@ -1,0 +1,47 @@
+{
+  "scope": "Supported original music-note CPU body only. HoF PC loading CONFIRMED UNFIXED / UNWIRED; no physical APU, full-frame, IRQ, native-commit or gameplay parity claim.",
+  "checks": {
+    "audit-1268-audio-final.log": {
+      "pass": true,
+      "sha256": "9da07a6f5e94c506c85ba373cc1125e84760d835643f06e8b0ce4a89c3fc598d"
+    },
+    "audit-1268-gba-serde.log": {
+      "pass": true,
+      "sha256": "8967a5a95b987d25da7a8a44f3c692b3893ce24d26b4d44310b57cdc0bf516d8"
+    },
+    "audit-1268-gba-default.log": {
+      "pass": true,
+      "sha256": "4156e24d8d23b53faf86ec00cc6ced9acfeaa6c84137be91b73a5a0523bc6dd4"
+    }
+  },
+  "case_counts": {
+    "channel_setup": 310,
+    "note_pitch": 700,
+    "whole_music_note": 538
+  },
+  "full_audio_tests": 155,
+  "older_fixture_regeneration": "All seven timer/math/stream/preparation/output/pitch/whole-note outputs reproduce byte-identically.",
+  "remaining": [
+    "channel-end and finite PressAB continuations",
+    "full audio frame/native commit",
+    "live shared ports and per-write APU timing",
+    "common IRQ/foreground and canonical Game producers",
+    "ordinary-input gameplay/end-to-end verification"
+  ],
+  "oracle_correction": "Initialization versus actual wave-instrument store bookkeeping corrected; no result-field assertion removed. Initial failure log preserved.",
+  "artifact_sha256": {
+    "crates/pokered-audio/src/source_clock/note_stream_instructions_golden.json": "eeca4587c2bca3a270e95ffa841dbc4ca78b99da140a2c1affe699afcc7ce235",
+    "crates/pokered-audio/src/source_clock/note_pitch_instructions_golden.json": "5053107dc891588a777d99272d7f7b125ccf4e063e6220bf3a8b01380a30adbb",
+    "crates/pokered-audio/src/source_clock/channel_output_instructions_golden.json": "38565a02069b37345f52fb6e8221ff15c5031977b63b92449f58a083059247bb",
+    "crates/pokered-audio/src/source_clock/timer_instructions_golden.json": "7e8fbcefee5c0a196a80f33792241378e3d3129dbb42b163032539b8b5d56b6e",
+    "crates/pokered-audio/src/source_clock/music_note_instructions_golden.json": "29e7358dc0e88b793ffd38e19cbf8a8d4c40d6831f39427de2ddd7564a060610",
+    "crates/pokered-audio/src/source_clock/note_math_instructions_golden.json": "cd4caca49e80f6e08f90836a3b2723518904abaacade3d6e9c9cbd134fc252ab",
+    "crates/pokered-audio/src/source_clock/note_preparation_golden.json": "5f45ae092f0e935ca6a6bef0a96141c3b2ee32f9f60216b777e201793c755db9",
+    "docs/audits/hof-pc-load/generate-timer-instructions.py": "b8e98e999f74169e6ff70c97fd2eda42e7e436ef82dae755730bed65e288ee0b",
+    "docs/audits/hof-pc-load/generate-note-pitch-instructions.py": "f6ee8ca47a29d1bc1a832d47336c6aa6a1a52a5201f1ad0c98e5cf705a9be362",
+    "docs/audits/hof-pc-load/generate-note-stream-instructions.py": "472dabbe7a4c9104e826a48583380a296d22be35a9c58ace49e36e79fcd3479e",
+    "docs/audits/hof-pc-load/generate-channel-output-instructions.py": "5d8467c55487424e6fcf1d7240f35a85f8268e673cf2018b1efb6b00a560ec24",
+    "docs/audits/hof-pc-load/generate-note-math-instructions.py": "e7de564fc814625816d98af10a177d3a42934f13e2b329a4012ae2f306acb640"
+  },
+  "sole_native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+}
