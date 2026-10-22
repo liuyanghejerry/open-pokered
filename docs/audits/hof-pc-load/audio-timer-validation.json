@@ -1,0 +1,68 @@
+{
+  "scope": "Retained timer CPU work only. HoF PC load remains CONFIRMED UNFIXED / UNWIRED.",
+  "native_manager_tests": {
+    "music": [
+      "POKECENTER",
+      "SILPH_CO",
+      "DUNGEON3"
+    ],
+    "confirmation": [
+      false,
+      true
+    ],
+    "updates_each": 96,
+    "minimum_timer_frames_per_configuration": 40,
+    "checks": [
+      "refuse every instruction before acceptance",
+      "serialize every cursor boundary",
+      "unchanged native channels before RET",
+      "one ordinary update after RET",
+      "same actual PCM",
+      "repeated complete calls do not advance",
+      "stale inputs reject"
+    ]
+  },
+  "oracle": {
+    "effect_cases": 160,
+    "timer_body_cases": 8,
+    "banks": [
+      2,
+      31
+    ],
+    "source": "pinned ROM byte interpreter, controlled scalar memory; no gameplay or APU timing claim"
+  },
+  "checks": {
+    "audit-1265-audio-tests.log": {
+      "sha256": "c1cb8e6bb0b179ec46b7b77a7673670ab31a63410687a87ff3c8699111be2f8c",
+      "pass": true
+    },
+    "audit-1265-audio-serde.log": {
+      "sha256": "c21ae66f8bb8eb7beb172ed426b9898fcf13c0519525c4867ddd073243272b87",
+      "pass": true
+    },
+    "audit-1265-audio-gba.log": {
+      "sha256": "0e81d15eb20aefd50145279f5e5a1c757097ba5d2a20cf5a69fbe03fb1193169",
+      "pass": true
+    },
+    "audit-1265-audio-gba-serde-manifest.log": {
+      "sha256": "a8b250988763eae7393fa59858b98099c34296aa0a833429d18a4106eb67613f",
+      "pass": true
+    },
+    "audit-1265-audio-final.log": {
+      "sha256": "11633668f377d03300923e388b5fc75867088bd3b92de50de9ee0c92f1cb445f",
+      "pass": true
+    }
+  },
+  "remaining": [
+    "next-note instruction bodies",
+    "duty rotation/pitch slide/other banks and mute states",
+    "actual shared ports and APU write timing",
+    "full IRQ/foreground owner and Game integration",
+    "ordinary-input gameplay replays and end-to-end parity"
+  ],
+  "artifact_sha256": {
+    "crates/pokered-audio/src/source_clock/timer_instructions_golden.json": "7e8fbcefee5c0a196a80f33792241378e3d3129dbb42b163032539b8b5d56b6e",
+    "docs/audits/hof-pc-load/generate-timer-instructions.py": "7b3f2ccb175b3a8da0434cfbe7e1e52bdfa102a2ed0a7bdcb62fb72768673627"
+  },
+  "sole_native_binary_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+}

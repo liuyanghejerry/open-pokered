@@ -69,7 +69,11 @@ mod tests {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct ChannelEffectWorkInput {
     pub channel: u8,
     pub paired_sfx_active: bool,
@@ -85,70 +89,11 @@ pub struct ChannelEffectWorkInput {
 /// Source timer/vibrato work. Next-note parsing, rotating duty and pitch slide
 /// are intentionally unsupported until their instruction work is composed.
 pub fn channel_effect_work_cycles(input: ChannelEffectWorkInput) -> Option<u32> {
-    if input.channel >= 8 || input.note_delay == 1 {
-        return None;
-    }
-    let mut cycles = 8 + 12 + 8 + 8 + 8 + 12 + 4 + 8 + 4 + 8;
-    if input.channel >= 4 {
-        cycles += 12;
-    } else {
-        cycles += 8 + 12 + 8 + 8 + 4;
-        if input.paired_sfx_active {
-            return Some(cycles + 8 + 16);
-        }
-        cycles += 12;
-    }
-    if input.flags1 & 64 != 0 {
-        return None;
-    }
-    cycles += 12 + 8 + 12 + 12;
-    cycles += 8 + 12 + 8 + 12;
-    if input.flags2 & 1 != 0 {
-        cycles += 12;
-    } else {
-        cycles += 8 + 12 + 8 + 12;
-        if input.flags1 & 4 != 0 {
-            return Some(cycles + 12 + 16);
-        }
-        cycles += 8;
-    }
-    if input.flags1 & 16 != 0 {
-        return None;
-    }
-    cycles += 12 + 8 + 12 + 12;
-    cycles += 12 + 8 + 8 + 4;
-    if input.vibrato_delay != 0 {
-        return Some(cycles + 8 + 12 + 16);
-    }
-    cycles += 12 + 12 + 8 + 8 + 4;
-    if input.vibrato_extent == 0 {
-        return Some(cycles + 8 + 16);
-    }
-    cycles += 12 + 4 + 12 + 8 + 8 + 8 + 4;
-    if input.vibrato_rate & 15 != 0 {
-        return Some(cycles + 8 + 12 + 16);
-    }
-    cycles += 12;
-    cycles += 8 + 16 + 8 + 8 + 12 + 8 + 8 + 12 + 8 + 12;
-    if input.flags1 & 8 != 0 {
-        cycles += 8 + 16 + 4 + 8 + 4 + 4 + 4;
-        cycles += if input.frequency_low >= input.vibrato_extent & 15 {
-            12
-        } else {
-            8 + 8
-        };
-        cycles += 12;
-    } else {
-        cycles += 12 + 16 + 4 + 8 + 8 + 4;
-        let amount = input.vibrato_extent >> 4;
-        cycles += if u16::from(input.frequency_low) + u16::from(amount) <= 255 {
-            12
-        } else {
-            8 + 8
-        };
-    }
-    let register_pointer = 4 + 12 + 4 + 12 + 4 + 8 + 4 + 4 + 8 + 16;
-    Some(cycles + 4 + 8 + 24 + register_pointer + 8 + 16)
+    Some(
+        super::timer_work::EffectInstructionWork::new(input)?
+            .map(u32::from)
+            .sum(),
+    )
 }
 
 #[cfg(test)]

@@ -3462,6 +3462,7 @@ dependencies = [
  "bitflags 2.13.2",
  "critical-section",
  "dotzuki-audio 0.10.1 (git+https://github.com/liuyanghejerry/dotzuki?rev=8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8)",
+ "serde",
  "serde_json",
 ]
 
@@ -3496,6 +3497,7 @@ dependencies = [
  "dotzuki-engine-script",
  "dotzuki-renderer",
  "hashbrown 0.15.5",
+ "image 0.25.10",
  "log",
  "num-derive",
  "num-traits",

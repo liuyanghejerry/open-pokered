@@ -11,6 +11,7 @@ mod audio_output_work;
 mod audio_stream_work;
 mod audio_work;
 mod press_ab_work;
+pub mod timer_work;
 
 use crate::{sequencer::Sequencer, NOTE_FREQUENCIES};
 use audio_next_note_work::music_next_note_work_with_sfx;
@@ -19,6 +20,10 @@ use audio_work::{audio_dispatch_work, channel_effect_work_cycles, ChannelEffectW
 use press_ab_work::{press_ab_next_note, PressAbWork, SOURCE_PRESS_AB_ID};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub enum AudioClockError {
     UnsupportedSoundBank,
     OutputUnavailable,
@@ -29,6 +34,10 @@ pub enum AudioClockError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct AudioFrameWork {
     pub cycles: u32,
 }
