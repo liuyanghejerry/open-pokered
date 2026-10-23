@@ -4,7 +4,9 @@ The supported source audio frame now routes individual APU accesses through
 `SourceAudioFrame` to the `AudioManager` APU. After the original frame RET, the
 manager calls `advance_frame_without_output` on its existing sequencer once.
 It does not run native batch register output a second time. The dependency is
-pinned to `dotzuki@a4f500c831aa7a2eaa725a471e9e225d29b271d5`.
+pinned to `dotzuki@35390dd7fa1bf4868f310c7866607f0a3b00b6ad`.
+This includes the logical-only frame API and music-only resume snapshots,
+which avoid retaining unrelated SFX streams and drum tables for saved tracks.
 
 The callback admits a complete instruction before advancing time, performs its
 read or write at the supplied machine-cycle offset, and returns the actual
@@ -142,3 +144,14 @@ format log was captured before a module-order correction in
 `source_clock/mod.rs`; that changed file passed the later 23-file check. These
 records describe the verified audio changes in the shared checkout, rather than
 claiming equality of every checkout file with a later isolated PR.
+
+## Dependency memory follow-up
+
+The initial PR head failed the unchanged GBA stress gate (contiguous heap
+probe 4095 B versus the 4096 B requirement). The updated engine dependency
+stores only music restoration fields in each resume cache entry. Its 190 audio
+tests and two doctests pass, including a full-clone playback comparison. The
+game passes all 191 audio tests and default/serde GBA audio checks with the new
+pin. These local checks do not establish the full GBA stress margin; that
+remains a required CI result before merge. Follow-up log hashes are recorded
+in the adjacent validation JSON.

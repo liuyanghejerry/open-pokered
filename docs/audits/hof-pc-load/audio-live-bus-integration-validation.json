@@ -65,6 +65,22 @@
     ".task-tmp/fidelity-39-plus/audit-1275-audio-fmt-check.log": {
       "sha256": "70a53b919023e89306beccb487038cb2b015b93fdee4b54ddf99c6d1c8fa4bf8",
       "bytes": 138354
+    },
+    ".task-tmp/fidelity-39-plus/audit-1277-music-snapshot-tests.log": {
+      "sha256": "5b16dd93c45d18f2285c22c01727d0df5c36cbf88ff3f9c31562920a89ebb518",
+      "bytes": 13329
+    },
+    ".task-tmp/fidelity-39-plus/audit-1277-pokered-audio-tests.log": {
+      "sha256": "a69b9f5b7d7e0635722a6c051f9ec540061ddda2e621874df7ec42924de6657b",
+      "bytes": 19343
+    },
+    ".task-tmp/fidelity-39-plus/audit-1277-gba-audio-check.log": {
+      "sha256": "36860a7dac468e211783ff86a2eab666c8406da28207462763c15908bf0c3641",
+      "bytes": 661
+    },
+    ".task-tmp/fidelity-39-plus/audit-1277-gba-audio-serde-check.log": {
+      "sha256": "469708468cdf32d9098268e9fe222aa69fd4e19985e0f891c1c84db02a481808",
+      "bytes": 616
     }
   },
   "checks": [
@@ -176,5 +192,17 @@
     "whole_crate_log": ".task-tmp/fidelity-39-plus/audit-1275-audio-fmt-check.log",
     "whole_crate_log_timing": "Captured before the source_clock/mod.rs module-order correction. That changed file then passed the final 23-file rustfmt check; the six unchanged-file baseline differences remain outside this patch."
   },
-  "final_checks_complete": true
+  "final_checks_complete": true,
+  "dependency_memory_followup": {
+    "engine_commit": "35390dd7fa1bf4868f310c7866607f0a3b00b6ad",
+    "engine_pr": "https://github.com/liuyanghejerry/dotzuki/pull/107",
+    "change": "Resume snapshots copy only music restoration fields; no unused SFX/drum table retention.",
+    "engine_tests_passed": 190,
+    "engine_doctests_passed": 2,
+    "game_audio_tests_passed": 191,
+    "game_audio_tests_seconds": 107.39,
+    "gba_default_check_passed": true,
+    "gba_serde_check_passed": true,
+    "gba_stress": "PR363 previous head failed; new full CI required. No heap threshold/workflow changes."
+  }
 }
