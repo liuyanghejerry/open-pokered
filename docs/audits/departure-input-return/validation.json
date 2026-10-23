@@ -126,5 +126,22 @@
     "production_unchanged_since_full_checks": true,
     "input_tape": "Held at [0,46), then neutral, exactly matching original; all recorded native frames unchanged after aligning the release time.",
     "final_test_log_sha256": "d1234961ec538a67ae965fd76d18aa39ff66407ae99a3bf1b97c150693f44f08"
+  },
+  "GBA_memory_scenarios": {
+    "pass": true,
+    "error": null,
+    "head": "99a71169172f42237d9a3058b8819bc399b6061c",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "4be2cf59bac5605f3dd54ae1f99b3e118ecdfdcd52be3e05fef8c754fc0ef5ff",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "seconds": 184.3203661319567,
+    "frames": 321240,
+    "cases": 13,
+    "min_heap": 4728,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
   }
 }

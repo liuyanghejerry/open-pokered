@@ -80,3 +80,9 @@ package, 63 agent tests and the release GBA build. The original 1 core and
 88 app ignored cases remain unchanged. Expanding the direction control
 changes tests/evidence only; all 8 updated input tests also pass. The GBA
 runtime memory suite is recorded separately after its execution.
+
+The unchanged complete 13-case GBA memory suite passes on the combined
+production code: minimum free heap 4728 B, stack headroom 8708 B, 321240
+hardware frames. `validation.json` includes the ROM, fixture and probe hashes.
+No thresholds, scenarios or timeouts were changed. Latest-head CI remains
+required before merging.
