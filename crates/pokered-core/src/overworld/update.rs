@@ -890,6 +890,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // These commands wait in the normal field loop too. MoveSprite
             // takes sixteen updates plus its ready boundary per NPC stride.
             if self.field_loop_wait != 0 {
+                if matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. }))
+                    && self.bike_redraw_advance
+                {
+                    // The first DoBikeSpeedup advance crosses the map redraw
+                    // before the normal AdvancePlayerSprite call resumes.
+                    self.bike_redraw_advance = false;
+                    self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
+                }
                 self.field_loop_wait -= 1;
                 return ScreenAction::Continue;
             }
@@ -3024,7 +3033,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Simulated joypad input takes the same .noCollision ->
                     // AdvancePlayerSprite path as an ordinary first step:
                     // publish the first two pixels before the redraw wait.
-                    player_movement::advance_step(&mut self.state);
+                    self.state.walk_counter = player_movement::WALK_COUNTER_INIT - 1;
+                    self.bike_redraw_advance = self.state.player.transport == TransportMode::Biking
+                        && self.state.player.bike_speedup_active;
                 }
             }
             return;

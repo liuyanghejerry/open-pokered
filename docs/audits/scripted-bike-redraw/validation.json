@@ -1,0 +1,82 @@
+{
+  "base": "9efec55d084b961fe5b51550c7790e5beabad037",
+  "production_diff_sha256": "8f089fc0cc64b25c0625864373266f0f9c1978328475ffcba9b497142abc7880",
+  "checks": [
+    {
+      "name": "core",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-bike-first-core.log",
+      "log_sha256": "f6c07a780da102f7f1cd1f21f72ce42e00631464917b27d05d443d6e8f85579b",
+      "passed": 3659,
+      "errors": []
+    },
+    {
+      "name": "app",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--test",
+        "route22_gate_guard",
+        "--test",
+        "relative_script_walk",
+        "--test",
+        "door_exit",
+        "--test",
+        "scripted_input_poll",
+        "--test",
+        "scripted_bike_walk",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-bike-first-app.log",
+      "log_sha256": "25defdb3bfd2a66f0b5a8219cf79c7e52291748adbd40ba5903ef7ad5a0ac2e1",
+      "passed": 16,
+      "errors": []
+    },
+    {
+      "name": "gba",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--features",
+        "memory-scenarios",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-bike-first-gba.log",
+      "log_sha256": "8f7a335aac6bfff9d025d9caf7e3ba9d4faac0465f8bcb63eb4abce55f6c2140",
+      "passed": 0,
+      "errors": []
+    }
+  ],
+  "baseline_passed": 1,
+  "baseline_failed": 1,
+  "original_cases_repeated": 2,
+  "portable_replay_identical": true,
+  "walking_capture_unchanged": true,
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_files": {
+    "home/overworld.asm": "a06a32da3c889f69355dc2ecd67407dc01332580",
+    "scripts/Route23.asm": "0755899623f73f0ff99e97eba28db41caee4a4e2",
+    "data/maps/objects/Route23.asm": "b31aff421781ffcb964b26734c733c0e7e9b1e78"
+  },
+  "scope": "First bicycle redraw in MovePlayerRelative; caller return ownership unchanged",
+  "screenshots": {
+    "before": "80173d543df611b9345b9f7cdb60a7821196332964b3d016cde26e82d4cdc1c7",
+    "after": "b71768460ab377280128f15373c7ba8ed434ce6ce0b03fa524826aaecda9b3af"
+  }
+}
