@@ -42,6 +42,14 @@ images show the same frame: A followed by8 neutral Game updates. The old game
 already credited coins; the fixed game is still waiting. These checks do not
 claim continuous source/native PCM equivalence or fix Hall of Fame loading.
 
-Local checks:22 core slots tests,167 game audio tests,191 engine audio tests,
+Local checks:22 core slots tests,168 game audio tests,191 engine audio tests,
 2 engine doc tests, the shared Game integration test, and locked GBA memory
 scenario release checking pass. Full applicable game CI remains required.
+
+The first CI candidate rejected two hardware-timer update averages: trainer
+battle entry234 ticks (limit232.3) and Pokédex entry119 ticks (limit118).
+It had settled elapsed audio time twice in every GBA Game update. The
+follow-up switches pause state only when the payout stage changes, and on
+forced scene exit/reset; ordinary frames retain their original single audio
+update. The shared Game test also covers forced exit during a live pause.
+The full original timing and memory gates must still pass on this follow-up.

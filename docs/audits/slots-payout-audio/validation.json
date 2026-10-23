@@ -10,7 +10,7 @@
   "original_payout_coins": 15,
   "unit_tests": {
     "core_slots": 22,
-    "game_audio": 167,
+    "game_audio": 168,
     "engine_audio": 191,
     "engine_doctests": 2
   },
@@ -21,7 +21,7 @@
   "evidence_sha256": {
     "original-runtime.json.gz": "305ce7c92989942369bba8d9ec4e469895c2a523ef0c7cf73562951464c66a98",
     "replay-original.py": "b6d2115d69dcf1c4e98c4a25fe113e4c6bfd9d38d1cd91ea9261b6499b18302c",
-    "README.md": "d612e0a72aeff24f06c6ed21758c17e1b32c001a57554e53c5452a8909ed8291",
+    "README.md": "96b39c5f9de783aadaa76117cd998e8ff63fc748623fcda2622e44b604631309",
     "before.png": "1b40b12b384962404675dafb4b461860c4f0b508c99defe89442d46679e03702",
     "original-fixture.sav": "7f4917d0f6f80083f0da64b3c7669863d05154d81ed2c58e0780ea543791b246",
     "after.png": "fb1db2a6df270568a65e55b7ffdd0e55215dd69d00b9a94955138c82ac4837f5"
@@ -30,5 +30,17 @@
   "native_executable_guard": {
     "expected_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
     "observation": "Cargo integration tests implicitly built the game binary; the frozen debug/pokered-app entry was restored from its byte-identical existing deps artifact via hardlink after testing. No original ROM changes."
+  },
+  "first_CI": {
+    "head": "9a874e7e44cda03608a2f39a491761c2517bda69",
+    "run": 39891733578,
+    "conclusion": "failure",
+    "cause": "Hardware-timer trainer update234>232.3; pokedex update119>118. Memory stages not reached.",
+    "follow_up": "Pause handoff only at payout-state change, forced exit and reset; default one audio update per frame restored. Full new CI required."
+  },
+  "follow_up_local_checks": {
+    "game_audio_tests": 168,
+    "shared_Game_integration": "pass including forced pause exit",
+    "GBA_locked_memory_check": "pass"
   }
 }

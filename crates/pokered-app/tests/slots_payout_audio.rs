@@ -105,6 +105,20 @@ fn shared_game_waits_for_sound_freezes_music_and_resumes_after_payout() {
                 game.audio.as_ref().unwrap().last_music_id(),
                 Some(MusicId::GAME_CORNER)
             );
+
+            // An external scene change must release a live payout pause too.
+            let slots = game.slots_screen.as_mut().unwrap();
+            slots.phase = SlotsPhase::Payout;
+            slots.payout_stage = PayoutStage::WaitPress;
+            slots.payout_remaining = 8;
+            game.audio.as_ref().unwrap().play_sfx(SfxId::Purchase);
+            game.update(&confirm);
+            game.handle_transition(GameScreen::Overworld);
+            let audio = game.audio.as_ref().unwrap();
+            audio.play_music(MusicId::PALLET_TOWN);
+            let before = music(&game);
+            audio.update_frame();
+            assert_ne!(music(&game), before);
         })
         .unwrap()
         .join()

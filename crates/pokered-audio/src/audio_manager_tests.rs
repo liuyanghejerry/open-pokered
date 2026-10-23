@@ -57,6 +57,19 @@ fn native_music_pause_refuses_unpaused_source_work_before_admission() {
 }
 
 #[test]
+fn stopping_audio_clears_payout_pause_before_a_new_song() {
+    let mut manager = AudioManager::new();
+    manager.play_music(MusicId::GAME_CORNER);
+    manager.set_music_paused(true);
+    manager.update_frame();
+    manager.stop_all();
+    manager.play_music(MusicId::PALLET_TOWN);
+    let before = format!("{:?}", manager.sequencer.channels);
+    manager.update_frame();
+    assert_ne!(format!("{:?}", manager.sequencer.channels), before);
+}
+
+#[test]
 fn test_new_defaults() {
     let mgr = AudioManager::new();
     assert_eq!(mgr.master_volume_left(), 7);

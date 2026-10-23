@@ -592,6 +592,12 @@ impl AudioManager {
             .any(|&index| self.engine.sequencer.channels[index].active)
     }
 
+    /// A reset/scene stop must also release a minigame's music pause.
+    pub fn stop_all(&mut self) {
+        self.music_paused = 0;
+        self.engine.stop_all();
+    }
+
     /// Enable/disable the low-health alarm (`wLowHealthAlarm`,
     /// audio/low_health_alarm.asm). Driven by the battle UI from
     /// `BattleScreen::low_health_alarm` — the original sets bit 7 when the
