@@ -64,6 +64,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "printTextCry",
     "readingMenu",
     "replaceTileBlock",
+    "route22GuardReturn",
     "setPartyNickname",
     "showCoinBox",
     "showDiploma",

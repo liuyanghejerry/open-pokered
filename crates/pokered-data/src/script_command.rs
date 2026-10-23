@@ -39,6 +39,8 @@ pub enum PokemonScriptCommand {
     PrintFieldText { text: String, retain_window: bool, prompt: FieldTextPrompt, leading_sound: Option<String> },
     /// Outer HoldTextDisplayOpen: wait for A release and close only the retained owner.
     FinishFieldText,
+    /// Route22GatePlayerMovingScript: unlock, Delay3, then finish simulation.
+    Route22GuardReturn,
     /// Ordinary no-voucher Bike clerk: explicit PARA/PROMPT/menu provenance.
     /// Seven localized strings: two Welcome paragraphs, question, refusal,
     /// goodbye, bicycle label, cancel label. Returns only after outer close.
@@ -133,6 +135,7 @@ impl PokemonScriptCommand {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
+            Self::Route22GuardReturn => "route22GuardReturn",
             Self::AskFieldYesNo { .. } => "askFieldYesNo",
             Self::PokecenterNurseOffer { .. } => "pokecenterNurseOffer",
             Self::PokecenterFarewell { .. } => "pokecenterFarewell",
@@ -260,6 +263,7 @@ impl PokemonScriptCommand {
             | Self::WaitMusic
             | Self::WaitSound
             | Self::FinishFieldText
+            | Self::Route22GuardReturn
             | Self::VendingDelivery => vec![],
         };
         ScriptCommand::Custom { name, args }
@@ -353,6 +357,10 @@ impl PokemonScriptCommand {
                 Self::PrintTextCry { text: string(0)?, species: string(1)? }
             },
             "finishFieldText" => Self::FinishFieldText,
+            "route22GuardReturn" => {
+                if !args.is_empty() { return Err("route22GuardReturn: no arguments expected".into()); }
+                Self::Route22GuardReturn
+            },
             "bikeShopOffer" => {
                 if args.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }
                 Self::BikeShopOffer { texts: (0..7).map(string).collect::<Result<Vec<_>, _>>()? }

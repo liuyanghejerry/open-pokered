@@ -1,0 +1,137 @@
+{
+  "source": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_sha256": {
+    "scripts/Route22Gate.asm": "7cf02673af85e21244fa2ed85a11400adf99d359c083e9deda28d8ee232a6008",
+    "home/overworld.asm": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+    "home/palettes.asm": "5e6838b4a72662c880142ff8479755a35a69a71a09b1a6f49d2632674263bb75",
+    "engine/joypad.asm": "a7113fcd3191cbe06c0029c4093cd97eb83120349a122a2b6c7ee5bf6ecf12ae"
+  },
+  "replay_sha256": "026a4774d25a895b804aa097b4f6503f913b1ab0af9696b4009d4734eab80d35",
+  "original_controls": [
+    {
+      "case": "early",
+      "button": "start",
+      "input_interval": [
+        18,
+        19
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": null
+    },
+    {
+      "case": "completion",
+      "button": "start",
+      "input_interval": [
+        19,
+        20
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [
+        19
+      ],
+      "first_later_stride_post_update": null
+    },
+    {
+      "case": "later",
+      "button": "start",
+      "input_interval": [
+        20,
+        22
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [
+        21
+      ],
+      "first_later_stride_post_update": null
+    },
+    {
+      "case": "held",
+      "button": "start",
+      "input_interval": [
+        0,
+        30
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [
+        19
+      ],
+      "first_later_stride_post_update": null
+    },
+    {
+      "case": "pulse",
+      "button": "start",
+      "input_interval": [
+        0,
+        10
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": null
+    },
+    {
+      "case": "up",
+      "button": "up",
+      "input_interval": [
+        0,
+        30
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": 24
+    },
+    {
+      "case": "down",
+      "button": "down",
+      "input_interval": [
+        0,
+        30
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": 22
+    },
+    {
+      "case": "left",
+      "button": "left",
+      "input_interval": [
+        0,
+        30
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": 24
+    },
+    {
+      "case": "right",
+      "button": "right",
+      "input_interval": [
+        0,
+        30
+      ],
+      "repeated_identically": true,
+      "menu_CPU_entry_offsets": [],
+      "first_later_stride_post_update": 24
+    }
+  ],
+  "baseline": {
+    "head": "d77b470cda234c889d36e82b93ed60fc327b1014",
+    "production_unchanged": true,
+    "passed": 9,
+    "failed": 5,
+    "log_sha256": "a80bb8d8dd4b69b4eebf46fee37855f52f8fac89277fa35f6e0078bca84758ca"
+  },
+  "targeted": {
+    "passed": 26,
+    "failed": 0,
+    "log_sha256": "4d4cc1f2a8c278ce1f828dd4a7de7649f525210d6cd3fa19be44819f672c81d1"
+  },
+  "original_sprites_CPU_offsets_during_return": [
+    19,
+    23
+  ],
+  "full_checks": "pending",
+  "gba_runtime": "pending",
+  "scope": "Controlled actual Game fixtures and original normal boot/CONTINUE with physical gate entry. No live RAM writes, forced warps, savestate loads, or original-font rendering. Not a fresh mainline validation."
+}

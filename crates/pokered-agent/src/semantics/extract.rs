@@ -213,6 +213,8 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "pokedexRating",
     // Closes the owned field window; event flags/inventory remain unchanged.
     "finishFieldText",
+    // Returns the guard's simulated walk to field input; no event mutation.
+    "route22GuardReturn",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",
