@@ -110,6 +110,8 @@ pub enum PayoutStage {
     /// " lined up! Scored N coins!" — waits for A/B (the ASM's
     /// WaitForTextScrollButtonPress).
     WaitPress,
+    /// WaitForSoundToFinish before the first credit; music is already paused.
+    WaitSound,
     /// Crediting 1 coin every few frames with a Reward SFX per coin.
     Tick,
 }
@@ -241,17 +243,32 @@ impl SlotsScreen {
 
     /// Advance one frame.
     pub fn update_frame(&mut self, input: SlotsInput) -> SlotsAction {
-        self.update_frame_sampled(input, None)
+        self.update_frame_sampled(input, None, false)
     }
 
     /// Hosted OneMoreGo polls held buttons only when HandleMenuInput reaches
     /// Joypad. Raw samples during Delay3/DelayFrames15 do not consume edges.
     /// The mask uses foreground_input's A/B/SELECT/START/RIGHT/LEFT/UP/DOWN order.
     pub fn update_frame_with_held_input(&mut self, input: SlotsInput, held: u8) -> SlotsAction {
-        self.update_frame_sampled(input, Some(held))
+        self.update_frame_sampled(input, Some(held), false)
     }
 
-    fn update_frame_sampled(&mut self, input: SlotsInput, held: Option<u8>) -> SlotsAction {
+    /// Live host adapter: preserve the pending sound before starting payout.
+    pub fn update_frame_with_audio(
+        &mut self, input: SlotsInput, held: u8, sfx_playing: bool,
+    ) -> SlotsAction {
+        self.update_frame_sampled(input, Some(held), sfx_playing)
+    }
+
+    /// SlotMachine_PayCoinsToPlayer pauses music through the final coin delay.
+    pub fn music_paused(&self) -> bool {
+        self.phase == SlotsPhase::Payout
+            && matches!(self.payout_stage, PayoutStage::WaitSound | PayoutStage::Tick)
+    }
+
+    fn update_frame_sampled(
+        &mut self, input: SlotsInput, held: Option<u8>, sfx_playing: bool,
+    ) -> SlotsAction {
         self.latest_held_buttons = held;
         self.frame = self.frame.wrapping_add(1);
         match self.phase {
@@ -274,7 +291,7 @@ impl SlotsScreen {
                 SlotsAction::Continue
             }
             SlotsPhase::Spinning => self.update_spinning(input),
-            SlotsPhase::Payout => self.update_payout(input),
+            SlotsPhase::Payout => self.update_payout(input, sfx_playing),
             SlotsPhase::Result => self.update_result(input),
         }
     }
@@ -403,7 +420,7 @@ impl SlotsScreen {
         }
     }
 
-    fn update_payout(&mut self, input: SlotsInput) -> SlotsAction {
+    fn update_payout(&mut self, input: SlotsInput, sfx_playing: bool) -> SlotsAction {
         match self.payout_stage {
             PayoutStage::Flash => {
                 if self.flash_frames_remaining > 0 {
@@ -432,17 +449,26 @@ impl SlotsScreen {
                 if input.a || input.b {
                     self.result_last_buttons = self.latest_held_buttons
                         .unwrap_or(u8::from(input.a) | (u8::from(input.b) << 1));
-                    self.payout_stage = PayoutStage::Tick;
+                    self.payout_stage = if sfx_playing {
+                        PayoutStage::WaitSound
+                    } else {
+                        PayoutStage::Tick
+                    };
                     self.payout_cooldown = 0;
                 }
             }
-            PayoutStage::Tick => {
-                if self.payout_remaining == 0 || self.coins >= MAX_COINS {
-                    self.finish_payout();
-                    return SlotsAction::Continue;
+            PayoutStage::WaitSound => {
+                if !sfx_playing {
+                    self.payout_stage = PayoutStage::Tick;
+                    return self.update_payout(SlotsInput::none(), false);
                 }
+            }
+            PayoutStage::Tick => {
                 if self.payout_cooldown > 0 {
                     self.payout_cooldown -= 1;
+                } else if self.payout_remaining == 0 || self.coins >= MAX_COINS {
+                    self.finish_payout();
+                    return SlotsAction::Continue;
                 } else {
                     // One coin per tick, each with its own Reward SFX
                     // (SlotMachine_PayCoinsToPlayer .loop).
@@ -976,6 +1002,35 @@ mod tests {
         assert_eq!(s.coins, 99 + 8);
         assert_eq!(reward_cues, 8, "one Reward SFX per coin");
         assert_eq!(s.message, "ONE MORE GO?");
+    }
+
+    #[test]
+    fn payout_waits_for_sound_and_keeps_music_paused_through_the_last_delay() {
+        let mut s = SlotsScreen::new(false, 100, 42);
+        s.phase = SlotsPhase::Payout;
+        s.payout_stage = PayoutStage::WaitPress;
+        s.payout_remaining = 15;
+        assert!(!s.music_paused());
+        s.update_frame_with_audio(press_a(), 1, true);
+        assert!(s.music_paused());
+        for _ in 0..120 {
+            s.update_frame_with_audio(SlotsInput::none(), 0, true);
+            assert_eq!(s.coins, 100);
+            assert!(s.take_sfx().is_empty());
+            assert!(s.music_paused());
+        }
+        // Same update as WaitForSoundToFinish returns: first coin is paid.
+        s.update_frame_with_audio(SlotsInput::none(), 0, false);
+        assert_eq!(s.coins, 101);
+        for frame in 1..120 {
+            s.update_frame_with_audio(SlotsInput::none(), 0, false);
+            assert_eq!(s.coins, 101 + frame / 8);
+            assert!(s.music_paused());
+        }
+        s.update_frame_with_audio(SlotsInput::none(), 0, false);
+        assert_eq!(s.coins, 115);
+        assert_eq!(s.phase, SlotsPhase::Result);
+        assert!(!s.music_paused());
     }
 
     #[test]

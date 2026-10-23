@@ -59,6 +59,22 @@
     ".task-tmp/fidelity-39-plus/audit-1287-pcm-gba.log": {
       "sha256": "c5e5d0e0667818efca79269d96e43f644df7fb3f5afff1713772ac3d90b7f4f4",
       "bytes": 58795
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-audio-tests.log": {
+      "sha256": "8b465650e2f4a7d98c9b2db4742f97cd5967cecfb40460f7c96bd5b01b4ce759",
+      "bytes": 15827
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-cpal.log": {
+      "sha256": "e511f15b948b695df802f1acc34382f79d906ffb33d52c51555ae8ced33cb2b6",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-web.log": {
+      "sha256": "9a65790394ff62cfaef04969e31cdd987bc8a4e77fd1897b0cd661f365a2bc25",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-gba.log": {
+      "sha256": "b80840cbe8f3404854cb70590d6ef0453ae0c52b5a3a2406020cdba6553bbd26",
+      "bytes": 58795
     }
   },
   "new_worktrees": 0,
@@ -72,5 +88,14 @@
     "web_audio": "pass",
     "GBA_memory_scenarios_locked_check": "pass",
     "full_CI": "required before merge"
+  },
+  "slots_master_combination": {
+    "master": "bf7484d179f4593aa44e2df38fb4f5803b9af937",
+    "audio_tests_passed": 172,
+    "audio_seconds": 50.7,
+    "locked_CPAL": "pass",
+    "locked_WebAudio": "pass",
+    "locked_GBA_memory_scenarios": "pass",
+    "full_CI": "required on updated commit"
   }
 }
