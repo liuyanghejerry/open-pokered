@@ -597,6 +597,16 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             },
         );
 
+        engine.register_async_fn(
+            "cyclingGateReturn",
+            |args: &[JsValue], _ctx: &mut Context| -> JsResult<ScriptCommand> {
+                if !args.is_empty() {
+                    return Err(boa_engine::JsNativeError::typ().with_message("cyclingGateReturn: no arguments expected").into());
+                }
+                Ok(PokemonScriptCommand::CyclingGateReturn.into_script_command())
+            },
+        );
+
         // game.playShipDeparture() -> Promise<void>
         // The S.S. Anne departure cutscene (VermilionDock): the blocking
         // ship-sail animation (smoke puffs + view scroll + erase).
@@ -1382,6 +1392,23 @@ mod tests {
                 text: "done".to_string()
             })
         );
+    }
+
+    #[test]
+    fn cycling_gate_return_suspends_the_boa_caller_until_completion() {
+        use crate::script_command::PokemonScriptCommand;
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function guardReturn() {
+                await game.cyclingGateReturn();
+                await game.showText("returned");
+            }
+        "#).unwrap();
+        let expected = PokemonScriptCommand::CyclingGateReturn.into_script_command();
+        assert_eq!(engine.call_function("guardReturn", &[]).unwrap(), Some(expected.clone()));
+        assert_eq!(engine.tick(), Some(expected));
+        assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),
+            Some(ScriptCommand::ShowText { text: "returned".into() }));
     }
 
     #[test]

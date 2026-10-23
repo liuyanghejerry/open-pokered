@@ -41,6 +41,8 @@ pub enum PokemonScriptCommand {
     FinishFieldText,
     /// Route22GatePlayerMovingScript: unlock, Delay3, then finish simulation.
     Route22GuardReturn,
+    /// Cycling gate callbacks clear simulation before Joypad, preserving held input.
+    CyclingGateReturn,
     /// Ordinary no-voucher Bike clerk: explicit PARA/PROMPT/menu provenance.
     /// Seven localized strings: two Welcome paragraphs, question, refusal,
     /// goodbye, bicycle label, cancel label. Returns only after outer close.
@@ -136,6 +138,7 @@ impl PokemonScriptCommand {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
             Self::Route22GuardReturn => "route22GuardReturn",
+            Self::CyclingGateReturn => "cyclingGateReturn",
             Self::AskFieldYesNo { .. } => "askFieldYesNo",
             Self::PokecenterNurseOffer { .. } => "pokecenterNurseOffer",
             Self::PokecenterFarewell { .. } => "pokecenterFarewell",
@@ -264,6 +267,7 @@ impl PokemonScriptCommand {
             | Self::WaitSound
             | Self::FinishFieldText
             | Self::Route22GuardReturn
+            | Self::CyclingGateReturn
             | Self::VendingDelivery => vec![],
         };
         ScriptCommand::Custom { name, args }
@@ -360,6 +364,10 @@ impl PokemonScriptCommand {
             "route22GuardReturn" => {
                 if !args.is_empty() { return Err("route22GuardReturn: no arguments expected".into()); }
                 Self::Route22GuardReturn
+            },
+            "cyclingGateReturn" => {
+                if !args.is_empty() { return Err("cyclingGateReturn: no arguments expected".into()); }
+                Self::CyclingGateReturn
             },
             "bikeShopOffer" => {
                 if args.len() != 7 { return Err("bikeShopOffer: seven text arguments expected".into()); }

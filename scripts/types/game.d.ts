@@ -192,6 +192,9 @@ interface GameAPI {
   /** Route 22 guard's completed simulated walk: unlock, Delay3, field return. */
   route22GuardReturn(): Promise<void>;
 
+  /** Route 16/18 guard: clear simulation before Joypad, preserving held input. */
+  cyclingGateReturn(): Promise<void>;
+
   /**
    * Plan a terrain-aware path for an NPC and move there.
    *

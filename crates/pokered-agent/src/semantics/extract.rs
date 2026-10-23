@@ -215,6 +215,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "finishFieldText",
     // Returns the guard's simulated walk to field input; no event mutation.
     "route22GuardReturn",
+    "cyclingGateReturn",
     // The found-item text and jingle only present a completed pickup;
     // giveItem / setFlag / hideObject carry its inventory/event effects.
     "showItemDialogue",

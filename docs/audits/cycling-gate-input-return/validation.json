@@ -1,0 +1,1304 @@
+{
+  "source": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "source_sha256": {
+    "scripts/Route16Gate1F.asm": "be8a78c628b4aba55b7824095b2854449cffeb16f0325d5d2fd440ebb2391139",
+    "scripts/Route18Gate1F.asm": "26d4f5fc2ca21dfa4ef5bab8cb38fa123fb00628d7698426bf7a9efb3c361f21",
+    "home/overworld.asm": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+    "engine/joypad.asm": "a7113fcd3191cbe06c0029c4093cd97eb83120349a122a2b6c7ee5bf6ecf12ae"
+  },
+  "return_controls": {
+    "source_only": true,
+    "driver_SHA256": "c97c95aa899a0a82428784c71d0d620783aa442572129e18c5586f2402b7392f",
+    "records": [
+      {
+        "gate": 16,
+        "case": "early",
+        "input_interval": [
+          15,
+          16
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-early-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "completion",
+        "input_interval": [
+          16,
+          17
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          16
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-completion-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "later",
+        "input_interval": [
+          17,
+          19
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          18
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-later-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "held",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          16
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-held-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "pulse",
+        "input_interval": [
+          0,
+          10
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-pulse-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "up",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate16-up-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "down",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate16-down-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "left",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate16-left-0/results.json"
+      },
+      {
+        "gate": 16,
+        "case": "right",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate16-right-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "early",
+        "input_interval": [
+          15,
+          16
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-early-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "completion",
+        "input_interval": [
+          16,
+          17
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          16
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-completion-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "later",
+        "input_interval": [
+          17,
+          19
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          18
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-later-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "held",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [
+          16
+        ],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-held-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "pulse",
+        "input_interval": [
+          0,
+          10
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-pulse-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "up",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": null,
+        "proof": "audit-1303-gate18-up-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "down",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate18-down-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "left",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate18-left-0/results.json"
+      },
+      {
+        "gate": 18,
+        "case": "right",
+        "input_interval": [
+          0,
+          30
+        ],
+        "repeated_identically": true,
+        "menu_CPU_offsets": [],
+        "next_stride_post_update": 17,
+        "proof": "audit-1303-gate18-right-0/results.json"
+      }
+    ]
+  },
+  "approach_audit": [
+    {
+      "gate": 16,
+      "steps": 0,
+      "repeated_identically": true,
+      "up_trace": [],
+      "matches_initial_17_frame_hypothesis": true,
+      "proof": "audit-1303-gate16-approach0-0/results.json"
+    },
+    {
+      "gate": 16,
+      "steps": 1,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          0,
+          4,
+          7
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": true,
+      "proof": "audit-1303-gate16-approach1-0/results.json"
+    },
+    {
+      "gate": 16,
+      "steps": 2,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          9
+        ],
+        [
+          7,
+          4,
+          9
+        ],
+        [
+          6,
+          4,
+          9
+        ],
+        [
+          6,
+          4,
+          9
+        ],
+        [
+          5,
+          4,
+          9
+        ],
+        [
+          5,
+          4,
+          9
+        ],
+        [
+          4,
+          4,
+          9
+        ],
+        [
+          4,
+          4,
+          9
+        ],
+        [
+          3,
+          4,
+          9
+        ],
+        [
+          3,
+          4,
+          9
+        ],
+        [
+          2,
+          4,
+          9
+        ],
+        [
+          2,
+          4,
+          9
+        ],
+        [
+          1,
+          4,
+          9
+        ],
+        [
+          1,
+          4,
+          9
+        ],
+        [
+          0,
+          4,
+          8
+        ],
+        [
+          0,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          0,
+          4,
+          7
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": false,
+      "proof": "audit-1303-gate16-approach2-0/results.json"
+    },
+    {
+      "gate": 16,
+      "steps": 3,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          10
+        ],
+        [
+          7,
+          4,
+          10
+        ],
+        [
+          7,
+          4,
+          10
+        ],
+        [
+          6,
+          4,
+          10
+        ],
+        [
+          6,
+          4,
+          10
+        ],
+        [
+          5,
+          4,
+          10
+        ],
+        [
+          5,
+          4,
+          10
+        ],
+        [
+          4,
+          4,
+          10
+        ],
+        [
+          4,
+          4,
+          10
+        ],
+        [
+          3,
+          4,
+          10
+        ],
+        [
+          3,
+          4,
+          10
+        ],
+        [
+          2,
+          4,
+          10
+        ],
+        [
+          2,
+          4,
+          10
+        ],
+        [
+          1,
+          4,
+          10
+        ],
+        [
+          1,
+          4,
+          10
+        ],
+        [
+          0,
+          4,
+          9
+        ],
+        [
+          0,
+          4,
+          9
+        ],
+        [
+          7,
+          4,
+          9
+        ],
+        [
+          7,
+          4,
+          9
+        ],
+        [
+          7,
+          4,
+          9
+        ],
+        [
+          6,
+          4,
+          9
+        ],
+        [
+          6,
+          4,
+          9
+        ],
+        [
+          5,
+          4,
+          9
+        ],
+        [
+          5,
+          4,
+          9
+        ],
+        [
+          4,
+          4,
+          9
+        ],
+        [
+          4,
+          4,
+          9
+        ],
+        [
+          3,
+          4,
+          9
+        ],
+        [
+          3,
+          4,
+          9
+        ],
+        [
+          2,
+          4,
+          9
+        ],
+        [
+          2,
+          4,
+          9
+        ],
+        [
+          1,
+          4,
+          9
+        ],
+        [
+          1,
+          4,
+          9
+        ],
+        [
+          0,
+          4,
+          8
+        ],
+        [
+          0,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          7,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          6,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          5,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          4,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          3,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          2,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          1,
+          4,
+          8
+        ],
+        [
+          0,
+          4,
+          7
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": true,
+      "proof": "audit-1303-gate16-approach3-0/results.json"
+    },
+    {
+      "gate": 18,
+      "steps": 0,
+      "repeated_identically": true,
+      "up_trace": [],
+      "matches_initial_17_frame_hypothesis": true,
+      "proof": "audit-1303-gate18-approach0-0/results.json"
+    },
+    {
+      "gate": 18,
+      "steps": 1,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          3
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": true,
+      "proof": "audit-1303-gate18-approach1-0/results.json"
+    },
+    {
+      "gate": 18,
+      "steps": 2,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          5
+        ],
+        [
+          7,
+          4,
+          5
+        ],
+        [
+          6,
+          4,
+          5
+        ],
+        [
+          6,
+          4,
+          5
+        ],
+        [
+          5,
+          4,
+          5
+        ],
+        [
+          5,
+          4,
+          5
+        ],
+        [
+          4,
+          4,
+          5
+        ],
+        [
+          4,
+          4,
+          5
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          3
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": false,
+      "proof": "audit-1303-gate18-approach2-0/results.json"
+    },
+    {
+      "gate": 18,
+      "steps": 3,
+      "repeated_identically": true,
+      "up_trace": [
+        [
+          7,
+          4,
+          6
+        ],
+        [
+          7,
+          4,
+          6
+        ],
+        [
+          6,
+          4,
+          6
+        ],
+        [
+          6,
+          4,
+          6
+        ],
+        [
+          5,
+          4,
+          6
+        ],
+        [
+          5,
+          4,
+          6
+        ],
+        [
+          4,
+          4,
+          6
+        ],
+        [
+          4,
+          4,
+          6
+        ],
+        [
+          3,
+          4,
+          6
+        ],
+        [
+          3,
+          4,
+          6
+        ],
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          1,
+          4,
+          6
+        ],
+        [
+          1,
+          4,
+          6
+        ],
+        [
+          0,
+          4,
+          5
+        ],
+        [
+          0,
+          4,
+          5
+        ],
+        [
+          7,
+          4,
+          5
+        ],
+        [
+          7,
+          4,
+          5
+        ],
+        [
+          6,
+          4,
+          5
+        ],
+        [
+          6,
+          4,
+          5
+        ],
+        [
+          5,
+          4,
+          5
+        ],
+        [
+          5,
+          4,
+          5
+        ],
+        [
+          4,
+          4,
+          5
+        ],
+        [
+          4,
+          4,
+          5
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          3,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          2,
+          4,
+          5
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          7,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          6,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          5,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          3,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          2,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          1,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          3
+        ]
+      ],
+      "matches_initial_17_frame_hypothesis": false,
+      "proof": "audit-1303-gate18-approach3-0/results.json"
+    }
+  ],
+  "baseline": {
+    "head": "f2a71aafd5f7df83fd8e465ff79985409ee0f740",
+    "production_unchanged_from_HEAD": true,
+    "passed": 3,
+    "failed": 3,
+    "log_sha256": "534da59cecf9581dc48c0e24e07cf4d8638235221ea7caa6a055a476db6a8547",
+    "candidate_patch_sha256": "b6589bc91168979bbb624d866a3d40d3906511cded2d5c05bfcae9ce08b9be97",
+    "candidate_restored_byte_identically": true
+  },
+  "targeted": {
+    "passed": 32,
+    "failed": 0,
+    "log_sha256": "908775c6074b274742183bb87097056ea0ac0a00e781c3a803e1029dfb155a76"
+  },
+  "full_checks": "pending",
+  "gba_runtime": "pending",
+  "remaining_approach_gap": "Route16 still uses absolute UP movement. Original initial waiting differs at Route16 two-UP and Route18 two/three-UP; uniform first 17-frame stride hypothesis rejected. Approach changes withheld, actual records retained. Final RIGHT completion CPU16 in all eight approach controls.",
+  "scope": "Controlled actualGame fixtures, original normal boot/CONTINUE and physical gateentry; no liveRAMwrites, forcedwarps, savestates or originalfont rendering. Not latestmaster mainline proof."
+}
