@@ -1,6 +1,8 @@
 use crate::alloc_prelude::*;
-#[cfg(any(target_os = "none", test))]
+#[cfg(target_os = "none")]
 use alloc::rc::Rc;
+#[cfg(all(test, not(target_os = "none")))]
+use std::rc::Rc;
 use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::StatusCondition as CoreStatus;
 use pokered_core::battle::state::{status2, status3};

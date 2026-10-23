@@ -73,8 +73,10 @@ Release that cache when the existing portrait-visibility condition turns false,
 before drawing the Pokémon. Safari and the Old Man tutorial retain theirs.
 The renderer's ownership regression fails with the old cache lifetime and
 passes with the fix; the tutorial's existing picture comparison also passes.
-All 393 available app unit tests and 10 walking/door/guard regressions pass
-(38 existing app tests remain ignored).
+All 393 app library tests and 10 walking/door/guard regressions pass
+(38 existing library tests remain ignored). The complete
+`cargo test -p pokered-app --locked --offline` command also passes, covering
+the executable's separate test target and every enabled integration target.
 
 The uninstrumented fixed GBA ROM completes all 13 original stress scenarios,
 including 330 move animations, with a 4728-byte heap low and 8708-byte stack

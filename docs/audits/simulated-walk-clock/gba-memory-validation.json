@@ -465,5 +465,26 @@
   ],
   "regression_scope": "Old renderer lifetime fails the same new ownership test; only the release block is omitted for that baseline. Host test cfg exposes the cache field. Uninstrumented GBA baseline/fix use the original full-save fixture and Evidence parser. Controlled stress, not a normal-playthrough parity proof.",
   "diagnostic_phase": "A separate temporary log emitted only after the original heap gate failed reproduced3907B at77363 and showed Intro(PlayerSendOut), snapshot=false. Diagnostic is absent from the fixed source.",
-  "ci_requirement": "All six original GBA gates and every other required workflow must execute and pass on the latest combined PR head before merge."
+  "ci_requirement": "All six original GBA gates and every other required workflow must execute and pass on the latest combined PR head before merge.",
+  "full_native_package_validation": {
+    "base": "3acb188faaf620140ee09fc81d57972b5d4e0c6a",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-app",
+      "--locked",
+      "--offline"
+    ],
+    "exit": 0,
+    "passed": 912,
+    "ignored": 88,
+    "counts_include_separate_library_binary_and_integration_targets": true,
+    "log": "audit-1300-cache-full-package.log",
+    "log_sha256": "5751fe0e925058af7cda39b37bad0d6d1228c0ba9e9f44a5cb0e1dd57f283db0",
+    "tested_source_sha256": "438d4e10abaafb37d8a4ef8af9ff6bc9c12165d2eb839c4bfdc876d386023637",
+    "tested_source_blob": "ee03f109383114e12443b2defe0f329504a61b74",
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+    "scope": "Fix hosted test import for shared lib/bin renderer; baremetal import and cache release logic unchanged from3acb188f. GBA local evidence is still the3acb188f ROM; latest combined-head CI required."
+  }
 }
