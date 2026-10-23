@@ -2872,7 +2872,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             extras.retain(|name,value| {
                 if pokered_data::event_flags::EventFlag::from_name(name).is_some() { return false; }
                 // This script byte has always lived in the original SRAM.
-                if name == "SCRIPT_REDSHOUSE2F_NOOP" { return false; }
+                if matches!(name.as_str(), "SCRIPT_REDSHOUSE2F_NOOP" | "SCRIPT_ROUTE22GATE_NOOP") { return false; }
                 let system_alias=name.starts_with("EVENT_TRADED_FOR_")
                     || name=="EVENT_GOT_LICKITUNG_FROM_TRADE"
                     || matches!(name.as_str(),"EVENT_GOT_OLD_ROD"|"EVENT_GOT_GOOD_ROD"|"EVENT_GOT_SUPER_ROD");
@@ -2917,6 +2917,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Restore counters and status bytes that live outside the event bitset.
     pub fn restore_system_save_state(&mut self, data: &crate::save::game_data::GameData) {
         self.set_flag_live(
+            "SCRIPT_ROUTE22GATE_NOOP",
+            data.game_progress_flags
+                .get(crate::save::game_data::ROUTE22_GATE_SCRIPT_INDEX)
+                .copied().unwrap_or(0) == 2,
+        );
+        self.set_flag_live(
             "SCRIPT_REDSHOUSE2F_NOOP",
             data.game_progress_flags
                 .get(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)
@@ -2943,6 +2949,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     /// Persist Safari allowances and original status-byte script aliases.
     pub fn write_system_save_state(&self, data: &mut crate::save::game_data::GameData) {
+        if let Some(script) = data.game_progress_flags
+            .get_mut(crate::save::game_data::ROUTE22_GATE_SCRIPT_INDEX)
+        {
+            // This alias owns only the persistent permission state (2).
+            // An unrelated save must retain the refusal state (1) and any
+            // unrecognized original byte instead of normalizing it to 0.
+            if self.unified_flags.get_flag("SCRIPT_ROUTE22GATE_NOOP") {
+                *script = 2;
+            } else if *script == 2 {
+                *script = 0;
+            }
+        }
         if let Some(script) = data.game_progress_flags
             .get_mut(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)
         {
