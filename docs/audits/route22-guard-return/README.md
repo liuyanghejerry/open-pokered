@@ -66,3 +66,14 @@ ROM SHA-256 `5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b`.
 Sources: [guard callback](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/Route22Gate.asm),
 [field input](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/overworld.asm),
 [Delay3](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/palettes.asm).
+
+Full combined checks pass: core 3659, data 448, the Boa suspension regression
+1, the complete app package 928, agent 63, and release GBA compilation. The
+existing 1 core and 88 app ignored cases remain unchanged. Core/data ran on
+2f5335e5; the only subsequent change before the remaining checks was a local
+import inside the Boa test. Production code is identical.
+
+The unchanged complete GBA memory suite passes all 13 cases over 321240
+hardware frames: minimum free heap 4728 B and stack headroom 8724 B. The
+record pins the ROM, scenario source and heap probe hashes. No threshold,
+scenario or timeout was adjusted. Latest-head CI is still required to merge.

@@ -131,7 +131,131 @@
     19,
     23
   ],
-  "full_checks": "pending",
-  "gba_runtime": "pending",
+  "full_checks": {
+    "head": "6734172f985c5ee00ca62ebdd0f16e971cd28f98",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 3659,
+        "ignored": 1,
+        "log": "audit-1302-guard-combined-core.log",
+        "sha256": "7b628091921d4e6cfc48911871fdb5241b972b6412caeceb44777adfe20631b6"
+      },
+      {
+        "name": "data",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 448,
+        "ignored": 0,
+        "log": "audit-1302-guard-combined-data.log",
+        "sha256": "413a97162b5bb88b666c22e815f79095be67e62ba7e0671dc500c68d1652e15d"
+      },
+      {
+        "name": "data-boa",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--features",
+          "script-boa",
+          "route22_guard_return",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 1,
+        "ignored": 0,
+        "log": "audit-1302-guard-combined-final-data-boa.log",
+        "sha256": "92dccb98a57a1849d6d4ab578e88102280500d9387c2a5c47ae814fb39c23e48"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 928,
+        "ignored": 88,
+        "log": "audit-1302-guard-combined-final-app.log",
+        "sha256": "13f7bf096832b35f2a7169f502ec328f1eee2d3eda6a08266b587fd22fa0ff73"
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 63,
+        "ignored": 0,
+        "log": "audit-1302-guard-combined-final-agent.log",
+        "sha256": "66db2083d2eec8b04dccf3155f13857216ae15b640c14deef80456dba6289f35"
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "ignored": 0,
+        "log": "audit-1302-guard-combined-final-gba.log",
+        "sha256": "cd4a5359717b5bba22664e6070ae5dd146f6800e1746198c0686709c0d202375"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+    "previous_core_data_head": "2f5335e5996850528a2d0bef95c81c0839768487",
+    "only_change_since_core_data": "test-only local import in script_api.rs"
+  },
+  "gba_runtime": {
+    "pass": true,
+    "error": null,
+    "head": "6734172f985c5ee00ca62ebdd0f16e971cd28f98",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "7a8388810e5f0cc2693972665124522b8a9bcbb05550cb5e330ccda7d5e17cb4",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "seconds": 171.9794460979756,
+    "frames": 321240,
+    "cases": 13,
+    "min_heap": 4728,
+    "min_stack": 8724,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
   "scope": "Controlled actual Game fixtures and original normal boot/CONTINUE with physical gate entry. No live RAM writes, forced warps, savestate loads, or original-font rendering. Not a fresh mainline validation."
 }
