@@ -125,7 +125,36 @@
     ".task-tmp/fidelity-39-plus/audit-1296-gate-final-gba.log": {
       "bytes": 58795,
       "sha256": "0c7d92abaa3f56d0e1275e74400f9a32a1081e3375abb6b13a17f0089369ad19"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-combined-app.log": {
+      "bytes": 89896,
+      "sha256": "9db619a33c1d88b6de4f1512b3ac923f8c9bf0847c3f635187d77a3e8024e6b4"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-combined-gba.log": {
+      "bytes": 58705,
+      "sha256": "c45a5e76cd43d9a44232c13f56ef34df69b192986ef9021a0f53a3517d2d4609"
     }
   },
-  "full_ci": "required on PR head"
+  "full_ci": "required on PR head",
+  "latest_combined_validation": {
+    "parent_master": "eb3ce84197631d8638df32dc13475d14b15b6c61",
+    "tested_code_head": "717d7b5de2130b1f9f7690915055673316fdfa59",
+    "app_core_data_renderer_unchanged_since": "6ec2ad871ad3aee11e946964705d5b64b2fd4737",
+    "checks": [
+      {
+        "check": "app",
+        "exit_code": 0,
+        "seconds": 18.57,
+        "log": "audit-1296-gate-combined-app.log"
+      },
+      {
+        "check": "gba",
+        "exit_code": 0,
+        "seconds": 13.31,
+        "log": "audit-1296-gate-combined-gba.log"
+      }
+    ],
+    "shared_game_input_tests_passed": 5,
+    "full_ci": "required on updated PR head"
+  }
 }
