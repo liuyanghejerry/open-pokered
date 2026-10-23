@@ -1386,6 +1386,7 @@ mod tests {
 
     #[test]
     fn route22_guard_return_suspends_the_boa_caller_until_completion() {
+        use crate::script_command::PokemonScriptCommand;
         let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
         engine.load_script(r#"
             export async function guardReturn() {
