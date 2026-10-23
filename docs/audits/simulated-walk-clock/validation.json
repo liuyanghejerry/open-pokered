@@ -1,5 +1,6 @@
 {
-  "baseline": "028b93b0fdeabda5067047a61db244d10fc61011",
+  "baseline": "7b79a188a1fe696f7bb16c7c42d2baf2a7ed2aa9",
+  "tested_code": "98738f067730656ba07a373aca5d8cfa7a255270",
   "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
   "source_files": [
     {
@@ -19,26 +20,19 @@
       "git_blob_sha": "0a040ea699111749e18490b89a3b44dd345b9f3e",
       "sha256": "3c183d74d80af9e79ae4629800887fe50f192e296447448a0b73253b5cd6bf04",
       "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "scripts/Route16Gate1F.asm",
+      "git_blob_sha": "8f02a6163e187fcac3fde7be95e87c9926ac351d",
+      "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "scripts/Route18Gate1F.asm",
+      "git_blob_sha": "3bf2f8e6831eb2f4183c3db5163d697241ae0d30",
+      "verified_against_pinned_GitHub_blob": true
     }
   ],
   "checks": [
-    {
-      "name": "generate",
-      "command": [
-        "cargo",
-        "run",
-        "-p",
-        "pokered-agent",
-        "--bin",
-        "gen_event_graph",
-        "--locked",
-        "--offline"
-      ],
-      "exit": 0,
-      "log_sha256": "909e81103de9bccca8e23c65ae7886e32f64ec0dd2355e90f782d0891eb26ccc",
-      "passed": 0,
-      "ignored": 0
-    },
     {
       "name": "core",
       "command": [
@@ -50,9 +44,10 @@
         "--offline"
       ],
       "exit": 0,
-      "log_sha256": "6413cbc9158e088e817e103c6081537b77c2903dae477e837e872136acc75eed",
-      "passed": 3656,
-      "ignored": 1
+      "log": "audit-1298-relative-final-core.log",
+      "log_sha256": "7295f29827a0ed83ffe68ecc63b91405e85fa155aeed9e142e7f949d4e77c260",
+      "passed": 3659,
+      "errors": []
     },
     {
       "name": "agent",
@@ -65,9 +60,10 @@
         "--offline"
       ],
       "exit": 0,
-      "log_sha256": "f05c88fef41d611f1af7f58a6015eea8f0f5ed974065abee53c67bbd4b30d3d0",
+      "log": "audit-1298-relative-final-agent.log",
+      "log_sha256": "5de6305d762cb1113da991bb063b1dd007eefdcdb44cda50aaf937cca3959706",
       "passed": 63,
-      "ignored": 0
+      "errors": []
     },
     {
       "name": "app",
@@ -80,13 +76,16 @@
         "route22_gate_guard",
         "--test",
         "relative_script_walk",
+        "--test",
+        "door_exit",
         "--locked",
         "--offline"
       ],
       "exit": 0,
-      "log_sha256": "d1aae5bd9b3b6d631b5debb2fac84b89ab1f267d718e933cf9b01f0666804884",
-      "passed": 7,
-      "ignored": 0
+      "log": "audit-1298-relative-final-app.log",
+      "log_sha256": "1261e0766257492f8d1169851ccfd6624dfb7e5613ad53b0b3f283e55abeb014",
+      "passed": 10,
+      "errors": []
     },
     {
       "name": "gba",
@@ -101,94 +100,18 @@
         "--offline"
       ],
       "exit": 0,
-      "log_sha256": "2cb75b470821818e84812ea8d9f1e4eca2f59cce39901188f246739ba4c19023",
+      "log": "audit-1298-relative-final-gba.log",
+      "log_sha256": "2a39b5d69bad8458418931589c938deaab9a8c70f3fbd7ed1a0b2952a3303a35",
       "passed": 0,
-      "ignored": 0
+      "errors": []
     }
   ],
+  "core_ignored_doctests": 1,
   "native_input_cases": 6,
   "original_cases_repeated": 6,
+  "baseline_test_result": "Both app tests fail at the original stride assertions on clean master; no product code changes in the baseline checkout.",
+  "baseline_log_sha256": "8f6f14daf0ec480c3582d9ae09a0272aae4f49d110b9e729a6fae8606c44d229",
   "original_live_memory_writes": false,
   "original_font_rendering": false,
-  "native_fixture_scope": "controlled-map shared PokemonGame input, not fresh mainline travel",
-  "production_patch_sha256": "807293269dcb1890c2d634ffef02458942d70b3bdd039b925f5fe22d9691ef28",
-  "combined_master_validation": {
-    "tested_code": "6a5776864d712f072aa8b27e65e009a38a5257ee",
-    "base": "7b79a188a1fe696f7bb16c7c42d2baf2a7ed2aa9",
-    "checks": [
-      {
-        "name": "core",
-        "command": [
-          "cargo",
-          "test",
-          "-p",
-          "pokered-core",
-          "--locked",
-          "--offline"
-        ],
-        "exit": 0,
-        "log": "audit-1298-relative-combined-core.log",
-        "log_sha256": "7701a6e0d7f81a14fdcacc0ff44589c7069d3f7d064487bc0b69cc8b089a7c20",
-        "passed": 3659,
-        "errors": []
-      },
-      {
-        "name": "agent",
-        "command": [
-          "cargo",
-          "test",
-          "-p",
-          "pokered-agent",
-          "--locked",
-          "--offline"
-        ],
-        "exit": 0,
-        "log": "audit-1298-relative-combined-agent.log",
-        "log_sha256": "57ddb4601d476eaadf262a7b1384b16a3548f6830b6bff8fceebd455f148e4aa",
-        "passed": 63,
-        "errors": []
-      },
-      {
-        "name": "app",
-        "command": [
-          "cargo",
-          "test",
-          "-p",
-          "pokered-app",
-          "--test",
-          "route22_gate_guard",
-          "--test",
-          "relative_script_walk",
-          "--test",
-          "door_exit",
-          "--locked",
-          "--offline"
-        ],
-        "exit": 0,
-        "log": "audit-1298-relative-combined-app.log",
-        "log_sha256": "130e74eb09ece79b9adac4e6733a7f237c2e91dc8d21205c1a466676e4df0331",
-        "passed": 10,
-        "errors": []
-      },
-      {
-        "name": "gba",
-        "command": [
-          "cargo",
-          "+nightly-2025-12-07",
-          "check",
-          "--release",
-          "--features",
-          "memory-scenarios",
-          "--locked",
-          "--offline"
-        ],
-        "exit": 0,
-        "log": "audit-1298-relative-combined-gba.log",
-        "log_sha256": "ff09c0291ddf695e8db25845ec4f548abc936536274acfdd4dc8be4fa2d30d2a",
-        "passed": 0,
-        "errors": []
-      }
-    ]
-  },
-  "combined_captures_identical": true
+  "scope": "Shared movement cadence only; caller-specific return and complete map-cycle parity remain unfinished."
 }

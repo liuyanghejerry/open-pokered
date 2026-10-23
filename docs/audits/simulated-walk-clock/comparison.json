@@ -1,61 +1,77 @@
 {
-  "base": "028b93b0fdeabda5067047a61db244d10fc61011",
-  "alignment": "first walk_counter=7, after real scene input; no direction input in neutral cases; RIGHT held from next hardware frame in control cases",
-  "repeated_original": true,
+  "baseline": "7b79a188a1fe696f7bb16c7c42d2baf2a7ed2aa9",
+  "tested_code": "98738f067730656ba07a373aca5d8cfa7a255270",
+  "alignment": "first walk_counter=7 after real scene input",
   "comparisons": [
     {
       "case": "guard-4",
-      "consecutive_hardware_frames_equal": 20,
-      "compared": [
+      "compared_hardware_frames": 17,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     },
     {
       "case": "guard-5",
-      "consecutive_hardware_frames_equal": 20,
-      "compared": [
+      "compared_hardware_frames": 17,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     },
     {
       "case": "guard-6",
-      "consecutive_hardware_frames_equal": 20,
-      "compared": [
+      "compared_hardware_frames": 17,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     },
     {
       "case": "guard-4-right",
-      "consecutive_hardware_frames_equal": 40,
-      "compared": [
+      "compared_hardware_frames": 17,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     },
     {
       "case": "departure",
-      "consecutive_hardware_frames_equal": 60,
-      "compared": [
+      "compared_hardware_frames": 34,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     },
     {
       "case": "departure-right",
-      "consecutive_hardware_frames_equal": 60,
-      "compared": [
+      "compared_hardware_frames": 34,
+      "fields": [
         "walk_counter",
         "x",
         "y"
-      ]
+      ],
+      "scope": "complete simulated walk, excluding caller return"
     }
-  ]
+  ],
+  "pending_return_differences": {
+    "guard": {
+      "first_physical_RIGHT_advance_original": 24,
+      "native": 19
+    },
+    "departure": {
+      "first_physical_RIGHT_advance_original": 38,
+      "native": 37
+    }
+  }
 }
