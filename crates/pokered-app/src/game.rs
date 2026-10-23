@@ -3716,6 +3716,8 @@ impl PokemonGame {
         }
 
         if let Some(ref audio) = self.audio {
+            audio.set_music_paused(self.state.screen == GameScreen::Slots
+                && self.slots_screen.as_ref().is_some_and(|slots| slots.music_paused()));
             audio.update_frame();
         }
 
@@ -6026,7 +6028,8 @@ impl PokemonGame {
                         (GbButton::Up, 64), (GbButton::Down, 128)]
                         .into_iter().fold(0, |bits, (button, bit)|
                             bits | if input.is_held(button) { bit } else { 0 });
-                    result = slots.update_frame_with_held_input(slots_input, held);
+                    let sound_pending = self.audio.as_ref().is_some_and(|audio| audio.payout_sound_pending());
+                    result = slots.update_frame_with_audio(slots_input, held, sound_pending);
                     coins_out = Some(slots.coins);
                     // The slots' own cues (slot_machine.asm: :120 spin start,
                     // :842 each reel stop, :694 per-coin payout tick, :588

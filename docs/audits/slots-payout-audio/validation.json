@@ -1,0 +1,30 @@
+{
+  "scope": "Original repeated physical-input pause/SFX/resume proof plus controlled shared-Game payout lifecycle test. No fresh travel, continuous source/native PCM equivalence or HoF fix claim.",
+  "base": "31cd299f5b355c382b30f50ab265a9782531f8aa",
+  "engine_dependency": "46381ddafb793aaa00370ba5dcbc5fa27b442bfe",
+  "engine_pr": 108,
+  "engine_merged_as": "a8a0087d54b3e5a92559a8873318ac0863f6f2bc",
+  "original_repeat_exact": true,
+  "original_pause_frames": 120,
+  "original_spins_to_win": 3,
+  "original_payout_coins": 15,
+  "unit_tests": {
+    "core_slots": 22,
+    "game_audio": 167,
+    "engine_audio": 191,
+    "engine_doctests": 2
+  },
+  "shared_Game_integration_test": "pass",
+  "GBA_locked_memory_scenarios_release_check": "pass",
+  "screenshots": "Same controlled WaitPress fixture plus Purchase SFX, A confirmation then8 neutral updates; base credits early, candidate waits for sound. Rendered by real shared Game draw, Fusion Pixel fonts.",
+  "fixture_preparation": "Offline source-derived location/music/map header/tileset fields and checksum, based on existing source-engine SRAM with prepared Coin Case and coins. No runtime RAM writes. Earlier incomplete legacy fixture attempts failed and are not runtime evidence.",
+  "evidence_sha256": {
+    "original-runtime.json.gz": "305ce7c92989942369bba8d9ec4e469895c2a523ef0c7cf73562951464c66a98",
+    "replay-original.py": "b6d2115d69dcf1c4e98c4a25fe113e4c6bfd9d38d1cd91ea9261b6499b18302c",
+    "before.png": "1b40b12b384962404675dafb4b461860c4f0b508c99defe89442d46679e03702",
+    "original-fixture.sav": "7f4917d0f6f80083f0da64b3c7669863d05154d81ed2c58e0780ea543791b246",
+    "after.png": "fb1db2a6df270568a65e55b7ffdd0e55215dd69d00b9a94955138c82ac4837f5",
+    "README.md": "707cb1dffdd542758deff38a372d57a3500a1340b229e53c3b3b29697226e4ff"
+  },
+  "source_pause_admission": "New regression verifies unpaused source work is rejected before admission when native music is paused."
+}

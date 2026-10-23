@@ -123,6 +123,16 @@ impl AudioOutput {
             manager.update_frame();
         }
     }
+
+    pub fn set_music_paused(&self, paused: bool) {
+        // Account for elapsed VBlanks under the old state before changing it.
+        self.update_frame();
+        self.manager.borrow_mut().set_music_paused(paused);
+    }
+
+    pub fn payout_sound_pending(&self) -> bool {
+        self.manager.borrow().payout_sound_pending()
+    }
     pub fn try_resume(&self) {}
 }
 impl Default for AudioOutput {

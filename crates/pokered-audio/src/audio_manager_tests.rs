@@ -5,6 +5,58 @@ use crate::music_data::MusicId;
 use crate::sfx_data::SfxId;
 
 #[test]
+fn slot_payout_pause_freezes_music_but_does_not_remute_each_reward() {
+    let mut manager = AudioManager::new();
+    manager.apu.write_register(0xff26, 0x80);
+    manager.play_music(MusicId::GAME_CORNER);
+    for _ in 0..60 { manager.update_frame(); }
+    let frozen = format!("{:?}", &manager.sequencer.channels[..4]);
+    manager.set_music_paused(true);
+    manager.update_frame();
+    assert_eq!(manager.apu.nr51, 0);
+    for frame in 0..120 {
+        if frame % 8 == 0 { manager.play_sfx(SfxId::SlotsReward); }
+        manager.set_music_paused(true);
+        manager.update_frame();
+        assert_eq!(format!("{:?}", &manager.sequencer.channels[..4]), frozen);
+        assert_ne!(manager.apu.nr51 & 0x11, 0, "sustained reward is not remuted");
+    }
+    manager.set_music_paused(false);
+    for _ in 0..60 { manager.update_frame(); }
+    assert_ne!(format!("{:?}", &manager.sequencer.channels[..4]), frozen);
+}
+
+#[test]
+fn payout_sound_wait_matches_the_original_channel_mask_and_alarm_guard() {
+    let mut manager = AudioManager::new();
+    for index in 4..8 {
+        manager.sequencer.channels[index].active = true;
+        assert_eq!(manager.payout_sound_pending(), index != 6);
+        manager.set_low_health_alarm(true);
+        assert!(!manager.payout_sound_pending());
+        manager.set_low_health_alarm(false);
+        manager.sequencer.channels[index].active = false;
+    }
+}
+
+#[test]
+fn native_music_pause_refuses_unpaused_source_work_before_admission() {
+    let mut manager = AudioManager::new();
+    manager.play_music(MusicId::SILPH_CO);
+    for _ in 0..20 { manager.update_frame(); }
+    manager.set_music_paused(true);
+    let before = format!("{:?}", manager.sequencer);
+    let mut admitted = false;
+    let result = manager.try_update_frame_with_source_work(|_| {
+        admitted = true;
+        Ok::<_, ()>(())
+    });
+    assert!(result.is_err());
+    assert!(!admitted);
+    assert_eq!(format!("{:?}", manager.sequencer), before);
+}
+
+#[test]
 fn test_new_defaults() {
     let mgr = AudioManager::new();
     assert_eq!(mgr.master_volume_left(), 7);
