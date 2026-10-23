@@ -82,3 +82,18 @@ The complete approach states remain in `original-runtime.json.gz`; the
 validation index stores lengths, initial counter-7 runs and trace hashes
 instead of duplicating every coordinate row. This preserves the evidence
 for the separate unresolved approach timing without expanding the index.
+
+Integration onto master `e5b32c62` replays only this change's two commits,
+retaining the merged guard return and its sound-query performance fix.
+The actual tested source is `c9be6951`; its whole tree matches the predicted
+three-way integration. `current-master-validation.json` records that identity
+and new combination checks: core 3659, data 448, Boa 1, full app 934, agent 63,
+and GBA release compilation. Existing ignored cases are unchanged.
+
+All seven original GBA performance scenarios pass; trainer-entry update cost
+is 231 ticks against the unchanged 232.3 limit. The unchanged complete
+13-case GBA memory fixture passes over 321240 hardware frames,
+with minimum heap 4728 B and stack headroom 8708 B.
+These are new runs of the combined implementation, not a relabeling of the
+old branch's results. They do not close the separate UP-approach discrepancy
+or replace fresh mainline and independent CONTINUE validation.
