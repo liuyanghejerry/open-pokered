@@ -1,0 +1,97 @@
+{
+  "base": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+  "production_diff_sha256": "5c2407ca8f57066940e3248f3f443600ad6251f8885c392fdd76930110ab95a7",
+  "checks": [
+    {
+      "name": "core",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-core.log",
+      "log_sha256": "6f768ab46c18dd554fb04ba081a4d6e555d825f43f75a3ffe1280075b440f205",
+      "passed": 3659,
+      "errors": []
+    },
+    {
+      "name": "app",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--test",
+        "route22_gate_guard",
+        "--test",
+        "relative_script_walk",
+        "--test",
+        "door_exit",
+        "--test",
+        "scripted_input_poll",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-app.log",
+      "log_sha256": "b8fc8ca4812006610266e194991a63225de948d8f798de418149399dc5ce301c",
+      "passed": 14,
+      "errors": []
+    },
+    {
+      "name": "gba",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--features",
+        "memory-scenarios",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-gba.log",
+      "log_sha256": "dc5c90c7f9879e911007148d45cabbfe573523c4f3c72f3bebb7cebfe64518f9",
+      "passed": 0,
+      "errors": []
+    }
+  ],
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_files": [
+    {
+      "path": "engine/joypad.asm",
+      "git_blob_sha": "b6c50e699363e2c898e7080c27ee0b03bd71da6d",
+      "sha256": "a7113fcd3191cbe06c0029c4093cd97eb83120349a122a2b6c7ee5bf6ecf12ae",
+      "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "home/joypad.asm",
+      "git_blob_sha": "9bc8663e57760e6ccd7f6d5e799ede4fe739b5c2",
+      "sha256": "334e57fefe57c4acde39c01da741dd329fd7417a46467e91dbbec49ef0803d18",
+      "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "home/overworld.asm",
+      "git_blob_sha": "a06a32da3c889f69355dc2ecd67407dc01332580",
+      "sha256": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+      "verified_against_pinned_GitHub_blob": true
+    }
+  ],
+  "baseline_result": {
+    "passed": 3,
+    "failed": 1,
+    "failure": "START held across departure second stride unexpectedly opens menu",
+    "log_sha256": "b7599b3e7363ef5102a8904f339f450e2356caed6a9bb59d68a27c258c0cf03e"
+  },
+  "original_cases_repeated": 4,
+  "native_cases": 4,
+  "original_live_memory_writes": false,
+  "original_font_rendering": false,
+  "render_method": "PokemonGame::draw, frame 59 after first counter-7 sample",
+  "scope": "Simulated cardinal stride physical polls; caller return timing and complete source ownership remain separate"
+}
