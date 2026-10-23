@@ -70,3 +70,15 @@ Sources: [Route 16 callback](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2
 
 `validation.json` records source hashes, baseline failures and checks.
 Full package checks and all original GBA gates are still required to merge.
+
+Full combined validation passes core 3659, data 448, the new Boa suspension
+regression 1, the complete app package 934, agent 63 and release GBA
+compilation. Existing 1 core and 88 app ignored cases remain unchanged.
+The unchanged 13-case GBA memory suite passes over 321240 hardware frames:
+minimum free heap 4728 B and stack headroom 8708 B. Scenario/probe/ROM hashes
+are recorded; thresholds, scenarios and timeouts were not modified.
+
+The complete approach states remain in `original-runtime.json.gz`; the
+validation index stores lengths, initial counter-7 runs and trace hashes
+instead of duplicating every coordinate row. This preserves the evidence
+for the separate unresolved approach timing without expanding the index.
