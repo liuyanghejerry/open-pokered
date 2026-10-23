@@ -61,6 +61,29 @@ return semantics must distinguish these paths before that follow-up is merged.
 `validation.json` records the tested code, commands, source and log hashes.
 The PR requires its own complete latest-head CI.
 
+## GBA full-save memory regression
+
+The unchanged GBA stress suite exposed a 3907-byte contiguous-heap low while
+entering the Route 22 rival battle with every PC box and Hall of Fame record
+full. The transition snapshot had already been released; the low occurred in
+`PlayerSendOut`. The renderer still retained the retired trainer back picture
+while loading the Pokémon back picture: 49 decoded tiles, or 3136 bytes.
+
+Release that cache when the existing portrait-visibility condition turns false,
+before drawing the Pokémon. Safari and the Old Man tutorial retain theirs.
+The renderer's ownership regression fails with the old cache lifetime and
+passes with the fix; the tutorial's existing picture comparison also passes.
+All 393 available app unit tests and 10 walking/door/guard regressions pass
+(38 existing app tests remain ignored).
+
+The uninstrumented fixed GBA ROM completes all 13 original stress scenarios,
+including 330 move animations, with a 4728-byte heap low and 8708-byte stack
+margin. The fixture, every-frame heap probe, parser, 4096-byte gate, timeout,
+and CI workflow are unchanged. `gba-memory-validation.json` records source and
+ROM hashes, the failure and successful sweep, and the local test results.
+This is memory-regression evidence, not a replacement for the six latest-head
+GBA CI gates or the remaining gameplay parity audit.
+
 Run the original reproductions from the repository root (the ROM and symbols
 must come from the pinned original build):
 
