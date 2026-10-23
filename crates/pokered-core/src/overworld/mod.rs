@@ -55,6 +55,8 @@ mod tests_field_question_ack;
 #[cfg(test)]
 mod tests_bedroom_persistence;
 #[cfg(test)]
+mod tests_route22_gate;
+#[cfg(test)]
 mod tests_collision;
 #[cfg(test)]
 mod tests_slots_lucky;
