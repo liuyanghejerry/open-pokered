@@ -36,14 +36,9 @@ These are library/device-contract tests. They do not claim a newly recorded
 original or native player run. Logs and hashes are recorded in the adjacent
 validation JSON after local verification.
 
-The isolated master-based branch passes all 168 audio tests (48.87 s), plus
-locked CPAL and Web Audio target checks. The initial locked test found a stale
-`pokered-data` image dependency edge in the unchanged master lockfile; offline
-resolution removes that one edge without changing package versions. The
-validation record distinguishes this branch from the separate 195-test
-prototype checkout.
-
-The latest validation incorporates PR365 parent `a0c9b5c6` and merged engine
-allocation fix `f3684094`. All168 audio tests and locked CPAL, Web Audio and
-GBA memory-scenarios checks pass again. Full CI on the new combined commit
-is still required; the earlier isolated results are retained as history.
+The current candidate incorporates master `ea385d8a`, including the merged
+source APU bus, slot-payout music pause and engine allocation fixes. All 200
+audio tests pass (50.89 s), as do locked CPAL, Web Audio and GBA
+memory-scenarios target checks. The preceding PCM head `fa99ae97` passed all
+original CI/GBA gates; the new combination requires its own full CI before
+merging. Earlier isolated results remain in the validation JSON as history.
