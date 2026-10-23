@@ -68,7 +68,7 @@ jobs:
             | sha256sum --check
           tar --extract --xz --file "$RUNNER_TEMP/$MGBA_ARCHIVE" --directory "$RUNNER_TEMP"
           sudo apt-get update
-          sudo apt-get install -yq xvfb \
+          sudo apt-get install -yq --no-install-recommends xvfb xauth \
             "$RUNNER_TEMP/$MGBA_DIR/libmgba.deb" \
             "$RUNNER_TEMP/$MGBA_DIR/mgba-qt.deb"
           mgba-qt --version

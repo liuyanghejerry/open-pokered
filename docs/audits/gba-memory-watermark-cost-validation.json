@@ -1,0 +1,39 @@
+{
+  "scope": "Diagnostic allocation-cost and installer optimization; no game/HoF/slots fix claim.",
+  "base": "72e81aee29e8f8c01bbda738f4ec9ed2ea0b93e7",
+  "rust_probe_tests_passed": 3,
+  "gate_tool_tests_passed": 27,
+  "gba_memory_target_check_passed": true,
+  "commands": [
+    "rustc --edition 2021 --test crates/pokered-gba/src/heap_probe.rs -o .task-tmp/fidelity-1064-payday-target/debug/deps/gba_heap_probe_tests",
+    ".task-tmp/fidelity-1064-payday-target/debug/deps/gba_heap_probe_tests",
+    "python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py scripts/test_gba_frame_timing.py",
+    "cd crates/pokered-gba && cargo +nightly-2025-12-07 check --release --features memory-scenarios --locked --offline"
+  ],
+  "unchanged_gates_and_scenarios": {
+    "scripts/gba_memory.py": "f3944c7d7d3552b5208e4a927dca2e13ee5a32fea28d7ca852a68a53b0cbea76",
+    "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+    "scripts/gba_frame_timing.py": "32fbfafc10ee1f5542d15f1944cff422bd84a4ef5a1bbadd5a7b67c5c0a4cc77",
+    "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937"
+  },
+  "thresholds_changed": false,
+  "timeouts_changed": false,
+  "checks_removed_or_skipped": false,
+  "every_frame_real_reserve_check": true,
+  "new_worktrees": 0,
+  "new_game_binary_or_rom": false,
+  "artifacts": {
+    ".task-tmp/fidelity-39-plus/audit-1280-heap-probe-tests.log": {
+      "sha256": "d60946b09fbfd4eaaed5a0dc18783ff3e00b789e5462724faad90efdc139d0c1",
+      "bytes": 380
+    },
+    ".task-tmp/fidelity-39-plus/audit-1280-gba-gate-tools-tests.log": {
+      "sha256": "f3ec78db1a1494864fc89e8fbe6466766ea6e432ed48dd8ca6c4047d4a9b0a0b",
+      "bytes": 7799
+    },
+    ".task-tmp/fidelity-39-plus/audit-1280-gba-memory-scenarios-check.log": {
+      "sha256": "12c134603a237fcad6fbb10e8c14a87cf6be45dda209e686afc48e3831e9193e",
+      "bytes": 58925
+    }
+  }
+}
