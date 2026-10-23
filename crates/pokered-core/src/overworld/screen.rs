@@ -3028,6 +3028,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.state.player.movement_state = MovementState::Idle;
             self.state.walk_counter = 0;
             self.state.exiting_door = false;
+            self.state.standing_on_door = false;
             self.state.standing_on_warp = false;
 
             // EnterMap: ResetUsingStrengthOutOfBattleBit — STRENGTH wears off
@@ -3118,19 +3119,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             // PlayerStepOutFromDoor: if the player landed on a door tile,
             // flag it so update_frame will auto-walk one step down.
-            // Skip when on_load started a script — the script controls the player.
-            if self.active_script_effect.is_none() {
-                if let Some(map) = &self.map_data {
-                    let provider = &collision::PokemonCollisionProvider::new(map.id, map.tileset);
-                    let tile = provider.get_tile_at_position(
-                        map.tileset, &map.blocks, map.width,
-                        self.state.player.x,
-                        self.state.player.y,
-                    );
-                    if crate::overworld::doors_elevators::is_standing_on_door(map.tileset, tile) {
-                        self.state.standing_on_door = true;
-                        self.state.player.facing = Direction::Down;
-                    }
+            // NPC visibility and other @load bookkeeping do not replace
+            // this movement. Explicit player movement takes ownership in
+            // update_frame and cancels the pending door step there.
+            if let Some(map) = &self.map_data {
+                let provider = &collision::PokemonCollisionProvider::new(map.id, map.tileset);
+                let tile = provider.get_tile_at_position(
+                    map.tileset, &map.blocks, map.width,
+                    self.state.player.x,
+                    self.state.player.y,
+                );
+                if crate::overworld::doors_elevators::is_standing_on_door(map.tileset, tile) {
+                    self.state.standing_on_door = true;
+                    self.state.player.facing = Direction::Down;
                 }
             }
 

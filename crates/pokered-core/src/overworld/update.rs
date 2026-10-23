@@ -857,6 +857,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect,
             Some(script_bridge::ScriptEffect::FollowNpc { .. })
         );
+        // Map-entry player choreography replaces the pending simulated
+        // DOWN. A preceding visibility/sound effect alone does not: clear
+        // only when a command actually takes control of the player path.
+        if matches!(&self.active_script_effect,
+            Some(script_bridge::ScriptEffect::MovePlayer { .. }
+                | script_bridge::ScriptEffect::MovePlayerRelative { .. }
+                | script_bridge::ScriptEffect::MovePlayerTo { .. }
+                | script_bridge::ScriptEffect::FollowNpc { .. })) {
+            self.state.standing_on_door = false;
+        }
         // DoScriptedNPCMovement uses the field loop's two DelayFrame calls,
         // even while a movement script controls both actors. Its eight
         // advances are logic updates, not eight displayed frames.
