@@ -996,6 +996,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // This API is HoldTextDisplayOpen only; it is not the outer ACK.
             Some(self.source_foreground_mut().unwrap().poll().held & crate::foreground_input::A == 0)
         } else { None };
+        let mut resumed_unlocked_relative_walk = false;
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
             let dialogue_was_open = self.pending_dialogue.is_some();
@@ -1089,6 +1090,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 self.naming_flash_frames = crate::naming_screen::NAMING_FLASH_FRAMES;
             }
             if done {
+                let completed_relative_walk = matches!(effect,
+                    script_bridge::ScriptEffect::MovePlayerRelative { .. });
                 // `giveItem` must report whether the bag had room (the original's
                 // GiveItem carry flag). Capture the item id while `effect` is still
                 // borrowed; the room check runs after the borrow ends, against the
@@ -1185,6 +1188,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         &self.starter_display_name(),
                     ));
                 }
+                if completed_relative_walk && matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::ClearJoyIgnore)) {
+                    // VermilionCityPlayerMovingUp2Script clears wJoyIgnore
+                    // inside RunMapScript, before this iteration's Joypad.
+                    // The explicit unlock continuation consumes no VBlank.
+                    let unlock = self.active_script_effect.take();
+                    self.apply_finished_effect(unlock);
+                    if let Ok(Some(next_cmd)) = self.script_engine.signal_done(CommandResult::Void) {
+                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                            &next_cmd, &self.player_name, &self.rival_name,
+                            &self.starter_display_name(),
+                        ));
+                    }
+                    resumed_unlocked_relative_walk = self.active_script_effect.is_none()
+                        && self.script_engine.is_idle();
+                }
                 self.sync_flags_from_engine();
             }
             if departure_apply_objects {
@@ -1220,8 +1239,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             // NPC movement must continue during script effects so that
             // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
-            self.run_npc_movement_tick();
-            return ScreenAction::Continue;
+            if !resumed_unlocked_relative_walk {
+                self.run_npc_movement_tick();
+                return ScreenAction::Continue;
+            }
         }
         // External awaits are completed by the frontend, not by VM polling.
         // The pending command can be emitted again while WaitingForCommand;
@@ -1752,7 +1773,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && !self.cutscene_manager.is_blocking()
             && self.pending_connection.is_none()
             && self.ledge_jump.is_none();
-        if ordinary_field_loop {
+        if ordinary_field_loop && !resumed_unlocked_relative_walk {
             if self.bike_redraw_advance {
                 self.bike_redraw_advance = false;
                 self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
@@ -2150,7 +2171,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // the "!" bubble shows and the trainer walks up.
         let intro_holding_input =
             self.trainer_encounter_intro.is_some() || self.trainer_intro_text_pending.is_some();
-        let player_input = self.sampled_player_input.as_input();
+        let player_input = if resumed_unlocked_relative_walk {
+            // JoypadOverworld.doneSimulating preserves the fresh A/START
+            // edges handled above, but clears hJoyHeld for movement. The
+            // ordinary no-direction path records the stop/turn state below.
+            OverworldInput::new(false, false, false, false, false, false, false, false)
+        } else {
+            self.sampled_player_input.as_input()
+        };
         let movement_input = MovementInput {
             up: player_input.up && !intro_holding_input,
             down: player_input.down && !intro_holding_input,

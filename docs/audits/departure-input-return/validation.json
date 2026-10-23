@@ -1,0 +1,39 @@
+{
+  "base": "93ce1f5acae96fe6a0058b7e5e347212d793ca9e",
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_blobs": {
+    "home/overworld.asm": "a06a32da3c889f69355dc2ecd67407dc01332580",
+    "engine/joypad.asm": "b6c50e699363e2c898e7080c27ee0b03bd71da6d",
+    "home/joypad.asm": "9bc8663e57760e6ccd7f6d5e799ede4fe739b5c2",
+    "scripts/VermilionCity.asm": "591e180c324a077ca048837229f44983193a270d",
+    "scripts/Route22Gate.asm": "e8e13b3c92dd263a95e4ab29331af950d20158a8",
+    "scripts/Route16Gate1F.asm": "8f02a6163e187fcac3fde7be95e87c9926ac351d",
+    "scripts/Route18Gate1F.asm": "3bf2f8e6831eb2f4183c3db5163d697241ae0d30"
+  },
+  "original_ROM_SHA256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "original_cases": 5,
+  "identical_repetitions_each": 2,
+  "native_baseline": {
+    "passed": 5,
+    "failed_expected": 3,
+    "log_SHA256": "9439338d4b1ef3787833e11ef7e793edbb9cd895e27ffdfcaf11805cd9b88dda"
+  },
+  "targeted_fixed_checks": {
+    "app_integration_cases": 20,
+    "log_SHA256": "8ba21ef611ad9f0e5b1f0e887631c9e379c364193a75b4efed91fb3202cfd432"
+  },
+  "findings": [
+    "All five input intervals repeated twice with identical full traces; boot/CONTINUE and physical dock exit, no live memory writes/font rendering.",
+    "Source JoypadOverworld return at CPU offset33 executes VermilionCityPlayerMovingUp2Script, clears wJoyIgnore, then Joypad and doneSimulating in the same foreground iteration.",
+    "START interval[33,34) opens at CPU offset33 (post-frame34);[32,33) misses. Interval[34,36) opens at CPUoffset35. These bracket the actual poll; CPU hook offsets are not native post-update frame indices.",
+    "doneSimulating clears held but preserves pressed. Held START already polled at laststride has pressed0 and opens no menu.",
+    "No-direction cleanup records old movingUP as last_stopUP then clears moving; later normal field polls occur at CPUoffset35,37.",
+    "Native confirmed baseline waits until postupdate37; separate ClearJoyIgnore occupiespostupdate35. Caller-specific callback/poll/held cleanup needs modeling; no universalNoDirection orDelay3."
+  ],
+  "scope": "Only explicit MovePlayerRelative -> ClearJoyIgnore -> script end, currently VermilionCity on-load exit. Zero-VBlank source callback continues to the same field poll; pressed A/START preserved, held movement cleared for ordinary NoDirection handling. No new persistent fields, allocations or duration constants. Other caller return phases remain unmodeled.",
+  "test_tape_correction": "Fresh START control after frame60 now lasts2hardwareframes, exactly like the existing original replayer. Oldnativehelper used1frame coinciding with its latepoll. Baseline-v2 uses the corrected2framecontrol and still fails the3new regressions. Original one-frame completion probe[33,34) is unchanged.",
+  "screenshots": {
+    "before": "f74b410c21ff57dd2d42f81eceb06e9c63c2bae7a466cb9f1fd9e1efcbe18048",
+    "after": "59619b44a645b0d3daff6682f86b1b22367876d9fd520a40cc32e82c79539c78"
+  }
+}
