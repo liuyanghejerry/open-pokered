@@ -1,0 +1,50 @@
+{
+  "scope": "Hosted PCM sample rate conversion only; not source/Game/HoF integration or original hardware PCM proof.",
+  "base": "72e81aee29e8f8c01bbda738f4ec9ed2ea0b93e7",
+  "engine_rev": "8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8",
+  "isolated_audio_tests": {
+    "passed": 168,
+    "failed": 0,
+    "ignored": 0,
+    "seconds": 48.87,
+    "command": "cargo test -p pokered-audio --offline"
+  },
+  "target_checks": [
+    {
+      "command": "cargo check --locked -p pokered-audio --features cpal --offline",
+      "passed": true
+    },
+    {
+      "command": "cargo check --locked -p pokered-audio --target wasm32-unknown-unknown --features web-audio --offline",
+      "passed": true
+    }
+  ],
+  "regressions": [
+    "exact full CPU second at 44100 and 48000 output samples vs independent direct APU tick",
+    "byte-identical PCM and APU state for irregular partitions vs one pull",
+    "live register changes at independently computed rational sample boundaries",
+    "actual AudioOutput::render_pcm preserves phase across calls"
+  ],
+  "lockfile_note": "Initial --locked test refused the unchanged master lockfile. Offline resolution only removed a stale image 0.25.10 dependency edge from pokered-core; include that one-line normalization so locked target checks pass. No package versions changed.",
+  "prototype_run": {
+    "audio_tests_passed": 195,
+    "seconds": 52.8,
+    "scope": "Separate unmerged prototype checkout; not the isolated PR test count."
+  },
+  "artifacts": {
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-audio-tests-unlocked.log": {
+      "sha256": "d10c1a3a6195c057f8e5b48b464bf3419b5d91674737e8642aa4d62aafff34e2",
+      "bytes": 15916
+    },
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-cpal-check.log": {
+      "sha256": "ed21aa8a25e918ad3e1fb324bc9e1f181be55f00ad60fd1c9ab3edf119b25b1d",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-web-check.log": {
+      "sha256": "5352438a304fdd30d8c7c201ec24a4bce131646144970f5068826c9205795b4e",
+      "bytes": 614
+    }
+  },
+  "new_worktrees": 0,
+  "new_game_binary_or_rom": false
+}

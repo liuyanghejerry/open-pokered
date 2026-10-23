@@ -3497,7 +3497,6 @@ dependencies = [
  "dotzuki-engine-script",
  "dotzuki-renderer",
  "hashbrown 0.15.5",
- "image 0.25.10",
  "log",
  "num-derive",
  "num-traits",
