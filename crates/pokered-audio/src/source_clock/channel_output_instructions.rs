@@ -12,6 +12,9 @@ pub enum OutputRoutine {
     EnableChannel,
     WaveFrequency,
 }
+
+#[path = "channel_output_bus.rs"]
+pub mod bus;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
     any(test, feature = "source-clock-serde"),
@@ -89,6 +92,9 @@ pub struct ChannelOutputInstructions {
     carry: bool,
     low: u8,
     cycles: u32,
+    /// Most recent source NR51 read, retained across later ALU/store instructions.
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    nr51: Option<u8>,
 }
 impl ChannelOutputInstructions {
     pub fn new(routine: OutputRoutine, input: OutputInput) -> Option<Self> {
@@ -109,6 +115,7 @@ impl ChannelOutputInstructions {
             carry: false,
             low: 0,
             cycles: 0,
+            nr51: None,
         })
     }
     pub fn finished(&self) -> bool {

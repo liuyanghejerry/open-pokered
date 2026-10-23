@@ -1,5 +1,6 @@
 //! Retained source pulse confirmation-tone body. Native sequencer/APU ownership
 //! stays with the caller; this cursor accepts CPU instructions, not audio ticks.
+use super::apu_bus::{ApuInstruction, BusStepError, NoteBusInput};
 use super::channel_end_instructions::{ChannelEndInput, ChannelEndInstructions, ChannelEndResult};
 use super::channel_output_instructions::{ChannelOutputInstructions, OutputInput, OutputRoutine};
 use super::note_math_instructions::MultiplyAddInstructions;
@@ -22,6 +23,10 @@ pub struct PressAbInput {
     pub sfx_tempo: u16,
     pub vibrato_reload: u8,
 }
+
+#[cfg(test)]
+#[path = "press_ab_bus_tests.rs"]
+mod bus_tests;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
     any(test, feature = "source-clock-serde"),
@@ -50,6 +55,7 @@ pub enum PressAbOutcome {
 pub enum PressAbStepError<E> {
     ChangedProgram,
     Truncated(usize),
+    MissingWave,
     Clock(E),
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -198,6 +204,75 @@ impl PressAbInstructions {
     }
     pub fn cycles(&self) -> u32 {
         self.cycles
+    }
+    /// Execute the same retained CPU instruction with its actual APU access.
+    /// The owner must reject before clocking/writing and return the live value
+    /// for a successful read. This finite pulse SFX never reads wave or stereo
+    /// panning data; its EnableChannelOutput child does read live NR51.
+    pub fn try_step_with_bus<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, PressAbStepError<E>> {
+        if self.result().is_some() {
+            return Ok(true);
+        }
+        if data != crate::sfx_data::SFX_PRESS_AB_CH5 {
+            return Err(PressAbStepError::ChangedProgram);
+        }
+        if let Stage::Output { work, after } = &mut self.stage {
+            let input = NoteBusInput {
+                note_delay: (self.computed >> 8) as u8,
+                volume: self.envelope,
+                duty: self.duty,
+                // Channel 4 skips the stereo-panning path. This unused scalar
+                // does not stand in for a logical byte or a hardware read.
+                panning: 0,
+                wave: None,
+            };
+            let mut accepted = 0;
+            let done = work
+                .try_step_with_bus(input, |instruction| {
+                    let receipt = execute(instruction)?;
+                    accepted = instruction.tcycles;
+                    Ok(receipt)
+                })
+                .map_err(|error| match error {
+                    BusStepError::MissingWave => PressAbStepError::MissingWave,
+                    BusStepError::Execute(error) => PressAbStepError::Clock(error),
+                })?;
+            self.cycles += u32::from(accepted);
+            if done {
+                self.stage = match *after {
+                    After::DutyStore => Stage::DutyStore,
+                    After::EnvelopeStore => Stage::EnvelopeStore,
+                    After::Enable => Stage::EnableCall,
+                    After::Wave => Stage::WaveCall(0),
+                    After::Return => {
+                        self.wave_frequency = work.frequency().expect("wave return");
+                        Stage::InnerReturn
+                    }
+                };
+            }
+            return Ok(false);
+        }
+        let store = match self.stage {
+            // Audio*_sfx_note does not mask the delay byte at this first store.
+            // ApplyDutyCycleAndSoundLength performs its separate masked store.
+            Stage::DutyStore => Some((0xff11, self.duty | (self.computed >> 8) as u8)),
+            Stage::EnvelopeStore => Some((0xff12, self.envelope)),
+            _ => None,
+        };
+        // All other child paths reuse the existing CPU progression, including
+        // the non-cry channel-4 ending, whose complete source tail has no APU I/O.
+        self.try_step(data, |cycles| {
+            let instruction = if let Some((address, value)) = store {
+                ApuInstruction::write(cycles, address, value)
+            } else {
+                ApuInstruction::plain(cycles)
+            };
+            execute(instruction).map(|_| ())
+        })
     }
     fn output(&self, routine: OutputRoutine, after: After) -> Stage {
         Stage::Output {

@@ -1,11 +1,13 @@
 //! Retained supported Audio1/3_PlayNextNote body, including its actual final RET.
-//! No native frame commit, APU bus scheduling, IRQ epilogue or Game hookup occurs.
+//! Live APU instructions are offered to the external owner; no native frame
+//! commit, independent clock, IRQ epilogue or Game hookup occurs here.
+use super::apu_bus::{ApuInstruction, BusStepError, NoteBusInput};
 use super::channel_end_instructions::{ChannelEndInput, ChannelEndInstructions, ChannelEndResult};
 use super::note_pitch_instructions::{NotePitchInput, NotePitchInstructions, NotePitchResult};
 use super::note_preparation::{
     NotePreparation, PreparationBoundary, PreparationInput, PreparationResult,
 };
-use super::note_stream_instructions::StreamStepError;
+use super::note_stream_instructions::{StreamInputError, StreamStepError};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -117,15 +119,44 @@ impl MusicNoteInstructions {
         data: &[u8],
         execute: impl FnOnce(u8) -> Result<(), E>,
     ) -> Result<bool, StreamStepError<E>> {
+        self.try_step_inner(data, None, |instruction| {
+            execute(instruction.tcycles).map(|()| None)
+        })
+    }
+    /// Advance the same retained note body while offering live APU accesses.
+    /// `panning` and the initial wave instrument belong to the native owner;
+    /// stream commands replace that instrument before pitch/output when due.
+    /// Wave patterns are caller-owned data, required only for an uncovered wave
+    /// note. A missing pattern rejects before accepting its pitch instruction.
+    pub fn try_step_with_bus<E>(
+        &mut self,
+        data: &[u8],
+        panning: u8,
+        initial_wave_instrument: u8,
+        wave_patterns: &[[u8; 16]],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, StreamStepError<E>> {
+        self.try_step_inner(
+            data,
+            Some((panning, initial_wave_instrument, wave_patterns)),
+            execute,
+        )
+    }
+    fn try_step_inner<E>(
+        &mut self,
+        data: &[u8],
+        bus: Option<(u8, u8, &[[u8; 16]])>,
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, StreamStepError<E>> {
         let mut accepted = 0;
-        let clock = |t| {
-            execute(t)?;
-            accepted = t;
-            Ok(())
+        let clock = |instruction: ApuInstruction| {
+            let value = execute(instruction)?;
+            accepted = instruction.tcycles;
+            Ok(value)
         };
         let transition = match &mut self.stage {
             Stage::Preparation(work) => {
-                if work.try_step(data, clock)? {
+                if work.try_step_with_bus(data, clock)? {
                     let preparation = work.result().expect("preparation boundary");
                     if preparation.boundary == PreparationBoundary::NoiseReturned {
                         Some(Stage::Return {
@@ -175,7 +206,32 @@ impl MusicNoteInstructions {
                 }
             }
             Stage::Pitch { preparation, work } => {
-                if work.try_step(clock).map_err(StreamStepError::Clock)? {
+                let done = if let Some((panning, initial_instrument, patterns)) = bus {
+                    let instrument = preparation
+                        .stream
+                        .wave_instrument
+                        .unwrap_or(initial_instrument);
+                    work.try_step_with_bus(
+                        NoteBusInput {
+                            note_delay: preparation.delay,
+                            volume: preparation.stream.state.volume,
+                            duty: preparation.stream.state.duty,
+                            panning,
+                            wave: patterns.get(usize::from(instrument)).copied(),
+                        },
+                        clock,
+                    )
+                    .map_err(|error| match error {
+                        BusStepError::MissingWave => {
+                            StreamStepError::Input(StreamInputError::MissingWave)
+                        }
+                        BusStepError::Execute(error) => StreamStepError::Clock(error),
+                    })?
+                } else {
+                    work.try_step(|t| clock(ApuInstruction::plain(t)).map(|_| ()))
+                        .map_err(StreamStepError::Clock)?
+                };
+                if done {
                     Some(Stage::Return {
                         preparation: *preparation,
                         pitch: work.result().expect("completed note pitch"),
@@ -185,7 +241,7 @@ impl MusicNoteInstructions {
                 }
             }
             Stage::Return { preparation, pitch } => {
-                clock(16).map_err(StreamStepError::Clock)?;
+                clock(ApuInstruction::plain(16)).map_err(StreamStepError::Clock)?;
                 Some(Stage::Done(MusicNoteResult {
                     preparation: *preparation,
                     saved_frequency_low: pitch.saved_frequency_low,
@@ -194,7 +250,10 @@ impl MusicNoteInstructions {
                 }))
             }
             Stage::Ending { stream, work } => {
-                if work.try_step(clock).map_err(StreamStepError::Clock)? {
+                if work
+                    .try_step(|t| clock(ApuInstruction::plain(t)).map(|_| ()))
+                    .map_err(StreamStepError::Clock)?
+                {
                     Some(Stage::EndReturn {
                         stream: *stream,
                         ending: work.result().expect("ending tail RET"),
@@ -204,7 +263,7 @@ impl MusicNoteInstructions {
                 }
             }
             Stage::EndReturn { stream, ending } => {
-                clock(16).map_err(StreamStepError::Clock)?;
+                clock(ApuInstruction::plain(16)).map_err(StreamStepError::Clock)?;
                 Some(Stage::EndDone(MusicEndResult {
                     stream: *stream,
                     ending: *ending,
@@ -333,3 +392,7 @@ mod ending_tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "music_note_bus_tests.rs"]
+mod bus_tests;

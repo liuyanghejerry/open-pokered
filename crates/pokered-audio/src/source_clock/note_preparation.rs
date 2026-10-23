@@ -1,6 +1,7 @@
 //! One retained source continuation from PlayNextNote entry through command
 //! parsing and note-length arithmetic. Native channels/APU remain the caller's
 //! sole owner; pitch/output and the enclosing return are not executed here.
+use super::apu_bus::ApuInstruction;
 use super::note_math_instructions::{NoteLengthInput, NoteLengthInstructions};
 use super::note_stream_instructions::{
     StreamInput, StreamInstructions, StreamResult, StreamStepError,
@@ -103,15 +104,26 @@ impl NotePreparation {
         data: &[u8],
         execute: impl FnOnce(u8) -> Result<(), E>,
     ) -> Result<bool, StreamStepError<E>> {
+        self.try_step_with_bus(data, |instruction| {
+            execute(instruction.tcycles).map(|()| None)
+        })
+    }
+    /// Retain the same command/length continuation while forwarding each live
+    /// APU instruction. Length arithmetic itself has no APU accesses.
+    pub fn try_step_with_bus<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, StreamStepError<E>> {
         let mut accepted = 0;
-        let clock = |t| {
-            execute(t)?;
-            accepted = t;
-            Ok(())
+        let clock = |instruction: ApuInstruction| {
+            let value = execute(instruction)?;
+            accepted = instruction.tcycles;
+            Ok(value)
         };
         let transition = match &mut self.stage {
             Stage::Stream(work) => {
-                if work.try_step(data, clock)? {
+                if work.try_step_with_bus(data, clock)? {
                     let stream = work.result().expect("stream at note-length entry");
                     let length = NoteLengthInstructions::new(NoteLengthInput {
                         channel: self.input.stream.channel,
@@ -136,7 +148,10 @@ impl NotePreparation {
                 }
             }
             Stage::Length { stream, work } => {
-                if work.try_step(clock).map_err(StreamStepError::Clock)? {
+                if work
+                    .try_step(|t| clock(ApuInstruction::plain(t)).map(|_| ()))
+                    .map_err(StreamStepError::Clock)?
+                {
                     let (fraction, delay) = work.result().expect("completed note length");
                     Some(Stage::Boundary(PreparationResult {
                         stream: *stream,

@@ -1,0 +1,39 @@
+{
+  "scope": "Controlled MusicNote component accesses and existing note CPU regressions; not Game/HoF wiring or full-frame validation.",
+  "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "cases": 548,
+  "apu_accesses": 5074,
+  "reused_source_cases": 538,
+  "additional_source_cases": 10,
+  "fixtures": {
+    "crates/pokered-audio/src/source_clock/music_note_bus_golden.json": {
+      "sha256": "275b1da30ed7542c083a5668e081370a56640b536bb1e0928033d5e80fc8ab10",
+      "bytes": 214447
+    },
+    "crates/pokered-audio/src/source_clock/music_note_instructions_golden.json": {
+      "sha256": "29e7358dc0e88b793ffd38e19cbf8a8d4c40d6831f39427de2ddd7564a060610",
+      "bytes": 2581248
+    }
+  },
+  "checks": [
+    {
+      "command": "cargo test -p pokered-audio --features source-clock-serde --locked --offline music_note_instructions -- --nocapture",
+      "passed": true,
+      "tests_passed": 5,
+      "tests_failed": 0,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-music-note-bus-tests.log",
+      "log_sha256": "14dcec4f9c777417cf5650766e1fa629fb510b8d59cfa3c03be11317cfdb37e6",
+      "bytes": 1429
+    },
+    {
+      "command": "cargo test -p pokered-audio --features source-clock-serde --locked --offline source_clock::note_ -- --nocapture",
+      "passed": true,
+      "tests_passed": 9,
+      "tests_failed": 0,
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-music-note-bus-regression.log",
+      "log_sha256": "850a09612ac9fcc4423c21662be6790a77069c572fa840cf0976466f99af7353",
+      "bytes": 1824
+    }
+  ],
+  "original_fonts_rendered": false
+}

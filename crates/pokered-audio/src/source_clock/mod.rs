@@ -4,6 +4,7 @@
 //! the branch work of its supported update, then checks the actual native
 //! delay result; it never applies a captured channel/result or service cost.
 //! The caller must consume the returned T-cycles in its foreground scheduler.
+pub mod apu_bus;
 mod audio_math_work;
 mod audio_next_note_work;
 mod audio_note_dispatch_work;
@@ -21,6 +22,7 @@ pub mod note_stream_instructions;
 pub mod press_ab_instructions;
 mod press_ab_work;
 pub mod timer_work;
+mod wave_patterns;
 
 use crate::{sequencer::Sequencer, NOTE_FREQUENCIES};
 use audio_next_note_work::music_next_note_work_with_sfx;
@@ -51,14 +53,27 @@ pub struct AudioFrameWork {
     pub cycles: u32,
 }
 
-/// Whether a guarded native audio update actually advanced. Only Preflight
-/// and Admission may be retried without consuming a native sequencer tick.
+/// Admission and completion outcomes for guarded audio work. Source progress
+/// and the native sequencer commit are distinct: preserve retained work after
+/// any accepted instruction and follow the particular API's resume contract.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AudioAdmissionError<E> {
-    /// Unsupported input: the callback was not called and nothing advanced.
+    /// Input rejected before this call accepts source work. Full-frame APIs use
+    /// this only before their first instruction; legacy single-step callers
+    /// must still preserve any progress accepted by earlier calls.
     Preflight(AudioClockError),
-    /// The callback refused execution; nothing in the native manager advanced.
+    /// No new instruction executed and the cursor is unchanged, but it belongs
+    /// to the other CPU/bus API. It may already contain source effects; resume
+    /// using its original mode rather than discarding it or falling back.
+    WrongMode,
+    /// The next source instruction was refused before its effects; the native
+    /// sequencer has not committed. Earlier instructions in this or previous
+    /// calls may have advanced the cursor/APU: retain the cursor to resume.
     Admission(E),
+    /// Accepted source instructions already had effects, then a resume guard or
+    /// end-of-call invariant failed before the native commit. Retain this
+    /// terminal outcome; do not restart or replay the frame's earlier accesses.
+    SourceFailed(AudioClockError),
     /// One native update already happened. Retrying would duplicate that tick.
     Advanced(AudioClockError),
 }
