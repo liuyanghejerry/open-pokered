@@ -19,7 +19,7 @@ bitflags = "2"
 serde = { version = "1", default-features = false, features = ["derive"], optional = true }
 
 # The sequencer/APU supports alloc + no_std on GBA; device backends remain optional.
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "46381ddafb793aaa00370ba5dcbc5fa27b442bfe" }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f3684094f82c80b3f045102fd546d2570d1d0934" }
 
 # An allocation-free VBlank counter keeps PSG tempo independent of slow draws.
 [target.'cfg(target_os = "none")'.dependencies]
@@ -32,7 +32,7 @@ critical-section = "1"
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
 serde = { version = "1", default-features = false, features = ["derive"] }
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "46381ddafb793aaa00370ba5dcbc5fa27b442bfe", features = ["serde"] }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "f3684094f82c80b3f045102fd546d2570d1d0934", features = ["serde"] }
 serde_json = "1"
 
 [[example]]

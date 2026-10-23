@@ -55,3 +55,21 @@ not include this diagnostic probe.
 The full original CI remains the acceptance gate. These local checks do not
 claim the complete memory/scenario run has passed. Commands and log hashes
 are recorded in the adjacent validation JSON.
+
+## Stream loading allocation follow-up
+
+The compact-cache candidate still failed the unchanged4096B gate at move75:
+4031B at frame89139 (run39888833826). It passed the earlier failure point with
+6168B, so this later low remains an independent failed measurement.
+
+The final audio pin is `f3684094f82c80b3f045102fd546d2570d1d0934`, merged in
+dotzuki PR109. Track loading previously allocated a temporary vector of copied
+streams before the sequencer copied them into its owned buffers. It now copies
+directly into those buffers. The public vector API, mutable channel ownership,
+channel holes and SFX deduplication remain. An allocator-counting test measures
+exactly two allocations for two nonempty streams, and zero for repeated active
+SFX. All191 engine unit tests, the allocation integration test and2 doc tests
+pass; all engine CI, including the GBA frame budget, passed before merge.
+The game audio library's164 tests and locked GBA memory-target check pass with
+the new pin. New complete game CI must establish the actual contiguous margin;
+removing temporary allocations alone does not prove that the whole gate passes.

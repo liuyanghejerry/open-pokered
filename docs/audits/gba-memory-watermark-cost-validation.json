@@ -42,6 +42,18 @@
     ".task-tmp/fidelity-39-plus/audit-1282-gba-memory-check.log": {
       "sha256": "40a78de034b5612efce2dc443a4be923693e7d399b78504a4b2512b585912a0b",
       "bytes": 58795
+    },
+    ".task-tmp/fidelity-39-plus/audit-1284-engine-track-copy-tests.log": {
+      "sha256": "4f4031ea69981cae776321ad42161b1f41fa5957d20893f666999b5d1b342755",
+      "bytes": 13781
+    },
+    ".task-tmp/fidelity-39-plus/audit-1284-memory-audio-tests.log": {
+      "sha256": "9365ad038eeaeaf439de4223a553cf5a53ef7bcd8ba68e6d55b90acac07bba7e",
+      "bytes": 15130
+    },
+    ".task-tmp/fidelity-39-plus/audit-1285-memory-gba-check.log": {
+      "sha256": "62aa30859a3cc7c04272648f7db9c4e51dbe45890dc2ceb2a20c7a3f5afe8201",
+      "bytes": 58928
     }
   },
   "music_resume_fix": {
@@ -60,5 +72,26 @@
     "frame": 77363,
     "complete": false
   },
-  "follow_up_full_ci": "Required on the updated dependency head; not yet established."
+  "follow_up_full_ci": "Required on the stream-copy dependency head; not yet established.",
+  "stream_loading_fix": {
+    "engine_rev": "f3684094f82c80b3f045102fd546d2570d1d0934",
+    "merged_engine_pr": 109,
+    "merged_as": "73879e2e9971ddc06f3e3442459b044df5bfed2c",
+    "engine_audio_tests": 191,
+    "engine_allocation_test": 1,
+    "engine_doctests": 2,
+    "all_engine_CI": "success",
+    "game_audio_tests": 164,
+    "GBA_locked_memory_check": "pass"
+  },
+  "second_full_ci": {
+    "head": "31cd299f5b355c382b30f50ab265a9782531f8aa",
+    "run": 39888833826,
+    "conclusion": "failure",
+    "heap_low_bytes": 4031,
+    "threshold_bytes": 4096,
+    "frame": 89139,
+    "move": 75,
+    "side": 0
+  }
 }
