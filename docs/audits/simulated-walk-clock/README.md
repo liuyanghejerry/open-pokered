@@ -48,6 +48,12 @@ check. Releasing all buttons and holding RIGHT have separately matched traces.
   the first counter-7 frame using the same fixture and button stream. The
   player/camera displacement is the bug; both captures use Fusion Pixel.
 
+After integrating master `7b79a188` (#368), code `6a577686` passes all 3,659
+core tests (one pre-existing ignored doctest), 63 agent tests, 10 shared Game
+tests, and locked GBA `memory-scenarios` compilation. All six native traces
+and captures remain byte-identical. `validation.json` records commands and
+log hashes; the PR still requires its own complete latest-head CI.
+
 Run the original reproductions from the repository root (the ROM and symbols
 must come from the pinned original build):
 

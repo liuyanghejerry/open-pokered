@@ -35,12 +35,9 @@
         "--offline"
       ],
       "exit": 0,
-      "summary": [
-        "wrote /home/jerry/develop/open-pokered/crates/pokered-data/story/graph.json (3328 edges)",
-        "wrote /home/jerry/develop/open-pokered/target/agent/world_semantics.json (248 maps, 1340 storylines; commands 2384 recognized / 1 unknown; calls 1308 recognized / 1 unknown)"
-      ],
       "log_sha256": "909e81103de9bccca8e23c65ae7886e32f64ec0dd2355e90f782d0891eb26ccc",
-      "passed": 0
+      "passed": 0,
+      "ignored": 0
     },
     {
       "name": "core",
@@ -53,52 +50,9 @@
         "--offline"
       ],
       "exit": 0,
-      "summary": [
-        "test result: ok. 3240 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.16s",
-        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
-        "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
-        "test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
-        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
-        "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s",
-        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
-        "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
-        "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
-        "test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
-        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s",
-        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s",
-        "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s"
-      ],
       "log_sha256": "6413cbc9158e088e817e103c6081537b77c2903dae477e837e872136acc75eed",
-      "passed": 3656
+      "passed": 3656,
+      "ignored": 1
     },
     {
       "name": "agent",
@@ -111,14 +65,9 @@
         "--offline"
       ],
       "exit": 0,
-      "summary": [
-        "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s",
-        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
-        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
-      ],
       "log_sha256": "f05c88fef41d611f1af7f58a6015eea8f0f5ed974065abee53c67bbd4b30d3d0",
-      "passed": 63
+      "passed": 63,
+      "ignored": 0
     },
     {
       "name": "app",
@@ -135,12 +84,9 @@
         "--offline"
       ],
       "exit": 0,
-      "summary": [
-        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s",
-        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s"
-      ],
       "log_sha256": "d1aae5bd9b3b6d631b5debb2fac84b89ab1f267d718e933cf9b01f0666804884",
-      "passed": 7
+      "passed": 7,
+      "ignored": 0
     },
     {
       "name": "gba",
@@ -155,9 +101,9 @@
         "--offline"
       ],
       "exit": 0,
-      "summary": [],
       "log_sha256": "2cb75b470821818e84812ea8d9f1e4eca2f59cce39901188f246739ba4c19023",
-      "passed": 0
+      "passed": 0,
+      "ignored": 0
     }
   ],
   "native_input_cases": 6,
@@ -165,5 +111,84 @@
   "original_live_memory_writes": false,
   "original_font_rendering": false,
   "native_fixture_scope": "controlled-map shared PokemonGame input, not fresh mainline travel",
-  "production_patch_sha256": "807293269dcb1890c2d634ffef02458942d70b3bdd039b925f5fe22d9691ef28"
+  "production_patch_sha256": "807293269dcb1890c2d634ffef02458942d70b3bdd039b925f5fe22d9691ef28",
+  "combined_master_validation": {
+    "tested_code": "6a5776864d712f072aa8b27e65e009a38a5257ee",
+    "base": "7b79a188a1fe696f7bb16c7c42d2baf2a7ed2aa9",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "log": "audit-1298-relative-combined-core.log",
+        "log_sha256": "7701a6e0d7f81a14fdcacc0ff44589c7069d3f7d064487bc0b69cc8b089a7c20",
+        "passed": 3659,
+        "errors": []
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "log": "audit-1298-relative-combined-agent.log",
+        "log_sha256": "57ddb4601d476eaadf262a7b1384b16a3548f6830b6bff8fceebd455f148e4aa",
+        "passed": 63,
+        "errors": []
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--test",
+          "route22_gate_guard",
+          "--test",
+          "relative_script_walk",
+          "--test",
+          "door_exit",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "log": "audit-1298-relative-combined-app.log",
+        "log_sha256": "130e74eb09ece79b9adac4e6733a7f237c2e91dc8d21205c1a466676e4df0331",
+        "passed": 10,
+        "errors": []
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "check",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "log": "audit-1298-relative-combined-gba.log",
+        "log_sha256": "ff09c0291ddf695e8db25845ec4f548abc936536274acfdd4dc8be4fa2d30d2a",
+        "passed": 0,
+        "errors": []
+      }
+    ]
+  },
+  "combined_captures_identical": true
 }
