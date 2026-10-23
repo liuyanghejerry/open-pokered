@@ -1,0 +1,101 @@
+# Route 22 guard input return
+
+After the no-badge guard pushes the player down, the original
+`Route22GatePlayerMovingScript` clears `wJoyIgnore`, calls `Delay3`, then
+returns to `JoypadOverworld`. The native scene previously ended immediately.
+That lost a one-frame START press on the original return frame, accepted a
+press during the source wait, and resumed held movement too early.
+
+Both refusal callers now explicitly run `route22GuardReturn()` after their
+relative walk. This typed callback owns the source three-VBlank wait;
+neither Joypad nor NPC movement runs inside it. Completion resumes the
+already-started field iteration, preserving fresh START/A edges while
+clearing held movement through the existing simulated-return path. The
+ordinary no-direction handling records the stop before the next turn.
+It adds no persistent screen field or allocation. Other movement callers
+retain their own completion behavior and remain explicitly unmodeled where
+their full input ownership has not been proved.
+
+Frame zero below is the first post-update walk-counter-7 observation.
+Original CPU hooks fire within a tick; their offset 19 corresponds to the
+native post-update frame 20.
+
+| Physical input | Original result | Fixed native |
+| --- | --- | --- |
+| START [18, 19) | No menu | No menu |
+| START [19, 20) | Menu CPU offset 19 | Menu frame 20 |
+| START [20, 22) | Menu CPU offset 21 | Menu frame 22 |
+| START [0, 30) | Menu CPU offset 19 | Menu frame 20 |
+| START [0, 10) | No menu | No menu |
+| DOWN [0, 30) | Next stride frame 22 | Frame 22 |
+| UP/LEFT/RIGHT [0, 30) | Next stride frame 24 | Frame 24 |
+
+All nine original cases were repeated twice with identical complete records.
+A further read-only `UpdateSprites` probe confirms no sprite update during
+the callback wait: updates resume at CPU offsets 19 and 23. The baseline
+native suite passes nine controls and fails all five new regressions;
+the candidate passes all 26 selected tests, including guard permission,
+direct talk, both gate lanes, departure, bicycle and door controls.
+
+The two screenshots under `docs/screenshots/route22-guard-return-*.png` show
+actual `PokemonGame::draw` at frame 59 with the same [19, 20) START input.
+The baseline remains in the field; the candidate has opened the menu.
+
+```sh
+python docs/audits/route22-guard-return/replay-original.py \
+  --rom /path/to/reference.gbc --symbols /path/to/pokered.sym \
+  --base-save docs/audits/route22-gate-guard/original-fixture.sav \
+  --out /path/to/evidence --press-from 19 --release-at 20
+SCRIPT_INPUT_CAPTURE_DIR=/path/to/captures \
+  cargo test -p pokered-app --test scripted_input_poll
+```
+
+Use `--control-button up|down|left|right --press-from 0 --release-at 30`
+for movement controls. `replay-sprites.py` adds only the read-only sprite
+hook. Both replayers boot normally, select CONTINUE from offline-prepared
+SRAM and physically enter the gate. They perform no live memory writes,
+forced warps, savestate loads or original-font renders. Native cases use
+controlled actual Game fixtures; these are not a fresh mainline playthrough.
+
+`validation.json` records hashes and results; the compressed files retain
+complete original and native traces. Full package checks and the unchanged
+GBA gates must pass before merging.
+
+Pinned source: `pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`;
+ROM SHA-256 `5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b`.
+Sources: [guard callback](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/Route22Gate.asm),
+[field input](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/overworld.asm),
+[Delay3](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/palettes.asm).
+
+Full combined checks pass: core 3659, data 448, the Boa suspension regression
+1, the complete app package 928, agent 63, and release GBA compilation. The
+existing 1 core and 88 app ignored cases remain unchanged. Core/data ran on
+2f5335e5; the only subsequent change before the remaining checks was a local
+import inside the Boa test. Production code is identical.
+
+The unchanged complete GBA memory suite passes all 13 cases over 321240
+hardware frames: minimum free heap 4728 B and stack headroom 8724 B. The
+record pins the ROM, scenario source and heap probe hashes. No threshold,
+scenario or timeout was adjusted. Latest-head CI is still required to merge.
+
+CI performance follow-up: the initial PR head `f5f2a5cb` failed the original
+trainer-entry update gate at 233 ticks (limit 232.3); the five later GBA
+execution gates were skipped, so that run was not mergeable. A local run
+reproduced all seven CI scenario records exactly.
+
+The battle VFX update and its immediately following faint wait now reuse one
+sound/alarm sample. VFX only queues requests; it does not play sounds or
+advance the sequencer between these two consumers. This removes duplicate
+queries without skipping audio updates, changing waits or adding a cache.
+Two independent fresh-SRAM mGBA runs now match exactly: trainer-entry updates
+take 231 ticks and wild-entry updates 212, down from 233 and 213. All seven
+original performance scenarios pass with the existing thresholds. Draw and
+present metrics and render counts remain identical to the failing baseline.
+
+After this change, full core 3659, data 448, Boa 1, app 928 and agent 63 checks
+pass again, including the actual faint fall/thud PCM regressions. The original
+13-case GBA memory run also passes over 321240 hardware frames,
+with minimum heap 4728 B and stack headroom 8724 B.
+`performance-validation.json` records the tested source and patch hashes,
+before/after metrics and repeat runs. Existing ignored cases remain unchanged;
+latest-head CI is still required before merge.

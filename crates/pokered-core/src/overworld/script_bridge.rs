@@ -80,6 +80,8 @@ pub enum ScriptEffect {
         leading_sound_started: bool,
     },
     FinishFieldText,
+    /// Blocking Delay3 in Route22GatePlayerMovingScript, before Joypad.
+    Route22GuardReturn { frames_remaining: u8 },
     ShowDialogue {
         text: String,
     },
@@ -398,7 +400,8 @@ impl ScriptEffect {
             | Self::LinkStart | Self::HallOfFameCeremony
             | Self::MoveNpc { .. } | Self::MoveNpcTo { .. } | Self::AwaitNpcMove { .. }
             | Self::MovePlayer { .. } | Self::MovePlayerTo { .. }
-            | Self::MovePlayerRelative { .. } | Self::FollowNpc { .. })
+            | Self::MovePlayerRelative { .. } | Self::FollowNpc { .. }
+            | Self::Route22GuardReturn { .. })
     }
 
     /// Nested gift/reading flows use the same text-window choice handoff.
@@ -540,6 +543,9 @@ impl ScriptEffect {
             ScriptEffect::WaitMusic => json!({ "effect": "WaitMusic" }),
             ScriptEffect::WaitSound => json!({ "effect": "WaitSound" }),
             ScriptEffect::FinishFieldText => json!({ "effect": "FinishFieldText" }),
+            ScriptEffect::Route22GuardReturn { frames_remaining } => json!({
+                "effect": "Route22GuardReturn", "frames_remaining": frames_remaining,
+            }),
             ScriptEffect::PlaySound { sound_id } => {
                 json!({ "effect": "PlaySound", "sound_id": sound_id })
             }
@@ -1084,6 +1090,7 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::WaitMusic => ScriptEffect::WaitMusic,
         PokemonScriptCommand::WaitSound => ScriptEffect::WaitSound,
         PokemonScriptCommand::FinishFieldText => ScriptEffect::FinishFieldText,
+        PokemonScriptCommand::Route22GuardReturn => ScriptEffect::Route22GuardReturn { frames_remaining: 3 },
     }
 }
 

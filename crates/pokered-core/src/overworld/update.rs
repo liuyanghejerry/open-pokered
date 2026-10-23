@@ -1092,6 +1092,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             if done {
                 let completed_relative_walk = matches!(effect,
                     script_bridge::ScriptEffect::MovePlayerRelative { .. });
+                let completed_guard_return = matches!(effect,
+                    script_bridge::ScriptEffect::Route22GuardReturn { .. });
                 // `giveItem` must report whether the bag had room (the original's
                 // GiveItem carry flag). Capture the item id while `effect` is still
                 // borrowed; the room check runs after the borrow ends, against the
@@ -1204,6 +1206,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     resumed_unlocked_relative_walk = self.active_script_effect.is_none()
                         && self.script_engine.is_idle();
                 }
+                if completed_relative_walk && matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::Route22GuardReturn { .. })) {
+                    // Route22GatePlayerMovingScript unlocks before Delay3.
+                    // Its Joypad and doneSimulating resume after that wait.
+                    self.joy_ignore_mask = 0;
+                }
+                if completed_guard_return {
+                    resumed_unlocked_relative_walk = self.active_script_effect.is_none()
+                        && self.script_engine.is_idle();
+                }
                 self.sync_flags_from_engine();
             }
             if departure_apply_objects {
@@ -1215,6 +1227,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 for toggle in pokered_data::toggleable_objects::SILPH_CITIZENS_SHOWN {
                     self.set_named_object_visible(toggle, true);
                 }
+            }
+            if matches!(self.active_script_effect,
+                Some(script_bridge::ScriptEffect::Route22GuardReturn { .. })) {
+                // DelayFrames runs VBlanks but neither Joypad nor UpdateSprites.
+                return ScreenAction::Continue;
             }
             // Scripted player path must also advance during script effects so
             // that MovePlayer can observe the path draining. Without this, the
@@ -3529,6 +3546,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     return true;
                 }
                 *frames_remaining -= 1;
+                *frames_remaining == 0
+            }
+            script_bridge::ScriptEffect::Route22GuardReturn { frames_remaining } => {
+                *frames_remaining = frames_remaining.saturating_sub(1);
                 *frames_remaining == 0
             }
             script_bridge::ScriptEffect::PlayShipDeparture { ref mut started } => {

@@ -458,6 +458,10 @@ impl ScriptHost for NativeHost {
             "waitMusic" => Ok(pokemon(PokemonScriptCommand::WaitMusic)),
             "waitSound" => Ok(pokemon(PokemonScriptCommand::WaitSound)),
             "finishFieldText" => Ok(pokemon(PokemonScriptCommand::FinishFieldText)),
+            "route22GuardReturn" => {
+                if !v.is_empty() { return Err("route22GuardReturn: no arguments expected".into()); }
+                Ok(pokemon(PokemonScriptCommand::Route22GuardReturn))
+            }
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
             "walkTogether" => {
                 let npc_id = args::text(v.first().ok_or("walkTogether: missing NPC")?, "walkTogether")?;

@@ -189,6 +189,9 @@ interface GameAPI {
    */
   movePlayerRelative(steps: ([number, number] | Direction)[]): Promise<void>;
 
+  /** Route 22 guard's completed simulated walk: unlock, Delay3, field return. */
+  route22GuardReturn(): Promise<void>;
+
   /**
    * Plan a terrain-aware path for an NPC and move there.
    *

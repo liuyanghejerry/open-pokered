@@ -168,8 +168,7 @@ fn a_start_pulse_between_stride_polls_does_not_open_the_menu() {
     drive_start(&mut g, "departure-start-pulse", 0, 10, false);
 }
 
-#[test]
-fn a_single_guard_step_does_not_consume_start_pressed_after_its_poll() {
+fn guard_refusal() -> PokemonGame {
     let mut g = game(MapId::Route22Gate, 4, 3);
     for _ in 0..8 {
         g.update(&input(GbButton::Up));
@@ -188,6 +187,12 @@ fn a_single_guard_step_does_not_consume_start_pressed_after_its_poll() {
             InputState::new()
         });
     }
+    g
+}
+
+#[test]
+fn a_single_guard_step_does_not_consume_start_pressed_after_its_poll() {
+    let mut g = guard_refusal();
     drive_start(&mut g, "guard-held-start", 0, 30, true);
     assert_eq!(
         (g.overworld.state.player.x, g.overworld.state.player.y),
@@ -260,4 +265,93 @@ fn departure_directions_resume_after_the_source_stop_and_turn_boundaries() {
             "{name}: original return boundary/collision"
         );
     }
+}
+
+#[test]
+fn guard_return_reads_a_one_frame_start_press_after_delay3() {
+    let mut g = guard_refusal();
+    assert_eq!(
+        drive_start(&mut g, "guard-completion-start", 19, 20, true),
+        Some(20)
+    );
+}
+
+#[test]
+fn guard_return_does_not_poll_during_delay3() {
+    let mut g = guard_refusal();
+    drive_start(&mut g, "guard-pre-completion-start", 18, 19, false);
+}
+
+#[test]
+fn guard_return_accepts_start_on_the_next_field_poll() {
+    let mut g = guard_refusal();
+    assert_eq!(
+        drive_start(&mut g, "guard-after-completion-start", 20, 22, true),
+        Some(22)
+    );
+}
+
+#[test]
+fn guard_return_held_start_waits_until_delay3_finishes() {
+    let mut g = guard_refusal();
+    assert_eq!(
+        drive_start(&mut g, "guard-held-start-after-delay", 0, 30, true),
+        Some(20)
+    );
+}
+
+#[test]
+fn guard_return_discards_a_pulse_while_still_walking() {
+    let mut g = guard_refusal();
+    drive_start(&mut g, "guard-walking-start-pulse", 0, 10, false);
+}
+
+#[test]
+fn guard_return_directions_observe_the_stop_and_turn_after_delay3() {
+    let mut results = Vec::new();
+    for (name, button) in [
+        ("up", GbButton::Up),
+        ("down", GbButton::Down),
+        ("left", GbButton::Left),
+        ("right", GbButton::Right),
+    ] {
+        let mut g = guard_refusal();
+        first_stride(&mut g);
+        let mut first_physical_step = None;
+        let mut trace = Vec::new();
+        for frame in 0..50 {
+            if frame >= 17 && g.overworld.state.walk_counter != 0 {
+                first_physical_step.get_or_insert(frame);
+            }
+            trace.push(
+                serde_json::json!({"frame":frame, "walk":g.overworld.state.walk_counter,
+                "x":g.overworld.state.player.x,"y":g.overworld.state.player.y,
+                "facing":format!("{:?}",g.overworld.state.player.facing),
+                "effect":g.overworld.active_script_effect_label()}),
+            );
+            g.update(&if frame < 30 {
+                input(button)
+            } else {
+                InputState::new()
+            });
+        }
+        if let Ok(dir) = std::env::var("SCRIPT_INPUT_CAPTURE_DIR") {
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(
+                format!("{dir}/guard-direction-{name}.json"),
+                serde_json::to_vec_pretty(&trace).unwrap(),
+            )
+            .unwrap();
+        }
+        results.push((name, first_physical_step));
+    }
+    assert_eq!(
+        results,
+        vec![
+            ("up", Some(24)),
+            ("down", Some(22)),
+            ("left", Some(24)),
+            ("right", Some(24))
+        ]
+    );
 }
