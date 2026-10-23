@@ -1198,7 +1198,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             // already Walking toward its next tile, not a stale Idle player,
             // or an NPC could start a step onto that tile in the gap.
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            self.advance_scripted_player_path(physical_buttons);
             // Only check warps when a step actually completed and the position
             // changed.  Checking on the frame that *starts* a walk would fire
             // on the old (warp-tile) position before the player has moved away,
@@ -1304,7 +1304,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         // Scripted player movement — follow path ignoring real input.
         if !self.scripted_player_path.is_empty() {
             let pos_before = (self.state.player.x, self.state.player.y);
-            self.advance_scripted_player_path();
+            self.advance_scripted_player_path(physical_buttons);
             let pos_after = (self.state.player.x, self.state.player.y);
             if pos_before != pos_after {
                 self.try_trigger_warp_at_player_position();
@@ -2226,7 +2226,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.scripted_player_path.extend(path);
                         // The arrow owns this frame too: do not let held input
                         // start an extra step before the queued path takes over.
-                        self.advance_scripted_player_path();
+                        self.advance_scripted_player_path(physical_buttons);
                         return ScreenAction::Continue;
                     }
                 }
@@ -2950,12 +2950,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
-    fn advance_scripted_player_path(&mut self) {
+    fn advance_scripted_player_path(&mut self, physical_buttons: u8) {
         if self.scripted_player_path.is_empty() {
             return;
         }
         if self.state.player.movement_state == MovementState::Idle {
-            self.start_next_scripted_player_step();
+            self.start_next_scripted_player_step(physical_buttons);
         } else {
             let step_done = player_movement::advance_step(&mut self.state);
             if step_done && !self.scripted_player_path.is_empty() {
@@ -2970,13 +2970,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.scripted_player_path.pop_front();
                     }
                 } else {
-                    self.start_next_scripted_player_step();
+                    self.start_next_scripted_player_step(physical_buttons);
                 }
             }
         }
     }
 
-    fn start_next_scripted_player_step(&mut self) {
+    fn start_next_scripted_player_step(&mut self, physical_buttons: u8) {
         while let Some(&(tx, ty)) = self.scripted_player_path.front() {
             if self.state.player.x == tx && self.state.player.y == ty {
                 self.scripted_player_path.pop_front();
@@ -3009,6 +3009,18 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 }
                 if matches!(self.active_script_effect,
                     Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
+                    // JoypadOverworld calls Joypad before substituting the
+                    // simulated direction. Even ignored buttons update
+                    // hJoyLast, so a held START sampled between strides is
+                    // not a fresh menu press when field control returns.
+                    // Keep this real poll and the legacy sampler in sync;
+                    // caller-specific return ownership remains unmodeled.
+                    let owner = self.source_foreground.get_or_insert_with(Default::default);
+                    owner.read_raw(physical_buttons);
+                    owner.poll();
+                    self.sampled_player_input = super::screen::FieldInputSample::from(
+                        crate::foreground_input::ForegroundJoypad::as_field_input(physical_buttons),
+                    );
                     // Simulated joypad input takes the same .noCollision ->
                     // AdvancePlayerSprite path as an ordinary first step:
                     // publish the first two pixels before the redraw wait.

@@ -1,0 +1,190 @@
+{
+  "base": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+  "production_diff_sha256": "5c2407ca8f57066940e3248f3f443600ad6251f8885c392fdd76930110ab95a7",
+  "checks": [
+    {
+      "name": "core",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-core.log",
+      "log_sha256": "6f768ab46c18dd554fb04ba081a4d6e555d825f43f75a3ffe1280075b440f205",
+      "passed": 3659,
+      "errors": []
+    },
+    {
+      "name": "app",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--test",
+        "route22_gate_guard",
+        "--test",
+        "relative_script_walk",
+        "--test",
+        "door_exit",
+        "--test",
+        "scripted_input_poll",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-app.log",
+      "log_sha256": "b8fc8ca4812006610266e194991a63225de948d8f798de418149399dc5ce301c",
+      "passed": 14,
+      "errors": []
+    },
+    {
+      "name": "gba",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--features",
+        "memory-scenarios",
+        "--locked",
+        "--offline"
+      ],
+      "exit": 0,
+      "log": "audit-1299-input-gba.log",
+      "log_sha256": "dc5c90c7f9879e911007148d45cabbfe573523c4f3c72f3bebb7cebfe64518f9",
+      "passed": 0,
+      "errors": []
+    }
+  ],
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_files": [
+    {
+      "path": "engine/joypad.asm",
+      "git_blob_sha": "b6c50e699363e2c898e7080c27ee0b03bd71da6d",
+      "sha256": "a7113fcd3191cbe06c0029c4093cd97eb83120349a122a2b6c7ee5bf6ecf12ae",
+      "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "home/joypad.asm",
+      "git_blob_sha": "9bc8663e57760e6ccd7f6d5e799ede4fe739b5c2",
+      "sha256": "334e57fefe57c4acde39c01da741dd329fd7417a46467e91dbbec49ef0803d18",
+      "verified_against_pinned_GitHub_blob": true
+    },
+    {
+      "path": "home/overworld.asm",
+      "git_blob_sha": "a06a32da3c889f69355dc2ecd67407dc01332580",
+      "sha256": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+      "verified_against_pinned_GitHub_blob": true
+    }
+  ],
+  "baseline_result": {
+    "passed": 3,
+    "failed": 1,
+    "failure": "START held across departure second stride unexpectedly opens menu",
+    "log_sha256": "b7599b3e7363ef5102a8904f339f450e2356caed6a9bb59d68a27c258c0cf03e"
+  },
+  "original_cases_repeated": 4,
+  "native_cases": 4,
+  "original_live_memory_writes": false,
+  "original_font_rendering": false,
+  "render_method": "PokemonGame::draw, frame 59 after first counter-7 sample",
+  "scope": "Simulated cardinal stride physical polls; caller return timing and complete source ownership remain separate",
+  "combined_validation": {
+    "base": "618f2187b5533e5d47210f6de407d6379c6ad0b8",
+    "checks": {
+      "head": "866ca3be76cc2b57b393b549e232d226abedbf54",
+      "checks": [
+        {
+          "name": "core",
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "pokered-core",
+            "--locked",
+            "--offline"
+          ],
+          "exit": 0,
+          "passed": 3659,
+          "ignored": 1,
+          "log": "audit-1300-input-combined-core.log",
+          "sha256": "22ea0e5ac5f7ccff6b370d90411bec0050abde9adf81e35b3a54905c670b2274"
+        },
+        {
+          "name": "app",
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "pokered-app",
+            "--locked",
+            "--offline"
+          ],
+          "exit": 0,
+          "passed": 916,
+          "ignored": 88,
+          "log": "audit-1300-input-combined-app.log",
+          "sha256": "5b04d0809b5e7306fddb9fa481c2e2f7fdfd31f011a23bdf97aa973583feac9e"
+        },
+        {
+          "name": "agent",
+          "command": [
+            "cargo",
+            "test",
+            "-p",
+            "pokered-agent",
+            "--locked",
+            "--offline"
+          ],
+          "exit": 0,
+          "passed": 63,
+          "ignored": 0,
+          "log": "audit-1300-input-combined-agent.log",
+          "sha256": "513491bbd9811713866cbb57371f7941e0d95246e9d4ab1b2e3404c899ec7e26"
+        },
+        {
+          "name": "gba",
+          "command": [
+            "cargo",
+            "+nightly-2025-12-07",
+            "build",
+            "--release",
+            "--features",
+            "memory-scenarios",
+            "--locked",
+            "--offline"
+          ],
+          "exit": 0,
+          "passed": 0,
+          "ignored": 0,
+          "log": "audit-1300-input-combined-gba.log",
+          "sha256": "0d01f760081c4b2f3757964d2073ff10889bf59b3595e7dba4e8c04d98bf42ac"
+        }
+      ],
+      "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+    },
+    "gba_memory": {
+      "pass": true,
+      "error": null,
+      "head": "866ca3be76cc2b57b393b549e232d226abedbf54",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "43c335a7ee5328443869616dac3986f69ee35cb4f84869780772d1123a0767ab",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "seconds": 163.3817631120328,
+      "frames": 321240,
+      "cases": 13,
+      "min_heap": 4728,
+      "min_stack": 8708,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    },
+    "scope": "Original physical-input reproductions remain unchanged. This combined source includes the GBA back-cache lifetime fix and its hosted-bin test import correction; full package validation includes both native test targets."
+  }
+}
