@@ -25,7 +25,7 @@
     "live register changes at independently computed rational sample boundaries",
     "actual AudioOutput::render_pcm preserves phase across calls"
   ],
-  "lockfile_note": "Initial --locked test refused the unchanged master lockfile. Offline resolution only removed a stale image 0.25.10 dependency edge from pokered-core; include that one-line normalization so locked target checks pass. No package versions changed.",
+  "lockfile_note": "Initial --locked test refused the unchanged master lockfile. Offline resolution only removed a stale image 0.25.10 dependency edge from pokered-data; include that one-line normalization so locked target checks pass. No package versions changed.",
   "prototype_run": {
     "audio_tests_passed": 195,
     "seconds": 52.8,
@@ -43,8 +43,34 @@
     ".task-tmp/fidelity-39-plus/audit-1278-isolated-web-check.log": {
       "sha256": "5352438a304fdd30d8c7c201ec24a4bce131646144970f5068826c9205795b4e",
       "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-audio-tests.log": {
+      "sha256": "b868e5e4e4c0b321811f293f7634dcd0bce9dfd966afb691af8a5389b3058100",
+      "bytes": 15445
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-cpal.log": {
+      "sha256": "75a0645d29b869729e5551f8f31f040e56980a6fe85cafbf608511c2c6d3e98b",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-web.log": {
+      "sha256": "00b9461edc17e02bb8c4cda76b56ed33c94b72e938c7475a100e73fdd2699190",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-gba.log": {
+      "sha256": "c5e5d0e0667818efca79269d96e43f644df7fb3f5afff1713772ac3d90b7f4f4",
+      "bytes": 58795
     }
   },
   "new_worktrees": 0,
-  "new_game_binary_or_rom": false
+  "new_game_binary_or_rom": false,
+  "latest_parent": "a0c9b5c639679aab2bf636dd234b66b5e01d5c83",
+  "latest_engine_rev": "f3684094f82c80b3f045102fd546d2570d1d0934",
+  "latest_checks": {
+    "audio_tests_passed": 168,
+    "audio_test_seconds": 46.43,
+    "cpal": "pass",
+    "web_audio": "pass",
+    "GBA_memory_scenarios_locked_check": "pass",
+    "full_CI": "required before merge"
+  }
 }

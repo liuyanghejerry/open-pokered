@@ -17,6 +17,9 @@ mod repro_route22;
 #[cfg(feature = "memory-scenarios")]
 mod memory_scenarios;
 
+#[cfg(any(feature = "repro-rival", feature = "repro-route22", feature = "memory-scenarios"))]
+mod heap_probe;
+
 #[cfg(all(feature = "frame-timing", not(any(feature = "hardware-timing", feature = "opening-timing"))))]
 mod frame_timing;
 
@@ -907,13 +910,15 @@ fn game_main() -> ! {
         #[cfg(feature = "frame-timing")]
         timing.drive(game, frame, &mut state);
 
-        // Heap watermark: every frame, probe the largest free block and log
-        // each new low. Catches peaks that only exist for one or two frames
-        // (battle entry, transition snapshots).
+        // Recheck the contiguous-heap low every frame, including transient
+        // peaks. Only search for a new low if allocating the previous one fails.
         #[cfg(any(feature = "repro-rival", feature = "repro-route22", feature = "memory-scenarios"))]
         {
             static mut MIN_FREE: usize = usize::MAX;
-            let free = pokered_app::game::largest_free_block();
+            let free = heap_probe::running_minimum(unsafe { MIN_FREE }, |bytes| {
+                let mut probe = alloc::vec::Vec::<u8>::new();
+                probe.try_reserve_exact(bytes).is_ok()
+            });
             unsafe {
                 if free < MIN_FREE {
                     MIN_FREE = free;

@@ -38,7 +38,12 @@ validation JSON after local verification.
 
 The isolated master-based branch passes all 168 audio tests (48.87 s), plus
 locked CPAL and Web Audio target checks. The initial locked test found a stale
-`pokered-core` image dependency edge in the unchanged master lockfile; offline
+`pokered-data` image dependency edge in the unchanged master lockfile; offline
 resolution removes that one edge without changing package versions. The
 validation record distinguishes this branch from the separate 195-test
 prototype checkout.
+
+The latest validation incorporates PR365 parent `a0c9b5c6` and merged engine
+allocation fix `f3684094`. All168 audio tests and locked CPAL, Web Audio and
+GBA memory-scenarios checks pass again. Full CI on the new combined commit
+is still required; the earlier isolated results are retained as history.
