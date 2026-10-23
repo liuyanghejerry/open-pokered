@@ -1,0 +1,147 @@
+{
+  "base": "93ce1f5acae96fe6a0058b7e5e347212d793ca9e",
+  "source_ref": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_blobs": {
+    "home/overworld.asm": "a06a32da3c889f69355dc2ecd67407dc01332580",
+    "engine/joypad.asm": "b6c50e699363e2c898e7080c27ee0b03bd71da6d",
+    "home/joypad.asm": "9bc8663e57760e6ccd7f6d5e799ede4fe739b5c2",
+    "scripts/VermilionCity.asm": "591e180c324a077ca048837229f44983193a270d",
+    "scripts/Route22Gate.asm": "e8e13b3c92dd263a95e4ab29331af950d20158a8",
+    "scripts/Route16Gate1F.asm": "8f02a6163e187fcac3fde7be95e87c9926ac351d",
+    "scripts/Route18Gate1F.asm": "3bf2f8e6831eb2f4183c3db5163d697241ae0d30"
+  },
+  "original_ROM_SHA256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "original_cases": 5,
+  "identical_repetitions_each": 2,
+  "native_baseline": {
+    "passed": 5,
+    "failed_expected": 3,
+    "log_SHA256": "9439338d4b1ef3787833e11ef7e793edbb9cd895e27ffdfcaf11805cd9b88dda"
+  },
+  "targeted_fixed_checks": {
+    "app_integration_cases": 20,
+    "log_SHA256": "8ba21ef611ad9f0e5b1f0e887631c9e379c364193a75b4efed91fb3202cfd432"
+  },
+  "findings": [
+    "All five input intervals repeated twice with identical full traces; boot/CONTINUE and physical dock exit, no live memory writes/font rendering.",
+    "Source JoypadOverworld return at CPU offset33 executes VermilionCityPlayerMovingUp2Script, clears wJoyIgnore, then Joypad and doneSimulating in the same foreground iteration.",
+    "START interval[33,34) opens at CPU offset33 (post-frame34);[32,33) misses. Interval[34,36) opens at CPUoffset35. These bracket the actual poll; CPU hook offsets are not native post-update frame indices.",
+    "doneSimulating clears held but preserves pressed. Held START already polled at laststride has pressed0 and opens no menu.",
+    "No-direction cleanup records old movingUP as last_stopUP then clears moving; later normal field polls occur at CPUoffset35,37.",
+    "Native confirmed baseline waits until postupdate37; separate ClearJoyIgnore occupiespostupdate35. Caller-specific callback/poll/held cleanup needs modeling; no universalNoDirection orDelay3."
+  ],
+  "scope": "Only explicit MovePlayerRelative -> ClearJoyIgnore -> script end, currently VermilionCity on-load exit. Zero-VBlank source callback continues to the same field poll; pressed A/START preserved, held movement cleared for ordinary NoDirection handling. No new persistent fields, allocations or duration constants. Other caller return phases remain unmodeled.",
+  "test_tape_correction": "Fresh START control after frame60 now lasts2hardwareframes, exactly like the existing original replayer. Oldnativehelper used1frame coinciding with its latepoll. Baseline-v2 uses the corrected2framecontrol and still fails the3new regressions. Original one-frame completion probe[33,34) is unchanged.",
+  "screenshots": {
+    "before": "f74b410c21ff57dd2d42f81eceb06e9c63c2bae7a466cb9f1fd9e1efcbe18048",
+    "after": "59619b44a645b0d3daff6682f86b1b22367876d9fd520a40cc32e82c79539c78"
+  },
+  "exact_post_update_assertions": {
+    "passed": 8,
+    "log_SHA256": "bb17bcc85dcc7d0333e6f7240c5926fec8d1d19a50f093dc81e9657acbe8a40b",
+    "captures_and_full_native_traces_identical_to_prior_fixed_run": true
+  },
+  "full_combined_checks": {
+    "head": "f8dddbef21fbeeda2e915ac184eabb6890b3295a",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 3659,
+        "ignored": 1,
+        "log": "audit-1301-return-combined-core.log",
+        "sha256": "00e2d03c362ee42511582d8b5cdbe85338afd1ef368d7ab22ab95f9e625bbdc3"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 922,
+        "ignored": 88,
+        "log": "audit-1301-return-combined-app.log",
+        "sha256": "4b5a8046456e011a1cd4c4eabe23e07b184416cfb7b4192a955f9ec965618417"
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 63,
+        "ignored": 0,
+        "log": "audit-1301-return-combined-agent.log",
+        "sha256": "c53764b573c3a1858a998f4ea30bd116e3fd8f035b5664484779e708834b9fb2"
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "ignored": 0,
+        "log": "audit-1301-return-combined-gba.log",
+        "sha256": "cbaa4bf5c61b09a7844664c0c5ac19fc158901ae20868af91aed92bfe94f272a"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+  },
+  "direction_controls": {
+    "original_repeats_each": 2,
+    "results": {
+      "up": 36,
+      "down": 38,
+      "left": null,
+      "right": 38
+    },
+    "native_all_match": true,
+    "native_test_log_sha256": "ba31c531bede2838453789603fb5a6cc62d020c5484a7af6d0e2931374f1a155",
+    "production_unchanged_since_full_checks": true,
+    "input_tape": "Held at [0,46), then neutral, exactly matching original; all recorded native frames unchanged after aligning the release time.",
+    "final_test_log_sha256": "d1234961ec538a67ae965fd76d18aa39ff66407ae99a3bf1b97c150693f44f08"
+  },
+  "GBA_memory_scenarios": {
+    "pass": true,
+    "error": null,
+    "head": "99a71169172f42237d9a3058b8819bc399b6061c",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "4be2cf59bac5605f3dd54ae1f99b3e118ecdfdcd52be3e05fef8c754fc0ef5ff",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "seconds": 184.3203661319567,
+    "frames": 321240,
+    "cases": 13,
+    "min_heap": 4728,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  }
+}
