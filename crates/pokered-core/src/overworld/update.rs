@@ -28,7 +28,7 @@ use dotzuki_engine::overworld::map_transitions::{
 };
 use dotzuki_engine::tileset::TilesetTrait;
 use dotzuki_engine::GameData;
-use dotzuki_engine_script::{CommandResult, MapScriptConfig};
+use dotzuki_engine_script::{CommandResult, MapScriptConfig, ScriptCommand};
 use pokered_data::blockset_data;
 use pokered_data::impl_traits::PokemonMapData;
 use pokered_data::map_data_loader::get_map_json;
@@ -875,6 +875,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 | script_bridge::ScriptEffect::MoveNpcTo { .. }
                 | script_bridge::ScriptEffect::AwaitNpcMove { .. }
                 | script_bridge::ScriptEffect::MovePlayer { .. }
+                | script_bridge::ScriptEffect::MovePlayerRelative { .. }
                 | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
             // These commands wait in the normal field loop too. MoveSprite
             // takes sixteen updates plus its ready boundary per NPC stride.
@@ -1082,6 +1083,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // room — the box counts as success ("sent to BOX!").
                 let is_give_pokemon =
                     matches!(effect, script_bridge::ScriptEffect::GivePokemon { .. });
+                let completed_simulated_walk =
+                    matches!(effect, script_bridge::ScriptEffect::MovePlayerRelative { .. });
                 let base_result = Self::finish_effect(effect);
                 // StartBattle must SUSPEND the script (not resume it now): the
                 // battle hasn't run yet, so the `await game.startBattle(...)`
@@ -1140,6 +1143,15 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     log::info!(target: "pokered::overworld", "[Script] Effect done: {:?}", core::mem::discriminant(eff));
                 }
                 self.apply_finished_effect(effect_done);
+                if completed_simulated_walk {
+                    // JoypadOverworld.doneSimulating clears held input. The
+                    // ensuing NoDirection remembers the last direction and
+                    // arms the ordinary turn check before physical input.
+                    self.joy_ignore_mask = 0;
+                    self.check_player_turn = true;
+                    self.player_last_stop_direction = self.player_moving_direction;
+                    self.player_moving_direction = 0;
+                }
                 if awaiting_battle {
                     // Hold the script; it resumes when the battle ends.
                     self.script_awaiting_battle = true;
@@ -1157,13 +1169,21 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // `resume_script_after_trade`.
                     self.script_awaiting_trade = true;
                 } else if let Ok(Some(next_cmd)) = self.script_engine.signal_done(result) {
-                    log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", core::mem::discriminant(&next_cmd));
-                    self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
-                        &next_cmd,
-                        &self.player_name,
-                        &self.rival_name,
-                        &self.starter_display_name(),
-                    ));
+                    // The map's redundant clearJoyIgnore is synchronous with
+                    // the simulated-walk return, not an extra displayed frame.
+                    let next_cmd = if completed_simulated_walk
+                        && matches!(next_cmd, ScriptCommand::ClearJoyIgnore) {
+                        self.script_engine.signal_done(CommandResult::Void).ok().flatten()
+                    } else { Some(next_cmd) };
+                    if let Some(next_cmd) = next_cmd {
+                        log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", core::mem::discriminant(&next_cmd));
+                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                            &next_cmd,
+                            &self.player_name,
+                            &self.rival_name,
+                            &self.starter_display_name(),
+                        ));
+                    }
                 }
                 self.sync_flags_from_engine();
             }
@@ -2895,6 +2915,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                             | script_bridge::ScriptEffect::MoveNpcTo { .. }
                             | script_bridge::ScriptEffect::AwaitNpcMove { .. }
                             | script_bridge::ScriptEffect::MovePlayer { .. }
+                            | script_bridge::ScriptEffect::MovePlayerRelative { .. }
                             | script_bridge::ScriptEffect::MovePlayerTo { .. }
                             | script_bridge::ScriptEffect::FollowNpc { .. }));
                     if !stationary_field_tick || controlled_slot == Some(slot) { return; }
@@ -2947,7 +2968,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         } else {
             let step_done = player_movement::advance_step(&mut self.state);
             if step_done && !self.scripted_player_path.is_empty() {
-                self.start_next_scripted_player_step();
+                if matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
+                    // AdvancePlayerSprite completes this stride before the
+                    // next OverworldLoop calls JoypadOverworld. Consume its
+                    // waypoint now, but sample the next simulated direction
+                    // only on that following field iteration.
+                    if self.scripted_player_path.front().copied()
+                        == Some((self.state.player.x, self.state.player.y)) {
+                        self.scripted_player_path.pop_front();
+                    }
+                } else {
+                    self.start_next_scripted_player_step();
+                }
             }
         }
     }
@@ -2978,9 +3011,17 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     Some(script_bridge::ScriptEffect::FollowNpc {
                         phase: script_bridge::FollowNpcPhase::Following { .. }, ..
                     } | script_bridge::ScriptEffect::MovePlayer { .. }
+                      | script_bridge::ScriptEffect::MovePlayerRelative { .. }
                       | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
                     // Initial map redraw crosses an extra VBlank per stride.
                     self.field_loop_wait = 2;
+                }
+                if matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
+                    // Simulated joypad input takes the same .noCollision ->
+                    // AdvancePlayerSprite path as an ordinary first step:
+                    // publish the first two pixels before the redraw wait.
+                    player_movement::advance_step(&mut self.state);
                 }
             }
             return;
@@ -5227,9 +5268,29 @@ mod late_fidelity_tests {
         screen.state.player.x = 24;
         screen.state.player.y = 16;
         screen.run_on_load();
-        for _ in 0..600 {
+        for _ in 0..8 {
+            if screen.state.walk_counter == 7 { break; }
             screen.update_frame(idle());
         }
+        assert_eq!(screen.state.walk_counter, 7);
+        // WalkToLance_RLEList is read backwards: LEFT 6, DOWN 7,
+        // LEFT 12, UP 12. Check every displayed stride instead of the old
+        // 600-frame settle window, which ends before a 37 * 17-frame walk.
+        let mut expected = (24u16, 16u16);
+        for (dx, dy, count) in [(-1, 0, 6), (0, 1, 7), (-1, 0, 12), (0, -1, 12)] {
+            for _ in 0..count {
+                for (frame, counter) in [7, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0].into_iter().enumerate() {
+                    if frame == 15 {
+                        expected = ((expected.0 as i16 + dx) as u16, (expected.1 as i16 + dy) as u16);
+                    }
+                    assert_eq!(screen.state.walk_counter, counter);
+                    assert_eq!((screen.state.player.x, screen.state.player.y), expected);
+                    screen.update_frame(idle());
+                }
+            }
+        }
+        // The awaited walk has returned; finish the sound and block writes.
+        for _ in 0..4 { screen.update_frame(idle()); }
         assert_eq!((screen.state.player.x, screen.state.player.y), (6, 11));
         assert!(screen.unified_flags.get_flag("EVENT_LANCES_ROOM_LOCK_DOOR"));
         assert!(screen.script_engine.is_idle());

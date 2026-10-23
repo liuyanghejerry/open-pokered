@@ -1,0 +1,61 @@
+{
+  "base": "028b93b0fdeabda5067047a61db244d10fc61011",
+  "alignment": "first walk_counter=7, after real scene input; no direction input in neutral cases; RIGHT held from next hardware frame in control cases",
+  "repeated_original": true,
+  "comparisons": [
+    {
+      "case": "guard-4",
+      "consecutive_hardware_frames_equal": 20,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "case": "guard-5",
+      "consecutive_hardware_frames_equal": 20,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "case": "guard-6",
+      "consecutive_hardware_frames_equal": 20,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "case": "guard-4-right",
+      "consecutive_hardware_frames_equal": 40,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "case": "departure",
+      "consecutive_hardware_frames_equal": 60,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    },
+    {
+      "case": "departure-right",
+      "consecutive_hardware_frames_equal": 60,
+      "compared": [
+        "walk_counter",
+        "x",
+        "y"
+      ]
+    }
+  ]
+}
