@@ -264,6 +264,16 @@ impl AudioOutput {
         }
     }
 
+    pub fn set_music_paused(&self, paused: bool) {
+        if let Ok(mut manager) = self.manager.lock() {
+            manager.set_music_paused(paused);
+        }
+    }
+
+    pub fn payout_sound_pending(&self) -> bool {
+        self.manager.lock().map(|manager| manager.payout_sound_pending()).unwrap_or(false)
+    }
+
     /// Resume the audio context if the browser suspended it (no-op on
     /// native — the stream is always running).
     #[cfg(not(target_arch = "wasm32"))]
