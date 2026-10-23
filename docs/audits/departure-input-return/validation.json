@@ -35,5 +35,10 @@
   "screenshots": {
     "before": "f74b410c21ff57dd2d42f81eceb06e9c63c2bae7a466cb9f1fd9e1efcbe18048",
     "after": "59619b44a645b0d3daff6682f86b1b22367876d9fd520a40cc32e82c79539c78"
+  },
+  "exact_post_update_assertions": {
+    "passed": 8,
+    "log_SHA256": "bb17bcc85dcc7d0333e6f7240c5926fec8d1d19a50f093dc81e9657acbe8a40b",
+    "captures_and_full_native_traces_identical_to_prior_fixed_run": true
   }
 }
