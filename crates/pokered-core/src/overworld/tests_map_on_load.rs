@@ -123,6 +123,50 @@ fn warp_and_same_map_reentry_each_run_the_load_phase_once() {
 }
 
 #[test]
+fn door_exit_survives_npc_visibility_effects_on_load() {
+    let mut screen = counter_screen();
+    warp(&mut screen, MapId::Route22, 8, 5);
+    assert!(matches!(screen.active_script_effect, Some(ScriptEffect::HideObjectByName { .. })));
+    ordinary_frames(&mut screen, 64);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (8, 6));
+    assert_eq!(screen.state.player.facing, Direction::Down);
+    assert!(!screen.state.standing_on_door);
+    assert!(!screen.state.exiting_door);
+}
+
+#[test]
+fn door_exit_is_superseded_by_explicit_player_movement_after_other_load_effects() {
+    for command in [
+        "movePlayer([[8, 6], [8, 7]])",
+        "movePlayerRelative([\"down\", \"down\"])",
+        "movePlayerTo(8, 7)",
+    ] {
+        let mut screen = counter_screen();
+        let scene = format!("game_scene Route22 {{\n  @load {{\n    hideObjectByName(\"ROUTE_22_RIVAL_1\")\n    {command}\n  }}\n}}");
+        screen.reload_scene_source("Route22", &scene).unwrap();
+        warp(&mut screen, MapId::Route22, 8, 5);
+        ordinary_frames(&mut screen, 100);
+        assert!(screen.script_engine.is_idle(), "{command}");
+        assert!(screen.active_script_effect.is_none(), "{command}");
+        assert_eq!((screen.state.player.x, screen.state.player.y), (8, 7), "{command}");
+        assert!(!screen.state.standing_on_door);
+        assert!(!screen.state.exiting_door);
+    }
+}
+
+#[test]
+fn next_warp_discards_a_pending_door_step_on_a_non_door_arrival() {
+    let mut screen = counter_screen();
+    screen.state.standing_on_door = true;
+    screen.state.exiting_door = true;
+    warp(&mut screen, MapId::RedsHouse1F, 7, 1);
+    ordinary_frames(&mut screen, 64);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (7, 1));
+    assert!(!screen.state.standing_on_door);
+    assert!(!screen.state.exiting_door);
+}
+
+#[test]
 fn crossing_a_real_connection_runs_the_destination_load_once() {
     let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
     register_counter(&mut screen, MapId::Route1);

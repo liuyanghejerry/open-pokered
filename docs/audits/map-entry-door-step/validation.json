@@ -1,0 +1,177 @@
+{
+  "base_master": "eb3ce84197631d8638df32dc13475d14b15b6c61",
+  "original_source": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "files": [
+      {
+        "path": "engine/overworld/auto_movement.asm",
+        "git_blob_sha": "dc5fc385316e75408dfe8f42ccf0a35fc7a38787",
+        "local_verified": true,
+        "sha256": "51132df663914861ac176733a764788e1db1d96f27d830952279338cc7633379",
+        "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/auto_movement.asm"
+      },
+      {
+        "path": "home/npc_movement.asm",
+        "git_blob_sha": "ccbd78dfc329b41a13487419738342626e9e9e02",
+        "local_verified": true,
+        "sha256": "e09e614a9219616af7f1d2dc1247dd1dccbc32077ca5ef21461f6d42428ea500",
+        "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/npc_movement.asm"
+      },
+      {
+        "path": "home/overworld.asm",
+        "git_blob_sha": "a06a32da3c889f69355dc2ecd67407dc01332580",
+        "local_verified": true,
+        "sha256": "ce1ebcec0d71af2fb61369295ad180bb51f18a5ba13711035524011bd0c7a849",
+        "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/overworld.asm"
+      }
+    ]
+  },
+  "original_replays": {
+    "cases": 2,
+    "two_identical_replays": true,
+    "normal_boot_continue_and_door_entry": true,
+    "runtime_memory_writes": false,
+    "render_original_font": false
+  },
+  "native_baseline": {
+    "exit_code": 101,
+    "log": "audit-1297-door-final-before.log",
+    "missing_steps": [
+      "gate-left",
+      "gate-right",
+      "home",
+      "lab",
+      "cerulean-champion",
+      "saffron-rescue",
+      "saffron-liberated"
+    ],
+    "passing_controls": [
+      "center",
+      "stairs",
+      "departure"
+    ],
+    "production_sources_restored_after_baseline": true
+  },
+  "local_checks": [
+    {
+      "check": "core-load",
+      "exit_code": 0,
+      "seconds": 31.24,
+      "log": "audit-1297-door-core-load.log"
+    },
+    {
+      "check": "field",
+      "exit_code": 0,
+      "seconds": 33.34,
+      "log": "audit-1297-door-field.log"
+    },
+    {
+      "check": "oak",
+      "exit_code": 0,
+      "seconds": 28.37,
+      "log": "audit-1297-door-oak.log"
+    },
+    {
+      "check": "gba",
+      "exit_code": 0,
+      "seconds": 13.84,
+      "log": "audit-1297-door-gba.log"
+    },
+    {
+      "check": "core-full",
+      "exit_code": 0,
+      "seconds": 31.67,
+      "log": "audit-1297-door-core-full.log"
+    },
+    {
+      "check": "app-final-after",
+      "exit_code": 0,
+      "seconds": 18.04,
+      "log": "audit-1297-door-final-after.log"
+    }
+  ],
+  "core_full": {
+    "passed": 3657,
+    "existing_ignored_doctests": 1
+  },
+  "native_shared_game_cases": {
+    "door_exit_and_reentry": 8,
+    "stairs": 1,
+    "ship_departure": 1,
+    "all_passed": true
+  },
+  "capture_updates": {
+    "scene": "gate-left",
+    "setup": 2,
+    "down_until_warp": 51,
+    "neutral_after_warp": 100,
+    "before_reentry_inputs": true,
+    "renderer": "shared Fusion Pixel",
+    "two_native_repetitions_byte_identical": true
+  },
+  "limits": [
+    "Prepared fixtures, not fresh travel.",
+    "Functional door-step behavior and existing walk-clock regression, not full map-entry cycle parity.",
+    "Full applicable CI required before merge."
+  ],
+  "tested_source_sha256": {
+    "crates/pokered-core/src/overworld/screen.rs": "00d31cd21fa1360034143b883ee2eeaacc4c2e9c95c371450e065cdc2a7f1167",
+    "crates/pokered-core/src/overworld/update.rs": "25c9b68d51509dd52eaea7cc7dad49428f4e7b62dd79dd278856c1610d565066",
+    "crates/pokered-app/tests/door_exit.rs": "a7347642b39a7733601bcaa799e5f8bdc126baa270022ac0d3d6509cf61f0d98",
+    "crates/pokered-core/src/overworld/tests_map_on_load.rs": "20cdeb3ab2b3de2242dfdd981169473efe80d918ab6595de88d977e436c45344"
+  },
+  "artifacts": {
+    "docs/audits/map-entry-door-step/original-runtime.json.gz": {
+      "bytes": 731,
+      "sha256": "adf6f689dab9747d16868de32e611e0e18bdb16235be5b9d73a1294ac2ee340a"
+    },
+    "docs/audits/map-entry-door-step/replay-original.py": {
+      "bytes": 3873,
+      "sha256": "cf32c79259f1e3d70f7809381a847bfed647c672abe7217c69e7f60d5f7a4d02"
+    },
+    "docs/audits/map-entry-door-step/README.md": {
+      "bytes": 4070,
+      "sha256": "d0990cc332d292292f123a205cc9f851c0fc6e1da1f58b0cb1f1eb4c11a00915"
+    },
+    "docs/audits/map-entry-door-step/original-fixture.sav": {
+      "bytes": 32768,
+      "sha256": "25ccd235743b1694e2e0e156ec02469ed7e593c448b98802a6849a3f56bf3e41"
+    },
+    "docs/screenshots/map-entry-door-gate-left-before.png": {
+      "bytes": 36507,
+      "sha256": "00a318d65d5bf3b72114e21ea67d25239f8d93498119f1501ec6d683e64806a6"
+    },
+    "docs/screenshots/map-entry-door-gate-left-after.png": {
+      "bytes": 35612,
+      "sha256": "9eaeddb23be17fe5af4393a4099d030131e16ba3c5044d36121106422e864be5"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-core-load.log": {
+      "bytes": 23620,
+      "sha256": "fa552f4e5068558620d8b6ef415542c3b12d51350ac7c8ca8990ca6329885687"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-field.log": {
+      "bytes": 26758,
+      "sha256": "6cb2910f04574d74a20d246a787a3babd7ed1cd0795880b55abd94a4e247d763"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-oak.log": {
+      "bytes": 23431,
+      "sha256": "cda4b314b54ca4f303f4111809826a9f7d9c97a6444cce4d5be852e221105608"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-gba.log": {
+      "bytes": 58705,
+      "sha256": "76a9f0ae99d470051ebcd4350f6946c8bb09db28e8406cd3fea7d7a20798baaa"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-core-full.log": {
+      "bytes": 321825,
+      "sha256": "b00b2dfa01adda91f2c5d4ca1ab00c5ff7ef50abc6f0dd8b67371313cb3e61d5"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-final-after.log": {
+      "bytes": 92513,
+      "sha256": "dfcc7cfa26a1b5d9ce2d17b96ed7c271ccf43b0dda085dcf6fe83e6690ca061d"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-final-before.log": {
+      "bytes": 92540,
+      "sha256": "1bbafcd2d40f2673f553d3e496574a87df9a61316dbb20a20b242efa5693016b"
+    }
+  }
+}
