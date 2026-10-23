@@ -48,3 +48,10 @@ SCRIPT_INPUT_CAPTURE_DIR=/path/to/captures cargo test -p pokered-app --test scri
 
 Caller-specific input return, including the departure completion's short
 START pulse, remains separate work. This change only fixes the first redraw.
+
+After integrating the PR #369 trainer-cache fix and the separate physical-input
+fix, the combined tree passes all 3659 core tests, all 918 tests across the
+complete app package, 63 agent tests and the release GBA build. The unchanged
+13-case GBA memory suite passes with 4728 B minimum free heap and 8708 B stack
+headroom. Existing ignored tests are listed in `validation.json`; these local
+results do not replace the latest-head CI gates.
