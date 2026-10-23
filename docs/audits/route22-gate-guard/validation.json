@@ -1,0 +1,131 @@
+{
+  "scope": "Route22Gate permission/refusal, original saved script byte, shared Game input regressions; not fresh travel or whole dialogue cycle equivalence",
+  "base_master": "ea385d8a571be5c5137fa4a518a6ab8c6c34a8e6",
+  "before_capture_frames": 191,
+  "source_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_files_verified": [
+    {
+      "path": "scripts/Route22Gate.asm",
+      "git_blob_sha": "e8e13b3c92dd263a95e4ab29331af950d20158a8",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/Route22Gate.asm",
+      "local_git_blob_sha": "e8e13b3c92dd263a95e4ab29331af950d20158a8",
+      "matched": true,
+      "sha256": "7cf02673af85e21244fa2ed85a11400adf99d359c083e9deda28d8ee232a6008",
+      "local_sha256": "7cf02673af85e21244fa2ed85a11400adf99d359c083e9deda28d8ee232a6008"
+    },
+    {
+      "path": "text/Route22Gate.asm",
+      "git_blob_sha": "20607ac30ba771db981daf278b387789816729c8",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/text/Route22Gate.asm",
+      "local_git_blob_sha": "20607ac30ba771db981daf278b387789816729c8",
+      "matched": true,
+      "sha256": "2419b419218051d86e719e3b67e3d92c96909371c5d871bbee717ffe311d1f43",
+      "local_sha256": "2419b419218051d86e719e3b67e3d92c96909371c5d871bbee717ffe311d1f43"
+    },
+    {
+      "path": "constants/map_constants.asm",
+      "git_blob_sha": "fe0bd9f53e2fb4905f9b46031db6697149cbbdbd",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/constants/map_constants.asm",
+      "local_git_blob_sha": "fe0bd9f53e2fb4905f9b46031db6697149cbbdbd",
+      "matched": true,
+      "sha256": "4129ef4e6908267e554c0308254f2269f1fb8f75b5c529faad6fd14c92119271",
+      "local_sha256": "4129ef4e6908267e554c0308254f2269f1fb8f75b5c529faad6fd14c92119271"
+    },
+    {
+      "path": "data/maps/headers/UndergroundPathRoute7Copy.asm",
+      "git_blob_sha": "5627e074c95bca70dd8c539bcfd9654d3f4d446d",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/data/maps/headers/UndergroundPathRoute7Copy.asm",
+      "local_git_blob_sha": "5627e074c95bca70dd8c539bcfd9654d3f4d446d",
+      "matched": true,
+      "sha256": "930127476c525aa03c1e801ee91823f589953bdfb86bf321c043fa0f73d42e52",
+      "local_sha256": "930127476c525aa03c1e801ee91823f589953bdfb86bf321c043fa0f73d42e52"
+    },
+    {
+      "path": "ram/wram.asm",
+      "git_blob_sha": "44775192ab5f8e5735002bafb9c1e89159c7c51b",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/ram/wram.asm",
+      "local_sha256": "b5ecda2d458077d3bfca8537341c49d9f7ce19a2af2fa1d93adf64d8c0db4e04"
+    },
+    {
+      "path": "engine/overworld/clear_variables.asm",
+      "git_blob_sha": "6bd4496367c9505a04359aa925032c184c8306ae",
+      "url": "https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/clear_variables.asm",
+      "local_sha256": "3e9864a57f9169d25684f82b233687732365c83b07545f75cb3c26d1e4690fa2"
+    }
+  ],
+  "original_replays": {
+    "cases": 5,
+    "two_identical_replays": true,
+    "boot_continue_and_normal_door_entry": true,
+    "render_original_font": false
+  },
+  "local_checks": [
+    {
+      "check": "core",
+      "exit_code": 0,
+      "seconds": 24.4,
+      "log": "audit-1296-gate-final-core.log"
+    },
+    {
+      "check": "bedroom",
+      "exit_code": 0,
+      "seconds": 23.25,
+      "log": "audit-1296-gate-final-bedroom.log"
+    },
+    {
+      "check": "app",
+      "exit_code": 0,
+      "seconds": 18.11,
+      "log": "audit-1296-gate-final-app.log"
+    },
+    {
+      "check": "gba",
+      "exit_code": 0,
+      "seconds": 13.09,
+      "log": "audit-1296-gate-final-gba.log"
+    }
+  ],
+  "artifacts": {
+    "docs/audits/route22-gate-guard/replay-original.py": {
+      "bytes": 7443,
+      "sha256": "6c7beebe7d6fc23e457d3ed3596192f418bf825d297acba243885ed2fbf76855"
+    },
+    "docs/audits/route22-gate-guard/original-fixture.sav": {
+      "bytes": 32768,
+      "sha256": "1c2f2b770f4a746f1c0525da7e2c75eed3dc8962f4af748a11cc63eae51d6f4d"
+    },
+    "docs/audits/route22-gate-guard/original-runtime.json.gz": {
+      "bytes": 1602,
+      "sha256": "0fcf3c5892b6713f3263e3bbd10bf364b103829358e96a7a911e917fd20339a4"
+    },
+    "docs/screenshots/route22-gate-guard-before.png": {
+      "bytes": 42999,
+      "sha256": "bebf51a491043fd61165a2fae17992f3238c88f1abc186c39524330ed9f2d447"
+    },
+    "docs/screenshots/route22-gate-guard-after.png": {
+      "bytes": 22832,
+      "sha256": "b2ae5bf20eaa61627d1b270229129023ed7455bb59fc96c22cb6c0e491ecea3b"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-master-before.log": {
+      "bytes": 90680,
+      "sha256": "3338ad50fc1c20a7f03bf55c90cba79f15a46868bc09239c1f0e1091b1ec994d"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-final-core.log": {
+      "bytes": 23279,
+      "sha256": "d86792ebab5f6f26d07b161d7471f0c58683140bb5699710f0e1b11a7856abbb"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-final-bedroom.log": {
+      "bytes": 22737,
+      "sha256": "4976a954e2f249b68a99a602e319a0b49f12f50286cbeb3e10f57645dce6117a"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-final-app.log": {
+      "bytes": 91169,
+      "sha256": "718a4ca619362b9d78507a602cff638d581bdd249e892e34fc8c31f011b8443d"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-gate-final-gba.log": {
+      "bytes": 58795,
+      "sha256": "0c7d92abaa3f56d0e1275e74400f9a32a1081e3375abb6b13a17f0089369ad19"
+    }
+  },
+  "full_ci": "required on PR head"
+}
