@@ -21,6 +21,20 @@ perturb allocator layout; the new allocation history is intentionally less
 intrusive, and new CI measurements must establish the resulting margin. No
 previous heap values are copied or substituted into a passing result.
 
+The first full run of this probe passed the 40-encounter Route22 regression
+but correctly rejected a 3915B contiguous low at frame77363, during entry to
+the broad suite's retained rival battle. This is a failed result, below the
+unchanged4096B gate; later stages did not run. The game dependency still used
+the older full-sequencer music resume cache. The follow-up pins
+`dotzuki-audio` to `35390dd7fa1bf4868f310c7866607f0a3b00b6ad`, whose music
+snapshot fix was merged in dotzuki PR107. A saved music track now retains
+only the music state actually restored, rather than unused SFX channels and
+the drum library. Live SFX/drum playback stays in the live sequencer. The
+engine regression compares resumed music and APU behavior against the former
+full-clone snapshot. This changes real retained allocations; it does not
+adjust the probe or its acceptance threshold. Full CI must measure the new
+combination before either memory margin or completion is claimed.
+
 The installer requests only required dependencies for the same pinned/checksummed
 mGBA build, plus explicit`xauth` for`xvfb-run`. It omits recommended packages.
 All original workflow stages, memory scenarios, both-side165-move sweep,
@@ -35,6 +49,8 @@ not include this diagnostic probe.
   every stable frame still calls the allocation predicate.
 - The existing27 performance/memory/frame-timing tool tests pass.
 - The GBA`memory-scenarios` target passes locked release checking.
+- With the merged music-cache fix pinned, all164 current game audio library
+  tests pass and the locked GBA`memory-scenarios` release check passes again.
 
 The full original CI remains the acceptance gate. These local checks do not
 claim the complete memory/scenario run has passed. Commands and log hashes

@@ -1,5 +1,5 @@
 {
-  "scope": "Diagnostic allocation-cost and installer optimization; no game/HoF/slots fix claim.",
+  "scope": "Diagnostic probe/installer cost and merged engine music-resume allocation fix; no HoF/slots fix claim.",
   "base": "72e81aee29e8f8c01bbda738f4ec9ed2ea0b93e7",
   "rust_probe_tests_passed": 3,
   "gate_tool_tests_passed": 27,
@@ -34,6 +34,31 @@
     ".task-tmp/fidelity-39-plus/audit-1280-gba-memory-scenarios-check.log": {
       "sha256": "12c134603a237fcad6fbb10e8c14a87cf6be45dda209e686afc48e3831e9193e",
       "bytes": 58925
+    },
+    ".task-tmp/fidelity-39-plus/audit-1282-music-memory-audio-tests.log": {
+      "sha256": "245e13b200c83283d39921ca9e90cd69edfdd73c1ca729cefd12d2d2a7a60639",
+      "bytes": 14997
+    },
+    ".task-tmp/fidelity-39-plus/audit-1282-gba-memory-check.log": {
+      "sha256": "40a78de034b5612efce2dc443a4be923693e7d399b78504a4b2512b585912a0b",
+      "bytes": 58795
     }
-  }
+  },
+  "music_resume_fix": {
+    "engine_rev": "35390dd7fa1bf4868f310c7866607f0a3b00b6ad",
+    "merged_engine_pr": 107,
+    "pokered_audio_tests_passed": 164,
+    "root_lock_normalization": "Cargo removed stale pokered-data image dependency and sorted same-version git packages."
+  },
+  "first_full_ci": {
+    "head": "1202003cc856ea7d2b34623cec6d8e611e4f144a",
+    "run": 39886785378,
+    "conclusion": "failure",
+    "route22_40_encounters": "success",
+    "broad_suite_low_bytes": 3915,
+    "minimum_required_bytes": 4096,
+    "frame": 77363,
+    "complete": false
+  },
+  "follow_up_full_ci": "Required on the updated dependency head; not yet established."
 }
