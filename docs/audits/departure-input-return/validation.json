@@ -123,6 +123,8 @@
     },
     "native_all_match": true,
     "native_test_log_sha256": "ba31c531bede2838453789603fb5a6cc62d020c5484a7af6d0e2931374f1a155",
-    "production_unchanged_since_full_checks": true
+    "production_unchanged_since_full_checks": true,
+    "input_tape": "Held at [0,46), then neutral, exactly matching original; all recorded native frames unchanged after aligning the release time.",
+    "final_test_log_sha256": "d1234961ec538a67ae965fd76d18aa39ff66407ae99a3bf1b97c150693f44f08"
   }
 }

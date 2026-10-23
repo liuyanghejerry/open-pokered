@@ -241,7 +241,11 @@ fn departure_directions_resume_after_the_source_stop_and_turn_boundaries() {
                 "x":g.overworld.state.player.x, "y":g.overworld.state.player.y,
                 "facing":format!("{:?}",g.overworld.state.player.facing)}),
             );
-            g.update(&input(button));
+            g.update(&if frame < 46 {
+                input(button)
+            } else {
+                InputState::new()
+            });
         }
         if let Ok(dir) = std::env::var("SCRIPT_INPUT_CAPTURE_DIR") {
             std::fs::create_dir_all(&dir).unwrap();
