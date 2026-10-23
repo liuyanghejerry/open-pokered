@@ -11,6 +11,8 @@ the refusal waits for DENIED before continuing. The admitted state maps to
 the original `wRoute22GateCurScript = 2`, at SRAM offset `0x28ba`, so it
 survives map changes and CONTINUE. Manual conversation remains available.
 An old companion flag cannot override this original saved byte.
+Saving without a permission transition preserves refusal and unrecognized
+original script bytes, including when saving from another map.
 
 The source is
 [`Route22Gate.asm`](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/Route22Gate.asm):
@@ -49,6 +51,8 @@ travel or a cycle-for-cycle match of the complete dialogue sequence.
 ```sh
 cargo test -p pokered-core --lib route22 --locked
 cargo test -p pokered-core --lib bedroom --locked
+cargo test -p pokered-core --test fidelity_systems --locked
+cargo test -p pokered-agent --lib --locked
 GATE_CAPTURE_DIR=/path/to/captures cargo test -p pokered-app --test route22_gate_guard --locked
 ```
 

@@ -2952,7 +2952,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         if let Some(script) = data.game_progress_flags
             .get_mut(crate::save::game_data::ROUTE22_GATE_SCRIPT_INDEX)
         {
-            *script = if self.unified_flags.get_flag("SCRIPT_ROUTE22GATE_NOOP") { 2 } else { 0 };
+            // This alias owns only the persistent permission state (2).
+            // An unrelated save must retain the refusal state (1) and any
+            // unrecognized original byte instead of normalizing it to 0.
+            if self.unified_flags.get_flag("SCRIPT_ROUTE22GATE_NOOP") {
+                *script = 2;
+            } else if *script == 2 {
+                *script = 0;
+            }
         }
         if let Some(script) = data.game_progress_flags
             .get_mut(crate::save::game_data::REDS_HOUSE_2F_SCRIPT_INDEX)

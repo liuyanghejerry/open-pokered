@@ -133,6 +133,30 @@
     ".task-tmp/fidelity-39-plus/audit-1296-gate-combined-gba.log": {
       "bytes": 58705,
       "sha256": "c45a5e76cd43d9a44232c13f56ef34df69b192986ef9021a0f53a3517d2d4609"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-generate.log": {
+      "bytes": 22615,
+      "sha256": "b72b4cb0bf0ae3b34754da56065b9c099977e2075f370094e4031f8aa4e0b4b4"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-save.log": {
+      "bytes": 21547,
+      "sha256": "38411617244187e04bb96a8a7e8546fd57a7e4144656ac1e5d22de72a7e92ba8"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-guard.log": {
+      "bytes": 23279,
+      "sha256": "f4285bc285b451f43fb7a5c020281e1ec6e6497b48142d96e7f97dbcd8665f20"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-agent.log": {
+      "bytes": 26587,
+      "sha256": "447d3cbcd0f5d19c6f399428b391e74093632440111fcf880451056a472d9e6a"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-app.log": {
+      "bytes": 89806,
+      "sha256": "18b9eb43693352ef2f21c3372e25d3077e985a5e2c46531d42f5315216770116"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-pr367-gba.log": {
+      "bytes": 58705,
+      "sha256": "24aad535be4a2e900059b18527ee3246d382810b528ec26ad257ce77723c9706"
     }
   },
   "full_ci": "required on PR head",
@@ -156,5 +180,72 @@
     ],
     "shared_game_input_tests_passed": 5,
     "full_ci": "required on updated PR head"
+  },
+  "ci_repair_validation": {
+    "parent_head": "d74c900d5c7e108c1c8f3b9935e5f8a0de5a03c4",
+    "failures": [
+      "Build pokered-core: preserving unrelated original script bytes",
+      "Coverage: generated event graph drift"
+    ],
+    "fix": "Permission alias updates state 2 only; retain refusal/unknown values when not admitted. Regenerate the scene event graph.",
+    "checks": [
+      {
+        "check": "generate",
+        "exit_code": 0,
+        "seconds": 16.5,
+        "log": "audit-1297-pr367-generate.log"
+      },
+      {
+        "check": "save",
+        "exit_code": 0,
+        "seconds": 11.48,
+        "log": "audit-1297-pr367-save.log"
+      },
+      {
+        "check": "guard",
+        "exit_code": 0,
+        "seconds": 24.13,
+        "log": "audit-1297-pr367-guard.log"
+      },
+      {
+        "check": "agent",
+        "exit_code": 0,
+        "seconds": 13.38,
+        "log": "audit-1297-pr367-agent.log"
+      },
+      {
+        "check": "app",
+        "exit_code": 0,
+        "seconds": 25.71,
+        "log": "audit-1297-pr367-app.log"
+      },
+      {
+        "check": "gba",
+        "exit_code": 0,
+        "seconds": 19.89,
+        "log": "audit-1297-pr367-gba.log"
+      }
+    ],
+    "tests": {
+      "fidelity_systems": 18,
+      "route22_core": 9,
+      "agent_library": 63,
+      "shared_game": 5
+    },
+    "full_ci": "Required on the new pushed head; prior failed CI does not qualify.",
+    "tested_source": {
+      "crates/pokered-core/src/overworld/screen.rs": {
+        "sha256": "da7aeece1dcf2835fa99059561982422e733df51411a82b96191b50d74203922",
+        "bytes": 171282
+      },
+      "crates/pokered-core/src/overworld/tests_route22_gate.rs": {
+        "sha256": "dcadb2e43c33724176e1695913437aaa509dcba0e78d9b0f90a1d3b8e95f2f60",
+        "bytes": 1852
+      },
+      "crates/pokered-data/story/graph.json": {
+        "sha256": "24eef920fb7b322fc11f80530fa777b5d9af735e913ab5b7a37e3776e52ccdc4",
+        "bytes": 428758
+      }
+    }
   }
 }

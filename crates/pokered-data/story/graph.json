@@ -9760,8 +9760,18 @@
     },
     {
       "from": "script:Route22Gate:gateThreshold",
-      "to": "flag:EVENT_BEAT_BROCK",
+      "to": "badge:BOULDERBADGE",
       "kind": "requires"
+    },
+    {
+      "from": "script:Route22Gate:gateThreshold",
+      "to": "flag:SCRIPT_ROUTE22GATE_NOOP",
+      "kind": "requires"
+    },
+    {
+      "from": "script:Route22Gate:gateThreshold",
+      "to": "flag:SCRIPT_ROUTE22GATE_NOOP",
+      "kind": "sets"
     },
     {
       "from": "script:Route22Gate:gateThreshold",
@@ -9770,8 +9780,18 @@
     },
     {
       "from": "script:Route22Gate:talkGuard",
-      "to": "flag:EVENT_BEAT_BROCK",
+      "to": "badge:BOULDERBADGE",
       "kind": "requires"
+    },
+    {
+      "from": "script:Route22Gate:talkGuard",
+      "to": "flag:SCRIPT_ROUTE22GATE_NOOP",
+      "kind": "sets"
+    },
+    {
+      "from": "script:Route22Gate:talkGuard",
+      "to": "flag:SCRIPT_ROUTE22GATE_NOOP",
+      "kind": "clears"
     },
     {
       "from": "script:Route22Gate:talkGuard",
