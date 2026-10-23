@@ -21,10 +21,14 @@
   "evidence_sha256": {
     "original-runtime.json.gz": "305ce7c92989942369bba8d9ec4e469895c2a523ef0c7cf73562951464c66a98",
     "replay-original.py": "b6d2115d69dcf1c4e98c4a25fe113e4c6bfd9d38d1cd91ea9261b6499b18302c",
+    "README.md": "d612e0a72aeff24f06c6ed21758c17e1b32c001a57554e53c5452a8909ed8291",
     "before.png": "1b40b12b384962404675dafb4b461860c4f0b508c99defe89442d46679e03702",
     "original-fixture.sav": "7f4917d0f6f80083f0da64b3c7669863d05154d81ed2c58e0780ea543791b246",
-    "after.png": "fb1db2a6df270568a65e55b7ffdd0e55215dd69d00b9a94955138c82ac4837f5",
-    "README.md": "707cb1dffdd542758deff38a372d57a3500a1340b229e53c3b3b29697226e4ff"
+    "after.png": "fb1db2a6df270568a65e55b7ffdd0e55215dd69d00b9a94955138c82ac4837f5"
   },
-  "source_pause_admission": "New regression verifies unpaused source work is rejected before admission when native music is paused."
+  "source_pause_admission": "New regression verifies unpaused source work is rejected before admission when native music is paused.",
+  "native_executable_guard": {
+    "expected_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+    "observation": "Cargo integration tests implicitly built the game binary; the frozen debug/pokered-app entry was restored from its byte-identical existing deps artifact via hardlink after testing. No original ROM changes."
+  }
 }
