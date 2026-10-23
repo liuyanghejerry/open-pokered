@@ -68,7 +68,7 @@ jobs:
             | sha256sum --check
           tar --extract --xz --file "$RUNNER_TEMP/$MGBA_ARCHIVE" --directory "$RUNNER_TEMP"
           sudo apt-get update
-          sudo apt-get install -yq xvfb \
+          sudo apt-get install -yq --no-install-recommends xvfb xauth \
             "$RUNNER_TEMP/$MGBA_DIR/libmgba.deb" \
             "$RUNNER_TEMP/$MGBA_DIR/mgba-qt.deb"
           mgba-qt --version
@@ -82,7 +82,10 @@ jobs:
 
       - name: Test performance-gate tooling
         if: steps.changes.outputs.has-changes == 'true'
-        run: python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py scripts/test_gba_frame_timing.py
+        run: |
+          rustc --edition 2021 --test crates/pokered-gba/src/heap_probe.rs -o "$RUNNER_TEMP/gba-heap-probe-tests"
+          "$RUNNER_TEMP/gba-heap-probe-tests"
+          python3 -m unittest scripts/test_gba_performance.py scripts/test_gba_memory.py scripts/test_gba_frame_timing.py
 
       - name: Build candidate benchmark ROM
         if: steps.changes.outputs.has-changes == 'true'
