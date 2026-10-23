@@ -1,0 +1,129 @@
+{
+  "scope": "Hosted PCM sample rate conversion only; not source/Game/HoF integration or original hardware PCM proof.",
+  "base": "72e81aee29e8f8c01bbda738f4ec9ed2ea0b93e7",
+  "engine_rev": "8a6e0dd5372fb8cd00e36aae38881e47d6ec2ea8",
+  "isolated_audio_tests": {
+    "passed": 168,
+    "failed": 0,
+    "ignored": 0,
+    "seconds": 48.87,
+    "command": "cargo test -p pokered-audio --offline"
+  },
+  "target_checks": [
+    {
+      "command": "cargo check --locked -p pokered-audio --features cpal --offline",
+      "passed": true
+    },
+    {
+      "command": "cargo check --locked -p pokered-audio --target wasm32-unknown-unknown --features web-audio --offline",
+      "passed": true
+    }
+  ],
+  "regressions": [
+    "exact full CPU second at 44100 and 48000 output samples vs independent direct APU tick",
+    "byte-identical PCM and APU state for irregular partitions vs one pull",
+    "live register changes at independently computed rational sample boundaries",
+    "actual AudioOutput::render_pcm preserves phase across calls"
+  ],
+  "lockfile_note": "Initial --locked test refused the unchanged master lockfile. Offline resolution only removed a stale image 0.25.10 dependency edge from pokered-data; include that one-line normalization so locked target checks pass. No package versions changed.",
+  "prototype_run": {
+    "audio_tests_passed": 195,
+    "seconds": 52.8,
+    "scope": "Separate unmerged prototype checkout; not the isolated PR test count."
+  },
+  "artifacts": {
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-audio-tests-unlocked.log": {
+      "sha256": "d10c1a3a6195c057f8e5b48b464bf3419b5d91674737e8642aa4d62aafff34e2",
+      "bytes": 15916
+    },
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-cpal-check.log": {
+      "sha256": "ed21aa8a25e918ad3e1fb324bc9e1f181be55f00ad60fd1c9ab3edf119b25b1d",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1278-isolated-web-check.log": {
+      "sha256": "5352438a304fdd30d8c7c201ec24a4bce131646144970f5068826c9205795b4e",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-audio-tests.log": {
+      "sha256": "b868e5e4e4c0b321811f293f7634dcd0bce9dfd966afb691af8a5389b3058100",
+      "bytes": 15445
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-cpal.log": {
+      "sha256": "75a0645d29b869729e5551f8f31f040e56980a6fe85cafbf608511c2c6d3e98b",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-web.log": {
+      "sha256": "00b9461edc17e02bb8c4cda76b56ed33c94b72e938c7475a100e73fdd2699190",
+      "bytes": 614
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-pcm-gba.log": {
+      "sha256": "c5e5d0e0667818efca79269d96e43f644df7fb3f5afff1713772ac3d90b7f4f4",
+      "bytes": 58795
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-audio-tests.log": {
+      "sha256": "8b465650e2f4a7d98c9b2db4742f97cd5967cecfb40460f7c96bd5b01b4ce759",
+      "bytes": 15827
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-cpal.log": {
+      "sha256": "e511f15b948b695df802f1acc34382f79d906ffb33d52c51555ae8ced33cb2b6",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-web.log": {
+      "sha256": "9a65790394ff62cfaef04969e31cdd987bc8a4e77fd1897b0cd661f365a2bc25",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1294-pcm-slots-gba.log": {
+      "sha256": "b80840cbe8f3404854cb70590d6ef0453ae0c52b5a3a2406020cdba6553bbd26",
+      "bytes": 58795
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-combined-audio-tests.log": {
+      "sha256": "9b62f26476c0f10a9a6a6773fae9a3ed5b39dde6245391d94168e7f9bf6244fd",
+      "bytes": 19467
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-combined-cpal.log": {
+      "sha256": "d7f7d54fade1b4f30603f3b161e5b8392cd53134c30a1062ba73beaf98edd61c",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-combined-web.log": {
+      "sha256": "3a3a8a5903491ce15b61e3dc06d58afc4d0566cb007eeb34fc6377170cae6cdd",
+      "bytes": 481
+    },
+    ".task-tmp/fidelity-39-plus/audit-1296-combined-gba.log": {
+      "sha256": "5367d6b9a21d19df1390b8a695e4460c5aa9e74ecbfcd89a6b9f918155a2d017",
+      "bytes": 58795
+    }
+  },
+  "new_worktrees": 0,
+  "new_game_binary_or_rom": false,
+  "latest_parent": "a0c9b5c639679aab2bf636dd234b66b5e01d5c83",
+  "latest_engine_rev": "f3684094f82c80b3f045102fd546d2570d1d0934",
+  "latest_checks": {
+    "audio_tests_passed": 168,
+    "audio_test_seconds": 46.43,
+    "cpal": "pass",
+    "web_audio": "pass",
+    "GBA_memory_scenarios_locked_check": "pass",
+    "full_CI": "required before merge"
+  },
+  "slots_master_combination": {
+    "master": "bf7484d179f4593aa44e2df38fb4f5803b9af937",
+    "audio_tests_passed": 172,
+    "audio_seconds": 50.7,
+    "locked_CPAL": "pass",
+    "locked_WebAudio": "pass",
+    "locked_GBA_memory_scenarios": "pass",
+    "full_CI": "required on updated commit"
+  },
+  "latest_combined_validation": {
+    "parent_master": "ea385d8a571be5c5137fa4a518a6ab8c6c34a8e6",
+    "tested_code_head": "333ae0aa8fe718b42ec80e09718089b89227826c",
+    "engine_rev": "f3684094f82c80b3f045102fd546d2570d1d0934",
+    "audio_tests_passed": 200,
+    "audio_seconds": 50.89,
+    "locked_CPAL": "pass",
+    "locked_WebAudio": "pass",
+    "locked_GBA_memory_scenarios": "pass",
+    "preceding_pcm_head_full_CI": "fa99ae9746811ff950be6fddd0d09894e1df0ba6 passed all three workflows, including every original GBA scenario",
+    "full_CI": "required on updated combined commit"
+  }
+}
