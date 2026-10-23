@@ -16,10 +16,15 @@ use crate::audio_manager::AudioManager;
 use crate::music_data::MusicId;
 use crate::sfx_data::SfxId;
 
+mod pcm_renderer;
+use pcm_renderer::PcmRenderer;
+
 /// The shared, mutex-guarded audio manager plus the live device output.
 /// Dropping `AudioOutput` stops the output stream.
 pub struct AudioOutput {
     pub manager: Arc<Mutex<AudioManager>>,
+    // Both render entry points lock the manager before this stream phase.
+    pcm_renderer: Arc<Mutex<PcmRenderer>>,
     #[cfg(all(not(target_arch = "wasm32"), feature = "cpal"))]
     _output: Option<dotzuki_audio::output::CpalOutput>,
     #[cfg(all(target_arch = "wasm32", feature = "web-audio"))]
@@ -36,6 +41,7 @@ impl AudioOutput {
         manager.apu.write_register(0xFF26, 0x80);
         Self {
             manager: Arc::new(Mutex::new(manager)),
+            pcm_renderer: Arc::new(Mutex::new(PcmRenderer::default())),
             #[cfg(any(
                 all(not(target_arch = "wasm32"), feature = "cpal"),
                 all(target_arch = "wasm32", feature = "web-audio")
@@ -51,9 +57,10 @@ impl AudioOutput {
         {
             let mut audio = Self::new_pcm();
             let manager = Arc::clone(&audio.manager);
+            let renderer = Arc::clone(&audio.pcm_renderer);
             let source = move |out: &mut [f32], rate: u32| {
                 let mut manager = manager.lock().unwrap();
-                dotzuki_audio::output::render_apu_stereo(&mut manager.apu, out, rate);
+                renderer.lock().unwrap().render(&mut manager.apu, out, rate);
             };
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -76,7 +83,10 @@ impl AudioOutput {
     /// Called by the embedding game thread, never alongside a live device output.
     pub fn render_pcm(&self, output: &mut [f32]) {
         let mut manager = self.manager.lock().unwrap();
-        dotzuki_audio::output::render_apu_stereo(&mut manager.apu, output, 44100);
+        self.pcm_renderer
+            .lock()
+            .unwrap()
+            .render(&mut manager.apu, output, 44100);
     }
 
     /// Set the logical per-side NR50 level on every output backend.
