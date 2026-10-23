@@ -4980,14 +4980,15 @@ impl PokemonGame {
                 // but WaitForSoundToFinish returns immediately while the
                 // low-health alarm bit is set (home/delay.asm:15-18).
                 self.battle_vfx.audio_available = self.audio.is_some();
-                self.battle_vfx.sfx_playing = self
+                let sfx_blocks_presentation = self
                     .audio
                     .as_ref()
                     .is_some_and(|a| a.is_sfx_playing() && !a.low_health_alarm_active());
+                self.battle_vfx.sfx_playing = sfx_blocks_presentation;
                 self.battle_vfx.update(&self.battle);
-                let faint_sound_ready = !self.audio.as_ref().is_some_and(|audio|
-                    audio.is_sfx_playing() && !audio.low_health_alarm_active());
-                let faint_sound = faint_sound_ready.then(|| self.battle_vfx.take_faint_sound()).flatten();
+                // VFX only queues sounds; the sequencer is unchanged until the
+                // audio requests below run. Share its sample with faint waits.
+                let faint_sound = (!sfx_blocks_presentation).then(|| self.battle_vfx.take_faint_sound()).flatten();
 
                 let move_sfx = self.battle_vfx.take_move_sfx();
                 let applying_sound = self.battle_vfx.take_applying_attack_sound();

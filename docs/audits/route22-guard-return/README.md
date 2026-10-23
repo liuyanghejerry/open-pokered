@@ -77,3 +77,25 @@ The unchanged complete GBA memory suite passes all 13 cases over 321240
 hardware frames: minimum free heap 4728 B and stack headroom 8724 B. The
 record pins the ROM, scenario source and heap probe hashes. No threshold,
 scenario or timeout was adjusted. Latest-head CI is still required to merge.
+
+CI performance follow-up: the initial PR head `f5f2a5cb` failed the original
+trainer-entry update gate at 233 ticks (limit 232.3); the five later GBA
+execution gates were skipped, so that run was not mergeable. A local run
+reproduced all seven CI scenario records exactly.
+
+The battle VFX update and its immediately following faint wait now reuse one
+sound/alarm sample. VFX only queues requests; it does not play sounds or
+advance the sequencer between these two consumers. This removes duplicate
+queries without skipping audio updates, changing waits or adding a cache.
+Two independent fresh-SRAM mGBA runs now match exactly: trainer-entry updates
+take 231 ticks and wild-entry updates 212, down from 233 and 213. All seven
+original performance scenarios pass with the existing thresholds. Draw and
+present metrics and render counts remain identical to the failing baseline.
+
+After this change, full core 3659, data 448, Boa 1, app 928 and agent 63 checks
+pass again, including the actual faint fall/thud PCM regressions. The original
+13-case GBA memory run also passes over 321240 hardware frames,
+with minimum heap 4728 B and stack headroom 8724 B.
+`performance-validation.json` records the tested source and patch hashes,
+before/after metrics and repeat runs. Existing ignored cases remain unchanged;
+latest-head CI is still required before merge.

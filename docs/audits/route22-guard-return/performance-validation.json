@@ -1,0 +1,378 @@
+{
+  "source": {
+    "base_commit": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+    "tested_game_rs_sha256": "263d2243f60131116fb9c64a89e5622e20507d25c3dc6bb1bede6513fa9d0159",
+    "tested_product_patch_sha256": "2868f4332ecd1bbbdc0b10dcad239b647a8211a5f63228c070bcefda79ec77fe",
+    "scope": "Base commit plus only the sound-sample reuse in game.rs. Documentation added after validation."
+  },
+  "failure": {
+    "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+    "job": 120669749097,
+    "run": 40028248487,
+    "raw_sha256": "ac6336453078fa7bc7219b997536e84b202b21637dbba80a74e6ea0441b1bfc2",
+    "gzip_sha256": "b2d44528c55785aafdf75d105eabe298eaaca81739f33c6047f922670ef0aeaf",
+    "failure": "trainer-battle-entry-v1/update_avg_ticks 233 > 232.3 (202 baseline,15% or25ticks original gate)",
+    "steps12_14_16_18_20": "skipped; not proof of success"
+  },
+  "baseline_reproduces_all_CI_metrics": true,
+  "change": "VFX and faint waits share the same sequencer/alarm sample. VFX queues sounds; audio requests execute afterwards. No audio update, simulation tick, wait, input, scenario, threshold or timeout was removed or changed.",
+  "performance": {
+    "baseline": {
+      "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "2539a804a2a9afe763d4626cfafbd2fc1937a45463a5c16d45e974e63cb4bb93",
+        "crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+      },
+      "frames": 8280,
+      "seconds": 3.541811984963715,
+      "failures": [
+        "trainer-battle-entry-v1/update_avg_ticks regressed from 202 to 233 ticks (allowed at most 232.3; 15% or 25 ticks)"
+      ],
+      "metrics": "audit-1305-gba-perf-guard-before-metrics.json",
+      "log": "audit-1305-gba-perf-guard-before.log"
+    },
+    "fixed": {
+      "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+      "diff_sha256": "2868f4332ecd1bbbdc0b10dcad239b647a8211a5f63228c070bcefda79ec77fe",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "15f650d64d3c897679a8a58c7b928880cdcb42dfad80044679df263d5aba72c7",
+        "crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+      },
+      "frames": 8280,
+      "seconds": 2.715832839952782,
+      "failures": [],
+      "metrics": "audit-1305-gba-perf-guard-sfx-sample-metrics.json",
+      "log": "audit-1305-gba-perf-guard-sfx-sample.log"
+    },
+    "fixed_repeat": {
+      "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+      "diff_sha256": "2868f4332ecd1bbbdc0b10dcad239b647a8211a5f63228c070bcefda79ec77fe",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "15f650d64d3c897679a8a58c7b928880cdcb42dfad80044679df263d5aba72c7",
+        "crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+      },
+      "frames": 8280,
+      "seconds": 2.6181188340997323,
+      "failures": [],
+      "metrics": "audit-1305-gba-perf-guard-sfx-repeat-metrics.json",
+      "log": "audit-1305-gba-perf-guard-sfx-repeat.log"
+    },
+    "fixed_repeats_match_exactly": true,
+    "before_metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 250,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1206,
+          "draw_max_ticks": 9843,
+          "present_per_frame_ticks": 354,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 600,
+          "update_avg_ticks": 173,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2863,
+          "draw_max_ticks": 9006,
+          "present_per_frame_ticks": 392,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 374,
+          "update_core_avg_ticks": 364,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 386,
+          "update_core_avg_ticks": 376,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 203,
+          "draw_max_ticks": 2796,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 771
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 213,
+          "update_core_avg_ticks": 202,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2630,
+          "draw_max_ticks": 8864,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 233,
+          "update_core_avg_ticks": 221,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2357,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 344,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 40,
+          "draw_max_ticks": 16321,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    },
+    "after_metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 250,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1206,
+          "draw_max_ticks": 9843,
+          "present_per_frame_ticks": 354,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 600,
+          "update_avg_ticks": 173,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2863,
+          "draw_max_ticks": 9006,
+          "present_per_frame_ticks": 392,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 374,
+          "update_core_avg_ticks": 364,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 386,
+          "update_core_avg_ticks": 376,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 203,
+          "draw_max_ticks": 2796,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 771
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2630,
+          "draw_max_ticks": 8864,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 231,
+          "update_core_avg_ticks": 220,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2357,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 344,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 40,
+          "draw_max_ticks": 16321,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    }
+  },
+  "checks": {
+    "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+    "diff_sha256": "2868f4332ecd1bbbdc0b10dcad239b647a8211a5f63228c070bcefda79ec77fe",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 3659,
+        "ignored": 1,
+        "log": "audit-1305-guard-perf-fix-core.log",
+        "sha256": "54416199004c0769bc240052a3d061b15dff6901a565789ee0c2eab55d5511e3"
+      },
+      {
+        "name": "data",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 448,
+        "ignored": 0,
+        "log": "audit-1305-guard-perf-fix-data.log",
+        "sha256": "50a01340f9705c6d386cda88a42e2beb8c8995e0ab88572ae715950f7053b7bd"
+      },
+      {
+        "name": "data-boa",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--features",
+          "script-boa",
+          "route22_guard_return",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 1,
+        "ignored": 0,
+        "log": "audit-1305-guard-perf-fix-data-boa.log",
+        "sha256": "cbdb57cf90668f73f58b31eb55106c563618be69f4731e4102756cf981a6d00c"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 928,
+        "ignored": 88,
+        "log": "audit-1305-guard-perf-fix-app.log",
+        "sha256": "1ab96c2366483a579bfbc7b5db14d822ab3a865c17fd083a45698b42c16c69c0"
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 63,
+        "ignored": 0,
+        "log": "audit-1305-guard-perf-fix-agent.log",
+        "sha256": "f2eab8349e6fa9b158f253e5d91d955034299099dbd3c3bfdc946961e15dbb6b"
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "ignored": 0,
+        "log": "audit-1305-guard-perf-fix-gba.log",
+        "sha256": "3f53acf0e1a6b6eb86e764d46131c06a236cfb26480f5f5a11d04666691915e5"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+  },
+  "GBA_memory": {
+    "pass": true,
+    "error": null,
+    "head": "f5f2a5cb86bd7292b0594a753ab0de8290b80ced",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "fad528e631beb35b446332ad0ea9a0b91a52529734dd093172d19475f6fb3d54",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "seconds": 159.57998421799857,
+    "frames": 321240,
+    "cases": 13,
+    "min_heap": 4728,
+    "min_stack": 8724,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "limits": "Controlled performance/memory scenarios and package regressions; not fresh mainline completion. Latest-head CI and all six original GBA execution gates remain required before merge."
+}
