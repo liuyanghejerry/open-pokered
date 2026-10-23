@@ -1,0 +1,247 @@
+{
+  "integration": {
+    "branch": "fix/cycling-gate-input-return",
+    "old_parent": "f2a71aafd5f7df83fd8e465ff79985409ee0f740",
+    "old_head": "11fb1dcf3d7be4c225b1bdba97d24cc48be89401",
+    "base": "e5b32c625d34111bb6843f6c133e9850db5f9f28",
+    "head": "c9be69517d037ebb770478a874bb851b688eaf51",
+    "tree": "15f279fffd0827e634c28b54763bcce6fe04d7df",
+    "expected_preview": "audit-1305-cycling-integration-preview.json",
+    "replayed_only_own_commits": 2,
+    "worktree_clean": true,
+    "source_difference_from_old_candidate": "Only master sound-sample reuse plus its two validation documentation files; complete combination still needs current tests."
+  },
+  "checks": {
+    "head": "c9be69517d037ebb770478a874bb851b688eaf51",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 3659,
+        "ignored": 1,
+        "log": "audit-1305-cycling-master-core.log",
+        "sha256": "a7f15099b2dc23bf016a87bca638016383a99ef44b4bca49e3f54c8f23a50b3b"
+      },
+      {
+        "name": "data",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 448,
+        "ignored": 0,
+        "log": "audit-1305-cycling-master-data.log",
+        "sha256": "fa4e4806f14b7ae14453c361d1f52f41cd68cef3d99d4926590ac6c4b62252b1"
+      },
+      {
+        "name": "data-boa",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--features",
+          "script-boa",
+          "gate_return",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 1,
+        "ignored": 0,
+        "log": "audit-1305-cycling-master-data-boa.log",
+        "sha256": "7a214ea6bb0f5a7668ab0ca8081645a28f0ab70fcc843e73e1e06dd4ace3fc6d"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 934,
+        "ignored": 88,
+        "log": "audit-1305-cycling-master-app.log",
+        "sha256": "ba8c451545f16e4dc696d154673b8bfe9f0e30427b35fd0398f45ca097d6f46f"
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 63,
+        "ignored": 0,
+        "log": "audit-1305-cycling-master-agent.log",
+        "sha256": "46978424342033ed6e1b0826426252087dea5f7b0ec875614df991cf0f2c3482"
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "perf-benchmark",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "ignored": 0,
+        "log": "audit-1305-cycling-master-gba.log",
+        "sha256": "b54d1798aff297fb97a9119a1185bb8fd9fe70f56690a9468de958d3cbbb6629"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+  },
+  "performance": {
+    "head": "c9be69517d037ebb770478a874bb851b688eaf51",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "deea15aa13a40aa1a1ea75256e69ce455d82c998fb055042659a39b4d12b2935",
+      "crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+    },
+    "frames": 8280,
+    "seconds": 2.599777320981957,
+    "failures": [],
+    "metrics": "audit-1305-gba-perf-cycling-master-metrics.json",
+    "log": "audit-1305-gba-perf-cycling-master.log"
+  },
+  "performance_metrics": {
+    "suite": "autopilot-v1",
+    "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+    "scenarios": {
+      "intro-title-v1": {
+        "scenario": "intro-title-v1",
+        "samples": 250,
+        "update_avg_ticks": 105,
+        "update_core_avg_ticks": 96,
+        "update_flush_avg_ticks": 1,
+        "renders": 115,
+        "draw_per_frame_ticks": 1206,
+        "draw_max_ticks": 9843,
+        "present_per_frame_ticks": 354,
+        "present_max_ticks": 782
+      },
+      "oak-dialogue-v1": {
+        "scenario": "oak-dialogue-v1",
+        "samples": 600,
+        "update_avg_ticks": 173,
+        "update_core_avg_ticks": 163,
+        "update_flush_avg_ticks": 1,
+        "renders": 307,
+        "draw_per_frame_ticks": 2863,
+        "draw_max_ticks": 9006,
+        "present_per_frame_ticks": 392,
+        "present_max_ticks": 782
+      },
+      "overworld-idle-v1": {
+        "scenario": "overworld-idle-v1",
+        "samples": 1400,
+        "update_avg_ticks": 375,
+        "update_core_avg_ticks": 366,
+        "update_flush_avg_ticks": 1,
+        "renders": 0,
+        "draw_per_frame_ticks": 0,
+        "draw_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "present_max_ticks": 0
+      },
+      "overworld-movement-v1": {
+        "scenario": "overworld-movement-v1",
+        "samples": 240,
+        "update_avg_ticks": 388,
+        "update_core_avg_ticks": 378,
+        "update_flush_avg_ticks": 1,
+        "renders": 24,
+        "draw_per_frame_ticks": 203,
+        "draw_max_ticks": 2796,
+        "present_per_frame_ticks": 70,
+        "present_max_ticks": 771
+      },
+      "battle-entry-v1": {
+        "scenario": "battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 212,
+        "update_core_avg_ticks": 201,
+        "update_flush_avg_ticks": 1,
+        "renders": 369,
+        "draw_per_frame_ticks": 2630,
+        "draw_max_ticks": 8865,
+        "present_per_frame_ticks": 566,
+        "present_max_ticks": 782
+      },
+      "trainer-battle-entry-v1": {
+        "scenario": "trainer-battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 231,
+        "update_core_avg_ticks": 220,
+        "update_flush_avg_ticks": 1,
+        "renders": 224,
+        "draw_per_frame_ticks": 2357,
+        "draw_max_ticks": 10184,
+        "present_per_frame_ticks": 344,
+        "present_max_ticks": 782
+      },
+      "pokedex-entry-v1": {
+        "scenario": "pokedex-entry-v1",
+        "samples": 400,
+        "update_avg_ticks": 116,
+        "update_core_avg_ticks": 104,
+        "update_flush_avg_ticks": 1,
+        "renders": 1,
+        "draw_per_frame_ticks": 40,
+        "draw_max_ticks": 16321,
+        "present_per_frame_ticks": 1,
+        "present_max_ticks": 767
+      }
+    }
+  },
+  "GBA_memory": {
+    "pass": true,
+    "error": null,
+    "head": "c9be69517d037ebb770478a874bb851b688eaf51",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "7b98cd39c177374fb5023d664cf5b3d8ac46dbafab19f84770a4905ee3b7551d",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "seconds": 163.34251598792616,
+    "frames": 321240,
+    "cases": 13,
+    "min_heap": 4728,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "memory_build_log_sha256": "e7a40aad44669b6ea13b11f3b56b518937434cdf05ebf5b734435feeb2828e5e",
+  "scope": "Actual current Game package tests and freshly built GBA ROMs after replaying only the two cycling commits onto merged PR373. The protected frozen native CLI is diagnostic history, not current-master playthrough proof.",
+  "limits": "UP approach timing, other outstanding fidelity gaps and latest-master fresh mainline/CONTINUE validation remain open. Latest-head CI and all six original GBA execution gates must succeed before merge."
+}

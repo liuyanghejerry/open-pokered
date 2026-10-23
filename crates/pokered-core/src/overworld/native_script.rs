@@ -462,6 +462,10 @@ impl ScriptHost for NativeHost {
                 if !v.is_empty() { return Err("route22GuardReturn: no arguments expected".into()); }
                 Ok(pokemon(PokemonScriptCommand::Route22GuardReturn))
             }
+            "cyclingGateReturn" => {
+                if !v.is_empty() { return Err("cyclingGateReturn: no arguments expected".into()); }
+                Ok(pokemon(PokemonScriptCommand::CyclingGateReturn))
+            }
             "vendingDelivery" => Ok(pokemon(PokemonScriptCommand::VendingDelivery)),
             "walkTogether" => {
                 let npc_id = args::text(v.first().ok_or("walkTogether: missing NPC")?, "walkTogether")?;

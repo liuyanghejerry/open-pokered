@@ -1,6 +1,6 @@
 // Route18Gate1F — translated from the original disassembly
 // (scripts/Route18Gate1F.asm, text/Route18Gate1F.asm) to the real Game DSL API.
-// This is the Cycling Road north gate: an item-gate (BICYCLE) guard. The guard's
+// This is the Cycling Road south gate: an item-gate (BICYCLE) guard. The guard's
 // dialogue branches on whether the player owns a BICYCLE, and an on-approach coord
 // script stops a bike-less player and turns them back (forced movement via
 // movePlayerRelative + coordEvents).
@@ -42,6 +42,7 @@ game_scene Route18Gate1F {
       // then one RIGHT step out of the corridor.
       @speaker("") { @t("You need a BICYCLE for\nCYCLING ROAD!", "去自行车道需要自行车！") }
       movePlayerRelative([[1, 0]])
+      cyclingGateReturn()
     }
   }
 }

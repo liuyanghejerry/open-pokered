@@ -997,6 +997,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             Some(self.source_foreground_mut().unwrap().poll().held & crate::foreground_input::A == 0)
         } else { None };
         let mut resumed_unlocked_relative_walk = false;
+        let mut resumed_cycling_gate_walk = false;
         if let Some(ref mut effect) = self.active_script_effect {
             let naming_was_open = self.pending_naming_screen.is_some();
             let dialogue_was_open = self.pending_dialogue.is_some();
@@ -1212,6 +1213,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // Its Joypad and doneSimulating resume after that wait.
                     self.joy_ignore_mask = 0;
                 }
+                if completed_relative_walk && matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::CyclingGateReturn)) {
+                    // Route16/18Gate1FPlayerMovingRightScript clears the
+                    // simulated-state bit before Joypad. Unlike doneSimulating,
+                    // this callback preserves the physical held directions.
+                    let unlock = self.active_script_effect.take();
+                    self.apply_finished_effect(unlock);
+                    if let Ok(Some(next_cmd)) = self.script_engine.signal_done(CommandResult::Void) {
+                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                            &next_cmd, &self.player_name, &self.rival_name,
+                            &self.starter_display_name(),
+                        ));
+                    }
+                    resumed_cycling_gate_walk = self.active_script_effect.is_none()
+                        && self.script_engine.is_idle();
+                }
                 if completed_guard_return {
                     resumed_unlocked_relative_walk = self.active_script_effect.is_none()
                         && self.script_engine.is_idle();
@@ -1256,7 +1273,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
             // NPC movement must continue during script effects so that
             // MoveNpc / StartNpcMove / AwaitNpcMove effects can complete.
-            if !resumed_unlocked_relative_walk {
+            if !resumed_unlocked_relative_walk && !resumed_cycling_gate_walk {
                 self.run_npc_movement_tick();
                 return ScreenAction::Continue;
             }
@@ -1790,7 +1807,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             && !self.cutscene_manager.is_blocking()
             && self.pending_connection.is_none()
             && self.ledge_jump.is_none();
-        if ordinary_field_loop && !resumed_unlocked_relative_walk {
+        if ordinary_field_loop && !resumed_unlocked_relative_walk && !resumed_cycling_gate_walk {
             if self.bike_redraw_advance {
                 self.bike_redraw_advance = false;
                 self.state.walk_counter = self.state.walk_counter.saturating_sub(1);
@@ -3570,6 +3587,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             | script_bridge::ScriptEffect::UnsupportedCommand { .. } => true,
             script_bridge::ScriptEffect::SetJoyIgnore { .. } => true,
             script_bridge::ScriptEffect::ClearJoyIgnore => true,
+            script_bridge::ScriptEffect::CyclingGateReturn => true,
             script_bridge::ScriptEffect::StartNpcMove { npc_id, path } => {
                 if let Some(idx) = resolve_npc_index(npc_id, npc_states, map_script_config) {
                     npc_movement::start_scripted_move(&mut npc_states[idx], path);
@@ -4216,7 +4234,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 script_bridge::ScriptEffect::SetJoyIgnore { mask } => {
                     self.joy_ignore_mask = mask;
                 }
-                script_bridge::ScriptEffect::ClearJoyIgnore => {
+                script_bridge::ScriptEffect::ClearJoyIgnore | script_bridge::ScriptEffect::CyclingGateReturn => {
                     self.joy_ignore_mask = 0;
                 }
                 script_bridge::ScriptEffect::FaceNpc { npc_id, direction } => {

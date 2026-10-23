@@ -1,9 +1,9 @@
 // Route16Gate1F — translated from the original disassembly
 // (scripts/Route16Gate1F.asm, text/Route16Gate1F.asm) to the real Game DSL API.
-// This is the south gate to CYCLING ROAD (Route 16). The guard blocks foot
+// This is the north gate to CYCLING ROAD (Route 16). The guard blocks foot
 // traffic onto CYCLING ROAD unless the player has the BICYCLE (item gate). The
-// on-enter coord script that shoved a pedestrian back with simulated joypad
-// input is approximated below (forced/scripted movement has no DSL API).
+// approach still uses an absolute waypoint; the final simulated RIGHT now
+// returns through the original caller's input semantics.
 
 game_scene Route16Gate1F {
   // ── Guard (npc 1) — item gate on the BICYCLE ───────────────────────────
@@ -51,6 +51,7 @@ game_scene Route16Gate1F {
         @t("No pedestrians are allowed\non CYCLING ROAD!", "行人禁止进入自行车道！")
       }
       movePlayerRelative([[1, 0]])
+      cyclingGateReturn()
     }
   }
 }
