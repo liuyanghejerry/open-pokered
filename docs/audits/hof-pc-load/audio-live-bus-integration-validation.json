@@ -81,6 +81,18 @@
     ".task-tmp/fidelity-39-plus/audit-1277-gba-audio-serde-check.log": {
       "sha256": "469708468cdf32d9098268e9fe222aa69fd4e19985e0f891c1c84db02a481808",
       "bytes": 616
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-live-bus-audio-tests.log": {
+      "sha256": "673e59027ea6621a124fb4b22ff612093052eeaa3b5acd0ae3e4c711b8909151",
+      "bytes": 18523
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-live-bus-gba.log": {
+      "sha256": "7658af5f17a0a4402fa53715310e1a62ec95af82f80296b803448df5eca21065",
+      "bytes": 58795
+    },
+    ".task-tmp/fidelity-39-plus/audit-1287-live-bus-gba-serde.log": {
+      "sha256": "31cb88eb383b3177d002ac81c485ca9b543074a73de0c9daab926fa06e67edf6",
+      "bytes": 616
     }
   },
   "checks": [
@@ -204,5 +216,15 @@
     "gba_default_check_passed": true,
     "gba_serde_check_passed": true,
     "gba_stress": "PR363 previous head failed; new full CI required. No heap threshold/workflow changes."
+  },
+  "latest_parent_validation": {
+    "parent": "a0c9b5c639679aab2bf636dd234b66b5e01d5c83",
+    "audio_engine": "f3684094f82c80b3f045102fd546d2570d1d0934",
+    "audio_tests_passed": 191,
+    "audio_tests_seconds": 51.69,
+    "GBA_memory_scenarios_locked_check": "pass",
+    "GBA_audio_source_clock_serde_locked_check": "pass",
+    "full_CI": "required before merge",
+    "no_new_worktree_or_game_binary": true
   }
 }
