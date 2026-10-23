@@ -221,15 +221,39 @@ fn departure_accepts_start_on_the_next_field_poll() {
 }
 
 #[test]
-fn departure_direction_resumes_after_the_source_stop_and_turn_boundaries() {
-    let mut g = departure();
-    first_stride(&mut g);
-    let mut first_physical_step = None;
-    for frame in 0..50 {
-        if frame >= 34 && g.overworld.state.walk_counter != 0 {
-            first_physical_step.get_or_insert(frame);
+fn departure_directions_resume_after_the_source_stop_and_turn_boundaries() {
+    for (name, button, expected) in [
+        ("up", GbButton::Up, Some(36)),
+        ("down", GbButton::Down, Some(38)),
+        ("left", GbButton::Left, None),
+        ("right", GbButton::Right, Some(38)),
+    ] {
+        let mut g = departure();
+        first_stride(&mut g);
+        let mut first_physical_step = None;
+        let mut trace = Vec::new();
+        for frame in 0..50 {
+            if frame >= 34 && g.overworld.state.walk_counter != 0 {
+                first_physical_step.get_or_insert(frame);
+            }
+            trace.push(
+                serde_json::json!({"frame":frame, "walk":g.overworld.state.walk_counter,
+                "x":g.overworld.state.player.x, "y":g.overworld.state.player.y,
+                "facing":format!("{:?}",g.overworld.state.player.facing)}),
+            );
+            g.update(&input(button));
         }
-        g.update(&input(GbButton::Right));
+        if let Ok(dir) = std::env::var("SCRIPT_INPUT_CAPTURE_DIR") {
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(
+                format!("{dir}/departure-direction-{name}.json"),
+                serde_json::to_vec_pretty(&trace).unwrap(),
+            )
+            .unwrap();
+        }
+        assert_eq!(
+            first_physical_step, expected,
+            "{name}: original return boundary/collision"
+        );
     }
-    assert_eq!(first_physical_step, Some(38));
 }

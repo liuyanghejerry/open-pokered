@@ -67,3 +67,16 @@ Pinned reference: `pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`;
 ROM SHA-256 `5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b`.
 Source: [departure callback](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/VermilionCity.asm),
 [JoypadOverworld and no-direction handling](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/home/overworld.asm).
+
+All four held directions were additionally replayed twice: UP resumes at
+post-update frame 36; DOWN and RIGHT at 38; LEFT is blocked by the map.
+The native regression checks all four results using the same Game path.
+`replay-direction.py` accepts `--control-button up|down|left|right` with
+`--press-from 0 --release-at 46` and the same ROM/SRAM arguments above.
+The complete source and native records are included in the compressed files.
+
+Full combined checks pass 3659 core tests, 922 tests across the complete app
+package, 63 agent tests and the release GBA build. The original 1 core and
+88 app ignored cases remain unchanged. Expanding the direction control
+changes tests/evidence only; all 8 updated input tests also pass. The GBA
+runtime memory suite is recorded separately after its execution.

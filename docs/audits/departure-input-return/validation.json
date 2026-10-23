@@ -40,5 +40,89 @@
     "passed": 8,
     "log_SHA256": "bb17bcc85dcc7d0333e6f7240c5926fec8d1d19a50f093dc81e9657acbe8a40b",
     "captures_and_full_native_traces_identical_to_prior_fixed_run": true
+  },
+  "full_combined_checks": {
+    "head": "f8dddbef21fbeeda2e915ac184eabb6890b3295a",
+    "checks": [
+      {
+        "name": "core",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 3659,
+        "ignored": 1,
+        "log": "audit-1301-return-combined-core.log",
+        "sha256": "00e2d03c362ee42511582d8b5cdbe85338afd1ef368d7ab22ab95f9e625bbdc3"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 922,
+        "ignored": 88,
+        "log": "audit-1301-return-combined-app.log",
+        "sha256": "4b5a8046456e011a1cd4c4eabe23e07b184416cfb7b4192a955f9ec965618417"
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 63,
+        "ignored": 0,
+        "log": "audit-1301-return-combined-agent.log",
+        "sha256": "c53764b573c3a1858a998f4ea30bd116e3fd8f035b5664484779e708834b9fb2"
+      },
+      {
+        "name": "gba",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "ignored": 0,
+        "log": "audit-1301-return-combined-gba.log",
+        "sha256": "cbaa4bf5c61b09a7844664c0c5ac19fc158901ae20868af91aed92bfe94f272a"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+  },
+  "direction_controls": {
+    "original_repeats_each": 2,
+    "results": {
+      "up": 36,
+      "down": 38,
+      "left": null,
+      "right": 38
+    },
+    "native_all_match": true,
+    "native_test_log_sha256": "ba31c531bede2838453789603fb5a6cc62d020c5484a7af6d0e2931374f1a155",
+    "production_unchanged_since_full_checks": true
   }
 }
