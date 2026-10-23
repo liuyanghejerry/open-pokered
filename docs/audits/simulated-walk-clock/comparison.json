@@ -1,0 +1,77 @@
+{
+  "baseline": "7b79a188a1fe696f7bb16c7c42d2baf2a7ed2aa9",
+  "tested_code": "98738f067730656ba07a373aca5d8cfa7a255270",
+  "alignment": "first walk_counter=7 after real scene input",
+  "comparisons": [
+    {
+      "case": "guard-4",
+      "compared_hardware_frames": 17,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    },
+    {
+      "case": "guard-5",
+      "compared_hardware_frames": 17,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    },
+    {
+      "case": "guard-6",
+      "compared_hardware_frames": 17,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    },
+    {
+      "case": "guard-4-right",
+      "compared_hardware_frames": 17,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    },
+    {
+      "case": "departure",
+      "compared_hardware_frames": 34,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    },
+    {
+      "case": "departure-right",
+      "compared_hardware_frames": 34,
+      "fields": [
+        "walk_counter",
+        "x",
+        "y"
+      ],
+      "scope": "complete simulated walk, excluding caller return"
+    }
+  ],
+  "pending_return_differences": {
+    "guard": {
+      "first_physical_RIGHT_advance_original": 24,
+      "native": 19
+    },
+    "departure": {
+      "first_physical_RIGHT_advance_original": 38,
+      "native": 37
+    }
+  }
+}

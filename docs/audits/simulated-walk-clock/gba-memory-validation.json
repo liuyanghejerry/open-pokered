@@ -1,0 +1,490 @@
+{
+  "baseline_head": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+  "fixed_source": {
+    "path": "crates/pokered-app/src/render/battle.rs",
+    "git_blob": "e1d96e718f5fe2c9e5a6e9d737d4129bcaa5effa",
+    "sha256": "3504132bb1ced8f87483f5c60b92695f4f1bc89245f821701bfb89cb8eb6a07f"
+  },
+  "failed_ci": "https://github.com/liuyanghejerry/open-pokered/actions/runs/39996757420/attempts/2",
+  "baseline": {
+    "result": {
+      "pass": false,
+      "error": "GBA contiguous heap margin below 4096 B: 3907",
+      "head": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "ed56b9919e94384d15f0c3fd5c14fd9b39df8d24f1ee0f05ac8281022b87a339",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "seconds": 111.72051479795482,
+      "frames": 160320,
+      "cases": 7,
+      "min_heap": 3907,
+      "min_stack": 8708,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    },
+    "evidence": {
+      "log_sha256": "99ad330b130a6cc5177c0cf6b8403454fc9901f8c43ffb5b06787997be5d7895",
+      "cases": [
+        {
+          "case": "pokedex",
+          "count": 302,
+          "free": 57664,
+          "stack": 8708
+        },
+        {
+          "case": "maps",
+          "count": 248,
+          "free": 32104,
+          "stack": 8708
+        },
+        {
+          "case": "oak-parcel",
+          "count": 1,
+          "free": 24712,
+          "stack": 8708
+        },
+        {
+          "case": "oak-dex",
+          "count": 16,
+          "free": 23968,
+          "stack": 8708
+        },
+        {
+          "case": "fossil",
+          "count": 1,
+          "free": 24864,
+          "stack": 8708
+        },
+        {
+          "case": "slots",
+          "count": 3,
+          "free": 24864,
+          "stack": 8708
+        },
+        {
+          "case": "menus",
+          "count": 48,
+          "free": 20768,
+          "stack": 8708
+        }
+      ],
+      "heap_lows": [
+        {
+          "bytes": 65536,
+          "frame": 0
+        },
+        {
+          "bytes": 62400,
+          "frame": 561
+        },
+        {
+          "bytes": 60096,
+          "frame": 4814
+        },
+        {
+          "bytes": 56960,
+          "frame": 4926
+        },
+        {
+          "bytes": 53824,
+          "frame": 7374
+        },
+        {
+          "bytes": 53760,
+          "frame": 22078
+        },
+        {
+          "bytes": 49376,
+          "frame": 39982
+        },
+        {
+          "bytes": 47760,
+          "frame": 39983
+        },
+        {
+          "bytes": 42152,
+          "frame": 40062
+        },
+        {
+          "bytes": 40128,
+          "frame": 40063
+        },
+        {
+          "bytes": 39232,
+          "frame": 40083
+        },
+        {
+          "bytes": 37120,
+          "frame": 40142
+        },
+        {
+          "bytes": 35504,
+          "frame": 40143
+        },
+        {
+          "bytes": 26032,
+          "frame": 40222
+        },
+        {
+          "bytes": 24416,
+          "frame": 40223
+        },
+        {
+          "bytes": 23696,
+          "frame": 41902
+        },
+        {
+          "bytes": 22800,
+          "frame": 41944
+        },
+        {
+          "bytes": 20864,
+          "frame": 42063
+        },
+        {
+          "bytes": 19968,
+          "frame": 42083
+        },
+        {
+          "bytes": 18464,
+          "frame": 51822
+        },
+        {
+          "bytes": 7816,
+          "frame": 59886
+        },
+        {
+          "bytes": 3907,
+          "frame": 77363
+        }
+      ]
+    }
+  },
+  "fixed": {
+    "result": {
+      "pass": true,
+      "error": null,
+      "head": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "d690b06503642cb59a8f35a9502cdea630e837bee9c9f64b3b12fd98bd8739b7",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "seconds": 165.4950943730073,
+      "frames": 321240,
+      "cases": 13,
+      "min_heap": 4728,
+      "min_stack": 8708,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    },
+    "evidence": {
+      "log_sha256": "69beec97b006364062a1ebe02abe276c97facdcafc22578116c29f6fad12b695",
+      "cases": [
+        {
+          "case": "pokedex",
+          "count": 302,
+          "free": 57664,
+          "stack": 8708
+        },
+        {
+          "case": "maps",
+          "count": 248,
+          "free": 32104,
+          "stack": 8708
+        },
+        {
+          "case": "oak-parcel",
+          "count": 1,
+          "free": 24712,
+          "stack": 8708
+        },
+        {
+          "case": "oak-dex",
+          "count": 16,
+          "free": 23968,
+          "stack": 8708
+        },
+        {
+          "case": "fossil",
+          "count": 1,
+          "free": 24864,
+          "stack": 8708
+        },
+        {
+          "case": "slots",
+          "count": 3,
+          "free": 24864,
+          "stack": 8708
+        },
+        {
+          "case": "menus",
+          "count": 48,
+          "free": 20768,
+          "stack": 8708
+        },
+        {
+          "case": "moves",
+          "count": 330,
+          "free": 9848,
+          "stack": 8708
+        },
+        {
+          "case": "evolution",
+          "count": 3,
+          "free": 22448,
+          "stack": 8708
+        },
+        {
+          "case": "trade",
+          "count": 3,
+          "free": 18096,
+          "stack": 8708
+        },
+        {
+          "case": "ending",
+          "count": 1,
+          "free": 21424,
+          "stack": 8708
+        },
+        {
+          "case": "pc-full",
+          "count": 300,
+          "free": 16048,
+          "stack": 8708
+        },
+        {
+          "case": "save-full",
+          "count": 1,
+          "free": 28592,
+          "stack": 8708
+        }
+      ],
+      "heap_lows": [
+        {
+          "bytes": 65536,
+          "frame": 0
+        },
+        {
+          "bytes": 62400,
+          "frame": 561
+        },
+        {
+          "bytes": 60096,
+          "frame": 4814
+        },
+        {
+          "bytes": 56960,
+          "frame": 4926
+        },
+        {
+          "bytes": 53824,
+          "frame": 7374
+        },
+        {
+          "bytes": 53760,
+          "frame": 22078
+        },
+        {
+          "bytes": 49376,
+          "frame": 39982
+        },
+        {
+          "bytes": 47760,
+          "frame": 39983
+        },
+        {
+          "bytes": 42152,
+          "frame": 40062
+        },
+        {
+          "bytes": 40128,
+          "frame": 40063
+        },
+        {
+          "bytes": 39232,
+          "frame": 40083
+        },
+        {
+          "bytes": 37120,
+          "frame": 40142
+        },
+        {
+          "bytes": 35504,
+          "frame": 40143
+        },
+        {
+          "bytes": 26032,
+          "frame": 40222
+        },
+        {
+          "bytes": 24416,
+          "frame": 40223
+        },
+        {
+          "bytes": 23696,
+          "frame": 41902
+        },
+        {
+          "bytes": 22800,
+          "frame": 41944
+        },
+        {
+          "bytes": 20864,
+          "frame": 42063
+        },
+        {
+          "bytes": 19968,
+          "frame": 42083
+        },
+        {
+          "bytes": 18464,
+          "frame": 51822
+        },
+        {
+          "bytes": 7816,
+          "frame": 59886
+        },
+        {
+          "bytes": 4968,
+          "frame": 77384
+        },
+        {
+          "bytes": 4967,
+          "frame": 78024
+        },
+        {
+          "bytes": 4728,
+          "frame": 86694
+        }
+      ]
+    }
+  },
+  "checks": {
+    "head": "925cf53d4420244eba482f36a1aafa6fad0964b9",
+    "diff_sha256": "b39bd7b46916d9fd907d3bcd9421be0cad2b6823fdc7d119a67e378265542574",
+    "checks": [
+      {
+        "name": "baseline",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "trainer_back_cache_lives_only",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 101,
+        "passed": 0,
+        "log": "audit-1300-cache-baseline.log",
+        "sha256": "4f71c716967d116c35c7f7e027e5a4cad77ca1ecfc2c94a9d35775e10382a48e"
+      },
+      {
+        "name": "app",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 393,
+        "log": "audit-1300-cache-app.log",
+        "sha256": "868ab370ed4f03ea4631da795d8cc3492df03c7ea6dce83e782bb46b3274356c"
+      },
+      {
+        "name": "walk",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--test",
+          "route22_gate_guard",
+          "--test",
+          "relative_script_walk",
+          "--test",
+          "door_exit",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 10,
+        "log": "audit-1300-cache-walk.log",
+        "sha256": "63cf52bb8485e98a19baa99ea1125c859db9448401123cac258960c67b25e66f"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "memory-scenarios",
+          "--locked",
+          "--offline"
+        ],
+        "exit": 0,
+        "passed": 0,
+        "log": "audit-1300-cache-gba-build.log",
+        "sha256": "4821c176c5b51b018cf98f1257a354df1ff77a22bab0d5f39e359669fc4daf4e"
+      }
+    ],
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99"
+  },
+  "existing_app_ignored_tests": 38,
+  "unchanged_gate_files": [
+    {
+      "path": "crates/pokered-gba/src/main.rs",
+      "sha256": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36"
+    },
+    {
+      "path": "crates/pokered-gba/src/memory_scenarios.rs",
+      "sha256": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937"
+    },
+    {
+      "path": "crates/pokered-gba/src/heap_probe.rs",
+      "sha256": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    {
+      "path": "scripts/gba_memory.py",
+      "sha256": "f3944c7d7d3552b5208e4a927dca2e13ee5a32fea28d7ca852a68a53b0cbea76"
+    },
+    {
+      "path": ".github/workflows/gba-performance.yml",
+      "sha256": "cb8a97e2757ae26342e8420e4eaaa89c8e4f770336fe227cb8ab2ca84300ad28"
+    }
+  ],
+  "regression_scope": "Old renderer lifetime fails the same new ownership test; only the release block is omitted for that baseline. Host test cfg exposes the cache field. Uninstrumented GBA baseline/fix use the original full-save fixture and Evidence parser. Controlled stress, not a normal-playthrough parity proof.",
+  "diagnostic_phase": "A separate temporary log emitted only after the original heap gate failed reproduced3907B at77363 and showed Intro(PlayerSendOut), snapshot=false. Diagnostic is absent from the fixed source.",
+  "ci_requirement": "All six original GBA gates and every other required workflow must execute and pass on the latest combined PR head before merge.",
+  "full_native_package_validation": {
+    "base": "3acb188faaf620140ee09fc81d57972b5d4e0c6a",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-app",
+      "--locked",
+      "--offline"
+    ],
+    "exit": 0,
+    "passed": 912,
+    "ignored": 88,
+    "counts_include_separate_library_binary_and_integration_targets": true,
+    "log": "audit-1300-cache-full-package.log",
+    "log_sha256": "5751fe0e925058af7cda39b37bad0d6d1228c0ba9e9f44a5cb0e1dd57f283db0",
+    "tested_source_sha256": "438d4e10abaafb37d8a4ef8af9ff6bc9c12165d2eb839c4bfdc876d386023637",
+    "tested_source_blob": "ee03f109383114e12443b2defe0f329504a61b74",
+    "frozen_cli_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+    "scope": "Fix hosted test import for shared lib/bin renderer; baremetal import and cache release logic unchanged from3acb188f. GBA local evidence is still the3acb188f ROM; latest combined-head CI required."
+  }
+}

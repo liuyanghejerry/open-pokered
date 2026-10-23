@@ -1,6 +1,8 @@
 use crate::alloc_prelude::*;
 #[cfg(target_os = "none")]
 use alloc::rc::Rc;
+#[cfg(all(test, not(target_os = "none")))]
+use std::rc::Rc;
 use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::StatusCondition as CoreStatus;
 use pokered_core::battle::state::{status2, status3};
@@ -564,7 +566,7 @@ pub struct BattleVisualEffects {
     #[cfg(target_os = "none")]
     #[cfg(target_os = "none")]
     scaled_player_back: Option<(String, Rc<TileSet>)>,
-    #[cfg(target_os = "none")]
+    #[cfg(any(target_os = "none", test))]
     scaled_trainer_back: Option<(bool, Rc<TileSet>)>,
 }
 
@@ -984,7 +986,7 @@ impl Default for BattleVisualEffects {
             #[cfg(target_os = "none")]
             #[cfg(target_os = "none")]
             scaled_player_back: None,
-            #[cfg(target_os = "none")]
+            #[cfg(any(target_os = "none", test))]
             scaled_trainer_back: None,
         }
     }
@@ -4555,6 +4557,15 @@ pub fn draw_battle(
             _ => false,
         };
 
+        // The retired trainer picture is 49 decoded tiles (3136 bytes).
+        // Release it before loading the Pokemon back picture; retaining both
+        // crosses the GBA heap margin with a full save and suspended script.
+        // Safari and the Old Man still display their trainer, so keep theirs.
+        #[cfg(any(target_os = "none", test))]
+        if !show_player_trainer_back {
+            effects.scaled_trainer_back = None;
+        }
+
         let (player_dx, player_dy) = effects.player_offset();
         if effects.player_visible_now()
             || effects.hide_mon_one_frame == Some(MonSide::Player)
@@ -6327,6 +6338,34 @@ mod battle_medicine_tests;
 mod old_man_render_tests {
     use super::*;
     use pokered_renderer::resource::AssetRoot;
+
+    #[test]
+    fn trainer_back_cache_lives_only_while_the_renderer_needs_the_portrait() {
+        let root = AssetRoot::auto_detect().expect("gfx assets for back-cache regression");
+        let mut resources = Some(ResourceManager::new(root));
+        for (safari, old_man) in [(false, false), (true, false), (false, true)] {
+            let mut screen = BattleScreen::new(true);
+            screen.is_safari = safari;
+            screen.is_old_man = old_man;
+            let mut effects = BattleVisualEffects::default();
+            let picture = Rc::new(TileSet::blank(49));
+            let lifetime = Rc::downgrade(&picture);
+            effects.scaled_trainer_back = Some((old_man, picture));
+            let mut fb = FrameBuffer::new(
+                dotzuki_engine::render_config::RenderConfig::new(160, 144), Rgba::WHITE,
+            );
+            screen.phase = BattlePhase::Intro { phase: IntroPhase::WildReveal, wait_frames: 32 };
+            draw_battle(&screen, &mut resources, &mut fb, &mut effects, Lang::En);
+            assert!(lifetime.upgrade().is_some(), "the intro still shows the trainer");
+            for phase in [BattlePhase::Intro { phase: IntroPhase::PlayerSendOut, wait_frames: 0 },
+                BattlePhase::PlayerMenu] {
+                screen.phase = phase;
+                draw_battle(&screen, &mut resources, &mut fb, &mut effects, Lang::En);
+                assert_eq!(lifetime.upgrade().is_some(), safari || old_man,
+                    "only Safari/tutorial keep a trainer after the reveal");
+            }
+        }
+    }
 
     #[test]
     fn tutorial_keeps_its_intro_portrait_without_player_hud_after_reveal() {
