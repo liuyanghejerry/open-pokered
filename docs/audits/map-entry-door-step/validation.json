@@ -172,6 +172,53 @@
     ".task-tmp/fidelity-39-plus/audit-1297-door-final-before.log": {
       "bytes": 92540,
       "sha256": "1bbafcd2d40f2673f553d3e496574a87df9a61316dbb20a20b242efa5693016b"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-combined-core.log": {
+      "bytes": 322050,
+      "sha256": "a818c4251afb83fbc3d47c1a23103169b4ad63938f2bb5432d240e5e2971665c"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-combined-app.log": {
+      "bytes": 94480,
+      "sha256": "374a37e0c94fadf76290a1ed33f3a1ba602a5381747463c86fab50d30a17f3d8"
+    },
+    ".task-tmp/fidelity-39-plus/audit-1297-door-combined-gba.log": {
+      "bytes": 58705,
+      "sha256": "a2a8e4e264a557b2e394ba4927c3e4882e9f90d5a46ff329745efeee26aa123a"
     }
+  },
+  "combined_master_validation": {
+    "parent_master": "028b93b0fdeabda5067047a61db244d10fc61011",
+    "tested_code_head": "ac81fa42716aee67d4014371b9674171b04d664f",
+    "checks": [
+      {
+        "check": "door-combined-core",
+        "exit_code": 0,
+        "seconds": 37.87,
+        "log": "audit-1297-door-combined-core.log",
+        "passed": 3659
+      },
+      {
+        "check": "door-combined-app",
+        "exit_code": 0,
+        "seconds": 27.21,
+        "log": "audit-1297-door-combined-app.log",
+        "passed": 8
+      },
+      {
+        "check": "door-combined-gba",
+        "exit_code": 0,
+        "seconds": 40.1,
+        "log": "audit-1297-door-combined-gba.log",
+        "passed": 0
+      }
+    ],
+    "core_full_passed": 3659,
+    "shared_game_tests": 8,
+    "door_capture_identical": true,
+    "source_sha256": {
+      "crates/pokered-core/src/overworld/screen.rs": "e17f17c54c5ec4b44d8137ba1688347c6a8560dabdd5007d8cb7d249af9ef14a",
+      "crates/pokered-core/src/overworld/update.rs": "25c9b68d51509dd52eaea7cc7dad49428f4e7b62dd79dd278856c1610d565066"
+    },
+    "full_ci": "Required on the final pushed head including this validation record."
   }
 }
