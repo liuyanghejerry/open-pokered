@@ -1,0 +1,32 @@
+{
+  "scope": "Existing timer/effect CPU cursors with optional actual APU stores. No live Game/IRQ/APU owner integration is claimed.",
+  "source": {
+    "pret_revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "effects": 492,
+    "timer_frames": 72,
+    "apu_stores": 448,
+    "strict_memory_reads": true,
+    "rendered_original_fonts": false
+  },
+  "checks": [
+    {
+      "command": "cargo test -p pokered-audio --features source-clock-serde timer_work --offline",
+      "passed": true,
+      "tests_passed": 6,
+      "tests_failed": 0,
+      "note": "Includes three original CPU-only tests and three new APU-store tests; every fixture instruction is refused twice then serialized/resumed and accepted.",
+      "log": ".task-tmp/fidelity-39-plus/audit-1274-timer-bus-tests.log",
+      "log_sha256": "92e5fa798ff0d41431259181f98e314f9cbbcfeaf53c18a554b1e9285b5d0ab0"
+    },
+    {
+      "cwd": "crates/pokered-gba",
+      "command": "cargo +nightly-2025-12-07 check --manifest-path ../pokered-audio/Cargo.toml --release --features source-clock-serde --offline",
+      "passed": true,
+      "target": "thumbv4t-none-eabi",
+      "log": ".task-tmp/fidelity-39-plus/audit-1274-timer-bus-gba-check.log",
+      "log_sha256": "06dc7703a2129ba1a8c628bbb8a994c3728cc80c00902ba434cafc54dfa9c0b2"
+    }
+  ],
+  "build_resources": "Reused the existing fidelity-1064-payday-target and 1030-tile-candidate-cargo-home with incremental disabled and DEV/TEST debug=0, opt-level=0. No new worktree, cache, target directory, game binary or ROM."
+}

@@ -68,6 +68,7 @@ struct Voice {
     loop_counter: u8,
     speed: u8,
     volume: u8,
+    wave_instrument: u8,
     duty: u8,
     octave: u8,
     flags1: u8,
@@ -115,6 +116,7 @@ impl NativeStart {
                     loop_counter: c.loop_counter,
                     speed: c.note_speed,
                     volume: c.volume_envelope,
+                    wave_instrument: c.wave_instrument,
                     duty: c.duty_cycle << 6,
                     octave: c.octave,
                     flags1: c.flags1.bits(),
@@ -176,6 +178,7 @@ pub struct SourceAudioFrame {
     bank: u8,
     mute: u8,
     start: NativeStart,
+    physical_output: bool,
     ids: [u8; 8],
     fractions: [u8; 8],
     tempo: u16,
@@ -183,6 +186,7 @@ pub struct SourceAudioFrame {
     stage: Stage,
     cycles: u32,
     pub(crate) committed: Option<Result<AudioFrameWork, AudioClockError>>,
+    pub(crate) source_failed: Option<AudioClockError>,
 }
 impl SourceAudioFrame {
     pub fn new(
@@ -248,6 +252,7 @@ impl SourceAudioFrame {
             bank,
             mute,
             start,
+            physical_output: false,
             ids,
             fractions,
             tempo,
@@ -255,7 +260,26 @@ impl SourceAudioFrame {
             stage: Stage::Init,
             cycles: 0,
             committed: None,
+            source_failed: None,
         })
+    }
+    /// Retain the same instruction cursor with actual APU accesses enabled.
+    /// The source path currently admits only the unmodified PressAB program.
+    pub fn new_with_bus(
+        seq: &Sequencer,
+        song: SourceSong,
+        bank: u8,
+        mute: u8,
+    ) -> Result<Self, AudioClockError> {
+        let mut work = Self::new(seq, song, bank, mute)?;
+        if seq.channels[4].active && (seq.frequency_modifier != 0 || seq.tempo_modifier != 0) {
+            return Err(AudioClockError::UnsupportedEffect(4));
+        }
+        work.physical_output = true;
+        Ok(work)
+    }
+    pub fn has_bus_output(&self) -> bool {
+        self.physical_output
     }
     pub fn matches_native(&self, seq: &Sequencer) -> bool {
         self.start == NativeStart::read(seq)
@@ -355,12 +379,47 @@ impl SourceAudioFrame {
         seq: &Sequencer,
         execute: impl FnOnce(u8) -> Result<(), E>,
     ) -> Result<bool, FrameStepError<E>> {
+        if self.physical_output {
+            return Err(FrameStepError::ChangedProgram);
+        }
+        self.step_inner(seq, |op| execute(op.tcycles).map(|()| None))
+    }
+    /// Execute one actual instruction/access. Accepted reads must return Some;
+    /// refusal precedes all clock/APU effects. Keep the APU and native sequencer
+    /// exclusively owned until the complete frame and its logical commit finish.
+    pub fn try_step_with_bus<E>(
+        &mut self,
+        seq: &Sequencer,
+        execute: impl FnOnce(super::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, FrameStepError<E>> {
+        if !self.physical_output {
+            return Err(FrameStepError::ChangedProgram);
+        }
+        self.step_inner(seq, execute)
+    }
+    fn step_inner<E>(
+        &mut self,
+        seq: &Sequencer,
+        execute: impl FnOnce(super::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, FrameStepError<E>> {
+        use super::apu_bus::ApuInstruction;
         let i = self.channel as usize;
         match &mut self.stage {
             Stage::Effect(work) => {
                 let t = work.peek().expect("pending effect");
-                execute(t).map_err(FrameStepError::Clock)?;
-                work.next();
+                if self.physical_output {
+                    work.try_step_with_apu(|t, write| {
+                        let op = write.map_or_else(
+                            || ApuInstruction::plain(t),
+                            |w| ApuInstruction::write(t, w.address, w.value),
+                        );
+                        execute(op).map(|_| ())
+                    })
+                    .map_err(FrameStepError::Clock)?;
+                } else {
+                    execute(ApuInstruction::plain(t)).map_err(FrameStepError::Clock)?;
+                    work.next();
+                }
                 self.cycles += u32::from(t);
                 if work.finished() {
                     self.stage = Stage::Tail(0);
@@ -369,16 +428,29 @@ impl SourceAudioFrame {
             }
             Stage::Music(work) => {
                 let mut accepted = 0;
-                let done = work
-                    .try_step(&seq.channels[i].data, |t| {
-                        execute(t)?;
-                        accepted = t;
-                        Ok(())
+                let clock = |op: ApuInstruction| {
+                    let value = execute(op)?;
+                    accepted = op.tcycles;
+                    Ok(value)
+                };
+                let done = if self.physical_output {
+                    work.try_step_with_bus(
+                        &seq.channels[i].data,
+                        self.start.panning,
+                        self.start.voices[i].wave_instrument,
+                        super::wave_patterns::for_bank(self.bank)
+                            .expect("source frame validates its audio bank"),
+                        clock,
+                    )
+                } else {
+                    work.try_step(&seq.channels[i].data, |t| {
+                        clock(ApuInstruction::plain(t)).map(|_| ())
                     })
-                    .map_err(|e| match e {
-                        StreamStepError::Clock(e) => FrameStepError::Clock(e),
-                        StreamStepError::Input(e) => FrameStepError::Stream(e),
-                    })?;
+                }
+                .map_err(|e| match e {
+                    StreamStepError::Clock(e) => FrameStepError::Clock(e),
+                    StreamStepError::Input(e) => FrameStepError::Stream(e),
+                })?;
                 self.cycles += u32::from(accepted);
                 if done {
                     let (tempo, fraction, ended) =
@@ -406,16 +478,22 @@ impl SourceAudioFrame {
             }
             Stage::Press(work) => {
                 let mut accepted = 0;
-                let done = work
-                    .try_step(&seq.channels[4].data, |t| {
-                        execute(t)?;
-                        accepted = t;
-                        Ok(())
+                let clock = |op: ApuInstruction| {
+                    let value = execute(op)?;
+                    accepted = op.tcycles;
+                    Ok(value)
+                };
+                let done = if self.physical_output {
+                    work.try_step_with_bus(&seq.channels[4].data, clock)
+                } else {
+                    work.try_step(&seq.channels[4].data, |t| {
+                        clock(ApuInstruction::plain(t)).map(|_| ())
                     })
-                    .map_err(|e| match e {
-                        PressAbStepError::Clock(e) => FrameStepError::Clock(e),
-                        _ => FrameStepError::ChangedProgram,
-                    })?;
+                }
+                .map_err(|e| match e {
+                    PressAbStepError::Clock(e) => FrameStepError::Clock(e),
+                    _ => FrameStepError::ChangedProgram,
+                })?;
                 self.cycles += u32::from(accepted);
                 if done {
                     match work.result().expect("completed PressAB") {
@@ -437,7 +515,7 @@ impl SourceAudioFrame {
         } else {
             None
         };
-        execute(t).map_err(FrameStepError::Clock)?;
+        execute(ApuInstruction::plain(t)).map_err(FrameStepError::Clock)?;
         self.advance(note);
         self.cycles += u32::from(t);
         Ok(self.finished())

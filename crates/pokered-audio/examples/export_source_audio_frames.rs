@@ -2,6 +2,7 @@
 use pokered_audio::{audio_manager::AudioManager, music_data::MusicId, sfx_data::SfxId};
 fn main() {
     let output = std::env::args().nth(1).expect("output path");
+    let wave_variants = std::env::args().any(|arg| arg == "--wave-variants");
     let mut rows = Vec::new();
     for (music, bank) in [
         (MusicId::POKECENTER, 2),
@@ -34,6 +35,25 @@ fn main() {
                         .map(|c| c.data.clone())
                         .collect();
                     rows.push(serde_json::json!({"frame":frame,"confirmation":confirmation,"work":work,"data":data}));
+                    // Explicit controlled inputs for valid wave indices not reached
+                    // by these short native trajectories. Both frames start a note
+                    // without a note_type command replacing the initial instrument.
+                    if wave_variants
+                        && !confirmation
+                        && ((music == MusicId::POKECENTER && frame == 12)
+                            || (music == MusicId::SILPH_CO && frame == 119))
+                    {
+                        let original = manager.sequencer.channels[2].wave_instrument;
+                        for instrument in 5..=8 {
+                            manager.sequencer.channels[2].wave_instrument = instrument;
+                            let work = manager.begin_source_audio_frame(bank, 0).unwrap();
+                            rows.push(
+                                serde_json::json!({"frame":frame,"confirmation":confirmation,
+                                "initial_wave_override":instrument,"work":work,"data":data}),
+                            );
+                        }
+                        manager.sequencer.channels[2].wave_instrument = original;
+                    }
                 }
                 manager.update_frame();
             }

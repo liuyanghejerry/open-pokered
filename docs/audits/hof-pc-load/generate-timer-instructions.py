@@ -17,7 +17,7 @@ FIELDS = {'note_delay':0xc0b6, 'flags1':0xc02e, 'flags2':0xc036,
           'vibrato_rate':0xc05e, 'frequency_low':0xc066}
 
 
-def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=None, stop_pc=None, capture=False, initial_stack=None, strict_memory=False, instruction_limit=2000):
+def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=None, stop_pc=None, capture=False, initial_stack=None, strict_memory=False, instruction_limit=2000, write_events=None, read_events=None):
     r = {x:0 for x in 'ABCDEHL'}
     r['C'] = channel or 0
     r.update(registers or {})
@@ -32,13 +32,23 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
     if entry is not None: pc = entry
     stack, trace = list(initial_stack or []), []
     z = carry = False
+    if write_events is not None:
+        class TracedMemory(dict):
+            def __setitem__(self, address, value):
+                super().__setitem__(address, value)
+                if 0xff10 <= address <= 0xff3f:
+                    write_events.append((len(trace), start, address, value))
+        m = TracedMemory(m)
 
     def read(address):
         if 0x4000 <= address < 0x8000:
             return rom[bank*0x4000+address-0x4000]
         if strict_memory and address not in m:
             raise AssertionError(f'unprovided memory read {address:04x} at {pc:04x}')
-        return m.get(address, 0)
+        value = m.get(address, 0)
+        if read_events is not None and 0xff10 <= address <= 0xff3f:
+            read_events.append((len(trace), start, address, value))
+        return value
 
     def fetch():
         nonlocal pc

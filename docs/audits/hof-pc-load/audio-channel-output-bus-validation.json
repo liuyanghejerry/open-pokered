@@ -1,0 +1,32 @@
+{
+  "scope": "Channel helper stores associated with owning instructions only. No subinstruction physical timing, full frame bus, Game hookup or HoF fix claim.",
+  "original_helper_calls": 930,
+  "original_apu_stores": 4320,
+  "audio_tests_passed": 166,
+  "strict_memory_reads": true,
+  "old_frame_fixture_regenerated_identically": true,
+  "new_fixture_regenerated_identically": true,
+  "checks": {
+    "audit-1273-audio-full.log": "70d656584a72483063a47a528b717fa6aa066a308533935f443ba5ec7c06ce0d",
+    "audit-1273-output-bus-targeted.log": "2d4fd82b1ac2e411d7f8fee3bc3d4edd2339d8fba153fe3aeb1d999ebe8a735c",
+    "audit-1273-gba-default.log": "9a1e2c0a88069d58e8a19077bf2f39970a521d1855e49cd786dee71494650df4",
+    "audit-1273-gba-serde.log": "57beb7c8398677ff5b095d0f1c8303fd2fb2443115a6d47a2a2eee6a117a9364"
+  },
+  "artifacts": {
+    "crates/pokered-audio/src/source_clock/channel_output_bus_golden.json": "f919482b733190c37a03f20f37c853a7252989544a9503516e900559723033fb",
+    "docs/audits/hof-pc-load/generate-channel-output-bus.py": "aa57d5edf43d0c7ae62117604f6dd12b62143d8b816e11e283e8b268a342a8dd",
+    "docs/audits/hof-pc-load/generate-timer-instructions.py": "6300b6f3684a4720e9f136e27bed0cf61b937382bad86b2892d3d48c34ad2c49"
+  },
+  "review": "Independent readonly source review found no address/value/instruction placement issue; noted actual input ownership and physical timing boundaries.",
+  "remaining": [
+    "other music/PressAB/timer/end store sites and whole-frame propagation",
+    "pure single native logical commit without repeated APU writes",
+    "source port producers and physical timing",
+    "fade/post-hook/IRQ ownership and Game hookup",
+    "ordinary-input end-to-end fidelity"
+  ],
+  "new_worktrees": 0,
+  "new_targets": 0,
+  "new_game_binaries": 0,
+  "new_rom_copies": 0
+}

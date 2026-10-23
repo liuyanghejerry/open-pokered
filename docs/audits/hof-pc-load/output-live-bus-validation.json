@@ -1,0 +1,58 @@
+{
+  "scope": "Live APU access propagation on existing helper/pitch instruction cursors; no Game/APU owner integration claim.",
+  "source_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "fixture": {
+    "path": "crates/pokered-audio/src/source_clock/output_live_bus_golden.json",
+    "sha256": "71bf7af97f500bee0ae4a72ec7326324d0d23ce2611129467b4c3562b3dee48d",
+    "bytes": 1121494,
+    "helper_cases": 930,
+    "pitch_cases": 2100,
+    "apu_accesses": 25218,
+    "reuses_existing_cpu_traces": true,
+    "changing_nr51_samples": true,
+    "deterministic_after_shared_read_events": true
+  },
+  "checks": [
+    {
+      "command": "cargo test -p pokered-audio --features source-clock-serde source_clock::channel_output_instructions --offline",
+      "passed": true,
+      "tests_passed": 7,
+      "tests_failed": 0,
+      "note": "Includes all three new helper/pitch bus tests, existing CPU-only helper tests and existing store-only tests.",
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-output-live-bus-regression.log",
+      "log_sha256": "0c7ba443b653b2ccaa983208e09a3ad7231869c2ccfcfa61484605533d49377a",
+      "bytes": 1732
+    },
+    {
+      "command": "cargo test -p pokered-audio --features source-clock-serde source_clock::note_pitch_instructions --offline",
+      "passed": true,
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "note": "Existing CPU-only pitch API and unchanged 700-case fixture remain passing.",
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-pitch-live-bus-regression.log",
+      "log_sha256": "174cb03fa924ea96241f9c6ed5091be03581d2e87ce221115fb7182b14b815f1",
+      "bytes": 999
+    },
+    {
+      "cwd": "crates/pokered-gba",
+      "command": "cargo +nightly-2025-12-07 check --manifest-path ../pokered-audio/Cargo.toml --release --features source-clock-serde --offline",
+      "passed": true,
+      "target": "thumbv4t-none-eabi",
+      "log": ".task-tmp/fidelity-39-plus/audit-1275-output-live-bus-gba-check.log",
+      "log_sha256": "417fe6219f712e157f397896a4c6a38c6024c03d86433db66457ac095f3cd26e",
+      "bytes": 616
+    }
+  ],
+  "resources": "Used the existing fidelity-1064-payday-target and 1030-tile-candidate-cargo-home; incremental=0 and DEV/TEST debug=0/opt-level=0. No worktree, cache, target directory, game binary or ROM was added.",
+  "original_fonts_rendered": false,
+  "preliminary_check": {
+    "command": "cargo test -p pokered-audio --features source-clock-serde live_ --offline",
+    "passed": true,
+    "tests_passed": 7,
+    "tests_failed": 0,
+    "note": "Preliminary broad name filter: three new bus tests plus four existing tests whose names contain live_. The seven-test channel_output filter above is the scoped helper regression.",
+    "log": ".task-tmp/fidelity-39-plus/audit-1275-output-live-bus-tests.log",
+    "log_sha256": "c11734f4fce740014583ec693979e1ca8261616d4c45ff8a21ba13b403a5c4f3",
+    "bytes": 1631
+  }
+}

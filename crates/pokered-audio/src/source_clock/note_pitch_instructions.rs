@@ -85,7 +85,12 @@ pub struct NotePitchInstructions {
     frequency: u16,
     result: NotePitchResult,
     cycles: u32,
+    /// The rest-on-wave path reads NR51 before clearing channel 3's routing.
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    rest_nr51: Option<u8>,
 }
+#[path = "note_pitch_bus.rs"]
+mod bus;
 impl NotePitchInstructions {
     pub fn new(input: NotePitchInput) -> Option<Self> {
         if !matches!(input.bank, 2 | 31)
@@ -106,6 +111,7 @@ impl NotePitchInstructions {
                 wave_return_frequency: None,
             },
             cycles: 0,
+            rest_nr51: None,
         })
     }
     pub fn finished(&self) -> bool {
