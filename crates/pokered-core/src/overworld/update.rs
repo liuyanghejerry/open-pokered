@@ -28,7 +28,7 @@ use dotzuki_engine::overworld::map_transitions::{
 };
 use dotzuki_engine::tileset::TilesetTrait;
 use dotzuki_engine::GameData;
-use dotzuki_engine_script::{CommandResult, MapScriptConfig, ScriptCommand};
+use dotzuki_engine_script::{CommandResult, MapScriptConfig};
 use pokered_data::blockset_data;
 use pokered_data::impl_traits::PokemonMapData;
 use pokered_data::map_data_loader::get_map_json;
@@ -1093,8 +1093,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 // room — the box counts as success ("sent to BOX!").
                 let is_give_pokemon =
                     matches!(effect, script_bridge::ScriptEffect::GivePokemon { .. });
-                let completed_simulated_walk =
-                    matches!(effect, script_bridge::ScriptEffect::MovePlayerRelative { .. });
                 let base_result = Self::finish_effect(effect);
                 // StartBattle must SUSPEND the script (not resume it now): the
                 // battle hasn't run yet, so the `await game.startBattle(...)`
@@ -1153,15 +1151,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     log::info!(target: "pokered::overworld", "[Script] Effect done: {:?}", core::mem::discriminant(eff));
                 }
                 self.apply_finished_effect(effect_done);
-                if completed_simulated_walk {
-                    // JoypadOverworld.doneSimulating clears held input. The
-                    // ensuing NoDirection remembers the last direction and
-                    // arms the ordinary turn check before physical input.
-                    self.joy_ignore_mask = 0;
-                    self.check_player_turn = true;
-                    self.player_last_stop_direction = self.player_moving_direction;
-                    self.player_moving_direction = 0;
-                }
                 if awaiting_battle {
                     // Hold the script; it resumes when the battle ends.
                     self.script_awaiting_battle = true;
@@ -1179,21 +1168,13 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     // `resume_script_after_trade`.
                     self.script_awaiting_trade = true;
                 } else if let Ok(Some(next_cmd)) = self.script_engine.signal_done(result) {
-                    // The map's redundant clearJoyIgnore is synchronous with
-                    // the simulated-walk return, not an extra displayed frame.
-                    let next_cmd = if completed_simulated_walk
-                        && matches!(next_cmd, ScriptCommand::ClearJoyIgnore) {
-                        self.script_engine.signal_done(CommandResult::Void).ok().flatten()
-                    } else { Some(next_cmd) };
-                    if let Some(next_cmd) = next_cmd {
-                        log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", core::mem::discriminant(&next_cmd));
-                        self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
-                            &next_cmd,
-                            &self.player_name,
-                            &self.rival_name,
-                            &self.starter_display_name(),
-                        ));
-                    }
+                    log::info!(target: "pokered::overworld", "[Script] Next command: {:?}", core::mem::discriminant(&next_cmd));
+                    self.active_script_effect = Some(script_bridge::dispatch_command_with_names(
+                        &next_cmd,
+                        &self.player_name,
+                        &self.rival_name,
+                        &self.starter_display_name(),
+                    ));
                 }
                 self.sync_flags_from_engine();
             }

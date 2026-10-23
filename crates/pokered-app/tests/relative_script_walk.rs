@@ -66,14 +66,7 @@ fn capture(g: &mut PokemonGame, name: &str) {
 // VBlanks between advances. Completion does not consume the next direction.
 const STRIDE: [u8; 17] = [7, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0];
 
-fn record_walk(
-    g: &mut PokemonGame,
-    name: &str,
-    y: u16,
-    dy: i16,
-    steps: usize,
-    first_input: Option<usize>,
-) {
+fn record_walk(g: &mut PokemonGame, name: &str, y: u16, dy: i16, steps: usize, hold_right: bool) {
     // The caller stops delivering its dialogue/warp input when the movement
     // command begins; all following movement is driven by the real scene.
     for _ in 0..30 {
@@ -85,9 +78,16 @@ fn record_walk(
     assert_eq!(g.overworld.state.walk_counter, 7);
     let mut rows = Vec::new();
     let mut actual = Vec::new();
+    let start_x = g.overworld.state.player.x;
     for frame in 0..steps * 17 + 26 {
         let row = (g.overworld.state.walk_counter, g.overworld.state.player.y);
         actual.push(row);
+        if frame < steps * 17 {
+            assert_eq!(
+                g.overworld.state.player.x, start_x,
+                "{name}: physical input during simulated movement"
+            );
+        }
         rows.push(
             serde_json::json!({"frame": frame, "walk": row.0, "y": row.1,
             "x": g.overworld.state.player.x, "effect": g.overworld.active_script_effect_label(),
@@ -96,7 +96,7 @@ fn record_walk(
         if frame == 8 {
             capture(g, name);
         }
-        g.update(&if first_input.is_some() && frame < steps * 17 + 12 {
+        g.update(&if hold_right && frame < steps * 17 + 12 {
             input(GbButton::Right)
         } else {
             InputState::new()
@@ -118,17 +118,6 @@ fn record_walk(
         })
         .collect();
     assert_eq!(&actual[..expected.len()], expected.as_slice(), "{name}");
-    if let Some(expected_frame) = first_input {
-        let end_y = (y as i16 + dy * steps as i16) as u16;
-        let resumed = actual
-            .iter()
-            .position(|&(counter, y)| counter == 7 && y == end_y);
-        assert_eq!(
-            resumed,
-            Some(expected_frame),
-            "{name}: physical RIGHT handoff"
-        );
-    }
     assert!(g.overworld.script_engine_idle(), "{name}");
     assert!(g.overworld.active_script_effect_label().is_none(), "{name}");
     assert_eq!(
@@ -169,7 +158,7 @@ fn guard_refusal_uses_the_field_clock_in_both_lanes_and_direct_talk() {
             if x == 6 { 3 } else { 2 },
             1,
             1,
-            held_right.then_some(24),
+            held_right,
         );
         assert_eq!(g.overworld.state.player.x, x + u16::from(held_right));
     }
@@ -210,7 +199,7 @@ fn dock_departure_keeps_the_boundary_between_two_simulated_steps() {
             31,
             -1,
             2,
-            held_right.then_some(38),
+            held_right,
         );
         assert_eq!(g.overworld.state.player.x, 18 + u16::from(held_right));
         assert!(g.overworld.pending_dialogue.is_none());

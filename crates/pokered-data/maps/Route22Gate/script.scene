@@ -26,8 +26,6 @@ game_scene Route22Gate {
       }
       resetFlag("SCRIPT_ROUTE22GATE_NOOP")
       movePlayerRelative([[0, 1]])
-      // Route22GatePlayerMovingScript waits Delay3 before returning control.
-      delay(3)
     }
   }
 
@@ -52,7 +50,6 @@ game_scene Route22Gate {
         }
         // Original simulates DOWN x1 from either trigger tile.
         movePlayerRelative([[0, 1]])
-        delay(3)
       }
     }
   }
