@@ -69,6 +69,8 @@ pub struct AudioManager {
     /// Overworld ItemUsePokeFlute stops map music, waits for the channel-3
     /// jingle to end, then starts the map music again.
     music_after_sfx: Option<MusicId>,
+    /// Native wMuteAudioAndPauseMusic; boundary muting is done only once.
+    music_paused: u8,
 }
 
 impl Deref for AudioManager {
@@ -103,6 +105,7 @@ impl AudioManager {
             low_health_alarm_enabled: false,
             low_health_timer: 0,
             music_after_sfx: None,
+            music_paused: 0,
         }
     }
 
@@ -304,6 +307,7 @@ impl AudioManager {
             Some(MusicId::SILPH_CO | MusicId::DUNGEON3 | MusicId::POKECENTER)
         ) && !self.engine.is_fading()
             && !self.low_health_alarm_enabled
+            && self.music_paused == 0
         {
             PreparedAudioFrame::from_shared_music(&self.engine.sequencer)
         } else {
@@ -365,7 +369,7 @@ impl AudioManager {
             Some(MusicId::SILPH_CO | MusicId::DUNGEON3) => 31,
             _ => return Err(AudioClockError::UnsupportedSoundBank),
         };
-        if bank != expected_bank || mute != 0 || self.music_after_sfx.is_some() {
+        if bank != expected_bank || mute != 0 || self.music_after_sfx.is_some() || self.music_paused != 0 {
             return Err(AudioClockError::UnsupportedSoundBank);
         }
         let seq = &self.engine.sequencer;
@@ -476,6 +480,7 @@ impl AudioManager {
             || self.low_health_alarm_enabled
             || self.music_after_sfx.is_some()
             || self.engine.sequencer.pending_nr50.is_some()
+            || self.music_paused != 0
         {
             return Err(AudioClockError::UnsupportedSoundBank);
         }
@@ -663,7 +668,17 @@ impl AudioManager {
     /// the sequencer so it overrides channel 1, exactly as the original's
     /// direct hardware writes override whatever the sound engine put there.
     pub fn update_frame(&mut self) {
-        self.engine.update_frame();
+        if self.music_paused != 0 {
+            if self.music_paused == 1 && self.engine.sequencer.channels[..4].iter().any(|ch| ch.active) {
+                self.engine.apu.write_register(0xff25, 0);
+                self.engine.apu.write_register(0xff1a, 0);
+                self.engine.apu.write_register(0xff1a, 0x80);
+                self.music_paused = 0x81;
+            }
+            self.engine.update_frame_with_music_paused();
+        } else {
+            self.engine.update_frame();
+        }
         if self.music_after_sfx.is_some() && !self.engine.is_sfx_playing() {
             let music = self.music_after_sfx.take().unwrap();
             self.engine.play_music(music);
@@ -671,6 +686,25 @@ impl AudioManager {
         if self.low_health_alarm_enabled {
             self.tick_low_health_alarm();
         }
+    }
+
+    /// Freeze music commands while keeping SFX alive (slot-machine payout).
+    /// The first paused audio update, rather than every reward tick, mutes
+    /// NR51 and resets the wave DAC as Audio*_UpdateMusic does.
+    pub fn set_music_paused(&mut self, paused: bool) {
+        self.music_paused = if paused { self.music_paused.max(1) } else { 0 };
+    }
+
+    /// WaitForSoundToFinish ignores wave SFX (CHAN7) and an enabled alarm.
+    pub fn payout_sound_pending(&self) -> bool {
+        !self.low_health_alarm_enabled && [4, 5, 7].iter()
+            .any(|&index| self.engine.sequencer.channels[index].active)
+    }
+
+    /// A reset/scene stop must also release a minigame's music pause.
+    pub fn stop_all(&mut self) {
+        self.music_paused = 0;
+        self.engine.stop_all();
     }
 
     /// Enable/disable the low-health alarm (`wLowHealthAlarm`,

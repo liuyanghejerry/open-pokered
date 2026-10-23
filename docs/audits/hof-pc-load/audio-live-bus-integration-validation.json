@@ -93,6 +93,14 @@
     ".task-tmp/fidelity-39-plus/audit-1287-live-bus-gba-serde.log": {
       "sha256": "31cb88eb383b3177d002ac81c485ca9b543074a73de0c9daab926fa06e67edf6",
       "bytes": 616
+    },
+    ".task-tmp/fidelity-39-plus/audit-1290-combined-audio-tests.log": {
+      "sha256": "2d2998971c1122b782b0b113db928d8e236102e9a7bc5b58182d043cb323a571",
+      "bytes": 19019
+    },
+    ".task-tmp/fidelity-39-plus/audit-1290-combined-gba-check.log": {
+      "sha256": "24659d1e2b938f851e2695d97ec9965c573e320710e8fa1326d1845ced362239",
+      "bytes": 58795
     }
   },
   "checks": [
@@ -226,5 +234,15 @@
     "GBA_audio_source_clock_serde_locked_check": "pass",
     "full_CI": "required before merge",
     "no_new_worktree_or_game_binary": true
+  },
+  "slots_master_combination": {
+    "master": "bf7484d179f4593aa44e2df38fb4f5803b9af937",
+    "exact_pre_documentation_tree": "4d3a75e6be226fdae3a473b3822bf41c9dbc5cb5",
+    "resolution": "retain both pending_nr50 and music_paused guards",
+    "regression": "both_source_entry_modes_reject_pending_volume_and_native_pause",
+    "audio_tests_passed": 196,
+    "audio_test_seconds": 52.08,
+    "GBA_locked_memory_check": "pass",
+    "reuse_basis": "Full resolved Git tree equals the locally tested trial tree; only this validation record changes afterward. Full CI required on the new commit."
   }
 }

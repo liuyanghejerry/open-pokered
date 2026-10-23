@@ -2412,6 +2412,11 @@ impl PokemonGame {
     }
 
     pub fn handle_transition(&mut self, screen: GameScreen) {
+        if self.state.screen == GameScreen::Slots && screen != GameScreen::Slots {
+            if let Some(audio) = self.audio.as_ref() {
+                audio.set_music_paused(false);
+            }
+        }
         if screen != GameScreen::PartyScreen { self.party_flash_text = None; }
         if self.state.screen == GameScreen::StartMenu && screen != GameScreen::StartMenu && self.start_menu.has_source_entry() {
             self.overworld.suspend_source_foreground();
@@ -6026,7 +6031,14 @@ impl PokemonGame {
                         (GbButton::Up, 64), (GbButton::Down, 128)]
                         .into_iter().fold(0, |bits, (button, bit)|
                             bits | if input.is_held(button) { bit } else { 0 });
-                    result = slots.update_frame_with_held_input(slots_input, held);
+                    let music_was_paused = slots.music_paused();
+                    let sound_pending = self.audio.as_ref().is_some_and(|audio| audio.payout_sound_pending());
+                    result = slots.update_frame_with_audio(slots_input, held, sound_pending);
+                    if music_was_paused != slots.music_paused() {
+                        if let Some(audio) = self.audio.as_ref() {
+                            audio.set_music_paused(slots.music_paused());
+                        }
+                    }
                     coins_out = Some(slots.coins);
                     // The slots' own cues (slot_machine.asm: :120 spin start,
                     // :842 each reel stop, :694 per-coin payout tick, :588

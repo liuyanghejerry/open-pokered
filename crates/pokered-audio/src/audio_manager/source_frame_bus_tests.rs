@@ -287,3 +287,33 @@ fn live_manager_resumes_across_refusals_and_commits_one_logical_tick_per_frame()
         }
     }
 }
+
+#[test]
+fn both_source_entry_modes_reject_pending_volume_and_native_pause() {
+    use crate::source_clock::AudioClockError;
+    for music in [MusicId::POKECENTER, MusicId::SILPH_CO, MusicId::DUNGEON3] {
+        let mut manager = powered(music);
+        for _ in 0..20 {
+            manager.update_frame();
+        }
+        let bank = SourceSong::from_music(music).unwrap().bank();
+        assert!(manager.begin_source_audio_frame(bank, 0).is_ok());
+        assert!(manager.begin_source_audio_frame_with_bus(bank, 0).is_ok());
+        for (pending_volume, paused) in [(true, false), (false, true), (true, true)] {
+            manager.sequencer.pending_nr50 = pending_volume.then_some(0x55);
+            manager.set_music_paused(paused);
+            let before = native(&manager);
+            let apu_before = format!("{:?}", manager.apu);
+            assert!(matches!(manager.begin_source_audio_frame(bank, 0),
+                Err(AudioClockError::UnsupportedSoundBank)));
+            assert!(matches!(manager.begin_source_audio_frame_with_bus(bank, 0),
+                Err(AudioClockError::UnsupportedSoundBank)));
+            assert_eq!(native(&manager), before);
+            assert_eq!(format!("{:?}", manager.apu), apu_before);
+        }
+        manager.sequencer.pending_nr50 = None;
+        manager.set_music_paused(false);
+        assert!(manager.begin_source_audio_frame(bank, 0).is_ok());
+        assert!(manager.begin_source_audio_frame_with_bus(bank, 0).is_ok());
+    }
+}

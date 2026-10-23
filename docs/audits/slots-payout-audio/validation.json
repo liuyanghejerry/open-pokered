@@ -1,0 +1,61 @@
+{
+  "scope": "Original repeated physical-input pause/SFX/resume proof plus controlled shared-Game payout lifecycle test. No fresh travel, continuous source/native PCM equivalence or HoF fix claim.",
+  "base": "31cd299f5b355c382b30f50ab265a9782531f8aa",
+  "engine_dependency": "f3684094f82c80b3f045102fd546d2570d1d0934",
+  "engine_pr": 109,
+  "engine_merged_as": "73879e2e9971ddc06f3e3442459b044df5bfed2c",
+  "original_repeat_exact": true,
+  "original_pause_frames": 120,
+  "original_spins_to_win": 3,
+  "original_payout_coins": 15,
+  "unit_tests": {
+    "core_slots": 22,
+    "game_audio": 168,
+    "engine_audio": 191,
+    "engine_doctests": 2
+  },
+  "shared_Game_integration_test": "pass",
+  "GBA_locked_memory_scenarios_release_check": "pass",
+  "screenshots": "Same controlled WaitPress fixture plus Purchase SFX, A confirmation then8 neutral updates; base credits early, candidate waits for sound. Rendered by real shared Game draw, Fusion Pixel fonts.",
+  "fixture_preparation": "Offline source-derived location/music/map header/tileset fields and checksum, based on existing source-engine SRAM with prepared Coin Case and coins. No runtime RAM writes. Earlier incomplete legacy fixture attempts failed and are not runtime evidence.",
+  "evidence_sha256": {
+    "original-runtime.json.gz": "305ce7c92989942369bba8d9ec4e469895c2a523ef0c7cf73562951464c66a98",
+    "replay-original.py": "b6d2115d69dcf1c4e98c4a25fe113e4c6bfd9d38d1cd91ea9261b6499b18302c",
+    "README.md": "96b39c5f9de783aadaa76117cd998e8ff63fc748623fcda2622e44b604631309",
+    "before.png": "1b40b12b384962404675dafb4b461860c4f0b508c99defe89442d46679e03702",
+    "original-fixture.sav": "7f4917d0f6f80083f0da64b3c7669863d05154d81ed2c58e0780ea543791b246",
+    "after.png": "fb1db2a6df270568a65e55b7ffdd0e55215dd69d00b9a94955138c82ac4837f5"
+  },
+  "source_pause_admission": "New regression verifies unpaused source work is rejected before admission when native music is paused.",
+  "native_executable_guard": {
+    "expected_sha256": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+    "observation": "Cargo integration tests implicitly built the game binary; the frozen debug/pokered-app entry was restored from its byte-identical existing deps artifact via hardlink after testing. No original ROM changes."
+  },
+  "first_CI": {
+    "head": "9a874e7e44cda03608a2f39a491761c2517bda69",
+    "run": 39891733578,
+    "conclusion": "failure",
+    "cause": "Hardware-timer trainer update234>232.3; pokedex update119>118. Memory stages not reached.",
+    "follow_up": "Pause handoff only at payout-state change, forced exit and reset; default one audio update per frame restored. Full new CI required."
+  },
+  "follow_up_local_checks": {
+    "game_audio_tests": 168,
+    "shared_Game_integration": "pass including forced pause exit",
+    "GBA_locked_memory_check": "pass"
+  },
+  "latest_parent": "a0c9b5c639679aab2bf636dd234b66b5e01d5c83",
+  "previous_full_CI": {
+    "head": "f37922b789815c663a9300269a5d15d82fc97abb",
+    "parent": "31cd299f5b355c382b30f50ab265a9782531f8aa",
+    "CI": 39892706564,
+    "ROM": 39892706577,
+    "GBA": 39892706563,
+    "conclusion": "all original stages passed; not evidence for latest combined head"
+  },
+  "latest_parent_local_checks": {
+    "game_audio_tests": 168,
+    "shared_Game_payout_and_forced_exit": "pass",
+    "GBA_locked_memory_scenarios_release_check": "pass",
+    "full_CI": "required before merge"
+  }
+}
