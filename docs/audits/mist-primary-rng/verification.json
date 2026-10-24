@@ -60,5 +60,24 @@
   "cases": 144,
   "interface": "Prepared production BattleScreen turn caller with actual LinkRng, both sides, nine primary stat-drop moves, Mist/no Mist, X Accuracy/no X Accuracy, accuracy bytes 0 and 255.",
   "scope": "Primary Mist accuracy early return only. The preceding secondary-drop fix is separate. NPC 25-percent stat-drop and other early-return RNG audits remain open. Pure battle logic, screenshot exemption; no ordinary NEW GAME or original-ROM recording claim.",
-  "GBA_validation": "Pending on the committed combined source; final remote workflows and all six original runtime gates required before merge."
+  "GBA_validation": {
+    "source": "b4db6d24370974d8fdbb2c39ebba056774548f2d",
+    "performance": {
+      "cases": 7,
+      "frames": 8280,
+      "failures": [],
+      "rom_sha256": "a96c5fc99fb05ad89b9a6bbe24da018528d4005e6df48612ef1a859f0889951e"
+    },
+    "memory": {
+      "cases": 13,
+      "frames": 322800,
+      "seconds": 176.3159356949618,
+      "min_heap": 7832,
+      "min_stack": 8724,
+      "pass": true
+    },
+    "memory_rom_sha256": "5a3ef55ac0f718dca4ee51c2c469b78d75d096e0f32c1d930117bf742e374a7d",
+    "original_gates_unchanged": true,
+    "remote_CI": "Still required on final PR source before merge."
+  }
 }

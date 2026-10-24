@@ -16,6 +16,9 @@ All 3,686 core tests pass, with one existing ignored test. Source, failure
 and passing log hashes are recorded in `verification.json`.
 
 This is prepared-state battle-logic evidence, exempt from screenshots under
-AGENTS.md. GBA checks for the final combined source and all required remote
-CI/runtime gates remain prerequisites before merge. NPC stat-drop miss rolls
-and other early-return cases remain separate audits.
+AGENTS.md. The committed combined source `b4db6d24` also passes the original
+seven GBA performance scenarios and all 13 memory scenarios, including all
+330 move animations. Minimum contiguous heap is 7,832 bytes and stack margin
+is 8,724 bytes. All scenarios, thresholds, timeouts and workflows are unchanged.
+Final remote CI/runtime gates remain prerequisites before merge. NPC stat-drop
+miss rolls and other early-return cases remain separate audits.
