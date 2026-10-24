@@ -75,5 +75,24 @@
   "fixture_correction": "Both BattleScreen.link_mode and BattleState.link_battle must be set, matching the real link driver. The first exploratory run stopped at that fixture assertion and is not bug evidence. Existing two Mist fixtures now set both mode flags.",
   "interface": "Prepared production BattleScreen turn caller, deterministic LinkRng slot with independently asserted ordinary/link battle modes and controlled move selection. Player/enemy, nine primary stat-drop moves, 0/63/64/255, no guard/Substitute/Mist.",
   "scope": "Primary stat drops only. Damaging secondary stat drops have a separate NPC miss-order audit. Pure game logic; no fresh playthrough or original-ROM recording claim.",
-  "GBA_validation": "Pending on committed combined source; remote all-three/all-six gates required before merge."
+  "GBA_validation": {
+    "source": "595060da2181aaa7d8707d3933e2ae8850e4004f",
+    "performance": {
+      "cases": 7,
+      "frames": 8280,
+      "failures": [],
+      "rom_sha256": "898cce3a5c239abaa9690b82e37be5b302515503fcc8887a296806d08fcf6996"
+    },
+    "memory": {
+      "cases": 13,
+      "frames": 322800,
+      "seconds": 173.6974650020711,
+      "min_heap": 7832,
+      "min_stack": 8708,
+      "pass": true
+    },
+    "memory_rom_sha256": "9fdc578545cd4e142a7533fa2dcaa5922e148aaf984fabdc6de08b1a207dac68",
+    "original_gates_unchanged": true,
+    "remote_CI": "Required on final PR head before merge."
+  }
 }

@@ -20,5 +20,8 @@ flags just as the real link driver does. All 3,687 core tests pass, with one
 existing ignored test. Exact failure, fixture and passing hashes are retained.
 
 Pure battle logic is exempt from screenshots under AGENTS.md. This is prepared
-production-turn evidence, not a fresh playthrough. Committed-source GBA tests
-and all required remote workflows/runtime gates remain pending before merge.
+production-turn evidence, not a fresh playthrough. Committed source `595060da`
+also passes the seven original GBA performance scenarios and all 13 memory
+scenarios, including 330 move animations, with 7,832 bytes minimum contiguous
+heap and 8,708 bytes stack margin. No gates or workloads were changed. All
+required remote workflows/runtime gates remain prerequisites before merge.
