@@ -41,6 +41,8 @@ mod menu_tests;
 #[cfg(test)]
 mod max_pp_menu_tests;
 #[cfg(test)]
+mod leech_seed_tests;
+#[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
 mod fight_notice_tests;

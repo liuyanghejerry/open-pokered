@@ -55,9 +55,7 @@ pub fn apply_leech_seed(state: &mut BattleState, move_data: &MoveData) -> Effect
     if d_mon.type1 == PokemonType::Grass || d_mon.type2 == PokemonType::Grass {
         return EffectResult::StatusFailed;
     }
-    if defender.has_status2(status2::HAS_SUBSTITUTE_UP) {
-        return EffectResult::StatusFailed;
-    }
+    // LeechSeedEffect_ has no Substitute immunity in the original.
     let _ = move_data;
     let defender = state.defender_mut();
     defender.set_status2(status2::SEEDED);

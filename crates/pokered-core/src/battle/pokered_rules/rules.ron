@@ -297,13 +297,13 @@ Ruleset(
 
         // ── LEECH SEED (LeechSeedEffect): install the "leechseed" volatile; the
         //    already-wired end-of-turn leech_residual drains 1/16 to the seeder.
-        //    Grass-type immunity + no re-seed + Substitute block.
+        //    LeechSeedEffect_: Grass-type immunity + no re-seed. Gen 1 permits
+        //    seeding through a Substitute; residual damage drains real HP.
         Effect(id: "status.leechseed", kind: Move, power: 0, type: "Grass", accuracy: 90,
             hooks: [
                 Hook(on: "DamagingHit", do: [
                     VetoIf(cond: HasType("Grass")),
                     VetoIf(cond: HasVolatile("leechseed")),
-                    VetoIf(cond: HasVolatile("Substitute")),
                     InflictVolatile(kind: "leechseed", target: Target),
                 ]),
             ]),

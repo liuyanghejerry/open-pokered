@@ -293,8 +293,8 @@ fn reflect_set(
     HandlerResult::Unchanged
 }
 
-/// Leech Seed: seed the DEFENDER (legacy `apply_leech_seed`). Fails if the
-/// defender is already seeded, Grass-type (immune), or holds a Substitute.
+/// LeechSeedEffect_: seed the defender unless already seeded or Grass-type.
+/// Like the original, a Substitute does not prevent seeding.
 fn leech_seed_set(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -308,11 +308,6 @@ fn leech_seed_set(
     let (t1, t2) = battler_types(ctx, target);
     if t1 == PokemonType::Grass || t2 == PokemonType::Grass {
         return HandlerResult::Unchanged; // Grass immune (legacy StatusFailed)
-    }
-    if has_vol(ctx, target, |k| {
-        matches!(k, PokeVolatile::Substitute | PokeVolatile::SubstituteHp { .. })
-    }) {
-        return HandlerResult::Unchanged; // Substitute blocks (legacy StatusFailed)
     }
     set_vol(ctx, target, PokeVolatile::LeechSeed);
     HandlerResult::Unchanged

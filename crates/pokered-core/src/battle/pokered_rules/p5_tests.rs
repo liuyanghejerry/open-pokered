@@ -176,8 +176,7 @@ fn p5_light_screen_and_reflect_parity() {
     assert!(has_kind(&effects, PLAYER, |k| matches!(k, PokeVolatile::Reflect)), "Reflect set");
 }
 
-/// Leech Seed: legacy seeds a non-Grass defender, fails on a Grass-type. Native
-/// matches both, plus the Substitute block.
+/// Leech Seed: legacy seeds a non-Grass defender, fails on a Grass-type.
 #[test]
 fn p5_leech_seed_parity() {
     reset_p5_scratch();
@@ -202,6 +201,45 @@ fn p5_leech_seed_parity() {
     let mut eff_g = Vec::new();
     fire_p5(&mut es_g, &mut eff_g, leech_seed_effect(), Event::Custom(EV_LEECH_SEED), OPP, PLAYER, RelayVar::Unit, vec![]);
     assert!(!has_kind(&eff_g, OPP, |k| matches!(k, PokeVolatile::LeechSeed)), "Grass NOT seeded (parity)");
+}
+
+/// Original LeechSeedEffect_ does not reject a Substitute; re-seeding still fails.
+#[test]
+fn p5_leech_seed_substitute_bypass_and_reseed_guard() {
+    reset_p5_scratch();
+    let md = *pokered_data::move_data::MoveData::get(MoveId::LeechSeed).unwrap();
+    let mut legacy = legacy_state(
+        legacy_poke(Species::Pikachu, 100, 200),
+        legacy_poke(Species::Pikachu, 200, 200),
+    );
+    legacy.enemy.set_status2(status2::HAS_SUBSTITUTE_UP);
+    legacy.enemy.substitute_hp = 50;
+    assert_eq!(
+        crate::battle::effects::field_effects::apply_leech_seed(&mut legacy, &md),
+        crate::battle::effects::EffectResult::Seeded,
+    );
+    assert_eq!(
+        crate::battle::effects::field_effects::apply_leech_seed(&mut legacy, &md),
+        crate::battle::effects::EffectResult::FieldEffectAlreadyActive,
+    );
+    assert_eq!(legacy.enemy.substitute_hp, 50);
+
+    let mut state = EngineState::new(
+        vec![engine_battler(Species::Pikachu, 100, 200)],
+        vec![engine_battler(Species::Pikachu, 200, 200)],
+    );
+    let mut effects = vec![EffectState {
+        id: dotzuki_engine::battle::stack::EffectId(0x50_920),
+        host: OPP,
+        effect_order: 0,
+        kind: PokeVolatile::SubstituteHp { hp: 50 },
+    }];
+    for _ in 0..2 {
+        fire_p5(&mut state, &mut effects, leech_seed_effect(), Event::Custom(EV_LEECH_SEED), OPP, PLAYER, RelayVar::Unit, vec![]);
+        assert_eq!(effects.iter().filter(|e| e.host == OPP && matches!(e.kind, PokeVolatile::LeechSeed)).count(), 1);
+    }
+    assert!(has_kind(&effects, OPP, |k| matches!(k, PokeVolatile::SubstituteHp { hp: 50 })));
+    assert_eq!(state.opponent_battlers[0].hp, 200, "seeding itself deals no damage");
 }
 
 /// Leech Seed residual: drains max/16 from the host to the seeder. Legacy

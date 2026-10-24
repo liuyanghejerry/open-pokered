@@ -1,0 +1,135 @@
+{
+  "base": "523b82c0edaf74694d95debc8aed0bbfc225fcd1",
+  "reference": {
+    "source_repository": "pret/pokered",
+    "source_pin": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source_hashes": {
+      "engine/battle/move_effects/leech_seed.asm": "ee58f9d3462ada1aaf49e3452afd3c92b4c70c9e4b0041c8a5cbed1bde05d234",
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f"
+    },
+    "finding": "LeechSeedEffect_ calls MoveHitTest, then checks both Grass type slots and SEEDED, but never blocks Substitute. MoveHitTest calls CheckTargetSubstitute for a broken drain-effect check; it is not a generic Substitute veto.",
+    "evidence_limit": "Source inspection and production battle input regression, not a new original-ROM physical-input capture."
+  },
+  "changed_source_sha256": {
+    "crates/pokered-core/src/battle/effects/field_effects.rs": "1dea094dc7aa1e958713d6adbb6d2f33ffac6477b3ecf727467b85fd1c8239f4",
+    "crates/pokered-core/src/battle/mod.rs": "b548d8c013a623bb8ff1a467c1995c7d1747e8e6dcbd55c034c18b4f252594a8",
+    "crates/pokered-core/src/battle/leech_seed_tests.rs": "6534e2ec5445a32a079c80fd9f024e3ef1cb7865fb879109dc9d1f37efae76bd",
+    "crates/pokered-core/src/battle/pokered_rules/p5_native.rs": "c8d1c91c24f2a8eff74b8e8cf8314e21f8168d482023513142049e6def29d7e8",
+    "crates/pokered-core/src/battle/pokered_rules/p5_tests.rs": "737e048356cb6383c634c4e6f697af1518f957c1c169b24f745c14d66eee5db4",
+    "crates/pokered-core/src/battle/pokered_rules/rules.ron": "41477d17cc72a4a88f8522371ee3c43dd4f8fd1108abe5c4d8653a35abde6506"
+  },
+  "red": {
+    "command": "cargo test -p pokered-core --locked --offline leech_seed -- --nocapture",
+    "passed": 11,
+    "failed": 2,
+    "assertions": [
+      "Production FIGHT: target_player=false, substitute=true, Rattata not seeded",
+      "Legacy helper: StatusFailed instead of Seeded"
+    ]
+  },
+  "green": {
+    "command": "cargo test -p pokered-core --locked --offline",
+    "passed": 3662,
+    "failed": 0,
+    "ignored": 1
+  },
+  "gba": {
+    "build": "cargo +nightly-2025-12-07 build --release --features perf-benchmark --locked --offline",
+    "cwd": "crates/pokered-gba",
+    "profile": "original release",
+    "rom_sha256": "d95bfd25bbcc1f5f0f3f90ea49b80090f0f9dfed78df884a45ee8bfa76ebab85",
+    "frames": 8280,
+    "failures": [],
+    "comparison": "unchanged perf-baseline.json; 15 percent / 25 tick thresholds",
+    "metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 251,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1201,
+          "draw_max_ticks": 9842,
+          "present_per_frame_ticks": 352,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 601,
+          "update_avg_ticks": 172,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2858,
+          "draw_max_ticks": 9006,
+          "present_per_frame_ticks": 391,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 375,
+          "update_core_avg_ticks": 366,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 388,
+          "update_core_avg_ticks": 378,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 203,
+          "draw_max_ticks": 2796,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 771
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2631,
+          "draw_max_ticks": 8863,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 501,
+          "update_avg_ticks": 231,
+          "update_core_avg_ticks": 220,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2352,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 343,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 104,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 40,
+          "draw_max_ticks": 16321,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    }
+  }
+}
