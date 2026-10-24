@@ -334,6 +334,61 @@ class BattleCompletionBudgetTests(unittest.TestCase):
         self.assertEqual(game.tap.call_count,121)
 
 
+class CaptureHandoffTests(unittest.TestCase):
+    def test_captured_entry_and_nickname_finish_before_navigation_returns(self):
+        game = Mock()
+        phases = [
+            ("battle", "NewDexMessage"),
+            ("pokedex", "Entry"),
+            ("battle", "Question"),
+            ("battle", "Choice"),
+            ("battle", "Transfer"),
+            ("overworld", None),
+        ]
+        game.st.side_effect = [
+            {"screen": screen, "capture_phase": phase,
+             "battle_phase": "BattleOver { won: true, escaped: false }"}
+            for screen, phase in phases
+        ]
+        pt.Game.battle_loop(game, max_iters=1)
+        self.assertEqual([call.args[0] for call in game.tap.call_args_list],
+                         ["b", "a", "b", "b", "b"])
+        game.wait.assert_called_once_with("not_battle", 1800)
+
+    def test_intro_ack_cannot_confirm_default_safari_ball(self):
+        game = Mock()
+        game.st.side_effect = [
+            {"screen": "battle", "battle_phase": "Intro { phase: SafariMenuPreparation, wait_frames: 1 }"},
+            {"screen": "overworld", "battle_phase": ""},
+        ]
+        pt.Game.battle_loop(game)
+        game.tap.assert_called_once_with("b", 10)
+
+    def test_stuck_capture_entry_has_a_bounded_failure(self):
+        game = Mock()
+        game.st.return_value = {"screen": "pokedex", "capture_phase": "Entry",
+                                "battle_phase": "BattleOver { won: true, escaped: false }"}
+        with self.assertRaisesRegex(pt.NavError, "capture flow did not finish"):
+            pt.Game.battle_loop(game, max_iters=1)
+        self.assertEqual(game.tap.call_count, 121)
+        game.wait.assert_not_called()
+
+    def test_unrelated_pokedex_page_is_not_dismissed_as_capture(self):
+        game = Mock()
+        game.st.return_value = {"screen": "pokedex", "capture_phase": None,
+                                "battle_phase": ""}
+        pt.Game.battle_loop(game)
+        game.tap.assert_not_called()
+
+    def test_unexpected_nickname_editor_does_not_rename_a_caught_mon(self):
+        game = Mock()
+        game.st.return_value = {"screen": "battle", "capture_phase": "Naming",
+                                "battle_phase": "BattleOver { won: true, escaped: false }"}
+        with self.assertRaisesRegex(pt.NavError, "unexpected capture nickname editor"):
+            pt.Game.battle_loop(game)
+        game.tap.assert_not_called()
+
+
 class BagSelectionTests(unittest.TestCase):
     @patch.object(late, "open_start")
     def test_selects_tm24_above_the_recorded_cancel_cursor(self, open_start):
