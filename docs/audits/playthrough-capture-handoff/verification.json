@@ -1,0 +1,50 @@
+{
+  "parent": "62bd5d2511e9ba49014d4ad53ecf0270061731ae",
+  "driver_sha256": "4f34fcdca2b62a3f5beca16d6e172f48f88907fb151fed66063bea0328666100",
+  "failure": "ordinary af6 NEW GAME completed m01-m27, then m28 navigation continued on the captured Doduo dex entry; no full clear or CONTINUE pass",
+  "tests": {
+    "red": {
+      "total": 4,
+      "failed": 3
+    },
+    "green": {
+      "total": 117,
+      "failed": 0
+    }
+  },
+  "native": {
+    "binary_sha256": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2",
+    "binary_source": "af6a12f8, same game capture implementation as current candidate",
+    "driver": "actual modified Game.battle_loop using real debug-server input calls, not a mocked battle",
+    "fixture": {
+      "give_pokemon": [
+        "Venusaur",
+        50
+      ],
+      "give_item": [
+        "MASTER_BALL",
+        1
+      ],
+      "start_wild_battle": [
+        "Rattata",
+        5
+      ]
+    },
+    "startup": "--skip-intro --warp Route1,10,10 --seed42 --speed0; separate temporary save",
+    "dex_entry_frame": 888,
+    "nickname_choice_frame": 996,
+    "final_frame": 1068,
+    "final_screen": "overworld",
+    "capture_phase": null,
+    "party": [
+      "Venusaur",
+      "Rattata"
+    ],
+    "bag": []
+  },
+  "limits": [
+    "A separate diagnostic proves the shared regular capture continuation, not recovery of the discarded Safari SRAM.",
+    "Full ordinary NEW GAME and independent CONTINUE must be rerun after the driver change.",
+    "No game rules, performance baselines, CI filters or timeouts were changed."
+  ]
+}

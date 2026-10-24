@@ -1705,6 +1705,15 @@ class Game:
         # without buttons then leaves ShowingText / TrainerVictory blocked.
         for it in range(max_iters + 120):
             s = self.st()
+            # Capture settlement spans battle text, a separate Pokédex screen,
+            # and the nickname/transfer continuation. Leaving battle alone is
+            # not yet a handoff to map navigation (fresh Safari m28 regression).
+            capture_phase = s.get("capture_phase")
+            if capture_phase is not None:
+                if capture_phase == "Naming":
+                    raise NavError("unexpected capture nickname editor")
+                self.tap("a" if capture_phase == "Entry" else "b", 10)
+                continue
             if it >= max_iters and s["screen"] == "battle":
                 live = s.get("battle_live") or {}
                 enemies = live.get("enemy_party") or [live.get("enemy", {})]
@@ -1724,7 +1733,11 @@ class Game:
             if s["screen"] != "battle":
                 break
             ph = s["battle_phase"]
-            if ph.startswith("LearnMove") and getattr(self, "smart_moves", False):
+            if ph.startswith("Intro"):
+                # B acknowledges intro text without selecting default FIGHT /
+                # SAFARI BALL if the real-time loop has just opened the menu.
+                self.tap("b", 10)
+            elif ph.startswith("LearnMove") and getattr(self, "smart_moves", False):
                 from playthrough_late import learn_move
                 getattr(self, 'learn_move', lambda state: learn_move(self, state))(s)
             elif ph == "PlayerMenu":
@@ -1789,8 +1802,11 @@ class Game:
                 target = getattr(self, 'battle_party_target', battle_party_target)(s)
                 self.tap("a" if s["battle_party_cursor"] == target else "down", 8)
             else:
-                # Intro{..}/ShowingText{..}/TrainerVictory{..} pages
+                # ShowingText{..}/TrainerVictory{..} pages
                 self.tap("a", 10)
+        else:
+            if s.get("capture_phase") is not None:
+                raise NavError("capture flow did not finish before navigation handoff")
         self.wait("not_battle", 1800)
 
     def _await_phase(self, name, max_frames):
