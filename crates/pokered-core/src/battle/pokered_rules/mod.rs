@@ -2875,7 +2875,7 @@ fn substitute_install(
 /// application seam (driver.rs fires it AFTER the effectiveness fold, BEFORE the hp
 /// write). Re-homes legacy `move_execution.rs` absorb: if the DEFENDER holds a
 /// Substitute, the incoming damage hits the doll instead of the mon — the doll BREAKS
-/// (volatile removed) when the hit is >= its HP (Gen-1 does NOT spill the overkill
+/// (volatile removed) when the hit is > its HP (Gen-1 does NOT spill the overkill
 /// into the mon), else its HP drops by the damage. Returns `Set(Damage(0))` so the mon
 /// takes nothing. Inert (Unchanged) when the target has no Substitute or the hit is 0.
 fn substitute_absorb(
@@ -2932,7 +2932,9 @@ fn absorb_into_substitute(
     let PokeVolatile::SubstituteHp { hp } = ctx.effects[idx].kind else {
         return false;
     };
-    if dmg >= hp {
+    // AttackSubstitute returns on no borrow: exact depletion leaves a zero-HP
+    // doll up until the next positive hit. Its protection is not its HP value.
+    if dmg > hp {
         ctx.effects.remove(idx); // the doll broke (no overflow to the mon)
     } else {
         ctx.effects[idx].kind = PokeVolatile::SubstituteHp { hp: hp - dmg };

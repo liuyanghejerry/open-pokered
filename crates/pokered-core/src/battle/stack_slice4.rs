@@ -153,16 +153,16 @@ use crate::alloc_prelude::*;
         );
     }
 
-    /// A hit that EXACTLY depletes the sub (`damage == sub_hp`). Legacy uses
-    /// `damage >= sub_hp` → BREAK, so an exact-depletion hit breaks the sub (not
-    /// "survives at 0"). The boundary pin below straddles this with `±1`.
+    /// Original AttackSubstitute returns on no borrow, so exact depletion keeps
+    /// the substitute up at zero HP. Check the legacy and stack implementations
+    /// against that source behavior, not their former shared `>=` mistake.
     #[test]
-    fn substitute_exact_depletion_breaks() {
+    fn substitute_exact_depletion_survives_at_zero() {
         let dmg = measure_player_damage(&base("exact probe"));
         assert!(dmg > 0);
 
-        let mut s = base("substitute exactly depleted breaks");
-        s.enemy.substitute_hp = dmg; // damage == sub_hp → `>=` → BREAK
+        let mut s = base("substitute exactly depleted stays up");
+        s.enemy.substitute_hp = dmg;
         run_scenario_sub(&s);
 
         let (stack, _c, _f, effects) = stack_run_sub(&s);
@@ -170,16 +170,15 @@ use crate::alloc_prelude::*;
             e.host == dotzuki_engine::battle::BattlerRef::OPPONENT
                 && matches!(e.kind, crate::battle::stack_parity::PocKind::Substitute { .. })
         });
-        assert!(!still_up, "damage == sub_hp must BREAK (legacy uses `>=`)");
+        assert!(still_up, "damage == sub_hp leaves a zero-HP substitute up");
+        assert!(effects.iter().any(|e|
+            e.host == dotzuki_engine::battle::BattlerRef::OPPONENT
+                && matches!(e.kind, crate::battle::stack_parity::PocKind::Substitute { hp: 0 })));
         assert_eq!(stack.opponent_battlers[0].hp, 500, "real hp untouched");
     }
 
-    /// **Boundary pin**: damage == sub_hp exactly (break vs survive). Builds three
-    /// scenarios around the measured damage: `sub = dmg-1` (BREAK, overkill),
-    /// `sub = dmg` (BREAK, exact `>=`), `sub = dmg+1` (SURVIVE at 1). Each runs
-    /// through `run_scenario_sub` (state + volatile + consumed vs legacy), so a
-    /// `>=`→`>` off-by-one in the absorb/break logic diverges from the legacy
-    /// oracle and fails. The fuzz may skip these exact values; this pins them.
+    /// Three measured-damage boundaries: below breaks, equal survives at zero,
+    /// above survives at one. Preserve state, volatile and RNG-consumption parity.
     #[test]
     fn substitute_break_boundary_exact_byte() {
         let dmg = measure_player_damage(&base("boundary probe"));
@@ -195,14 +194,14 @@ use crate::alloc_prelude::*;
             "sub_hp = dmg-1 must BREAK (overkill)"
         );
 
-        // sub = dmg → exact depletion → BREAK (legacy `damage >= sub_hp`).
-        let mut at = base("boundary: sub = dmg breaks (exact)");
+        // sub = dmg → exact depletion → survives (original RET NC).
+        let mut at = base("boundary: sub = dmg survives at zero");
         at.enemy.substitute_hp = dmg;
         run_scenario_sub(&at);
         let (_s2, _c2, _f2, eff_at) = stack_run_sub(&at);
         assert!(
-            !sub_up(&eff_at),
-            "sub_hp = dmg must BREAK (legacy uses `>=`, not `>`)"
+            sub_up(&eff_at),
+            "sub_hp = dmg must stay up at zero HP"
         );
 
         // sub = dmg + 1 → survives at 1.

@@ -303,7 +303,8 @@ fn calc_and_apply_damage(
     let has_sub = defender.has_status2(status2::HAS_SUBSTITUTE_UP);
     if has_sub {
         let sub_hp = defender.substitute_hp as u16;
-        if result.damage >= sub_hp {
+        // Original AttackSubstitute keeps the up flag on exact depletion.
+        if result.damage > sub_hp {
             defender.substitute_hp = 0;
             defender.clear_status2(status2::HAS_SUBSTITUTE_UP);
         } else {
