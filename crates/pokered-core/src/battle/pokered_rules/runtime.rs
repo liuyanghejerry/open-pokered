@@ -343,16 +343,17 @@ pub(crate) fn translate_turn_named_with_faints(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
                 }
-                // PayDayEffect runs after this action's applied/substitute
-                // damage and before faint handling, not at the end of the turn.
-                // The receipt was made by the actual positive damage hook.
+                // The actual hit receipt orders Substitute break/Pay Day text
+                // before faint handling. A broken doll cancels the coin effect.
                 if md.effect == pokered_data::moves::MoveEffect::PayDayEffect {
-                    if let Some((_, substitute_broke)) = super::payday_scatter(effects, actor) {
+                    if let Some((coins, substitute_broke)) = super::payday_scatter(effects, actor) {
                         if substitute_broke {
                             msgs.push(format!("{}'s SUBSTITUTE broke!",
                                 display_name_named(state, opp_ref(actor), names)));
                         }
-                        msgs.push("Coins scattered\neverywhere!".to_string());
+                        if coins != 0 {
+                            msgs.push("Coins scattered\neverywhere!".to_string());
+                        }
                     }
                 }
                 // HazeEffect (haze.asm:1-49): a landed Haze narrates ONLY

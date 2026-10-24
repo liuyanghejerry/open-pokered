@@ -114,53 +114,86 @@ fn both_turn_callers_reject_ghost_but_accept_real_damage_without_missed_log_gues
 }
 
 #[test]
-fn real_substitute_surviving_or_breaking_still_scatters_after_its_damage() {
+fn real_substitute_scatters_only_when_the_doll_survives() {
     for breaks in [false, true] {
-        let mut s = screen(
-            mon(
-                Species::Meowth,
-                if breaks { 100 } else { 10 },
-                MoveId::PayDay,
-            ),
-            mon(
+        for target_player in [false, true] {
+            let attacker_level = if breaks { 100 } else { 10 };
+            let attacker = mon(Species::Meowth, attacker_level, MoveId::Splash);
+            let defender = mon(
                 Species::Snorlax,
                 if breaks { 20 } else { 100 },
                 MoveId::Substitute,
-            ),
-            None,
-        );
-        // Create the doll through its actual move, rather than faking a hit receipt.
-        s.run_enemy_free_turn_stack(Vec::new(), Some((MoveId::Substitute, 0)));
-        finish_text(&mut s);
-        assert_eq!(s.phase, BattlePhase::PlayerMenu);
-        assert!(s
-            .battle_state
-            .as_ref()
-            .unwrap()
-            .enemy
-            .has_status2(HAS_SUBSTITUTE_UP));
-        // Isolate this hit from the enemy's next action: after its doll breaks,
-        // another Substitute would legitimately spend HP to create a new one.
-        let enemy = s.battle_state.as_mut().unwrap().enemy.active_mon_mut();
-        enemy.moves[0] = MoveId::Splash;
-        enemy.pp[0] = 40;
-        let hp = s.battle_state.as_ref().unwrap().enemy.active_mon().hp;
-        s.execute_turn_with_move(0);
-        let lines = pages(&s);
-        assert_eq!(pot(&s), if breaks { 200 } else { 20 });
-        assert_eq!(coin_count(&lines), 1, "{lines:?}");
-        let bs = s.battle_state.as_ref().unwrap();
-        assert_eq!(bs.enemy.active_mon().hp, hp, "the doll takes all damage");
-        assert_eq!(bs.enemy.has_status2(HAS_SUBSTITUTE_UP), !breaks);
-        let coins = lines.iter().position(|line| line == COINS).unwrap();
-        let broken: Vec<_> = lines
-            .iter()
-            .enumerate()
-            .filter(|(_, line)| line.contains("SUBSTITUTE broke!"))
-            .collect();
-        assert_eq!(broken.len(), usize::from(breaks), "{lines:?}");
-        if breaks {
-            assert!(broken[0].0 < coins, "{lines:?}");
+            );
+            let (player, enemy) = if target_player {
+                (defender, attacker)
+            } else {
+                (attacker, defender)
+            };
+            let mut s = screen(player, enemy, None);
+            // Both dolls are created through ordinary FIGHT input and the real
+            // turn. The attacker's initial Splash lets the defender create it.
+            s.update_frame(a());
+            assert_eq!(s.phase, BattlePhase::MoveSelect);
+            s.update_frame(a());
+            finish_text(&mut s);
+            assert_eq!(s.phase, BattlePhase::PlayerMenu);
+            let bs = s.battle_state.as_mut().unwrap();
+            let (attacker, defender) = if target_player {
+                (&mut bs.enemy, &mut bs.player)
+            } else {
+                (&mut bs.player, &mut bs.enemy)
+            };
+            assert!(defender.has_status2(HAS_SUBSTITUTE_UP));
+            let hp = defender.active_mon().hp;
+            let doll_hp = defender.substitute_hp;
+            attacker.active_mon_mut().moves[0] = MoveId::PayDay;
+            attacker.active_mon_mut().pp[0] = 20;
+            defender.active_mon_mut().moves[0] = MoveId::Splash;
+            defender.active_mon_mut().pp[0] = 40;
+            s.update_frame(a());
+            assert_eq!(s.phase, BattlePhase::MoveSelect);
+            s.update_frame(a());
+            let lines = pages(&s);
+            assert_eq!(
+                pot(&s),
+                if breaks {
+                    0
+                } else {
+                    u32::from(attacker_level) * 2
+                },
+                "target_player={target_player}, breaks={breaks}"
+            );
+            assert_eq!(coin_count(&lines), usize::from(!breaks), "{lines:?}");
+            let bs = s.battle_state.as_ref().unwrap();
+            let defender = if target_player { &bs.player } else { &bs.enemy };
+            assert_eq!(defender.active_mon().hp, hp, "the doll takes all damage");
+            assert_eq!(defender.has_status2(HAS_SUBSTITUTE_UP), !breaks);
+            if !breaks {
+                assert!(
+                    defender.substitute_hp < doll_hp,
+                    "the Pay Day hit connected"
+                );
+            }
+            let broken: Vec<_> = lines
+                .iter()
+                .enumerate()
+                .filter(|(_, line)| line.contains("SUBSTITUTE broke!"))
+                .collect();
+            assert_eq!(broken.len(), usize::from(breaks), "{lines:?}");
+            if breaks {
+                let used = lines
+                    .iter()
+                    .position(|line| line.contains("used PAY DAY!"))
+                    .unwrap();
+                assert!(used < broken[0].0, "{lines:?}");
+                // In the break fixture Meowth moves first. Keep the break text
+                // within its action, before the defender's subsequent Splash.
+                let splash = lines
+                    .iter()
+                    .position(|line| line.contains("used SPLASH!"))
+                    .unwrap();
+                assert!(broken[0].0 < splash, "{lines:?}");
+            }
         }
     }
 }

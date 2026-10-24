@@ -144,6 +144,7 @@ pub enum PokeVolatile {
     /// A successful wild flee move ends actions and residual ticks immediately.
     Escaped { actor: BattlerRef, move_: MoveId },
     /// Actual positive Pay Day hit, including damage absorbed by a Substitute.
+    /// A broken doll clears the move effect: zero coins retain only break narration.
     /// This turn-local receipt is consumed by the production caller.
     PayDayScattered { coins: u16, substitute_broke: bool },
     /// Original wPlayerUsedMove/wEnemyUsedMove, updated when move text prints.
@@ -1562,6 +1563,7 @@ pub fn sub_created_this_turn(who: BattlerRef) -> bool {
 
 /// The actual damage hook owns success; neither MoveUsed nor a real-HP delta
 /// distinguishes type immunity from a hit absorbed by a Substitute.
+/// Zero coins preserve the break receipt after AttackSubstitute cancels Pay Day.
 pub(super) fn payday_scatter(
     effects: &[EffectState<PokeredRules>],
     actor: BattlerRef,
@@ -2918,7 +2920,9 @@ fn substitute_absorb(
     {
         let substitute_broke = absorbed && !ctx.effects.iter().any(|entry|
             entry.host == target && matches!(entry.kind, PokeVolatile::SubstituteHp { .. }));
-        let coins = u16::from(ctx.battler(source).level) * 2;
+        // AttackSubstitute nullifies PAY_DAY_EFFECT before AlwaysHappenSideEffects.
+        // Retain the hit receipt for the ordered break text, without scattering.
+        let coins = if substitute_broke { 0 } else { u16::from(ctx.battler(source).level) * 2 };
         // One action owns one receipt even if its damage hook is visited again.
         ctx.effects.push(EffectState {
             id: EffectId(0x50_fe0 + u32::from(source.side)),
