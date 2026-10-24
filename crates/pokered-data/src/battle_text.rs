@@ -49,6 +49,8 @@ const EXACT: &[(&str, &str)] = &[
     ("Can't escape!", "不能逃走！"),
     ("Got away safely!", "成功逃走了！"),
     ("But it failed!", "但是失败了！"),
+    ("But, it failed!", "但是失败了！"),
+    ("Nothing happened!", "什么也没有发生！"),
     ("No! There's no running from a trainer battle!", "不行！训练家对战中不能逃走！"),
     ("Can't use that here!", "这里不能使用！"),
     ("Can't use that!", "不能使用！"),
