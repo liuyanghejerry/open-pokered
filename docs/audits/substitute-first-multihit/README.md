@@ -19,6 +19,14 @@ moves: 20 first-hit breaks, 20 intact dolls, 14 later breaks on the seven
 not another ordinary NEW GAME run. Pure battle logic uses the repository's
 screenshot exemption.
 
-GBA checks await the standalone memory fix and the preceding battle PRs.
 Multi-hit random-byte sampling and Twineedle's final poison gate remain
 separate audit candidates; this change does not claim to resolve them.
+
+After the merged GBA memory and hosted-loop fixes, this isolated branch at
+`900b8702d77e2d894c9abcfb82046e60272591e5` passed all 3,679 core tests
+(zero failures, one existing ignored test), the unmodified GBA release build
+and all seven original performance scenarios. Subsequent dependency rebases
+change documentation only; product files are checked byte-for-byte. Historical
+results remain separately identified in `verification.json`. All three remote
+workflows and all six original GBA runtime gates must pass on the final PR
+source before merge. No thresholds, timeouts, scenarios or workflows changed.
