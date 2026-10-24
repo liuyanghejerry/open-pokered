@@ -352,6 +352,11 @@ pub(crate) fn translate_turn_named_with_faints(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
                 }
+                // SplashEffect prints this result after its animation. Blocked
+                // actions have no MoveUsed event and never enter the handler.
+                if md.effect == pokered_data::moves::MoveEffect::SplashEffect {
+                    msgs.push("No effect!".to_string());
+                }
                 // The actual hit receipt orders Substitute break/Pay Day text
                 // before faint handling. A broken doll cancels the coin effect.
                 if md.effect == pokered_data::moves::MoveEffect::PayDayEffect {
