@@ -1025,7 +1025,7 @@ fn damage_handler(
 /// `damage_handler`'s `1000`). Re-homes the legacy absorb/break at
 /// `move_execution.rs:288-300`: when the DEFENDER has a Substitute up, the computed
 /// damage reduces the sub's hp instead of the defender's real hp; on overkill
-/// (`damage >= sub_hp`) the sub breaks (hp → 0, volatile removed); the defender's
+/// (`damage > sub_hp`) the sub breaks (hp → 0, volatile removed); the defender's
 /// REAL hp is never touched while a sub stands.
 ///
 /// ## The cross-battler exercise (`pair_mut`) — and an HONEST scoping note
@@ -1103,7 +1103,7 @@ fn substitute_interceptor(
         return HandlerResult::Unchanged;
     };
     let sub_hp = *hp;
-    if damage >= sub_hp {
+    if damage > sub_hp {
         // Overkill → the substitute BREAKS: hp 0 + volatile removed.
         ctx.effects.remove(sub_idx);
     } else {
