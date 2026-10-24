@@ -8108,3 +8108,5 @@ mod substitute_secondary_rng_tests;
 
 #[cfg(test)]
 mod mist_secondary_tests;
+#[cfg(test)]
+mod mist_primary_rng_tests;
