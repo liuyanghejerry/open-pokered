@@ -1,63 +1,215 @@
 {
-  "reference": {
-    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
-    "source_sha256": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3",
-    "routines": [
-      "PoisonEffect",
-      "FreezeBurnParalyzeEffect",
-      "FlinchSideEffect",
-      "StatModifierDownEffect"
-    ]
+  "current_validation": {
+    "tested_source": "eddd1774841cbf01b1c75c026596d310ae1fe50a",
+    "tested_tree": "1e7a503b09c984eb46a71f636bfc2d00ff9546d2",
+    "dependencies": {
+      "PR381": "568136e34c578ebf75d438bad027d32be579d109",
+      "PR383_merged": "c24c513a26c794620f9ff260d0120089c561b8b0",
+      "PR382_merged": "ead01996a9b129d6061705e6a77271fa1c2d4227"
+    },
+    "core_full": {
+      "head": "eddd1774841cbf01b1c75c026596d310ae1fe50a",
+      "tree": "1e7a503b09c984eb46a71f636bfc2d00ff9546d2",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0,
+      "seconds": 61.323013980989344,
+      "log_sha256": "6e64e1024505d66ada6483a0aab1a73566a3b60d3913544d856e5637ecbb390e",
+      "passed": 3683,
+      "failed": 0,
+      "ignored": 1
+    },
+    "gba_build": {
+      "head": "eddd1774841cbf01b1c75c026596d310ae1fe50a",
+      "tree": "1e7a503b09c984eb46a71f636bfc2d00ff9546d2",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "perf-benchmark",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 88.8628289779881,
+      "log_sha256": "af0e6474e45b9b1cc27d9ab634db1e0f55ec33e8a97b69a9dac1067cf7b35326"
+    },
+    "gba_original_performance": {
+      "scenarios": 7,
+      "hardware_frames": 8280,
+      "failures": [],
+      "seconds": 2.952501346007921,
+      "hashes": {
+        "pokered-gba": "c5912d4211666384b422e20ead4f7e0f341159c6d0421e99401bc1c322990cb8",
+        "pokered-gba.gba": "c2b753325fbc09dfaa96baf30bdb6351f34c3222f64296249d38b8fd5f459585",
+        "main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403"
+      },
+      "metrics": {
+        "suite": "autopilot-v1",
+        "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+        "scenarios": {
+          "intro-title-v1": {
+            "scenario": "intro-title-v1",
+            "samples": 251,
+            "update_avg_ticks": 105,
+            "update_core_avg_ticks": 96,
+            "update_flush_avg_ticks": 1,
+            "renders": 115,
+            "draw_per_frame_ticks": 1201,
+            "draw_max_ticks": 9849,
+            "present_per_frame_ticks": 352,
+            "present_max_ticks": 782
+          },
+          "oak-dialogue-v1": {
+            "scenario": "oak-dialogue-v1",
+            "samples": 602,
+            "update_avg_ticks": 172,
+            "update_core_avg_ticks": 163,
+            "update_flush_avg_ticks": 1,
+            "renders": 307,
+            "draw_per_frame_ticks": 2888,
+            "draw_max_ticks": 9044,
+            "present_per_frame_ticks": 391,
+            "present_max_ticks": 781
+          },
+          "overworld-idle-v1": {
+            "scenario": "overworld-idle-v1",
+            "samples": 1400,
+            "update_avg_ticks": 374,
+            "update_core_avg_ticks": 364,
+            "update_flush_avg_ticks": 1,
+            "renders": 0,
+            "draw_per_frame_ticks": 0,
+            "draw_max_ticks": 0,
+            "present_per_frame_ticks": 0,
+            "present_max_ticks": 0
+          },
+          "overworld-movement-v1": {
+            "scenario": "overworld-movement-v1",
+            "samples": 240,
+            "update_avg_ticks": 387,
+            "update_core_avg_ticks": 377,
+            "update_flush_avg_ticks": 1,
+            "renders": 24,
+            "draw_per_frame_ticks": 207,
+            "draw_max_ticks": 2885,
+            "present_per_frame_ticks": 70,
+            "present_max_ticks": 771
+          },
+          "battle-entry-v1": {
+            "scenario": "battle-entry-v1",
+            "samples": 516,
+            "update_avg_ticks": 208,
+            "update_core_avg_ticks": 198,
+            "update_flush_avg_ticks": 1,
+            "renders": 385,
+            "draw_per_frame_ticks": 2646,
+            "draw_max_ticks": 8864,
+            "present_per_frame_ticks": 573,
+            "present_max_ticks": 782
+          },
+          "trainer-battle-entry-v1": {
+            "scenario": "trainer-battle-entry-v1",
+            "samples": 501,
+            "update_avg_ticks": 231,
+            "update_core_avg_ticks": 220,
+            "update_flush_avg_ticks": 1,
+            "renders": 224,
+            "draw_per_frame_ticks": 2360,
+            "draw_max_ticks": 10184,
+            "present_per_frame_ticks": 343,
+            "present_max_ticks": 782
+          },
+          "pokedex-entry-v1": {
+            "scenario": "pokedex-entry-v1",
+            "samples": 400,
+            "update_avg_ticks": 116,
+            "update_core_avg_ticks": 104,
+            "update_flush_avg_ticks": 1,
+            "renders": 1,
+            "draw_per_frame_ticks": 41,
+            "draw_max_ticks": 16497,
+            "present_per_frame_ticks": 1,
+            "present_max_ticks": 767
+          }
+        }
+      },
+      "log_sha256": "f92b8e0f6ecb3e9ba09c73a8000f7a4c4be31b3438b7a94603dc96e49962a7ab"
+    },
+    "scope": "Each isolated branch was tested before documentation-only rebases. Product files are byte-identical to this source. All final remote workflows and all six original GBA runtime gates remain required before merge; earlier or descendant memory results do not substitute for those gates.",
+    "unchanged_gates": true
   },
-  "red": {
-    "command": [
-      "cargo",
-      "test",
-      "--locked",
-      "--offline",
-      "-p",
-      "pokered-core",
-      "--lib",
-      "substitute_secondary_rng_tests",
-      "--",
-      "--nocapture"
-    ],
-    "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
-    "exit_code": 101,
-    "seconds": 43.823141789995134,
-    "log_sha256": "92bb34c79ea89e22023c68913635a5b1fcf481318eba4252c2c9196c5c2799a7",
-    "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
-  },
-  "confirmed_extra_draw_cases": 24,
-  "core_full": {
-    "command": [
-      "cargo",
-      "test",
-      "--locked",
-      "--offline",
-      "-p",
-      "pokered-core"
-    ],
-    "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
-    "exit_code": 0,
-    "seconds": 73.02120750700124,
-    "passed": 3683,
-    "failed": 0,
-    "ignored": 1,
-    "log_sha256": "f80d662ffd1703fa703d5edaf462c88968fef1cf17b5738272d1b8b2d2d8ddb3",
-    "diff_sha256": "ef850d6b017ce309a69fa9311fc63784110d2b9c45d723df700ae1b8c2639e8f",
-    "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
-  },
-  "coverage": {
-    "intact_doll_cases": 24,
-    "broken_and_absent_control_cases": 24,
-    "confusion_exception_cases": 8
-  },
-  "interface": "prepared BattleScreen actual turn caller using real LinkRng; both sides",
-  "source_sha256": {
-    "crates/pokered-core/src/battle/substitute_secondary_rng_tests.rs": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780",
-    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "0cc501457bb562452ff187a78b399f9cf58b019a302524b94e91e8fc00e8dd9d"
-  },
-  "gba": "not yet verified for this combined head; all CI required before merge",
-  "scope": "single-hit secondary Substitute early return only; Twineedle final rider, type/status/KO checks and Mist remain separate audits; pure logic screenshot exemption; no ordinary NEW GAME claim"
+  "earlier_audit": {
+    "reference": {
+      "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "source_sha256": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3",
+      "routines": [
+        "PoisonEffect",
+        "FreezeBurnParalyzeEffect",
+        "FlinchSideEffect",
+        "StatModifierDownEffect"
+      ]
+    },
+    "red": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core",
+        "--lib",
+        "substitute_secondary_rng_tests",
+        "--",
+        "--nocapture"
+      ],
+      "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+      "exit_code": 101,
+      "seconds": 43.823141789995134,
+      "log_sha256": "92bb34c79ea89e22023c68913635a5b1fcf481318eba4252c2c9196c5c2799a7",
+      "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
+    },
+    "confirmed_extra_draw_cases": 24,
+    "core_full": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+      "exit_code": 0,
+      "seconds": 73.02120750700124,
+      "passed": 3683,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "f80d662ffd1703fa703d5edaf462c88968fef1cf17b5738272d1b8b2d2d8ddb3",
+      "diff_sha256": "ef850d6b017ce309a69fa9311fc63784110d2b9c45d723df700ae1b8c2639e8f",
+      "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
+    },
+    "coverage": {
+      "intact_doll_cases": 24,
+      "broken_and_absent_control_cases": 24,
+      "confusion_exception_cases": 8
+    },
+    "interface": "prepared BattleScreen actual turn caller using real LinkRng; both sides",
+    "source_sha256": {
+      "crates/pokered-core/src/battle/substitute_secondary_rng_tests.rs": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "0cc501457bb562452ff187a78b399f9cf58b019a302524b94e91e8fc00e8dd9d"
+    },
+    "gba": "not yet verified for this combined head; all CI required before merge",
+    "scope": "single-hit secondary Substitute early return only; Twineedle final rider, type/status/KO checks and Mist remain separate audits; pure logic screenshot exemption; no ordinary NEW GAME claim"
+  }
 }
