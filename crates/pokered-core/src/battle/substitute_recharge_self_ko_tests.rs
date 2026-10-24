@@ -159,3 +159,109 @@ fn next_hyper_beam_can_recharge_after_the_previous_doll_broke() {
         assert!(target.hp < target.max_hp);
     }
 }
+
+#[test]
+fn recoil_uses_doll_damage_but_is_cancelled_when_the_doll_breaks() {
+    for move_ in [MoveId::TakeDown, MoveId::DoubleEdge, MoveId::Submission] {
+        for target_player in [false, true] {
+            let seed = connected_seed(move_, target_player);
+            for substitute in [None, Some(60), Some(1)] {
+                let mut screen = battle(move_, seed, target_player, substitute);
+                fight(&mut screen);
+                let target = battler(&screen, target_player);
+                let damage = match substitute {
+                    None => target.active_mon().max_hp - target.active_mon().hp,
+                    Some(60) => {
+                        assert!(target.has_status2(status2::HAS_SUBSTITUTE_UP));
+                        assert_eq!(target.active_mon().hp, target.active_mon().max_hp);
+                        60 - u16::from(target.substitute_hp)
+                    }
+                    Some(1) => {
+                        assert!(!target.has_status2(status2::HAS_SUBSTITUTE_UP));
+                        assert_eq!(target.active_mon().hp, target.active_mon().max_hp);
+                        0
+                    }
+                    _ => unreachable!(),
+                };
+                if substitute != Some(1) {
+                    assert!(damage > 0, "the attack connected");
+                }
+                let recoil = if substitute == Some(1) {
+                    0
+                } else {
+                    (damage / 4).max(1)
+                };
+                let attacker = battler(&screen, !target_player).active_mon();
+                assert_eq!(attacker.max_hp - attacker.hp, recoil,
+                    "{move_:?}, target_player={target_player}, doll={substitute:?}, damage={damage}");
+            }
+        }
+    }
+}
+
+#[test]
+fn forced_struggle_recoil_is_cancelled_after_a_substitute_breaks() {
+    fn forced(seed: u64, substitute: Option<u8>) -> BattleScreen {
+        let mut screen = battle(MoveId::Tackle, seed, false, substitute);
+        screen
+            .battle_state
+            .as_mut()
+            .unwrap()
+            .player
+            .active_mon_mut()
+            .pp = [0; 4];
+        screen.update_frame(BattleInput {
+            a: true,
+            ..BattleInput::none()
+        });
+        assert_eq!(
+            screen.phase,
+            BattlePhase::ForcedStruggle { wait_frames: 60 }
+        );
+        for _ in 0..60 {
+            screen.update_frame(BattleInput::none());
+        }
+        assert!(matches!(screen.phase, BattlePhase::ShowingText { .. }));
+        screen
+    }
+    let seed = (0..512)
+        .find(|&seed| {
+            let screen = forced(seed, None);
+            let target = battler(&screen, false).active_mon();
+        target.max_hp - target.hp > 1
+        })
+    .expect("unshielded forced Struggle must exceed the one-HP doll");
+    for substitute in [None, Some(60), Some(1)] {
+        let screen = forced(seed, substitute);
+        let target = battler(&screen, false);
+        let damage = match substitute {
+            None => target.active_mon().max_hp - target.active_mon().hp,
+            Some(60) => {
+                assert!(target.has_status2(status2::HAS_SUBSTITUTE_UP));
+                assert_eq!(target.active_mon().hp, target.active_mon().max_hp);
+                60 - u16::from(target.substitute_hp)
+            }
+            Some(1) => {
+                assert!(!target.has_status2(status2::HAS_SUBSTITUTE_UP));
+                assert_eq!(target.active_mon().hp, target.active_mon().max_hp);
+                0
+            }
+            _ => unreachable!(),
+        };
+        if substitute != Some(1) {
+            assert!(damage > 0);
+        }
+        let recoil = if substitute == Some(1) {
+            0
+        } else {
+            (damage / 2).max(1)
+        };
+        let attacker = battler(&screen, true).active_mon();
+        assert_eq!(
+            attacker.max_hp - attacker.hp,
+            recoil,
+            "forced Struggle doll={substitute:?}"
+        );
+        assert_eq!(attacker.pp, [0; 4]);
+    }
+}
