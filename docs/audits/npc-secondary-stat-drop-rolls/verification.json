@@ -1,0 +1,150 @@
+{
+  "source": "b57f89f1be20187bdbc1f3453420d56903d9b3b0",
+  "parent": "3975e1dbaa48baee74320cb8b6c2e659b7a7781a",
+  "original_reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "cases": 840,
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "npc_secondary_stat_drop_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "3975e1dbaa48baee74320cb8b6c2e659b7a7781a",
+    "exit_code": 101,
+    "seconds": 26.265058828983456,
+    "log_sha256": "15b7d87265e408f617d787801beb0d5008cb015a4faaeac00f38da7164cc9a02",
+    "tracked_diff_sha256": "e2b2b8063d3778db4ef03447eef7e161f7330df7e49e4f01342990293d6156d5",
+    "passed": 0,
+    "failed": 1,
+    "ignored": 0,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/npc_secondary_stat_drop_tests.rs": "7e2faac679715d2d3a1e4fd8f6d73ecf32f3d3fbe6c5a8dfcf62b6d9d122b6ba",
+      "crates/pokered-core/src/battle/mod.rs": "ad8dd4de8d74d48d08dbb3567446d33228b19bac68dfb5fbe2c0aa72d7aea899"
+    }
+  },
+  "red_mismatches": {
+    "stat_outcomes": 144,
+    "rng_consumption": 288
+  },
+  "initial_full_suite": {
+    "exit_code": 101,
+    "failures": 2,
+    "reason": "Old substitute RNG fixture set only the screen link flag; corrected the underlying battle flag to match its intended link mode.",
+    "log_sha256": "1dde5a09960c1a651410cea636966eb10c9ef656800b0db54c0d8904c1c4da61"
+  },
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "3975e1dbaa48baee74320cb8b6c2e659b7a7781a",
+    "exit_code": 0,
+    "seconds": 34.63884024997242,
+    "log_sha256": "2b36b6e110d9533967004c30a9f7bf7cc552d3c51248e7dfd1b330b1cef31404",
+    "tracked_diff_sha256": "df960102eaf7f62b1b0b889d8979d46323d9ccf633c6362578bdb6f63db7ee68",
+    "passed": 3688,
+    "failed": 0,
+    "ignored": 1,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/npc_secondary_stat_drop_tests.rs": "7e2faac679715d2d3a1e4fd8f6d73ecf32f3d3fbe6c5a8dfcf62b6d9d122b6ba",
+      "crates/pokered-core/src/battle/mod.rs": "ad8dd4de8d74d48d08dbb3567446d33228b19bac68dfb5fbe2c0aa72d7aea899",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "604e256005cfa788bf5d35ecde7683c2ecf704ca6967a8c706c71c58d9c1e83c",
+      "crates/pokered-core/src/battle/substitute_secondary_rng_tests.rs": "22cb6ad755f86bd3ad4a091feb4e35a67a83b4f073e7dd72a705fa3792266ee4"
+    }
+  },
+  "gba_performance": {
+    "head": "b57f89f1be20187bdbc1f3453420d56903d9b3b0",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "0fae6c8d23433bbf815f5e0e7305fa42b48f3281b9161d8384815e2c77a391fe",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "1e3247f9c4700e7cb46db48f0dff1fac7c4e1a07b8bda5608b36143caad76895",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.831778517924249,
+    "failures": [],
+    "metrics": "audit-1309-npc-secondary-gba-perf-metrics.json",
+    "log": "audit-1309-npc-secondary-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "b57f89f1be20187bdbc1f3453420d56903d9b3b0",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "c90c2c39ed6a60168e35d01fc3e365e2353b4bf64bcc70b5a6335b614449ff43",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "seconds": 169.65075006091502,
+    "frames": 322800,
+    "cases": 13,
+    "min_heap": 7832,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "memory_log_archive": {
+    "original": "audit-1309-rom-oam-memory-npc-secondary.log",
+    "bytes": 5654144,
+    "sha256": "cc1f7c0ae6da9f92cbba384053d46e8760fd71d08f5adf8f8d54cc98861f1e8b",
+    "compressed": "audit-1309-rom-oam-memory-npc-secondary.log.gz",
+    "compressed_bytes": 431934,
+    "compressed_sha256": "9be2a8d59c69e1e72f8c5656579d08e2376f39913ae314e4fad166035c005009",
+    "round_trip_verified": true
+  },
+  "gba_builds": {
+    "performance": {
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "perf-benchmark",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+      "exit_code": 0,
+      "seconds": 65.96869524102658,
+      "base": "b57f89f1be20187bdbc1f3453420d56903d9b3b0",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "profile": "unmodified release profile; original perf-benchmark feature"
+    },
+    "memory": {
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "memory-scenarios",
+        "--locked",
+        "--offline"
+      ],
+      "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+      "exit_code": 0,
+      "seconds": 71.99575982801616,
+      "base": "b57f89f1be20187bdbc1f3453420d56903d9b3b0",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "profile": "unmodified release profile; original memory-scenarios feature"
+    }
+  },
+  "scope": "Prepared BattleScreen production turn caller; mode and deterministic RNG are independently configured. Original source is the authority. Not a fresh playthrough or a live original-ROM comparison.",
+  "remote_ci": "Final branch must pass all three workflows and all six actual original GBA runtime gates before merge."
+}
