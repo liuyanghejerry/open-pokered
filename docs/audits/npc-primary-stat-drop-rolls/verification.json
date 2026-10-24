@@ -1,0 +1,79 @@
+{
+  "reference": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "routines": [
+      "StatModifierDownEffect",
+      "MoveHitTest"
+    ],
+    "sha256": {
+      "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3",
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f"
+    }
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "npc_primary_stat_drop_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "bc1362f5b7d43599f951adf444f5efe8972f8c21",
+    "exit_code": 101,
+    "seconds": 38.624242414021865,
+    "log_sha256": "df3f7b36682e3038d0427c69e0c0a0429280ff2ea5f931a6c978034435c127cb",
+    "tracked_diff_sha256": "c651d5589d0918a9949503a16de8356d2bba6327813559f29deed238772ec515",
+    "passed": 0,
+    "failed": 1,
+    "ignored": 0,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/mist_primary_rng_tests.rs": "34c530bf453c7aa08839dead6749634158e55df76e7071f80db5fb9b94cb3aae",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "9236cc519e73d1c4cc4b876d392e25b9d8895ac2c1d26af42f78a670bde6df74"
+    }
+  },
+  "red_fixture_identity": {
+    "test_sha256": "f08f84abdf6c4606319a935e9ae8d44e23fc6366ca47feac2d39b2ef8427e368",
+    "initial_red_run": "fixture mode assertion failed before bug assertions; not counted as reproduction",
+    "mode_configuration": "set BattleScreen.link_mode and BattleState.link_battle explicitly, matching link_battle_driver.rs:471-473"
+  },
+  "confirmed_mismatches": {
+    "stat_results": 27,
+    "RNG_draw_counts": 162
+  },
+  "cases": 432,
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "bc1362f5b7d43599f951adf444f5efe8972f8c21",
+    "exit_code": 0,
+    "seconds": 51.66810241295025,
+    "log_sha256": "a6d59d5126d6695f47692b3c1f7d020296357358b1d74209d6fef374c1042909",
+    "tracked_diff_sha256": "9c1b1cae540a6bee0fd782632159552fd2334b745e46b43141332bfe4d734a34",
+    "passed": 3687,
+    "failed": 0,
+    "ignored": 1,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/npc_primary_stat_drop_tests.rs": "f08f84abdf6c4606319a935e9ae8d44e23fc6366ca47feac2d39b2ef8427e368",
+      "crates/pokered-core/src/battle/mist_primary_rng_tests.rs": "f9026da0696e95a04d52552f6e848cab77151438dc6994200ded79b228b2274d",
+      "crates/pokered-core/src/battle/mist_secondary_tests.rs": "e5571e92eb95951821f26820506565adca5058fd2e0026d90c25813ae831888c",
+      "crates/pokered-core/src/battle/mod.rs": "7c705fc365fdc90d4c7e22abb040628b5aa4fde78e58755fe517f9ee346cdb3f",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "061ef1a8c83c51b819c028a85da6b06d0077d5ec7b1c66b4d2bea7133f4f1414",
+      "crates/pokered-core/src/battle/pokered_rules/runtime.rs": "fb36fdf8af227d0e4fffdb5bc4464085c64b12b471d409b12e258747ea2f9900"
+    }
+  },
+  "fixture_correction": "Both BattleScreen.link_mode and BattleState.link_battle must be set, matching the real link driver. The first exploratory run stopped at that fixture assertion and is not bug evidence. Existing two Mist fixtures now set both mode flags.",
+  "interface": "Prepared production BattleScreen turn caller, deterministic LinkRng slot with independently asserted ordinary/link battle modes and controlled move selection. Player/enemy, nine primary stat-drop moves, 0/63/64/255, no guard/Substitute/Mist.",
+  "scope": "Primary stat drops only. Damaging secondary stat drops have a separate NPC miss-order audit. Pure game logic; no fresh playthrough or original-ROM recording claim.",
+  "GBA_validation": "Pending on committed combined source; remote all-three/all-six gates required before merge."
+}
