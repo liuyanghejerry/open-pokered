@@ -3116,11 +3116,19 @@ fn bridge_foe_stat_down(
     let Some(hook) = hook_for(source_effect, Event::DamagingHit) else {
         return HandlerResult::Unchanged;
     };
-    // StatModifierDownEffect checks Substitute before the side-effect chance.
-    // A broken doll has already cleared the move effect and also skips the draw.
-    // Primary stat-down moves have no chance gate here.
+    // A broken doll has already cleared the move effect before dispatch.
+    // Otherwise StatModifierDownEffect checks the ordinary enemy's extra miss,
+    // then Substitute, then the secondary chance. MoveMissed prints no failure
+    // text for a secondary. Primary moves perform their prechecks in Accuracy.
     if let Some((num, den)) = hook.chance {
-        if substitute_broke_for(source) || target_has_substitute(ctx, target) {
+        if substitute_broke_for(source) {
+            return HandlerResult::Unchanged;
+        }
+        if ctx.battler(source).resources.current(RES_NPC_STAT_DOWN_MISS) == Some(1)
+            && ctx.rng.next_u8() < 64 {
+            return HandlerResult::Unchanged;
+        }
+        if target_has_substitute(ctx, target) {
             return HandlerResult::Unchanged;
         }
         if !ctx.rng.chance(num, den) {
