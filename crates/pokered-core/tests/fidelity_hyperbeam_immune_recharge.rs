@@ -143,7 +143,8 @@ fn ghost_immunity_allows_another_attack_next_turn_on_both_sides() {
             );
             assert_eq!(target_hp(&battle, enemy), hp);
             assert!(!recharging(&battle, enemy));
-            assert_eq!(battle.link_rng.as_ref().unwrap().consumed() - before, 3);
+            // Critical and accuracy only: immune damage skips RandomizeDamage.
+            assert_eq!(battle.link_rng.as_ref().unwrap().consumed() - before, 2);
             drain(&mut battle);
         }
     }
