@@ -281,15 +281,15 @@ Ruleset(
                     InflictVolatile(kind: "confusion", target: Target, amount: RngMask(mask: 3, plus: 2)),
                 ]),
             ]),
-        // ── CONFUSION side-effect (~10% = 26/256): a damaging move + confuse
+        // ── CONFUSION side-effect (10 percent = 25/256): a damaging move + confuse
         //    rider (Confusion move / Psybeam; Dizzy Punch is pure damage in
         //    Gen 1 — NO_ADDITIONAL_EFFECT).
         Effect(id: "side.confuse", kind: Move, power: 50, type: "Psychic", accuracy: 100,
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
                 Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
-                Hook(on: "DamagingHit", chance: [26, 256], do: [
-                    VetoIf(cond: HasVolatile("Substitute")),
+                // ConfusionSideEffect jumps past the primary Substitute check.
+                Hook(on: "DamagingHit", chance: [25, 256], do: [
                     VetoIf(cond: HasVolatile("confusion")),
                     InflictVolatile(kind: "confusion", target: Target, amount: RngMask(mask: 3, plus: 2)),
                 ]),

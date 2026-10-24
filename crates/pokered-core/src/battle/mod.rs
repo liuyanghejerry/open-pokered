@@ -45,6 +45,8 @@ mod leech_seed_tests;
 #[cfg(test)]
 mod substitute_hp_tests;
 #[cfg(test)]
+mod substitute_side_effect_tests;
+#[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
 mod fight_notice_tests;

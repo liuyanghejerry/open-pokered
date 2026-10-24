@@ -1,0 +1,153 @@
+{
+  "tested_base": "f67ababb17b94271b054e289c19a289daf90758c",
+  "reference": {
+    "repository": "pret/pokered",
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source_sha256": {
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+      "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3",
+      "macros/data.asm": "2b5b9e8c9f1e7b5ca7ceaf9c8e63fd5a53edc02c76695fb8ae1bf4fa55ca0582"
+    }
+  },
+  "regression": {
+    "interface": "prepared production BattleScreen PlayerMenu -> FIGHT -> MoveSelect -> actual turn",
+    "sides": [
+      "player target",
+      "enemy target"
+    ],
+    "production_cases": 14,
+    "explicit_rng_stack_cases": 12,
+    "red_failed": 2,
+    "red_log_sha256": "1fa5c92e0c750c9280543cc5c9a78f4cbc5181270970990392eb8789bbef8063"
+  },
+  "validation": {
+    "core_full": {
+      "passed": 3670,
+      "failed": 0,
+      "ignored": 1,
+      "suites": 42,
+      "log_sha256": "ddb0db45051e17438e61884fc50f91fcb6aee21e85cc07da2daa9f8307464e04"
+    },
+    "gba_build": {
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "perf-benchmark",
+        "--locked",
+        "--offline"
+      ],
+      "profile": "unmodified release; nightly-2025-12-07",
+      "exit_code": 0,
+      "log_sha256": "8c1171411acd10bae35a0cf4ece6ee5706652fa4dbce2665b4095088dff71f2a"
+    },
+    "gba_original_performance": {
+      "scenarios": 7,
+      "frames": 8280,
+      "failures": [],
+      "rom_sha256": "a00120f77902fd9750af431d7e095228eb5ef62f989f576ca43939fccfad57f7",
+      "metrics": {
+        "suite": "autopilot-v1",
+        "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+        "scenarios": {
+          "intro-title-v1": {
+            "scenario": "intro-title-v1",
+            "samples": 251,
+            "update_avg_ticks": 105,
+            "update_core_avg_ticks": 96,
+            "update_flush_avg_ticks": 1,
+            "renders": 115,
+            "draw_per_frame_ticks": 1201,
+            "draw_max_ticks": 9849,
+            "present_per_frame_ticks": 352,
+            "present_max_ticks": 782
+          },
+          "oak-dialogue-v1": {
+            "scenario": "oak-dialogue-v1",
+            "samples": 602,
+            "update_avg_ticks": 172,
+            "update_core_avg_ticks": 163,
+            "update_flush_avg_ticks": 1,
+            "renders": 307,
+            "draw_per_frame_ticks": 2888,
+            "draw_max_ticks": 9044,
+            "present_per_frame_ticks": 391,
+            "present_max_ticks": 781
+          },
+          "overworld-idle-v1": {
+            "scenario": "overworld-idle-v1",
+            "samples": 1400,
+            "update_avg_ticks": 374,
+            "update_core_avg_ticks": 364,
+            "update_flush_avg_ticks": 1,
+            "renders": 0,
+            "draw_per_frame_ticks": 0,
+            "draw_max_ticks": 0,
+            "present_per_frame_ticks": 0,
+            "present_max_ticks": 0
+          },
+          "overworld-movement-v1": {
+            "scenario": "overworld-movement-v1",
+            "samples": 240,
+            "update_avg_ticks": 387,
+            "update_core_avg_ticks": 377,
+            "update_flush_avg_ticks": 1,
+            "renders": 24,
+            "draw_per_frame_ticks": 207,
+            "draw_max_ticks": 2885,
+            "present_per_frame_ticks": 70,
+            "present_max_ticks": 771
+          },
+          "battle-entry-v1": {
+            "scenario": "battle-entry-v1",
+            "samples": 500,
+            "update_avg_ticks": 212,
+            "update_core_avg_ticks": 201,
+            "update_flush_avg_ticks": 1,
+            "renders": 369,
+            "draw_per_frame_ticks": 2630,
+            "draw_max_ticks": 8863,
+            "present_per_frame_ticks": 566,
+            "present_max_ticks": 782
+          },
+          "trainer-battle-entry-v1": {
+            "scenario": "trainer-battle-entry-v1",
+            "samples": 501,
+            "update_avg_ticks": 231,
+            "update_core_avg_ticks": 220,
+            "update_flush_avg_ticks": 1,
+            "renders": 224,
+            "draw_per_frame_ticks": 2360,
+            "draw_max_ticks": 10184,
+            "present_per_frame_ticks": 343,
+            "present_max_ticks": 782
+          },
+          "pokedex-entry-v1": {
+            "scenario": "pokedex-entry-v1",
+            "samples": 400,
+            "update_avg_ticks": 116,
+            "update_core_avg_ticks": 104,
+            "update_flush_avg_ticks": 1,
+            "renders": 1,
+            "draw_per_frame_ticks": 41,
+            "draw_max_ticks": 16497,
+            "present_per_frame_ticks": 1,
+            "present_max_ticks": 767
+          }
+        }
+      },
+      "log_sha256": "fbd7d36bc434498018d2303b7e3f4ffbb43b28a91b399a9f42cab098e4de35ab"
+    }
+  },
+  "source_sha256": {
+    "crates/pokered-core/src/battle/mod.rs": "43fa1c085ca29ecd53909720847d694789a1c493bb3f6e44de52c441df2d79d6",
+    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "979ec4267afc16ad7b3647bd291a8e693a2ea3d2f2e3768b2319142cff9b3185",
+    "crates/pokered-core/src/battle/pokered_rules/rules.ron": "3b89f602bfee65743b6bedef68765ad4cd27f351c73a225e0fe09f78e6794358",
+    "crates/pokered-core/src/battle/pokered_rules/tests.rs": "7d735c6075e1290c6948ee20f479a5ee97f9b4db961d477810f4a089551cde6c",
+    "crates/pokered-core/src/battle/effects/special_effects.rs": "2bfaabf5739f8049b4e0a7efd8a2d313287151e81c491befb126090ab560a995",
+    "crates/pokered-core/src/battle/substitute_side_effect_tests.rs": "1039c3f8aec7fd137e5e15808b92568532ac473eea752c848745782a0f46e743"
+  },
+  "scope": "Source-backed prepared production regression; not original-ROM recording or ordinary NEW GAME. Chance-gated secondary status/stat effects only; native-effect cancellation and multi-hit continuation remain separate audit questions."
+}
