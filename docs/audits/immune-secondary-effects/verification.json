@@ -1,0 +1,186 @@
+{
+  "source": {
+    "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+    "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+    "test_sha256": "c99c1c89344a5aa149dd7c8eb613a5f23c2b7204d27f66b47bbc1e6cd9dd3606"
+  },
+  "reference_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_tests": {
+    "base": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+    "source_sha256": "c99c1c89344a5aa149dd7c8eb613a5f23c2b7204d27f66b47bbc1e6cd9dd3606",
+    "exe_sha256": "4d3b36eac264bfb2770bb869a547dfd501d2c5b333c42c80026c501cff47fed4",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "d5091417e999660624d66dc540ab7b0666809c5ecf907170a45fbb729fdca110"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "229666185bb06847629d707734fe848b459743785fb85e6394e1a6d749a890c5"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "e2bf2233feaa6f2e2951270aa1e885fc3924985c9b76440862bcdae4cd835f21"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "output": "\nrunning 3 tests\ntest immune_targets_cannot_be_paralyzed_or_flinched_or_consume_secondary_rng ... FAILED\ntest ordinary_misses_still_leave_the_target_healthy_and_able_to_act ... ok\ntest successful_hits_keep_their_paralysis_and_flinch_effects ... ok\n\nfailures:\n\nfailures:\n    immune_targets_cannot_be_paralyzed_or_flinched_or_consume_secondary_rng\n\ntest result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n\nthread 'immune_targets_cannot_be_paralyzed_or_flinched_or_consume_secondary_rng' (3647866) panicked at /home/jerry/develop/open-pokered/crates/pokered-core/tests/fidelity_immune_secondary.rs:79:17:\nassertion `left == right` failed: BodySlam [\"MEWTWO used BODY SLAM!\", \"It doesn't affect\\nEnemy SNORLAX!\", \"Enemy SNORLAX is paralyzed!\\nIt may be unable\", \"to move!\", \"Enemy SNORLAX used SPLASH!\", \"No effect!\"]\n  left: Paralysis\n right: None\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n"
+  },
+  "candidate_tests": {
+    "focused": 3,
+    "prepared_FIGHT_turns": 126,
+    "drained_presentations": 126,
+    "core_passed": 3727,
+    "core_ignored": 1,
+    "core_seconds": 36.83923072204925
+  },
+  "native": {
+    "m06": {
+      "mode": "m06",
+      "source": {
+        "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+        "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+        "test_sha256": "c99c1c89344a5aa149dd7c8eb613a5f23c2b7204d27f66b47bbc1e6cd9dd3606",
+        "binary_sha256": "9f105737343f345a395804cf0a1ad66fbf7e2a50c0ff0c9a198997459f910dca"
+      },
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1322-secondary",
+      "status": "passed",
+      "seconds": 42.58445012802258,
+      "unchanged_source_and_binary": true
+    },
+    "scenarios": {
+      "mode": "scenarios",
+      "source": {
+        "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+        "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+        "test_sha256": "c99c1c89344a5aa149dd7c8eb613a5f23c2b7204d27f66b47bbc1e6cd9dd3606",
+        "binary_sha256": "9f105737343f345a395804cf0a1ad66fbf7e2a50c0ff0c9a198997459f910dca"
+      },
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1322-secondary",
+      "status": "passed",
+      "seconds": 145.37889743898995,
+      "unchanged_source_and_binary": true
+    }
+  },
+  "gba": {
+    "performance": {
+      "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+      "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+      "hashes": {
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "d8519f6129ce148d1ccb2a6b52b68102ff99cb1a14e57fd0bdeaaec7d3852625",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "6c6f3df4ba4b70ff0b8cd3835f484dded2a82ff124da5c15ec0ddcad432acef4",
+        "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+      },
+      "frames": 8280,
+      "seconds": 2.7784737929468974,
+      "failures": [],
+      "metrics": "audit-1322-secondary-gba-perf-metrics.json",
+      "log": "audit-1322-secondary-gba-perf.log"
+    },
+    "memory": {
+      "pass": true,
+      "error": null,
+      "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "6d9a7d522fc99670cd31376e652ef67edd661655bebbc1d652af91c3021197d9",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+      "seconds": 172.72160389099736,
+      "frames": 324840,
+      "cases": 13,
+      "min_heap": 7816,
+      "min_stack": 8704,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    }
+  },
+  "capture": {
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1322-secondary-visual.rs",
+    "source_sha256": "10d8bd5c4f82fc0c18983ac3a85e840cc632df739f3b2dd1ea563bab302583ca",
+    "frame": 208,
+    "before": {
+      "base": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+      "source": "audit-1322-secondary-visual.rs",
+      "source_sha256": "10d8bd5c4f82fc0c18983ac3a85e840cc632df739f3b2dd1ea563bab302583ca",
+      "exe_sha256": "ac5a10c11624bb44678674972f402eedaaf9b592835f9efc5cc6f899772af505",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "d5091417e999660624d66dc540ab7b0666809c5ecf907170a45fbb729fdca110"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "229666185bb06847629d707734fe848b459743785fb85e6394e1a6d749a890c5"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "e2bf2233feaa6f2e2951270aa1e885fc3924985c9b76440862bcdae4cd835f21"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "MOVE frame=2 serial=1 enemy_display_hp=450\nCAPTURE frame=208 enemy_display_hp=450 message=Some(\"Enemy SNORLAX used SPLASH!\") phase=ShowingText { messages: [\"MEWTWO used BODY SLAM!\", \"It doesn't affect\\nEnemy SNORLAX!\", \"Enemy SNORLAX is paralyzed!\\nIt may be unable\", \"to move!\", \"Enemy SNORLAX used SPLASH!\", \"No effect!\"], current: 4, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "2d4101fab70abb3c31888585255db0ea4e2bf0bc86544b95efd6c076fd461e3d"
+    },
+    "after": {
+      "source_identity": {
+        "head": "29a5afa5a25795a63318946cd2f9f77854e10d04",
+        "diff_sha256": "7bcdf255757c3f5adfe9d53bd8ee66c2f005a288d6634923d3657ef1442233a5",
+        "test_sha256": "c99c1c89344a5aa149dd7c8eb613a5f23c2b7204d27f66b47bbc1e6cd9dd3606"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "74392d6c75e11165bfdfe5caca8e5d4e69cdd50d1005cec2e80cea52516f7726"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "b579d5b995b72192bd5a47d68694eb07df4089fb2c7c7c4710d180bf869e1e52"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "f03ae8e8ae8180d0e406b4c67234fc37627144b3e2b4990dd197863bf11b684f"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "5d7f1c23c47f6328a2e501c989359d5f2b65ec5cb7fb780ffb10ee391e7f61bb",
+      "output": "MOVE frame=2 serial=1 enemy_display_hp=450\nCAPTURE frame=208 enemy_display_hp=450 message=None phase=PlayerMenu\n",
+      "image_sha256": "a9c20a26e8d5607fac998b6ced169610afa26aec4791b35d6f71c04e015d9067"
+    },
+    "deleted_exe_bytes": 36323448
+  },
+  "images_visually_inspected": true,
+  "limitations": [
+    "Prepared FIGHT fixtures, fresh m06 and11 scenarios are not a new full m49 playthrough.",
+    "Renderer capture exercises BattleVisualEffects/draw_battle, not full game/audio clock or original ROM.",
+    "RNG assertions compare immune damaging moves with an immune Tackle control, not a complete original RNG pipeline.",
+    "Critical/damage RNG byte rotations and phase order, single-hit Rage and per-hit narration remain separate audit findings."
+  ]
+}
