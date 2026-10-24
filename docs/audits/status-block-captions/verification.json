@@ -1,0 +1,288 @@
+{
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_status_block_text",
+      "--",
+      "--nocapture"
+    ],
+    "base": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 101,
+    "seconds": 16.51866288599558
+  },
+  "focused": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_status_block_text",
+      "--",
+      "--nocapture"
+    ],
+    "base": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942",
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "exit": 0,
+    "seconds": 15.877248074975796
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "base": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942",
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "exit": 0,
+    "seconds": 32.98387862008531
+  },
+  "platforms": {
+    "status": "passed",
+    "started": "2026-10-24T10:55:09.196991+00:00",
+    "source": {
+      "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+      "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+      "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942"
+    },
+    "commands": [
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1315-status-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 59.705913888057694,
+        "log": "audit-1315-status-gba-build-driver.log",
+        "log_sha256": "f5fcf7014b6f33c947f489c9bdf919f244f9b3d38d18ca10c1376971bc5655b0"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1315-status-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.1305739580420777,
+        "log": "audit-1315-status-gba-perf-driver.log",
+        "log_sha256": "9a64e83ac0bff2a508e7a41929405043dade489a6093e0315bb01e7886d07a76"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1315-status-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 57.441638024989516,
+        "log": "audit-1315-status-memory-build-driver.log",
+        "log_sha256": "82d495321570c92d7c37909a1cf3a9028aec5e6dbdaa7ac84ceb5994dcdbdabc"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1315-status-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 166.80112896696664,
+        "log": "audit-1315-status-memory-run-driver.log",
+        "log_sha256": "8dc944fd4f68126c878c5eda8f8a17eb62832b6d1d3e033750c29743563f31f6"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1315-status-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 26.047532815951854,
+        "log": "audit-1315-status-native-build-driver.log",
+        "log_sha256": "c4d271bc8790bdffa2fcd98e98b083704241af0465c41bfe16a9f4adfb8fdac3"
+      }
+    ],
+    "finished": "2026-10-24T11:00:22.370368+00:00",
+    "unchanged_source": true
+  },
+  "gba_perf": {
+    "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "5f77f31e36d32f765e87ebc9ad30f5407983815f0f6938d03f20fbadde356e52",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "edab4707d6737c3bbc63cce8d83c226a848d4507217542c7ea71964b85906786",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.677318081026897,
+    "failures": [],
+    "metrics": "audit-1315-status-gba-perf-metrics.json",
+    "log": "audit-1315-status-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "84952f21a66d420332b4025f17db0963fe69fc5bc4293774e881561fd72585fd",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "seconds": 166.49969077005517,
+    "frames": 322800,
+    "cases": 13,
+    "min_heap": 7832,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "memory_log": {
+    "original": "audit-1315-status-memory-candidate.log",
+    "original_bytes": 5653922,
+    "original_sha256": "e54c7b9040c2a0df834daccbdd45e82722f24d467996bdc82e78e686c900a2db",
+    "archive": "audit-1315-status-memory-candidate.log.gz",
+    "archive_bytes": 431871,
+    "archive_sha256": "bf1c7ef5443b50579fbeec4f4d17bb1dc5cc20bad8e018d97383e017ac2069cd",
+    "roundtrip_verified": true,
+    "bytes_saved": 5222051
+  },
+  "native_build": {
+    "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered",
+    "protected_aliases": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-376b96c393fca6ed": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1312",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-4147a5c464458640": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-422d10856709dcf7": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1309",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-65dda198e93c6c3a": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9"
+    },
+    "exit_code": 0,
+    "candidate_sha256": "dfe54130f1cd51a049be83c6658e4d71e8feca190df8cd77736dbba1909cb0bb",
+    "candidate": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1315-status",
+    "seconds": 24.512208160944283,
+    "historical_binaries_unchanged": true,
+    "hardlinks_only": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+      "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+      "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942",
+      "binary_sha256": "dfe54130f1cd51a049be83c6658e4d71e8feca190df8cd77736dbba1909cb0bb"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1315-status",
+    "status": "passed",
+    "seconds": 39.02221678791102,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+      "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+      "test_sha256": "ee2fe1bab830311318baf95ef32190bd9c698091436b5be29629b17dd0ee0942",
+      "binary_sha256": "dfe54130f1cd51a049be83c6658e4d71e8feca190df8cd77736dbba1909cb0bb"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1315-status",
+    "status": "passed",
+    "seconds": 159.46623097301926,
+    "unchanged_source_and_binary": true
+  },
+  "before": {
+    "base": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "source": "audit-1315-status-visual.rs",
+    "source_sha256": "5ed2173061dcb8e551c0850835856a864c1c2eaa44b21311e2aeb920b9146f25",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "3d8b508bc8faf5a2631ec54748a9889ac006bc9ed44c018d430d7e42a771dbe1"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "192b33fe61626a38723b1d9f852e32cb3bc0e92f0fc5025d69dabaa4324e7566"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "a5a94fdc9031c5d9bd759ccc200f54195ddf397048763bceebd9c26d04feb446"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "scope": "Prepared public FIGHT; faster frozen Vaporeon is blocked before slower Ember thaws it alive. Actual BattleVisualEffects/draw_battle frame3, not full PokemonGame/audio or original-ROM timing.",
+    "exe_sha256": "07fd242a7734c21015a91dc18c477d57515c3964df4412b8e2f474ae356cef71",
+    "output": "CAPTURE frame=3 enemy_display_hp=390 message=Some(\"Enemy VAPOREON can't move!\") phase=ShowingText { messages: [\"Enemy VAPOREON can't move!\", \"MEWTWO used EMBER!\", \"It's not very effective...\", \"Fire defrosted\\nEnemy VAPOREON!\"], current: 0, wait_frames: 9, next_phase: PlayerMenu, backdrop: Battle }\n",
+    "image_sha256": "2a214f9c82670588efa4f26ebedfdbf51c946a6f5601a4a7a79d6ce87b64bfb4",
+    "deleted_exe_bytes": 18134376
+  },
+  "after": {
+    "base": "21c87ee97c78e811b3e47e4b7076cd470125aa92",
+    "source": "audit-1315-status-visual.rs",
+    "source_sha256": "5ed2173061dcb8e551c0850835856a864c1c2eaa44b21311e2aeb920b9146f25",
+    "scope": "Prepared public FIGHT; faster frozen Vaporeon is blocked before slower Ember thaws it alive. Actual BattleVisualEffects/draw_battle frame3, not full PokemonGame/audio or original-ROM timing.",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "5f6233328dc197029c232328b63573e850ab9939a2562c8f71d1532de41c771a"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "1d5b61cad27c3ee7535fab25b59ffe0ddc407c81bdfd627554816835b2cd5108"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "877c9a49159ce1653af05484f51d9493c77f127acc45f59e8c41229f83173179"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "diff_sha256": "c4c43446da850287596974ad02ef8856504e70843dc11780975e0f14eee27658",
+    "exe_sha256": "edf6e36f62698970eeb4076b799af49dfb0302f48dfe8b0a39a25b882d69cc84",
+    "output": "CAPTURE frame=3 enemy_display_hp=390 message=Some(\"Enemy VAPOREON is frozen\\nsolid!\") phase=ShowingText { messages: [\"Enemy VAPOREON is frozen\\nsolid!\", \"MEWTWO used EMBER!\", \"It's not very effective...\", \"Fire defrosted\\nEnemy VAPOREON!\"], current: 0, wait_frames: 9, next_phase: PlayerMenu, backdrop: Battle }\n",
+    "image_sha256": "a404be5adb74a0cfae9870ba278052fd214083c6eec1b7698bbc50b16c91be2c",
+    "deleted_exe_bytes": 18135496
+  }
+}
