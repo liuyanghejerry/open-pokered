@@ -135,7 +135,7 @@ Ruleset(
         //   • drain  → HealFraction  (of: LastDamage, 1/2, Source) — Gen-1 half-of-dealt
         //   • recoil → DamageFraction(of: LastDamage, 1/4, Source) — Gen-1 quarter-of-dealt
         //   The `chance:[n,256]` gate is bit-identical to the legacy `byte < n`
-        //   (51/102/26/77/85), one byte drawn (doc 11 §4.1).
+        //   (52/103/26/77/85), one byte drawn (doc 11 §4.1).
         //
         // DEFERRED (honest — not P2-expressible; see the module doc):
         //   • Sleep primary (rng&7 turn count → needs StatusWithDuration)
@@ -145,13 +145,13 @@ Ruleset(
         //   • the foe stat-down side effects (need the nested TryBoost veto driver)
 
         // ── POISON side-effect: poison-type immunity (HasType Poison) + Substitute
-        //    block + no-status guard. PoisonSideEffect1 = 51/256 (Poison Sting),
-        //    PoisonSideEffect2 = 102/256 (Sludge).
+        //    block + no-status guard. PoisonEffect uses percent * 255 / 100 + 1:
+        //    PoisonSideEffect1 = 52/256; PoisonSideEffect2 = 103/256.
         Effect(id: "side.poison_1", kind: Move, power: 15, type: "Poison", accuracy: 100,
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
                 Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
-                Hook(on: "DamagingHit", chance: [51, 256], do: [
+                Hook(on: "DamagingHit", chance: [52, 256], do: [
                     VetoIf(cond: HasType("Poison")),
                     VetoIf(cond: HasVolatile("Substitute")),
                     InflictStatus(status: "poison", target: Target),
@@ -161,7 +161,7 @@ Ruleset(
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
                 Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
-                Hook(on: "DamagingHit", chance: [102, 256], do: [
+                Hook(on: "DamagingHit", chance: [103, 256], do: [
                     VetoIf(cond: HasType("Poison")),
                     VetoIf(cond: HasVolatile("Substitute")),
                     InflictStatus(status: "poison", target: Target),

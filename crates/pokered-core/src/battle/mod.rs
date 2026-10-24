@@ -8099,3 +8099,6 @@ mod safari_capture_alarm_tests {
 
 #[cfg(test)]
 mod run_rng_tests;
+
+#[cfg(test)]
+mod poison_secondary_tests;

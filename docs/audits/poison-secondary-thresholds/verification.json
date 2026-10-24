@@ -1,0 +1,220 @@
+{
+  "current_validation": {
+    "tested_source": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+    "tested_tree": "607a9e120a4cd38cba2881f986ac5baf1f2ed4fc",
+    "dependencies": {
+      "PR381": "568136e34c578ebf75d438bad027d32be579d109",
+      "PR383_merged": "c24c513a26c794620f9ff260d0120089c561b8b0",
+      "PR382_merged": "ead01996a9b129d6061705e6a77271fa1c2d4227"
+    },
+    "core_full": {
+      "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+      "tree": "607a9e120a4cd38cba2881f986ac5baf1f2ed4fc",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0,
+      "seconds": 36.38078001700342,
+      "log_sha256": "657544cf0fee3af0f3f2d2e8a4cf8b4791d6b3bdd44cc0d4843c01d367260697",
+      "passed": 3680,
+      "failed": 0,
+      "ignored": 1
+    },
+    "gba_build": {
+      "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+      "tree": "607a9e120a4cd38cba2881f986ac5baf1f2ed4fc",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "perf-benchmark",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 79.51752808899619,
+      "log_sha256": "faedadafa87c0e5f93351d5ee857c866f21c27a3b117d34f926eea2d5215fd8e"
+    },
+    "gba_original_performance": {
+      "scenarios": 7,
+      "hardware_frames": 8280,
+      "failures": [],
+      "seconds": 4.151403966010548,
+      "hashes": {
+        "pokered-gba": "1f64b3d0f71323355b5ff1b5f65d572d44eabb7d9eabd6765a9de0e9c4ef00f4",
+        "pokered-gba.gba": "964034a89d91f4cfb0b8d1385b02cdd76f8654be3f431d3188775f06a7045fb0",
+        "main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403"
+      },
+      "metrics": {
+        "suite": "autopilot-v1",
+        "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+        "scenarios": {
+          "intro-title-v1": {
+            "scenario": "intro-title-v1",
+            "samples": 251,
+            "update_avg_ticks": 105,
+            "update_core_avg_ticks": 96,
+            "update_flush_avg_ticks": 1,
+            "renders": 115,
+            "draw_per_frame_ticks": 1201,
+            "draw_max_ticks": 9849,
+            "present_per_frame_ticks": 352,
+            "present_max_ticks": 782
+          },
+          "oak-dialogue-v1": {
+            "scenario": "oak-dialogue-v1",
+            "samples": 602,
+            "update_avg_ticks": 172,
+            "update_core_avg_ticks": 163,
+            "update_flush_avg_ticks": 1,
+            "renders": 307,
+            "draw_per_frame_ticks": 2888,
+            "draw_max_ticks": 9044,
+            "present_per_frame_ticks": 391,
+            "present_max_ticks": 781
+          },
+          "overworld-idle-v1": {
+            "scenario": "overworld-idle-v1",
+            "samples": 1400,
+            "update_avg_ticks": 374,
+            "update_core_avg_ticks": 364,
+            "update_flush_avg_ticks": 1,
+            "renders": 0,
+            "draw_per_frame_ticks": 0,
+            "draw_max_ticks": 0,
+            "present_per_frame_ticks": 0,
+            "present_max_ticks": 0
+          },
+          "overworld-movement-v1": {
+            "scenario": "overworld-movement-v1",
+            "samples": 240,
+            "update_avg_ticks": 387,
+            "update_core_avg_ticks": 377,
+            "update_flush_avg_ticks": 1,
+            "renders": 24,
+            "draw_per_frame_ticks": 207,
+            "draw_max_ticks": 2885,
+            "present_per_frame_ticks": 70,
+            "present_max_ticks": 771
+          },
+          "battle-entry-v1": {
+            "scenario": "battle-entry-v1",
+            "samples": 500,
+            "update_avg_ticks": 212,
+            "update_core_avg_ticks": 202,
+            "update_flush_avg_ticks": 1,
+            "renders": 369,
+            "draw_per_frame_ticks": 2630,
+            "draw_max_ticks": 8864,
+            "present_per_frame_ticks": 566,
+            "present_max_ticks": 782
+          },
+          "trainer-battle-entry-v1": {
+            "scenario": "trainer-battle-entry-v1",
+            "samples": 501,
+            "update_avg_ticks": 231,
+            "update_core_avg_ticks": 220,
+            "update_flush_avg_ticks": 1,
+            "renders": 224,
+            "draw_per_frame_ticks": 2360,
+            "draw_max_ticks": 10184,
+            "present_per_frame_ticks": 343,
+            "present_max_ticks": 782
+          },
+          "pokedex-entry-v1": {
+            "scenario": "pokedex-entry-v1",
+            "samples": 400,
+            "update_avg_ticks": 116,
+            "update_core_avg_ticks": 104,
+            "update_flush_avg_ticks": 1,
+            "renders": 1,
+            "draw_per_frame_ticks": 41,
+            "draw_max_ticks": 16497,
+            "present_per_frame_ticks": 1,
+            "present_max_ticks": 767
+          }
+        }
+      },
+      "log_sha256": "2b9d2b6037c8e3b21ed6d1befccb1335828caebee19e14cd6ea011b06b1925cc"
+    },
+    "scope": "Each isolated branch was tested before documentation-only rebases. Product files are byte-identical to this source. All final remote workflows and all six original GBA runtime gates remain required before merge; earlier or descendant memory results do not substitute for those gates.",
+    "unchanged_gates": true
+  },
+  "earlier_audit": {
+    "reference": {
+      "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "files": {
+        "macros/data.asm": "2b5b9e8c9f1e7b5ca7ceaf9c8e63fd5a53edc02c76695fb8ae1bf4fa55ca0582",
+        "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3"
+      }
+    },
+    "change": {
+      "PoisonSideEffect1": {
+        "before": 51,
+        "after": 52,
+        "denominator": 256
+      },
+      "PoisonSideEffect2": {
+        "before": 102,
+        "after": 103,
+        "denominator": 256
+      }
+    },
+    "red": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core",
+        "--lib",
+        "poison_secondary_tests",
+        "--",
+        "--nocapture"
+      ],
+      "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+      "exit_code": 101,
+      "seconds": 23.055927052046172,
+      "log_sha256": "528aef762d147560af4809083ca7c541c5d7b3152f55d777d4ba5c1f660b6c17",
+      "test_source_sha256": "908f9ea539da7f77a886eaa786c46daa3cac41bdcfe4275b27b3cbcadf10de94"
+    },
+    "red_scope": "PoisonSting chance byte51 incorrectly did not poison. The same exploratory run also independently exposed intact-Substitute RNG consumption; that separate failure is not fixed by this threshold-only patch.",
+    "core_full": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+      "exit_code": 0,
+      "seconds": 30.93305248802062,
+      "passed": 3680,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "5a126ffe74d36a34ffd0a37f788beb39e515e4eb3b2e467e7aef5a4716b22caf",
+      "diff_sha256": "ecb3279f6b7ab8ffd8ba5e44c00e9bdff1c26bae2b0edd408382f3006dceefb0",
+      "test_source_sha256": "467edb6d89f076f0681be56964c239a44318509269914794918236d7c67e005a"
+    },
+    "cases": 16,
+    "interface": "prepared BattleScreen actual turn caller with real LinkRng; both sides, four boundary/control bytes per move",
+    "source_sha256": {
+      "crates/pokered-core/src/battle/poison_secondary_tests.rs": "467edb6d89f076f0681be56964c239a44318509269914794918236d7c67e005a",
+      "crates/pokered-core/src/battle/pokered_rules/rules.ron": "b8fdc5f1b86f07675c157eb379a0de0be5fc82f7d8852e392c3202d5ed06e175"
+    },
+    "gba": "not yet verified on this combined head; remote full CI required before merge",
+    "scope": "pure battle logic; no screenshots required under AGENTS.md; not ordinary NEW GAME or an original-ROM recording"
+  }
+}
