@@ -1,0 +1,68 @@
+{
+  "reference": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "files": {
+      "macros/data.asm": "2b5b9e8c9f1e7b5ca7ceaf9c8e63fd5a53edc02c76695fb8ae1bf4fa55ca0582",
+      "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3"
+    }
+  },
+  "change": {
+    "PoisonSideEffect1": {
+      "before": 51,
+      "after": 52,
+      "denominator": 256
+    },
+    "PoisonSideEffect2": {
+      "before": 102,
+      "after": 103,
+      "denominator": 256
+    }
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "poison_secondary_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+    "exit_code": 101,
+    "seconds": 23.055927052046172,
+    "log_sha256": "528aef762d147560af4809083ca7c541c5d7b3152f55d777d4ba5c1f660b6c17",
+    "test_source_sha256": "908f9ea539da7f77a886eaa786c46daa3cac41bdcfe4275b27b3cbcadf10de94"
+  },
+  "red_scope": "PoisonSting chance byte51 incorrectly did not poison. The same exploratory run also independently exposed intact-Substitute RNG consumption; that separate failure is not fixed by this threshold-only patch.",
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+    "exit_code": 0,
+    "seconds": 30.93305248802062,
+    "passed": 3680,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "5a126ffe74d36a34ffd0a37f788beb39e515e4eb3b2e467e7aef5a4716b22caf",
+    "diff_sha256": "ecb3279f6b7ab8ffd8ba5e44c00e9bdff1c26bae2b0edd408382f3006dceefb0",
+    "test_source_sha256": "467edb6d89f076f0681be56964c239a44318509269914794918236d7c67e005a"
+  },
+  "cases": 16,
+  "interface": "prepared BattleScreen actual turn caller with real LinkRng; both sides, four boundary/control bytes per move",
+  "source_sha256": {
+    "crates/pokered-core/src/battle/poison_secondary_tests.rs": "467edb6d89f076f0681be56964c239a44318509269914794918236d7c67e005a",
+    "crates/pokered-core/src/battle/pokered_rules/rules.ron": "b8fdc5f1b86f07675c157eb379a0de0be5fc82f7d8852e392c3202d5ed06e175"
+  },
+  "gba": "not yet verified on this combined head; remote full CI required before merge",
+  "scope": "pure battle logic; no screenshots required under AGENTS.md; not ordinary NEW GAME or an original-ROM recording"
+}
