@@ -32,3 +32,18 @@ and multi-hit continuation are outside this change and remain audit questions.
 
 The unmodified GBA release build and all seven original performance scenarios
 also pass. No baseline, threshold, timeout or CI workflow was changed.
+
+Initial PR381 head `327a1abb` failed the original broad GBA memory gate at
+enemy Hyper Beam (game frame 86882): contiguous free heap was 3,839 bytes,
+below the existing 4,096-byte minimum. The exact local source repeated that
+failure. Checking the break flag before classifying the record did not resolve
+it on its own.
+
+The bridge was cloning each compiled hook, including nested operation lists,
+for read-only classification and execution. Installed rules hosts are immutable
+and already have static lifetimes across hot reloads, so return their borrowed
+hooks. The final candidate passes the full 3,673 core tests, the original seven
+performance scenarios, and all 13 original GBA memory scenarios (all 330 move
+animations included): lowest contiguous heap 4,768 bytes, untouched stack
+8,708 bytes. These are measurements of the final stress build, not a claim
+that every allocator layout has the same margin. No gate or workload changed.

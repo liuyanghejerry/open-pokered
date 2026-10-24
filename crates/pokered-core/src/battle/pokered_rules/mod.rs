@@ -1392,7 +1392,10 @@ pub fn move_effect_for(m: MoveId) -> Option<&'static Effect<PokeredRules>> {
 
 /// Look up a record's compiled hook for a given event (the bridge's lookup),
 /// recovering the record from the combined effect's `source_effect` id.
-fn hook_for(source_effect: EffectId, event: Event) -> Option<CompiledHook> {
+/// Installed hosts are immutable and have a static lifetime, including across
+/// hot reloads. Borrow their hooks instead of cloning nested operation lists
+/// for classification and execution on every battle hit.
+fn hook_for(source_effect: EffectId, event: Event) -> Option<&'static CompiledHook> {
     let rec_idx = source_effect.0.checked_sub(MOVE_EFFECT_ID_BASE)? as usize;
     let host = PokeredRules::rules_host()?;
     MOVE_RECORDS.with(|r| {
@@ -1403,7 +1406,6 @@ fn hook_for(source_effect: EffectId, event: Event) -> Option<CompiledHook> {
                     .iter()
                     .find_map(|id| host.compiled.hook(*id).filter(|h| h.event == event))
             })
-            .cloned()
     })
 }
 
@@ -3270,7 +3272,7 @@ fn bridge_damaging_hit(
 ) -> HandlerResult {
     // AttackSubstitute clears EXPLODE_EFFECT before AlwaysHappenSideEffects:
     // breaking the doll cancels the attacker's self-KO, even though damage hit.
-    if source_effect_is(source_effect, "special.explosion") && substitute_broke_for(source) {
+    if substitute_broke_for(source) && source_effect_is(source_effect, "special.explosion") {
         return HandlerResult::Unchanged;
     }
     let is_foe_stat_down = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook| {
