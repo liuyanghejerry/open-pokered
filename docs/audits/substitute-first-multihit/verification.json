@@ -1,0 +1,36 @@
+{
+  "base": "69f261c24293307c8afb2b7a592af89e4795b01b",
+  "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "red": {
+    "case": "Player Doubleslap, target one-HP substitute",
+    "expected_real_HP": 450,
+    "actual_real_HP": 446,
+    "test_result": "failed before fix"
+  },
+  "production_FIGHT_cases": {
+    "first_hit_break": 20,
+    "intact_doll": 20,
+    "later_hit_break": 14,
+    "next_action": 2
+  },
+  "core_tests": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "exit_code": 0,
+    "seconds": 33.11227961699478,
+    "head": "69f261c24293307c8afb2b7a592af89e4795b01b",
+    "passed": 3679,
+    "failed": 0,
+    "ignored": 1,
+    "tracked_diff_sha256": "99b3f2d917e24b27b35d1838a2f166e8c49349ee41ab12f0e9bee7c1b0eac4fa",
+    "test_source_sha256": "64259793cea3989205f4501a34583983b1f3477ab8a4284be94c987950d62e51"
+  },
+  "GBA_validation": "Pending rebase on standalone GBA memory fix PR383 and earlier battle fixes",
+  "scope": "Cancels multi-hit initialization only when the first hit broke the doll; later hits continue after a later break. Prepared reachable states followed by production FIGHT input. Does not claim full multi-hit RNG or Twineedle poison parity."
+}
