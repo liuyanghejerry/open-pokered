@@ -1,0 +1,103 @@
+{
+  "source": {
+    "head": "35bfebab3d724184dd4de58846069df12d975f10",
+    "diff_sha256": "93ba9f442e6e0ac11b7119f2a16aa8e2d9896e0eabd4a47de45cf6c9b28320a9",
+    "test_sha256": "4e1d123f5120ce4bd7b4c4c4faba625edde4c87ff8a1cf9e9e079e3f99fa2781"
+  },
+  "reference_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_tests": {
+    "passed": 1,
+    "failed": 5,
+    "executable_sha256": "7c94b17d4bfb8e3dc5dbbb31539d0413235bf3aa8a41df0f27a2db45a55f6506",
+    "libraries": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "1d5b61cad27c3ee7535fab25b59ffe0ddc407c81bdfd627554816835b2cd5108"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      }
+    }
+  },
+  "candidate_tests": {
+    "focused": 6,
+    "prepared_FIGHT_turns": 194,
+    "drained_presentations": 164,
+    "core_passed": 3713,
+    "core_ignored": 1,
+    "test_sha256": "4e1d123f5120ce4bd7b4c4c4faba625edde4c87ff8a1cf9e9e079e3f99fa2781",
+    "core_seconds": 33.45296442403924
+  },
+  "native": {
+    "binary_sha256": "ee0e8e41582bfaa9620be91908295d22ca626a282a5b811b2debff7add69b598",
+    "fresh_m06_seconds": 38.7593403570354,
+    "scenarios": 11,
+    "scenario_seconds": 145.88691660994664,
+    "unchanged_source_and_binary": true
+  },
+  "gba": {
+    "performance_cases": 7,
+    "performance_failures": [],
+    "memory": {
+      "pass": true,
+      "error": null,
+      "head": "35bfebab3d724184dd4de58846069df12d975f10",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "c6bc4f1ed682fe34a9e3df5b6ad86cfbf4e3cb5eab0e370adda0b41981a902af",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "diff_sha256": "93ba9f442e6e0ac11b7119f2a16aa8e2d9896e0eabd4a47de45cf6c9b28320a9",
+      "seconds": 167.8779201169964,
+      "frames": 322800,
+      "cases": 13,
+      "min_heap": 7832,
+      "min_stack": 8708,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    }
+  },
+  "capture": {
+    "frame": 347,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source_sha256": "f02791537745e7b0a1400e6463f035764c6eb6277fb020c8b92657d4ce3783ce",
+    "before": {
+      "image_sha256": "3c14e71aed64c87a879944aec94852fd0bb55a62c9bc5b5673772edfebbd78ce",
+      "output": "MOVE frame=155 serial=2 enemy_display_hp=450\nMOVE frame=231 serial=3 enemy_display_hp=442\nCAPTURE frame=347 enemy_display_hp=434 message=None phase=PlayerMenu\n",
+      "executable_sha256": "6a2a082eb0639c247319296c9138294bda600ef8a76a89fb3426976b5323e266"
+    },
+    "after": {
+      "image_sha256": "6ef32095b69090928109e1a46e3c80a3284124e06587513a9f3ba4dd41ed9da3",
+      "output": "MOVE frame=155 serial=2 enemy_display_hp=450\nMOVE frame=231 serial=3 enemy_display_hp=442\nCAPTURE frame=347 enemy_display_hp=434 message=Some(\"Hit the enemy\\n2 times!\") phase=ShowingText { messages: [\"Enemy SNORLAX used SPLASH!\", \"No effect!\", \"MEWTWO used DOUBLE KICK!\", \"It's super effective!\", \"Hit the enemy\\n2 times!\"], current: 4, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "executable_sha256": "e36de3354dc9199ff38fb57fa286ecb3a7d5b8086e1beeba96c88c55dd4aa902",
+      "libraries": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "c6f19dce503aaa5ee375de26b1115cb09c7a7ea64803d3543b7bdb45a4eaab07"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "1c982f327e548560994b0af7d97aa0783f3148bca145ac8af9267906a25468eb"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "ef9ff4641330c3c5d2bbb0f9bdd78eff4ffaa781c25bd75c54516d894e2debad"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Prepared battle fixtures are not a new full m49 playthrough.",
+    "Actual battle renderer was exercised; no full PokemonGame/audio-clock or original-ROM runtime capture.",
+    "Per-hit Rage stat/text handling and repeated effectiveness captions are separate confirmed audit findings."
+  ]
+}

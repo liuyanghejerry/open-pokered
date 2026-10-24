@@ -289,6 +289,7 @@ pub(crate) fn translate_turn_named_with_faints(
     // cure/stat events narrate through its single "eliminated" line.
     let mut current_move: Option<MoveId> = None;
     let mut current_block = None;
+    let mut multi_hit_stats_published = false;
     for (i, e) in evs.iter().enumerate() {
         match e {
             TurnEvent::MoveUsed { actor, move_ } => {
@@ -358,6 +359,20 @@ pub(crate) fn translate_turn_named_with_faints(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
                 }
+                let hit_count = if missed { None } else { super::completed_multi_hit_count(actor.side == 0, *move_) };
+                multi_hit_stats_published = hit_count.is_some();
+                if let Some(count) = hit_count {
+                    // HandleBuildingRage precedes MultiHitText; Twineedle's
+                    // poison follows it. The engine's action diff lists status
+                    // before stages, so publish this action's stage lines here.
+                    for event in evs[i + 1..].iter().take_while(|event| !matches!(event,
+                        TurnEvent::MoveUsed { .. } | TurnEvent::Blocked { .. }
+                        | TurnEvent::Damaged { cause: Some(_), .. } | TurnEvent::Healed { cause: Some(_), .. })) {
+                        if let Some(line) = stat_change_message(event, state, names) { msgs.push(line); }
+                    }
+                    msgs.push(if actor.side == 0 { format!("Hit the enemy\n{count} times!") }
+                        else { format!("Hit {count} times!") });
+                }
                 // SplashEffect prints this result after its animation. Blocked
                 // actions have no MoveUsed event and never enter the handler.
                 if md.effect == pokered_data::moves::MoveEffect::SplashEffect {
@@ -385,6 +400,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 }
             }
             TurnEvent::Blocked { actor } => {
+                multi_hit_stats_published = false;
                 current_block = Some(*actor);
                 msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
             }
@@ -441,22 +457,13 @@ pub(crate) fn translate_turn_named_with_faints(
                     msgs.push(format!("Fire defrosted\n{}!", display_name_named(state, *target, names)));
                 }
             }
-            TurnEvent::StatChanged { target, stat, delta } => {
+            TurnEvent::StatChanged { .. } => {
                 // Haze's stat reset draws no per-stat lines (the original
                 // prints only StatusChangesEliminatedText).
-                if current_move == Some(MoveId::Haze) {
+                if current_move == Some(MoveId::Haze) || multi_hit_stats_published {
                     continue;
                 }
-                if *delta != 0 {
-                    let name = display_name_named(state, *target, names);
-                    let verb = match *delta {
-                        d if d >= 2 => "greatly rose",
-                        1 => "rose",
-                        -1 => "fell",
-                        _ => "greatly fell",
-                    };
-                    msgs.push(format!("{name}'s {} {verb}!", stat_display(*stat)));
-                }
+                if let Some(line) = stat_change_message(e, state, names) { msgs.push(line); }
             }
             TurnEvent::Damaged { .. } => {
                 if let Some(line) = presentation_hp_message_named(e, state, effects, names) { msgs.push(line); }
@@ -465,6 +472,14 @@ pub(crate) fn translate_turn_named_with_faints(
         }
     }
     msgs
+}
+
+fn stat_change_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, names: Option<&BattleNameContext>) -> Option<String> {
+    let TurnEvent::StatChanged { target, stat, delta } = event else { return None; };
+    if *delta == 0 { return None; }
+    let name = display_name_named(state, *target, names);
+    let verb = match *delta { d if d >= 2 => "greatly rose", 1 => "rose", -1 => "fell", _ => "greatly fell" };
+    Some(format!("{name}'s {} {verb}!", stat_display(*stat)))
 }
 
 /// Narration boundaries for HP changes outside an executed move.
