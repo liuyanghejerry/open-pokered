@@ -1493,12 +1493,15 @@ thread_local! {
     static SUBSTITUTE_BROKE: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
     static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
+    /// CantLowerAnymore belongs to this action, even if a later Haze resets stages.
+    static PRIMARY_STAT_FLOOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
 }
 
 /// Set the move the battler on `who`'s side is executing this action (production).
 pub fn set_current_move(who: BattlerRef, m: MoveData) {
     CURRENT_MOVES.with(|c| c.borrow_mut()[who.side as usize] = Some(m));
     SUBSTITUTE_BROKE.with(|flags| flags.borrow_mut()[who.side as usize] = false);
+    PRIMARY_STAT_FLOOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1509,7 +1512,12 @@ pub fn clear_current_moves() {
     SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
+    PRIMARY_STAT_FLOOR.with(|moves| *moves.borrow_mut() = [None, None]);
     ohko::clear();
+}
+
+fn primary_stat_floor(player: bool, move_id: MoveId) -> bool {
+    PRIMARY_STAT_FLOOR.with(|moves| moves.borrow()[usize::from(!player)] == Some(move_id))
 }
 
 /// Captured while this action resolves, before a later Conversion or switch
@@ -3206,6 +3214,10 @@ fn bridge_foe_stat_down(
         if ctx.battler(lowered).stat_stages.get(stat).copied().unwrap_or(0) != before {
             // StatModifierDownEffect reapplies penalties to the lowered side.
             crate::battle::badge_boosts::apply_status_penalties(ctx.battler_mut(lowered));
+        } else if hook.chance.is_none() && is_primary_stat_down(current_move_for(source).effect) {
+            // effects.asm:705-710 prints NothingHappened only for primary moves.
+            let move_id = current_move_for(source).id;
+            PRIMARY_STAT_FLOOR.with(|moves| moves.borrow_mut()[source.side as usize] = Some(move_id));
         }
     }
     HandlerResult::Unchanged

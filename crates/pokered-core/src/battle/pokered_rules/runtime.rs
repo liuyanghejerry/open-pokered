@@ -314,7 +314,16 @@ pub(crate) fn translate_turn_named_with_faints(
                             .unwrap_or_else(|| displayed_effectiveness(md.move_type, d1, d2))
                     }
                 } else { Effectiveness::Normal };
-                if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
+                if super::is_primary_stat_down(md.effect) {
+                    // StatModifierDownEffect's MoveMissed/CantLowerAnymore
+                    // captions differ from an ordinary damaging attack miss.
+                    msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
+                    if missed {
+                        msgs.push("But, it failed!".to_string());
+                    } else if super::primary_stat_floor(actor.side == 0, *move_) {
+                        msgs.push("Nothing happened!".to_string());
+                    }
+                } else if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
                     let target_name = display_name_named(state, opp_ref(actor), names);
                     if super::ohko::speed_failed(actor, *move_) {
                         msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
