@@ -1,0 +1,827 @@
+{
+  "base": "23c5c5c48b2233e301b896795ad9cf744fa000cf",
+  "engine_base": "73879e2e9971ddc06f3e3442459b044df5bfed2c",
+  "web": {
+    "local-before-present": {
+      "tasks": 305552,
+      "cpuSeconds": 9.624029999999998,
+      "elapsed": 10.070606000022963,
+      "audio": "running",
+      "fps": [
+        "52 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS"
+      ]
+    },
+    "local-after-idle": {
+      "tasks": 1160,
+      "cpuSeconds": 2.0934869999999997,
+      "elapsed": 10.050317000015639,
+      "audio": "running",
+      "fps": [
+        "57 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS"
+      ]
+    },
+    "local-before-idle-4x": {
+      "tasks": 44782,
+      "cpuSeconds": 9.905583999999998,
+      "elapsed": 10.272441999986768,
+      "audio": "running",
+      "fps": [
+        "41 FPS",
+        "61 FPS",
+        "58 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "57 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS",
+        "60 FPS",
+        "60 FPS",
+        "57 FPS",
+        "59 FPS",
+        "58 FPS",
+        "59 FPS",
+        "61 FPS"
+      ]
+    },
+    "local-after-idle-4x": {
+      "tasks": 1062,
+      "cpuSeconds": 5.398806,
+      "elapsed": 10.134863000013866,
+      "audio": "running",
+      "fps": [
+        "53 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS",
+        "61 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "59 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS"
+      ]
+    },
+    "local-before-walk": {
+      "tasks": 120396,
+      "cpuSeconds": 3.861590999999997,
+      "elapsed": 4.033769000088796,
+      "audio": "running",
+      "fps": [
+        "56 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "58 FPS",
+        "60 FPS",
+        "60 FPS"
+      ]
+    },
+    "local-after-walk": {
+      "tasks": 465,
+      "cpuSeconds": 0.9655089999999973,
+      "elapsed": 4.026028000051156,
+      "audio": "running",
+      "fps": [
+        "54 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS",
+        "60 FPS"
+      ]
+    }
+  },
+  "desktop": {
+    "before-x11": [
+      {
+        "phase": "idle",
+        "fps": 42.0830215138224,
+        "samples": [
+          {
+            "time": 573554.958024267,
+            "frame": 87,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573555.962430467,
+            "frame": 128,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573556.966677136,
+            "frame": 171,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573557.97842089,
+            "frame": 214,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573558.991537951,
+            "frame": 257,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573560.006979538,
+            "frame": 299,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573561.023971765,
+            "frame": 340,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573562.041017581,
+            "frame": 384,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573563.061054604,
+            "frame": 428,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          }
+        ]
+      },
+      {
+        "phase": "walk",
+        "fps": 42.14511857810056,
+        "samples": [
+          {
+            "time": 573563.181235212,
+            "frame": 431,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573564.190303667,
+            "frame": 476,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573565.191917628,
+            "frame": 518,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573566.207334078,
+            "frame": 561,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573567.214836289,
+            "frame": 602,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573568.226164982,
+            "frame": 645,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573569.237186194,
+            "frame": 687,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573570.246499609,
+            "frame": 729,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573571.248598918,
+            "frame": 771,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      },
+      {
+        "phase": "battle",
+        "fps": 42.10021779505828,
+        "samples": [
+          {
+            "time": 573571.398276924,
+            "frame": 775,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573572.40548939,
+            "frame": 818,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573573.427645493,
+            "frame": 864,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573574.457142068,
+            "frame": 906,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573575.46190694,
+            "frame": 947,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573576.487996658,
+            "frame": 991,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573577.504287759,
+            "frame": 1034,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573578.525271645,
+            "frame": 1076,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573579.569256031,
+            "frame": 1119,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      }
+    ],
+    "after-x11": [
+      {
+        "phase": "idle",
+        "fps": 55.549494119449,
+        "samples": [
+          {
+            "time": 573842.354487666,
+            "frame": 102,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573843.357469579,
+            "frame": 160,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573844.387950685,
+            "frame": 219,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573845.404703298,
+            "frame": 274,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573846.422058668,
+            "frame": 333,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573847.426592354,
+            "frame": 393,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573848.442149176,
+            "frame": 450,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573849.454243977,
+            "frame": 503,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573850.473373484,
+            "frame": 553,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          }
+        ]
+      },
+      {
+        "phase": "walk",
+        "fps": 57.49699357440699,
+        "samples": [
+          {
+            "time": 573850.581152809,
+            "frame": 557,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 573851.588173327,
+            "frame": 603,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573852.609747673,
+            "frame": 662,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573853.624396584,
+            "frame": 722,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573854.630028285,
+            "frame": 782,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573855.635784372,
+            "frame": 842,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573856.643560465,
+            "frame": 901,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573857.64434979,
+            "frame": 961,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573858.651139971,
+            "frame": 1021,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      },
+      {
+        "phase": "battle",
+        "fps": 60.02190253663533,
+        "samples": [
+          {
+            "time": 573858.756139393,
+            "frame": 1025,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573859.770917045,
+            "frame": 1088,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573860.776612614,
+            "frame": 1148,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573861.780451737,
+            "frame": 1208,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573862.785256224,
+            "frame": 1268,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573863.790216131,
+            "frame": 1328,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573864.793610203,
+            "frame": 1388,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573865.798203318,
+            "frame": 1448,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 573866.803201875,
+            "frame": 1508,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      }
+    ]
+  },
+  "pixel_sha256": {
+    "before": "17bd5d49ceb556a126881986d52423530b0cc51be96033ae73faef09148b82c2",
+    "after": "17bd5d49ceb556a126881986d52423530b0cc51be96033ae73faef09148b82c2"
+  },
+  "limitations": [
+    "Linux host only; user confirmed desktop, not iOS.",
+    "Browser uses headless Chromium and software WebGL; CDP TaskDuration is main-thread occupied time, not total-system CPU.",
+    "Prepared save/fixtures; not an ordinary NEW GAME playthrough."
+  ],
+  "functional": {
+    "sound": {
+      "state": "running",
+      "sampleRate": 44100,
+      "peak": 0.6499999761581421
+    },
+    "errors": [],
+    "shortStartPressMs": 1,
+    "shortBPressMs": 1,
+    "menuAndReturnVisuallyVerified": true
+  },
+  "engine_commit": "ce5dc7b090fbf530cfe18c6fa0f18044a7f74327",
+  "engine_tests": {
+    "renderer": 484,
+    "web": 7,
+    "format": "passed"
+  },
+  "game_tests": {
+    "core": 3670,
+    "audio": 200,
+    "failed": 0,
+    "ignored": 1,
+    "command": "cargo test --locked --offline -p pokered-core -p pokered-audio"
+  },
+  "engine_merge": "eaac3a6c87618a1f92e6277bb730ea3800de60bc",
+  "engine_ci": {
+    "run": 40062279945,
+    "all_12_jobs": "success"
+  },
+  "public_pin_desktop": {
+    "windowed": true,
+    "phases": [
+      {
+        "phase": "idle",
+        "fps": 59.56672890972597,
+        "samples": [
+          {
+            "time": 574845.763387916,
+            "frame": 116,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574846.767854799,
+            "frame": 176,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574847.7724445,
+            "frame": 236,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574848.78191902,
+            "frame": 295,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574849.786532862,
+            "frame": 355,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574850.791094801,
+            "frame": 415,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574851.795605629,
+            "frame": 475,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574852.800237698,
+            "frame": 535,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574853.804789698,
+            "frame": 595,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          }
+        ]
+      },
+      {
+        "phase": "held-down",
+        "fps": 60.02763473181656,
+        "samples": [
+          {
+            "time": 574853.912158282,
+            "frame": 599,
+            "screen": "overworld",
+            "x": 5,
+            "y": 6
+          },
+          {
+            "time": 574854.926558113,
+            "frame": 662,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574855.931289737,
+            "frame": 722,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574856.935657065,
+            "frame": 782,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574857.940395817,
+            "frame": 842,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574858.945404536,
+            "frame": 902,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574859.949330312,
+            "frame": 962,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574860.953950476,
+            "frame": 1022,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574861.958452329,
+            "frame": 1082,
+            "screen": "overworld",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      },
+      {
+        "phase": "battle-intro",
+        "fps": 60.02947805265233,
+        "samples": [
+          {
+            "time": 574862.066195651,
+            "frame": 1086,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574863.080340527,
+            "frame": 1149,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574864.084825065,
+            "frame": 1209,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574865.089396092,
+            "frame": 1269,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574866.093918446,
+            "frame": 1329,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574867.098505172,
+            "frame": 1389,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574868.103087943,
+            "frame": 1449,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574869.107693856,
+            "frame": 1509,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          },
+          {
+            "time": 574870.112242621,
+            "frame": 1569,
+            "screen": "battle",
+            "x": 5,
+            "y": 8
+          }
+        ]
+      }
+    ]
+  },
+  "public_pin_pixel_sha256": "17bd5d49ceb556a126881986d52423530b0cc51be96033ae73faef09148b82c2",
+  "gba": {
+    "original_performance_scenarios": 7,
+    "failures": [],
+    "rom_sha256": "1fd53cc21cad81a57bcf0f11f62a092dac12dab084e0aa1851a0c0c8f187cc49",
+    "thresholds_and_baseline": "unchanged",
+    "registry_lock_versions_and_checksums": "unchanged in both lockfiles"
+  }
+}
