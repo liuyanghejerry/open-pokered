@@ -1,0 +1,372 @@
+{
+  "base": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+  "engine_previous": "ce5dc7b090fbf530cfe18c6fa0f18044a7f74327",
+  "engine_new": "688db209603860be52da3e6a77abe9de4182e495",
+  "original_reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "product_file_sha256": {
+    "Cargo.lock": "3887b0c036ee59269e5eb2f47cc0fabbfff72a62fd783b9248eb190b7243be97",
+    "crates/pokered-agent/Cargo.toml": "62f56de125195d476ccc5a0196e598c9c84ee91532bf39db4c66f8c56cda877e",
+    "crates/pokered-app/Cargo.toml": "5649a43f798819c675628bbfa19da58a3e867a99caff30172c860386a7405629",
+    "crates/pokered-audio/Cargo.toml": "4f4b239874ab4757cdf807206af4bab093e7578d07ae35e2e5090a969b653c95",
+    "crates/pokered-core/Cargo.toml": "1c1937b8f71124e95b9daf251913f0913b3361ca1f2e965574e58b92302a29f7",
+    "crates/pokered-core/src/battle/pokered_rules/tests.rs": "be6edb0c54e4c2894c54ae22ff995bdd4a56b8028ad3914902e055c3121a2a35",
+    "crates/pokered-data/Cargo.toml": "62c77ec1c8564efdfe58a0cf2940f16c460f0d10bb19d53522a46d7b9c350f6a",
+    "crates/pokered-debug-server/Cargo.toml": "117acee16c150aeb893f3ed1d1c5513983d0f58fa89b077ef5ba7a8097f1eff6",
+    "crates/pokered-gba/Cargo.lock": "ffe446220e96ddf41c6be34fbeb7689077026d147713d951c8523814b54b8572",
+    "crates/pokered-gba/Cargo.toml": "3236717df0baea0d5f9f4a7f8bd2eb5ada71d4c30df5ac47989cb925a74bd69a",
+    "crates/pokered-layout-preview/Cargo.toml": "eae88bf9fd4dcd3221bed53f4713bfc9040092f599e482319d851b4683d43cda",
+    "crates/pokered-mobile/Cargo.toml": "320152c2a65814fcc1e59d065d705437a1c9843afc24a855835ec1daaafaad5e",
+    "crates/pokered-renderer/Cargo.toml": "3bb27027a33402ff43a2b7fc6b5f6d8c784d41f1023517e97af822b2a63e48b3",
+    "crates/pokered-tui/Cargo.toml": "db2e68708dffb012747415ebbcbff017db28c031db7926b801e9ebacd689729b",
+    "crates/pokered-ui-preview/Cargo.toml": "7548ffd04a2085897652169f3a2c1f80408a0672c80fbdf1a44bcedfb9996fe4",
+    "crates/pokered-ui/Cargo.toml": "a614a514567347222cfb664a3d2b36db4bd63862799563d2277b9e09fb372b3e",
+    "crates/pokered-web/Cargo.toml": "5169deea0b5e9ffd3ad903142dd6499fdde71711bf3b886b1634d30fbbeb41f3",
+    "crates/scene_apply/Cargo.toml": "0fdca4093f1206c02db84eb4fbb0b82bce8306f89b8e242239f7c9d4b4a9fcac",
+    "crates/pokered-core/tests/fidelity_repeat_hits.rs": "ea53e37de1f5e88b2c63afa9de6726b018178e46b4e63ede58a9ceda604d3e09"
+  },
+  "prepared_turns": 990,
+  "completed_presentations": 976,
+  "red": {
+    "base": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+    "build_exit": 0,
+    "source_sha256": "1138911485e2ec675fc2ad3e6986b5506b75bab9ecb12be178808e42ef041cb9",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-a7ff13b7c984aca9.rlib",
+        "sha256": "3a9c33ee5035ca322ef93920a53984f7fa87839393c7ac502504ef23a949c08d"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-f4cda78646add0b3.rlib",
+        "sha256": "9faa6e85e73156b16e9f949ba96f231576535974e13ce67da09c6441976073a2"
+      }
+    },
+    "exit": 101,
+    "exe_sha256": "65f54f7adc7d67ce06817c446af9a3e4098c1183894ad442d04e801f79dd9abe",
+    "completed_binary_cleanup_bytes": 14745176
+  },
+  "green": {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--locked",
+      "--offline",
+      "--test",
+      "fidelity_repeat_hits"
+    ],
+    "exit": 0,
+    "elapsed_s": 25.06095280207228,
+    "source_diff_sha256": "5d74b231dee977c26a8954998878d78d10866174b54b5eeca2d07718d3543dbe"
+  },
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--locked",
+      "--offline"
+    ],
+    "exit": 0,
+    "elapsed_s": 43.210239370004274,
+    "diff_sha256": "c9153b8e22b89a1d87d7bb77225341951f8da9452376507a9b97ec52a6b2326e",
+    "passed": 3693,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "3d415b82d1b80d52377113d0f55934847edaa5a05422b9baef413f25ba4f3af6"
+  },
+  "native_m06": {
+    "mode": "m06",
+    "head": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+    "diff_sha256": "c9153b8e22b89a1d87d7bb77225341951f8da9452376507a9b97ec52a6b2326e",
+    "new_tests_sha256": "ea53e37de1f5e88b2c63afa9de6726b018178e46b4e63ede58a9ceda604d3e09",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1312",
+    "binary_sha256": "990d141ef42390a8abfac35598dd85170c101790ba8c9c2315126519b74e2ddb",
+    "status": "passed",
+    "seconds": 32.45891779300291,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios_raw": {
+    "mode": "scenarios",
+    "head": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+    "diff_sha256": "c9153b8e22b89a1d87d7bb77225341951f8da9452376507a9b97ec52a6b2326e",
+    "new_tests_sha256": "ea53e37de1f5e88b2c63afa9de6726b018178e46b4e63ede58a9ceda604d3e09",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1312",
+    "binary_sha256": "990d141ef42390a8abfac35598dd85170c101790ba8c9c2315126519b74e2ddb",
+    "status": "failed",
+    "error": "Traceback (most recent call last):\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1312-native-regression.py\", line 32, in <module>\n    result=scenarios.main()\n  File \"/home/jerry/develop/open-pokered/scripts/scenarios.py\", line 472, in main\n    return sys.exit(1 if fails else 0)\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^\nSystemExit: 0\n",
+    "seconds": 142.2168736270396,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios_review": {
+    "status": "passed",
+    "scenarios": 11,
+    "seconds": 142.2168736270396,
+    "unchanged_source_and_binary": true,
+    "raw_result": "audit-1312-native-scenarios.json",
+    "log": "audit-1312-native-scenarios.log",
+    "log_sha256": "43591a08e0a97504bab347363ab3140321962866aada5f0fad493d25a6f1f766",
+    "explanation": "The suite completed 11/11 PASS and main() exited with SystemExit(0). The external wrapper caught BaseException and mislabeled that successful exit as failure. Original result and log retained; no scenario or product change, no rerun."
+  },
+  "gba_performance": {
+    "head": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+    "diff_sha256": "c9153b8e22b89a1d87d7bb77225341951f8da9452376507a9b97ec52a6b2326e",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "2e1886b70a6608c0680d260620b12306c8c1e4dc34e719c63f1b663cb00ffe57",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "7411b6c1d29254128a2a21c8cc4590f7904f38c9bdcb7afde494104b771f3fdf",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 3.4773141930345446,
+    "failures": [],
+    "metrics": "audit-1312-repeat-gba-perf-metrics.json",
+    "log": "audit-1312-repeat-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "ec41faff793b0e0d6926704215e8094d0df39b3c",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "0c06b69b54718f71c8e0a6346a55321834ebbafcc608b9898e1dece7d2d0e64a",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "c9153b8e22b89a1d87d7bb77225341951f8da9452376507a9b97ec52a6b2326e",
+    "seconds": 194.87043346499559,
+    "frames": 324840,
+    "cases": 13,
+    "min_heap": 7816,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "gba_driver": {
+    "started": "2026-10-24T09:12:01.613201+00:00",
+    "status": "passed",
+    "previous": "audit-1312-repeat-validation-driver.json",
+    "resume_reason": "GBA build passed; first bridge invocation lacked LD_LIBRARY_PATH. Reuse built ROM, no change to game/gates/timeout.",
+    "commands": [
+      {
+        "script": [
+          "audit-1312-repeat-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.9903861259808764,
+        "log": "audit-1312-repeat-gba-perf-driver-v2.log"
+      },
+      {
+        "script": [
+          "audit-1312-repeat-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 85.21801655809395,
+        "log": "audit-1312-repeat-memory-build-driver-v2.log"
+      },
+      {
+        "script": [
+          "audit-1312-repeat-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 195.30513678700663,
+        "log": "audit-1312-repeat-memory-run-driver-v2.log"
+      },
+      {
+        "script": [
+          "audit-1312-repeat-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 44.505692012025975,
+        "log": "audit-1312-repeat-native-build-driver-v2.log"
+      }
+    ],
+    "finished": "2026-10-24T09:17:30.636646+00:00"
+  },
+  "visual": {
+    "before": {
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-c3aea0fde1465c9d.rlib",
+          "sha256": "2522495599e55299f19d66c4fbdc70666790e3f4c4c4c8d2a01fd33464a15629"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-a7ff13b7c984aca9.rlib",
+          "sha256": "3a9c33ee5035ca322ef93920a53984f7fa87839393c7ac502504ef23a949c08d"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-f4cda78646add0b3.rlib",
+          "sha256": "9faa6e85e73156b16e9f949ba96f231576535974e13ce67da09c6441976073a2"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-538f4ef830e5c19b.rlib",
+          "sha256": "83435ec8ffae829ddf47845667892ab74582c44ade6a7023ca8965e0a35e791d"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-e6ca7ecd7a052c96.rlib",
+          "sha256": "f5a795843892a136a26ee66df1e7a9b5d90f7c7a71c04768c56ea3222772cd7a"
+        }
+      },
+      "exe_sha256": "bca2e7d1b6af81b06e3b3f855ac52358f389dc50b2e2799865c43a79e406d8a2",
+      "source_sha256": "7564409adaf83375c8bcf91689c5b039057087fd56434fcac1c63cc894335f6b",
+      "deleted_exe_bytes": 18150528
+    },
+    "after": {
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "c32516a0a320b4e9a7e8b1a29e2bb9db1e732266f7c673f2d6f763dd5b247090"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "04d1edfcc38961332ac2e55418de53be54bfe00ef92463560fd62316c7accc3b"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "323e6934ea607e17ea299bb971a872ca8b0054e4d9c0b9b41e543c3144f382c9"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "65fa07eb30c39cd203f19351603122a614691a23dae9bc2841b86b34b7e2086a"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "1a2188db6f0140fa77ddd074bf5c367c3209acb1132e4487698f6a32fa276f7c",
+      "source_sha256": "7564409adaf83375c8bcf91689c5b039057087fd56434fcac1c63cc894335f6b",
+      "deleted_exe_bytes": 18131568
+    },
+    "differing_frames": [
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286,
+      287,
+      288,
+      289,
+      290,
+      291,
+      292,
+      293,
+      294,
+      295,
+      296,
+      297,
+      298,
+      299,
+      300,
+      301,
+      302,
+      303,
+      304,
+      305,
+      306,
+      307,
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315,
+      316,
+      317,
+      318,
+      319,
+      320,
+      321,
+      322,
+      323,
+      324,
+      325,
+      326,
+      327,
+      328,
+      329,
+      330,
+      331,
+      332,
+      333
+    ],
+    "selected_frame": 256,
+    "images": {
+      "before": {
+        "path": "docs/screenshots/multi-hit-knockout-before.png",
+        "sha256": "7dd496d07e66c411603f7b65521c60ed8c6d372ebcc4fd98bf4f585dfeb70a5a"
+      },
+      "after": {
+        "path": "docs/screenshots/multi-hit-knockout-after.png",
+        "sha256": "dade49bd9cc747037a24d9f403941014ab89dc7d6f1cabe2554801ba30cfbcb7"
+      }
+    },
+    "inspected": true,
+    "committed_capture_source_sha256": "0c0522e16494de580793aa5df4683727463905e1817e2e048be6eaf3d60fa78b",
+    "committed_capture_note": "Removed one trailing-whitespace-only line from the executed capture source."
+  },
+  "scope": "Prepared production BattleScreen evidence and native m06 + 11 scenarios. Previous complete m01-m49 run belongs to parent master/old engine pin. No claim of complete original parity."
+}

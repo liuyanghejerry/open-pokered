@@ -82,18 +82,18 @@ struct MoveBytes {
     accuracy: u8,
     damage: u8,
     side_effect: u8,
-    /// P4: the `multi_hit_roll` byte the `RepeatHits` TwoToFive count source draws
-    /// (the legacy `EffectRandoms::multi_hit_roll`). Drawn by the stack at the
-    /// DamagingHit ordinal AFTER `damage`, only for a TwoToFive multi-hit move.
+    /// First count byte, drawn after the first surviving hit.
     multi_hit: u8,
+    /// Original effects.asm:952-958 draws this only when the first low bits >= 2.
+    multi_hit_reroll: u8,
 }
 
 impl MoveBytes {
     /// confusion 0 (acts), crit 255 (no crit), accuracy 0 (always hits), damage 255 (max roll),
     /// side_effect 255 (a 255 byte is `>= any threshold` ⇒ secondary does NOT fire),
-    /// multi_hit 0 (< 96 ⇒ the 2-5 distribution yields 2 hits).
+    /// multi_hit 0 selects 2 hits without a reroll.
     fn always_hit() -> Self {
-        Self { confusion: 0, paralysis: 255, crit: 255, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0 }
+        Self { confusion: 0, paralysis: 255, crit: 255, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0, multi_hit_reroll: 0 }
     }
 }
 
@@ -195,15 +195,7 @@ fn to_move_randoms(b: MoveBytes) -> MoveRandoms {
     }
 }
 
-/// Gen-1 two-to-five distribution (the harness's local copy of the engine
-/// `determine_hit_count`): `roll<96⇒2, <192⇒3, <224⇒4, else⇒5`. Used to predict the
-/// stack stream's hit count + the expected total damage (per-hit × N).
-fn determine_hit_count(roll: u8) -> u8 {
-    if roll < 96 { 2 } else if roll < 192 { 3 } else if roll < 224 { 4 } else { 5 }
-}
-
-/// Whether `effect` is a P4 TwoToFive multi-hit (draws ONE count byte at the
-/// DamagingHit ordinal after `damage`).
+/// Whether `effect` samples one or two count bytes after the first hit.
 fn is_two_to_five(effect: MoveEffect) -> bool {
     effect == MoveEffect::TwoToFiveAttacksEffect
 }
@@ -375,12 +367,11 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
         if hit && (is_side_status_effect(md.effect) || is_side_foe_down_effect(md.effect)) {
             bytes.push(mb.side_effect);
         }
-        // P4: a TwoToFive multi-hit draws ONE count byte (the multi_hit_roll) at the
-        // DamagingHit ordinal AFTER `damage` (Fixed-count moves — Double Kick /
-        // Bonemerang / Twineedle — draw NO count byte). It is drawn only on a hit
-        // (the RepeatHits op rides DamagingHit, which fires after the first hit).
+        // Original low-bit count sampling conditionally draws a second byte.
+        // These fixtures keep the target alive; KO exits have production tests.
         if hit && is_two_to_five(md.effect) {
             bytes.push(mb.multi_hit);
+            if mb.multi_hit & 3 >= 2 { bytes.push(mb.multi_hit_reroll); }
         }
         // P4: Twineedle draws ONE final-hit poison chance byte (52/256) at the
         // side_effect ordinal (after the count — but Twineedle is Fixed(2) so there
@@ -3638,7 +3629,7 @@ fn pure_damage_crit() {
     let mut s = Scenario::base("Tackle crit (Snorlax vs Snorlax)", MoveId::Tackle);
     s.player = Mon::new(Species::Snorlax, 300, 100);
     s.enemy = Mon::new(Species::Snorlax, 300, 50);
-    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 0, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0 };
+    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 0, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0, multi_hit_reroll: 0 };
     run_scenario(&s);
 
     // The crit hit value, and a non-crit control.
@@ -3663,7 +3654,7 @@ fn pure_damage_one_in_256_miss() {
     let mut s = Scenario::base("Surf 1/256 miss (first mover)", MoveId::Surf);
     s.player = Mon::new(Species::Snorlax, 300, 100);
     s.enemy = Mon::new(Species::Snorlax, 300, 50);
-    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 255, accuracy: 255, damage: 255, side_effect: 255, multi_hit: 0 };
+    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 255, accuracy: 255, damage: 255, side_effect: 255, multi_hit: 0, multi_hit_reroll: 0 };
     run_scenario(&s);
 
     // Explicit: the enemy took ONLY the second mover's hit, not the missed first.
@@ -3856,7 +3847,7 @@ fn focus_energy_div4_crit_bug_parity() {
     let mut s = Scenario::base("Focus Energy ÷4 crit bug", MoveId::Tackle);
     s.player = Mon { focus_energy: true, ..Mon::new(Species::Pikachu, 300, 100) };
     s.enemy = Mon::new(Species::Pikachu, 300, 50);
-    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 20, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0 };
+    s.first = MoveBytes { confusion: 255, paralysis: 255, crit: 20, accuracy: 0, damage: 255, side_effect: 255, multi_hit: 0, multi_hit_reroll: 0 };
     run_scenario(&s);
 }
 
@@ -4934,13 +4925,12 @@ fn multi_base(name: &'static str, move_id: MoveId) -> Scenario {
     s
 }
 
-/// TWO-TO-FIVE, LOW roll = 2 hits: byte 50 (< 96) ⇒ 2 hits. Real total = per-hit×2.
+/// First low bits zero select two hits without a reroll.
 #[test]
 fn multi_hit_two_to_five_low_roll_2_hits() {
     let mut s = multi_base("Doubleslap 2-5 LOW roll = 2 hits", MoveId::Doubleslap);
-    s.first.multi_hit = 50;  // < 96 ⇒ 2 hits
-    s.second.multi_hit = 50;
-    assert_eq!(determine_hit_count(50), 2, "byte 50 ⇒ 2 hits");
+    s.first.multi_hit = 0;
+    s.second.multi_hit = 0;
     let per_hit = legacy_per_hit(&s);
     let (dealt, consumed, _st) = p4_stack(&s);
     assert_eq!(dealt, per_hit * 2, "2-hit total = per-hit × 2 ({} × 2)", per_hit);
@@ -4950,33 +4940,42 @@ fn multi_hit_two_to_five_low_roll_2_hits() {
     assert_eq!(consumed, 8, "two movers × (crit, acc, damage, multi_hit) = 8");
 }
 
-/// TWO-TO-FIVE, HIGH roll = 5 hits: byte 240 (>= 224) ⇒ 5 hits. Total = per-hit×5.
+/// First low bits three reroll; second low bits three select five hits.
 #[test]
 fn multi_hit_two_to_five_high_roll_5_hits() {
     let mut s = multi_base("Doubleslap 2-5 HIGH roll = 5 hits", MoveId::Doubleslap);
-    s.first.multi_hit = 240; // >= 224 ⇒ 5 hits
-    s.second.multi_hit = 240;
-    assert_eq!(determine_hit_count(240), 5, "byte 240 ⇒ 5 hits");
+    s.first.multi_hit = 3;
+    s.first.multi_hit_reroll = 3;
+    s.second.multi_hit = 3;
+    s.second.multi_hit_reroll = 3;
     let per_hit = legacy_per_hit(&s);
     let (dealt, consumed, _st) = p4_stack(&s);
     assert_eq!(dealt, per_hit * 5, "5-hit total = per-hit × 5 ({} × 5)", per_hit);
     assert_eq!((per_hit, dealt), (15, 75), "real Gen-1: Doubleslap per-hit 15, 5 hits = 75");
-    assert_eq!(consumed, 8, "two movers × (crit, acc, damage, multi_hit) = 8");
+    assert_eq!(consumed, 10, "two movers × (crit, acc, damage, first count, reroll) = 10");
 }
 
-/// The full 2-5 distribution boundaries (the engine `determine_hit_count` parity):
-/// the stack's hit count tracks the legacy distribution exactly across the cutoffs.
+/// Original source truth table, including bytes that the old threshold model
+/// misclassified. The legacy path remains only the per-hit damage oracle.
 #[test]
 fn multi_hit_two_to_five_distribution_boundaries() {
-    for (byte, want_n) in [(0u8, 2u8), (95, 2), (96, 3), (191, 3), (192, 4), (223, 4), (224, 5), (255, 5)] {
+    for (byte, reroll, want_n, count_draws) in [
+        (0u8, 255u8, 2u8, 1), (1, 255, 3, 1),
+        (2, 0, 2, 2), (2, 1, 3, 2), (2, 2, 4, 2), (2, 3, 5, 2),
+        (3, 0, 2, 2), (3, 1, 3, 2), (3, 2, 4, 2), (3, 3, 5, 2),
+        (95, 252, 2, 2), (96, 255, 2, 1), (191, 254, 4, 2),
+        (192, 255, 2, 1), (223, 252, 2, 2), (224, 255, 2, 1), (255, 255, 5, 2),
+    ] {
         let mut s = multi_base("Fury Attack distribution", MoveId::FuryAttack);
         s.first.multi_hit = byte;
+        s.first.multi_hit_reroll = reroll;
         s.second.multi_hit = byte;
-        assert_eq!(determine_hit_count(byte), want_n, "byte {byte} ⇒ {want_n} hits");
+        s.second.multi_hit_reroll = reroll;
         let per_hit = legacy_per_hit(&s);
-        let (dealt, _c, _st) = p4_stack(&s);
+        let (dealt, consumed, _st) = p4_stack(&s);
         assert_eq!(dealt, per_hit * want_n as u16,
             "byte {byte}: total = per-hit({per_hit}) × {want_n}");
+        assert_eq!(consumed, 2 * (3 + count_draws), "bytes {byte}/{reroll}");
     }
 }
 
