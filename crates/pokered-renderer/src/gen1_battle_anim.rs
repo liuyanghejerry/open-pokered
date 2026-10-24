@@ -53,6 +53,56 @@ pub fn render_gen1_oam_palette_split(
     palette_after: &Palette,
     split_y: Option<u32>,
 ) {
+    render_gen1_oam_rows(
+        fb,
+        entries,
+        |tile, row| tileset.get(tile).pixels[row],
+        palette_before,
+        palette_after,
+        split_y,
+    );
+}
+
+/// Composite directly from a ROM-resident 2bpp animation sheet. On GBA this
+/// avoids retaining a 5 KiB decoded sheet beside the active battle and script.
+/// Only the current eight-pixel row is expanded, on the stack.
+#[cfg(any(target_os = "none", feature = "gba-resource-tests"))]
+pub fn render_gen1_oam_2bpp_palette_split(
+    fb: &mut crate::FrameBuffer,
+    entries: &[SpriteOamEntry],
+    tiles: &[u8],
+    palette_before: &Palette,
+    palette_after: &Palette,
+    split_y: Option<u32>,
+) {
+    render_gen1_oam_rows(
+        fb,
+        entries,
+        |tile, row| {
+            let offset = tile * 16 + row * 2;
+            let mut pixels = [0; TILE_PIXELS];
+            if let Some(bytes) = tiles.get(offset..offset + 2) {
+                for (col, pixel) in pixels.iter_mut().enumerate() {
+                    let shift = 7 - col;
+                    *pixel = ((bytes[0] >> shift) & 1) | (((bytes[1] >> shift) & 1) << 1);
+                }
+            }
+            pixels
+        },
+        palette_before,
+        palette_after,
+        split_y,
+    );
+}
+
+fn render_gen1_oam_rows(
+    fb: &mut crate::FrameBuffer,
+    entries: &[SpriteOamEntry],
+    row_pixels: impl Fn(usize, usize) -> [u8; TILE_PIXELS],
+    palette_before: &Palette,
+    palette_after: &Palette,
+    split_y: Option<u32>,
+) {
     let width = fb.width() as i32;
     let height = fb.height() as i32;
     for screen_y in 0..height {
@@ -89,7 +139,7 @@ pub fn render_gen1_oam_palette_split(
             } else {
                 source_row
             };
-            let tile = tileset.get(entry.tile_id as usize);
+            let pixels = row_pixels(entry.tile_id as usize, tile_row);
             for source_col in 0..TILE_PIXELS {
                 let screen_x = entry.x + source_col as i32;
                 if !(0..width).contains(&screen_x) {
@@ -100,7 +150,7 @@ pub fn render_gen1_oam_palette_split(
                 } else {
                     source_col
                 };
-                let color = tile.get(tile_row, tile_col);
+                let color = pixels[tile_col];
                 if color != 0 {
                     // DMG OBJ priority bit: the object is behind nonzero BG
                     // color numbers, but remains visible through BG color 0.

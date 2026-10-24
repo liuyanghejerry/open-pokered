@@ -30,11 +30,15 @@ use pokered_renderer::battle_transition::{BattleTransitionKind, BattleTransition
 use pokered_renderer::transition_blit::TransitionTarget;
 use pokered_renderer::embedded_font::draw_text;
 use pokered_renderer::gen1_battle_anim::{
-    draw_mon_pic_clipped, move_short_flash_timing, render_gen1_oam,
-    render_gen1_oam_palette_split, render_gen1_slide_up, render_gen1_squish, AnimTickResult,
+    draw_mon_pic_clipped, move_short_flash_timing,
+    render_gen1_slide_up, render_gen1_squish, AnimTickResult,
     AnimationPlayer, ApplyingAttackMotion, BallFrameEvent, BgPaletteState, BlinkMon, LongFlashTiming, LongScreenFlash,
     MonTilemapAnimation, RockSlideShake, ShakeBackAndForth, ShortFlashTiming, ShortScreenFlash,
 };
+#[cfg(not(target_os = "none"))]
+use pokered_renderer::gen1_battle_anim::render_gen1_oam_palette_split;
+#[cfg(target_os = "none")]
+use pokered_renderer::gen1_battle_anim::render_gen1_oam_2bpp_palette_split;
 use pokered_renderer::palette::{GRAYSCALE_PALETTE, GRAYSCALE_SPRITE_PALETTE};
 use pokered_renderer::resource::{AssetCategory, ResourceManager};
 use pokered_renderer::sprite::SpriteLayer;
@@ -4967,34 +4971,33 @@ pub fn draw_battle(
                 2 => "move_anim_0",
                 _ => "move_anim_0",
             };
+            let mut flipped = *pal;
+            flipped.colors.swap(1, 2);
+            let before = if effects.ball_obj_palette_frame_initial { &flipped } else { pal };
+            let after = if effects.ball_obj_palette_flipped { &flipped } else { pal };
+            #[cfg(target_os = "none")]
+            if let Some(tiles) = pokered_renderer::gba_assets::get_preconverted_asset(
+                "battle", anim_tileset_name,
+            ) {
+                render_gen1_oam_2bpp_palette_split(
+                    fb,
+                    &effects.anim_layer.entries,
+                    tiles,
+                    before,
+                    after,
+                    effects.ball_obj_palette_write_scanline,
+                );
+            }
+            #[cfg(not(target_os = "none"))]
             if let Ok(cached) = rm.load_battle(anim_tileset_name) {
-                if effects.ball_obj_palette_flipped
-                    || effects.ball_obj_palette_frame_initial
-                    || effects.ball_obj_palette_write_scanline.is_some()
-                {
-                    let mut flipped = *pal;
-                    flipped.colors.swap(1, 2);
-                    let before = if effects.ball_obj_palette_frame_initial {
-                        &flipped
-                    } else {
-                        pal
-                    };
-                    let after = if effects.ball_obj_palette_flipped {
-                        &flipped
-                    } else {
-                        pal
-                    };
-                    render_gen1_oam_palette_split(
-                        fb,
-                        &effects.anim_layer.entries,
-                        &cached.tileset,
-                        before,
-                        after,
-                        effects.ball_obj_palette_write_scanline,
-                    );
-                } else {
-                    render_gen1_oam(fb, &effects.anim_layer.entries, &cached.tileset, pal);
-                }
+                render_gen1_oam_palette_split(
+                    fb,
+                    &effects.anim_layer.entries,
+                    &cached.tileset,
+                    before,
+                    after,
+                    effects.ball_obj_palette_write_scanline,
+                );
             }
         }
     } else {
