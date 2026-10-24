@@ -2078,10 +2078,11 @@ fn pokered_damage(
     // never spin forever — a real rng terminates in ~6 tries, far below the cap,
     // so the production draw count/stream is unchanged.
     let damage_roll = {
-        let mut b = ctx.rng.next_u8();
+        // RandomizeDamage applies RRC A before testing every sampled byte.
+        let mut b = ctx.rng.next_u8().rotate_right(1);
         let mut tries = 0;
         while b < 217 && tries < 64 {
-            b = ctx.rng.next_u8();
+            b = ctx.rng.next_u8().rotate_right(1);
             tries += 1;
         }
         b.max(217)

@@ -103,6 +103,12 @@ fn trainer_seen_tracks_real_ai_switches_back_to_an_already_seen_slot() {
         g.save_data.party = Default::default();
         g.save_data.party.add(mon).unwrap();
         g.start_trainer_battle(&make_trainer_id(TrainerClass::Juggler, 4), None);
+        // Exercise real AI switches without coupling this Pokédex assertion to
+        // damage-variance draws or the opponent knocking the player out.
+        for enemy in &mut g.battle.battle_state.as_mut().unwrap().enemy.party {
+            enemy.moves = [pokered_data::moves::MoveId::Growl; 4];
+            enemy.pp = [40; 4];
+        }
         g.battle.rng = pokered_core::battle::pokered_rules::runtime::StdBattleRng::from_seed(42);
         g.state.config.battle_animation = false;
         let mut slots = vec![0];
