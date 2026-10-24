@@ -3208,6 +3208,13 @@ fn run_bridge(
     let Some(hook) = hook_for(source_effect, event) else {
         return HandlerResult::Unchanged;
     };
+    // AttackSubstitute clears the move effect before the first hit can install
+    // ATTACKING_MULTIPLE_TIMES. A later break occurs inside RepeatHits, after
+    // this entry check, and must not cancel an already-running hit sequence.
+    if event == Event::DamagingHit && substitute_broke_for(source)
+        && hook.ops.iter().any(|op| matches!(op, dotzuki_rules::Op::RepeatHits { .. })) {
+        return HandlerResult::Unchanged;
+    }
     // The authored chance gate. A broken Substitute cancels secondary dispatch
     // before the draw; records without a chance gate need no random byte.
     if let Some((num, den)) = hook.chance {

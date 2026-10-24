@@ -1,0 +1,188 @@
+{
+  "current_validation": {
+    "tested_source": "900b8702d77e2d894c9abcfb82046e60272591e5",
+    "tested_tree": "0d761a4ac8f245fa46d6b93e000c2dd9791dd274",
+    "dependencies": {
+      "PR381": "568136e34c578ebf75d438bad027d32be579d109",
+      "PR383_merged": "c24c513a26c794620f9ff260d0120089c561b8b0",
+      "PR382_merged": "ead01996a9b129d6061705e6a77271fa1c2d4227"
+    },
+    "core_full": {
+      "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+      "tree": "0d761a4ac8f245fa46d6b93e000c2dd9791dd274",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0,
+      "seconds": 44.90504153992515,
+      "log_sha256": "d55d6b08ece06133e4956fbcf5f3dd185d975057bb2cc96738b2688d99499991",
+      "passed": 3679,
+      "failed": 0,
+      "ignored": 1
+    },
+    "gba_build": {
+      "head": "900b8702d77e2d894c9abcfb82046e60272591e5",
+      "tree": "0d761a4ac8f245fa46d6b93e000c2dd9791dd274",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--features",
+        "perf-benchmark",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 77.17342177708633,
+      "log_sha256": "478b2ec24d70637982c5e6f842a43b984333e88f2af7ce3b1733df279a06c453"
+    },
+    "gba_original_performance": {
+      "scenarios": 7,
+      "hardware_frames": 8280,
+      "failures": [],
+      "seconds": 2.851297499029897,
+      "hashes": {
+        "pokered-gba": "2715eaa5549e1689ac85dc724256da4196afb4c25c87254fc13ad221598467d6",
+        "pokered-gba.gba": "ef6265e5a74e10e63c69d9baa3df8a89171d7a7a17fba4fbd451dea6d5a21394",
+        "main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403"
+      },
+      "metrics": {
+        "suite": "autopilot-v1",
+        "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+        "scenarios": {
+          "intro-title-v1": {
+            "scenario": "intro-title-v1",
+            "samples": 251,
+            "update_avg_ticks": 105,
+            "update_core_avg_ticks": 96,
+            "update_flush_avg_ticks": 1,
+            "renders": 115,
+            "draw_per_frame_ticks": 1201,
+            "draw_max_ticks": 9849,
+            "present_per_frame_ticks": 352,
+            "present_max_ticks": 782
+          },
+          "oak-dialogue-v1": {
+            "scenario": "oak-dialogue-v1",
+            "samples": 602,
+            "update_avg_ticks": 172,
+            "update_core_avg_ticks": 163,
+            "update_flush_avg_ticks": 1,
+            "renders": 307,
+            "draw_per_frame_ticks": 2888,
+            "draw_max_ticks": 9044,
+            "present_per_frame_ticks": 391,
+            "present_max_ticks": 781
+          },
+          "overworld-idle-v1": {
+            "scenario": "overworld-idle-v1",
+            "samples": 1400,
+            "update_avg_ticks": 374,
+            "update_core_avg_ticks": 364,
+            "update_flush_avg_ticks": 1,
+            "renders": 0,
+            "draw_per_frame_ticks": 0,
+            "draw_max_ticks": 0,
+            "present_per_frame_ticks": 0,
+            "present_max_ticks": 0
+          },
+          "overworld-movement-v1": {
+            "scenario": "overworld-movement-v1",
+            "samples": 240,
+            "update_avg_ticks": 387,
+            "update_core_avg_ticks": 377,
+            "update_flush_avg_ticks": 1,
+            "renders": 24,
+            "draw_per_frame_ticks": 207,
+            "draw_max_ticks": 2885,
+            "present_per_frame_ticks": 70,
+            "present_max_ticks": 771
+          },
+          "battle-entry-v1": {
+            "scenario": "battle-entry-v1",
+            "samples": 516,
+            "update_avg_ticks": 208,
+            "update_core_avg_ticks": 198,
+            "update_flush_avg_ticks": 1,
+            "renders": 385,
+            "draw_per_frame_ticks": 2646,
+            "draw_max_ticks": 8864,
+            "present_per_frame_ticks": 573,
+            "present_max_ticks": 782
+          },
+          "trainer-battle-entry-v1": {
+            "scenario": "trainer-battle-entry-v1",
+            "samples": 501,
+            "update_avg_ticks": 231,
+            "update_core_avg_ticks": 220,
+            "update_flush_avg_ticks": 1,
+            "renders": 224,
+            "draw_per_frame_ticks": 2360,
+            "draw_max_ticks": 10184,
+            "present_per_frame_ticks": 343,
+            "present_max_ticks": 782
+          },
+          "pokedex-entry-v1": {
+            "scenario": "pokedex-entry-v1",
+            "samples": 400,
+            "update_avg_ticks": 116,
+            "update_core_avg_ticks": 104,
+            "update_flush_avg_ticks": 1,
+            "renders": 1,
+            "draw_per_frame_ticks": 41,
+            "draw_max_ticks": 16497,
+            "present_per_frame_ticks": 1,
+            "present_max_ticks": 767
+          }
+        }
+      },
+      "log_sha256": "ee5910c71697362728666c8186ebae8bc70b9fc8fbc294e56bf7a147cfa62c02"
+    },
+    "scope": "Each isolated branch was tested before documentation-only rebases. Product files are byte-identical to this source. All final remote workflows and all six original GBA runtime gates remain required before merge; earlier or descendant memory results do not substitute for those gates.",
+    "unchanged_gates": true
+  },
+  "earlier_audit": {
+    "base": "69f261c24293307c8afb2b7a592af89e4795b01b",
+    "reference": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "red": {
+      "case": "Player Doubleslap, target one-HP substitute",
+      "expected_real_HP": 450,
+      "actual_real_HP": 446,
+      "test_result": "failed before fix"
+    },
+    "production_FIGHT_cases": {
+      "first_hit_break": 20,
+      "intact_doll": 20,
+      "later_hit_break": 14,
+      "next_action": 2
+    },
+    "core_tests": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0,
+      "seconds": 33.11227961699478,
+      "head": "69f261c24293307c8afb2b7a592af89e4795b01b",
+      "passed": 3679,
+      "failed": 0,
+      "ignored": 1,
+      "tracked_diff_sha256": "99b3f2d917e24b27b35d1838a2f166e8c49349ee41ab12f0e9bee7c1b0eac4fa",
+      "test_source_sha256": "64259793cea3989205f4501a34583983b1f3477ab8a4284be94c987950d62e51"
+    },
+    "GBA_validation": "Pending rebase on standalone GBA memory fix PR383 and earlier battle fixes",
+    "scope": "Cancels multi-hit initialization only when the first hit broke the doll; later hits continue after a later break. Prepared reachable states followed by production FIGHT input. Does not claim full multi-hit RNG or Twineedle poison parity."
+  }
+}
