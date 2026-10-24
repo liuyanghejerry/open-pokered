@@ -1492,6 +1492,8 @@ thread_local! {
     /// that action's receipt even though the defender's volatile is now gone.
     static SUBSTITUTE_BROKE: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
+    // Survival at the last hit, before a later action/residual can KO the target.
+    static MULTI_HIT_SURVIVOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
     static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
     /// CantLowerAnymore belongs to this action, even if a later Haze resets stages.
     static PRIMARY_STAT_FLOOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
@@ -1502,6 +1504,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
     CURRENT_MOVES.with(|c| c.borrow_mut()[who.side as usize] = Some(m));
     SUBSTITUTE_BROKE.with(|flags| flags.borrow_mut()[who.side as usize] = false);
     PRIMARY_STAT_FLOOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
+    MULTI_HIT_SURVIVOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1511,6 +1514,7 @@ pub fn clear_current_moves() {
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
     SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
+    MULTI_HIT_SURVIVOR.with(|moves| *moves.borrow_mut() = [None, None]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
     PRIMARY_STAT_FLOOR.with(|moves| *moves.borrow_mut() = [None, None]);
     ohko::clear();
@@ -1537,8 +1541,18 @@ pub(super) fn presented_move_missed(player: bool, move_id: MoveId) -> Option<boo
 pub(super) fn presented_hits(player: bool) -> [u16; 6] {
     PRESENTED_HITS.with(|hits|hits.borrow()[usize::from(!player)])
 }
+fn completed_multi_hit_count(player: bool, move_id: MoveId) -> Option<u16> {
+    let survived = MULTI_HIT_SURVIVOR.with(|moves| moves.borrow()[usize::from(!player)] == Some(move_id));
+    let count = presented_hits(player)[5];
+    // A first-hit Substitute break cancels the multi-hit effect before its loop.
+    (survived && count > 1).then_some(count)
+}
 fn record_presented_hit(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, target: BattlerRef, amount: u16, absorbed: bool) {
-    if !matches!(current_move_for(source).effect,MoveEffect::TwoToFiveAttacksEffect | MoveEffect::AttackTwiceEffect | MoveEffect::TwineedleEffect) {return;}
+    let pm = current_move_for(source);
+    if !matches!(pm.effect,MoveEffect::TwoToFiveAttacksEffect | MoveEffect::AttackTwiceEffect | MoveEffect::TwineedleEffect) {return;}
+    let hp = ctx.battler(target).hp; // both callers run before the HP write
+    MULTI_HIT_SURVIVOR.with(|moves| moves.borrow_mut()[source.side as usize] =
+        (hp > 0 && (absorbed || amount < hp)).then_some(pm.id));
     PRESENTED_HITS.with(|hits| {
         let mut hits=hits.borrow_mut();
         let row=&mut hits[source.side as usize];
