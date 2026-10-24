@@ -15,6 +15,13 @@ checks that damage connects and exactly four random bytes are consumed.
 This is pure game logic, exempt from screenshots under AGENTS.md. It is a
 prepared-state regression, not an original-ROM recording or a fresh playthrough.
 The separately reproduced early-return RNG order issue remains a follow-up.
-GBA validation for this final combined source is still pending; all required
-CI and runtime gates must pass before merge. Exact hashes are recorded in
-`verification.json`.
+Exact source and log hashes are recorded in `verification.json`.
+
+After the merged GBA memory and hosted-loop fixes, this isolated branch at
+`2337ee8b0d965b55343a93747c8cba823d1387b3` passed all 3,680 core tests
+(zero failures, one existing ignored test), the unmodified GBA release build
+and all seven original performance scenarios. Subsequent dependency rebases
+change documentation only; product files are checked byte-for-byte. Historical
+results remain separately identified in `verification.json`. All three remote
+workflows and all six original GBA runtime gates must pass on the final PR
+source before merge. No thresholds, timeouts, scenarios or workflows changed.
