@@ -739,6 +739,7 @@ impl RuleBindings<PokeredRules> for PokeredBindings {
             return false; // self-inflicted (recoil / self-KO) bypasses one's own doll
         }
         let absorbed=absorb_into_substitute(ctx, who, amount);
+        record_substitute_break(ctx, source, who, absorbed);
         record_presented_hit(ctx,source,who,amount,absorbed);
         absorbed
     }
@@ -1455,6 +1456,7 @@ pub fn level_for_species_pub(species: Species) -> u16 {
 /// handlers read. Mirrors the stack_parity active-move thread-local.
 pub fn set_active_move(m: MoveData) {
     ACTIVE_MOVE.with(|c| *c.borrow_mut() = Some(m));
+    SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
 }
 
 /// Read the active MoveData (defaults to Tackle if unset — defensive).
@@ -1484,6 +1486,9 @@ thread_local! {
     /// pre/post `HAS_SUBSTITUTE_UP` flags can't distinguish that). Set by
     /// `substitute_install`, cleared with [`clear_current_moves`] before each turn.
     static SUB_CREATED: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
+    /// AttackSubstitute clears the move effect after breaking the doll. Keep
+    /// that action's receipt even though the defender's volatile is now gone.
+    static SUBSTITUTE_BROKE: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
     static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
 }
@@ -1491,6 +1496,7 @@ thread_local! {
 /// Set the move the battler on `who`'s side is executing this action (production).
 pub fn set_current_move(who: BattlerRef, m: MoveData) {
     CURRENT_MOVES.with(|c| c.borrow_mut()[who.side as usize] = Some(m));
+    SUBSTITUTE_BROKE.with(|flags| flags.borrow_mut()[who.side as usize] = false);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1498,6 +1504,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
 pub fn clear_current_moves() {
     CURRENT_MOVES.with(|c| *c.borrow_mut() = [None, None]);
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
+    SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
     ohko::clear();
@@ -1528,6 +1535,17 @@ fn record_presented_hit(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, t
         let count=row[5] as usize;
         if count<5 {row[count]=if absorbed {0}else{amount.min(ctx.battler(target).hp)};row[5]+=1;}
     });
+}
+
+fn record_substitute_break(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, target: BattlerRef, absorbed: bool) {
+    if absorbed && !ctx.effects.iter().any(|entry| entry.host == target
+        && matches!(entry.kind, PokeVolatile::SubstituteHp { .. })) {
+        SUBSTITUTE_BROKE.with(|flags| flags.borrow_mut()[source.side as usize] = true);
+    }
+}
+
+fn substitute_broke_for(source: BattlerRef) -> bool {
+    SUBSTITUTE_BROKE.with(|flags| flags.borrow()[source.side as usize])
 }
 
 /// Mark that `who` raised a Substitute doll this turn (called by `substitute_install`).
@@ -2890,6 +2908,7 @@ fn substitute_absorb(
         return HandlerResult::Unchanged;
     }
     let absorbed=absorb_into_substitute(ctx,target,dmg);
+    record_substitute_break(ctx, source, target, absorbed);
     record_presented_hit(ctx,source,target,dmg,absorbed);
     if current_move_for(source).effect == MoveEffect::PayDayEffect
         && payday_scatter(ctx.effects, source).is_none()
@@ -3077,8 +3096,12 @@ fn bridge_foe_stat_down(
     // The chance gate (side-variant 85/256). Drawn UNCONDITIONALLY so the
     // side_effect byte is consumed at the legacy ordinal even when the drop is
     // blocked by Mist/Substitute — the consumed() invariant. A primary foe-down
-    // (no chance) skips this with no byte.
+    // (no chance) skips this with no byte. A broken doll has already cleared
+    // the original move effect, so it never reaches this chance draw.
     if let Some((num, den)) = hook.chance {
+        if substitute_broke_for(source) {
+            return HandlerResult::Unchanged;
+        }
         if !ctx.rng.chance(num, den) {
             return HandlerResult::Unchanged; // secondary did not roll ⇒ no drop
         }
@@ -3178,9 +3201,14 @@ fn run_bridge(
     let Some(hook) = hook_for(source_effect, event) else {
         return HandlerResult::Unchanged;
     };
-    // The chance gate — drawn UNCONDITIONALLY so draw order is a pure function of
-    // the op-list (doc 11 §4.1). Bucket-A authors NO chance gate, so this is inert.
+    // The authored chance gate. A broken Substitute cancels secondary dispatch
+    // before the draw; records without a chance gate need no random byte.
     if let Some((num, den)) = hook.chance {
+        // A broken doll zeroes the original move effect before its secondary
+        // dispatch. It skips the chance byte too; an intact doll does not.
+        if event == Event::DamagingHit && substitute_broke_for(source) {
+            return HandlerResult::Unchanged;
+        }
         if !ctx.rng.chance(num, den) {
             return HandlerResult::Unchanged;
         }

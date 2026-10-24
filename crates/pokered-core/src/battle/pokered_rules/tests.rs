@@ -1828,6 +1828,41 @@ fn substitute_absorbs_the_hit() {
     assert!(matches!(sub_left, Some(hp) if hp < 1000), "the doll absorbed the damage: {sub_left:?}");
 }
 
+#[test]
+fn confusion_side_effect_uses_original_threshold_and_skips_rng_after_sub_break() {
+    for move_ in [MoveId::Confusion, MoveId::Psybeam] {
+        for sub_hp in [None, Some(100), Some(1)] {
+            for chance_byte in [24, 25] {
+                install_canonical();
+                clear_current_moves();
+                set_current_move(BattlerRef::PLAYER, real_move(move_));
+                set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Splash));
+                // The target acts first, so newly applied confusion keeps its
+                // full duration and does not draw a second-mover confusion roll.
+                let mut state = EngineState::new(
+                    vec![engine_battler(&Mon::new(Species::Mewtwo, 500, 100), move_)],
+                    vec![engine_battler(&Mon::new(Species::Snorlax, 500, 200), MoveId::Splash)],
+                );
+                let mut effects = Vec::new();
+                if let Some(hp) = sub_hp {
+                    effects.push(EffectState { id: EffectId(0x9301), host: BattlerRef::OPPONENT,
+                        effect_order: 999, kind: PokeVolatile::SubstituteHp { hp } });
+                }
+                // Crit, accuracy, damage, secondary chance, confusion duration.
+                let mut rng = ScriptedRng::new(vec![255, 0, 255, chance_byte, 3]);
+                StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects,
+                    [BattleAction::Fight { move_ }, BattleAction::Fight { move_: MoveId::Splash }], &mut rng);
+                let expected = chance_byte == 24 && sub_hp != Some(1);
+                assert_eq!(effects.iter().any(|entry| entry.host == BattlerRef::OPPONENT
+                    && matches!(entry.kind, PokeVolatile::Confused { turns: 5 })), expected,
+                    "{move_:?}, doll={sub_hp:?}, chance={chance_byte}");
+                assert_eq!(rng.consumed(), if sub_hp == Some(1) { 3 } else if expected { 5 } else { 4 },
+                    "broken doll skips both chance and duration; chance 25 skips duration");
+            }
+        }
+    }
+}
+
 /// An overkill hit breaks the Substitute (volatile removed) and the mon STILL takes
 /// nothing — Gen-1 does not spill the overflow into the real HP.
 #[test]

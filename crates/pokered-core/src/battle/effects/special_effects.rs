@@ -23,11 +23,15 @@ pub fn apply_flinch_side(
 }
 
 pub fn apply_confusion_primary(state: &mut BattleState, randoms: &EffectRandoms) -> EffectResult {
-    let defender = state.defender();
-    if defender.has_status1(status1::CONFUSED) {
+    if state.defender().has_status2(status2::HAS_SUBSTITUTE_UP) {
         return EffectResult::StatusFailed;
     }
-    if defender.has_status2(status2::HAS_SUBSTITUTE_UP) {
+    apply_confusion(state, randoms)
+}
+
+fn apply_confusion(state: &mut BattleState, randoms: &EffectRandoms) -> EffectResult {
+    let defender = state.defender();
+    if defender.has_status1(status1::CONFUSED) {
         return EffectResult::StatusFailed;
     }
     let turns = (randoms.duration_roll & 0x03) + 2;
@@ -45,7 +49,7 @@ pub fn apply_confusion_side(
     if randoms.side_effect_roll >= threshold {
         return EffectResult::NoEffect;
     }
-    apply_confusion_primary(state, randoms)
+    apply_confusion(state, randoms)
 }
 
 pub fn apply_transform(state: &mut BattleState) -> EffectResult {
@@ -266,7 +270,7 @@ mod tests {
             duration_roll: 3,
             multi_hit_roll: 0, stat_down_miss_roll: 255,
         };
-        let result = apply_confusion_side(&mut state, &randoms, 26);
+        let result = apply_confusion_side(&mut state, &randoms, 25);
         assert_eq!(result, EffectResult::NoEffect);
     }
 
