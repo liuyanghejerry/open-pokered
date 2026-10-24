@@ -174,9 +174,8 @@ pub enum PokeVolatile {
     /// `"Substitute"` ↔ this arena entry, and [`PokeredRules::effect_for_volatile`]
     /// hands back its `TryBoost`-veto effect.
     Substitute,
-    /// Mist up (P3): the foe-stat-down veto. A battler protected by Mist cannot
-    /// have its stats lowered by the foe (legacy `apply_stat_down`'s
-    /// `PROTECTED_BY_MIST` guard). Drives the nested-veto cascade: the pokered-side
+    /// Mist up: blocks primary foe stat-down moves, but not damaging secondary
+    /// stat drops. Drives the nested-veto cascade: the pokered-side
     /// driver fires `Event::TryBoost`, and this volatile's registered `TryBoost`
     /// handler returns `Fail` to veto the stat drop.
     Mist,
@@ -3158,6 +3157,11 @@ fn bridge_foe_stat_down(
         lowered,
         &mut hs,
     );
+    if hook.chance.is_some() {
+        // MoveHitTest's Mist check covers primary stat-down effects only.
+        // A damaging move's secondary drop still rolls and lowers the stat.
+        hs.retain(|handler| handler.source_effect != mist_try_boost_effect().id);
+    }
     let verdict = run_event_checked(ctx, hs, RelayVar::Int(stages as i64), false);
     if matches!(verdict, RelayVar::Bool(false)) {
         // Vetoed by Mist / Substitute (the legacy StatBlocked path) — no drop, but
