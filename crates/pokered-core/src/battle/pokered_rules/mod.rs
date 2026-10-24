@@ -1903,6 +1903,18 @@ fn pokered_accuracy(
         PokeVolatile::Invulnerable | PokeVolatile::Charging { invulnerable: true, .. })) {
         return HandlerResult::Set(RelayVar::Bool(false));
     }
+    // MoveHitTest rejects primary stat drops protected by Mist before X Accuracy
+    // or the accuracy byte. Damaging side effects do not use this Mist gate.
+    if matches!(pm.effect,
+        MoveEffect::AttackDown1Effect | MoveEffect::DefenseDown1Effect
+        | MoveEffect::SpeedDown1Effect | MoveEffect::SpecialDown1Effect
+        | MoveEffect::AccuracyDown1Effect | MoveEffect::EvasionDown1Effect
+        | MoveEffect::AttackDown2Effect | MoveEffect::DefenseDown2Effect
+        | MoveEffect::SpeedDown2Effect | MoveEffect::SpecialDown2Effect
+        | MoveEffect::AccuracyDown2Effect | MoveEffect::EvasionDown2Effect)
+        && ctx.effects.iter().any(|e| e.host == target && matches!(e.kind, PokeVolatile::Mist)) {
+        return HandlerResult::Set(RelayVar::Bool(false));
+    }
     if ctx.effects.iter().any(|e| e.host == source && matches!(e.kind, PokeVolatile::XAccuracy)) {
         // X Accuracy cannot erase type immunity established before MoveHitTest.
         return if ohko_missed { HandlerResult::Set(RelayVar::Bool(false)) }

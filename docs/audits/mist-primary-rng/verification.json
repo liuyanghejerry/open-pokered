@@ -1,0 +1,64 @@
+{
+  "reference": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "routine": "MoveHitTest: Mist check before X Accuracy and CalcHitChance",
+    "source_sha256": {
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+      "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3"
+    }
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "mist_primary_rng_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "ef8aafb2ff1bc2076d740d02d2c770542e0e84dd",
+    "exit_code": 101,
+    "seconds": 29.62908945500385,
+    "log_sha256": "4b3b5bf4a67884256562e62a307aa7ddd5bf354c07cbb16e5246946706bdf205",
+    "tracked_diff_sha256": "67bca2622179edbed945907fdbeec5d6b0b4d53e6faa2c923f73c3a02184f872",
+    "passed": 0,
+    "failed": 1,
+    "ignored": 0,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/mist_primary_rng_tests.rs": "d9a1a0ac37a75859fc2c7c2667920adf1a6860f7f2dfb134d343a22a241cbd3b",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "70a365961f28b91e6a95d4383f3c89e489342ed3b4bdf30754f33da57a8c73fa"
+    }
+  },
+  "confirmed_extra_accuracy_draws": 36,
+  "initial_attempt": "The first fixture did not compile due to a usize/u64 comparison. It is retained as audit-1308-mist-primary-red.json, not counted as bug reproduction.",
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "ef8aafb2ff1bc2076d740d02d2c770542e0e84dd",
+    "exit_code": 0,
+    "seconds": 43.284192057093605,
+    "log_sha256": "92d41cf0d4bec00fb20e04bb6fe3a67dee52823d465b614ad7c53965fc1ee408",
+    "tracked_diff_sha256": "110a256096a83065ab6eff97b443d9e91e9c61b55f509cae416a7736143ec601",
+    "passed": 3686,
+    "failed": 0,
+    "ignored": 1,
+    "source_sha256": {
+      "crates/pokered-core/src/battle/mist_primary_rng_tests.rs": "34c530bf453c7aa08839dead6749634158e55df76e7071f80db5fb9b94cb3aae",
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "9236cc519e73d1c4cc4b876d392e25b9d8895ac2c1d26af42f78a670bde6df74"
+    }
+  },
+  "cases": 144,
+  "interface": "Prepared production BattleScreen turn caller with actual LinkRng, both sides, nine primary stat-drop moves, Mist/no Mist, X Accuracy/no X Accuracy, accuracy bytes 0 and 255.",
+  "scope": "Primary Mist accuracy early return only. The preceding secondary-drop fix is separate. NPC 25-percent stat-drop and other early-return RNG audits remain open. Pure battle logic, screenshot exemption; no ordinary NEW GAME or original-ROM recording claim.",
+  "GBA_validation": "Pending on the committed combined source; final remote workflows and all six original runtime gates required before merge."
+}
