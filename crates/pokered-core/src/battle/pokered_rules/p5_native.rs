@@ -737,7 +737,12 @@ pub fn sleep_gate(
     } else {
         Some(StatusCondition::Sleep(new_counter))
     };
-    HandlerResult::Fail // … but the wake tick still forfeits the turn (#8)
+    // Capture the actual gate outcome before a later move can cure/reapply sleep.
+    super::block_action(ctx, source, if new_counter == 0 {
+        crate::battle::CannotMoveReason::WokeUpButLostTurn
+    } else {
+        crate::battle::CannotMoveReason::Asleep
+    })
 }
 
 /// Freeze gate (order 20, bug #10): a frozen mon ALWAYS cannot move; Gen-1 has no
@@ -751,7 +756,7 @@ pub fn freeze_gate(
 ) -> HandlerResult {
     if ctx.battler(source).status == Some(StatusCondition::Freeze) {
         super::set_used_move(ctx, source, pokered_data::moves::MoveId::None);
-        HandlerResult::Fail
+        super::block_action(ctx, source, crate::battle::CannotMoveReason::Frozen)
     } else {
         HandlerResult::Unchanged
     }
@@ -838,7 +843,7 @@ pub fn paralysis_gate(
         let roll = ctx.rng.next_u8();
         if roll < 63 {
             cancel_multiturn_after_status(ctx, source, true);
-            return HandlerResult::Fail; // fully paralyzed → move aborted
+            return super::block_action(ctx, source, crate::battle::CannotMoveReason::FullyParalyzed);
         }
     }
     HandlerResult::Unchanged

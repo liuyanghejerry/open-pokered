@@ -216,11 +216,15 @@ fn opp_ref(who: BattlerRef) -> BattlerRef {
     BattlerRef::new(if who.side == 0 { 1 } else { 0 }, who.slot)
 }
 
-fn blocked_reason(state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], who: BattlerRef) -> &'static str {
-    if let Some(reason) = effects.iter().find_map(|entry| match entry.kind {
+fn blocked_action_reason(effects: &[EffectState<PokeredRules>], who: BattlerRef) -> Option<crate::battle::CannotMoveReason> {
+    effects.iter().find_map(|entry| match entry.kind {
         PokeVolatile::BlockedAction { reason } if entry.host == who => Some(reason),
         _ => None,
-    }) {
+    })
+}
+
+fn blocked_reason(state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], who: BattlerRef) -> &'static str {
+    if let Some(reason) = blocked_action_reason(effects, who) {
         return crate::battle::format_cannot_move(&reason);
     }
     match battler_at(state, who).status {
@@ -284,9 +288,11 @@ pub(crate) fn translate_turn_named_with_faints(
     // The move whose effect events are currently being walked — Haze's own
     // cure/stat events narrate through its single "eliminated" line.
     let mut current_move: Option<MoveId> = None;
+    let mut current_block = None;
     for (i, e) in evs.iter().enumerate() {
         match e {
             TurnEvent::MoveUsed { actor, move_ } => {
+                current_block = None;
                 current_move = Some(*move_);
                 let actor = *actor;
                 let (mut crit, mut missed) = (false, false);
@@ -379,6 +385,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 }
             }
             TurnEvent::Blocked { actor } => {
+                current_block = Some(*actor);
                 msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
             }
             TurnEvent::Fainted { who } => {
@@ -393,6 +400,12 @@ pub(crate) fn translate_turn_named_with_faints(
                 }
             },
             TurnEvent::StatusInflicted { target, status } => {
+                // The engine also reports Sleep(n) -> Sleep(n-1). That is the
+                // blocked action's countdown, not a fresh sleep inflicted by a move.
+                if matches!(status, LegacyStatus::Sleep(_)) && current_block == Some(*target)
+                    && matches!(blocked_action_reason(effects, *target), Some(crate::battle::CannotMoveReason::Asleep)) {
+                    continue;
+                }
                 let name = display_name_named(state, *target, names);
                 let line = match status {
                     LegacyStatus::Poison => format!("{name} was poisoned!"),
@@ -417,6 +430,12 @@ pub(crate) fn translate_turn_named_with_faints(
                 // "Fire defrosted <TARGET>!" when a Fire-type burn-family move
                 // thaws a frozen target.
                 if matches!(status, LegacyStatus::Sleep(_)) {
+                    // The wake gate already published this action's one caption.
+                    // A later real sleep/cure starts under its own MoveUsed event.
+                    if current_block == Some(*target)
+                        && matches!(blocked_action_reason(effects, *target), Some(crate::battle::CannotMoveReason::WokeUpButLostTurn)) {
+                        continue;
+                    }
                     msgs.push(format!("{} woke up!", display_name_named(state, *target, names)));
                 } else if matches!(status, LegacyStatus::Freeze) {
                     msgs.push(format!("Fire defrosted\n{}!", display_name_named(state, *target, names)));
