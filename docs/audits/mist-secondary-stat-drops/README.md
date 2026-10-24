@@ -21,4 +21,7 @@ runtime red reproduction.
 This is pure game logic, exempt from screenshots under AGENTS.md. The tests use
 prepared link battle states, not a fresh playthrough or an original-ROM recording.
 The separate question of primary Mist's early-return RNG order remains unaudited.
-GBA and final remote CI validation are pending. See `verification.json` for hashes.
+The combined source `3e079898` also passes the original seven GBA performance
+scenarios and 13 memory scenarios (all 330 move animations): minimum contiguous
+heap 7,832 bytes, untouched stack 8,708 bytes. No gate, timeout or workload was
+changed. Final remote CI is still required. See `verification.json` for hashes.

@@ -61,5 +61,19 @@
     "crates/pokered-core/src/battle/mist_secondary_tests.rs": "fd3fb5c32815f39e8f15290b48784f38d856de11eef880bd1812923f0a63894f"
   },
   "scope": "Mist secondary stat-drop eligibility; primary controls assert protection, not original early-return RNG ordering. Pure logic screenshot exemption. No original-ROM/fresh-playthrough claim.",
-  "gba": "pending combined-source checks and final remote CI"
+  "gba": {
+    "tested_combined_head": "3e079898bd8b26f369df9a11f10d59dd74a1e241",
+    "original_performance_cases": 7,
+    "performance_rom_sha256": "d183bdf3a72465fb0d03fab3232fb3c88587d9617ca93b19e3e5c190defaac14",
+    "performance_log_sha256": "3250fbb4ac17ce654f68ebc741846fdc08953eb03ebf79b32e05f22e298f75c0",
+    "original_memory_cases": 13,
+    "move_animation_cases": 330,
+    "memory_rom_sha256": "faf6672b0a0b319db8c4ba603b9667190d390165608e77c9f95d1c6147991ba9",
+    "memory_log_sha256": "6e2681625f15370ef201ffcd641412a9a06afac45f84e10e78bad6a53f059426",
+    "min_contiguous_heap_bytes": 7832,
+    "min_untouched_stack_bytes": 8708,
+    "unchanged_minimum_bytes": 4096,
+    "unchanged_timeout_seconds": 600,
+    "final_remote_ci": "still required for every reviewed PR head"
+  }
 }
