@@ -206,9 +206,8 @@ fn is_twineedle(effect: MoveEffect) -> bool {
     effect == MoveEffect::TwineedleEffect
 }
 
-/// Whether `effect` is a P2 side-status (chance-gated) effect — the stack draws
-/// the side-effect byte at the legacy ordinal (after `damage`) whether or not the
-/// secondary fires, so the byte stream / `consumed()` is invariant.
+/// A P2 side-status effect. Eligible targets draw after damage whether or not
+/// the secondary fires; original status/type/Substitute guards can skip it.
 fn is_side_status_effect(effect: MoveEffect) -> bool {
     use MoveEffect::*;
     matches!(
@@ -336,10 +335,23 @@ fn build_stream(s: &Scenario, first: FirstMover, tie: bool) -> Vec<u8> {
 fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: bool) -> Vec<u8> {
     let md = real_move(s.move_id);
     let mut bytes = if tie { vec![s.order_byte] } else { Vec::new() };
+    // These fixtures start without statuses or Conversion. Original type
+    // immunity skips the chance byte, so the reply's crit must follow damage.
+    let allows_status = |species| {
+        if !is_side_status_effect(md.effect) { return true; }
+        let immune_type = if matches!(md.effect, MoveEffect::PoisonSideEffect1 | MoveEffect::PoisonSideEffect2)
+            { PokemonType::Poison } else { md.move_type };
+        let (one, two) = species_types(species);
+        one != immune_type && two != immune_type
+    };
+    let (first_target, second_target) = match first {
+        FirstMover::Player => (s.enemy.species, s.player.species),
+        FirstMover::Opponent => (s.player.species, s.enemy.species),
+    };
     // `gate_para`: the mover is paralyzed at its BeforeMove (draws the paralysis gate
     // byte first; `< 63` would abort, but the harness scenarios use paralysis 255 ⇒
     // the gate passes and the move proceeds).
-    let push = |bytes: &mut Vec<u8>, mb: MoveBytes, gate_para: bool| {
+    let push = |bytes: &mut Vec<u8>, mb: MoveBytes, gate_para: bool, target_species: Species| {
         if gate_para {
             bytes.push(mb.paralysis);
             if mb.paralysis < 63 {
@@ -360,11 +372,11 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
         if md.power > 0 && hit {
             bytes.push(mb.damage);
         }
-        // P2: the side-status chance gate draws ONE byte (after damage) on a hit.
+        // P2: side-status draws only when the target's types permit the effect.
         // P3: the SIDE foe-stat-down chance gate (85/256) draws ONE byte too — the
         // nested-veto driver reads it at the same legacy ordinal whether or not the
         // drop fires/vetoes (the side_effect-at-legacy-ordinal invariant).
-        if hit && (is_side_status_effect(md.effect) || is_side_foe_down_effect(md.effect)) {
+        if hit && ((is_side_status_effect(md.effect) && allows_status(target_species)) || is_side_foe_down_effect(md.effect)) {
             bytes.push(mb.side_effect);
         }
         // Original low-bit count sampling conditionally draws a second byte.
@@ -386,14 +398,14 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
     };
     // The first mover has no pre-existing gate status (scenarios set none), so it
     // never draws a gate byte.
-    push(&mut bytes, fb, false);
+    push(&mut bytes, fb, false, first_target);
     // The second mover may be paralyzed by the first mover's move this turn (Thunder
     // Wave / Body Slam), in which case its paralysis gate draws one byte first.
     let first_scaled = (md.accuracy as u32 * 255 / 100).min(255) as u8;
     let first_hit = md.effect == MoveEffect::SwiftEffect || fb.accuracy < first_scaled;
-    let sec_para = move_paralyzes_target(&md, first_hit, fb.side_effect, second_subbed);
+    let sec_para = allows_status(first_target) && move_paralyzes_target(&md, first_hit, fb.side_effect, second_subbed);
     // Both HP kept > 30 in every scenario so the second mover always acts.
-    push(&mut bytes, sb, sec_para);
+    push(&mut bytes, sb, sec_para, second_target);
     bytes
 }
 
@@ -4198,12 +4210,13 @@ fn side_status_type_immunity_quirk_23() {
     s.player = Mon::new(Species::Charmander, 300, 100); // Fire
     s.enemy = Mon::new(Species::Charmander, 300, 50);   // Fire
     p2_assert(&s, P2Setup::none());
-    let (stack, _c) = p2_stack(&s, P2Setup::none());
+    let (stack, consumed) = p2_stack(&s, P2Setup::none());
+    assert_eq!(consumed, 6, "each type-immune hit draws crit, accuracy and damage only");
     assert_eq!(stack.opponent_battlers[0].status, None, "Fire-type immune to its own-type burn (#23)");
     assert_eq!(stack.player_battlers[0].status, None, "Fire-type immune to its own-type burn (#23)");
 }
 
-/// Poison-type immunity (poison-side): Poison Sting (PoisonSideEffect1 51/256)
+/// Poison-type immunity (poison-side): Poison Sting (PoisonSideEffect1 52/256)
 /// can't poison a Poison-type. Both Nidoking (Poison/Ground) ⇒ neither poisoned;
 /// a non-Poison pair (Pikachu) IS poisoned.
 #[test]
@@ -4212,7 +4225,8 @@ fn side_status_poison_type_immunity() {
     immune.player = Mon::new(Species::Nidoking, 300, 100);
     immune.enemy = Mon::new(Species::Nidoking, 300, 50);
     p2_assert(&immune, P2Setup::none());
-    let (st, _c) = p2_stack(&immune, P2Setup::none());
+    let (st, consumed) = p2_stack(&immune, P2Setup::none());
+    assert_eq!(consumed, 6, "Poison-type targets skip both poison chance draws");
     assert_eq!(st.opponent_battlers[0].status, None, "Poison-type immune to poison");
     let bitten = side_base("Poison Sting poisons a non-Poison type", MoveId::PoisonSting, 0);
     p2_assert(&bitten, P2Setup::none());

@@ -2457,11 +2457,10 @@ fn trapping_lockin(
 /// side-effect moves (Ember / Fire Punch / Flamethrower / Fire Blast) — DEFROSTS
 /// a frozen target it hits ("Fire defrosted <TARGET>!"). The original reaches
 /// CheckDefrost when the side-effect handler finds the target already statused,
-/// BEFORE the probability roll, so the defrost is unconditional on a hit. This
-/// hook is ordered after the RON side-status hooks, which cannot inflict on an
-/// already-statused target (the binding guard) — so the net outcome matches the
-/// original exactly: defrosted, never burned. Keyed on move type+effect → inert
-/// for every other move; draws no rng.
+/// BEFORE the probability roll. The defender must survive without an intact or
+/// just-broken Substitute, as required before original secondary dispatch. This
+/// hook follows the RON side-status bridge, whose pre-roll status guard leaves
+/// the frozen target for CheckDefrost. It draws no random byte.
 fn pokered_defrost(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
@@ -2469,6 +2468,10 @@ fn pokered_defrost(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    if ctx.battler(target).hp == 0 || target_has_substitute(ctx, target)
+        || substitute_broke_for(source) {
+        return HandlerResult::Unchanged;
+    }
     let pm = current_move_for(source);
     if pm.move_type != PokemonType::Fire
         || !matches!(
@@ -3272,6 +3275,9 @@ fn run_bridge(
                 || (blocked_by_doll && target_has_substitute(ctx, target)) {
                 return HandlerResult::Unchanged;
             }
+            if secondary_status_precluded(ctx, target, source) {
+                return HandlerResult::Unchanged;
+            }
         }
         if !ctx.rng.chance(num, den) {
             return HandlerResult::Unchanged;
@@ -3284,6 +3290,22 @@ fn run_bridge(
 fn target_has_substitute(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef) -> bool {
     ctx.effects.iter().any(|entry| entry.host == target
         && volatile_name_matches("Substitute", &entry.kind))
+}
+
+/// PoisonEffect and FreezeBurnParalyzeEffect reject these targets before RNG.
+/// CheckDefrost runs separately for an eligible frozen target of a Fire move.
+fn secondary_status_precluded(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef, source: BattlerRef) -> bool {
+    let pm = current_move_for(source);
+    let immune_type = match pm.effect {
+        MoveEffect::PoisonSideEffect1 | MoveEffect::PoisonSideEffect2 => PokemonType::Poison,
+        MoveEffect::BurnSideEffect1 | MoveEffect::BurnSideEffect2
+        | MoveEffect::FreezeSideEffect1 | MoveEffect::FreezeSideEffect2
+        | MoveEffect::ParalyzeSideEffect1 | MoveEffect::ParalyzeSideEffect2 => pm.move_type,
+        _ => return false,
+    };
+    if ctx.battler(target).status.is_some() { return true; }
+    let (type1, type2) = effective_types(ctx, target);
+    type1 == immune_type || type2 == immune_type
 }
 
 fn bridge_modify_damage(
