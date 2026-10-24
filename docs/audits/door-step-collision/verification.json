@@ -1,0 +1,173 @@
+{
+  "reference": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "original_PR107_commit": "acb42de40129f4224e090251cfcee907885564ba",
+  "tested_parent": "1af539e3cdaad70861e3a9d2daca93359ec33195",
+  "source_hashes": {
+    "crates/pokered-core/src/overworld/mod.rs": "ffd84790b29e852100105a90f7aef473affa3fe747b5872263a602c6b3e067a7",
+    "crates/pokered-core/src/overworld/update.rs": "ebf0a2aec45c2c8d9b904fcc3a00524449928e7bca42a2e03ac38eed9249ed56",
+    "crates/pokered-core/src/overworld/tests_door_auto_step.rs": "1351b24bd377a28c50883d1eb5e8e59fe4ade7047daf7c89df484bce4a5bf853"
+  },
+  "red_regression": {
+    "base": "523b82c0edaf74694d95debc8aed0bbfc225fcd1",
+    "failed": 2,
+    "details": [
+      "Mansion1F actual (2,2), expected (2,1)",
+      "NPC blocker: exiting_door true, expected false"
+    ],
+    "exclusion": "Earlier test coordinate-type compilation error is not behavioral red evidence."
+  },
+  "core": {
+    "command": "cargo test -p pokered-core --locked --offline",
+    "passed": 3664,
+    "failed": 0,
+    "ignored": 1
+  },
+  "native": {
+    "before_sha256": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2",
+    "after_sha256": "3c3742d3b526e033553eded8578b4ebf36d195a9fc6a8ccb8f25dd9757bfae23",
+    "after_source_patch_sha256": "2d7dbd2eebf081cdddec8ec720d8914e4e40c0af36bd40b0a4eb4f17184acabc",
+    "setup": "startup warp CeladonMansion2F,3,1; isolated missing save; seed42; speed0",
+    "inputs": [
+      [
+        "left",
+        16
+      ],
+      [
+        null,
+        144
+      ]
+    ],
+    "before": {
+      "frame_count": 160,
+      "map_name": "CeladonMansion1F",
+      "player_x": 2,
+      "player_y": 2,
+      "player_movement_state": "Idle"
+    },
+    "after": {
+      "frame_count": 160,
+      "map_name": "CeladonMansion1F",
+      "player_x": 2,
+      "player_y": 1,
+      "player_movement_state": "Idle"
+    },
+    "control_inputs": [
+      [
+        "right",
+        16
+      ],
+      [
+        null,
+        32
+      ]
+    ],
+    "control_after": {
+      "frame_count": 208,
+      "map_name": "CeladonMansion1F",
+      "player_x": 3,
+      "player_y": 1,
+      "player_movement_state": "Idle"
+    },
+    "screenshots": {
+      "after.png": "07707f0c9d54e8de94ba3dc721118aa03c68bf3986473b56c5df25f9a2a90e45",
+      "before.png": "f748a86f62abd07e71c6c554899c4ee4c33c4ed9128b14da244bbb0194b9dd02",
+      "control-return.png": "2d1a5e517bbaab7c0ee6e2d0cd6e5e6483763c3d4171ad11ea3808917ca636ef"
+    }
+  },
+  "gba": {
+    "build": "cargo +nightly-2025-12-07 build --release --features perf-benchmark --locked --offline",
+    "rom_sha256": "f732da1b18b2d4a61ba8bcdd2c74db61664bbc815d8d233a46a140a510584695",
+    "frames": 8280,
+    "failures": [],
+    "metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 251,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1201,
+          "draw_max_ticks": 9849,
+          "present_per_frame_ticks": 352,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 601,
+          "update_avg_ticks": 172,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2893,
+          "draw_max_ticks": 9044,
+          "present_per_frame_ticks": 391,
+          "present_max_ticks": 781
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 374,
+          "update_core_avg_ticks": 364,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 387,
+          "update_core_avg_ticks": 377,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 207,
+          "draw_max_ticks": 2885,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 771
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2630,
+          "draw_max_ticks": 8863,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 501,
+          "update_avg_ticks": 231,
+          "update_core_avg_ticks": 220,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2360,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 343,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 104,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 41,
+          "draw_max_ticks": 16497,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    }
+  }
+}

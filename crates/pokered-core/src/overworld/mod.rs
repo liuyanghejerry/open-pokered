@@ -69,6 +69,8 @@ mod tests_connections;
 #[cfg(test)]
 mod tests_doors_elevators;
 #[cfg(test)]
+mod tests_door_auto_step;
+#[cfg(test)]
 mod tests_field_items;
 #[cfg(test)]
 mod tests_forced_bike;
