@@ -28,6 +28,7 @@ fn run(move_: MoveId, target_player: bool, mist: bool, x_accuracy: bool, byte: u
     screen.link_enemy_move_override = Some((if target_player { move_ } else { MoveId::Splash }, 0));
     screen.link_rng = Some(LinkRng::new([byte, 91, 82, 73, 64, 55, 46, 37, 28, 19]));
     let bs = screen.battle_state.as_mut().unwrap();
+    bs.link_battle = true;
     let (attacker, target) = if target_player {
         (&mut bs.enemy, &mut bs.player)
     } else {

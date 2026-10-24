@@ -638,6 +638,7 @@ pub fn engine_state_from_legacy(
         crate::battle::badge_boosts::set_staged_stats(&mut enemy_b, working);
     }
     enemy_b.resources.set(super::RES_FINITE_PP, ls.link_battle as u16, 1);
+    enemy_b.resources.set(super::RES_NPC_STAT_DOWN_MISS, (!ls.link_battle) as u16, 1);
     enemy_b.resources.set(super::RES_HELD_AT_ENTRY,
         (ls.player.has_status1(status1::USING_TRAPPING_MOVE) && ls.player.num_attacks_left > 0) as u16, 1);
     let state = EngineState::new(vec![player_b], vec![enemy_b]);

@@ -1679,6 +1679,7 @@ pub(super) const RES_FINITE_PP: u16 = 0xff14;
 pub(super) const RES_SELECTED_SLOT: u16 = 0xff15;
 pub(super) const RES_HELD_AT_ENTRY: u16 = 0xff42;
 pub(super) const RES_WILD_BATTLE: u16 = 0xff43;
+pub(super) const RES_NPC_STAT_DOWN_MISS: u16 = 0xff44;
 pub(super) const RES_DV0: u16 = 0xff20;
 pub(super) const RES_DV1: u16 = 0xff21;
 pub(super) const RES_CATCH_RATE: u16 = 0xff22;
@@ -1801,6 +1802,17 @@ fn pokered_accuracy(
         return HandlerResult::Unchanged;
     }
     let pm = current_move_for(source);
+    if is_primary_stat_down(pm.effect) {
+        // StatModifierDownEffect runs these gates before calling MoveHitTest.
+        // Only the ordinary enemy has the additional 25 percent + 1 miss roll.
+        if ctx.battler(source).resources.current(RES_NPC_STAT_DOWN_MISS) == Some(1)
+            && ctx.rng.next_u8() < 64 {
+            return HandlerResult::Set(RelayVar::Bool(false));
+        }
+        if target_has_substitute(ctx, target) {
+            return HandlerResult::Set(RelayVar::Bool(false));
+        }
+    }
     // Capture the display byte before accuracy can veto the damage hook.
     // A later Conversion must not change which failure text this action used.
     let display = if pm.power > 0 && !is_special_damage_effect(pm.effect)
@@ -1905,13 +1917,7 @@ fn pokered_accuracy(
     }
     // MoveHitTest rejects primary stat drops protected by Mist before X Accuracy
     // or the accuracy byte. Damaging side effects do not use this Mist gate.
-    if matches!(pm.effect,
-        MoveEffect::AttackDown1Effect | MoveEffect::DefenseDown1Effect
-        | MoveEffect::SpeedDown1Effect | MoveEffect::SpecialDown1Effect
-        | MoveEffect::AccuracyDown1Effect | MoveEffect::EvasionDown1Effect
-        | MoveEffect::AttackDown2Effect | MoveEffect::DefenseDown2Effect
-        | MoveEffect::SpeedDown2Effect | MoveEffect::SpecialDown2Effect
-        | MoveEffect::AccuracyDown2Effect | MoveEffect::EvasionDown2Effect)
+    if is_primary_stat_down(pm.effect)
         && ctx.effects.iter().any(|e| e.host == target && matches!(e.kind, PokeVolatile::Mist)) {
         return HandlerResult::Set(RelayVar::Bool(false));
     }
@@ -3462,6 +3468,16 @@ fn scaled_accuracy(move_accuracy: u8, acc_stage: i8, eva_stage: i8) -> u8 {
     let (en, ed) = STAGE_RATIOS[((-eva_stage) + 6) as usize];
     accuracy = accuracy * en / ed;
     accuracy.min(255) as u8
+}
+
+fn is_primary_stat_down(effect: MoveEffect) -> bool {
+    matches!(effect,
+        MoveEffect::AttackDown1Effect | MoveEffect::DefenseDown1Effect
+        | MoveEffect::SpeedDown1Effect | MoveEffect::SpecialDown1Effect
+        | MoveEffect::AccuracyDown1Effect | MoveEffect::EvasionDown1Effect
+        | MoveEffect::AttackDown2Effect | MoveEffect::DefenseDown2Effect
+        | MoveEffect::SpeedDown2Effect | MoveEffect::SpecialDown2Effect
+        | MoveEffect::AccuracyDown2Effect | MoveEffect::EvasionDown2Effect)
 }
 
 pub(super) fn move_rolls_accuracy(effect: MoveEffect) -> bool {
