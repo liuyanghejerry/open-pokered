@@ -3312,8 +3312,9 @@ fn run_bridge(
     // before the draw; records without a chance gate need no random byte.
     if let Some((num, den)) = hook.chance {
         if event == Event::DamagingHit {
-            // Ordinary secondary effects run only if the defender survived.
-            if ctx.battler(target).hp == 0 {
+            // A failed/immune hit returns before secondary dispatch in the ROM.
+            // Successful hits still require the defender to have survived.
+            if ctx.mv.move_missed || ctx.battler(target).hp == 0 {
                 return HandlerResult::Unchanged;
             }
             // Poison/FreezeBurnParalyze/Flinch check the doll before BattleRandom.
