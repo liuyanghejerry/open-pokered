@@ -4785,21 +4785,20 @@ fn foe_stat_down_blocked_by_substitute() {
     );
 }
 
-/// SIDE foe-down (Aurora Beam, AttackDownSide 85/256): the side_effect byte is
-/// drawn at the legacy ordinal EVEN WHEN blocked by Mist (consumed() invariant).
-/// FIRES at byte 84 (< 85), and is still drawn (but vetoed) under Mist.
+/// Original Mist protects against primary stat-down moves only. Aurora Beam's
+/// secondary chance and stat drop both run while Mist is active.
 #[test]
-fn foe_stat_down_side_byte_drawn_even_when_vetoed() {
+fn foe_stat_down_side_effect_ignores_mist() {
     let mut s = Scenario::base("Aurora Beam -Atk side (85/256) under Mist", MoveId::AuroraBeam);
     s.player = Mon::new(Species::Snorlax, 400, 100);
     s.enemy = Mon::new(Species::Snorlax, 400, 50);
     s.first.side_effect = 84;  // < 85 ⇒ the secondary rolls
     s.second.side_effect = 84;
-    // Under Mist: the drop is vetoed, but the side_effect byte is still drawn.
+    // Under Mist the secondary drop still lands.
     let (mist_stack, mist_consumed) = p3_foedown_stack(&s, true, false);
     assert_eq!(
         mist_stack.opponent_battlers[0].stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
-        0, "Mist vetoes the side foe-down"
+        -1, "Mist does not veto a damaging secondary stat drop"
     );
     // WITHOUT Mist: the same byte 84 FIRES the drop.
     let (open_stack, open_consumed) = p3_foedown_stack(&s, false, false);
@@ -4807,10 +4806,9 @@ fn foe_stat_down_side_byte_drawn_even_when_vetoed() {
         open_stack.opponent_battlers[0].stat_stages.get(StatIndex::Attack).copied().unwrap_or(0),
         -1, "no Mist ⇒ the side foe-down lands at byte 84"
     );
-    // consumed() IDENTICAL whether vetoed or not — the chance byte is drawn either
-    // way (the side_effect-roll-at-legacy-ordinal invariant).
+    // Mist changes neither the secondary outcome nor its chance draw.
     assert_eq!(mist_consumed, open_consumed,
-        "side_effect byte drawn at the legacy ordinal even when Mist vetoes");
+        "Mist leaves the secondary chance draw unchanged");
     // Each mover draws crit + accuracy + damage + side_effect = 4; two movers = 8.
     assert_eq!(open_consumed, 8, "two movers × (crit, acc, damage, side_effect)");
 }

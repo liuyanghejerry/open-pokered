@@ -8105,3 +8105,6 @@ mod poison_secondary_tests;
 
 #[cfg(test)]
 mod substitute_secondary_rng_tests;
+
+#[cfg(test)]
+mod mist_secondary_tests;

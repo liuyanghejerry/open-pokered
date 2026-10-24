@@ -1,0 +1,65 @@
+{
+  "reference": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source_sha256": {
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+      "engine/battle/effects.asm": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3"
+    },
+    "routines": [
+      "MoveHitTest: enemyMistCheck/playerMistCheck",
+      "StatModifierDownEffect"
+    ]
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "mist_secondary_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "eddd1774841cbf01b1c75c026596d310ae1fe50a",
+    "exit_code": 101,
+    "seconds": 45.363084367942065,
+    "log_sha256": "8ff538fdfcd011ce35bfc3c25f57ee58157682180da520e04af5e2b1b358ccc4",
+    "test_source_sha256": "fd3fb5c32815f39e8f15290b48784f38d856de11eef880bd1812923f0a63894f",
+    "prior_attempt": "red.log did not compile because of a test-only MoveId::Psychic typo; corrected to PsychicM before reproduction"
+  },
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "eddd1774841cbf01b1c75c026596d310ae1fe50a",
+    "exit_code": 0,
+    "seconds": 59.87011688598432,
+    "passed": 3685,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "2eee84b601154b1cd786c3906beeff339eca67d68106f6a648fd596af15b4a13",
+    "diff_sha256": "e5d66891b8391ea44ddb810d3ee4f910a1afb343546fc85c249fbb60e1770c44",
+    "test_source_sha256": "fd3fb5c32815f39e8f15290b48784f38d856de11eef880bd1812923f0a63894f"
+  },
+  "coverage": {
+    "secondary_cases": 144,
+    "primary_control_cases": 12,
+    "incorrectly_blocked_secondary_cases_before_fix": 24
+  },
+  "interface": "prepared actual BattleScreen turn caller; real LinkRng; both attacking sides",
+  "source_sha256": {
+    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "70a365961f28b91e6a95d4383f3c89e489342ed3b4bdf30754f33da57a8c73fa",
+    "crates/pokered-core/src/battle/pokered_rules/tests.rs": "4804a65eb2ba666945a6bf29c9dc91cf82e5b3880e6ec3d3055043cbf383b9e3",
+    "crates/pokered-core/src/battle/mist_secondary_tests.rs": "fd3fb5c32815f39e8f15290b48784f38d856de11eef880bd1812923f0a63894f"
+  },
+  "scope": "Mist secondary stat-drop eligibility; primary controls assert protection, not original early-return RNG ordering. Pure logic screenshot exemption. No original-ROM/fresh-playthrough claim.",
+  "gba": "pending combined-source checks and final remote CI"
+}
