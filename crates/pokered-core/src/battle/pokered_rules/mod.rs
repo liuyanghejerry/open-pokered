@@ -2224,8 +2224,8 @@ fn counter_handler(
 
 /// `DamagingHit` hook (every record): after a Hyper Beam connects, install the
 /// `Recharge` volatile on the user so it is forced to skip next turn — UNLESS the
-/// target fainted (Gen-1: a KO skips the recharge, the well-known quirk). Keyed on
-/// the active move's `HyperBeamEffect`, so it is inert for every other move. Draws
+/// target fainted or the hit broke its Substitute (which clears the move effect).
+/// Keyed on the active move's `HyperBeamEffect`, so it is inert for every other move. Draws
 /// no rng; the volatile round-trips through `status2::NEEDS_TO_RECHARGE`.
 fn hyperbeam_recharge_install(
     ctx: &mut BattleCtx<'_, PokeredRules>,
@@ -2234,7 +2234,8 @@ fn hyperbeam_recharge_install(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    if current_move_for(source).effect != MoveEffect::HyperBeamEffect {
+    if current_move_for(source).effect != MoveEffect::HyperBeamEffect
+        || substitute_broke_for(source) {
         return HandlerResult::Unchanged;
     }
     // Gen-1: a Hyper Beam that KO'd the target needs no recharge.
@@ -2932,7 +2933,7 @@ fn substitute_absorb(
 }
 
 /// Route `dmg` into `who`'s Substitute doll if it has one: the doll BREAKS (volatile
-/// removed) when `dmg >= its HP` (Gen-1 does NOT spill the overkill into the mon), else
+/// removed) when `dmg > its HP` (Gen-1 does NOT spill the overkill into the mon), else
 /// its HP drops by `dmg`. Returns `true` iff a doll absorbed the hit — the shared core
 /// of both the `Event::Damage` absorb (formula damage) and the `redirect_hp_loss`
 /// binding (the direct-mutate ops: Super Fang / OHKO / multi-hit).
@@ -3267,6 +3268,11 @@ fn bridge_damaging_hit(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
+    // AttackSubstitute clears EXPLODE_EFFECT before AlwaysHappenSideEffects:
+    // breaking the doll cancels the attacker's self-KO, even though damage hit.
+    if source_effect_is(source_effect, "special.explosion") && substitute_broke_for(source) {
+        return HandlerResult::Unchanged;
+    }
     let is_foe_stat_down = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook| {
         hook.ops.iter().any(|op| {
             matches!(

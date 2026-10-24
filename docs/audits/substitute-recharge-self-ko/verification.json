@@ -1,0 +1,152 @@
+{
+  "tested_base": "451c77d84572b9b5a5c9a14e67a1a1ea0df888bd",
+  "reference": {
+    "repository": "pret/pokered",
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source_sha256": {
+      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+      "data/battle/always_happen_effects.asm": "8aa9abc2b43f5943966b36107d1aec79df86cfe24d71efcf657e7f440d0cbde7"
+    }
+  },
+  "regression": {
+    "interface": "prepared production BattleScreen FIGHT input, normal turn presentation before the second action",
+    "first_turn_cases": 18,
+    "next_action_cases": 2,
+    "moves": [
+      "HyperBeam",
+      "Explosion",
+      "Selfdestruct"
+    ],
+    "targets": [
+      "player",
+      "enemy"
+    ],
+    "substitute_hp": [
+      null,
+      60,
+      1
+    ],
+    "red_failed": 3,
+    "red_log_sha256": "7f7d2f70c3e6353d8d029e47ed29cb4d2365c478e3dc491592028d8b3963e637",
+    "harness_corrections": [
+      "Initial fixture enum typo did not compile and is not the retained red evidence.",
+      "Second-turn PP assertion applies only to player; the NPC does not consume PP. Recharge and real-HP assertions cover both sides."
+    ]
+  },
+  "validation": {
+    "core_full": {
+      "passed": 3673,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "68f60363988d08096a9b1ab307e54b0e4f25072a0d407d8406b9aa0272d428e2"
+    },
+    "gba_build": {
+      "profile": "unmodified release, nightly-2025-12-07, perf-benchmark",
+      "exit_code": 0,
+      "log_sha256": "59ac6edb93aadd982b5410f49d27f637f00c4ef6e53df8f6b2160244be970533"
+    },
+    "gba_original_performance": {
+      "scenarios": 7,
+      "frames": 8280,
+      "failures": [],
+      "rom_sha256": "6699b5fed5cd8fc32143b0109ef2795c1a48088d1b46fb3e95df494d785fbf17",
+      "metrics": {
+        "suite": "autopilot-v1",
+        "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+        "scenarios": {
+          "intro-title-v1": {
+            "scenario": "intro-title-v1",
+            "samples": 251,
+            "update_avg_ticks": 105,
+            "update_core_avg_ticks": 96,
+            "update_flush_avg_ticks": 1,
+            "renders": 115,
+            "draw_per_frame_ticks": 1201,
+            "draw_max_ticks": 9849,
+            "present_per_frame_ticks": 352,
+            "present_max_ticks": 782
+          },
+          "oak-dialogue-v1": {
+            "scenario": "oak-dialogue-v1",
+            "samples": 602,
+            "update_avg_ticks": 172,
+            "update_core_avg_ticks": 163,
+            "update_flush_avg_ticks": 1,
+            "renders": 307,
+            "draw_per_frame_ticks": 2888,
+            "draw_max_ticks": 9044,
+            "present_per_frame_ticks": 391,
+            "present_max_ticks": 781
+          },
+          "overworld-idle-v1": {
+            "scenario": "overworld-idle-v1",
+            "samples": 1400,
+            "update_avg_ticks": 374,
+            "update_core_avg_ticks": 364,
+            "update_flush_avg_ticks": 1,
+            "renders": 0,
+            "draw_per_frame_ticks": 0,
+            "draw_max_ticks": 0,
+            "present_per_frame_ticks": 0,
+            "present_max_ticks": 0
+          },
+          "overworld-movement-v1": {
+            "scenario": "overworld-movement-v1",
+            "samples": 240,
+            "update_avg_ticks": 387,
+            "update_core_avg_ticks": 377,
+            "update_flush_avg_ticks": 1,
+            "renders": 24,
+            "draw_per_frame_ticks": 207,
+            "draw_max_ticks": 2885,
+            "present_per_frame_ticks": 70,
+            "present_max_ticks": 771
+          },
+          "battle-entry-v1": {
+            "scenario": "battle-entry-v1",
+            "samples": 500,
+            "update_avg_ticks": 212,
+            "update_core_avg_ticks": 201,
+            "update_flush_avg_ticks": 1,
+            "renders": 369,
+            "draw_per_frame_ticks": 2630,
+            "draw_max_ticks": 8863,
+            "present_per_frame_ticks": 566,
+            "present_max_ticks": 782
+          },
+          "trainer-battle-entry-v1": {
+            "scenario": "trainer-battle-entry-v1",
+            "samples": 501,
+            "update_avg_ticks": 231,
+            "update_core_avg_ticks": 220,
+            "update_flush_avg_ticks": 1,
+            "renders": 224,
+            "draw_per_frame_ticks": 2360,
+            "draw_max_ticks": 10184,
+            "present_per_frame_ticks": 343,
+            "present_max_ticks": 782
+          },
+          "pokedex-entry-v1": {
+            "scenario": "pokedex-entry-v1",
+            "samples": 400,
+            "update_avg_ticks": 116,
+            "update_core_avg_ticks": 104,
+            "update_flush_avg_ticks": 1,
+            "renders": 1,
+            "draw_per_frame_ticks": 41,
+            "draw_max_ticks": 16497,
+            "present_per_frame_ticks": 1,
+            "present_max_ticks": 767
+          }
+        }
+      },
+      "log_sha256": "4fd168dd1e98c3add41602018b16adf187e0817cfe58a706360d6c65d70a216a"
+    }
+  },
+  "source_sha256": {
+    "crates/pokered-core/src/battle/mod.rs": "99d478ba9e9e05f5d68e94a6e4cb9ec6b0e58939799c8760c379c38042acc4af",
+    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "75749e79cd4ba27d7427e5c2502547b4c60faffc2d87af88f2da8b89540fcc8e",
+    "crates/pokered-core/src/battle/substitute_recharge_self_ko_tests.rs": "f43d330bac2078be1775e5b32172c3acb3215fdd9fd9f58afc16ce66162f80ae"
+  },
+  "scope": "Pure battle logic; prepared production regression and original source, not original-ROM recording or ordinary NEW GAME. Recoil, Pay Day and multi-hit remain separate."
+}
