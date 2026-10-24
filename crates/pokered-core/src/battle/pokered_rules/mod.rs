@@ -2295,7 +2295,7 @@ fn hyperbeam_recharge_install(
     _eff: EffectId,
 ) -> HandlerResult {
     if current_move_for(source).effect != MoveEffect::HyperBeamEffect
-        || substitute_broke_for(source) {
+        || ctx.mv.move_missed || substitute_broke_for(source) {
         return HandlerResult::Unchanged;
     }
     // Gen-1: a Hyper Beam that KO'd the target needs no recharge.
