@@ -258,12 +258,14 @@ impl BattlePresentation {
         names: Option<&runtime::BattleNameContext>,
     ) {
         self.queued.clear();
+        // Page matching must use narration's names, including nicknames and
+        // the original identity retained after Transform changes species.
         for (event_index, event) in log.events.iter().enumerate() {
             if let Some(cue) = faint_plan.and_then(|plan| plan.at(event_index)) {
                 self.queued.push(MoveStep::faint(cue, runtime::faint_caption(cue, state, names), hp));
             }
             if !self.enabled { continue; }
-            if let Some(announcement) = runtime::presentation_hp_message(event, state, effects) {
+            if let Some(announcement) = runtime::presentation_hp_message_named(event, state, effects, names) {
                 self.queued.push(MoveStep {
                     announcement,
                     faint: None,
@@ -290,7 +292,7 @@ impl BattlePresentation {
                 TurnEvent::MoveUsed { actor, move_ } => self.queued.push(MoveStep {
                     announcement: format!(
                         "{} used {}!",
-                        runtime::display_name(state, *actor),
+                        runtime::display_name_named(state, *actor, names),
                         move_name(*move_, false)
                     ),
                     hits: {
