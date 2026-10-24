@@ -516,7 +516,8 @@ Ruleset(
         // Super Fang: half the target's CURRENT hp (min 1).
         Effect(id: "special.super_fang", kind: Move, power: 0, type: "Normal", accuracy: 90,
             hooks: [
-                Hook(on: "DamagingHit", do: [ DamageCurrentHpFraction(num: 1, den: 2, target: Target) ]),
+                // Apply the strike before reactions such as Rage inspect it.
+                Hook(on: "DamagingHit", order: 100, do: [ DamageCurrentHpFraction(num: 1, den: 2, target: Target) ]),
             ]),
         // OHKO: native preparation computes typed/randomized $ffff before
         // MoveHitTest. Apply through normal Damage (Substitute/shared wDamage).
