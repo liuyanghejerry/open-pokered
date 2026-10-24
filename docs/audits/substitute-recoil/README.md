@@ -25,3 +25,12 @@ Reference: pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`,
 regressions, not a fresh playthrough or original-ROM recording. This pure logic
 change is exempt from screenshots under AGENTS.md. Final local evidence and
 source hashes are in `verification.json`.
+
+After the merged GBA memory and hosted-loop fixes, this isolated branch at
+`f74550238d0aee212d3ab0d7d9c76ad3b6840799` passed all 3,675 core tests
+(zero failures, one existing ignored test), the unmodified GBA release build
+and all seven original performance scenarios. Subsequent dependency rebases
+change documentation only; product files are checked byte-for-byte. Historical
+results remain separately identified in `verification.json`. All three remote
+workflows and all six original GBA runtime gates must pass on the final PR
+source before merge. No thresholds, timeouts, scenarios or workflows changed.

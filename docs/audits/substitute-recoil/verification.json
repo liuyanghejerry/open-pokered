@@ -1,31 +1,33 @@
 {
-  "tested_base": "f9f3fee5a9cf6c55afb681b57c8d03283d0024ed",
-  "reference": {
-    "repository": "pret/pokered",
-    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
-    "source_sha256": {
-      "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
-      "data/battle/always_happen_effects.asm": "8aa9abc2b43f5943966b36107d1aec79df86cfe24d71efcf657e7f440d0cbde7",
-      "engine/battle/move_effects/recoil.asm": "16c19c4d14085c974aba4600cbdccfbfcd46e4c9d167e2b5b339706f44976cf6"
-    }
-  },
-  "regression": {
-    "interface": "prepared production FIGHT/MoveSelect; actual forced-Struggle wait for exhausted player PP",
-    "ordinary_cases": 18,
-    "forced_struggle_cases": 3,
-    "red_logs": {
-      "audit-1308-substitute-side-recoil-red.log": "89a3b682fcf46800c3f16636e9d13409a729fa4331442c9ed742e15c0b2f39e9",
-      "audit-1308-substitute-side-recoil-forced-red-overkill.log": "c3e258a7c159db82d590dc472e88b9d80ba0ff463e9050495d2f194edae11f0a"
-    }
-  },
-  "validation": {
+  "current_validation": {
+    "tested_source": "f74550238d0aee212d3ab0d7d9c76ad3b6840799",
+    "tested_tree": "9d26be5a35928bd80183c81caa4cb50877154055",
+    "dependencies": {
+      "PR381": "568136e34c578ebf75d438bad027d32be579d109",
+      "PR383_merged": "c24c513a26c794620f9ff260d0120089c561b8b0",
+      "PR382_merged": "ead01996a9b129d6061705e6a77271fa1c2d4227"
+    },
     "core_full": {
+      "head": "f74550238d0aee212d3ab0d7d9c76ad3b6840799",
+      "tree": "9d26be5a35928bd80183c81caa4cb50877154055",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "exit_code": 0,
+      "seconds": 36.1367068720283,
+      "log_sha256": "b87477de886525c7d01f15bb7d9f859ee39ec01bc779483a514a45211063cc06",
       "passed": 3675,
       "failed": 0,
-      "ignored": 1,
-      "log_sha256": "df1c18f0aedf5e0e7dfb024c37225a88e1e265eafc25a35f12ec5b385b98a57e"
+      "ignored": 1
     },
     "gba_build": {
+      "head": "f74550238d0aee212d3ab0d7d9c76ad3b6840799",
+      "tree": "9d26be5a35928bd80183c81caa4cb50877154055",
       "command": [
         "cargo",
         "+nightly-2025-12-07",
@@ -36,18 +38,22 @@
         "--locked",
         "--offline"
       ],
-      "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
       "exit_code": 0,
-      "seconds": 75.26345711399335,
-      "base": "f9f3fee5a9cf6c55afb681b57c8d03283d0024ed",
-      "diff_sha256": "59761a1dc120fed380f1e0b0a29bdc730deba80459f93224764a2930e8631e97",
-      "profile": "unmodified release profile; original perf-benchmark feature"
+      "seconds": 70.54455756407697,
+      "log_sha256": "99796b3af93580f4f6b8a5a2a4a39e02bb804ad2dce1b1c1c3d4bb79d9ab0854"
     },
     "gba_original_performance": {
       "scenarios": 7,
-      "frames": 8280,
+      "hardware_frames": 8280,
       "failures": [],
-      "rom_sha256": "436a8e095daf4c2b96b277797f05a311ac2e6c7d2a06a0f171fd1af737cec319",
+      "seconds": 3.106562308035791,
+      "hashes": {
+        "pokered-gba": "002785de744ad093de06b130d71ec555cd7787fa6c8c96b3407d681afa24fa8b",
+        "pokered-gba.gba": "bb056c1af923bb825acf61343fd845b7e7ace545396c757a2e82693abc07f302",
+        "main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403"
+      },
       "metrics": {
         "suite": "autopilot-v1",
         "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
@@ -102,14 +108,14 @@
           },
           "battle-entry-v1": {
             "scenario": "battle-entry-v1",
-            "samples": 500,
-            "update_avg_ticks": 212,
-            "update_core_avg_ticks": 201,
+            "samples": 516,
+            "update_avg_ticks": 208,
+            "update_core_avg_ticks": 198,
             "update_flush_avg_ticks": 1,
-            "renders": 369,
-            "draw_per_frame_ticks": 2630,
-            "draw_max_ticks": 8863,
-            "present_per_frame_ticks": 566,
+            "renders": 385,
+            "draw_per_frame_ticks": 2646,
+            "draw_max_ticks": 8864,
+            "present_per_frame_ticks": 573,
             "present_max_ticks": 782
           },
           "trainer-battle-entry-v1": {
@@ -138,12 +144,158 @@
           }
         }
       },
-      "log_sha256": "5ef08a2684b76daf1e8b58b08393db6436037dcfb9e9cdc2d1276d021c1a8398"
-    }
+      "log_sha256": "ee5910c71697362728666c8186ebae8bc70b9fc8fbc294e56bf7a147cfa62c02"
+    },
+    "scope": "Each isolated branch was tested before documentation-only rebases. Product files are byte-identical to this source. All final remote workflows and all six original GBA runtime gates remain required before merge; earlier or descendant memory results do not substitute for those gates.",
+    "unchanged_gates": true
   },
-  "source_sha256": {
-    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "f2c8141ad126e798dad40a389cc38f352518b196ee9d48d73eb30a4b4c7c7bc6",
-    "crates/pokered-core/src/battle/substitute_recharge_self_ko_tests.rs": "9fda9233b06756db9df17d1fc6ebc994e8479fb33f05ad1a4b450fcf32108f86"
-  },
-  "scope": "Source-backed prepared production regressions, not original-ROM recording or current-master full mainline. Parent PR381 memory CI remains failed; this private candidate is not ready for publication."
+  "earlier_audit": {
+    "tested_base": "f9f3fee5a9cf6c55afb681b57c8d03283d0024ed",
+    "reference": {
+      "repository": "pret/pokered",
+      "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+      "source_sha256": {
+        "engine/battle/core.asm": "928a66d1ac444fc913c7c658d9f7739eb6351e797b3276da64a5de9682a57a5f",
+        "data/battle/always_happen_effects.asm": "8aa9abc2b43f5943966b36107d1aec79df86cfe24d71efcf657e7f440d0cbde7",
+        "engine/battle/move_effects/recoil.asm": "16c19c4d14085c974aba4600cbdccfbfcd46e4c9d167e2b5b339706f44976cf6"
+      }
+    },
+    "regression": {
+      "interface": "prepared production FIGHT/MoveSelect; actual forced-Struggle wait for exhausted player PP",
+      "ordinary_cases": 18,
+      "forced_struggle_cases": 3,
+      "red_logs": {
+        "audit-1308-substitute-side-recoil-red.log": "89a3b682fcf46800c3f16636e9d13409a729fa4331442c9ed742e15c0b2f39e9",
+        "audit-1308-substitute-side-recoil-forced-red-overkill.log": "c3e258a7c159db82d590dc472e88b9d80ba0ff463e9050495d2f194edae11f0a"
+      }
+    },
+    "validation": {
+      "core_full": {
+        "passed": 3675,
+        "failed": 0,
+        "ignored": 1,
+        "log_sha256": "df1c18f0aedf5e0e7dfb024c37225a88e1e265eafc25a35f12ec5b385b98a57e"
+      },
+      "gba_build": {
+        "command": [
+          "cargo",
+          "+nightly-2025-12-07",
+          "build",
+          "--release",
+          "--features",
+          "perf-benchmark",
+          "--locked",
+          "--offline"
+        ],
+        "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+        "exit_code": 0,
+        "seconds": 75.26345711399335,
+        "base": "f9f3fee5a9cf6c55afb681b57c8d03283d0024ed",
+        "diff_sha256": "59761a1dc120fed380f1e0b0a29bdc730deba80459f93224764a2930e8631e97",
+        "profile": "unmodified release profile; original perf-benchmark feature"
+      },
+      "gba_original_performance": {
+        "scenarios": 7,
+        "frames": 8280,
+        "failures": [],
+        "rom_sha256": "436a8e095daf4c2b96b277797f05a311ac2e6c7d2a06a0f171fd1af737cec319",
+        "metrics": {
+          "suite": "autopilot-v1",
+          "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+          "scenarios": {
+            "intro-title-v1": {
+              "scenario": "intro-title-v1",
+              "samples": 251,
+              "update_avg_ticks": 105,
+              "update_core_avg_ticks": 96,
+              "update_flush_avg_ticks": 1,
+              "renders": 115,
+              "draw_per_frame_ticks": 1201,
+              "draw_max_ticks": 9849,
+              "present_per_frame_ticks": 352,
+              "present_max_ticks": 782
+            },
+            "oak-dialogue-v1": {
+              "scenario": "oak-dialogue-v1",
+              "samples": 602,
+              "update_avg_ticks": 172,
+              "update_core_avg_ticks": 163,
+              "update_flush_avg_ticks": 1,
+              "renders": 307,
+              "draw_per_frame_ticks": 2888,
+              "draw_max_ticks": 9044,
+              "present_per_frame_ticks": 391,
+              "present_max_ticks": 781
+            },
+            "overworld-idle-v1": {
+              "scenario": "overworld-idle-v1",
+              "samples": 1400,
+              "update_avg_ticks": 374,
+              "update_core_avg_ticks": 364,
+              "update_flush_avg_ticks": 1,
+              "renders": 0,
+              "draw_per_frame_ticks": 0,
+              "draw_max_ticks": 0,
+              "present_per_frame_ticks": 0,
+              "present_max_ticks": 0
+            },
+            "overworld-movement-v1": {
+              "scenario": "overworld-movement-v1",
+              "samples": 240,
+              "update_avg_ticks": 387,
+              "update_core_avg_ticks": 377,
+              "update_flush_avg_ticks": 1,
+              "renders": 24,
+              "draw_per_frame_ticks": 207,
+              "draw_max_ticks": 2885,
+              "present_per_frame_ticks": 70,
+              "present_max_ticks": 771
+            },
+            "battle-entry-v1": {
+              "scenario": "battle-entry-v1",
+              "samples": 500,
+              "update_avg_ticks": 212,
+              "update_core_avg_ticks": 201,
+              "update_flush_avg_ticks": 1,
+              "renders": 369,
+              "draw_per_frame_ticks": 2630,
+              "draw_max_ticks": 8863,
+              "present_per_frame_ticks": 566,
+              "present_max_ticks": 782
+            },
+            "trainer-battle-entry-v1": {
+              "scenario": "trainer-battle-entry-v1",
+              "samples": 501,
+              "update_avg_ticks": 231,
+              "update_core_avg_ticks": 220,
+              "update_flush_avg_ticks": 1,
+              "renders": 224,
+              "draw_per_frame_ticks": 2360,
+              "draw_max_ticks": 10184,
+              "present_per_frame_ticks": 343,
+              "present_max_ticks": 782
+            },
+            "pokedex-entry-v1": {
+              "scenario": "pokedex-entry-v1",
+              "samples": 400,
+              "update_avg_ticks": 116,
+              "update_core_avg_ticks": 104,
+              "update_flush_avg_ticks": 1,
+              "renders": 1,
+              "draw_per_frame_ticks": 41,
+              "draw_max_ticks": 16497,
+              "present_per_frame_ticks": 1,
+              "present_max_ticks": 767
+            }
+          }
+        },
+        "log_sha256": "5ef08a2684b76daf1e8b58b08393db6436037dcfb9e9cdc2d1276d021c1a8398"
+      }
+    },
+    "source_sha256": {
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "f2c8141ad126e798dad40a389cc38f352518b196ee9d48d73eb30a4b4c7c7bc6",
+      "crates/pokered-core/src/battle/substitute_recharge_self_ko_tests.rs": "9fda9233b06756db9df17d1fc6ebc994e8479fb33f05ad1a4b450fcf32108f86"
+    },
+    "scope": "Source-backed prepared production regressions, not original-ROM recording or current-master full mainline. Parent PR381 memory CI remains failed; this private candidate is not ready for publication."
+  }
 }
