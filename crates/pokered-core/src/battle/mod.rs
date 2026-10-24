@@ -8112,3 +8112,6 @@ mod mist_secondary_tests;
 mod mist_primary_rng_tests;
 #[cfg(test)]
 mod npc_primary_stat_drop_tests;
+
+#[cfg(test)]
+mod npc_secondary_stat_drop_tests;
