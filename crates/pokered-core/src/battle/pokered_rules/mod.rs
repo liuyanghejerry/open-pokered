@@ -1492,7 +1492,7 @@ thread_local! {
     /// that action's receipt even though the defender's volatile is now gone.
     static SUBSTITUTE_BROKE: RefCell<[bool; 2]> = const { RefCell::new([false, false]) };
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
-    // A landed damage action (including Substitute and enemy Psywave's zero),
+    // A landed damage action (including Substitute and eligible zero damage),
     // and survival at its last hit, before a later action/residual changes HP.
     static HIT_SURVIVAL: RefCell<[Option<(MoveId, bool)>; 2]> = const { RefCell::new([None, None]) };
     // Successful gains followed by attempts blocked at an actual Attack of 999.
@@ -1563,8 +1563,10 @@ fn rage_outcome(player: bool, move_id: MoveId) -> Option<(u8, u8)> {
 fn record_presented_hit(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, target: BattlerRef, amount: u16, absorbed: bool) {
     if source == target || ctx.mv.move_missed { return; }
     let pm = current_move_for(source);
-    // Enemy Psywave can successfully deal zero and still builds Rage in the ROM.
-    if amount == 0 && pm.id != MoveId::Psywave { return; }
+    // Enemy Psywave and a trapping continuation can successfully deal zero.
+    // Continuations skip MoveHitTest; the first immune trapping hit still misses.
+    if amount == 0 && pm.id != MoveId::Psywave
+        && trapping_continuation_damage(ctx, source) != Some(0) { return; }
     let hp = ctx.battler(target).hp; // both callers run before the HP write
     HIT_SURVIVAL.with(|hits| hits.borrow_mut()[source.side as usize] =
         (hp > 0).then_some((pm.id, absorbed || amount < hp)));
