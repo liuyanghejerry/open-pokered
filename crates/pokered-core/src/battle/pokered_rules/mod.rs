@@ -3274,9 +3274,12 @@ fn bridge_damaging_hit(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
-    // AttackSubstitute clears EXPLODE_EFFECT before AlwaysHappenSideEffects:
-    // breaking the doll cancels the attacker's self-KO, even though damage hit.
-    if substitute_broke_for(source) && source_effect_is(source_effect, "special.explosion") {
+    // AttackSubstitute clears the move effect before AlwaysHappenSideEffects:
+    // breaking the doll cancels both self-KO and recoil, even though damage hit.
+    if substitute_broke_for(source)
+        && (source_effect_is(source_effect, "special.explosion")
+            || source_effect_is(source_effect, "recoil.take_down")
+            || source_effect_is(source_effect, "recoil.struggle")) {
         return HandlerResult::Unchanged;
     }
     let is_foe_stat_down = hook_for(source_effect, Event::DamagingHit).is_some_and(|hook| {
