@@ -1811,7 +1811,8 @@ fn pokered_crit(
         .iter()
         .any(|e| e.host == source && matches!(e.kind, PokeVolatile::FocusEnergy));
     let threshold = crate::battle::damage::crit_chance(base_speed, is_high_crit, is_focus);
-    let crit_roll = ctx.rng.next_u8();
+    // CriticalHitTest rotates the BattleRandom byte with three RLC A instructions.
+    let crit_roll = ctx.rng.next_u8().rotate_left(3);
     ctx.mv.is_critical = crit_roll < threshold;
     HandlerResult::Unchanged
 }
