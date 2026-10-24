@@ -1,0 +1,83 @@
+{
+  "base": "23c5c5c48b2233e301b896795ad9cf744fa000cf",
+  "tested_source": "db17d7aaab5342c253cadc27c4070d60961082a4",
+  "ci_failure": {
+    "PRs": [
+      381,
+      382
+    ],
+    "contiguous_heap_bytes": 3839,
+    "required_bytes": 4096,
+    "frame": 86882,
+    "exact_CI_ROM_reproduced_locally": true,
+    "artifact": 12546288853,
+    "ROM_SHA256": "31952cd3ff7fb103f3a57bd9cdaa5fac8eb215e8a8669b87d9539ce8256205f8"
+  },
+  "tests": {
+    "renderer": {
+      "passed": 403,
+      "failed": 0,
+      "ignored": 0,
+      "command": "cargo test --locked -p pokered-renderer --features gba-resource-tests --lib"
+    },
+    "app": {
+      "passed": 393,
+      "failed": 0,
+      "ignored": 38,
+      "command": "cargo test --locked -p pokered-app --lib"
+    }
+  },
+  "original_memory_scenarios": {
+    "pass": true,
+    "error": null,
+    "head": "db17d7aaab5342c253cadc27c4070d60961082a4",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "164de72409ab8e19b4657e5c357d6086b3fc54d16ecb2bc82c254899d95f8b78",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "seconds": 172.84090280998498,
+    "frames": 322800,
+    "cases": 13,
+    "min_heap": 7832,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "pixel_comparison": {
+    "before_rom_sha256": "43f0b53cd535d2cb0fd7a2546b7a5a4c807ba92971b6e7b0859d0976b40308de",
+    "after_rom_sha256": "164de72409ab8e19b4657e5c357d6086b3fc54d16ecb2bc82c254899d95f8b78",
+    "before_source_tree": "2748125f698fd766b145fdc503b0e63c5954b134",
+    "after_commit": "db17d7aaab5342c253cadc27c4070d60961082a4",
+    "same_ordered_pixel_changes": true,
+    "pixel_changes": 65,
+    "unique_frames": 58,
+    "before_hardware_frames": 1111,
+    "after_hardware_frames": 1115,
+    "scope": "Every successive distinct framebuffer of enemy Hyper Beam matches, including palette flashes. Repeated identical hardware frames are collapsed; this is not a claim of identical timing."
+  },
+  "screenshot": {
+    "animation": "enemy Hyper Beam",
+    "successive_distinct_frame_index": 50,
+    "rgba_sha256": "973986672a3cef105aef9cc80ef345af643a876dfab5c6a8668b9dd0900ffdc3",
+    "png_sha256": "4c1cbc514e9b4afd59f7777a25268f9c02f5e873d7bdc7ea6491cdda1ff8bc60"
+  },
+  "original_GBA_performance": {
+    "head": "db17d7aaab5342c253cadc27c4070d60961082a4",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "86b5a17534cc952d18b4dfc66957b934d3ffa8cea3c512fc9279363f6d56e9b5",
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "83539d9d0342b5b85feb55643c60bd5a5efe45a17abf190f731b8916afcb38cb",
+      "crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403"
+    },
+    "frames": 8280,
+    "seconds": 2.6981650210218504,
+    "failures": [],
+    "metrics": "audit-1308-rom-oam-gba-perf-metrics.json",
+    "log": "audit-1308-rom-oam-gba-perf.log",
+    "scenarios": 7
+  },
+  "scope": "Prepared original GBA stress fixtures and renderer regression, not an ordinary NEW GAME run; no thresholds/scenarios/workflows modified."
+}
