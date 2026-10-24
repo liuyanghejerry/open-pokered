@@ -3075,9 +3075,8 @@ fn build_try_boost_veto_effect(id: EffectId) -> &'static Effect<PokeredRules> {
 }
 
 /// **The pokered-side nested-veto driver** (blueprint 15 §3). For a foe stat-down
-/// move, this rides `DamagingHit`, applies the authored chance gate (side-variant)
-/// UNCONDITIONALLY (so the byte is drawn at the legacy ordinal even when blocked —
-/// the `consumed()` invariant), reads the record's `Boost(stat, stages, Foe)` op,
+/// move, this rides `DamagingHit`, checks Substitute before a side-effect chance
+/// draw, then reads the record's `Boost(stat, stages, Foe)` op,
 /// FIRES `Event::TryBoost` on the foe, and applies the drop only if no Mist /
 /// Substitute handler vetoed.
 ///
@@ -3100,13 +3099,11 @@ fn bridge_foe_stat_down(
     let Some(hook) = hook_for(source_effect, Event::DamagingHit) else {
         return HandlerResult::Unchanged;
     };
-    // The chance gate (side-variant 85/256). Drawn UNCONDITIONALLY so the
-    // side_effect byte is consumed at the legacy ordinal even when the drop is
-    // blocked by Mist/Substitute — the consumed() invariant. A primary foe-down
-    // (no chance) skips this with no byte. A broken doll has already cleared
-    // the original move effect, so it never reaches this chance draw.
+    // StatModifierDownEffect checks Substitute before the side-effect chance.
+    // A broken doll has already cleared the move effect and also skips the draw.
+    // Primary stat-down moves have no chance gate here.
     if let Some((num, den)) = hook.chance {
-        if substitute_broke_for(source) {
+        if substitute_broke_for(source) || target_has_substitute(ctx, target) {
             return HandlerResult::Unchanged;
         }
         if !ctx.rng.chance(num, den) {
@@ -3218,10 +3215,17 @@ fn run_bridge(
     // The authored chance gate. A broken Substitute cancels secondary dispatch
     // before the draw; records without a chance gate need no random byte.
     if let Some((num, den)) = hook.chance {
-        // A broken doll zeroes the original move effect before its secondary
-        // dispatch. It skips the chance byte too; an intact doll does not.
-        if event == Event::DamagingHit && substitute_broke_for(source) {
-            return HandlerResult::Unchanged;
+        if event == Event::DamagingHit {
+            // Poison/FreezeBurnParalyze/Flinch check the doll before BattleRandom.
+            // Damaging confusion has no such guard and still rolls through it.
+            let blocked_by_doll = hook.ops.iter().any(|op| matches!(op,
+                dotzuki_rules::Op::VetoIf {
+                    cond: dotzuki_rules::Predicate::HasVolatile(name), ..
+                } if name == "Substitute"));
+            if substitute_broke_for(source)
+                || (blocked_by_doll && target_has_substitute(ctx, target)) {
+                return HandlerResult::Unchanged;
+            }
         }
         if !ctx.rng.chance(num, den) {
             return HandlerResult::Unchanged;
@@ -3229,6 +3233,11 @@ fn run_bridge(
     }
     let host = PokeredRules::rules_host().expect("pokered rules host installed");
     dotzuki_rules::run_ops(ctx, relay, target, source, &host.bindings, &hook)
+}
+
+fn target_has_substitute(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef) -> bool {
+    ctx.effects.iter().any(|entry| entry.host == target
+        && volatile_name_matches("Substitute", &entry.kind))
 }
 
 fn bridge_modify_damage(

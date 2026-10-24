@@ -567,8 +567,8 @@ Ruleset(
         Effect(id: "foedown.defense_2", kind: Move, power: 0, type: "Normal", accuracy: 85,
             hooks: [ Hook(on: "DamagingHit", do: [ Boost(stat: "Defense", stages: -2, target: Target) ]) ]),
 
-        // ── SIDE foe stat-down (power>0, chance 85/256 — the side_effect byte is
-        //    drawn at the legacy ordinal even when Mist/Substitute veto). ──
+        // ── SIDE foe stat-down (power>0, chance 85/256). The bridge checks
+        //    Substitute before drawing the side-effect byte. ──
         Effect(id: "foedown.attack_side", kind: Move, power: 65, type: "Ice", accuracy: 100,
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
