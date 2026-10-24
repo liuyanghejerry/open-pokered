@@ -1,0 +1,277 @@
+{
+  "source": {
+    "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+    "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+    "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f"
+  },
+  "reference_commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "baseline_first_six_tests": {
+    "base": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "1c982f327e548560994b0af7d97aa0783f3148bca145ac8af9267906a25468eb"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      }
+    },
+    "test_sha256": "00ec72e14b13ba655aab1f37c1a633628e8dab0f7a61d861f393b30a1d13c914",
+    "exe_sha256": "597ad2d4801a49c2963c11959c5892ec683369cf6c68882a435defafc867a57d",
+    "exit": 101,
+    "deleted_exe_bytes": 14825072
+  },
+  "attack_999_red_test": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_rage_multi_hit",
+      "--",
+      "--nocapture"
+    ],
+    "base": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+    "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f",
+    "diff_sha256": "d0dd547a346ac068bfff205a34d77766b4e97efd728e6dee7dff0857a487a859",
+    "exit": 101,
+    "seconds": 16.747112193028443
+  },
+  "candidate_tests": {
+    "focused_passed": 7,
+    "prepared_FIGHT_turns": 426,
+    "core_passed": 3720,
+    "core_ignored": 1,
+    "core": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core"
+      ],
+      "base": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+      "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f",
+      "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+      "exit": 0,
+      "seconds": 40.89566402998753
+    }
+  },
+  "native": {
+    "m06": {
+      "mode": "m06",
+      "source": {
+        "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+        "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+        "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f",
+        "binary_sha256": "36b3c489bee097d78ea42235be2da4b00bf4ebac08b5836e6500a042bd71afde"
+      },
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1319-rage",
+      "status": "passed",
+      "seconds": 54.15728558797855,
+      "unchanged_source_and_binary": true
+    },
+    "scenarios": {
+      "mode": "scenarios",
+      "source": {
+        "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+        "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+        "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f",
+        "binary_sha256": "36b3c489bee097d78ea42235be2da4b00bf4ebac08b5836e6500a042bd71afde"
+      },
+      "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1319-rage",
+      "status": "passed",
+      "seconds": 159.9792708629975,
+      "unchanged_source_and_binary": true
+    }
+  },
+  "gba": {
+    "performance": {
+      "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+      "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+      "hashes": {
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "2d622d1cfe7489ccd5dbaf28c7159c2ea25df2125692e46a9f2c63244d360100",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "bd78d38b63815145d123ea575a3d07ab12f4a32b932420931ac99a1bbb90229c",
+        "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+        "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+        "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+      },
+      "frames": 8280,
+      "seconds": 4.107220918056555,
+      "failures": [],
+      "metrics": "audit-1319-rage-gba-perf-metrics.json",
+      "log": "audit-1319-rage-gba-perf.log"
+    },
+    "memory": {
+      "pass": true,
+      "error": null,
+      "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+      "hashes": {
+        ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "5b075a58026db1ddd19c14fffafb0041772666e2cd543fc7c1535ee821b818ef",
+        ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+        "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+        "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+      },
+      "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+      "seconds": 229.8090338780312,
+      "frames": 324840,
+      "cases": 13,
+      "min_heap": 7816,
+      "min_stack": 8704,
+      "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+    }
+  },
+  "captures": {
+    "rage": {
+      "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+      "source": "audit-1318-rage-visual.rs",
+      "source_sha256": "41170b4c8fea39a4fdcdeb4b3480322b299b5d26f678b6ac32200f3862dc14b5",
+      "frame": 427,
+      "before": {
+        "base": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+        "source": "audit-1318-rage-visual.rs",
+        "source_sha256": "41170b4c8fea39a4fdcdeb4b3480322b299b5d26f678b6ac32200f3862dc14b5",
+        "libs": {
+          "pokered_app": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+            "sha256": "c6f19dce503aaa5ee375de26b1115cb09c7a7ea64803d3543b7bdb45a4eaab07"
+          },
+          "pokered_core": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+            "sha256": "1c982f327e548560994b0af7d97aa0783f3148bca145ac8af9267906a25468eb"
+          },
+          "pokered_data": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+            "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+          },
+          "pokered_renderer": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+            "sha256": "ef9ff4641330c3c5d2bbb0f9bdd78eff4ffaa781c25bd75c54516d894e2debad"
+          },
+          "dotzuki_engine": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+            "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+          }
+        },
+        "exe_sha256": "0783e62eb387534f9db78ca8c2d2b5342e124ed905bd184a6a4f9e129066777f",
+        "output": "MOVE frame=27 serial=1 enemy_display_hp=450\nMOVE frame=103 serial=2 enemy_display_hp=447\nMOVE frame=180 serial=3 enemy_display_hp=444\nMOVE frame=257 serial=4 enemy_display_hp=441\nMOVE frame=334 serial=5 enemy_display_hp=438\nCAPTURE frame=427 enemy_display_hp=435 message=Some(\"Enemy SNORLAX's ATTACK rose!\") phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used FURY ATTACK!\", \"Enemy SNORLAX's ATTACK rose!\", \"Hit the enemy\\n5 times!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+        "image_sha256": "ee4407882bcccb403bc5a1e9581f1464ee35227152b289ab001f5f8d931e9233"
+      },
+      "after": {
+        "source_identity": {
+          "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+          "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+          "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f"
+        },
+        "libs": {
+          "pokered_app": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+            "sha256": "745c51c595add0558571583d10493fedaf6ad5df108576478d13ba5251607898"
+          },
+          "pokered_core": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+            "sha256": "10f213a089df5359a2ab8801212291b96e12417f767c6783c42cc1ce89562d1b"
+          },
+          "pokered_data": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+            "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+          },
+          "pokered_renderer": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+            "sha256": "ffe627bbf4978c83d0a93a8407e7f54db0a3e5f32fa313c422e0255b671d1d73"
+          },
+          "dotzuki_engine": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+            "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+          }
+        },
+        "exe_sha256": "c0fe76fbf27cdbd6e9210639b46a0fd76ddba8ab6e047484414f78462c169f91",
+        "output": "MOVE frame=27 serial=1 enemy_display_hp=450\nMOVE frame=103 serial=2 enemy_display_hp=447\nMOVE frame=180 serial=3 enemy_display_hp=444\nMOVE frame=257 serial=4 enemy_display_hp=441\nMOVE frame=334 serial=5 enemy_display_hp=438\nCAPTURE frame=427 enemy_display_hp=435 message=Some(\"Enemy SNORLAX's\\nRAGE is building!\") phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used FURY ATTACK!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Hit the enemy\\n5 times!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+        "image_sha256": "6268b9ce41beeb0ae9ba81037637d40d2313aad3da596a6498e9d5433a257e97"
+      },
+      "deleted_exe_bytes": 36308448
+    },
+    "rage999": {
+      "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+      "source": "audit-1319-rage999-visual.rs",
+      "source_sha256": "8e9aa58ccae21f535fcd7a8b7051be7d67a933cdac7367117e76e47aaf6b4b0a",
+      "frame": 443,
+      "before": {
+        "base": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+        "source": "audit-1319-rage999-visual.rs",
+        "source_sha256": "8e9aa58ccae21f535fcd7a8b7051be7d67a933cdac7367117e76e47aaf6b4b0a",
+        "libs": {
+          "pokered_app": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+            "sha256": "c6f19dce503aaa5ee375de26b1115cb09c7a7ea64803d3543b7bdb45a4eaab07"
+          },
+          "pokered_core": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+            "sha256": "1c982f327e548560994b0af7d97aa0783f3148bca145ac8af9267906a25468eb"
+          },
+          "pokered_data": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+            "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+          },
+          "pokered_renderer": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+            "sha256": "ef9ff4641330c3c5d2bbb0f9bdd78eff4ffaa781c25bd75c54516d894e2debad"
+          },
+          "dotzuki_engine": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+            "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+          }
+        },
+        "exe_sha256": "e7946caa313da0a54d5767ab3c0b932cbf0c2e4c6607fd514e7bf6f6cb34222d",
+        "output": "MOVE frame=27 serial=1 enemy_display_hp=312\nMOVE frame=103 serial=2 enemy_display_hp=310\nMOVE frame=180 serial=3 enemy_display_hp=308\nMOVE frame=257 serial=4 enemy_display_hp=306\nMOVE frame=334 serial=5 enemy_display_hp=304\nCAPTURE frame=443 enemy_display_hp=302 message=Some(\"Hit the enemy\\n5 times!\") phase=ShowingText { messages: [\"Enemy DRAGONITE is fast\\nasleep!\", \"MEWTWO used FURY ATTACK!\", \"Enemy DRAGONITE's ATTACK\\nrose!\", \"Hit the enemy\\n5 times!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+        "image_sha256": "151f778ec95aadecadf9fcef8c6d9d21beb47279cd6533d8853f5e50b7cead12"
+      },
+      "after": {
+        "source_identity": {
+          "head": "438f1948b9fb077d94481e4ee3d5d3eaf57f33b8",
+          "diff_sha256": "0acbc15c96c4cce4c3e8d3cd041ef4357e45fb85983bfd8e6acbf3ec1a9c4f19",
+          "test_sha256": "7f65f2ac1a0879a5260b6675be38f1479e517c6a1b741a305ea25fffb362711f"
+        },
+        "libs": {
+          "pokered_app": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+            "sha256": "745c51c595add0558571583d10493fedaf6ad5df108576478d13ba5251607898"
+          },
+          "pokered_core": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+            "sha256": "10f213a089df5359a2ab8801212291b96e12417f767c6783c42cc1ce89562d1b"
+          },
+          "pokered_data": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+            "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+          },
+          "pokered_renderer": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+            "sha256": "ffe627bbf4978c83d0a93a8407e7f54db0a3e5f32fa313c422e0255b671d1d73"
+          },
+          "dotzuki_engine": {
+            "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+            "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+          }
+        },
+        "exe_sha256": "ac2cac3603f172b0a457a0bc9ec70562c37c887cee1d58d4849dcb5594a0f1aa",
+        "output": "MOVE frame=27 serial=1 enemy_display_hp=312\nMOVE frame=103 serial=2 enemy_display_hp=310\nMOVE frame=180 serial=3 enemy_display_hp=308\nMOVE frame=257 serial=4 enemy_display_hp=306\nMOVE frame=334 serial=5 enemy_display_hp=304\nCAPTURE frame=443 enemy_display_hp=302 message=Some(\"Nothing happened!\") phase=ShowingText { messages: [\"Enemy DRAGONITE is fast\\nasleep!\", \"MEWTWO used FURY ATTACK!\", \"Enemy DRAGONITE's\\nRAGE is building!\", \"Nothing happened!\", \"Enemy DRAGONITE's\\nRAGE is building!\", \"Nothing happened!\", \"Enemy DRAGONITE's\\nRAGE is building!\", \"Nothing happened!\", \"Enemy DRAGONITE's\\nRAGE is building!\", \"Nothing happened!\", \"Enemy DRAGONITE's\\nRAGE is building!\", \"Nothing happened!\", \"Hit the enemy\\n5 times!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+        "image_sha256": "e44d989daa886bc4b5a07dc191e661fb54468f7ceeef3cbcae945a59222a6c0c"
+      },
+      "deleted_exe_bytes": 36308672
+    }
+  },
+  "images_visually_inspected": true,
+  "limitations": [
+    "Prepared battle fixtures and fresh m06/11 scenarios are not a new m49 playthrough.",
+    "Captures use actual BattleVisualEffects and draw_battle, not full PokemonGame/audio-clock or original-ROM runtime.",
+    "Per-hit text/animation interleaving, repeated critical/effectiveness captions and Substitute-break text ordering remain separate findings.",
+    "Single-hit Rage and the overall original RNG pipeline are outside this repair."
+  ]
+}

@@ -288,6 +288,7 @@ pub(crate) fn translate_turn_named_with_faints(
     // The move whose effect events are currently being walked — Haze's own
     // cure/stat events narrate through its single "eliminated" line.
     let mut current_move: Option<MoveId> = None;
+    let mut current_actor = None;
     let mut current_block = None;
     let mut multi_hit_stats_published = false;
     for (i, e) in evs.iter().enumerate() {
@@ -296,6 +297,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 current_block = None;
                 current_move = Some(*move_);
                 let actor = *actor;
+                current_actor = Some(actor);
                 let (mut crit, mut missed) = (false, false);
                 for follow in &evs[i + 1..] {
                     match follow {
@@ -359,6 +361,16 @@ pub(crate) fn translate_turn_named_with_faints(
                 } else {
                     msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
                 }
+                // A 999-capped attempt has no StatChanged event, but still
+                // prints BuildingRageText followed by NothingHappenedText.
+                if let Some((gains, limited)) = super::multi_hit_rage_outcome(actor.side == 0, *move_) {
+                    let name = display_name_named(state, opp_ref(actor), names);
+                    for attempt in 0..gains + limited {
+                        msgs.push(format!("{name}'s\nRAGE is building!"));
+                        msgs.push(if attempt < gains { format!("{name}'s ATTACK rose!") }
+                            else { "Nothing happened!".to_string() });
+                    }
+                }
                 let hit_count = if missed { None } else { super::completed_multi_hit_count(actor.side == 0, *move_) };
                 multi_hit_stats_published = hit_count.is_some();
                 if let Some(count) = hit_count {
@@ -368,7 +380,7 @@ pub(crate) fn translate_turn_named_with_faints(
                     for event in evs[i + 1..].iter().take_while(|event| !matches!(event,
                         TurnEvent::MoveUsed { .. } | TurnEvent::Blocked { .. }
                         | TurnEvent::Damaged { cause: Some(_), .. } | TurnEvent::Healed { cause: Some(_), .. })) {
-                        if let Some(line) = stat_change_message(event, state, names) { msgs.push(line); }
+                        append_stat_change(&mut msgs, event, state, names, Some((actor, *move_)));
                     }
                     msgs.push(if actor.side == 0 { format!("Hit the enemy\n{count} times!") }
                         else { format!("Hit {count} times!") });
@@ -401,6 +413,7 @@ pub(crate) fn translate_turn_named_with_faints(
             }
             TurnEvent::Blocked { actor } => {
                 multi_hit_stats_published = false;
+                current_actor = None;
                 current_block = Some(*actor);
                 msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
             }
@@ -463,7 +476,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 if current_move == Some(MoveId::Haze) || multi_hit_stats_published {
                     continue;
                 }
-                if let Some(line) = stat_change_message(e, state, names) { msgs.push(line); }
+                append_stat_change(&mut msgs, e, state, names, current_actor.zip(current_move));
             }
             TurnEvent::Damaged { .. } => {
                 if let Some(line) = presentation_hp_message_named(e, state, effects, names) { msgs.push(line); }
@@ -472,6 +485,15 @@ pub(crate) fn translate_turn_named_with_faints(
         }
     }
     msgs
+}
+
+fn append_stat_change(msgs: &mut Vec<String>, event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, names: Option<&BattleNameContext>, action: Option<(BattlerRef, MoveId)>) {
+    if let (Some((actor, move_id)), TurnEvent::StatChanged { target, stat: StatIndex::Attack, .. }) = (action, event) {
+        if *target == opp_ref(actor) && super::multi_hit_rage_outcome(actor.side == 0, move_id).is_some() {
+            return; // individual attempts were published with the move
+        }
+    }
+    if let Some(line) = stat_change_message(event, state, names) { msgs.push(line); }
 }
 
 fn stat_change_message(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, names: Option<&BattleNameContext>) -> Option<String> {

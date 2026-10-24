@@ -1494,6 +1494,8 @@ thread_local! {
     static PRESENTED_HITS: RefCell<[[u16; 6]; 2]> = const { RefCell::new([[0; 6]; 2]) };
     // Survival at the last hit, before a later action/residual can KO the target.
     static MULTI_HIT_SURVIVOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
+    // Successful gains followed by attempts blocked at an actual Attack of 999.
+    static MULTI_HIT_RAGE_OUTCOME: RefCell<[Option<(MoveId, u8, u8)>; 2]> = const { RefCell::new([None, None]) };
     static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
     /// CantLowerAnymore belongs to this action, even if a later Haze resets stages.
     static PRIMARY_STAT_FLOOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
@@ -1505,6 +1507,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
     SUBSTITUTE_BROKE.with(|flags| flags.borrow_mut()[who.side as usize] = false);
     PRIMARY_STAT_FLOOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
     MULTI_HIT_SURVIVOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
+    MULTI_HIT_RAGE_OUTCOME.with(|gains| gains.borrow_mut()[who.side as usize] = None);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1515,6 +1518,7 @@ pub fn clear_current_moves() {
     SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
     MULTI_HIT_SURVIVOR.with(|moves| *moves.borrow_mut() = [None, None]);
+    MULTI_HIT_RAGE_OUTCOME.with(|gains| *gains.borrow_mut() = [None, None]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
     PRIMARY_STAT_FLOOR.with(|moves| *moves.borrow_mut() = [None, None]);
     ohko::clear();
@@ -1546,6 +1550,10 @@ fn completed_multi_hit_count(player: bool, move_id: MoveId) -> Option<u16> {
     let count = presented_hits(player)[5];
     // A first-hit Substitute break cancels the multi-hit effect before its loop.
     (survived && count > 1).then_some(count)
+}
+fn multi_hit_rage_outcome(player: bool, move_id: MoveId) -> Option<(u8, u8)> {
+    MULTI_HIT_RAGE_OUTCOME.with(|gains| gains.borrow()[usize::from(!player)]
+        .filter(|(recorded, _, _)| *recorded == move_id).map(|(_, gains, limited)| (gains, limited)))
 }
 fn record_presented_hit(ctx: &BattleCtx<'_, PokeredRules>, source: BattlerRef, target: BattlerRef, amount: u16, absorbed: bool) {
     let pm = current_move_for(source);
@@ -2379,16 +2387,44 @@ fn rage_manage(
             kind: PokeVolatile::Rage,
         });
     }
-    // The DEFENDER is raging and just got hit → +1 Attack stage (clamped to +6).
-    if ctx.effects.iter().any(|e| e.host == target && matches!(e.kind, PokeVolatile::Rage)) {
-        let b = ctx.battler_mut(target);
-        let cur = b.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0);
-        if cur < 6 {
+    // RepeatHits has already applied the whole sequence. The ROM calls
+    // HandleBuildingRage after each survived hit, including Substitute hits.
+    // Reapply each gain separately: badge boosts and the attacker's status
+    // penalties compound once per actual gain, and the KO hit gives none.
+    let pm = current_move_for(source);
+    let multi_hit = matches!(pm.effect, MoveEffect::TwoToFiveAttacksEffect | MoveEffect::AttackTwiceEffect | MoveEffect::TwineedleEffect);
+    let hits = if multi_hit {
+        let count = presented_hits(source.side == 0)[5] as u8;
+        let survived = MULTI_HIT_SURVIVOR.with(|moves| moves.borrow()[source.side as usize] == Some(pm.id));
+        if ctx.mv.move_missed || ctx.mv.damage == 0 { 0 }
+        else { count.saturating_sub(u8::from(!survived)) }
+    } else { 1 };
+    let mut gains = 0;
+    let mut limited = 0;
+    let raging = ctx.effects.iter().any(|e| e.host == target && matches!(e.kind, PokeVolatile::Rage));
+    if raging {
+        for _ in 0..hits {
+            let b = ctx.battler_mut(target);
+            let cur = b.stat_stages.get(StatIndex::Attack).copied().unwrap_or(0);
+            if cur >= 6 { break; }
+            // StatModifierUpEffect restores the old stage when Attack is 999.
+            // Failed attempts do not reapply badge boosts or status penalties.
+            if multi_hit {
+                let (attack, stage) = crate::battle::badge_boosts::stat_and_stage(b, StatIndex::Attack);
+                if crate::battle::stat_stages::apply_stage(attack, stage) == 999 {
+                    limited += 1;
+                    continue;
+                }
+            }
             b.stat_stages.set(StatIndex::Attack, cur + 1);
             crate::battle::badge_boosts::reapply_on_stage_change(b, StatIndex::Attack);
             // Rage temporarily flips whose turn it is before StatModifierUpEffect.
             crate::battle::badge_boosts::apply_status_penalties(ctx.battler_mut(source));
+            gains += 1;
         }
+    }
+    if multi_hit && raging {
+        MULTI_HIT_RAGE_OUTCOME.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, gains, limited)));
     }
     HandlerResult::Unchanged
 }
