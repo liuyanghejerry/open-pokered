@@ -363,7 +363,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 }
                 // A 999-capped attempt has no StatChanged event, but still
                 // prints BuildingRageText followed by NothingHappenedText.
-                if let Some((gains, limited)) = super::multi_hit_rage_outcome(actor.side == 0, *move_) {
+                if let Some((gains, limited)) = super::rage_outcome(actor.side == 0, *move_) {
                     let name = display_name_named(state, opp_ref(actor), names);
                     for attempt in 0..gains + limited {
                         msgs.push(format!("{name}'s\nRAGE is building!"));
@@ -489,7 +489,7 @@ pub(crate) fn translate_turn_named_with_faints(
 
 fn append_stat_change(msgs: &mut Vec<String>, event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, names: Option<&BattleNameContext>, action: Option<(BattlerRef, MoveId)>) {
     if let (Some((actor, move_id)), TurnEvent::StatChanged { target, stat: StatIndex::Attack, .. }) = (action, event) {
-        if *target == opp_ref(actor) && super::multi_hit_rage_outcome(actor.side == 0, move_id).is_some() {
+        if *target == opp_ref(actor) && super::rage_outcome(actor.side == 0, move_id).is_some() {
             return; // individual attempts were published with the move
         }
     }
