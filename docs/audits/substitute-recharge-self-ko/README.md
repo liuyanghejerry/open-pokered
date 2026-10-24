@@ -33,17 +33,17 @@ and multi-hit continuation are outside this change and remain audit questions.
 The unmodified GBA release build and all seven original performance scenarios
 also pass. No baseline, threshold, timeout or CI workflow was changed.
 
-Initial PR381 head `327a1abb` failed the original broad GBA memory gate at
-enemy Hyper Beam (game frame 86882): contiguous free heap was 3,839 bytes,
-below the existing 4,096-byte minimum. The exact local source repeated that
-failure. Checking the break flag before classifying the record did not resolve
-it on its own.
+The previous PR381 candidate `b544bc95` still failed remote broad-memory CI:
+enemy Hyper Beam at game frame 86882 had 3,839 bytes of contiguous free heap,
+below the unchanged 4,096-byte minimum. Replaying that exact CI ROM locally
+reproduced the failure. Borrowing immutable compiled hooks was insufficient
+to remove the remote failure, despite the earlier local build passing.
 
-The bridge was cloning each compiled hook, including nested operation lists,
-for read-only classification and execution. Installed rules hosts are immutable
-and already have static lifetimes across hot reloads, so return their borrowed
-hooks. The final candidate passes the full 3,673 core tests, the original seven
-performance scenarios, and all 13 original GBA memory scenarios (all 330 move
-animations included): lowest contiguous heap 4,768 bytes, untouched stack
-8,708 bytes. These are measurements of the final stress build, not a claim
-that every allocator layout has the same margin. No gate or workload changed.
+The candidate is now based on PR383's ROM-backed animation tiles and PR382's
+hosted pacing integration. On this combined source (`e0ae72b8`), all 3,673 core
+tests, seven original performance scenarios and 13 original memory scenarios
+pass. The memory run includes all 330 move animations; minimum contiguous heap
+is 7,832 bytes and untouched stack is 8,708 bytes. See `verification.json` for
+the exact source, ROM hashes and preserved earlier local measurements. The
+final CI still must pass all three workflows and all six runtime gates before
+merge. No fixture, threshold, timeout or workflow was changed.
