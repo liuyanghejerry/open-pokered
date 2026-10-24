@@ -1,0 +1,288 @@
+{
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_nickname_presentation",
+      "--",
+      "--nocapture"
+    ],
+    "base": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 101,
+    "seconds": 16.95519739307929
+  },
+  "focused": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_nickname_presentation",
+      "--",
+      "--nocapture"
+    ],
+    "base": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce",
+    "diff_sha256": "5b936b32322dbf176cebd174763d0b82732d11624d46c79284da45b7f00d28ca",
+    "exit": 0,
+    "seconds": 12.606821621069685
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "base": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce",
+    "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+    "exit": 0,
+    "seconds": 38.53430950001348
+  },
+  "platforms": {
+    "status": "passed",
+    "started": "2026-10-24T10:30:17.703835+00:00",
+    "source": {
+      "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+      "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+      "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce"
+    },
+    "commands": [
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1314-nickname-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 59.72171544400044,
+        "log": "audit-1314-nickname-gba-build-driver.log",
+        "log_sha256": "aa7b9ce8de10d5c2bbe59a8d693bbaee36bed85fbf3cff1be96fad0c881c8ce5"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1314-nickname-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.2755497300531715,
+        "log": "audit-1314-nickname-gba-perf-driver.log",
+        "log_sha256": "d99336d08e672ee7f10c585a4ad292f852892256e2a404846e5ce64ed9fde87d"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1314-nickname-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 63.84986236994155,
+        "log": "audit-1314-nickname-memory-build-driver.log",
+        "log_sha256": "5e380ee3212f2b4feaac8f1ced80afebe403027ea59b68abc6b445265bc160af"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1314-nickname-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 196.52527120301966,
+        "log": "audit-1314-nickname-memory-run-driver.log",
+        "log_sha256": "0ce058b60bab3fb5b687de90f84e0cd70653c6092a48bd9bdd84a63fdec9574a"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1314-nickname-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 38.87883033195976,
+        "log": "audit-1314-nickname-native-build-driver.log",
+        "log_sha256": "a57a4fd1aa7eda55d9aaedd884d0d936dcc843611df73105a59259c104643cfc"
+      }
+    ],
+    "finished": "2026-10-24T10:36:20.110425+00:00",
+    "unchanged_source": true
+  },
+  "gba_perf": {
+    "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "4d28ac10ec1772e6535ee84dcfe27fd04fb7cea1694b8c44d54fcea5544f81be",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "8affa726892cc43b3ea472f376280d878b7672fac8df73391c296ab5ccf6101b",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.8315939540043473,
+    "failures": [],
+    "metrics": "audit-1314-nickname-gba-perf-metrics.json",
+    "log": "audit-1314-nickname-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "77bbf8d91c094d3e52edbb0d384b6690aec4afa59c87273783b0c390d30a25d4",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+    "seconds": 196.13170722709037,
+    "frames": 322800,
+    "cases": 13,
+    "min_heap": 7832,
+    "min_stack": 8708,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "memory_log": {
+    "original": "audit-1314-nickname-memory-candidate.log",
+    "original_bytes": 5653922,
+    "original_sha256": "84dd904df9c1a45f51d97e20368944c690e7c6d91a012c87cc3e116440b0ad6d",
+    "archive": "audit-1314-nickname-memory-candidate.log.gz",
+    "archive_bytes": 431870,
+    "archive_sha256": "58e14f3e858ecda95a9417eb4c8de56ce2315771e40a0d7526a88294d7acee0c",
+    "roundtrip_verified": true,
+    "bytes_saved": 5222052
+  },
+  "native_build": {
+    "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered",
+    "protected_aliases": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-376b96c393fca6ed": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1312",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-4147a5c464458640": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-422d10856709dcf7": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1309",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-65dda198e93c6c3a": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9"
+    },
+    "exit_code": 0,
+    "candidate_sha256": "e55e8971a51c276a6cdebb08a986e3218b30c78256cf768f1674f6630c918ea2",
+    "candidate": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1314-nickname",
+    "seconds": 37.0160535259638,
+    "historical_binaries_unchanged": true,
+    "hardlinks_only": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+      "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+      "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce",
+      "binary_sha256": "e55e8971a51c276a6cdebb08a986e3218b30c78256cf768f1674f6630c918ea2"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1314-nickname",
+    "status": "passed",
+    "seconds": 39.861045864992775,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+      "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+      "test_sha256": "99480a2517af0414015b001c7d6f26660966ea02473f791187eca0784fc75dce",
+      "binary_sha256": "e55e8971a51c276a6cdebb08a986e3218b30c78256cf768f1674f6630c918ea2"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1314-nickname",
+    "status": "passed",
+    "seconds": 144.61481137305964,
+    "unchanged_source_and_binary": true
+  },
+  "before": {
+    "base": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "source": "audit-1314-nickname-visual.rs",
+    "source_sha256": "ac3360d87cf73cfa800ae815b0aeb2723017008ec8473e77fcd0df11db01caa4",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "a43101382c025d35cc0b2dab184ed14e9aa40d534cbb857bf78900dd20e454dd"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "a08e9bbb355a9ef42295a1438746c5af6f58b6205f505728df768964223b9515"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "1495c4b5c5a0c0929b2853c0863ea1e6c5d5d6d28ad434eaa5f7b3bbaa9f8155"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "scope": "Prepared public FIGHT, player nicknamed SPROUT, actual BattleVisualEffects/draw_battle; no full PokemonGame/audio clock or original-ROM timing claim.",
+    "exe_sha256": "967fce26319ffa0e9fa518d37a67b0b3c0f25b81a7dc1cb32dec846d3ca937b9",
+    "output": "CAPTURE frame=34 enemy_display_hp=82 message=Some(\"Enemy RATTATA used GROWTH!\") phase=ShowingText { messages: [\"SPROUT used TACKLE!\", \"Enemy RATTATA used GROWTH!\", \"Enemy RATTATA's SPECIAL\\nrose!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+    "image_sha256": "e290d947f227c5ea084677c251b07eca382c00a6c6f7feb65035608725ad4eeb",
+    "deleted_exe_bytes": 18134992
+  },
+  "after": {
+    "base": "b896e9f45e0350d6a0a2027850bd9c5c249d5a57",
+    "source": "audit-1314-nickname-visual.rs",
+    "source_sha256": "ac3360d87cf73cfa800ae815b0aeb2723017008ec8473e77fcd0df11db01caa4",
+    "scope": "Prepared public FIGHT, player nicknamed SPROUT, actual BattleVisualEffects/draw_battle; no full PokemonGame/audio clock or original-ROM timing claim.",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "3d8b508bc8faf5a2631ec54748a9889ac006bc9ed44c018d430d7e42a771dbe1"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "192b33fe61626a38723b1d9f852e32cb3bc0e92f0fc5025d69dabaa4324e7566"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "a5a94fdc9031c5d9bd759ccc200f54195ddf397048763bceebd9c26d04feb446"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "diff_sha256": "202b18252f96e6fd8843aedf61707c8b2c191b84f4f773d15e90c30c458e89cd",
+    "exe_sha256": "19c24622367c18417980c928189de7ba5b86ce2ffdfb91bd29dd91d2d661d0c2",
+    "output": "MOVE frame=2 serial=1 enemy_display_hp=82\nCAPTURE frame=34 enemy_display_hp=82 message=Some(\"SPROUT used TACKLE!\") phase=ShowingText { messages: [\"SPROUT used TACKLE!\", \"Enemy RATTATA used GROWTH!\", \"Enemy RATTATA's SPECIAL\\nrose!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\n",
+    "image_sha256": "315fbff89e7cba4c7d378770fa59a547925b50a0f985416d65c84bc84f82017e",
+    "deleted_exe_bytes": 18134736
+  }
+}

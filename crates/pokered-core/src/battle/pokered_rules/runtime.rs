@@ -453,7 +453,7 @@ pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &E
     presentation_hp_message_named(event, state, effects, None)
 }
 
-fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], names: Option<&BattleNameContext>) -> Option<String> {
+pub(crate) fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], names: Option<&BattleNameContext>) -> Option<String> {
     match event {
         TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,effects,*actor))),
         TurnEvent::Damaged { target, cause: Some(cause), .. } => {
