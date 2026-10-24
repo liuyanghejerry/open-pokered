@@ -64,6 +64,8 @@ pub mod battle_text_tiles;
 pub mod party_hp_bar;
 pub mod hash_compat;
 pub mod gen1_battle_anim;
+#[cfg(all(test, feature = "gba-resource-tests"))]
+mod gen1_oam_rom_tests;
 mod gen1_wavy_schedule;
 pub mod screen_fade;
 mod resource_catalog;
