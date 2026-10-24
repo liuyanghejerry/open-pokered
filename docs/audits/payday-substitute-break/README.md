@@ -31,11 +31,11 @@ regression; not a fresh playthrough or an original-ROM recording. This is pure
 battle-effect logic, with no renderer/layout changes; AGENTS.md's logic exemption
 applies. Exact sources and local validation are recorded in `verification.json`.
 
-Local validation: all 3,673 core tests pass (one existing ignored test); the
-unmodified GBA release build and all seven original performance scenarios pass.
-The baseline, thresholds, timeouts and CI workflows are unchanged.
-
-Retested after PR381's immutable-hook borrowing change: full core 3,673 pass,
-all seven original GBA performance scenarios pass, and all 13 original broad
-memory scenarios pass (330 move animations, minimum contiguous heap 4,768 B,
-minimum untouched stack 8,708 B). Gates and workload remain unchanged.
+After the merged GBA memory and hosted-loop fixes, this isolated branch at
+`68dea63dff7766b044d8962edb97cf18e1722162` passed all 3,673 core tests
+(zero failures, one existing ignored test), the unmodified GBA release build
+and all seven original performance scenarios. Subsequent dependency rebases
+change documentation only; product files are checked byte-for-byte. Historical
+results remain separately identified in `verification.json`. All three remote
+workflows and all six original GBA runtime gates must pass on the final PR
+source before merge. No thresholds, timeouts, scenarios or workflows changed.
