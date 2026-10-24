@@ -564,5 +564,53 @@
     ],
     "finished": "2026-10-24T14:23:31.204590+00:00",
     "unchanged_source": true
+  },
+  "ci_fixture_followup": {
+    "failure": {
+      "pr": 407,
+      "head": "380dccd20a6981626582dec870a530d20120e0c8",
+      "run": 40102953209,
+      "job": 120898672355,
+      "excerpt": "---- game::trainer_seen_tests::trainer_seen_tracks_real_ai_switches_back_to_an_already_seen_slot stdout ----\n2026-10-24T14:39:16.3300861Z Asset root found: \"/home/runner/work/open-pokered/open-pokered/crates/pokered-renderer/../../gfx\"\n2026-10-24T14:39:16.3301659Z Audio output disabled (--no-audio).\n2026-10-24T14:39:16.3301859Z \n2026-10-24T14:39:16.3302313Z thread '<unnamed>' (10853) panicked at crates/pokered-app/src/trainer_seen_tests.rs:122:9:\n2026-10-24T14:39:16.3303026Z assertion `left == right` failed\n2026-10-24T14:39:16.3303285Z   left: [0]\n2026-10-24T14:39:16.3303586Z  right: [0, 1, 0]\n2026-10-24T14:39:16.3304426Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n2026-10-24T14:39:16.3305267Z \n2026-10-24T14:39:16.3306186Z thread 'game::trainer_seen_tests::trainer_seen_tracks_real_ai_switches_back_to_an_already_seen_slot' (10852) panicked at crates/pokered-app/src/trainer_seen_tests.rs:8:38:\n2026-10-24T14:39:16.3307448Z called `Result::unwrap()` on an `Err` value: Any { .. }\n2026-10-24T14:39:16.3307849Z \n2026-10-24T14:39:16.3307855Z \n2026-10-24T14:39:16.3307990Z failures:\n2026-10-24T14:39:16.3308435Z     game::trainer_seen_tests::trainer_seen_tracks_real_ai_switches_back_to_an_already_seen_slot\n2026-10-24T14:39:16.3308801Z \n2026-10-24T14:39:16.3309083Z test result: FAILED. 392 passed; 1 failed; 38 ignored; 0 measured; 0 filtered out; finished in 120.80s\n2026-10-24T14:39:16.3309454Z \n2026-10-24T14:39:16.3495393Z \u001b[1m\u001b[91merror\u001b[0m: test failed, to rerun pass `-p pokered-app --lib`\n2026-10-24T14:39:16.3836576Z error: process didn't exit successfully: `/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo test --tests --manifest-path /home/runner/work/open-pokered/open-pokered/Cargo.toml --target-dir /home/runner/work/open-pokered/open-pokered/target/llvm-cov-target --workspace` (exit status: 101)\n2026-10-24T14:39:16.4045783Z ##[error]Process completed with exit code 101.\n2026-10-24T14:39:16.5051669Z "
+    },
+    "local_red": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-app",
+        "--lib",
+        "trainer_seen_tracks_real_ai_switches_back_to_an_already_seen_slot",
+        "--",
+        "--nocapture"
+      ],
+      "head": "380dccd20a6981626582dec870a530d20120e0c8",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit": 101,
+      "seconds": 27.695891901035793
+    },
+    "local_app_suite": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-app",
+        "--lib"
+      ],
+      "head": "380dccd20a6981626582dec870a530d20120e0c8",
+      "diff_sha256": "438a24dcc5f18a4d18b760e2ede71d509fb7cb3c26f3ccd3806c9ee1c465cb2e",
+      "exit": 0,
+      "seconds": 84.41540301998612
+    },
+    "app_results": {
+      "passed": 393,
+      "failed": 0,
+      "ignored": 38
+    },
+    "scope": "Test fixture only: use Growl for both prepared opponents; same public input, actual AI switches and seen/owned assertions. Production files unchanged from380dccd20a6981626582dec870a530d20120e0c8."
   }
 }

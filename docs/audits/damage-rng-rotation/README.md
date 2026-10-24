@@ -23,6 +23,11 @@ Original reference: pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`,
   Expected damage and draw counts come from the observed ROM results. Both
   tests fail on the parent and pass with the repair.
 - Full core: 3,741 passed, one existing ignored.
+- CI exposed an existing trainer-Pokédex fixture whose two AI switches depended
+  on the old damage draw sequence. Give its prepared opponents Growl so the
+  test still drives real AI switches through normal game input without damage
+  variance or a player KO. The original fixture also failed locally; after this
+  test-only adjustment, all 393 app library tests pass (38 existing ignored).
 - Fresh desktop NEW GAME through m06 and all 11 subsystem scenarios passed
   with unchanged source/binary identities.
 - Seven GBA benchmark cases and 13 memory cases passed with unchanged fixtures,
