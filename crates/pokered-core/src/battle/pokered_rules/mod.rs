@@ -2074,21 +2074,6 @@ fn pokered_damage(
         // vs the standalone oracle, which takes no rng).
         return HandlerResult::Unchanged;
     }
-    // Gen-1 damage spread: reject bytes below 217 so the multiplier lands in
-    // [217, 255] (~85%..100% of computed damage). The rejection is BOUNDED so a
-    // degenerate or exhausted rng (e.g. a scripted all-zero test stream) can
-    // never spin forever — a real rng terminates in ~6 tries, far below the cap,
-    // so the production draw count/stream is unchanged.
-    let damage_roll = {
-        // RandomizeDamage applies RRC A before testing every sampled byte.
-        let mut b = ctx.rng.next_u8().rotate_right(1);
-        let mut tries = 0;
-        while b < 217 && tries < 64 {
-            b = ctx.rng.next_u8().rotate_right(1);
-            tries += 1;
-        }
-        b.max(217)
-    };
     let is_crit = ctx.mv.is_critical;
     let physical = is_physical(pm.move_type);
 
@@ -2135,7 +2120,8 @@ fn pokered_damage(
         defender_type1: dtype1,
         defender_type2: dtype2,
         is_critical: is_crit,
-        random_value: damage_roll,
+        // Obtain typed damage before deciding whether RandomizeDamage draws.
+        random_value: 255,
         has_reflect_or_light_screen: has_screen,
         // Explosion / Self-Destruct halve the target's Defense (the self-KO is a
         // data op on the record).
@@ -2143,7 +2129,20 @@ fn pokered_damage(
         attacker_burned: a.status == Some(LegacyStatus::Burn)
             && crate::battle::badge_boosts::staged_stats(a).is_none(),
     };
-    let result = calculate_damage(&params);
+    let mut result = calculate_damage(&params);
+    // RandomizeDamage returns without calling BattleRandom for damage 0 or 1.
+    // This includes immunity and damage rounded down by type resistance.
+    if result.damage > 1 {
+        // Rotate every sample before rejection. Preserve the existing bounded
+        // fallback for degenerate or exhausted scripted RNG streams.
+        let mut roll = ctx.rng.next_u8().rotate_right(1);
+        let mut tries = 0;
+        while roll < 217 && tries < 64 {
+            roll = ctx.rng.next_u8().rotate_right(1);
+            tries += 1;
+        }
+        result.damage = ((result.damage as u32 * roll.max(217) as u32) / 255).max(1) as u16;
+    }
     PRESENTED_EFFECTIVENESS.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, displayed, result.is_miss)));
     ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
     if result.is_miss {
