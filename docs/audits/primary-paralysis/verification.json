@@ -1,0 +1,158 @@
+{
+  "base_source": "af6a12f8535864519a0dbc6f4ed9d2db73d97774",
+  "extracted_from": {
+    "pr": 107,
+    "commit": "dca9b2363dbb59626c32aa982b254eb42c3a2b7c"
+  },
+  "original_reference": {
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "file": "engine/battle/move_effects/paralyze.asm",
+    "sha256": "d5d19eb4c814bf04ad20d83fc9fc6937b9e9e6a575b5405c89b54620eabe3ea0"
+  },
+  "final_changed_file_sha256": {
+    "crates/pokered-core/src/battle/effects/status_effects.rs": "5d50575a3332ddc639dac3966e03ddfcce96f8e32785c6bc6f9e1861b5a2c91c",
+    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "d77459df61431e763d353e9c1eb460692aee690b44fdfe2fedfd019af9445fe9",
+    "crates/pokered-core/src/battle/pokered_rules/rules.ron": "563d0e162c784ac98b2c284e9baa0ee3b4621d980ddf72b41bfa3be1d6706e7a",
+    "crates/pokered-core/src/battle/pokered_rules/tests.rs": "8cfa39db475977b61aa0410d445e08a40e0653f9118257bedf1b6eabfd14f6ee"
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "primary_paralysis_follows_red_type_and_substitute_rules",
+      "--locked",
+      "--offline",
+      "--",
+      "--nocapture"
+    ],
+    "exit_code": 101,
+    "assertion": "ThunderWave vs Zapdos, substitute=false: None != Some(Paralysis)",
+    "production_source": "Unchanged master; added only the production-stack regression."
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-core",
+      "--locked",
+      "--offline"
+    ],
+    "passed": 3660,
+    "failed": 0,
+    "ignored": 1,
+    "seconds": 38.13,
+    "note": "Only the related rules.ron explanatory comment changed after this test; production rules and tests are unchanged."
+  },
+  "gba": {
+    "build_command": [
+      "cargo",
+      "+nightly-2025-12-07",
+      "build",
+      "--release",
+      "--features",
+      "perf-benchmark",
+      "--locked",
+      "--offline"
+    ],
+    "source_patch_sha256": "e85383eab6a1e64c721864be1a00909d6869374bfbe0bfa8b242e4957d96db15",
+    "elf_sha256": "edf2f8307cb530e5ed7638b72f4fd7bf077db416386a8a912a408a45aaeb6954",
+    "rom_sha256": "1cb5a5bfeeb79493645ed1cc9ed6bff04efeb7359655c87f482111a31e1da146",
+    "frames": 8280,
+    "seconds": 2.72306256799493,
+    "failures": [],
+    "metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 251,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1201,
+          "draw_max_ticks": 9842,
+          "present_per_frame_ticks": 352,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 601,
+          "update_avg_ticks": 172,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2858,
+          "draw_max_ticks": 9006,
+          "present_per_frame_ticks": 391,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 375,
+          "update_core_avg_ticks": 366,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 388,
+          "update_core_avg_ticks": 378,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 203,
+          "draw_max_ticks": 2796,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 771
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2630,
+          "draw_max_ticks": 8864,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 501,
+          "update_avg_ticks": 231,
+          "update_core_avg_ticks": 220,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2352,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 343,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 104,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 40,
+          "draw_max_ticks": 16321,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    }
+  }
+}
