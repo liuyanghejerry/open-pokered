@@ -1,0 +1,63 @@
+{
+  "reference": {
+    "revision": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source_sha256": "6e7650408de33069aae9521473f62a1078697f7b539a3978daa49a0e6df825d3",
+    "routines": [
+      "PoisonEffect",
+      "FreezeBurnParalyzeEffect",
+      "FlinchSideEffect",
+      "StatModifierDownEffect"
+    ]
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--lib",
+      "substitute_secondary_rng_tests",
+      "--",
+      "--nocapture"
+    ],
+    "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+    "exit_code": 101,
+    "seconds": 43.823141789995134,
+    "log_sha256": "92bb34c79ea89e22023c68913635a5b1fcf481318eba4252c2c9196c5c2799a7",
+    "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
+  },
+  "confirmed_extra_draw_cases": 24,
+  "core_full": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core"
+    ],
+    "head": "2337ee8b0d965b55343a93747c8cba823d1387b3",
+    "exit_code": 0,
+    "seconds": 73.02120750700124,
+    "passed": 3683,
+    "failed": 0,
+    "ignored": 1,
+    "log_sha256": "f80d662ffd1703fa703d5edaf462c88968fef1cf17b5738272d1b8b2d2d8ddb3",
+    "diff_sha256": "ef850d6b017ce309a69fa9311fc63784110d2b9c45d723df700ae1b8c2639e8f",
+    "test_source_sha256": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780"
+  },
+  "coverage": {
+    "intact_doll_cases": 24,
+    "broken_and_absent_control_cases": 24,
+    "confusion_exception_cases": 8
+  },
+  "interface": "prepared BattleScreen actual turn caller using real LinkRng; both sides",
+  "source_sha256": {
+    "crates/pokered-core/src/battle/substitute_secondary_rng_tests.rs": "83b2ba214ff20b98ce2ccb9e5d75392ff7ed545982d2c42c8cd1300299fc7780",
+    "crates/pokered-core/src/battle/pokered_rules/mod.rs": "0cc501457bb562452ff187a78b399f9cf58b019a302524b94e91e8fc00e8dd9d"
+  },
+  "gba": "not yet verified for this combined head; all CI required before merge",
+  "scope": "single-hit secondary Substitute early return only; Twineedle final rider, type/status/KO checks and Mist remain separate audits; pure logic screenshot exemption; no ordinary NEW GAME claim"
+}

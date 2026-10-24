@@ -8102,3 +8102,6 @@ mod run_rng_tests;
 
 #[cfg(test)]
 mod poison_secondary_tests;
+
+#[cfg(test)]
+mod substitute_secondary_rng_tests;
