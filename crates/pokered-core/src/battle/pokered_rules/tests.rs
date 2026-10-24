@@ -4229,31 +4229,20 @@ fn side_status_poison_type_immunity() {
     assert_eq!(st2.opponent_battlers[0].status, Some(LegacyStatus::Poison), "non-Poison ⇒ poisoned");
 }
 
-/// FREEZE side-status (Ice Beam, FreezeSideEffect1 26/256) FIRES: byte 0 < 26. A
-/// frozen mon can't act (P5), so we make the FIRST mover's Ice Beam FAINT the
-/// defender — the reply is cancelled on BOTH paths, isolating the freeze. Player
-/// (Charizard, fast) freezes a low-HP Charizard; the enemy faints + is frozen.
+/// core.asm returns on target KO before ordinary secondary effects. The old
+/// legacy oracle incorrectly froze the fainted defender; original behavior is
+/// the authority here, including the skipped chance byte.
 #[test]
-fn side_status_freeze_fires_defender_faints() {
-    let mut s = Scenario::base("Ice Beam freeze FIRES (defender faints)", MoveId::IceBeam);
+fn side_status_freeze_skips_fainted_defender() {
+    let mut s = Scenario::base("Ice Beam skips freeze after KO", MoveId::IceBeam);
     s.player = Mon::new(Species::Snorlax, 300, 100);
-    s.enemy = Mon::new(Species::Charizard, 10, 50); // Fire/Flying: Ice 2× ⇒ faints; low HP
-    s.first.side_effect = 0;  // freeze fires
+    s.enemy = Mon::new(Species::Charizard, 10, 50); // Low HP guarantees the KO.
+    s.first.side_effect = 0;  // Would freeze a surviving defender.
     s.second.side_effect = 0;
-    // Legacy + stack: player's Ice Beam faints the enemy, the reply is cancelled.
-    let legacy = p2_legacy(&s, P2Setup::none());
     let (stack, consumed) = p2_stack(&s, P2Setup::none());
     assert_eq!(stack.opponent_battlers[0].hp, 0, "enemy fainted");
-    assert_eq!(legacy.enemy.active_mon().hp, 0, "legacy enemy fainted too");
-    assert_eq!(
-        legacy.enemy.active_mon().status,
-        stack.opponent_battlers[0].status.unwrap_or(LegacyStatus::None),
-        "freeze parity on the fainted defender"
-    );
-    assert_eq!(stack.opponent_battlers[0].status, Some(LegacyStatus::Freeze), "the defender is FROZEN");
-    // Only the first mover's bytes are drawn (the reply is cancelled): crit, acc,
-    // damage, side_effect = 4.
-    assert_eq!(consumed, 4, "defender faints ⇒ only first mover's 4 bytes (incl. the freeze byte)");
+    assert_eq!(stack.opponent_battlers[0].status, None, "KO skips freeze");
+    assert_eq!(consumed, 3, "only crit, accuracy and damage are drawn");
 }
 
 /// PRIMARY status (Thunder Wave, ParalyzeEffect): guaranteed paralysis on a hit,

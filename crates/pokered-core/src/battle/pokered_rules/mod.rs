@@ -3116,12 +3116,12 @@ fn bridge_foe_stat_down(
     let Some(hook) = hook_for(source_effect, Event::DamagingHit) else {
         return HandlerResult::Unchanged;
     };
-    // A broken doll has already cleared the move effect before dispatch.
+    // A fainted target returns, or a broken doll clears the effect, before dispatch.
     // Otherwise StatModifierDownEffect checks the ordinary enemy's extra miss,
     // then Substitute, then the secondary chance. MoveMissed prints no failure
     // text for a secondary. Primary moves perform their prechecks in Accuracy.
     if let Some((num, den)) = hook.chance {
-        if substitute_broke_for(source) {
+        if ctx.battler(target).hp == 0 || substitute_broke_for(source) {
             return HandlerResult::Unchanged;
         }
         if ctx.battler(source).resources.current(RES_NPC_STAT_DOWN_MISS) == Some(1)
@@ -3246,6 +3246,10 @@ fn run_bridge(
     // before the draw; records without a chance gate need no random byte.
     if let Some((num, den)) = hook.chance {
         if event == Event::DamagingHit {
+            // Ordinary secondary effects run only if the defender survived.
+            if ctx.battler(target).hp == 0 {
+                return HandlerResult::Unchanged;
+            }
             // Poison/FreezeBurnParalyze/Flinch check the doll before BattleRandom.
             // Damaging confusion has no such guard and still rolls through it.
             let blocked_by_doll = hook.ops.iter().any(|op| matches!(op,

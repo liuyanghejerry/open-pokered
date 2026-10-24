@@ -8115,3 +8115,6 @@ mod npc_primary_stat_drop_tests;
 
 #[cfg(test)]
 mod npc_secondary_stat_drop_tests;
+
+#[cfg(test)]
+mod secondary_ko_tests;
