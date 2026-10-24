@@ -47,6 +47,8 @@ mod substitute_hp_tests;
 #[cfg(test)]
 mod substitute_side_effect_tests;
 #[cfg(test)]
+mod substitute_recharge_self_ko_tests;
+#[cfg(test)]
 mod item_fidelity_tests;
 #[cfg(test)]
 mod fight_notice_tests;
