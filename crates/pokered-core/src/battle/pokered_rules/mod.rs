@@ -2141,15 +2141,13 @@ fn pokered_damage(
     // RandomizeDamage returns without calling BattleRandom for damage 0 or 1.
     // This includes immunity and damage rounded down by type resistance.
     if result.damage > 1 {
-        // Rotate every sample before rejection. Preserve the existing bounded
-        // fallback for degenerate or exhausted scripted RNG streams.
+        // RandomizeDamage retries until a rotated byte is accepted. Real link
+        // streams can require more than 65 draws; do not clamp rejected bytes.
         let mut roll = ctx.rng.next_u8().rotate_right(1);
-        let mut tries = 0;
-        while roll < 217 && tries < 64 {
+        while roll < 217 {
             roll = ctx.rng.next_u8().rotate_right(1);
-            tries += 1;
         }
-        result.damage = ((result.damage as u32 * roll.max(217) as u32) / 255).max(1) as u16;
+        result.damage = ((result.damage as u32 * roll as u32) / 255).max(1) as u16;
     }
     PRESENTED_EFFECTIVENESS.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, displayed, result.is_miss)));
     ctx.mv.damage = if result.is_miss { 0 } else { result.damage };
