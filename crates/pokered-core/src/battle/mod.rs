@@ -1628,7 +1628,7 @@ impl BattleScreen {
     fn sync_display_from_state(&mut self) {
         if let Some(ref bs) = self.battle_state {
             let p = bs.player.active_mon();
-            self.player_species = p.species;
+            if !self.presentation.holds_species(true) { self.player_species = p.species; }
             if !self.presentation.holds_level_up() {
                 self.player_level = p.level;
                 self.player_max_hp = p.max_hp;
@@ -1645,7 +1645,7 @@ impl BattleScreen {
             self.player_pokeball_status = derive_pokeball_status(&bs.player.party);
 
             let e = bs.enemy.active_mon();
-            self.enemy_species = e.species;
+            if !self.presentation.holds_species(false) { self.enemy_species = e.species; }
             self.enemy_level = e.level;
             if !self.presentation.holds_hp() { self.hp_bar_anim.set_target(
                 BattleSide::Enemy,

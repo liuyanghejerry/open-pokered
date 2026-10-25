@@ -1,0 +1,347 @@
+{
+  "scope": "Original source-level comparison; 20 core and 22 app prepared public-FIGHT/menu-switch turns, two snapshot tests, plus 5 renderer turns with 17 captures per version. No full original turn or original renderer timing claim.",
+  "red": {
+    "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+    "source_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "ebcac56411a65b5d6e9431b3136a32eaa0773518248e63394c529deea6e95ec9"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "b150bfd55305d3cce8d1ef5ad0521f4726c0b0f341fd46864eb653ccb9f9baea"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "93fcfb38eb309918f04e3cbeed76e929930ef4172f314ef956d0916c7a6dbec2"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "seconds": 0.014589909929782152,
+    "log_sha256": "2b0832cd643764565b48ce91dba56b78fc4e1664def6668ee486af2cdea606b7",
+    "exe_sha256": "0b735e4541c93c7e9b1f636e794d2ba67dbb87182e843e3a91875d934a2877bf",
+    "deleted_exe_bytes": 14833040,
+    "scope": "20 prepared public FIGHT/drained turns, enabled16 + disabled4; before/result identity, unchanged HP/RNG."
+  },
+  "counts": {
+    "core": [
+      3784,
+      0,
+      1
+    ],
+    "app-test": [
+      396,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "da277d728145b05c7141eff8563fc9f796dae4e3",
+    "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7",
+    "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+    "exit": 0,
+    "seconds": 56.4538719050006
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "da277d728145b05c7141eff8563fc9f796dae4e3",
+    "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7",
+    "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+    "exit": 0,
+    "seconds": 77.29694815899984
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T13:58:39.951342+00:00",
+    "source": {
+      "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+      "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+      "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 77.40962365300038,
+        "log": "audit-1339-transform-sprites-app-test-driver.log",
+        "log_sha256": "9f55bfadc1ed419cffaaa7acc1b2fbe326be4f99df6d6583f6e415bf8fdd2810"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 61.69330108400027,
+        "log": "audit-1339-transform-sprites-gba-build-driver.log",
+        "log_sha256": "0d9b9a53c11876f69b8e509343eb8a178a5d63af2f6e8b7b27695bbba328f755"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.350205378999817,
+        "log": "audit-1339-transform-sprites-gba-perf-driver.log",
+        "log_sha256": "10b9fda2ab24f9dd1fc52cda77e7bb727498ab66ac3d504946d6ba3d26352897"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 63.03641829499975,
+        "log": "audit-1339-transform-sprites-memory-build-driver.log",
+        "log_sha256": "6333278708b365a760e362f3cb59ad26394a930b41e7c7e0184fc1d9a22c7834"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 165.92354626499946,
+        "log": "audit-1339-transform-sprites-memory-run-driver.log",
+        "log_sha256": "a87a2f276f50f127d0695ac824fc58bbfadd6e24403e000653f26695963119c3"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1339-transform-sprites-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 24.783778440999413,
+        "log": "audit-1339-transform-sprites-native-build-driver.log",
+        "log_sha256": "4c9fec0d91fcb829fd505cd47babdc95cc722db48472620240d5e329ba504473"
+      }
+    ],
+    "finished": "2026-10-25T14:05:16.314132+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+      "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+      "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7",
+      "binary_sha256": "35a5093533f5924c6535ad72edd7365fb0fbc5ed8b2a31b01319c37651651da0"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1339-transform-sprites",
+    "status": "passed",
+    "seconds": 41.25795347999974,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+      "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+      "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7",
+      "binary_sha256": "35a5093533f5924c6535ad72edd7365fb0fbc5ed8b2a31b01319c37651651da0"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1339-transform-sprites",
+    "status": "passed",
+    "seconds": 142.55370608900012,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "52f05851fd35ae9a452fcd7ef850de837384a959acde561ff74d9d4ee13d280e",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+    "seconds": 165.596466555,
+    "frames": 323040,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+    "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "f0026ab4fcce56476ee2117302082db493895153af97b87701b14b0262157ab6",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "9f3975aa76ffa5cb58b4ceb404ca79e8e42f2bb72408039bdbf9c0791b49d783",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.8370672559995,
+    "failures": [],
+    "metrics": "audit-1339-transform-sprites-gba-perf-metrics.json",
+    "log": "audit-1339-transform-sprites-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "d5f51c1779fc53a9d86a039f5a816c9ccdc8c89db5119c5d16dcf9a5d08a10f2",
+    "inputs_identical": true,
+    "capture_frames_identical": true,
+    "scope": "Four prepared public FIGHT turns, both sides/orders, plus one public party-menu switch/free turn. Actual BattleVisualEffects/draw_battle; no full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1339-transform-sprites-visual.rs",
+    "source_sha256": "b9eaa8826dd62117c3d36f333e3529b8a90acd6c0a9598735a08c98e27718df6",
+    "before": {
+      "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+      "tree": "c2e63d84066ae09675aa53a49048c14cc55fd0a4",
+      "source": "audit-1339-transform-sprites-visual.rs",
+      "source_sha256": "b9eaa8826dd62117c3d36f333e3529b8a90acd6c0a9598735a08c98e27718df6",
+      "exe_sha256": "cf4db931c9354ed1d55a5cec9ac71e0c5e1d81966566fa4b2f63f640a9c857d2",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "ebcac56411a65b5d6e9431b3136a32eaa0773518248e63394c529deea6e95ec9"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "b150bfd55305d3cce8d1ef5ad0521f4726c0b0f341fd46864eb653ccb9f9baea"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "93fcfb38eb309918f04e3cbeed76e929930ef4172f314ef956d0916c7a6dbec2"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "enemy=false first=false label=initial frame=0 turns=0 display=Mewtwo/Snorlax state=Mewtwo/Snorlax active=0 draws=0 message=None phase=MoveSelect\nenemy=false first=false label=early frame=3 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"Enemy TANK used SPLASH!\", \"No effect!\", \"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=false label=result frame=331 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"Enemy TANK used SPLASH!\", \"No effect!\", \"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=false label=first-menu frame=336 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=false first=true label=initial frame=0 turns=0 display=Mewtwo/Snorlax state=Mewtwo/Snorlax active=0 draws=0 message=None phase=MoveSelect\nenemy=false first=true label=early frame=3 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY used TRANSFORM!\") phase=ShowingText { messages: [\"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=true label=result frame=187 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=true label=first-menu frame=336 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=true first=false label=initial frame=0 turns=0 display=Snorlax/Mewtwo state=Snorlax/Mewtwo active=0 draws=0 message=None phase=MoveSelect\nenemy=true first=false label=early frame=3 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"TANK used SPLASH!\") phase=ShowingText { messages: [\"TANK used SPLASH!\", \"No effect!\", \"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=false label=result frame=347 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"TANK used SPLASH!\", \"No effect!\", \"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=false label=first-menu frame=352 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=true first=false label=after-switch frame=544 turns=2 display=Tangela/Snorlax state=Tangela/Snorlax active=1 draws=0 message=None phase=PlayerMenu\nenemy=true first=true label=initial frame=0 turns=0 display=Snorlax/Mewtwo state=Snorlax/Mewtwo active=0 draws=0 message=None phase=MoveSelect\nenemy=true first=true label=early frame=3 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY used TRANSFORM!\") phase=ShowingText { messages: [\"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\", \"TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=true label=result frame=203 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\", \"TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=true label=first-menu frame=352 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\n",
+      "images": {
+        "enemy-false-first-false-early.png": "6cd1a906af98e0e1e5de2f00c59db7948f3835514152bad31487f3e6dd9e0143",
+        "enemy-false-first-false-first-menu.png": "fd4fa4fdcc5ad0de7430c43a56fc8b6bab1d34324f3f1e894c1cbf986ebbc252",
+        "enemy-false-first-false-initial.png": "70ef16f0b42c973797337ca7cb96d6f272046674d8dd1d762d5e7ec8efe9acb7",
+        "enemy-false-first-false-result.png": "a08abfc3f4569b6467b342d64fbb2da81c8f2025a63cea351af6c6bba1276606",
+        "enemy-false-first-true-early.png": "20f7da29f401ce2dca9d1973f95b25bfce83cab53e5470f8e55a450c8a0a12e5",
+        "enemy-false-first-true-first-menu.png": "fd4fa4fdcc5ad0de7430c43a56fc8b6bab1d34324f3f1e894c1cbf986ebbc252",
+        "enemy-false-first-true-initial.png": "70ef16f0b42c973797337ca7cb96d6f272046674d8dd1d762d5e7ec8efe9acb7",
+        "enemy-false-first-true-result.png": "2eed66b03e45bff7d04e0aba945d37c840425f37d968560afec9782e574edcd2",
+        "enemy-true-first-false-after-switch.png": "63d5a4722cc6ce56a55ab45969e1b1af41f96978501dcf9356da5989d4c7eae2",
+        "enemy-true-first-false-early.png": "85d9d0a6212a9675bedf26fb006d34becfc5499bce0420aa333d4073bd5249d0",
+        "enemy-true-first-false-first-menu.png": "b9cf9cb187e0092dc21cd5902f1ca7c9a833d770fb12ac81d27c65fc48d82c5e",
+        "enemy-true-first-false-initial.png": "acbae6df529e77518f320dda76e917ad9f0de16d1cdad98b38d51eaf8e086352",
+        "enemy-true-first-false-result.png": "77a691bc7a54d17ea92c32ecdcee73371ebedd8d4350bae6644f6d444105e302",
+        "enemy-true-first-true-early.png": "f52ab4539176201f1167f3b5f7be65ec3379acaf60afad19f2b6fae65b94903d",
+        "enemy-true-first-true-first-menu.png": "b9cf9cb187e0092dc21cd5902f1ca7c9a833d770fb12ac81d27c65fc48d82c5e",
+        "enemy-true-first-true-initial.png": "acbae6df529e77518f320dda76e917ad9f0de16d1cdad98b38d51eaf8e086352",
+        "enemy-true-first-true-result.png": "b8fbac8c940e9ca9a1554042369ace65bb71c88945c6fd558f07ca94fd2d41d5"
+      }
+    },
+    "after": {
+      "source_identity": {
+        "head": "da277d728145b05c7141eff8563fc9f796dae4e3",
+        "diff_sha256": "5009ba4ddbf73bcf522c81c5dd3510e0524dd8feefbf10eddc9b6af3fef0e259",
+        "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "2e9b4889f625c9f076eae152dbbd6608e63db0c4d43618533d2e8421480fe857"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "1ca4b2114646096b91ee8d6822c140cc878f4e04be2a07ff41fd6c3041ac43c8"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "e49fc9fbbead5110d74b6f225e7bc98bb6f6fbd8de00c0e3625087b48e5daa0f"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "efb3f531ce146050ccdbbb74579480cc6cb8ab68cee1071e7d1ca6ac3c51c40b",
+      "output": "enemy=false first=false label=initial frame=0 turns=0 display=Mewtwo/Snorlax state=Mewtwo/Snorlax active=0 draws=0 message=None phase=MoveSelect\nenemy=false first=false label=early frame=3 turns=0 display=Mewtwo/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"Enemy TANK used SPLASH!\", \"No effect!\", \"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=false label=result frame=331 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"Enemy TANK used SPLASH!\", \"No effect!\", \"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=false label=first-menu frame=336 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=false first=true label=initial frame=0 turns=0 display=Mewtwo/Snorlax state=Mewtwo/Snorlax active=0 draws=0 message=None phase=MoveSelect\nenemy=false first=true label=early frame=3 turns=0 display=Mewtwo/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY used TRANSFORM!\") phase=ShowingText { messages: [\"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=true label=result frame=187 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"COPY used TRANSFORM!\", \"COPY transformed into\\nSNORLAX!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=false first=true label=first-menu frame=336 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=true first=false label=initial frame=0 turns=0 display=Snorlax/Mewtwo state=Snorlax/Mewtwo active=0 draws=0 message=None phase=MoveSelect\nenemy=true first=false label=early frame=3 turns=0 display=Snorlax/Mewtwo state=Snorlax/Snorlax active=0 draws=0 message=Some(\"TANK used SPLASH!\") phase=ShowingText { messages: [\"TANK used SPLASH!\", \"No effect!\", \"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=false label=result frame=347 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"TANK used SPLASH!\", \"No effect!\", \"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=false label=first-menu frame=352 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\nenemy=true first=false label=after-switch frame=544 turns=2 display=Tangela/Snorlax state=Tangela/Snorlax active=1 draws=0 message=None phase=PlayerMenu\nenemy=true first=true label=initial frame=0 turns=0 display=Snorlax/Mewtwo state=Snorlax/Mewtwo active=0 draws=0 message=None phase=MoveSelect\nenemy=true first=true label=early frame=3 turns=0 display=Snorlax/Mewtwo state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY used TRANSFORM!\") phase=ShowingText { messages: [\"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\", \"TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=true label=result frame=203 turns=0 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=Some(\"Enemy COPY transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"Enemy COPY used TRANSFORM!\", \"Enemy COPY transformed into\\nSNORLAX!\", \"TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nenemy=true first=true label=first-menu frame=352 turns=1 display=Snorlax/Snorlax state=Snorlax/Snorlax active=0 draws=0 message=None phase=PlayerMenu\n",
+      "images": {
+        "enemy-false-first-false-early.png": "d5052593d8a32f539c53e47e434a879c62a4468000dc696ee95a8b98d0879c87",
+        "enemy-false-first-false-first-menu.png": "fd4fa4fdcc5ad0de7430c43a56fc8b6bab1d34324f3f1e894c1cbf986ebbc252",
+        "enemy-false-first-false-initial.png": "70ef16f0b42c973797337ca7cb96d6f272046674d8dd1d762d5e7ec8efe9acb7",
+        "enemy-false-first-false-result.png": "a08abfc3f4569b6467b342d64fbb2da81c8f2025a63cea351af6c6bba1276606",
+        "enemy-false-first-true-early.png": "a8ce0e4daf39bcaad480f1d4cc49166f4b17f19a77b48ccfae59f9e171434aac",
+        "enemy-false-first-true-first-menu.png": "fd4fa4fdcc5ad0de7430c43a56fc8b6bab1d34324f3f1e894c1cbf986ebbc252",
+        "enemy-false-first-true-initial.png": "70ef16f0b42c973797337ca7cb96d6f272046674d8dd1d762d5e7ec8efe9acb7",
+        "enemy-false-first-true-result.png": "2eed66b03e45bff7d04e0aba945d37c840425f37d968560afec9782e574edcd2",
+        "enemy-true-first-false-after-switch.png": "4980af798e13ebae545e5a958a7c808564c3258e1e9e7f57763107cc10e1a8c0",
+        "enemy-true-first-false-early.png": "41179da2187ced6f7f2b00fc1ae1d8096cba5e5dd221cb6fe6462f84ede0a78f",
+        "enemy-true-first-false-first-menu.png": "b9cf9cb187e0092dc21cd5902f1ca7c9a833d770fb12ac81d27c65fc48d82c5e",
+        "enemy-true-first-false-initial.png": "acbae6df529e77518f320dda76e917ad9f0de16d1cdad98b38d51eaf8e086352",
+        "enemy-true-first-false-result.png": "77a691bc7a54d17ea92c32ecdcee73371ebedd8d4350bae6644f6d444105e302",
+        "enemy-true-first-true-early.png": "3bf86217f1f17d5470675afabda88820719a3c75b17a2f4fe2fec6b2ad167f94",
+        "enemy-true-first-true-first-menu.png": "b9cf9cb187e0092dc21cd5902f1ca7c9a833d770fb12ac81d27c65fc48d82c5e",
+        "enemy-true-first-true-initial.png": "acbae6df529e77518f320dda76e917ad9f0de16d1cdad98b38d51eaf8e086352",
+        "enemy-true-first-true-result.png": "b8fbac8c940e9ca9a1554042369ace65bb71c88945c6fd558f07ca94fd2d41d5"
+      }
+    },
+    "deleted_exe_bytes": 36469800
+  },
+  "visual_inspection": {
+    "utc": "2026-10-25T14:08:23.470144+00:00",
+    "all_selected_pairs_inspected": true,
+    "inspected": {
+      "before/enemy-false-first-false-early.png": "6cd1a906af98e0e1e5de2f00c59db7948f3835514152bad31487f3e6dd9e0143",
+      "after/enemy-false-first-false-early.png": "d5052593d8a32f539c53e47e434a879c62a4468000dc696ee95a8b98d0879c87",
+      "before/enemy-true-first-false-early.png": "85d9d0a6212a9675bedf26fb006d34becfc5499bce0420aa333d4073bd5249d0",
+      "after/enemy-true-first-false-early.png": "41179da2187ced6f7f2b00fc1ae1d8096cba5e5dd221cb6fe6462f84ede0a78f",
+      "before/enemy-true-first-false-after-switch.png": "63d5a4722cc6ce56a55ab45969e1b1af41f96978501dcf9356da5989d4c7eae2",
+      "after/enemy-true-first-false-after-switch.png": "4980af798e13ebae545e5a958a7c808564c3258e1e9e7f57763107cc10e1a8c0"
+    },
+    "observations": [
+      "Player Mewtwo remains Mewtwo during faster enemy Splash atframe3.",
+      "Enemy Mewtwo remains Mewtwo during faster player Splash atframe3.",
+      "After public player switch toTangela atframe544, enemy picture remains copiedSnorlax."
+    ],
+    "scope": "Six selected captures inspected. Other identical final/initial images verified by hashes, not separately claimed visually inspected."
+  },
+  "test_sha256": "fa6e0b7246c35e10e4d18dca8ca2a280a869169e9369748fb8f1733de25e8cb7"
+}
