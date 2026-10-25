@@ -1,0 +1,412 @@
+{
+  "scope": "Two original prepared healthy Rest calls through sleep PrintText to animation entry without input; 20 integration turns and18snapshot setups; four fixed-input actual-renderer sequences with six captures each. No full original turn or cross-runtime frame timing claim.",
+  "original": {
+    "status": "passed",
+    "scope": "Two prepared original healthy Rest calls through PrintText to animation entry, no input. No complete turn, actual image or cross-runtime frame timing claim.",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "source_sha256": "0972ba763fcc1a487a39e826b2d828e48504bc6d771cfb3982aebaf6f7cce288",
+    "pyboy": "2.8.1",
+    "cases": [
+      {
+        "side": 0,
+        "sleep_text_frames": [
+          50
+        ],
+        "animation_entry": {
+          "frame": 71,
+          "hp": 630,
+          "status": 2,
+          "scroll_calls_before_animation": 0
+        },
+        "input_events": []
+      },
+      {
+        "side": 1,
+        "sleep_text_frames": [
+          50
+        ],
+        "animation_entry": {
+          "frame": 77,
+          "hp": 630,
+          "status": 2,
+          "scroll_calls_before_animation": 0
+        },
+        "input_events": []
+      }
+    ]
+  },
+  "red": {
+    "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+    "source_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "75c989a942599186c3ea0d8210da3bb848e5e73d0343252ea06642fe016a3ec1"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "462909f5fbddfa42b1402105cc9c91ec41135156ee7216c3a1c2e533b293c6ff"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "f2dccbd2f0882071ed90d70ba6b7ec488053aa08a5fe2e413c7674717b3b96f3"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "exe_sha256": "e9b4588546be9b16771d8303d6f173df9107affd1b5f0879a76e357eddeb2a78",
+    "log_sha256": "9b0f56f01a76820e076daaa893b426e05fcb236bf103cba5e3a4ea4dc975a367",
+    "deleted_exe_bytes": 14845168
+  },
+  "counts": {
+    "core": [
+      3794,
+      0,
+      1
+    ],
+    "app-test": [
+      396,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+    "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+    "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+    "exit": 0,
+    "seconds": 34.351944953000384
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+    "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+    "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+    "exit": 0,
+    "seconds": 73.79776296
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T14:53:23.394459+00:00",
+    "source": {
+      "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+      "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+      "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 73.8472238889999,
+        "log": "audit-1341-rest-done-app-test-driver.log",
+        "log_sha256": "07ede3baf32e61ca95f2bd0f227549f0d15e7658bab351fea13add528b4d626b"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 68.77039546099968,
+        "log": "audit-1341-rest-done-gba-build-driver.log",
+        "log_sha256": "a4491d206cbacf24060828cf6257890c261062fe0ce0e16eb251455f7e4e39b9"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.1617975620001744,
+        "log": "audit-1341-rest-done-gba-perf-driver.log",
+        "log_sha256": "6851b576fc97b3caa475818af9c077b6c0565f279a7a85a5dd80152ea640e222"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 61.82175183199979,
+        "log": "audit-1341-rest-done-memory-build-driver.log",
+        "log_sha256": "0efef03b7950b0f082da56fc8a997bf8e65c910a0971908fd76f78e9a0ada0d6"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 185.71986575899973,
+        "log": "audit-1341-rest-done-memory-run-driver.log",
+        "log_sha256": "5c11a062d617f4defddb28ac14d259e1a019c28e9bbec43c552ece6127cf998c"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1341-rest-done-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 32.948001280000426,
+        "log": "audit-1341-rest-done-native-build-driver.log",
+        "log_sha256": "e1b59c9472382c4d71260eb1941843d3d2925fcfce7d2f8d9ebcbe2b0a7a3f06"
+      }
+    ],
+    "finished": "2026-10-25T15:00:29.759574+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+      "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+      "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+      "binary_sha256": "e6e189e7f0647a04e65d8c9c1b1dfc6c33d39dc28e4fb822ad324ebe51f67ae7"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1341-rest-done",
+    "status": "passed",
+    "seconds": 41.672618422000596,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+      "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+      "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+      "binary_sha256": "e6e189e7f0647a04e65d8c9c1b1dfc6c33d39dc28e4fb822ad324ebe51f67ae7"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1341-rest-done",
+    "status": "passed",
+    "seconds": 141.1271299150003,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "17fce7bacd43f0b64d5c29e56eceb309be541cabd9a9d0822aab06058cb16ecb",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+    "seconds": 185.41313675400033,
+    "frames": 323040,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+    "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "02ba4bce7cff4aa23d68f25deac89436fa4c120bc7e63106e126a2f6515a1c37",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "d47c733b9f8bfdd40a72238c0bf8b2d1e73e0fe71521c33af492dd7c4c1cdb34",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.738597196000228,
+    "failures": [],
+    "metrics": "audit-1341-rest-done-gba-perf-metrics.json",
+    "log": "audit-1341-rest-done-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "032e79c8deba3cdb8cf4932c41d83b7fe5645f5c9d9628b6a44ee27dab760525",
+    "inputs_identical": true,
+    "capture_frames_identical": true,
+    "scope": "Four prepared public FIGHT sequences: Recover success/failure and healthy/poisoned Rest. Fixed four button presses and 481 frames per case. Actual BattleVisualEffects/draw_battle; no full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1341-rest-done-visual.rs",
+    "source_sha256": "4534bc0aadac816ed41dc7ef066c87357f2f64d893bc269a502658efb1602342",
+    "before": {
+      "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+      "tree": "17b5644a962f45ebbdc08f1ccb4374341b975561",
+      "source": "audit-1341-rest-done-visual.rs",
+      "source_sha256": "4534bc0aadac816ed41dc7ef066c87357f2f64d893bc269a502658efb1602342",
+      "exe_sha256": "3bf108e04383e8e07f66c09659b718161db8daf21f7dfe1f5ff112ac3a67e551",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "75c989a942599186c3ea0d8210da3bb848e5e73d0343252ea06642fe016a3ec1"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "462909f5fbddfa42b1402105cc9c91ec41135156ee7216c3a1c2e533b293c6ff"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "f2dccbd2f0882071ed90d70ba6b7ec488053aa08a5fe2e413c7674717b3b96f3"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "label=recover frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=recover frame=2 capture=false hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=80 capture=true hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=160 capture=true hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=235 capture=false hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=240 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=320 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=480 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=0 capture=true hp=630 move=None message=None phase=MoveSelect\nlabel=failed frame=2 capture=false hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=80 capture=true hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=160 capture=true hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=235 capture=false hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=240 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=320 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=480 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=rest-healthy frame=2 capture=false hp=600 move=None message=Some(\"WARD used REST!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=27 capture=false hp=600 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=80 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=160 capture=true hp=630 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=235 capture=false hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=240 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=320 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=480 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=rest-poisoned frame=2 capture=false hp=600 move=None message=Some(\"WARD used REST!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=27 capture=false hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=80 capture=true hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=160 capture=true hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=235 capture=false hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=240 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=320 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=480 capture=true hp=630 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "images": {
+        "failed-0.png": "c551e617df67d2472e44e906cfa50da2b91e6bdf7ae6d4387178c04017ca5d09",
+        "failed-160.png": "8519706a3c5fc16c778a39c104b97f0834185b3aff6021a7143f2a6847ee6658",
+        "failed-240.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-320.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-480.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-80.png": "8519706a3c5fc16c778a39c104b97f0834185b3aff6021a7143f2a6847ee6658",
+        "recover-0.png": "b98d9c6368a5ae6eb463924625ff095bfb4e194e76b3b8329df066a31beceb6a",
+        "recover-160.png": "a7f9d802d493515bf9c8d22dce7139032dda0683a20cff049333fbcc87018e78",
+        "recover-240.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-320.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-480.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-80.png": "39770b1e7b74fbc66bffbf72666552d676424d9d1fd14b404bf0e7296433e238",
+        "rest-healthy-0.png": "fdf21897cda1bc352820df6299634b2f5624565f727a801efe05dc889508855e",
+        "rest-healthy-160.png": "903569a3089840fc49792ef77a01130d22bf97d553f18582ef326326b38ca9cc",
+        "rest-healthy-240.png": "42f5785db17a3b9b2ca6ba5ae2bfccd1adf418ee0036486336f3d3ab4746788a",
+        "rest-healthy-320.png": "42f5785db17a3b9b2ca6ba5ae2bfccd1adf418ee0036486336f3d3ab4746788a",
+        "rest-healthy-480.png": "42f5785db17a3b9b2ca6ba5ae2bfccd1adf418ee0036486336f3d3ab4746788a",
+        "rest-healthy-80.png": "bc42bf9c97c8321bda8fb30da0d21685b43eab7a1599a65c5c118bdf91e4b528",
+        "rest-poisoned-0.png": "773f3394c342ee8f184c399544a383c0ec19cbf42e0ebb9af105d684ea4fbb08",
+        "rest-poisoned-160.png": "c2918b12b2853c7b6ad7197c896079c5c1a05ce05dba2a88ebb74e5c21c69fc5",
+        "rest-poisoned-240.png": "b7d3c52af9e90cdae3667e3d8163a2757d4032f5e72e752eae0df22b506c7da1",
+        "rest-poisoned-320.png": "b02b718f157de23874cceecce37822027cb5a8c7308992dc2aa65e245aca41c6",
+        "rest-poisoned-480.png": "00080c5227c4bf83389d6ed22775d4e49756010064851b3ac8bbaf73f0aff239",
+        "rest-poisoned-80.png": "c2918b12b2853c7b6ad7197c896079c5c1a05ce05dba2a88ebb74e5c21c69fc5"
+      }
+    },
+    "after": {
+      "source_identity": {
+        "head": "f7c03eb209a2ba0de8bf4080d6a2a7280fa67319",
+        "diff_sha256": "cc2ad187a16b2e0373b8afd93e3fab0e9f2e0ca52895069a44a3a8868f519b34",
+        "test_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "016c5af252a9c0a9dcb3239004843204bc3c2f030b84c809d7ac9360aaa20493"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "fb90a872b63c18636193fdc53d213fe90deb1004816654639b5c3877c3823cdd"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "527b80053d272c93442758b44443fbbe4dc3ec8255052e333ed7737ea758f563"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "72c283fe811da127ec5b9369094af2bcae4ca043eddfe22e41b096118d432cd4",
+      "output": "label=recover frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=recover frame=2 capture=false hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=80 capture=true hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=160 capture=true hp=600 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=235 capture=false hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=240 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=320 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=recover frame=480 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=0 capture=true hp=630 move=None message=None phase=MoveSelect\nlabel=failed frame=2 capture=false hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=80 capture=true hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=160 capture=true hp=630 move=Some((1, Recover, true)) message=Some(\"WARD used RECOVER!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=235 capture=false hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=240 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=320 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=failed frame=480 capture=true hp=630 move=None message=Some(\"But, it failed!\") phase=ShowingText { messages: [\"WARD used RECOVER!\", \"But, it failed!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=rest-healthy frame=2 capture=false hp=600 move=None message=Some(\"WARD used REST!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=27 capture=false hp=600 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=80 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=160 capture=true hp=630 move=Some((1, Rest, true)) message=Some(\"WARD\\nstarted sleeping!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 5, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=166 capture=false hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=235 capture=false hp=630 move=Some((2, Splash, false)) message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=240 capture=true hp=630 move=Some((2, Splash, false)) message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=320 capture=true hp=630 move=Some((2, Splash, false)) message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-healthy frame=480 capture=true hp=630 move=Some((2, Splash, false)) message=Some(\"Enemy TANK used SPLASH!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nstarted sleeping!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=0 capture=true hp=600 move=None message=None phase=MoveSelect\nlabel=rest-poisoned frame=2 capture=false hp=600 move=None message=Some(\"WARD used REST!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=27 capture=false hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=80 capture=true hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=160 capture=true hp=600 move=None message=Some(\"WARD\\nfell asleep and\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=235 capture=false hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=240 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=320 capture=true hp=600 move=Some((1, Rest, true)) message=Some(\"became healthy!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=374 capture=false hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\nlabel=rest-poisoned frame=480 capture=true hp=630 move=None message=Some(\"WARD\\nregained health!\") phase=ShowingText { messages: [\"WARD used REST!\", \"WARD\\nfell asleep and\", \"became healthy!\", \"WARD\\nregained health!\", \"Enemy TANK used SPLASH!\", \"No effect!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "images": {
+        "failed-0.png": "c551e617df67d2472e44e906cfa50da2b91e6bdf7ae6d4387178c04017ca5d09",
+        "failed-160.png": "8519706a3c5fc16c778a39c104b97f0834185b3aff6021a7143f2a6847ee6658",
+        "failed-240.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-320.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-480.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+        "failed-80.png": "8519706a3c5fc16c778a39c104b97f0834185b3aff6021a7143f2a6847ee6658",
+        "recover-0.png": "b98d9c6368a5ae6eb463924625ff095bfb4e194e76b3b8329df066a31beceb6a",
+        "recover-160.png": "a7f9d802d493515bf9c8d22dce7139032dda0683a20cff049333fbcc87018e78",
+        "recover-240.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-320.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-480.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+        "recover-80.png": "39770b1e7b74fbc66bffbf72666552d676424d9d1fd14b404bf0e7296433e238",
+        "rest-healthy-0.png": "fdf21897cda1bc352820df6299634b2f5624565f727a801efe05dc889508855e",
+        "rest-healthy-160.png": "156fa90c64a33853460f12ae4e4050093007eb520b12e7d2d7abd76864045d54",
+        "rest-healthy-240.png": "42c552c2956781406c94e267c980c88268740c1dbe5aaafd4f5fd7816ea7534f",
+        "rest-healthy-320.png": "17e7c9e765e0c6de15fc2be554765a10bc7181686ec462171fe40813e8043259",
+        "rest-healthy-480.png": "286f8ac166d8c77209463fa05fcbf61c9470a51fbe7bdae895eeac1e65406e24",
+        "rest-healthy-80.png": "bc42bf9c97c8321bda8fb30da0d21685b43eab7a1599a65c5c118bdf91e4b528",
+        "rest-poisoned-0.png": "773f3394c342ee8f184c399544a383c0ec19cbf42e0ebb9af105d684ea4fbb08",
+        "rest-poisoned-160.png": "c2918b12b2853c7b6ad7197c896079c5c1a05ce05dba2a88ebb74e5c21c69fc5",
+        "rest-poisoned-240.png": "b7d3c52af9e90cdae3667e3d8163a2757d4032f5e72e752eae0df22b506c7da1",
+        "rest-poisoned-320.png": "b02b718f157de23874cceecce37822027cb5a8c7308992dc2aa65e245aca41c6",
+        "rest-poisoned-480.png": "42f5785db17a3b9b2ca6ba5ae2bfccd1adf418ee0036486336f3d3ab4746788a",
+        "rest-poisoned-80.png": "c2918b12b2853c7b6ad7197c896079c5c1a05ce05dba2a88ebb74e5c21c69fc5"
+      }
+    },
+    "deleted_exe_bytes": 36506168
+  },
+  "visual_inspection": {
+    "utc": "2026-10-25T15:12:17.332361+00:00",
+    "selections": {
+      "recover": "recover-240.png",
+      "failed": "failed-240.png",
+      "rest-healthy": "rest-healthy-160.png",
+      "rest-poisoned": "rest-poisoned-480.png"
+    },
+    "all_selected_pairs_inspected": true,
+    "scope": "Eight selected actual-renderer images visually inspected; not all 48 captures. Same four inputs and capture frames in both builds.",
+    "observations": [
+      "Recover success and failure controls at frame 240 are byte-identical.",
+      "Healthy Rest at frame 160 keeps the sleeping text while the animation concludes; the obsolete acknowledgement arrow disappears.",
+      "Poisoned Rest at frame 480 proceeds to regained health without another press, while the parent remains at became healthy."
+    ],
+    "inspected": {
+      "before/recover-240.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+      "after/recover-240.png": "7a4fc97d9d0cd4e05c8e5cbbf357895db4fe8babd7d5c38f9413f4f279a021e2",
+      "before/failed-240.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+      "after/failed-240.png": "b9f4cac86479df5091c6c31156a09c854449a5618ff76d38417fca38f42138d3",
+      "before/rest-healthy-160.png": "903569a3089840fc49792ef77a01130d22bf97d553f18582ef326326b38ca9cc",
+      "after/rest-healthy-160.png": "156fa90c64a33853460f12ae4e4050093007eb520b12e7d2d7abd76864045d54",
+      "before/rest-poisoned-480.png": "00080c5227c4bf83389d6ed22775d4e49756010064851b3ac8bbaf73f0aff239",
+      "after/rest-poisoned-480.png": "42f5785db17a3b9b2ca6ba5ae2bfccd1adf418ee0036486336f3d3ab4746788a"
+    }
+  },
+  "test_sha256": "f67cf000b85aad542803fc7549186b381a88605a1042cf95d338e832505efbdb",
+  "test_whitespace_adjustment": {
+    "path": "crates/pokered-core/tests/fidelity_rest_text_continuation.rs",
+    "before_sha256": "07bb5786148a86c72d1366b904754468750ca7a9c8b4562a092767722dcda665",
+    "after_sha256": "f67cf000b85aad542803fc7549186b381a88605a1042cf95d338e832505efbdb",
+    "change": "Removed exactly one extra newline at EOF after staged whitespace check; all Rust source tokens unchanged.",
+    "tests_rerun": false,
+    "reason": "Test formatting only; production source and validated binary unchanged."
+  }
+}

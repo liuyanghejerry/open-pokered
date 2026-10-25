@@ -29,6 +29,16 @@ pub struct TextPagePublication {
     level_ups: Vec<Option<LevelUpDisplay>>,
     #[serde(default)]
     transforms: Vec<Option<TransformDisplay>>,
+    #[serde(default)]
+    rests: Vec<Option<RestText>>,
+    #[serde(default)]
+    active_rest: Option<(u32, bool)>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+struct RestText {
+    player: bool,
+    hp: [u16; 2],
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -48,6 +58,7 @@ pub(super) struct LevelUpDisplay {
 #[derive(Debug, Clone)]
 struct MoveStep {
     announcement: String,
+    rest_sleep: bool,
     level_up: Option<LevelUpDisplay>,
     transform: Option<TransformDisplay>,
     faint: Option<FaintCue>,
@@ -66,7 +77,7 @@ struct MoveStep {
 impl MoveStep {
     fn faint(cue: FaintCue, announcement: String, hp: [u16; 2]) -> Self {
         Self {
-            announcement, level_up: None, transform: None, faint: Some(cue), faint_continuation: false,
+            announcement, rest_sleep: false, level_up: None, transform: None, faint: Some(cue), faint_continuation: false,
             faint_text_published: false, move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal, leech_seed: false,
             charge: None, missed: false, player: cue.side == super::FaintSide::Player,
             hp, hits: Vec::new(),
@@ -75,7 +86,7 @@ impl MoveStep {
 
     fn level_up(announcement: String, display: LevelUpDisplay) -> Self {
         Self {
-            announcement, level_up: Some(display), transform: None, faint: None,
+            announcement, rest_sleep: false, level_up: Some(display), transform: None, faint: None,
             faint_continuation: false, faint_text_published: false,
             move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal,
             leech_seed: false, charge: None, missed: false, player: true,
@@ -85,11 +96,21 @@ impl MoveStep {
 
     fn transform(announcement: String, display: TransformDisplay) -> Self {
         Self {
-            announcement, level_up: None, transform: Some(display), faint: None,
+            announcement, rest_sleep: false, level_up: None, transform: Some(display), faint: None,
             faint_continuation: false, faint_text_published: false,
             move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal,
             leech_seed: false, charge: None, missed: false, player: display.player,
             hp: [0; 2], hits: Vec::new(),
+        }
+    }
+
+    fn rest_sleep(announcement: String, display: RestText) -> Self {
+        Self {
+            announcement, rest_sleep: true, level_up: None, transform: None, faint: None,
+            faint_continuation: false, faint_text_published: false,
+            move_id: Some(MoveId::Rest), effectiveness: pokered_data::types::Effectiveness::Normal,
+            leech_seed: false, charge: None, missed: false, player: display.player,
+            hp: display.hp, hits: Vec::new(),
         }
     }
 }
@@ -120,6 +141,10 @@ impl BattlePresentation {
             faint_waiting: self.current_faint.is_some() && self.waiting,
             level_ups: self.pages.iter().map(|step| step.as_ref().and_then(|step| step.level_up)).collect(),
             transforms: self.pages.iter().map(|step| step.as_ref().and_then(|step| step.transform)).collect(),
+            rests: self.pages.iter().map(|step| step.as_ref().filter(|step| step.rest_sleep)
+                .map(|step| RestText { player: step.player, hp: step.hp })).collect(),
+            active_rest: self.current.filter(|_| self.waiting && self.page.is_some_and(|page| self.rest_sleep_at(page)))
+                .map(|(serial, _, player)| (serial, player)),
         }
     }
 
@@ -128,16 +153,17 @@ impl BattlePresentation {
         self.page = saved.page;
         if self.current_faint.is_some() { self.waiting = false; }
         self.current_faint = None;
-        self.queued.retain(|step| step.faint.is_none() && step.level_up.is_none() && step.transform.is_none());
+        self.queued.retain(|step| step.faint.is_none() && step.level_up.is_none() && step.transform.is_none() && !step.rest_sleep);
         for page in &mut self.pages {
             if page.as_ref().is_some_and(|step| step.faint.is_some()) { *page = None; }
         }
         // This vector is positional: all-None ordinary pages must survive
         // capture -> restore -> capture just as pages with a faint cue do.
-        let count = saved.faints.len().max(saved.level_ups.len()).max(saved.transforms.len());
+        let count = saved.faints.len().max(saved.level_ups.len()).max(saved.transforms.len()).max(saved.rests.len());
         let mut faints = saved.faints.into_iter();
         let mut level_ups = saved.level_ups.into_iter();
         let mut transforms = saved.transforms.into_iter();
+        let mut rests = saved.rests.into_iter();
         self.pages = (0..count).map(|_| {
             let mut step = faints.next().flatten().map(|(cue, continuation, published)| {
                 let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
@@ -151,11 +177,15 @@ impl BattlePresentation {
             if let Some(display) = transforms.next().flatten() {
                 step = Some(MoveStep::transform(String::new(), display));
             }
+            if let Some(display) = rests.next().flatten() {
+                step = Some(MoveStep::rest_sleep(String::new(), display));
+            }
             step
         }).collect();
         self.serial = saved.faint_serial;
         self.current_faint = saved.active_faint;
-        self.waiting = saved.faint_waiting;
+        self.current = saved.active_rest.map(|(serial, player)| (serial, MoveId::Rest, player));
+        self.waiting = saved.faint_waiting || saved.active_rest.is_some();
     }
 
     /// Old snapshots did not record publication. Preserve their prior ACK
@@ -170,6 +200,12 @@ impl BattlePresentation {
 
     pub(super) fn faint_at(&self, page: usize) -> Option<FaintCue> {
         self.pages.get(page).and_then(Option::as_ref).and_then(|step| step.faint)
+    }
+
+    /// Only the final sleep page ends in DONE. Earlier wrapped pages and the
+    /// following RegainedHealthText retain their normal text acknowledgements.
+    pub(super) fn rest_sleep_at(&self, page: usize) -> bool {
+        self.pages.get(page).and_then(Option::as_ref).is_some_and(|step| step.rest_sleep)
     }
 
     pub(super) fn publish_faint_text(&mut self, page: usize) -> bool {
@@ -262,6 +298,7 @@ impl BattlePresentation {
             step_index,
             MoveStep {
                 announcement,
+                rest_sleep: false,
                 level_up: None,
                 transform: None,
                 faint: None,
@@ -344,10 +381,21 @@ impl BattlePresentation {
             if let Some(cue) = faint_plan.and_then(|plan| plan.at(event_index)) {
                 self.queued.push(MoveStep::faint(cue, runtime::faint_caption(cue, state, names), hp));
             }
-            if !self.enabled { continue; }
+            if !self.enabled {
+                if let TurnEvent::MoveUsed { actor, move_: MoveId::Rest } = event {
+                    if super::pokered_rules::rest_had_status(actor.side == 0).is_some() {
+                        // Headless callers publish resolved HP immediately and
+                        // need no visual ACK, but DONE still belongs to the text.
+                        self.queued.push(MoveStep::rest_sleep(runtime::rest_sleep_caption(state, *actor, names),
+                            RestText { player: actor.side == 0, hp: [state.player_battlers[0].hp, state.opponent_battlers[0].hp] }));
+                    }
+                }
+                continue;
+            }
             if let Some(announcement) = runtime::presentation_hp_message_named(event, state, effects, names) {
                 self.queued.push(MoveStep {
                     announcement,
+                    rest_sleep: false,
                     level_up: None,
                     transform: None,
                     faint: None,
@@ -373,15 +421,17 @@ impl BattlePresentation {
             match event {
                 TurnEvent::MoveUsed { actor, move_ } => {
                     let missed = super::pokered_rules::presented_move_missed(actor.side == 0, *move_).unwrap_or(false);
+                    let rest_sleep = *move_ == MoveId::Rest && !missed
+                        && super::pokered_rules::rest_had_status(actor.side == 0).is_some();
                     self.queued.push(MoveStep {
-                        announcement: if *move_ == MoveId::Rest && !missed
-                            && super::pokered_rules::rest_had_status(actor.side == 0).is_some() {
+                        announcement: if rest_sleep {
                             // HealEffect prints the sleep result before playing
                             // Rest's animation and updating the HP bar.
                             runtime::rest_sleep_caption(state, *actor, names)
                         } else {
                             runtime::move_action_caption(state, *actor, *move_, names)
                         },
+                        rest_sleep,
                         level_up: None,
                         transform: None,
                         hits: {
@@ -622,6 +672,91 @@ mod tests {
         pokemon::stats::create_pokemon_with_moves,
     };
     use pokered_data::species::Species;
+
+    fn rest_sleep_screen(enemy: bool, poisoned: bool) -> BattleScreen {
+        use crate::{battle::state::StatusCondition, link::rng::LinkRng};
+        let make = |species, mv| create_pokemon_with_moves(species, 100, [0x9a, 0x78],
+            [mv, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        let mut actor = make(Species::Chansey, MoveId::Rest); actor.set_nickname("WARD"); actor.hp -= 30;
+        if poisoned { actor.status = StatusCondition::Poison; }
+        let other = make(Species::Snorlax, MoveId::Splash);
+        let (player, foe) = if enemy { (other, actor) } else { (actor, other) };
+        let mut b = BattleScreen::from_parties(true, &[player], &[foe], None);
+        b.link_rng = Some(LinkRng::new([255; 10])); b.link_enemy_move_override = Some((foe.moves[0], 0));
+        let bs = b.battle_state.as_mut().unwrap();
+        bs.player.active_mon_mut().speed = if enemy { 100 } else { 800 };
+        bs.enemy.active_mon_mut().speed = if enemy { 800 } else { 100 };
+        b.set_presentation_enabled(true); b.phase = BattlePhase::PlayerMenu;
+        let a = BattleInput { a: true, ..BattleInput::none() }; b.update_frame(a); b.update_frame(a);
+        for frame in 0..5000 {
+            if b.presentation.waiting && b.presentation.current_move().is_some_and(|(_, mv, _)| mv == MoveId::Rest) { return b; }
+            if b.presentation.waiting { b.complete_move_presentation(); }
+            b.update_frame(if frame % 2 == 0 { a } else { BattleInput::none() });
+        }
+        panic!("missing Rest animation");
+    }
+
+    fn roundtrip_rest(b: &BattleScreen) -> BattleScreen {
+        use crate::snapshot::BattleSnapshot;
+        let json = serde_json::to_value(BattleSnapshot::capture(b)).unwrap();
+        let saved: BattleSnapshot = serde_json::from_value(json.clone()).unwrap();
+        let mut restored = BattleScreen::new(true); saved.restore_into(&mut restored);
+        assert_eq!(serde_json::to_value(BattleSnapshot::capture(&restored)).unwrap(), json);
+        restored
+    }
+
+    fn compare_rest_without_input(b: &mut BattleScreen, restored: &mut BattleScreen) {
+        for _ in 0..200 {
+            b.update_frame(BattleInput::none()); restored.update_frame(BattleInput::none());
+            assert_eq!((b.player_hp, b.enemy_hp), (restored.player_hp, restored.enemy_hp));
+            assert_eq!(b.current_message, restored.current_message);
+        }
+        assert!(b.current_message.as_ref().is_some_and(|m| m.contains("regained health!")));
+        assert!(!b.hp_bar_anim.is_active() && !restored.hp_bar_anim.is_active());
+    }
+
+    #[test]
+    fn rest_snapshot_keeps_pending_animation_and_its_hp_completion() {
+        for enemy in [false, true] { for poisoned in [false, true] {
+            let mut b = rest_sleep_screen(enemy, poisoned); let mut restored = roundtrip_rest(&b);
+            assert_eq!(restored.presentation.current_move(), b.presentation.current_move());
+            assert!(restored.presentation.waiting);
+            let message = restored.current_message.clone();
+            for _ in 0..50 { restored.update_frame(BattleInput::none()); }
+            assert_eq!(restored.current_message, message); assert!(restored.presentation.waiting);
+            b.complete_move_presentation(); restored.complete_move_presentation();
+            compare_rest_without_input(&mut b, &mut restored);
+        }}
+    }
+
+    #[test]
+    fn rest_snapshot_during_refill_or_result_does_not_replay_animation() {
+        for enemy in [false, true] { for poisoned in [false, true] { for elapsed in [0, 5, 100] {
+            let mut b = rest_sleep_screen(enemy, poisoned); b.complete_move_presentation();
+            for _ in 0..elapsed { b.update_frame(BattleInput::none()); }
+            let mut restored = roundtrip_rest(&b);
+            assert!(!restored.presentation.waiting); assert!(restored.presentation.current_move().is_none());
+            compare_rest_without_input(&mut b, &mut restored);
+        }}}
+    }
+
+    #[test]
+    fn snapshots_without_rest_metadata_retain_the_old_current_page_ack() {
+        use crate::snapshot::BattleSnapshot;
+        for enemy in [false, true] {
+            let mut b = rest_sleep_screen(enemy, false); b.complete_move_presentation();
+            let message = b.current_message.clone();
+            let mut json = serde_json::to_value(BattleSnapshot::capture(&b)).unwrap();
+            let publication = json["text_publication"].as_object_mut().unwrap();
+            publication.remove("rests"); publication.remove("active_rest");
+            let saved: BattleSnapshot = serde_json::from_value(json).unwrap(); saved.restore_into(&mut b);
+            for _ in 0..600 { b.update_frame(BattleInput::none()); }
+            assert_eq!(b.current_message, message); assert!(!b.presentation.waiting);
+            b.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            for _ in 0..20 { b.update_frame(BattleInput::none()); }
+            assert!(b.current_message.as_ref().is_some_and(|m| m.contains("regained health!")));
+        }
+    }
 
     fn growth_screen(level: u8, active: usize, transformed: bool) -> BattleScreen {
         let make = |species, level| create_pokemon_with_moves(species, level, [0x9a, 0x78],
