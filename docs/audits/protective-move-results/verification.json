@@ -1,0 +1,665 @@
+{
+  "scope": "32 prepared original effect-entry observations, 72 prepared native public-FIGHT turns, actual-renderer comparison. No full original turn or original-renderer timing claim.",
+  "original": {
+    "status": "passed",
+    "scope": "32 prepared original protective-effect calls. Read-only hooks observe duplicate veto or successful flag set at animation entry; no original full-turn, animation, caption timing, or later Haze execution claim.",
+    "source_sha256": "01b02e39af5d35976432b867f4a08d332a87063c8e9ae7c16208dae12b83b0bf",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "pyboy": "2.8.1",
+    "cases": [
+      {
+        "move": "Reflect",
+        "side": 0,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 0,
+        "condition": "already_active",
+        "initial_flags": 4,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 0,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 132,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 0,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 1,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 1,
+        "condition": "already_active",
+        "initial_flags": 4,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 1,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 132,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Reflect",
+        "side": 1,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 0,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 0,
+        "condition": "already_active",
+        "initial_flags": 2,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 0,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 130,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 0,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 1,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 1,
+        "condition": "already_active",
+        "initial_flags": 2,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 1,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 130,
+          "draws": 0
+        }
+      },
+      {
+        "move": "LightScreen",
+        "side": 1,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 0,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 0,
+        "condition": "already_active",
+        "initial_flags": 2,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 0,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 130,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 0,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 1,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 1,
+        "condition": "already_active",
+        "initial_flags": 2,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 1,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 130,
+          "draws": 0
+        }
+      },
+      {
+        "move": "Mist",
+        "side": 1,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 2,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 0,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 0,
+        "condition": "already_active",
+        "initial_flags": 4,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 0,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 132,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 0,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 1,
+        "condition": "absent",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 1,
+        "condition": "already_active",
+        "initial_flags": 4,
+        "result": {
+          "branch": "duplicate_veto",
+          "flags": 4,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 1,
+        "condition": "unrelated_flag",
+        "initial_flags": 128,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 132,
+          "draws": 0
+        }
+      },
+      {
+        "move": "FocusEnergy",
+        "side": 1,
+        "condition": "opponent_active",
+        "initial_flags": 0,
+        "result": {
+          "branch": "success_before_animation",
+          "flags": 4,
+          "draws": 0
+        }
+      }
+    ]
+  },
+  "red": {
+    "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+    "source_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "3f7b6d07f37f4828d41028d98555856792211d51cb163cc68f2798163cc0d9c6"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "bb836971d1ab809b1d62b889e07cb08cb4ba1ff837105c38e79f3d5e1452571d"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "99026dd54e06c350503bcb59cf3afba990211e5309418b11d0e9cb01d6170607"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "seconds": 0.03309365699533373,
+    "log_sha256": "2ebdb1528dcb56096df9bc0bba534bf45ae93addaed96059fee476c2219af6b7",
+    "exe_sha256": "ad382917f9d270728e80603b3c57cfeff76370d17bd691aa7c57a42d2672c31d",
+    "deleted_exe_bytes": 14913536,
+    "scope": "72 prepared public FIGHT turns, drained presentations and missed-animation markers; four tests."
+  },
+  "counts": {
+    "core": [
+      3776,
+      0,
+      1
+    ],
+    "app-test": [
+      393,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+    "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a",
+    "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+    "exit": 0,
+    "seconds": 54.397822518018074
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+    "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a",
+    "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+    "exit": 0,
+    "seconds": 93.5530726449797
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T03:45:40.131093+00:00",
+    "source": {
+      "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+      "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+      "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 93.62522948090918,
+        "log": "audit-1337-protective-moves-app-test-driver.log",
+        "log_sha256": "0eefd4db70372e15c0ec13a5d14ddce920711e8ce0a94c6a988de4d9f163b0e2"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 71.17077013291419,
+        "log": "audit-1337-protective-moves-gba-build-driver.log",
+        "log_sha256": "d4e14d296e76e1a652fcc572b736b47534c965cdb9e57395824d54bf8190a984"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.5097953119548038,
+        "log": "audit-1337-protective-moves-gba-perf-driver.log",
+        "log_sha256": "834f683f59dcfda797719539b4f72e2c5d5ff19ae5e59a623336196bdc3ea859"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 73.23747318494134,
+        "log": "audit-1337-protective-moves-memory-build-driver.log",
+        "log_sha256": "3d58520348be79a3b983c39d522fe0fd9ef219063c9f5063fba716b1074844d0"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 179.2509641329525,
+        "log": "audit-1337-protective-moves-memory-run-driver.log",
+        "log_sha256": "7d0df6ba2d1854f441dc53a0583c4d386ea1c0afda135577d495f9a842dd6d11"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1337-protective-moves-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 25.139496678952128,
+        "log": "audit-1337-protective-moves-native-build-driver.log",
+        "log_sha256": "a8dc895f7d57fc3c7a551c46591f0fb59b55415a91d730111273bb8487aa7c1b"
+      }
+    ],
+    "finished": "2026-10-25T03:53:06.128321+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+      "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+      "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a",
+      "binary_sha256": "43f0004325dddcae800f20aaa70c51cca15f2a19f0b75b946710295123bceb22"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1337-protective-moves",
+    "status": "passed",
+    "seconds": 49.86621406197082,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+      "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+      "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a",
+      "binary_sha256": "43f0004325dddcae800f20aaa70c51cca15f2a19f0b75b946710295123bceb22"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1337-protective-moves",
+    "status": "passed",
+    "seconds": 140.60604240803514,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "cc6eea3fb76ad9bfacb956e21e9ac731921413906f215b1a014f71c06799a312",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+    "seconds": 178.906995191006,
+    "frames": 322920,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8768,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+    "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "d4c013f08511b2674998be9e5d5340a3bf7bb51c8112d266464636664bb6ade5",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "a440da9fbb2fe915ce7231030bf74bc19ceaffe3e6204e8180d11b45a9bea04c",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 3.009042551042512,
+    "failures": [],
+    "metrics": "audit-1337-protective-moves-gba-perf-metrics.json",
+    "log": "audit-1337-protective-moves-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "3cf21122624aff045444f780a7eab8862ad04b3cae6c424258d96123153a948e",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1337-protective-moves-visual.rs",
+    "source_sha256": "bacaf51f365aab02bfaae8d3729cf453c84278d5a24cceb2cdb6dc826ced5ab9",
+    "frame": 187,
+    "before": {
+      "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+      "tree": "afe4b9a363e1f542faf632f0673957b3d9a21b58",
+      "source": "audit-1337-protective-moves-visual.rs",
+      "source_sha256": "bacaf51f365aab02bfaae8d3729cf453c84278d5a24cceb2cdb6dc826ced5ab9",
+      "exe_sha256": "243748f7939d46939d2b3b02abc656212b8b330931608f927ad6a9604a6f7ed3",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "3f7b6d07f37f4828d41028d98555856792211d51cb163cc68f2798163cc0d9c6"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "bb836971d1ab809b1d62b889e07cb08cb4ba1ff837105c38e79f3d5e1452571d"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "99026dd54e06c350503bcb59cf3afba990211e5309418b11d0e9cb01d6170607"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "STAGE attack=0\nCAPTURE frame=187 completed_turns=0 player_display_hp=142 draws=0 message=Some(\"Enemy TARGET used SPLASH!\") phase=ShowingText { messages: [\"WARD used REFLECT!\", \"Enemy TARGET used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "80b55070783e49478456fc8ed9117927348b065b8c794b5d8c890c0631f4edca"
+    },
+    "after": {
+      "source_identity": {
+        "head": "b05885ea8bff57647c8a886f4f3c1f49c2f760dc",
+        "diff_sha256": "aef273752c80fbe01841ddd85595bc42adc93d46eb2ca56fd59766d63dac569a",
+        "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "562fdfd8909de1a144df35909212c4f838b9d44f91bd3220669dba179ecc3a0e"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "2731538abc9f23c0fbbfe1a707f5c49de182e1e4d8765d28bf8b8b6563f3477a"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "d9efc2838a58813b2c9cb44f3728597934d0b5ed51fd5a8effc76e652a8c7cf6"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "7fc5a4a23458f15f128ceb40a2af4feb3f14f7b715529d239bbf6af3f2565030",
+      "output": "STAGE attack=0\nCAPTURE frame=187 completed_turns=0 player_display_hp=142 draws=0 message=Some(\"WARD\\ngained armor!\") phase=ShowingText { messages: [\"WARD used REFLECT!\", \"WARD\\ngained armor!\", \"Enemy TARGET used SPLASH!\", \"No effect!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "0dfe04b7eacaabc921de9ceb5887f1580d50e7aaae0eff5acf3cc6b23305ab61"
+    },
+    "deleted_exe_bytes": 36387880
+  },
+  "visual_inspection": {
+    "both_images_inspected": true,
+    "frame": 187,
+    "before": "Enemy TARGET is announcing Splash; the user has no Reflect success caption.",
+    "after": "WARD gained armor! appears after its successful Reflect, despite TARGET already having Reflect.",
+    "scope": "Same input, same frame, actual renderer. Both player HP142/142 and RNG0. Native tests verify the effect flags and duplicate-failure animation markers.",
+    "before_sha256": "80b55070783e49478456fc8ed9117927348b065b8c794b5d8c890c0631f4edca",
+    "after_sha256": "0dfe04b7eacaabc921de9ceb5887f1580d50e7aaae0eff5acf3cc6b23305ab61"
+  },
+  "test_sha256": "564533962de18c0b48c1f0414b31f3b1bace60a77325ec60f92b1073e11ef07a"
+}

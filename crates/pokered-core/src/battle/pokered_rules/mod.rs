@@ -3414,6 +3414,21 @@ fn bridge_damaging_hit(
     source: BattlerRef,
     source_effect: EffectId,
 ) -> HandlerResult {
+    let pm = current_move_for(source);
+    if is_self_protection(pm.effect) {
+        // These effects inspect the USER's existing flag. DamagingHit's
+        // ordinary target is the opponent, while the authored guard is
+        // target-relative; bind that guard to the same user as InflictVolatile.
+        let result = run_bridge(ctx, relay, source, source, source_effect, Event::DamagingHit);
+        let failed = matches!(result, HandlerResult::Fail);
+        ctx.mv.move_missed = failed;
+        // Retain this action's outcome even if the other side uses Haze later.
+        // A duplicate-use failure must also suppress the success animation.
+        PRESENTED_EFFECTIVENESS.with(|values| {
+            values.borrow_mut()[source.side as usize] = Some((pm.id, Effectiveness::Normal, failed));
+        });
+        return result;
+    }
     // AttackSubstitute clears the move effect before AlwaysHappenSideEffects:
     // breaking the doll cancels both self-KO and recoil, even though damage hit.
     if substitute_broke_for(source)
@@ -3465,6 +3480,11 @@ fn bridge_damaging_hit(
 // ─────────────────────────────────────────────────────────────────────────────
 // 9. Shared helpers (re-homed from the stack_parity POC / pokered formula).
 // ─────────────────────────────────────────────────────────────────────────────
+
+fn is_self_protection(effect: MoveEffect) -> bool {
+    matches!(effect, MoveEffect::ReflectEffect | MoveEffect::LightScreenEffect
+        | MoveEffect::MistEffect | MoveEffect::FocusEnergyEffect)
+}
 
 fn battler<'a>(state: &'a EngineState<PokeredRules>, who: BattlerRef) -> &'a EngineBattler<PokeredRules> {
     if who.side == 0 {
