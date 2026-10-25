@@ -50,11 +50,22 @@ fn target(b: &BattleScreen, enemy: bool) -> &pokered_core::battle::state::Battle
 }
 
 fn turn(b: &mut BattleScreen, enemy: bool) -> (String, Vec<bool>) {
+    turn_in_slot(b, enemy, 0)
+}
+
+fn turn_in_slot(b: &mut BattleScreen, enemy: bool, slot: usize) -> (String, Vec<bool>) {
     let a = BattleInput {
         a: true,
         ..BattleInput::none()
     };
     b.update_frame(a);
+    for _ in 0..slot {
+        b.update_frame(BattleInput {
+            down: true,
+            ..BattleInput::none()
+        });
+        b.update_frame(BattleInput::none());
+    }
     b.update_frame(a);
     let mut lines = Vec::new();
     let mut previous = None;
@@ -179,6 +190,58 @@ fn other_haze_cures_do_not_forfeit_the_targets_move() {
                 assert_eq!(mon.hp, old.hp);
                 assert_eq!(mon.pp[0], old.pp[0] - u8::from(!enemy));
                 assert_eq!(mon.status, StatusCondition::None);
+                assert_eq!(b.link_rng.as_ref().unwrap().consumed(), 0);
+            }
+        }
+    }
+}
+
+#[test]
+fn haze_clears_both_disable_counters_and_the_move_can_be_selected_next_turn() {
+    for presentation in [false, true] {
+        for enemy in [false, true] {
+            for first in [false, true] {
+                let mut b = fixture(enemy, first, StatusCondition::None, presentation);
+                let state = b.battle_state.as_mut().unwrap();
+                for side in [&mut state.player, &mut state.enemy] {
+                    side.active_mon_mut().moves[1] = MoveId::Harden;
+                    side.active_mon_mut().pp[1] = 30;
+                    side.disabled_move = 2;
+                    side.disabled_turns_left = 5;
+                }
+
+                let (text, _) = turn(&mut b, enemy);
+                assert!(text.contains("used HAZE!") && text.contains("used SPLASH!"));
+                let state = b.battle_state.as_ref().unwrap();
+                assert_eq!(
+                    [
+                        state.player.disabled_move,
+                        state.player.disabled_turns_left,
+                        state.enemy.disabled_move,
+                        state.enemy.disabled_turns_left
+                    ],
+                    [0, 0, 0, 0],
+                    "presentation={presentation} enemy={enemy} first={first}: {text}"
+                );
+                assert_eq!(state.player.active_mon().pp[1], 30);
+                // The previously disabled slot must be available through the
+                // real next-turn FIGHT menu, without clearing it in the fixture.
+                let state = b.battle_state.as_mut().unwrap();
+                state.enemy.active_mon_mut().moves[0] = MoveId::Splash;
+                b.link_enemy_move_override = Some((MoveId::Splash, 0));
+                let (next, _) = turn_in_slot(&mut b, enemy, 1);
+                assert!(
+                    next.contains("used HARDEN!") && next.contains("DEFENSE rose!"),
+                    "{next}"
+                );
+                assert!(!next.contains("disabled") && !next.contains("can't move!"));
+                let mon = b.battle_state.as_ref().unwrap().player.active_mon();
+                assert_eq!(mon.hp, mon.max_hp);
+                assert_eq!(mon.pp[1], 29);
+                assert_eq!(
+                    b.battle_state.as_ref().unwrap().player.stat_stages.defense,
+                    1
+                );
                 assert_eq!(b.link_rng.as_ref().unwrap().consumed(), 0);
             }
         }

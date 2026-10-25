@@ -2914,10 +2914,14 @@ fn haze_reset(
             kind: PokeVolatile::HazeCuredMove,
         });
     }
+    // HazeEffect_ explicitly clears both Disable slots and counters before
+    // applying the volatile-status masks. Dropping the effect clears both
+    // legacy fields when the completed turn is written back.
     ctx.effects.retain(|e| {
         !matches!(
             e.kind,
             PokeVolatile::Confused { .. }
+                | PokeVolatile::Disable { .. }
                 | PokeVolatile::LeechSeed
                 | PokeVolatile::Toxic { .. }
                 | PokeVolatile::FocusEnergy
