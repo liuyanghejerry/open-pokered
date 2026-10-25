@@ -34,7 +34,9 @@ fn fixture(move_id: MoveId, enemy: bool, condition: &str, chance: u8) -> BattleS
         )
         .unwrap()
     };
-    let attacker = mon(Species::Mewtwo, 20, move_id);
+    // Keep typed damage above 1 so these draw counts isolate the secondary
+    // guard. Damage 0/1 bypasses variance and has its own exhaustive fixtures.
+    let attacker = mon(Species::Mewtwo, 40, move_id);
     let mut target = mon(
         if condition == "same_type" {
             same_type_species(md.move_type)

@@ -1,0 +1,736 @@
+{
+  "scope": "Skip variance draws for typed damage0/1; preserve >1 sampling. Original isolated subroutine; native prepared FIGHT and actual renderer, not full pipeline or m49 parity.",
+  "source": {
+    "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a"
+  },
+  "original_oracle": {
+    "status": "passed",
+    "source_sha256": "d75aedb9bcb0f7f9a5e394a9884cfc0ab07799ea522ba7996d0ab7fd9f95d823",
+    "pyboy": "2.8.1",
+    "scope": "Original RandomizeDamage subroutine execution with prepared RAM/registers/stack and actual BattleRandom link seeds. Read-only hooks, no ROM patch, no formula reimplementation or full-battle/UI/timing claim.",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "source_reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/battle/core.asm RandomizeDamage",
+    "case_count": 768,
+    "full_output_sha256": "15a568d3a9f5646ba84dd5dd290a6f9e8059013d1d6f147b4959fc0c7712f33c",
+    "observed_groups": [
+      {
+        "initial_damage": 0,
+        "damage": 0,
+        "draws": 0,
+        "count": 256,
+        "inclusive_raw_ranges": [
+          [
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "initial_damage": 1,
+        "damage": 1,
+        "draws": 0,
+        "count": 256,
+        "inclusive_raw_ranges": [
+          [
+            0,
+            255
+          ]
+        ]
+      },
+      {
+        "initial_damage": 2,
+        "damage": 1,
+        "draws": 1,
+        "count": 38,
+        "inclusive_raw_ranges": [
+          [
+            179,
+            179
+          ],
+          [
+            181,
+            181
+          ],
+          [
+            183,
+            183
+          ],
+          [
+            185,
+            185
+          ],
+          [
+            187,
+            187
+          ],
+          [
+            189,
+            189
+          ],
+          [
+            191,
+            191
+          ],
+          [
+            193,
+            193
+          ],
+          [
+            195,
+            195
+          ],
+          [
+            197,
+            197
+          ],
+          [
+            199,
+            199
+          ],
+          [
+            201,
+            201
+          ],
+          [
+            203,
+            203
+          ],
+          [
+            205,
+            205
+          ],
+          [
+            207,
+            207
+          ],
+          [
+            209,
+            209
+          ],
+          [
+            211,
+            211
+          ],
+          [
+            213,
+            213
+          ],
+          [
+            215,
+            215
+          ],
+          [
+            217,
+            217
+          ],
+          [
+            219,
+            219
+          ],
+          [
+            221,
+            221
+          ],
+          [
+            223,
+            223
+          ],
+          [
+            225,
+            225
+          ],
+          [
+            227,
+            227
+          ],
+          [
+            229,
+            229
+          ],
+          [
+            231,
+            231
+          ],
+          [
+            233,
+            233
+          ],
+          [
+            235,
+            235
+          ],
+          [
+            237,
+            237
+          ],
+          [
+            239,
+            239
+          ],
+          [
+            241,
+            241
+          ],
+          [
+            243,
+            243
+          ],
+          [
+            245,
+            245
+          ],
+          [
+            247,
+            247
+          ],
+          [
+            249,
+            249
+          ],
+          [
+            251,
+            251
+          ],
+          [
+            253,
+            253
+          ]
+        ]
+      },
+      {
+        "initial_damage": 2,
+        "damage": 2,
+        "draws": 1,
+        "count": 1,
+        "inclusive_raw_ranges": [
+          [
+            255,
+            255
+          ]
+        ]
+      },
+      {
+        "initial_damage": 2,
+        "damage": 2,
+        "draws": 2,
+        "count": 217,
+        "inclusive_raw_ranges": [
+          [
+            0,
+            178
+          ],
+          [
+            180,
+            180
+          ],
+          [
+            182,
+            182
+          ],
+          [
+            184,
+            184
+          ],
+          [
+            186,
+            186
+          ],
+          [
+            188,
+            188
+          ],
+          [
+            190,
+            190
+          ],
+          [
+            192,
+            192
+          ],
+          [
+            194,
+            194
+          ],
+          [
+            196,
+            196
+          ],
+          [
+            198,
+            198
+          ],
+          [
+            200,
+            200
+          ],
+          [
+            202,
+            202
+          ],
+          [
+            204,
+            204
+          ],
+          [
+            206,
+            206
+          ],
+          [
+            208,
+            208
+          ],
+          [
+            210,
+            210
+          ],
+          [
+            212,
+            212
+          ],
+          [
+            214,
+            214
+          ],
+          [
+            216,
+            216
+          ],
+          [
+            218,
+            218
+          ],
+          [
+            220,
+            220
+          ],
+          [
+            222,
+            222
+          ],
+          [
+            224,
+            224
+          ],
+          [
+            226,
+            226
+          ],
+          [
+            228,
+            228
+          ],
+          [
+            230,
+            230
+          ],
+          [
+            232,
+            232
+          ],
+          [
+            234,
+            234
+          ],
+          [
+            236,
+            236
+          ],
+          [
+            238,
+            238
+          ],
+          [
+            240,
+            240
+          ],
+          [
+            242,
+            242
+          ],
+          [
+            244,
+            244
+          ],
+          [
+            246,
+            246
+          ],
+          [
+            248,
+            248
+          ],
+          [
+            250,
+            250
+          ],
+          [
+            252,
+            252
+          ],
+          [
+            254,
+            254
+          ]
+        ]
+      }
+    ]
+  },
+  "native_reproduction": {
+    "status": "passed",
+    "scope": "24 prepared public FIGHT turns; full presentation drain. Native libs from1327 candidate; expected pre-variance damage calibrated by Attack/Special1,Defense/Special250 and converted target types. No original whole-turn ordering claim.",
+    "source_sha256": "65ef2c3c72bf22251101c4600301b03b5de4350aa469ccaa6beaa6982e33f0ed",
+    "exe_sha256": "bb899a92dc6525b3f711c342d585e822d9421bd5932c18c10f1ffccfcac655ff",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "870dae033079dacdce5aa6c8aabdca7611e97566ee82e0ad0c9d15fbe99a9c91"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      }
+    },
+    "exit": 0,
+    "output": "CASE enemy=false label=immune pre_variance=0 raw=179 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It doesn't affect\\nEnemy SNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=immune pre_variance=0 raw=217 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It doesn't affect\\nEnemy SNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=immune pre_variance=0 raw=255 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It doesn't affect\\nEnemy SNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=rounded_zero pre_variance=0 raw=179 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used VINE WHIP!\", \"MEWTWO's attack missed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=rounded_zero pre_variance=0 raw=217 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used VINE WHIP!\", \"MEWTWO's attack missed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=rounded_zero pre_variance=0 raw=255 damage=0 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used VINE WHIP!\", \"MEWTWO's attack missed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=one pre_variance=1 raw=179 damage=1 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=one pre_variance=1 raw=217 damage=1 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=one pre_variance=1 raw=255 damage=1 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=two pre_variance=2 raw=179 damage=1 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=two pre_variance=2 raw=217 damage=1 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=false label=two pre_variance=2 raw=255 damage=2 draws=3 phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=immune pre_variance=0 raw=179 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It doesn't affect\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=immune pre_variance=0 raw=217 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It doesn't affect\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=immune pre_variance=0 raw=255 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It doesn't affect\\nSNORLAX!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=rounded_zero pre_variance=0 raw=179 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used VINE WHIP!\", \"Enemy MEWTWO's attack\\nmissed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=rounded_zero pre_variance=0 raw=217 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used VINE WHIP!\", \"Enemy MEWTWO's attack\\nmissed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=rounded_zero pre_variance=0 raw=255 damage=0 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used VINE WHIP!\", \"Enemy MEWTWO's attack\\nmissed!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=one pre_variance=1 raw=179 damage=1 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=one pre_variance=1 raw=217 damage=1 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=one pre_variance=1 raw=255 damage=1 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\", \"It's not very effective...\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=two pre_variance=2 raw=179 damage=1 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=two pre_variance=2 raw=217 damage=1 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\nCASE enemy=true label=two pre_variance=2 raw=255 damage=2 draws=3 phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used POUND!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\n"
+  },
+  "red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_small_damage_rng",
+      "--",
+      "--nocapture"
+    ],
+    "base": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 101,
+    "seconds": 17.989652988966554
+  },
+  "focused": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_small_damage_rng",
+      "--",
+      "--nocapture"
+    ],
+    "base": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+    "diff_sha256": "14378319415ff4961f51e6dca37b6d70e3ba13a6cf35d78d71de14253307fa2b",
+    "exit": 0,
+    "seconds": 18.67970517091453
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "exit": 0,
+    "seconds": 46.452869517030194
+  },
+  "core_totals": {
+    "passed": 3747,
+    "failed": 0,
+    "ignored": 1
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "exit": 0,
+    "seconds": 128.9619956909446
+  },
+  "app_totals": {
+    "passed": 393,
+    "failed": 0,
+    "ignored": 38
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-24T15:14:49.819731+00:00",
+    "source": {
+      "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+      "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+      "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 129.06447870191187,
+        "log": "audit-1330-small-damage-app-test-driver.log",
+        "log_sha256": "59ea92fbf9ff61eae8f81c0cb6d6f3273d9b312208d69ebcdeffecb3eb44ec75"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 124.0035082079703,
+        "log": "audit-1330-small-damage-gba-build-driver.log",
+        "log_sha256": "442ede96c6035ac3ab61136594643e19fa35bea7e41287febc35be6cd303ce42"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 5.883462928934023,
+        "log": "audit-1330-small-damage-gba-perf-driver.log",
+        "log_sha256": "d98d142e3ab5a2625ee6dd5afa365c82c59fe59f2e6e75a5b37856dc87716462"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 174.32303668896202,
+        "log": "audit-1330-small-damage-memory-build-driver.log",
+        "log_sha256": "f3ed5f54f35a1dbea47557fd9b7423fd412c49ad62a4f00f18d0996dcb16d278"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 214.89994103601202,
+        "log": "audit-1330-small-damage-memory-run-driver.log",
+        "log_sha256": "7ed0f8d59b9aef6393b0d853163c0c980ec93f74a20f9baed2fe6d884a45fb22"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1330-small-damage-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 44.04142922593746,
+        "log": "audit-1330-small-damage-native-build-driver.log",
+        "log_sha256": "294d3847c6808d7390764ad959d4474ec0cba2476b694f352b1d74f460bd52ac"
+      }
+    ],
+    "interruption": "Execution session ended with143 after stale code-mode host; GBA build did not produce completion record.",
+    "interrupted_at": "2026-10-24T15:20:33.594111+00:00",
+    "resumed_at": "2026-10-24T15:37:38.046513+00:00",
+    "interruption2": "Tool handle95833missing and process inventory confirms no validation/build process remains; no GBA completion record.",
+    "interrupted2_at": "2026-10-24T15:37:37.919899+00:00",
+    "finished": "2026-10-24T15:47:01.297138+00:00",
+    "unchanged_source": true
+  },
+  "native_build": {
+    "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered",
+    "protected_aliases": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-376b96c393fca6ed": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1312",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-4147a5c464458640": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-422d10856709dcf7": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1309",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/pokered_app-65dda198e93c6c3a": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1306-frozen-cli-e1bf73f9"
+    },
+    "exit_code": 0,
+    "candidate_sha256": "100ec2ea8f1a4ff3e51880583ca8024a2a2d915f592d46b60e6d31d3d4ccfa54",
+    "candidate": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1330-small-damage",
+    "seconds": 39.29561990406364,
+    "historical_binaries_unchanged": true,
+    "hardlinks_only": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+      "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+      "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+      "binary_sha256": "100ec2ea8f1a4ff3e51880583ca8024a2a2d915f592d46b60e6d31d3d4ccfa54"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1330-small-damage",
+    "status": "passed",
+    "seconds": 41.7528424130287,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+      "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+      "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a",
+      "binary_sha256": "100ec2ea8f1a4ff3e51880583ca8024a2a2d915f592d46b60e6d31d3d4ccfa54"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1330-small-damage",
+    "status": "passed",
+    "seconds": 145.52605003700592,
+    "unchanged_source_and_binary": true
+  },
+  "gba_performance": {
+    "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "8a3e621d21b11b35a5f9460057e6738d150e31c769bfea7db248a651318721ba",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "650810316bbc8fd253f82b68e82ad850e6d77ba30acd75cb09131e0d68becf4a",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 4.899951666011475,
+    "failures": [],
+    "metrics": "audit-1330-small-damage-gba-perf-metrics.json",
+    "log": "audit-1330-small-damage-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "d21eb3960ac73afe4c8a97bd15013a59e6efc186827086ec276afd9f51cd48d3",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+    "seconds": 214.19188728602603,
+    "frames": 324120,
+    "cases": 13,
+    "min_heap": 7816,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "render_comparison": {
+    "input_trace_sha256": "1b0763a8154ff3e6f77588a700b92e03ccf4ad201577d6fa7d56dc58100ed78e",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1330-small-damage-visual.rs",
+    "source_sha256": "3c568eb2a7d44d68adc78398180f692dcdafb27387bcd86b36423684f3575605",
+    "frame": 795,
+    "before": {
+      "base": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+      "source": "audit-1330-small-damage-visual.rs",
+      "source_sha256": "3c568eb2a7d44d68adc78398180f692dcdafb27387bcd86b36423684f3575605",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "1f37519832693891424a8256d002f86af0172972370364122608a73a41f04897"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "46dd0bb17e7a47e0edb6deb3213e13c998311f898f41d248ef71997d9b74822b"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "d79c7bb256fbe3fa573385f406777c3953e5734cf63ef726b49f5a1e2944bdb4"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "1ddd450ad138bf7966f00d30eb786535ba15b6cbf1a02cf2d690fd567d6f8e99",
+      "output": "CAPTURE frame=795 completed_turns=1 enemy_display_hp=430 draws=8 message=Some(\"It's super effective!\") phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used ICE BEAM!\", \"It's super effective!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "aaace9ea107dae17a37b3e632edc1e678754b42f8fc418ea18e4e98894c5d9a8"
+    },
+    "after": {
+      "source_identity": {
+        "head": "3e0e882d27a8ba28ff0ee0eef8f324eab030689e",
+        "diff_sha256": "95afc1dcc6f5bc3ed08c533f6ae0380e50e46cd664b023cb12e842bc0199968a",
+        "test_sha256": "be16819d12fce1fe769320fd8d29ac833aacbb186c3bbb81a4e6aaba30a13c1a"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "c4e25ef54415ed7cd53a6e35f7fc48eff2a00e9a2633d7a70bed5354ef0c9a00"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "1fe7f74ac37c16ee2ad10876cb4ed7ec5410e934b7a68dc67b97da2445bca914"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "4e034c0c8513ce3c3fdbf24dfa4737460d75e4b3d27afc1f02ae09aa61af62a0"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "cd53afa47100572795144e983c205bff45127cd69798127ea4e666ad7db0226e",
+      "output": "CAPTURE frame=795 completed_turns=1 enemy_display_hp=416 draws=5 message=Some(\"Critical hit!\") phase=ShowingText { messages: [\"Enemy SNORLAX is fast\\nasleep!\", \"MEWTWO used ICE BEAM!\", \"Critical hit!\", \"It's super effective!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "e462e9ae8277d2ad89beaf5b02c9b7bf0c8ffb2eff1ed3d2ff8bc4abfd0f1d01"
+    },
+    "deleted_exe_bytes": 36321408
+  },
+  "images": {
+    "before": {
+      "path": "docs/screenshots/small-damage-rng-before.png",
+      "sha256": "aaace9ea107dae17a37b3e632edc1e678754b42f8fc418ea18e4e98894c5d9a8"
+    },
+    "after": {
+      "path": "docs/screenshots/small-damage-rng-after.png",
+      "sha256": "e462e9ae8277d2ad89beaf5b02c9b7bf0c8ffb2eff1ed3d2ff8bc4abfd0f1d01"
+    }
+  },
+  "visual_review": "Both PNGs inspected at frame795 with identical input traces; before super effective andHP430/draws8, after Critical hit andHP416/draws5. First immune Thunderbolt then IceBeam, prepared sleeping converted Ground defender."
+}
