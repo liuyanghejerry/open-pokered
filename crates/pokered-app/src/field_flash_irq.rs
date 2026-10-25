@@ -398,7 +398,9 @@ impl PokemonGame {
                         irq.audio = Some(Box::new(audio.begin_source_audio_frame_with_bus(bank, 0)
                             .map_err(|e| format!("source audio entry: {e:?}"))?));
                     }
-                    let time = &mut *self.source_display;
+                    // One exclusive display bus spans the audio continuation;
+                    // each instruction still observes its own IO/budget edge.
+                    let mut time = self.source_display.display_bus();
                     let result = audio.resume_source_audio_frame_with_bus(
                         irq.audio.as_mut().unwrap(), |apu, instruction| {
                             let offset = match instruction.access {

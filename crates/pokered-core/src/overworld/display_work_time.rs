@@ -414,17 +414,8 @@ impl DisplayWorkTime {
         at_tcycle: u8,
         access: impl FnOnce() -> T,
     ) -> Result<T, DisplayWorkError> {
-        if !self.active_vblank {
-            return Err(DisplayWorkError::NoActiveVBlank);
-        }
-        if tcycles == 0 || tcycles & 3 != 0 || at_tcycle > tcycles || at_tcycle & 3 != 0 {
-            return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidPhase));
-        }
-        self.reserve()?;
-        self.elapse(u64::from(at_tcycle))?;
-        let result = access();
-        self.elapse(u64::from(tcycles - at_tcycle))?;
-        Ok(result)
+        self.display_bus()
+            .execute_external_irq_access(tcycles, at_tcycle, access)
     }
     #[inline(always)]
     pub fn begin_native_update(&mut self) {
@@ -725,6 +716,36 @@ pub struct DisplayBus<'a> {
     validated: bool,
 }
 impl DisplayBus<'_> {
+    /// Execute external IO while this bus exclusively owns display time.
+    /// The callback cannot replace the display device or finish its IRQ, so
+    /// successive audio instructions reuse the validated device. Each still
+    /// admits its own budget and advances both sides of the actual IO cycle.
+    #[inline(always)]
+    pub fn execute_external_irq_access<T>(
+        &mut self,
+        tcycles: u8,
+        at_tcycle: u8,
+        access: impl FnOnce() -> T,
+    ) -> Result<T, DisplayWorkError> {
+        if !self.time.active_vblank {
+            return Err(DisplayWorkError::NoActiveVBlank);
+        }
+        if tcycles == 0 || tcycles & 3 != 0 || at_tcycle > tcycles || at_tcycle & 3 != 0 {
+            return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidPhase));
+        }
+        self.reserve()?;
+        let result = (|| {
+            self.time.elapse_reserved(at_tcycle)?;
+            let result = access();
+            self.time.elapse_reserved(tcycles - at_tcycle)?;
+            Ok(result)
+        })();
+        if result.is_err() {
+            self.validated = false;
+        }
+        result
+    }
+
     #[inline(always)]
     fn reserve(&mut self) -> Result<(), DisplayWorkError> {
         if !self.validated {
@@ -741,6 +762,10 @@ impl DisplayBus<'_> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "display_external_irq_bus_tests.rs"]
+mod external_irq_bus_tests;
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
     fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
