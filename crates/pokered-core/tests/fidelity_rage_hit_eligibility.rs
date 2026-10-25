@@ -61,7 +61,7 @@ fn setup(id: MoveId, enemy: bool, initial: i8, species: Species) -> BattleScreen
     b.link_rng = Some(LinkRng::new(if fixed(id) {
         [0, 255, 255, 255, 255, 255, 255, 255, 255, 255]
     } else {
-        [255, 0, 255, 255, 255, 255, 255, 255, 255, 255]
+        [255, 255, 0, 255, 255, 255, 255, 255, 255, 255]
     }));
     side(&mut b, enemy).active_mon_mut().speed = 100;
     let target = side(&mut b, !enemy);

@@ -53,6 +53,12 @@ fn setup(enemy: bool, id: MoveId, types: [PokemonType; 2], raw: u8) -> BattleScr
     let mut bytes = [255; 10];
     bytes[1] = 0;
     bytes[2] = raw;
+    if id == MoveId::Pound && types == [PokemonType::Normal; 2] {
+        bytes[1] = raw;
+        bytes[2] = 255;
+        // Successful accuracy follows the independently observed variance draws.
+        bytes[1 + ORIGINAL_DRAWS_TWO[raw as usize] as usize] = 0;
+    }
     battle.link_rng = Some(LinkRng::new(bytes));
     let state = battle.battle_state.as_mut().unwrap();
     let (actor, target) = if enemy {

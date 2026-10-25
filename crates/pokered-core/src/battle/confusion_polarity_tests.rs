@@ -39,7 +39,7 @@ fn real_turn_caller_uses_uncomplemented_link_confusion_bytes_on_both_sides() {
         for (byte, self_hit) in [(0, false), (127, false), (128, true), (255, true)] {
             let mut screen = screen(player);
             let before = screen.battle_state.as_ref().unwrap().clone();
-            let list = [byte, 255, 0, 255, 91, 82, 73, 64, 55, 46];
+            let list = [byte, 255, 255, 0, 91, 82, 73, 64, 55, 46];
             screen.link_rng = Some(LinkRng::new(list));
             screen.execute_turn_with_move(0);
             let after = screen.battle_state.as_ref().unwrap();

@@ -747,7 +747,7 @@ fn p5_jump_kick_crash_on_miss_via_driver() {
 
 /// on:Miss is INERT when the move registers no OnMiss hook (the additive/defaulted
 /// guarantee): a missing move with a plain pipeline effect crashes nothing and
-/// draws exactly the accuracy byte.
+/// draws no extra byte beyond crit, variance and accuracy.
 #[test]
 fn p5_on_miss_inert_without_subscriber() {
     use super::{install_canonical, set_active_move, move_effect_for};
@@ -770,10 +770,10 @@ fn p5_on_miss_inert_without_subscriber() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    // Player: crit 255, accuracy 255 (MISS — no damage byte). Opponent: crit 255,
-    // accuracy 0 (hit), damage 255.
+    // Player: crit 255, damage 255, accuracy 255 (miss). Opponent: crit 255,
+    // damage 255, accuracy 0 (hit).
     let _ = move_effect_for(MoveId::Tackle);
-    let mut rng = ScriptedRng::new(vec![255, 255, 255, 0, 255]);
+    let mut rng = ScriptedRng::new(vec![255, 255, 255, 255, 255, 0]);
     let result = StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     assert_eq!(result.first, FirstMover::Player);
     // Player's Tackle MISSED → the opponent is untouched by it (no crash on the
@@ -783,9 +783,9 @@ fn p5_on_miss_inert_without_subscriber() {
     // The opponent's Tackle HIT the player (player is the opponent's defender), so
     // the player took normal damage — NOT a crash (Tackle still has no OnMiss hook).
     assert!(state.player_battlers[0].hp < 300, "opponent's Tackle hit the player normally");
-    // Exactly 5 bytes drawn (player crit+acc=2 on the miss; opponent crit+acc+dmg=3)
+    // Exactly 6 bytes drawn (both movers draw crit+damage+accuracy)
     // — the inert OnMiss fire drew NOTHING (the additive/defaulted guarantee).
-    assert_eq!(rng.consumed(), 5, "on:Miss fire drew no extra byte (inert without a subscriber)");
+    assert_eq!(rng.consumed(), 6, "on:Miss fire drew no extra byte (inert without a subscriber)");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

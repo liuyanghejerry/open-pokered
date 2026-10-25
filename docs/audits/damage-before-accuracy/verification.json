@@ -1,0 +1,346 @@
+{
+  "scope": "32 original calculation slices and32 prepared publicFIGHT turns, not a complete original turn or clock comparison. Fresh native m06/scenarios, unchanged GBA gates, and actual native renderer recorded separately.",
+  "initial_red": {
+    "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+    "scope": "Standalone integration-test harness linked to verified1332 native libraries; no new production change. Nominal20 prepared publicFIGHT turns including10controlturns.",
+    "test_sha256": "5cba2bf87b213e94559319f19ef51fd0564dbce51866567ba7c96b8257858aa3",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "aaa34b3d5050126dc53bafa6a2f2c141747b7a0e49fd0fcd527f4274b891ccab"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exe_sha256": "cbd440a6bd592cd0e38217ab388def6df5fad96157b8f618abf5a3cf23a142bf",
+    "exit": 101,
+    "seconds": 0.17986764607485384,
+    "deleted_exe_bytes": 14816768
+  },
+  "dream_eater_red": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_damage_before_accuracy",
+      "--",
+      "--nocapture"
+    ],
+    "base": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+    "test_sha256": "e92785145b8b0aeac8684a482c8e445a27ad5a009e577680496948aa1774200c",
+    "diff_sha256": "90f4a0ad89935ef65b97133dcc917e0be041a2b13983f8a674b75d2b32d086f0",
+    "exit": 101,
+    "seconds": 11.048938723979518
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+    "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+    "diff_sha256": "ccd02e12096d96bd6b3739dae0fcaa324137cc560de5c53c03ad0a199650c8e9",
+    "exit": 0,
+    "seconds": 34.82663095602766
+  },
+  "ron_comment_only_after_core": {
+    "scope": "Only this RON comment changed after the full3758-test core pass. No rule/token/test/production-logic changes. App/native/GBA validation uses the final source including this comment.",
+    "core": {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "pokered-core",
+        "--no-fail-fast"
+      ],
+      "base": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+      "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+      "diff_sha256": "ccd02e12096d96bd6b3739dae0fcaa324137cc560de5c53c03ad0a199650c8e9",
+      "exit": 0,
+      "seconds": 34.82663095602766
+    },
+    "comment_diff": "--- \n+++ \n@@ -451,7 +451,7 @@\n \n         // \u2500\u2500 DREAM EATER: the WHOLE MOVE fails when the target is not asleep \u2014\n         //    core.asm:5240-5245 (MoveHitTest's dreamEaterCheck) jumps to\n-        //    .moveMissed before any damage/accuracy roll. Mirrored as a pre-hit\n+        //    .moveMissed after damage randomization, before accuracy. Mirrored as a pre-hit\n         //    veto on the Accuracy event (order 50 \u21d2 fires before the native\n         //    accuracy handler at order u32::MAX, so no accuracy byte is drawn on\n         //    the failure \u2014 exactly the original's early-out). Only when the target\n",
+    "before_sha256": "b3f5d556cc65a09b42cf23cf5179dc749231d44bb08c1277cf28693eccaced83",
+    "after_sha256": "180f58df519d92ab5662776cbd9c154ece3e212e93800f9f6d7a2cd99b0fca34",
+    "final_diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f"
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+    "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+    "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+    "exit": 0,
+    "seconds": 83.07524811301846
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T02:28:58.951978+00:00",
+    "source": {
+      "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+      "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+      "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 83.13540148199536,
+        "log": "audit-1333-damage-order-app-test-driver.log",
+        "log_sha256": "f43233df08385ad8fac16b6829899cd5571d6f4138cc6cc3d0f52cfe03c828ce"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 59.04919524805155,
+        "log": "audit-1333-damage-order-gba-build-driver.log",
+        "log_sha256": "957edaad03e388d688da7ce4420aab3446415242cfda32189fbfc4934a8be8d8"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.1467508539790288,
+        "log": "audit-1333-damage-order-gba-perf-driver.log",
+        "log_sha256": "5cb7acf166cfcf34a58decc4ef421ab3439cb0f81650988c2acd0ec41f115491"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 60.875024755019695,
+        "log": "audit-1333-damage-order-memory-build-driver.log",
+        "log_sha256": "187769704b6863632b995dddc300739ab7217f1a56b43e7a92c9b0eed887fe5d"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 165.04726811207365,
+        "log": "audit-1333-damage-order-memory-run-driver.log",
+        "log_sha256": "63b0fc3ef8f65ab24d5afa747b5c4f2ef5d6d1235ad1d1b43c261d6484734d1d"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1333-damage-order-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 30.70632763800677,
+        "log": "audit-1333-damage-order-native-build-driver.log",
+        "log_sha256": "622855a30bee2656bbf9c4edc42915eff9c54719333bc390629ae663cc30cb92"
+      }
+    ],
+    "resumed_from": "audit-1333-damage-order-validation-log-guard-failure.json",
+    "finished": "2026-10-25T02:34:17.874790+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+      "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+      "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+      "binary_sha256": "f5ab83101c0f945b33652f28f819776f99ca54b3e1e81f7a50edb4a255abf98e"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1333-damage-order",
+    "status": "passed",
+    "seconds": 48.081460925983265,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+      "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+      "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+      "binary_sha256": "f5ab83101c0f945b33652f28f819776f99ca54b3e1e81f7a50edb4a255abf98e"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1333-damage-order",
+    "status": "passed",
+    "seconds": 144.16649846802466,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "f405cb1107ae6ab0a2908bb6f43eab3f2fcdb14d063fb9b075d44d8d423e6e61",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+    "seconds": 164.7318953629583,
+    "frames": 324000,
+    "cases": 13,
+    "min_heap": 7816,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "render": {
+    "input_trace_sha256": "73220fec5d47d4f102c6061f2ef741a5ebfc9a5f4fdccbd33f01237f42109b14",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1333-damage-order-visual.rs",
+    "source_sha256": "692e544ffd43da5b41873a2275fade32f462ffa1cbb5c7a4bd696502de3bc812",
+    "frame": 75,
+    "before": {
+      "base": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+      "base_tree": "c16349f81d9e7938a543a3b73274029bfc5e83c8",
+      "source": "audit-1333-damage-order-visual.rs",
+      "source_sha256": "692e544ffd43da5b41873a2275fade32f462ffa1cbb5c7a4bd696502de3bc812",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "6e399c56ca65b13582aa4351831455a9fc2dfaa63ad1293ded37c7ac9ea15d9b"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "aaa34b3d5050126dc53bafa6a2f2c141747b7a0e49fd0fcd527f4274b891ccab"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "8694026289eaf371595465f153b511bc78e9c93454e5d1deb59261de4ce88339"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "1b4b35d67b08daf90d6cba23985f13bad41d619f60505cfb530bf03c5a3feaf7",
+      "note": "Current validated1332 libraries. Prepared enemy Tackle versus sleeping player Snorlax; capture miss caption after candidate and replay same frame on parent.",
+      "output": "STAGE attack=0\nCAPTURE frame=75 completed_turns=0 player_display_hp=999 draws=3 message=Some(\"Enemy MEWTWO used TACKLE!\") phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used TACKLE!\"], current: 1, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "24d287b543a0a0483d9172c4a3f570e481f9178d2e39d839141bab37da49025d"
+    },
+    "after": {
+      "source_identity": {
+        "head": "6e71d172e66c1cb647bf4e0de534280235c19c62",
+        "diff_sha256": "aa644b6c2204f22960f2ca196863a5ee1b4aa9522db2eee797a2bcb13b4cc54f",
+        "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "d5c9ab2d383330eb30b03d7d5b3301b6d248d3709e71cd135417a73f9b91ad4d"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "d68826d89b6950951cc2c919ffb612e4df0cbfc6ccf2b9143c1eb8cec505fe6e"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "10ffb6c484a9930febccd88b0887c34fb781dae342e7cb9a54c86c6b4e1dfbb8"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "c4372f49a93c2c9e7591108e76b08480f2f3adff59b242e8b87f0a6970b25b62",
+      "output": "STAGE attack=0\nCAPTURE frame=75 completed_turns=0 player_display_hp=999 draws=3 message=Some(\"Enemy MEWTWO's attack\\nmissed!\") phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used TACKLE!\", \"Enemy MEWTWO's attack\\nmissed!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "38fdf47f9ea3c7ac29e13a35f4fe0d459aae50b9848d52a6d3ec6dea5389f377"
+    },
+    "deleted_exe_bytes": 36337280
+  },
+  "test_sha256": "e2c1b5f2f608169e688ba02ce19eb693eed9355e794ed5ebdbc1c4f50db612f4",
+  "golden_oracle_values_unchanged": true,
+  "original": {
+    "status": "passed",
+    "scope": "Original PlayerCalcMoveDamage/EnemyCalcMoveDamage through return from MoveHitTest, with prepared move/mon/status/stat/modifier/link RAM, registers and stack. Read-only hooks observe the pipeline before animation. Not public inputs, complete original turns, narration, HP application or timing.",
+    "source_reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/battle/core.asm3134-3148 and5517-5536",
+    "source_sha256": "c34fae534c9eff1cc15b3d8bad47830c347cb5e1cef841d0bbc84db465a1c9ee",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "pyboy": "2.8.1",
+    "full_output_sha256": "7abf1adb2ebb1ad8576d32ed2cf7b46563096961a08619ddc8057ab532566a02"
+  ,
+    "cases": [
+      {"side":0,"case":"variance_then_miss","seeds":[255,179,255,0,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":0,"case":"maximum_then_hit","seeds":[255,255,0,255,255,255,255,255,255,255],"damage":200,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":255},{"index":2,"raw":0}]},
+      {"side":0,"case":"minimum_then_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":170,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":0,"case":"immune_control","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"invulnerable_target","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"x_accuracy","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":170,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"swift","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":291,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"swift_invulnerable","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":291,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"x_accuracy_invulnerable","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"immune_x_accuracy","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":1,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255}]},
+      {"side":0,"case":"fly_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":339,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":0,"case":"fly_miss","seeds":[255,179,255,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":0,"case":"dig_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":485,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":0,"case":"dig_miss","seeds":[255,179,255,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":0,"case":"dream_awake","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":0,"case":"dream_asleep","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":109,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":1,"case":"variance_then_miss","seeds":[255,179,255,0,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":1,"case":"maximum_then_hit","seeds":[255,255,0,255,255,255,255,255,255,255],"damage":200,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":255},{"index":2,"raw":0}]},
+      {"side":1,"case":"minimum_then_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":170,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":1,"case":"immune_control","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"invulnerable_target","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"x_accuracy","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":170,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"swift","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":291,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"swift_invulnerable","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":291,"missed":0,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"x_accuracy_invulnerable","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"immune_x_accuracy","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":1,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255}]},
+      {"side":1,"case":"fly_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":339,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":1,"case":"fly_miss","seeds":[255,179,255,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":1,"case":"dig_hit","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":485,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]},
+      {"side":1,"case":"dig_miss","seeds":[255,179,255,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":255}]},
+      {"side":1,"case":"dream_awake","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":0,"missed":1,"critical":0,"draws":2,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179}]},
+      {"side":1,"case":"dream_asleep","seeds":[255,179,0,255,255,255,255,255,255,255],"damage":109,"missed":0,"critical":0,"draws":3,"phases":["CriticalHitTest","CalculateDamage","AdjustDamageForMoveType","RandomizeDamage","MoveHitTest"],"rng":[{"index":0,"raw":255},{"index":1,"raw":179},{"index":2,"raw":0}]}
+    ]
+  }
+}

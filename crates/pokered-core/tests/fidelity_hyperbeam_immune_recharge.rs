@@ -34,8 +34,10 @@ fn setup(enemy: bool, mode: &str) -> BattleScreen {
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     battle.link_rng = Some(LinkRng::new(if mode == "miss" {
         [255; 10]
-    } else {
+    } else if matches!(mode, "gastly" | "haunter" | "gengar" | "converted") {
         [255, 0, 255, 255, 0, 255, 255, 0, 255, 255]
+    } else {
+        [255, 255, 0, 255, 255, 0, 255, 255, 0, 255]
     }));
     let state = battle.battle_state.as_mut().unwrap();
     let (actor, target) = if enemy {
@@ -178,13 +180,8 @@ fn hit_miss_and_substitute_controls_keep_their_next_turn_behavior() {
             );
             assert_eq!(
                 battle.link_rng.as_ref().unwrap().consumed() - before,
-                if expected {
-                    0
-                } else if mode == "miss" {
-                    2
-                } else {
-                    3
-                }
+                // A miss also draws variance before the hit test.
+                if expected { 0 } else { 3 }
             );
             drain(&mut battle);
         }

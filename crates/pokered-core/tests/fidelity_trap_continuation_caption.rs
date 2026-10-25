@@ -6,7 +6,7 @@ use pokered_data::{moves::MoveId, species::Species, types::PokemonType};
 
 const TRAPS: [MoveId; 4] = [MoveId::Bind, MoveId::Wrap, MoveId::Clamp, MoveId::FireSpin];
 
-fn seed(duration: u8) -> LinkRng {
+fn seed(duration: u8, immune: bool) -> LinkRng {
     let mut bytes = [255; 10];
     bytes[0] = duration;
     let critical = if duration >= 2 {
@@ -15,7 +15,7 @@ fn seed(duration: u8) -> LinkRng {
     } else {
         1
     };
-    bytes[critical + 1] = 0;
+    bytes[critical + if immune { 1 } else { 2 }] = 0;
     LinkRng::new(bytes)
 }
 
@@ -65,7 +65,7 @@ fn setup(id: MoveId, enemy: bool, duration: u8, immune_rage: bool) -> BattleScre
     };
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     battle.link_enemy_move_override = Some((if enemy { id } else { target_move }, 0));
-    battle.link_rng = Some(seed(duration));
+    battle.link_rng = Some(seed(duration, immune_rage));
     actor(&mut battle, enemy).active_mon_mut().speed = 200;
     let defender = target(&mut battle, enemy);
     defender.active_mon_mut().speed = 100;
@@ -176,7 +176,7 @@ fn every_trapping_duration_keeps_its_caption_animation_pp_and_damage() {
                 }
                 // A new use after the final continuation must get its ordinary
                 // announcement and a new animation, not a stale action receipt.
-                battle.link_rng = Some(seed(0));
+                battle.link_rng = Some(seed(0, false));
                 let messages = fight(&mut battle);
                 assert!(messages[0].contains("WRAPPER used"));
                 assert!(messages.iter().all(|m| !m.contains("attack continues!")));

@@ -18,7 +18,7 @@ fn setup(id: MoveId, enemy: bool, count: u8) -> BattleScreen {
     let (p, e) = if enemy { (b, a) } else { (a, b) };
     let mut battle = BattleScreen::from_parties(true, &[p], &[e], None);
     battle.link_enemy_move_override = Some((if enemy { id } else { MoveId::Splash }, 0));
-    battle.link_rng = Some(LinkRng::new([255, 0, 255, 255, count - 2, 82, 73, 64, 55, 46]));
+    battle.link_rng = Some(LinkRng::new([255, 255, 0, 255, count - 2, 82, 73, 64, 55, 46]));
     let s = battle.battle_state.as_mut().unwrap();
     s.player.active_mon_mut().speed = if enemy { 200 } else { 100 };
     s.enemy.active_mon_mut().speed = if enemy { 100 } else { 200 };
@@ -137,7 +137,7 @@ fn completed_count_survives_a_later_self_destruct_and_precedes_its_announcement(
         a.active_mon_mut().speed = 300; t.active_mon_mut().speed = 100;
         t.active_mon_mut().moves[0] = MoveId::Selfdestruct;
         b.link_enemy_move_override = Some((if enemy { MoveId::DoubleKick } else { MoveId::Selfdestruct }, 0));
-        b.link_rng = Some(LinkRng::new([255, 0, 255, 255, 0, 255, 255, 0, 255, 255]));
+        b.link_rng = Some(LinkRng::new([255, 255, 0, 255, 255, 0, 255, 255, 0, 255]));
         let messages = fight(&mut b);
         assert_eq!(target(&mut b, enemy).active_mon().hp, 0);
         assert_eq!(counts(&messages), [caption(enemy, 2)]);
@@ -160,7 +160,7 @@ fn count_precedes_twineedle_poison_and_follows_existing_rage_stat_narration() {
                 t.selected_move = MoveId::Rage;
                 t.active_mon_mut().moves[0] = MoveId::Rage;
             }
-            b.link_rng = Some(LinkRng::new([255, 0, 255, 0, 255, 0, 255, 255, 255, 255]));
+            b.link_rng = Some(LinkRng::new([255, 255, 0, 0, 255, 255, 0, 255, 255, 255]));
             let messages = fight(&mut b);
             let count = messages.iter().position(|s| s.starts_with("Hit ")).expect("count");
             let poison = messages.iter().position(|s| s.contains("was poisoned")).expect("poison");

@@ -31,7 +31,11 @@ fn setup(id: MoveId, enemy: bool, kind: PokemonType, doll: bool) -> BattleScreen
     let (p, e) = if enemy { (t, a) } else { (a, t) };
     let mut b = BattleScreen::from_parties(true, &[p], &[e], None);
     b.link_enemy_move_override = Some((if enemy { id } else { MoveId::Splash }, 0));
-    b.link_rng = Some(LinkRng::new([255, 0, 255, 0, 255, 255, 255, 255, 255, 255]));
+    b.link_rng = Some(LinkRng::new(if kind == immune_type(id) {
+        [255, 0, 255, 0, 255, 255, 255, 255, 255, 255]
+    } else {
+        [255, 255, 0, 0, 255, 255, 255, 255, 255, 255]
+    }));
     side(&mut b, enemy).active_mon_mut().speed = 200;
     let target = side(&mut b, !enemy);
     target.active_mon_mut().speed = 100;

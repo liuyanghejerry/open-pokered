@@ -27,7 +27,7 @@ fn run(move_: MoveId, target_player: bool, substitute: Option<u8>, byte: u8) -> 
     screen.link_mode = true;
     screen.link_enemy_move_override = Some((if target_player { move_ } else { MoveId::Splash }, 0));
     // Crit, accuracy, damage, secondary chance, then unmistakable continuation bytes.
-    screen.link_rng = Some(LinkRng::new([255, 0, 255, byte, 91, 82, 73, 64, 55, 46]));
+    screen.link_rng = Some(LinkRng::new([255, 255, 0, byte, 91, 82, 73, 64, 55, 46]));
     let bs = screen.battle_state.as_mut().unwrap();
     let (attacker, target) = if target_player {
         (&mut bs.enemy, &mut bs.player)

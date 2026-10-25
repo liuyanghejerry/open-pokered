@@ -36,7 +36,11 @@ fn setup(id: MoveId, enemy: bool, immune: bool, initial: i8, species: Species) -
     };
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     // Two-turn trap; non-critical first hit; accuracy succeeds; maximum damage.
-    battle.link_rng = Some(LinkRng::new([0, 255, 0, 255, 255, 255, 255, 255, 255, 255]));
+    battle.link_rng = Some(LinkRng::new(if immune {
+        [0, 255, 0, 255, 255, 255, 255, 255, 255, 255]
+    } else {
+        [0, 255, 255, 0, 255, 255, 255, 255, 255, 255]
+    }));
     let state = battle.battle_state.as_mut().unwrap();
     let (actor, defender) = if enemy {
         (&mut state.enemy, &mut state.player)
