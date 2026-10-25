@@ -229,6 +229,56 @@ fn whole_source_apu_accesses_match_original_and_commit_never_replays_batch_outpu
 }
 
 #[test]
+fn source_frame_runner_matches_single_instructions_through_refusal_and_resume() {
+    let fixture: BusFixture =
+        serde_json::from_str(include_str!("../source_clock/frame_bus_golden.json")).unwrap();
+    for case in fixture.cases.iter().step_by(37) {
+        for allowance in [1, 17, 31, 128] {
+            let manager = at_frame(case);
+            let mut actual = manager.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+            let mut expected = actual.clone();
+            let mut actual_apu = manager.apu.clone();
+            let mut expected_apu = actual_apu.clone();
+            loop {
+                let frozen = actual.clone();
+                assert_eq!(
+                    actual.run_with_bus(&manager.sequencer, |_| Err("denied")),
+                    Err(FrameStepError::Clock("denied")),
+                );
+                assert_eq!(actual, frozen);
+                actual = serde_json::from_slice(&serde_json::to_vec(&actual).unwrap()).unwrap();
+                let mut actual_ops = Vec::new();
+                let mut expected_ops = Vec::new();
+                let result = actual.run_with_bus(&manager.sequencer, |op| {
+                    if actual_ops.len() == allowance { return Err("yield"); }
+                    actual_ops.push(op);
+                    Ok(execute(&mut actual_apu, op))
+                });
+                let reference = loop {
+                    match expected.try_step_with_bus(&manager.sequencer, |op| {
+                        if expected_ops.len() == allowance { return Err("yield"); }
+                        expected_ops.push(op);
+                        Ok(execute(&mut expected_apu, op))
+                    }) {
+                        Ok(true) => break Ok(()),
+                        Ok(false) => (),
+                        Err(error) => break Err(error),
+                    }
+                };
+                assert_eq!(result, reference);
+                assert_eq!(actual_ops, expected_ops);
+                assert_eq!(actual, expected);
+                assert_eq!(actual_apu.playback_state(), expected_apu.playback_state());
+                if result.is_ok() { break; }
+            }
+            actual.run_with_bus(&manager.sequencer, |_| -> Result<_, ()> {
+                panic!("completed frame must not execute")
+            }).unwrap();
+        }
+    }
+}
+
+#[test]
 fn live_manager_resumes_across_refusals_and_commits_one_logical_tick_per_frame() {
     for (music, bank) in [
         (MusicId::POKECENTER, 2),

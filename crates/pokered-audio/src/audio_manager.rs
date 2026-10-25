@@ -654,12 +654,10 @@ impl AudioManager {
         let prepared = self
             .prepare_source_frame()
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
-        while !work.finished() {
-            work.try_step_with_bus(&self.engine.sequencer, |op| {
-                execute(&mut self.engine.apu, op)
-            })
-            .map_err(AudioAdmissionError::Admission)?;
-        }
+        work.run_with_bus(&self.engine.sequencer, |op| {
+            execute(&mut self.engine.apu, op)
+        })
+        .map_err(AudioAdmissionError::Admission)?;
         if prepared.work()
             != (AudioFrameWork {
                 cycles: work.cycles(),

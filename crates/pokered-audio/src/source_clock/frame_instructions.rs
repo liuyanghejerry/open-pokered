@@ -434,6 +434,42 @@ impl SourceAudioFrame {
         }
         self.step_inner(seq, execute)
     }
+    /// Keep an effect child borrowed until it returns or the clock refuses an
+    /// instruction. Each instruction still visits the caller's bus; only the
+    /// enclosing frame dispatch and duplicate effect lookup are avoided.
+    pub(crate) fn run_with_bus<E>(
+        &mut self,
+        seq: &Sequencer,
+        mut execute: impl FnMut(super::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<(), FrameStepError<E>> {
+        use super::apu_bus::ApuInstruction;
+        if !self.physical_output {
+            return Err(FrameStepError::ChangedProgram);
+        }
+        while !self.finished() {
+            if let Stage::Effect(work) = &mut self.stage {
+                assert!(!work.finished(), "pending effect");
+                loop {
+                    let mut accepted = 0;
+                    let done = work.try_step_with_apu(|t, write| {
+                        let op = write.map_or_else(
+                            || ApuInstruction::plain(t),
+                            |w| ApuInstruction::write(t, w.address, w.value),
+                        );
+                        execute(op)?;
+                        accepted = t;
+                        Ok(())
+                    }).map_err(FrameStepError::Clock)?;
+                    self.cycles += u32::from(accepted);
+                    if done { break; }
+                }
+                self.stage = Stage::Tail(0);
+            } else {
+                self.step_inner(seq, &mut execute)?;
+            }
+        }
+        Ok(())
+    }
     fn step_inner<E>(
         &mut self,
         seq: &Sequencer,
