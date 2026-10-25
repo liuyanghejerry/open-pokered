@@ -1495,6 +1495,9 @@ thread_local! {
     static TRAPPING_CONTINUED: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
     /// CantLowerAnymore belongs to this action, even if a later Haze resets stages.
     static PRIMARY_STAT_FLOOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
+    // Rest chooses its sleep text before clearing the user's old status.
+    // A later Haze must not rewrite that action's result.
+    static REST_HAD_STATUS: RefCell<[Option<bool>; 2]> = const { RefCell::new([None, None]) };
 }
 
 /// Set the move the battler on `who`'s side is executing this action (production).
@@ -1505,6 +1508,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
     HIT_SURVIVAL.with(|moves| moves.borrow_mut()[who.side as usize] = None);
     RAGE_OUTCOME.with(|gains| gains.borrow_mut()[who.side as usize] = None);
     TRAPPING_CONTINUED.with(|moves| moves.borrow_mut()[who.side as usize] = None);
+    REST_HAD_STATUS.with(|status| status.borrow_mut()[who.side as usize] = None);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1519,7 +1523,12 @@ pub fn clear_current_moves() {
     TRAPPING_CONTINUED.with(|moves| *moves.borrow_mut() = [None, None]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
     PRIMARY_STAT_FLOOR.with(|moves| *moves.borrow_mut() = [None, None]);
+    REST_HAD_STATUS.with(|status| *status.borrow_mut() = [None, None]);
     ohko::clear();
+}
+
+pub(super) fn rest_had_status(player: bool) -> Option<bool> {
+    REST_HAD_STATUS.with(|status| status.borrow()[usize::from(!player)])
 }
 
 fn primary_stat_floor(player: bool, move_id: MoveId) -> bool {
@@ -3415,6 +3424,11 @@ fn bridge_damaging_hit(
     source_effect: EffectId,
 ) -> HandlerResult {
     let pm = current_move_for(source);
+    if pm.id == MoveId::Rest && source_effect_is(source_effect, "status.rest") {
+        REST_HAD_STATUS.with(|status| {
+            status.borrow_mut()[source.side as usize] = Some(ctx.battler(source).status.is_some());
+        });
+    }
     if is_self_protection(pm.effect) {
         // These effects inspect the USER's existing flag. DamagingHit's
         // ordinary target is the opponent, while the authored guard is

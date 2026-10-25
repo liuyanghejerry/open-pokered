@@ -183,6 +183,15 @@ pub(in crate::battle) fn transformed_result(state: &EngineState<PokeredRules>, a
     (format!("{} transformed into\n{copied}!", display_name_named(state, actor, names)), species)
 }
 
+pub(in crate::battle) fn rest_sleep_caption(state: &EngineState<PokeredRules>, actor: BattlerRef, names: Option<&BattleNameContext>) -> String {
+    let name = display_name_named(state, actor, names);
+    if super::rest_had_status(actor.side == 0) == Some(true) {
+        format!("{name}\nfell asleep and\nbecame healthy!")
+    } else {
+        format!("{name}\nstarted sleeping!")
+    }
+}
+
 /// Display name: UPPERCASE species, "Enemy "-prefixed on side 1.
 pub fn display_name(state: &EngineState<PokeredRules>, who: BattlerRef) -> String {
     let up = species_name(battler_at(state, who).species, false).to_uppercase();
@@ -365,6 +374,19 @@ pub(crate) fn translate_turn_named_with_faints(
                             _ => format!("{name}'s\ngetting pumped!"),
                         }
                     });
+                } else if md.effect == pokered_data::moves::MoveEffect::HealEffect {
+                    let name = display_name_named(state, actor, names);
+                    msgs.push(format!("{name} used {}!", move_name(*move_, false)));
+                    if missed {
+                        msgs.push("But, it failed!".to_string());
+                    } else {
+                        // HealEffect prints Rest's sleep text before animation,
+                        // then RegainedHealthText after the HP bar refill.
+                        if *move_ == MoveId::Rest {
+                            msgs.push(rest_sleep_caption(state, actor, names));
+                        }
+                        msgs.push(format!("{name}\nregained health!"));
+                    }
                 } else if matches!(md.effect, pokered_data::moves::MoveEffect::ConversionEffect
                     | pokered_data::moves::MoveEffect::TransformEffect) {
                     msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
@@ -483,6 +505,10 @@ pub(crate) fn translate_turn_named_with_faints(
                 }
             },
             TurnEvent::StatusInflicted { target, status } => {
+                if current_move == Some(MoveId::Rest) && current_actor == Some(*target)
+                    && super::rest_had_status(target.side == 0).is_some() {
+                    continue; // Rest already published its distinct sleep result.
+                }
                 // The engine also reports Sleep(n) -> Sleep(n-1). That is the
                 // blocked action's countdown, not a fresh sleep inflicted by a move.
                 if matches!(status, LegacyStatus::Sleep(_)) && current_block == Some(*target)
