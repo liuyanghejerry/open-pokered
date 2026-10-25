@@ -27,7 +27,7 @@ fn setup_target(id: MoveId, enemy: bool, count: u8, initial_stage: i8, species: 
     let (p, e) = if enemy { (t, a) } else { (a, t) };
     let mut b = BattleScreen::from_parties(true, &[p], &[e], None);
     b.link_enemy_move_override = Some((if enemy { id } else { MoveId::Rage }, 0));
-    b.link_rng = Some(LinkRng::new([255, 0, 255, 255, count - 2, 82, 73, 64, 55, 46]));
+    b.link_rng = Some(LinkRng::new([255, 255, 0, 255, count - 2, 82, 73, 64, 55, 46]));
     side(&mut b, enemy).active_mon_mut().speed = 100;
     let target = side(&mut b, !enemy);
     target.active_mon_mut().speed = 200;

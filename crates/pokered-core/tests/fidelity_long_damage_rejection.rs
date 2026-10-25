@@ -1,5 +1,5 @@
 //! Original RandomizeDamage must keep sampling until it accepts a byte.
-use pokered_core::battle::state::StatusCondition;
+use pokered_core::battle::state::{status2, StatusCondition};
 use pokered_core::battle::{BattleInput, BattlePhase, BattleScreen};
 use pokered_core::link::rng::LinkRng;
 use pokered_core::pokemon::stats::create_pokemon_with_moves;
@@ -54,7 +54,11 @@ fn setup(enemy: bool, id: MoveId, types: [PokemonType; 2], raw: u8) -> BattleScr
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     battle.link_enemy_move_override = Some((if enemy { id } else { MoveId::Splash }, 0));
     let bytes = [raw; 10];
-    battle.link_rng = Some(LinkRng::new(bytes));
+    let mut rng = LinkRng::new(bytes);
+    // The isolated original oracle starts variance at index 2. Prepare index 1
+    // so the critical byte leads into exactly that same stream position.
+    rng.next_stream_byte();
+    battle.link_rng = Some(rng);
     let state = battle.battle_state.as_mut().unwrap();
     let (actor, target) = if enemy {
         (&mut state.enemy, &mut state.player)
@@ -62,6 +66,8 @@ fn setup(enemy: bool, id: MoveId, types: [PokemonType; 2], raw: u8) -> BattleScr
         (&mut state.player, &mut state.enemy)
     };
     // Prepared stats give base damage 2; converted types reduce it to 0/1.
+    // Isolate variance from the subsequent accuracy byte, including raw 255.
+    actor.battle_status2 |= status2::USING_X_ACCURACY;
     actor.active_mon_mut().attack = 1;
     actor.active_mon_mut().special = 1;
     actor.active_mon_mut().speed = 100;
@@ -86,6 +92,7 @@ fn target_hp(battle: &BattleScreen, enemy: bool) -> u16 {
 
 fn fight_and_drain(mut battle: BattleScreen, enemy: bool) -> (u16, u64) {
     let hp = target_hp(&battle, enemy);
+    let initial_draws = battle.link_rng.as_ref().unwrap().consumed();
     let mut input = BattleInput::none();
     input.a = true;
     for _ in 0..4 {
@@ -100,14 +107,14 @@ fn fight_and_drain(mut battle: BattleScreen, enemy: bool) -> (u16, u64) {
     assert!(messages.iter().any(|s| s.contains("used POUND!")));
     let outcome = (
         hp - target_hp(&battle, enemy),
-        battle.link_rng.as_ref().unwrap().consumed(),
+        battle.link_rng.as_ref().unwrap().consumed() - initial_draws,
     );
     for frame in 0..4000 {
         if battle.presentation.waiting {
             battle.complete_move_presentation();
         }
         if matches!(battle.phase, BattlePhase::PlayerMenu) {
-            assert_eq!(battle.link_rng.as_ref().unwrap().consumed(), outcome.1);
+            assert_eq!(battle.link_rng.as_ref().unwrap().consumed() - initial_draws, outcome.1);
             return outcome;
         }
         let mut input = BattleInput::none();
@@ -119,9 +126,7 @@ fn fight_and_drain(mut battle: BattleScreen, enemy: bool) -> (u16, u64) {
 
 fn verify_sequences(long: bool) {
     for enemy in [false, true] {
-        // Raw 255 misses the accuracy test before native variance. Overall
-        // phase ordering is a separate gap, outside this rejection-loop test.
-        for raw in 0..255u8 {
+        for raw in 0..=255u8 {
             let expected_draws = ORIGINAL_DRAWS[raw as usize];
             if (expected_draws > 65) != long {
                 continue;
@@ -131,7 +136,7 @@ fn verify_sequences(long: bool) {
                     setup(enemy, MoveId::Pound, [PokemonType::Normal; 2], raw),
                     enemy
                 ),
-                (ORIGINAL_DAMAGE[raw as usize], 2 + expected_draws),
+                (ORIGINAL_DAMAGE[raw as usize], 1 + expected_draws),
                 "enemy={enemy} raw={raw}"
             );
         }

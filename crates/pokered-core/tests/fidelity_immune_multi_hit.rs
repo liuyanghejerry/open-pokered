@@ -36,13 +36,17 @@ fn setup(id: MoveId, enemy: bool, count: u8, doll: bool, raging: bool) -> Battle
 }
 
 fn reset_rng(b: &mut BattleScreen, count: u8) {
-    b.link_rng = Some(LinkRng::new([255, 0, 255, 255, count - 2, 82, 73, 64, 55, 46]));
+    b.link_rng = Some(LinkRng::new([255, 255, 0, 255, count - 2, 82, 73, 64, 55, 46]));
 }
 
 fn make_immune(b: &mut BattleScreen, enemy: bool, kind: PokemonType) {
     let target = side(b, !enemy);
     target.conversion_type1 = Some(kind);
     target.conversion_type2 = Some(kind);
+    // No variance on immunity: the hit-test byte directly follows crit.
+    let mut bytes = b.link_rng.as_ref().unwrap().list();
+    bytes[1] = 0;
+    b.link_rng = Some(LinkRng::new(bytes));
 }
 
 fn fight(b: &mut BattleScreen) -> Vec<String> {
@@ -130,8 +134,8 @@ fn an_immune_next_turn_cannot_reuse_the_previous_hit_sequence() {
             let mut b = setup(MoveId::FuryAttack, enemy, 5, doll, false);
             fight(&mut b);
             assert_eq!(drain(&mut b, MoveId::FuryAttack, enemy), 5);
-            make_immune(&mut b, enemy, PokemonType::Ghost);
             reset_rng(&mut b, 5);
+            make_immune(&mut b, enemy, PokemonType::Ghost);
             let hp = side(&mut b, !enemy).active_mon().hp;
             let messages = fight(&mut b);
             assert_eq!(side(&mut b, !enemy).active_mon().hp, hp);

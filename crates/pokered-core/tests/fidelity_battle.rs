@@ -503,7 +503,7 @@ fn stage_rounding_precedes_badges_and_persists_without_double_stage_application(
     turn(&mut bs, MoveId::Sharpen, vec![255]);
     assert_eq!(bs.player.staged_badge_stats.unwrap()[0], 122);
     // floor(73*3/2)=109, then 109+floor(109/8)=122. Reversing gives123.
-    turn(&mut bs, MoveId::BodySlam, vec![255, 0, 255, 255]);
+    turn(&mut bs, MoveId::BodySlam, vec![255, 255, 0, 255]);
     assert_eq!(
         bs.enemy.active_mon().hp,
         330,
@@ -531,7 +531,7 @@ fn critical_damage_uses_party_stats_instead_of_badge_or_transform_copies() {
     bs.player.stat_stages.attack = 6;
     bs.player.active_mon_mut().status = StatusCondition::Burn;
     bs.enemy.set_status3(status3::HAS_REFLECT_UP);
-    turn(&mut bs, MoveId::Tackle, vec![0, 0, 255]);
+    turn(&mut bs, MoveId::Tackle, vec![0, 255, 0]);
     assert_eq!(
         bs.enemy.active_mon().hp,
         354,
@@ -542,7 +542,7 @@ fn critical_damage_uses_party_stats_instead_of_badge_or_transform_copies() {
     bs.enemy.active_mon_mut().attack = 300;
     turn(&mut bs, MoveId::Transform, vec![255]);
     assert_eq!(bs.player.active_mon().attack, 300);
-    turn(&mut bs, MoveId::Tackle, vec![0, 0, 255]);
+    turn(&mut bs, MoveId::Tackle, vec![0, 255, 0]);
     assert_eq!(
         bs.enemy.active_mon().hp,
         354,
@@ -574,7 +574,7 @@ fn transformed_enemy_crit_recalculates_own_level_except_in_link_battles() {
         };
         enemy_turn(&mut bs, MoveId::Transform, vec![255]);
         assert_eq!(bs.enemy.active_mon().species, Species::Pikachu);
-        enemy_turn(&mut bs, MoveId::Tackle, vec![0, 0, 255]);
+        enemy_turn(&mut bs, MoveId::Tackle, vec![0, 255, 0]);
         // GetEnemyMonStat: non-link (55+15)*2*10/100+5=19 Attack;
         // link uses original party Attack=100. Critical own level is 10.
         assert_eq!(bs.player.active_mon().hp, 400 - damage, "link={link}");

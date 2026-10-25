@@ -62,7 +62,7 @@ fn fixture(move_id: MoveId, enemy: bool, condition: &str, chance: u8) -> BattleS
     };
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     battle.link_enemy_move_override = Some((if enemy { move_id } else { MoveId::Splash }, 0));
-    battle.link_rng = Some(LinkRng::new([255, 0, 255, chance, 82, 73, 64, 55, 46, 37]));
+    battle.link_rng = Some(LinkRng::new([255, 255, 0, chance, 82, 73, 64, 55, 46, 37]));
     let state = battle.battle_state.as_mut().unwrap();
     assert!(!state.link_battle && !battle.link_mode);
     let (attacker, target) = if enemy {

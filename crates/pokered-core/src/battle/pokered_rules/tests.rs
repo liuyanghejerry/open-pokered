@@ -70,7 +70,7 @@ fn canonical_install_reuses_the_current_thread_registry() {
 // rolls. An exhausted all-zero ScriptedRng repeats zero forever and can never
 // finish the original RandomizeDamage rejection loop. Raw 179 rotates to 217.
 fn finite_damage_rolls() -> ScriptedRng {
-    ScriptedRng::new([0, 0, 179].repeat(32))
+    ScriptedRng::new([0, 179, 0].repeat(32))
 }
 
 // ─── Scenario shape (mirrors the stack_parity DamageScenario, PokeredRules-side) ─
@@ -304,10 +304,10 @@ fn order_is_tie(s: &Scenario) -> bool {
 
 /// Predict the byte stream the StackDriver draws, in FIRE order, + the count.
 /// Mirrors the resolve_action control flow for the P1/P2 (no-confusion, no-status)
-/// scenarios: order byte (tie only) → per mover [crit? acc damage? side_effect?].
+/// scenarios: order byte (tie only) → per mover [crit? damage? acc side_effect?].
 ///   * crit drawn iff power > 0;
 ///   * accuracy drawn always EXCEPT SwiftEffect (never misses, draws nothing);
-///   * damage drawn iff power > 0 AND accuracy hit;
+///   * damage drawn for ordinary power > 0 moves before accuracy;
 ///   * P2 side_effect drawn iff the move is a chance-gated side-status AND it HIT
 ///     (the chance gate on the `DamagingHit` hook is drawn UNCONDITIONALLY of
 ///     whether the secondary fires, so consumed() is invariant). Drain/recoil and
@@ -368,6 +368,9 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
         if md.power > 0 {
             bytes.push(mb.crit);
         }
+        if md.power > 0 {
+            bytes.push(mb.damage);
+        }
         let draws_acc = md.effect != MoveEffect::SwiftEffect && super::move_rolls_accuracy(md.effect);
         if draws_acc {
             bytes.push(mb.accuracy);
@@ -376,9 +379,6 @@ fn build_stream_sub(s: &Scenario, first: FirstMover, tie: bool, second_subbed: b
         // never draws acc and always hits.
         let scaled = (md.accuracy as u32 * 255 / 100).min(255) as u8;
         let hit = !draws_acc || mb.accuracy < scaled;
-        if md.power > 0 && hit {
-            bytes.push(mb.damage);
-        }
         // P2: side-status draws only when the target's types permit the effect.
         // P3: the SIDE foe-stat-down chance gate (85/256) draws ONE byte too — the
         // nested-veto driver reads it at the same legacy ordinal whether or not the
@@ -835,11 +835,11 @@ fn reflect_halves_physical_damage_via_decoupled_stack() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         ];
-        // Draw order: crit byte, then accuracy, then the ≥217 damage byte.
-        // A cyclic [255, 0, 217] stream gives: no crit (255 ≥ threshold),
+        // Draw order: crit byte, then the rotated damage byte, then accuracy.
+        // A cyclic [255, 217, 0] stream gives: no crit (255 ≥ threshold),
         // hit (0 < 255 accuracy), damage roll 217 — deterministic and non-crit
         // (a crit discards Reflect, core.asm:4059-4064, out of scope here).
-        let mut rng = ScriptedRng::new([255u8, 0, 217].iter().copied().cycle().take(64).collect::<Vec<u8>>());
+        let mut rng = ScriptedRng::new([255u8, 217, 0].iter().copied().cycle().take(64).collect::<Vec<u8>>());
         let (_r, log) = StackDriver::execute_turn_logged(
             &PokeredRules, &mut state, &mut effects, actions, &mut rng,
         );
@@ -1572,8 +1572,8 @@ fn wrap_duration_uses_multi_hit_weights() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Wrap },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    // Duration is rolled before crit, accuracy and formula randomization.
-    let mut rng = ScriptedRng::new(vec![2, 2, 255, 0, 255]);
+    // Duration is rolled before crit, formula randomization and accuracy.
+    let mut rng = ScriptedRng::new(vec![2, 2, 255, 255, 0]);
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1858,8 +1858,8 @@ fn confusion_side_effect_uses_original_threshold_and_skips_rng_after_sub_break()
                     effects.push(EffectState { id: EffectId(0x9301), host: BattlerRef::OPPONENT,
                         effect_order: 999, kind: PokeVolatile::SubstituteHp { hp } });
                 }
-                // Crit, accuracy, damage, secondary chance, confusion duration.
-                let mut rng = ScriptedRng::new(vec![255, 0, 255, chance_byte, 3]);
+                // Crit, damage, accuracy, secondary chance, confusion duration.
+                let mut rng = ScriptedRng::new(vec![255, 255, 0, chance_byte, 3]);
                 StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects,
                     [BattleAction::Fight { move_ }, BattleAction::Fight { move_: MoveId::Splash }], &mut rng);
                 let expected = chance_byte == 24 && sub_hp != Some(1);
@@ -2719,8 +2719,8 @@ fn disable_faster_user_target_decrements_same_turn() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Disable },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    // Disable accuracy/slot/one-turn duration, then Tackle crit/accuracy/variance.
-    let mut rng = ScriptedRng::new(vec![0, 0, 0, 0, 0, 179]);
+    // Disable accuracy/slot/one-turn duration, then Tackle crit/variance/accuracy.
+    let mut rng = ScriptedRng::new(vec![0, 0, 0, 0, 179, 0]);
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -2787,7 +2787,7 @@ fn dream_eater_drains_from_sleeping_target() {
 
 /// Dream Eater FAILS ENTIRELY (a miss — no damage, no drain) when the target is
 /// awake: core.asm:5240-5245, MoveHitTest's dreamEaterCheck → .moveMissed before
-/// any damage/accuracy roll.
+/// accuracy, after damage has already been calculated and randomized.
 #[test]
 fn dream_eater_fails_on_awake_target() {
     install_canonical();
@@ -2805,7 +2805,7 @@ fn dream_eater_fails_on_awake_target() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::DreamEater },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = ScriptedRng::new(vec![255, 179]);
     let (_r, log) = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -3203,7 +3203,7 @@ fn gate_paralysis_full_para_blocks_else_acts() {
     assert_eq!(r1.consumed(), 1, "only the paralysis gate byte is drawn on a full-para");
     // byte 63 !< 63 → acts → Tackle lands.
     let (mut s2, mut e2) = gate_state(Some(LegacyStatus::Paralysis));
-    let mut r2 = ScriptedRng::new(vec![63, 255, 0, 255]); // para(63 act), crit(255), acc(0 hit), dmg(255)
+    let mut r2 = ScriptedRng::new(vec![63, 255, 255, 0]); // para(63 act), crit(255), dmg(255), acc(0 hit)
     StackDriver::execute_turn(&PokeredRules, &mut s2, &mut e2, gate_actions(), &mut r2);
     assert!(s2.opponent_battlers[0].hp < 300, "para byte 63 ≥ 63 → acts → Tackle hits");
 }
@@ -3222,7 +3222,7 @@ fn gate_confusion_self_hit_else_acts() {
     // byte 127 continues normally → Tackle lands.
     let (mut s2, mut e2) = gate_state(None);
     e2.push(EffectState { id: EffectId(801), host: BattlerRef::PLAYER, effect_order: 0, kind: PokeVolatile::Confused { turns: 3 } });
-    let mut r2 = ScriptedRng::new(vec![127, 255, 0, 255]); // confusion(127 act), crit, acc, dmg
+    let mut r2 = ScriptedRng::new(vec![127, 255, 255, 0]); // confusion(127 act), crit, dmg, acc
     StackDriver::execute_turn(&PokeredRules, &mut s2, &mut e2, gate_actions(), &mut r2);
     assert!(s2.opponent_battlers[0].hp < 300, "confusion byte 127 < 128 → acts → Tackle hits");
     assert_eq!(s2.player_battlers[0].hp, 300, "no self-hit when the mon acts through confusion");
@@ -3238,7 +3238,7 @@ fn gate_confusion_original_raw_boundaries_on_both_sides() {
             effects.push(EffectState {id:EffectId(803),host:actor,effect_order:0,kind:PokeVolatile::Confused {turns:3}});
             let mut actions=[BattleAction::<PokeredRules>::Nothing,BattleAction::Nothing];
             actions[actor.side as usize]=BattleAction::Fight {move_:MoveId::Tackle};
-            let mut rng=ScriptedRng::new(vec![byte,255,0,255]);
+            let mut rng=ScriptedRng::new(vec![byte,255,255,0]);
             let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,actions,&mut rng);
             let own=battler_at(&state,actor).hp;
             let other=battler_at(&state,opp_ref(actor)).hp;
@@ -3261,7 +3261,7 @@ fn gate_confusion_link_list_keeps_raw_polarity_and_exact_index() {
             effects.push(EffectState {id:EffectId(804),host:actor,effect_order:0,kind:PokeVolatile::Confused {turns:3}});
             let mut actions=[BattleAction::<PokeredRules>::Nothing,BattleAction::Nothing];
             actions[actor.side as usize]=BattleAction::Fight {move_:MoveId::Tackle};
-            let list=[byte,255,0,255,91,82,73,64,55,46];
+            let list=[byte,255,255,0,91,82,73,64,55,46];
             let mut rng=LinkRng::new(list);
             let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,actions,&mut rng);
             assert_eq!(battler_at(&state,actor).hp<300,self_hit,"raw Link byte {byte}");
@@ -3292,9 +3292,9 @@ fn gate_confusion_original_polarity_preserves_paralysis_read_order() {
 fn gate_confusion_snap_out_never_reads_the_high_self_hit_byte() {
     let (mut state,mut effects)=gate_state(None);
     effects.push(EffectState {id:EffectId(806),host:BattlerRef::PLAYER,effect_order:0,kind:PokeVolatile::Confused {turns:1}});
-    // These are crit/accuracy/damage. The leading 255 would self-hit if the
+    // These are crit/damage/accuracy. The leading 255 would self-hit if the
     // expired confusion gate incorrectly consumed it.
-    let mut rng=ScriptedRng::new(vec![255,0,255]);
+    let mut rng=ScriptedRng::new(vec![255,255,0]);
     StackDriver::execute_turn(&PokeredRules,&mut state,&mut effects,gate_actions(),&mut rng);
     assert_eq!(state.player_battlers[0].hp,300);
     assert!(state.opponent_battlers[0].hp<300);
@@ -5432,8 +5432,8 @@ fn immune_failure_retains_pre_accuracy_types_across_later_conversion() {
             id:EffectId(0x9910), host:BattlerRef::OPPONENT, effect_order:999,
             kind:PokeVolatile::TypeOverride {type1:PokemonType::Ghost,type2:PokemonType::Poison},
         }] } else { Vec::new() };
-        // Accuracy fails before ModifyDamage, so the earlier capture is needed.
-        let mut bytes = vec![0, 255]; bytes.extend([0; 128]);
+        // Accuracy fails after damage preparation; the receipt precedes Conversion.
+        let bytes = if initially_immune { vec![0, 255] } else { vec![0, 255, 255] };
         let mut rng = ScriptedRng::new(bytes);
         let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects,
             [BattleAction::<PokeredRules>::Fight {move_:MoveId::MegaPunch},

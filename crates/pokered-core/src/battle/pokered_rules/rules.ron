@@ -451,7 +451,7 @@ Ruleset(
 
         // ── DREAM EATER: the WHOLE MOVE fails when the target is not asleep —
         //    core.asm:5240-5245 (MoveHitTest's dreamEaterCheck) jumps to
-        //    .moveMissed before any damage/accuracy roll. Mirrored as a pre-hit
+        //    .moveMissed after damage randomization, before accuracy. Mirrored as a pre-hit
         //    veto on the Accuracy event (order 50 ⇒ fires before the native
         //    accuracy handler at order u32::MAX, so no accuracy byte is drawn on
         //    the failure — exactly the original's early-out). Only when the target

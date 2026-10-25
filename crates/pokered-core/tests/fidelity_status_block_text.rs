@@ -29,9 +29,9 @@ fn fixture(status: S, reply: MoveId, enemy: bool, actor_first: bool) -> BattleSc
     b.link_rng = Some(LinkRng::new(if reply == MoveId::Hypnosis {
         [0, 3, 255, 0, 255, 255, 0, 255, 255, 0]
     } else if status == S::Paralysis {
-        [0, 255, 0, 255, 255, 0, 255, 255, 0, 255]
+        [0, 255, 255, 0, 255, 255, 0, 255, 255, 0]
     } else {
-        [255, 0, 255, 255, 0, 255, 255, 0, 255, 255]
+        [255, 255, 0, 255, 255, 0, 255, 255, 0, 255]
     }));
     let state = b.battle_state.as_mut().unwrap();
     assert!(!state.link_battle && !b.link_mode);

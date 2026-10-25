@@ -33,7 +33,7 @@ const ORIGINAL_DRAWS: [u64; 256] = [
     2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
 ];
 
-fn setup(enemy: bool, variance_bytes: &[u8]) -> BattleScreen {
+fn setup(enemy: bool, variance_bytes: &[u8], variance_draws: usize) -> BattleScreen {
     let attacker = create_pokemon_with_moves(
         Species::Mewtwo,
         100,
@@ -64,8 +64,9 @@ fn setup(enemy: bool, variance_bytes: &[u8]) -> BattleScreen {
         0,
     ));
     let mut bytes = [255; 10];
-    bytes[1] = 0;
-    bytes[2..2 + variance_bytes.len()].copy_from_slice(variance_bytes);
+    bytes[1..1 + variance_bytes.len()].copy_from_slice(variance_bytes);
+    // Place the successful accuracy sample after the original observed draws.
+    bytes[1 + variance_draws] = 0;
     battle.link_rng = Some(LinkRng::new(bytes));
     let state = battle.battle_state.as_mut().unwrap();
     let (actor, target) = if enemy {
@@ -130,9 +131,9 @@ fn fight_and_drain(mut battle: BattleScreen, enemy: bool) -> (u16, u64) {
 fn all_256_original_damage_bytes_match_on_both_sides() {
     for enemy in [false, true] {
         for raw in 0..=255u8 {
-            // Crit then accuracy remain separate from the observed variance draws.
+            // Crit and accuracy surround the original observed variance draws.
             assert_eq!(
-                fight_and_drain(setup(enemy, &[raw]), enemy),
+                fight_and_drain(setup(enemy, &[raw], ORIGINAL_DRAWS[raw as usize] as usize), enemy),
                 (
                     ORIGINAL_DAMAGE[raw as usize],
                     2 + ORIGINAL_DRAWS[raw as usize]
@@ -153,7 +154,7 @@ fn each_rejection_retry_rotates_its_new_byte() {
             (&[0, 0, 179][..], 170, 3),
         ] {
             assert_eq!(
-                fight_and_drain(setup(enemy, seeds), enemy),
+                fight_and_drain(setup(enemy, seeds, draws as usize), enemy),
                 (damage, draws + 2),
                 "enemy={enemy} seeds={seeds:?}"
             );

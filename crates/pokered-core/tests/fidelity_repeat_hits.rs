@@ -49,7 +49,7 @@ fn turn(
     let mut battle = BattleScreen::from_parties(true, &[player], &[foe], None);
     battle.link_enemy_move_override = Some((if enemy { move_id } else { MoveId::Splash }, 0));
     battle.link_rng = Some(LinkRng::new([
-        255, 0, 255, first, second, 82, 73, 64, 55, 46,
+        255, 255, 0, first, second, 82, 73, 64, 55, 46,
     ]));
     let state = battle.battle_state.as_mut().unwrap();
     assert!(!state.link_battle && !battle.link_mode);

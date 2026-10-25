@@ -189,7 +189,7 @@ fn metronome_quick_attack_keeps_the_selected_moves_original_turn_priority() {
                 move_: MoveId::Tackle,
             },
         ],
-        &mut ScriptedRng::new(vec![255, 0, 255, MoveId::QuickAttack as u8, 255, 0, 255]),
+        &mut ScriptedRng::new(vec![255, 255, 0, MoveId::QuickAttack as u8, 255, 255, 0]),
     );
     let used = log
         .events

@@ -14,7 +14,7 @@ fn setup(raw: u8, enemy: bool) -> BattleScreen {
     let (p, e) = if enemy { (target, attacker) } else { (attacker, target) };
     let mut b = BattleScreen::from_parties(true, &[p], &[e], None);
     b.link_enemy_move_override = Some((if enemy { MoveId::Tackle } else { MoveId::Splash }, 0));
-    b.link_rng = Some(LinkRng::new([raw, 0, 255, 255, 255, 255, 255, 255, 255, 255]));
+    b.link_rng = Some(LinkRng::new([raw, 255, 0, 255, 255, 255, 255, 255, 255, 255]));
     let s = b.battle_state.as_mut().unwrap();
     let (actor, defender) = if enemy { (&mut s.enemy, &mut s.player) } else { (&mut s.player, &mut s.enemy) };
     actor.active_mon_mut().speed = 100; defender.active_mon_mut().speed = 200;

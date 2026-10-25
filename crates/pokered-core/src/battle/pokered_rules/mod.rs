@@ -13,9 +13,9 @@
 //! `pokered_core::battle::damage::calculate_damage` stays the **single damage
 //! authority** — it folds STAB + the per-type effectiveness chart + the ×roll/255
 //! ordering into ONE number (the real Gen-1 damage). The stack path precomputes
-//! that full number into `ctx.mv.damage` inside the native [`pokered_damage`]
-//! `ModifyDamage` handler (mirroring minimon's `move_damage_hook`, where the
-//! number is provider-computed and the hook is the subscription marker). So:
+//! that full number into `ctx.mv.damage` through [`prepare_ordinary_damage`]
+//! immediately after the critical test, before the `Accuracy` event. The engine
+//! then applies that prepared value through its ordinary damage fold:
 //!
 //!   * the move's `DealMoveDamage` op is the `ModifyDamage` **subscription
 //!     marker** (resolves `Unchanged` — the number is already in `ctx.mv.damage`);
@@ -24,14 +24,10 @@
 //!     the damage authority, so a second fold would double-count. The binding's
 //!     [`PokeredBindings::type_chart_mult`] returns `(1, 1)` for exactly this.
 //!
-//! The crit / accuracy / damage-roll **draws** are native pipeline handlers
-//! ([`pokered_crit`] / [`pokered_accuracy`] / [`pokered_damage`]) re-homing
-//! pokered's own formula (the damage authority), so the stack's draw order is
-//! byte-identical to the legacy `MoveRandoms` field order — exactly as the
-//! existing `stack_parity` POC handlers do, with one addition: a **power-0
-//! short-circuit** so a self-Boost / self-heal move draws ONLY the accuracy byte
-//! (no crit, no damage), matching the legacy power-0 branch
-//! (`move_execution.rs:78-101`).
+//! The native handlers preserve the original ordinary order: critical test,
+//! typed damage and variance, then accuracy. Status, fixed damage, Counter,
+//! charge gathering, Bide release and trapping continuations keep their own
+//! bypasses. Self boosts and healing do not call MoveHitTest.
 //!
 //! ## Honest bucket-A scope (data vs deferred)
 //!
@@ -324,7 +320,7 @@ pub enum PokeVolatile {
 /// The pokered P1 `RulesProvider`. Carries no per-battle state; the move-effect
 /// resolver returns a combined `&'static Effect` per move record (built once from
 /// the compiled registry and leaked). `calculate_damage` stays the damage
-/// authority — the native [`pokered_damage`] handler precomputes the full Gen-1
+/// authority — [`prepare_ordinary_damage`] precomputes the full Gen-1
 /// number into `ctx.mv.damage` via [`crate::battle::damage::calculate_damage`].
 pub struct PokeredRules;
 
@@ -346,10 +342,8 @@ impl BattleProvider for PokeredRules {
         _r: u8,
         _c: bool,
     ) -> DamageResult {
-        // The damage number is computed inside the `ModifyDamage` handler
-        // (`pokered_damage`) re-homing `calculate_damage` — the single authority.
-        // This trait method is unused by the stack path (the StackDriver relies on
-        // the ModifyDamage handler, not this hook), mirroring the POC provider.
+        // The stack prepares ordinary damage before Accuracy and handles fixed
+        // damage in ModifyDamage. This legacy provider method is not used there.
         DamageResult { damage: 0, effectiveness: 1.0, is_miss: false }
     }
 
@@ -1083,10 +1077,9 @@ fn rebuild_move_index() {
     // Build a combined `&'static Effect` per record. Each record's effect id is
     // `MOVE_EFFECT_ID_BASE + record_index`; the bridge recovers the record by
     // subtracting the base. Every record gets the FULL pipeline hooks (crit /
-    // accuracy / damage = the native draws) PLUS one bridge hook per event the
-    // record subscribes to (ModifyDamage / Effectiveness / AfterMove). Power-0
-    // records still register the pipeline hooks; the handlers short-circuit on
-    // power-0 (drawing only the accuracy byte) to match the legacy power-0 branch.
+    // damage / accuracy = the native draws) PLUS one bridge hook per event the
+    // record subscribes to. Status/fixed/continuing moves retain their original
+    // bypasses inside the native handlers.
     let mut effects: Vec<&'static Effect<PokeredRules>> = Vec::new();
     // Intern identical complete hook topologies on every platform. The RON
     // records remain authoritative for event order, priority and veto routing.
@@ -1785,22 +1778,26 @@ fn last_move_live(who: BattlerRef) -> MoveId {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. The native pipeline handlers (the DRAW structure). Re-home pokered's own
-//    crit / accuracy / damage formula — the damage authority — with a power-0
-//    short-circuit so self-Boost / self-heal moves draw ONLY accuracy.
+// 7. Native RNG pipeline: critical, typed damage/variance, then MoveHitTest.
+//    Status, fixed damage, charge gathering and continuing moves retain their
+//    own original bypasses rather than drawing the ordinary formula bytes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// `ModifyCritRatio` — draws the crit byte ONLY for a power>0 move (the legacy
-/// power-0 branch draws no crit). Re-homes `crit_chance` + the Focus-Energy `/4`
-/// bug (#1); base-speed from the species (Gen-1 ignores in-battle Speed, #3).
+/// `ModifyCritRatio` performs the critical test and prepares ordinary damage
+/// before any hit-test gate. Critical chance uses species Speed and preserves
+/// the original Focus Energy division bug; special paths bypass this formula.
 fn pokered_crit(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
-    _target: BattlerRef,
+    target: BattlerRef,
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
     let pm = current_move_for(source);
+    // Capture before any Accuracy hook, including Dream Eater's sleep veto.
+    PRESENTED_EFFECTIVENESS.with(|values| {
+        values.borrow_mut()[source.side as usize] = Some((pm.id, Effectiveness::Normal, false));
+    });
     if pm.effect == MoveEffect::OhkoEffect {
         // Original CriticalHitTest runs, but OneHitKOEffect replaces its flag.
         // Its byte is still consumed before the OHKO damage/hit-test sequence.
@@ -1832,6 +1829,11 @@ fn pokered_crit(
     // CriticalHitTest rotates the BattleRandom byte with three RLC A instructions.
     let crit_roll = ctx.rng.next_u8().rotate_left(3);
     ctx.mv.is_critical = crit_roll < threshold;
+    // The original calculates typed/randomized damage immediately after crit,
+    // before every MoveHitTest gate. Counter/Psywave use separate damage paths.
+    if !matches!(pm.id, MoveId::Counter | MoveId::Psywave) {
+        prepare_ordinary_damage(ctx, target, source, pm);
+    }
     HandlerResult::Unchanged
 }
 
@@ -1846,11 +1848,11 @@ fn pokered_accuracy(
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
+    let pm = current_move_for(source);
     // A continued trapping attack skips MoveHitTest, including Dig/Fly.
     if trapping_continuation_damage(ctx, source).is_some() {
         return HandlerResult::Unchanged;
     }
-    let pm = current_move_for(source);
     if is_primary_stat_down(pm.effect) {
         // StatModifierDownEffect runs these gates before calling MoveHitTest.
         // Only the ordinary enemy has the additional 25 percent + 1 miss roll.
@@ -1862,19 +1864,6 @@ fn pokered_accuracy(
             return HandlerResult::Set(RelayVar::Bool(false));
         }
     }
-    // Capture the display byte before accuracy can veto the damage hook.
-    // A later Conversion must not change which failure text this action used.
-    let display = if pm.power > 0 && !is_special_damage_effect(pm.effect)
-        && !matches!(pm.id, MoveId::Counter | MoveId::Psywave)
-    {
-        let (one, two) = effective_types(ctx, target);
-        runtime::displayed_effectiveness(pm.move_type, one, two)
-    } else {
-        Effectiveness::Normal
-    };
-    PRESENTED_EFFECTIVENESS.with(|values| {
-        values.borrow_mut()[source.side as usize] = Some((pm.id, display, false));
-    });
     let ohko_missed = pm.effect == MoveEffect::OhkoEffect && !ohko::prepare(ctx, target, source);
     if ohko::speed_failed(source, pm.id) {
         return HandlerResult::Set(RelayVar::Bool(false));
@@ -1986,27 +1975,19 @@ fn pokered_accuracy(
     }
 }
 
-/// `ModifyDamage` — the damage authority. Power-0 moves draw NOTHING and leave
-/// `ctx.mv.damage` at 0 (legacy power-0 branch). For a power>0 move it draws the
-/// damage byte and writes the full Gen-1 `calculate_damage` number (STAB + type
-/// chart + ×roll/255) into `ctx.mv.damage` — the single source of truth the
-/// `DealMoveDamage` op marks and the driver applies. On a type-immunity "miss" it
-/// returns `Bool(false)` to short-circuit (#4).
+/// `ModifyDamage` applies special damage and charge/Bide state transitions.
+/// Ordinary damage already lives in `ctx.mv.damage` from before MoveHitTest;
+/// keeping it here avoids drawing a second variance byte on a successful hit.
 fn pokered_damage(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     _relay: RelayVar,
-    target: BattlerRef,
+    _target: BattlerRef,
     source: BattlerRef,
     _eff: EffectId,
 ) -> HandlerResult {
-    use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
     let pm = current_move_for(source);
     // OHKO prepared its typed/randomized damage before MoveHitTest.
     if pm.effect == MoveEffect::OhkoEffect { return HandlerResult::Unchanged; }
-    // The move initializes the presentation byte to neutral. Only the
-    // ordinary type-adjustment path below overwrites it; fixed damage and
-    // Counter/Psywave must not acquire a type message from a later lookup.
-    PRESENTED_EFFECTIVENESS.with(|values| values.borrow_mut()[source.side as usize] = Some((pm.id, Effectiveness::Normal, false)));
     if let Some(damage) = trapping_continuation_damage(ctx, source) {
         ctx.mv.damage = damage;
         return HandlerResult::Unchanged;
@@ -2074,14 +2055,18 @@ fn pokered_damage(
         ctx.mv.damage = 0;
         return HandlerResult::Unchanged;
     }
-    if pm.power == 0 || is_special_damage_effect(pm.effect) {
-        // power-0 OR special/fixed/SuperFang: the formula does NOT run here.
-        // For a special-damage move the SetDamage / DamageCurrentHpFraction / SetHp
-        // op (on ModifyDamage / DamagingHit) writes `ctx.mv.damage` directly,
-        // bypassing the type chart — and draws no formula damage byte (P3 parity
-        // vs the standalone oracle, which takes no rng).
-        return HandlerResult::Unchanged;
-    }
+    HandlerResult::Unchanged
+}
+
+/// Calculate once without consuming a charge volatile: MoveHitTest must still
+/// distinguish the strike from the gather turn. Its success/miss hooks end it.
+fn prepare_ordinary_damage(
+    ctx: &mut BattleCtx<'_, PokeredRules>,
+    target: BattlerRef,
+    source: BattlerRef,
+    pm: MoveData,
+) {
+    use crate::battle::damage::{calculate_damage, is_physical, DamageParams};
     let is_crit = ctx.mv.is_critical;
     let physical = is_physical(pm.move_type);
 
@@ -2155,9 +2140,8 @@ fn pokered_damage(
         // AdjustDamageForMoveType zeroes wDamage on immunity.
         set_shared_damage(ctx, 0);
         ctx.mv.move_missed = true;
-        return HandlerResult::Set(RelayVar::Bool(false)); // type-immunity → "miss"
+        // MoveHitTest still runs and consumes its byte on type immunity.
     }
-    HandlerResult::Unchanged
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2270,6 +2254,7 @@ fn clear_shared_damage_on_miss(
     let pm = current_move_for(source);
     if move_rolls_accuracy(pm.effect)
         && (pm.id != MoveId::Counter || counter_can_reflect(ctx, target)) {
+        ctx.mv.damage = 0;
         set_shared_damage(ctx, 0);
         ctx.effects.retain(|entry| !(entry.host == source
             && matches!(entry.kind, PokeVolatile::Trapping { .. })));
@@ -3410,7 +3395,7 @@ fn bridge_after_move(
 
 /// The `Accuracy`-event data bridge (Dream Eater's pre-hit sleep veto,
 /// core.asm:5240-5245). A `VetoIf` here `Fail`s the fold → `Bool(false)` → the
-/// driver marks the move missed BEFORE any accuracy/damage byte is drawn.
+/// driver marks the move missed after prepared variance, before the accuracy byte.
 fn bridge_accuracy(
     ctx: &mut BattleCtx<'_, PokeredRules>,
     relay: RelayVar,

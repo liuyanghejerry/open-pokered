@@ -45,7 +45,7 @@ fn fixture(mask: u8, player_first: bool, condition: &str, affected_enemy: bool) 
     };
     let mut b = BattleScreen::from_parties(true, &[player], &[enemy], None);
     b.link_enemy_move_override = Some((MoveId::Tackle, 0));
-    b.link_rng = Some(LinkRng::new([255, 0, 255, 255, 0, 255, 255, 0, 255, 255]));
+    b.link_rng = Some(LinkRng::new([255, 255, 0, 255, 255, 0, 255, 255, 0, 255]));
     let s = b.battle_state.as_mut().unwrap();
     s.player.active_mon_mut().speed = if player_first { 200 } else { 100 };
     s.enemy.active_mon_mut().speed = if player_first { 100 } else { 200 };

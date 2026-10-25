@@ -152,7 +152,7 @@ fn slow_headbutt_on_an_already_acted_player_does_not_block_the_next_fight() {
         &mut screen,
         MoveId::Amnesia,
         Some(MoveId::Headbutt),
-        vec![255, 0, 255, 0],
+        vec![255, 255, 0, 0],
     );
     assert_eq!(turn.draws, 4);
     let used = turn
@@ -223,7 +223,7 @@ fn fast_headbutt_blocks_this_turn_with_flinch_text_and_does_not_block_the_next()
             &mut screen,
             MoveId::Headbutt,
             Some(MoveId::Growl),
-            vec![255, 0, 255, 0],
+            vec![255, 255, 0, 0],
         );
         assert_eq!(turn.draws, 4, "flinch precedes any paralysis roll");
         assert!(turn.log.events.iter().any(|event| matches!(event,

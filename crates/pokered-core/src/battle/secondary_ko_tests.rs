@@ -27,7 +27,7 @@ fn run(move_: MoveId, enemy_attacks: bool, ko: bool, byte: u8, link: bool) -> Ba
     screen.link_mode = link;
     screen.link_enemy_move_override = Some((if enemy_attacks { move_ } else { MoveId::Splash }, 0));
     // Crit, accuracy, damage, secondary chance, and optional confusion duration.
-    screen.link_rng = Some(LinkRng::new([255, 0, 255, byte, 0, 82, 73, 64, 55, 46]));
+    screen.link_rng = Some(LinkRng::new([255, 255, 0, byte, 0, 82, 73, 64, 55, 46]));
     let bs = screen.battle_state.as_mut().unwrap();
     bs.link_battle = link;
     let (attacker, target) = if enemy_attacks {

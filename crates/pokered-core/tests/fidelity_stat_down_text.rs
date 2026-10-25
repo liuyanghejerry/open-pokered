@@ -236,7 +236,7 @@ fn secondary_drop_failures_stay_silent_and_damaging_misses_keep_their_text() {
         ] {
             for condition in ["min_stage", "sub"] {
                 let mut battle = prepared(move_id, enemy, condition, MoveId::Splash);
-                battle.link_rng = Some(LinkRng::new([255, 0, 255, 64, 0, 255, 0, 255, 0, 255]));
+                battle.link_rng = Some(LinkRng::new([255, 255, 0, 64, 0, 255, 0, 255, 0, 255]));
                 fight(&mut battle);
                 let text = messages(&mut battle);
                 assert!(
@@ -249,7 +249,7 @@ fn secondary_drop_failures_stay_silent_and_damaging_misses_keep_their_text() {
             }
         }
         let mut battle = prepared(MoveId::Tackle, enemy, "success", MoveId::Splash);
-        battle.link_rng = Some(LinkRng::new([255, 255, 0, 0, 0, 0, 0, 0, 0, 0]));
+        battle.link_rng = Some(LinkRng::new([255, 255, 255, 0, 0, 0, 0, 0, 0, 0]));
         fight(&mut battle);
         let text = messages(&mut battle);
         assert!(

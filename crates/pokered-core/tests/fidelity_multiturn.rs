@@ -79,7 +79,7 @@ fn counter_hits_substitute_through_the_normal_damage_fold() {
         MoveId::Counter,
         MoveId::Tackle,
         true,
-        vec![255, 0, 255, 255, 0],
+        vec![255, 255, 0, 255, 0],
     );
     let incoming = 400 - bs.player.active_mon().hp;
     assert!(incoming > 0);
@@ -153,11 +153,11 @@ fn wrap_continuations_repeat_damage_without_random_draws_and_hold_the_final_turn
         MoveId::Wrap,
         MoveId::Tackle,
         true,
-        vec![0, 255, 0, 255],
+        vec![0, 255, 255, 0],
     );
     let damage = 400 - bs.enemy.active_mon().hp;
     assert!(damage > 0);
-    assert_eq!(draws, 4); // duration, crit, accuracy, formula.
+    assert_eq!(draws, 4); // duration, crit, formula, accuracy.
     assert_eq!(bs.player.active_mon().hp, 400);
     assert_eq!(bs.player.num_attacks_left, 1);
     assert!(bs.player.has_status1(status1::USING_TRAPPING_MOVE));
@@ -176,7 +176,7 @@ fn wrap_continuations_repeat_damage_without_random_draws_and_hold_the_final_turn
         MoveId::Splash,
         MoveId::Tackle,
         true,
-        vec![255, 0, 255],
+        vec![255, 255, 0],
     );
     assert!(bs.player.active_mon().hp < 400); // foe released next turn.
 }
@@ -192,9 +192,9 @@ fn wrap_initial_miss_releases_foe_and_clears_recharge_before_hit_test() {
         MoveId::Wrap,
         MoveId::Tackle,
         true,
-        vec![2, 3, 255, 255, 255, 0, 255],
+        vec![2, 3, 255, 255, 255, 255, 255, 0],
     );
-    assert_eq!(draws, 7);
+    assert_eq!(draws, 8);
     assert!(!bs.player.has_status1(status1::USING_TRAPPING_MOVE));
     assert!(!bs.enemy.has_status2(status2::NEEDS_TO_RECHARGE));
     assert_eq!(bs.enemy.active_mon().hp, 400);
@@ -204,10 +204,10 @@ fn wrap_initial_miss_releases_foe_and_clears_recharge_before_hit_test() {
 #[test]
 fn wrap_duration_preserves_conditional_original_draw_order() {
     for (bytes, remaining, expected_draws) in [
-        (vec![0, 255, 0, 255], 1, 4),
-        (vec![1, 255, 0, 255], 2, 4),
-        (vec![2, 2, 255, 0, 255], 3, 5),
-        (vec![3, 3, 255, 0, 255], 4, 5),
+        (vec![0, 255, 255, 0], 1, 4),
+        (vec![1, 255, 255, 0], 2, 4),
+        (vec![2, 2, 255, 255, 0], 3, 5),
+        (vec![3, 3, 255, 255, 0], 4, 5),
     ] {
         let mut bs = state(MoveId::Wrap, MoveId::Splash);
         faster_player(&mut bs);
@@ -226,9 +226,9 @@ fn thrash_misses_still_start_and_tick_the_rampage() {
         MoveId::Thrash,
         MoveId::Splash,
         false,
-        vec![0, 255, 255],
+        vec![0, 255, 255, 255],
     );
-    assert_eq!(draws, 3);
+    assert_eq!(draws, 4);
     assert_eq!(bs.player.num_attacks_left, 2);
     assert!(bs.player.has_status1(status1::THRASHING_ABOUT));
     let (_, draws) = turn(
@@ -236,9 +236,9 @@ fn thrash_misses_still_start_and_tick_the_rampage() {
         MoveId::Thrash,
         MoveId::Splash,
         false,
-        vec![255, 255],
+        vec![255, 255, 255],
     );
-    assert_eq!(draws, 2);
+    assert_eq!(draws, 3);
     assert_eq!(bs.player.num_attacks_left, 1);
     assert_eq!(bs.enemy.active_mon().hp, 400);
     let (_, draws) = turn(
@@ -246,9 +246,9 @@ fn thrash_misses_still_start_and_tick_the_rampage() {
         MoveId::Thrash,
         MoveId::Splash,
         false,
-        vec![3, 255, 255],
+        vec![3, 255, 255, 255],
     );
-    assert_eq!(draws, 3); // fatigue first, then crit and missed accuracy.
+    assert_eq!(draws, 4); // fatigue first, then crit, variance and missed accuracy.
     assert!(!bs.player.has_status1(status1::THRASHING_ABOUT));
     assert_eq!(bs.player.num_attacks_left, 0);
     assert!(bs.player.has_status1(status1::CONFUSED));
@@ -305,7 +305,7 @@ fn trapped_enemy_entry_skips_status_checks_but_player_sleep_still_ticks() {
         MoveId::Wrap,
         MoveId::Tackle,
         true,
-        vec![0, 255, 0, 255],
+        vec![0, 255, 255, 0],
     );
     assert_eq!(bs.enemy.active_mon().status, StatusCondition::Sleep(2));
     turn(&mut bs, MoveId::Wrap, MoveId::Tackle, true, vec![255]);
@@ -319,7 +319,7 @@ fn trapped_enemy_entry_skips_status_checks_but_player_sleep_still_ticks() {
         MoveId::Splash,
         MoveId::Wrap,
         true,
-        vec![0, 255, 0, 255],
+        vec![0, 255, 255, 0],
     );
     assert_eq!(bs.player.active_mon().status, StatusCondition::Sleep(2));
     turn(&mut bs, MoveId::Splash, MoveId::Wrap, true, vec![255]);

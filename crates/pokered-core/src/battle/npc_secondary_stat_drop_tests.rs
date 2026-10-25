@@ -44,14 +44,14 @@ fn run(
     screen.link_mode = link;
     screen.link_enemy_move_override = Some((if enemy_attacks { move_ } else { MoveId::Splash }, 0));
     // Deterministic RNG and chosen moves are independent of ordinary/link mode.
-    // Crit, accuracy and damage are followed by the applicable effect rolls.
+    // Crit, damage and accuracy are followed by the applicable effect rolls.
     let (fourth, fifth) = if enemy_attacks && !link {
         (npc_byte, chance_byte)
     } else {
         (chance_byte, 91)
     };
     screen.link_rng = Some(LinkRng::new([
-        255, 0, 255, fourth, fifth, 82, 73, 64, 55, 46,
+        255, 255, 0, fourth, fifth, 82, 73, 64, 55, 46,
     ]));
     let bs = screen.battle_state.as_mut().unwrap();
     bs.link_battle = link;

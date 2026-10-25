@@ -178,9 +178,9 @@ fn haze_restores_the_users_stat_words_without_curing_its_status() {
             MoveId::Splash,
             false,
             if status == StatusCondition::Paralysis {
-                vec![255, 255, 0, 255]
+                vec![255, 255, 255, 0]
             } else {
-                vec![255, 0, 255]
+                vec![255, 255, 0]
             },
         );
         assert_eq!(bs.enemy.active_mon().hp, 375); // full attack, not a second deferred burn penalty.
@@ -207,7 +207,7 @@ fn transform_copies_the_targets_already_penalized_stat_words() {
         MoveId::Tackle,
         MoveId::Tackle,
         false,
-        vec![255, 0, 255, 255],
+        vec![255, 255, 0, 255],
     );
     assert_eq!(bs.player.staged_badge_stats.unwrap()[0], 50);
     assert_eq!(bs.damage, 13); // Tackle uses copied Attack 50 despite no user burn.
@@ -254,7 +254,7 @@ fn inflicted_paralysis_and_burn_update_the_stored_working_stat_once() {
         MoveId::Ember,
         MoveId::Splash,
         false,
-        vec![255, 0, 255, 0],
+        vec![255, 255, 0, 0],
     );
     assert_eq!(bs.enemy.active_mon().status, StatusCondition::Burn);
     assert_eq!(bs.enemy.staged_badge_stats.unwrap()[0], 50);
