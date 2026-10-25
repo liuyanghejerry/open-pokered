@@ -527,11 +527,15 @@ impl BattlePresentation {
     }
     /// Publish one page. A frontend must present a newly activated page
     /// before its acknowledgement can advance the caller.
-    pub(super) fn activate(&mut self, page: usize) -> bool {
-        if !self.enabled || self.page == Some(page) {
+    pub(super) fn activate(&mut self, page: usize, publish_text_without_animation: bool) -> bool {
+        if (!self.enabled && !publish_text_without_animation) || self.page == Some(page) {
             return false;
         }
         self.page = Some(page);
+        // LinkBattleDriver renders its text through the app's screen mirror,
+        // but does not wait for move-animation acknowledgements. Its pages
+        // still need one publication before input may dismiss them.
+        if !self.enabled { return true; }
         let step = self.pages.get(page).and_then(Option::as_ref);
         self.waiting = step.is_some_and(|step| !step.faint_continuation && step.level_up.is_none() && step.transform.is_none());
         self.hit_index = 0;
@@ -586,7 +590,7 @@ impl BattlePresentation {
 
 impl BattleScreen {
     pub(super) fn activate_text_page(&mut self, page: usize) -> bool {
-        let first_publication = self.presentation.activate(page);
+        let first_publication = self.presentation.activate(page, self.link_mode);
         if first_publication {
             if let Some(display) = self.presentation.pages.get(page)
                 .and_then(Option::as_ref).and_then(|step| step.transform) {
