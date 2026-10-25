@@ -358,6 +358,15 @@ pub(crate) fn translate_turn_named_with_faints(
                             _ => format!("{name}'s\ngetting pumped!"),
                         }
                     });
+                } else if matches!(md.effect, pokered_data::moves::MoveEffect::ConversionEffect
+                    | pokered_data::moves::MoveEffect::TransformEffect) {
+                    msgs.push(format!("{} used {}!", display_name_named(state, actor, names), move_name(*move_, false)));
+                    if missed {
+                        msgs.push("But, it failed!".to_string());
+                    } else if md.effect == pokered_data::moves::MoveEffect::ConversionEffect {
+                        msgs.push(format!("Converted type to\n{}'s!",
+                            display_name_named(state, opp_ref(actor), names)));
+                    }
                 } else if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
                     let target_name = display_name_named(state, opp_ref(actor), names);
                     if super::ohko::speed_failed(actor, *move_) {
