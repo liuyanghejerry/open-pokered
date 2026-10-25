@@ -2318,7 +2318,8 @@ impl BattleScreen {
                 // printing the next line (predef UpdateHPBar2,
                 // engine/battle/core.asm:4727); reproduce that by holding the
                 // current page until the drain/refill finishes.
-                if (faint.is_some_and(|cue| cue.text.is_none()) || link_notice || input.a || input.b) && !self.hp_bar_anim.is_active() {
+                if (faint.is_some_and(|cue| cue.text.is_none()) || link_notice
+                    || self.presentation.rest_sleep_at(current) || input.a || input.b) && !self.hp_bar_anim.is_active() {
                     let next_idx = current + 1;
                     if next_idx >= messages.len() {
                         if let BattleTextBackdrop::PpRestoreParty { consume_on_ack: Some(item), .. } = backdrop {
