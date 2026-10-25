@@ -50,7 +50,9 @@ pub enum ExperienceAwardKind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExperienceNotice {
     Gained { party_index: usize, amount: u32, kind: ExperienceAwardKind },
-    Leveled { party_index: usize, level: u8 },
+    /// Keep each award's stats: EXP.ALL can level the same mon twice before
+    /// the first notice is presented.
+    Leveled { party_index: usize, level: u8, hp: u16, max_hp: u16 },
     Learned { party_index: usize, move_id: pokered_data::moves::MoveId },
 }
 
@@ -191,7 +193,9 @@ fn gain_one(
     };
     notices.push(ExperienceNotice::Gained { party_index: i, amount: exp, kind });
     if result.leveled_up {
-        notices.push(ExperienceNotice::Leveled { party_index: i, level: result.new_level });
+        notices.push(ExperienceNotice::Leveled {
+            party_index: i, level: result.new_level, hp: mon.hp, max_hp: mon.max_hp,
+        });
     }
     if result.leveled_up && !leveled_up.contains(&i) {
         leveled_up.push(i);
