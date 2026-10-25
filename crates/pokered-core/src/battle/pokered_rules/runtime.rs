@@ -345,6 +345,19 @@ pub(crate) fn translate_turn_named_with_faints(
                     } else if super::primary_stat_floor(actor.side == 0, *move_) {
                         msgs.push("Nothing happened!".to_string());
                     }
+                } else if super::is_self_protection(md.effect) {
+                    let name = display_name_named(state, actor, names);
+                    msgs.push(format!("{name} used {}!", move_name(*move_, false)));
+                    msgs.push(if missed {
+                        "But, it failed!".to_string()
+                    } else {
+                        match md.effect {
+                            pokered_data::moves::MoveEffect::ReflectEffect => format!("{name}\ngained armor!"),
+                            pokered_data::moves::MoveEffect::LightScreenEffect => format!("{name}'s\nprotected against\nspecial attacks!"),
+                            pokered_data::moves::MoveEffect::MistEffect => format!("{name}'s\nshrouded in mist!"),
+                            _ => format!("{name}'s\ngetting pumped!"),
+                        }
+                    });
                 } else if md.effect == pokered_data::moves::MoveEffect::OhkoEffect {
                     let target_name = display_name_named(state, opp_ref(actor), names);
                     if super::ohko::speed_failed(actor, *move_) {
