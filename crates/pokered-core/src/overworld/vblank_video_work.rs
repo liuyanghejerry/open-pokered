@@ -230,7 +230,7 @@ impl VBlankVideoWork {
                 }) => {
                     let child = if self.phase == Pattern { &mut self.pattern } else { &mut self.double };
                     let mut bus = time.pattern_bus(memory, assets);
-                    while child.step(&mut bus)?.is_some() {}
+                    child.run(&mut bus)?;
                     if self.phase == Pattern { CallDouble } else { CallMoving }
                 }
                 Moving => {

@@ -248,6 +248,77 @@ impl VBlankPatternWork {
         };
         Some(PatternInstruction { tcycles, access })
     }
+    /// Run complete POP/store sequences without redispatching their opcode
+    /// after every byte. Each instruction still visits the same bus, and its
+    /// continuation commits only after acceptance, including a partial pair.
+    pub fn run<B: PatternInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if self.double() {
+            self.run_format::<B, true>(bus)
+        } else {
+            self.run_format::<B, false>(bus)
+        }
+    }
+
+    fn run_format<B: PatternInstructionBus, const DOUBLE: bool>(
+        &mut self,
+        bus: &mut B,
+    ) -> Result<(), B::Error> {
+        let writes = if DOUBLE { 4 } else { 2 };
+        let pairs = if DOUBLE { 4 } else { 8 };
+        loop {
+            if self.step != Step::Pop {
+                if self.step(bus)?.is_none() {
+                    return Ok(());
+                }
+                continue;
+            }
+            let source = self.source.expect("active source offset");
+            let value = bus.execute(PatternInstruction {
+                tcycles: 12,
+                access: Some(PatternAccess::ReadPair {
+                    source: self.copy.expect("active pattern identity").source,
+                    offset: source,
+                    first_at_tcycle: 4,
+                    second_at_tcycle: 8,
+                }),
+            })?;
+            self.de = value.expect("POP source receipt");
+            self.source = Some(source.wrapping_add(2));
+            self.write = 0;
+            self.step = Step::Write;
+            for write in 0..writes {
+                let destination = self.destination.expect("active destination");
+                let low = if DOUBLE { write < 2 } else { write == 0 };
+                bus.execute(PatternInstruction {
+                    tcycles: 8,
+                    access: Some(PatternAccess::Write {
+                        destination,
+                        value: if low { self.de as u8 } else { (self.de >> 8) as u8 },
+                        at_tcycle: 4,
+                    }),
+                })?;
+                self.step = Step::Increment;
+                let last = self.pair + 1 == pairs && write + 1 == writes;
+                bus.execute(PatternInstruction {
+                    tcycles: if last { 8 } else { 4 },
+                    access: None,
+                })?;
+                self.destination = Some(if last {
+                    destination.wrapping_add(1)
+                } else {
+                    (destination & 0xff00) | u16::from((destination as u8).wrapping_add(1))
+                });
+                self.write = write + 1;
+                if self.write < writes {
+                    self.step = Step::Write;
+                } else {
+                    self.pair += 1;
+                    self.step = if self.pair < pairs { Step::Pop } else { Step::Decrement };
+                }
+            }
+        }
+    }
+
     /// A bus refusal leaves the whole instruction unexecuted. POP DE is never
     /// partially committed across a grant, and writes cannot be replayed.
     pub fn step<B: PatternInstructionBus>(
@@ -362,6 +433,68 @@ mod tests {
             destination: 0x8800,
             tiles,
             format,
+        }
+    }
+    #[test]
+    fn pair_runner_preserves_every_instruction_and_refused_continuation() {
+        use crate::alloc_prelude::*;
+        struct Grant {
+            limit: usize,
+            trace: Vec<PatternInstruction>,
+        }
+        impl PatternInstructionBus for Grant {
+            type Error = ();
+            fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, ()> {
+                if self.trace.len() == self.limit {
+                    return Err(());
+                }
+                self.trace.push(instruction);
+                Ok(match instruction.access {
+                    Some(PatternAccess::ReadPair { offset, .. }) => Some(u16::from_le_bytes([
+                        (offset as u8).wrapping_mul(3),
+                        (offset.wrapping_add(1) as u8).wrapping_mul(3),
+                    ])),
+                    _ => None,
+                })
+            }
+        }
+        for format in [CopyFormat::TwoBpp, CopyFormat::OneBppDouble] {
+            for tiles in [0, 1, 8] {
+                for destination in [0x8800, 0x88fc] {
+                    for limit in 1..=17 {
+                        let mut request = copy(format, tiles);
+                        request.destination = destination;
+                        let mut fast = VBlankPatternWork::new(request);
+                        let mut reference = fast;
+                        let mut actual = Grant { limit: 0, trace: Vec::new() };
+                        assert_eq!(fast.run(&mut actual), Err(()));
+                        assert_eq!(fast, reference);
+                        actual.limit = limit;
+                        let mut expected = Grant { limit, trace: Vec::new() };
+                        loop {
+                            let result = fast.run(&mut actual);
+                            let expected_result = loop {
+                                match reference.step(&mut expected) {
+                                    Ok(Some(_)) => (),
+                                    Ok(None) => break Ok(()),
+                                    Err(error) => break Err(error),
+                                }
+                            };
+                            assert_eq!(result, expected_result);
+                            assert_eq!(actual.trace, expected.trace,
+                                "{format:?} tiles={tiles} destination={destination:x} limit={limit}");
+                            assert_eq!(fast, reference);
+                            if result.is_ok() {
+                                assert!(fast.finished());
+                                break;
+                            }
+                            fast = serde_json::from_value(serde_json::to_value(fast).unwrap()).unwrap();
+                            actual.trace.clear();
+                            expected.trace.clear();
+                        }
+                    }
+                }
+            }
         }
     }
     #[test]
