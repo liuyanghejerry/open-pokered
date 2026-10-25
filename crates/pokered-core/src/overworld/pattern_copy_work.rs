@@ -37,6 +37,20 @@ pub trait PatternInstructionBus {
     /// Error means this instruction has not executed. The common bus runs
     /// device/IRQ events at the specified access before returning its receipt.
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error>;
+
+    /// Optionally execute the stores and destination increments following one
+    /// VBlank POP DE. A successful receipt gives the final destination. The bus
+    /// must prove that no device event or budget boundary can expose an
+    /// intermediate instruction; otherwise None leaves everything untouched.
+    /// The final pair uses INC HL for its last increment, all others INC L.
+    fn try_vblank_pair_writes<const DOUBLE: bool>(
+        &mut self,
+        _destination: u16,
+        _de: u16,
+        _last_pair: bool,
+    ) -> Result<Option<u16>, Self::Error> {
+        Ok(None)
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum CopyStep {

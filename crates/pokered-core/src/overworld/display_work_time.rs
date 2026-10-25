@@ -860,6 +860,53 @@ impl<A> DisplayInstructionBus for PatternBus<'_, A> {
 impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
     #[inline(always)]
+    fn try_vblank_pair_writes<const DOUBLE: bool>(
+        &mut self,
+        mut destination: u16,
+        de: u16,
+        last_pair: bool,
+    ) -> Result<Option<u16>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        let writes = if DOUBLE { 4 } else { 2 };
+        // LD [HL],r (8), INC L (4); the final INC HL takes 8 instead.
+        let cycles = writes * 12 + if last_pair { 4 } else { 0 };
+        if !self.time.active_vblank
+            || self.patterns.bytes().len() != 0x2000
+            || self.time.shadow_oam.len() != 160
+            || !(0x8000..0xa000).contains(&destination)
+            || self.time.remaining() < u64::from(cycles)
+            || self.time.elapsed.checked_add(u64::from(cycles)).is_none()
+            || !self.time.device.has_no_event_within(cycles)
+        {
+            return Ok(None);
+        }
+        // Every store stays in this same 256-byte page. Only the increment
+        // after the last store can change the high byte. With no LCD/DMA edge,
+        // VRAM accessibility is constant and no observer can see the stores
+        // between instructions. Refusal and event edges use execute() instead.
+        self.check_memory()?;
+        self.reserve()?;
+        let accessible = self.time.device.vram_accessible();
+        for write in 0..writes {
+            let low = if DOUBLE { write < 2 } else { write == 0 };
+            if accessible {
+                self.patterns
+                    .write(destination, if low { de as u8 } else { (de >> 8) as u8 })
+                    .expect("validated same-page VRAM destination");
+            }
+            destination = if last_pair && write + 1 == writes {
+                destination.wrapping_add(1)
+            } else {
+                (destination & 0xff00) | u16::from((destination as u8).wrapping_add(1))
+            };
+        }
+        self.elapse(cycles)?;
+        Ok(Some(destination))
+    }
+    #[inline(always)]
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error> {
         if let Some(PatternAccess::Display(access)) = instruction.access {
             return DisplayInstructionBus::execute(self, DisplayInstruction {
@@ -875,6 +922,10 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
         self.execute_pattern_general(instruction)
     }
 }
+
+#[cfg(test)]
+#[path = "display_vblank_pair_tests.rs"]
+mod vblank_pair_tests;
 
 impl<A: PatternAssets> PatternBus<'_, A> {
     #[cfg(test)]

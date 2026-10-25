@@ -249,8 +249,9 @@ impl VBlankPatternWork {
         Some(PatternInstruction { tcycles, access })
     }
     /// Run complete POP/store sequences without redispatching their opcode
-    /// after every byte. Each instruction still visits the same bus, and its
-    /// continuation commits only after acceptance, including a partial pair.
+    /// after every byte. The exclusive bus may combine stores only when no
+    /// event or budget edge exposes their intermediate state. Otherwise each
+    /// instruction commits separately, including a partially accepted pair.
     pub fn run<B: PatternInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         if self.double() {
             self.run_format::<B, true>(bus)
@@ -286,6 +287,17 @@ impl VBlankPatternWork {
             self.source = Some(source.wrapping_add(2));
             self.write = 0;
             self.step = Step::Write;
+            if let Some(destination) = bus.try_vblank_pair_writes::<DOUBLE>(
+                self.destination.expect("active destination"),
+                self.de,
+                self.pair + 1 == pairs,
+            )? {
+                self.destination = Some(destination);
+                self.write = writes;
+                self.pair += 1;
+                self.step = if self.pair < pairs { Step::Pop } else { Step::Decrement };
+                continue;
+            }
             for write in 0..writes {
                 let destination = self.destination.expect("active destination");
                 let low = if DOUBLE { write < 2 } else { write == 0 };

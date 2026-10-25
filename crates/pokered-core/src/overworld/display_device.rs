@@ -160,6 +160,13 @@ impl DisplayDevice {
     pub fn observed_tcycles(&self) -> u64 {
         self.observed_tcycles
     }
+    /// An exclusive, validated bus may combine work only inside this phase.
+    /// Equality stays on the ordinary path so the boundary event is observed.
+    #[inline(always)]
+    pub(super) fn has_no_event_within(&self, tcycles: u8) -> bool {
+        self.dma.is_none()
+            && (!self.lcd_enabled() || u16::from(tcycles) < self.phase_remaining)
+    }
     #[inline(always)]
     pub fn validate(&self) -> Result<(), DisplayDeviceError> {
         if self.oam.len() != 160 {
