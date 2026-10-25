@@ -1,0 +1,308 @@
+{
+  "scope": "Original source-level TransformEffect/text evidence; 26 prepared native public-FIGHT regression turns. No successful original-ROM execution or original-renderer timing claim.",
+  "original_reference": {
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "effect": "engine/battle/move_effects/transform.asm",
+    "text": "data/text/text_3.asm:290-296",
+    "optional_rom_tail_attempt": "Entry hook was not reached; zero observed cases. Excluded from passing evidence."
+  },
+  "red": {
+    "head": "8ad93aab144693454935b44892855a15402965f6",
+    "source_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "f46fe161b7578a5fef2050330c9e0583a124d6961c93b60c91fa2bccb009a132"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "0358d4874acecf53ac8a5ab713f4ca908ec08be44eb5d9779fdf5d1fb282e832"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "d9fd5cdeed6ff0f5bd84861cd9288a2c734e2a0a919cd729b17d4d8dcd802e3d"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "seconds": 0.0068237020168453455,
+    "log_sha256": "056ebb48f7689f4f99a0136d3cc59ab9d5e00f1a88a856b3d911b0cdae0f8182",
+    "exe_sha256": "8b0f03bc4aec8fbe48134d0e70b7e6cbb3146405101ba784d5665123e9aad3a6",
+    "deleted_exe_bytes": 14869352,
+    "scope": "26 prepared public FIGHT turns with drained presentations; success bothorders/nicknames, blocked/invulnerability controls and following copied move."
+  },
+  "counts": {
+    "core": [
+      3764,
+      0,
+      1
+    ],
+    "app-test": [
+      393,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "8ad93aab144693454935b44892855a15402965f6",
+    "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f",
+    "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+    "exit": 0,
+    "seconds": 31.26098987192381
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "8ad93aab144693454935b44892855a15402965f6",
+    "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f",
+    "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+    "exit": 0,
+    "seconds": 68.54952621494886
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T03:10:53.122529+00:00",
+    "source": {
+      "head": "8ad93aab144693454935b44892855a15402965f6",
+      "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+      "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 68.5960766900098,
+        "log": "audit-1335-transform-caption-app-test-driver.log",
+        "log_sha256": "ef8406d2be4d58c8bba97a0f0b386db151be34e43487327b3b429047587e8cb2"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 55.37249237799551,
+        "log": "audit-1335-transform-caption-gba-build-driver.log",
+        "log_sha256": "80bdfd143f0093ad176ac51443dab9c91d78c8f0ac42247b6d598cb12b2314db"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.0579263960244134,
+        "log": "audit-1335-transform-caption-gba-perf-driver.log",
+        "log_sha256": "db2fff4cf7ae4bc884073d90a9b5dec8e5921e21a46112249ab8b635ad377fdb"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 60.02672706195153,
+        "log": "audit-1335-transform-caption-memory-build-driver.log",
+        "log_sha256": "57bf985afa81d67e5d97ffc1af25770c4b6302c3410caf076ccf467e47904fac"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 158.59583047800697,
+        "log": "audit-1335-transform-caption-memory-run-driver.log",
+        "log_sha256": "b11cf360fec20386ca0644ec0e1197611eb47b8ad9975cca1f840ba098a092f2"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1335-transform-caption-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 22.46548604592681,
+        "log": "audit-1335-transform-caption-native-build-driver.log",
+        "log_sha256": "cd348c7e3a53e47eebc4a4db58bb16e29fac31d7011dd8abeed63ff01006130b"
+      }
+    ],
+    "finished": "2026-10-25T03:17:01.293127+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "8ad93aab144693454935b44892855a15402965f6",
+      "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+      "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f",
+      "binary_sha256": "98f0c2bd4039339a5318fdbda5f4ec98ba8b86bb2f18eb2802ec2cf04977900c"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1335-transform-caption",
+    "status": "passed",
+    "seconds": 37.602819047053345,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "8ad93aab144693454935b44892855a15402965f6",
+      "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+      "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f",
+      "binary_sha256": "98f0c2bd4039339a5318fdbda5f4ec98ba8b86bb2f18eb2802ec2cf04977900c"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1335-transform-caption",
+    "status": "passed",
+    "seconds": 153.3110707079759,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "8ad93aab144693454935b44892855a15402965f6",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "99c3fe2ec7cd9cd01344b7c99c57809f234d49906a24c00f0b7bd13118207550",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+    "seconds": 158.32731655507814,
+    "frames": 323040,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8720,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "8ad93aab144693454935b44892855a15402965f6",
+    "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "50a1d73cf00f5ef4a6eaadbaded56c228373774a14a4db89232b357d16e07669",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "67f7d4a27b1f3a8c1b98aeb7f044e12b0362a9e5f0bd02eb16a6059ff81e331e",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.690974436001852,
+    "failures": [],
+    "metrics": "audit-1335-transform-caption-gba-perf-metrics.json",
+    "log": "audit-1335-transform-caption-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "f34da4c582c528cb6dfd6ed8ab3a77119a022e1672366d53b369d8323122a4b3",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1335-transform-caption-visual.rs",
+    "source_sha256": "3fbe1055203780c1a07061fe358bae027dcdf3cede4a24b389278a843b85bf1e",
+    "frame": 347,
+    "before": {
+      "head": "8ad93aab144693454935b44892855a15402965f6",
+      "tree": "1fa9cdf338b43075589003969f1841f62f4e9af5",
+      "source": "audit-1335-transform-caption-visual.rs",
+      "source_sha256": "3fbe1055203780c1a07061fe358bae027dcdf3cede4a24b389278a843b85bf1e",
+      "exe_sha256": "55009bacbf29695921fcaabe6cf87259f3bc57fef6d130b270d22732712c1f77",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "f46fe161b7578a5fef2050330c9e0583a124d6961c93b60c91fa2bccb009a132"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "0358d4874acecf53ac8a5ab713f4ca908ec08be44eb5d9779fdf5d1fb282e832"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "d9fd5cdeed6ff0f5bd84861cd9288a2c734e2a0a919cd729b17d4d8dcd802e3d"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "STAGE attack=0\nCAPTURE frame=347 completed_turns=1 player_display_hp=450 draws=0 message=None phase=PlayerMenu\n",
+      "image_sha256": "30ddf48728264003336ea02a42457862902e2083d5545f1604adc34d180877bf"
+    },
+    "after": {
+      "source_identity": {
+        "head": "8ad93aab144693454935b44892855a15402965f6",
+        "diff_sha256": "f8c65b89778a1b7acf62939fb7f7989a79870a307cb44da510305f96d1bc2fe7",
+        "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "e54c9d739324fe377f1b8a44dd038653b2a3592021f5d622ec8c9e4681058533"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "250cb3c8f1dba46019f17cdf8a326af959348d9385065ede7bb8c0e72f9d6a68"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "fb0996630e751777323786da197dfc972b001fa2961a25bf5f7639382b7111cf"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "4b5e1e574546a3499166325fc390ee7962a4a765fd2965ba7913f0e86160593a",
+      "output": "STAGE attack=0\nCAPTURE frame=347 completed_turns=0 player_display_hp=450 draws=0 message=Some(\"Enemy CLONE transformed into\\nSNORLAX!\") phase=ShowingText { messages: [\"TANK used SPLASH!\", \"No effect!\", \"Enemy CLONE used TRANSFORM!\", \"Enemy CLONE transformed into\\nSNORLAX!\"], current: 3, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "330fd2a366f659afa14b6261ef7ff517276c72b9faa014bf2871e02496616d3e"
+    },
+    "deleted_exe_bytes": 36337672
+  },
+  "visual_inspection": {
+    "both_images_inspected": true,
+    "frame": 347,
+    "before": "PlayerMenu FIGHT/PKMN/ITEM/RUN; no result caption",
+    "after": "Enemy CLONE transformed into SNORLAX!; original actor nickname preserved, copied species named despite target nickname TANK",
+    "scope": "Same input and actual renderer frame; before completed1 turn while after still at its new result caption. Both HP450 and RNG0. Early species/HUD publication is separate and remains unfixed.",
+    "before_sha256": "30ddf48728264003336ea02a42457862902e2083d5545f1604adc34d180877bf",
+    "after_sha256": "330fd2a366f659afa14b6261ef7ff517276c72b9faa014bf2871e02496616d3e"
+  },
+  "test_sha256": "1b4ef8fd0aa5319947fa953cc301af832d2e39ec4ba11039c533c7a909527e0f"
+}

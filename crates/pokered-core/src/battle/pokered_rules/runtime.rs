@@ -407,6 +407,16 @@ pub(crate) fn translate_turn_named_with_faints(
                 if md.effect == pokered_data::moves::MoveEffect::SplashEffect {
                     msgs.push("No effect!".to_string());
                 }
+                // TransformEffect prints TransformedText after copying the
+                // species. <USER> keeps its party name; wNameBuffer contains
+                // the copied species name, not the target's nickname.
+                if md.effect == pokered_data::moves::MoveEffect::TransformEffect
+                    && !missed && effects.iter().any(|entry|
+                        entry.host == actor && matches!(entry.kind, PokeVolatile::Transformed)) {
+                    let copied = species_name(battler_at(state, actor).species, false).to_uppercase();
+                    msgs.push(format!("{} transformed into\n{copied}!",
+                        display_name_named(state, actor, names)));
+                }
                 // The actual hit receipt orders Substitute break/Pay Day text
                 // before faint handling. A broken doll cancels the coin effect.
                 if md.effect == pokered_data::moves::MoveEffect::PayDayEffect {
