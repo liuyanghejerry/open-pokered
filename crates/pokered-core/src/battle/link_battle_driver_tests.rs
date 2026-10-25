@@ -21,6 +21,55 @@ use pokered_data::species::Species;
 
 const HOST_LIST: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+#[test]
+fn both_link_peers_publish_recovery_text_before_acknowledging_it() {
+    for rest_first in [false, true] {
+        let mut sleeper = mk(Species::Snorlax, 100,
+            [MoveId::Rest, MoveId::None, MoveId::None, MoveId::None]);
+        sleeper.set_nickname("WARD");
+        sleeper.hp -= 30;
+        let foe = mk(Species::Magikarp, if rest_first { 1 } else { 100 },
+            [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None]);
+        let (mut a, mut b) = setup_battle(party_of(vec![sleeper]), party_of(vec![foe]));
+        for driver in [&mut a, &mut b] {
+            pump_through_intro(driver, 1000);
+            assert_eq!(driver.screen().unwrap().phase, BattlePhase::PlayerMenu);
+            assert!(!driver.screen().unwrap().presentation.enabled);
+            select_move(driver, 0);
+        }
+        a.poll(); b.poll(); a.poll(); b.poll();
+
+        for (name, driver) in [("WARD", &mut a), ("Enemy WARD", &mut b)] {
+            let mut messages = Vec::new();
+            let mut previous = None;
+            for frame in 0..1000 {
+                let screen = driver.screen().unwrap();
+                if screen.current_message != previous {
+                    if let Some(message) = &screen.current_message {
+                        messages.push(message.split_whitespace().collect::<Vec<_>>().join(" "));
+                    }
+                    previous = screen.current_message.clone();
+                }
+                assert!(!screen.presentation.waiting,
+                    "link text must not wait for move-animation acknowledgements");
+                if screen.phase == BattlePhase::PlayerMenu { break; }
+                // Repeated presses, with release frames between them, must
+                // not acknowledge the final page before it has been drawn.
+                driver.update(if frame % 2 == 0 { input_a() } else { BattleInput::none() });
+            }
+            assert_eq!(driver.screen().unwrap().phase, BattlePhase::PlayerMenu);
+            let recovered = format!("{name} regained health!");
+            assert_eq!(messages.iter().filter(|message| **message == recovered).count(), 1,
+                "rest_first={rest_first}: {messages:?}");
+        }
+        assert_mirrored(&a, &b);
+        let state = a.screen().unwrap().battle_state.as_ref().unwrap();
+        assert_eq!(state.player.active_mon().hp, sleeper.max_hp);
+        assert_eq!(state.player.active_mon().pp[0], sleeper.pp[0] - 1);
+        assert_eq!(a.screen().unwrap().link_rng.as_ref().unwrap().consumed(), 0);
+    }
+}
+
 fn mk(species: Species, level: u8, moves: [MoveId; 4]) -> Pokemon {
     create_pokemon_with_moves(species, level, [0xAB, 0xCD], moves).unwrap()
 }
