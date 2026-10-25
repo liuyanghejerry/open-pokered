@@ -1,0 +1,182 @@
+{
+  "base": "2115547503e702bf63ef79685c2c2caf2a9750e2",
+  "code_commit": "36a8a9d0562d246092fd772d12fbcd89071cc221",
+  "validated_source": {
+    "head": "36a8a9d0562d246092fd772d12fbcd89071cc221",
+    "base": "2115547503e702bf63ef79685c2c2caf2a9750e2",
+    "tree": "223909b00acf8ae4f0acbf88470368bfd7797643",
+    "diff_vs_master_sha256": "4d0ceb6c0741f5d87a71a7420513e7803257da2a8c4386d35de3927081b1c66d",
+    "files": {
+      "crates/pokered-core/src/battle/link_battle_driver_tests.rs": "b2a0b24f9f95ff4e92626a40e6e70e1ecb9b8d5af622911b6412946425988e51",
+      "crates/pokered-core/src/battle/presentation.rs": "ac2fe45d0231c30745761020ce095cc7e6711529a04b99f9c49544cccf409060"
+    },
+    "repair_unchanged_after_rebase": true,
+    "new_master_before_captures_identical": true
+  },
+  "native_binary_sha256": "458c141bdefac41aa6668d2938e9d8213739b2b1135c76f6d3beb4e3d43c73d2",
+  "tests": {
+    "core": {
+      "programs": 70,
+      "passed": 3799,
+      "failed": 0,
+      "ignored": 1
+    },
+    "app": {
+      "programs": 1,
+      "passed": 407,
+      "failed": 0,
+      "ignored": 40
+    },
+    "two_peer_regression": "Actual ChannelTransport handshake, request/accept, party exchange, intro, FIGHT and move exchange. Rest first/last, both local perspectives, result text, HP, the Rest user's local PP and mirrored RNG.",
+    "fresh_new_game_through": "m06",
+    "subsystem_scenarios_passed": 11,
+    "full_m01_m49_playthrough": false
+  },
+  "gba": {
+    "emulator": "mGBA 0.10.5",
+    "performance_failures": [],
+    "performance_metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 250,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1206,
+          "draw_max_ticks": 9849,
+          "present_per_frame_ticks": 354,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 600,
+          "update_avg_ticks": 173,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2898,
+          "draw_max_ticks": 9044,
+          "present_per_frame_ticks": 392,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 374,
+          "update_core_avg_ticks": 365,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 387,
+          "update_core_avg_ticks": 377,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 207,
+          "draw_max_ticks": 2885,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 770
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2629,
+          "draw_max_ticks": 8864,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 221,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2365,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 344,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 41,
+          "draw_max_ticks": 16496,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    },
+    "memory_scenarios_passed": 13,
+    "memory_frames": 323040,
+    "min_heap_bytes": 4928,
+    "min_stack_bytes": 8704,
+    "memory_rom_sha256": "a90cb61808a592b08739fd2c29a48c4f844cfa1dec4e12324835f1fed0b8a349",
+    "setup_retry": {
+      "before_emulator_launch": true,
+      "reason": "Canonical desktop binary temporarily unlinked by the concurrent native linker protection. Failure occurred in hashes(), before audit_open; no emulator run or save was created.",
+      "resolution": "Native build completed and restored every historical alias before the memory runner started. Existing successful GBA performance and memory build reused; no source/gate/ROM change.",
+      "result": "passed"
+    }
+  },
+  "captures": {
+    "before": {
+      "path": "docs/screenshots/link-battle-text-before.png",
+      "sha256": "bc01b6da61a72781749de759102caf7760a8f24bb65e738e3d50c293ab358984",
+      "head": "2115547503e702bf63ef79685c2c2caf2a9750e2",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_binary_sha256": "011abd15d4b707fc120d555556cfdbeecc9da582d90319a8cc31fce3a6936412"
+    },
+    "after": {
+      "path": "docs/screenshots/link-battle-text-after.png",
+      "sha256": "0d06da19be1d41533ade87a54911e4e4aee5a8c5b2c59fdb5919748bcad45e1a",
+      "head": "36a8a9d0562d246092fd772d12fbcd89071cc221",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_binary_sha256": "fccf6bc806252deafac258ab78bf8f83b5f6bff498eab6fd0f5c85062af65369"
+    }
+  },
+  "comparison": {
+    "scope": "Two actual ChannelTransport link peers, both move orders, handshake/party exchange/intro/FIGHT/turn exchange; actual BattleVisualEffects/draw_battle then 81 fixed input updates per peer. Not full PokemonGame/audio or original-ROM timing proof.",
+    "fixture_sha256": "aa11ee1880b270902bd5fc3bfa53ebd9680a3ed264a21fc8915b6f0c787a1046",
+    "fixed_inputs_sha256": "1a7405a2cc2e0506f54f7d18c77fa82f85d2ab2cdca99de96f4822d6d04c7e15",
+    "capture_count_each": 40,
+    "changed": [
+      "fast-A-56.png",
+      "fast-A-60.png",
+      "fast-A-64.png",
+      "fast-A-80.png",
+      "fast-B-56.png",
+      "fast-B-60.png",
+      "fast-B-64.png",
+      "fast-B-80.png",
+      "slow-A-56.png",
+      "slow-A-60.png",
+      "slow-A-64.png",
+      "slow-A-80.png",
+      "slow-B-56.png",
+      "slow-B-60.png",
+      "slow-B-64.png",
+      "slow-B-80.png"
+    ],
+    "published_capture_update_index": 64,
+    "index_starts_at_zero": true
+  }
+}
