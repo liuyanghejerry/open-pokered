@@ -5050,9 +5050,9 @@ fn multi_hit_twineedle_two_hits_and_poison() {
     let chip = (fires.enemy.hp / 16).max(1);
     assert_eq!(dealt, per_hit * 2 + chip, "Twineedle 2 hits (per-hit × 2) + poison residual chip");
     assert_eq!(status, Some(LegacyStatus::Poison), "byte 51 < 52 ⇒ poison on the final hit");
-    // Per mover: crit, acc, damage, side_effect(poison) = 4 (NO count byte, Fixed 2);
+    // Per mover: crit, damage, acc, side_effect(poison) = 4 (NO count byte, Fixed 2);
     // two movers = 8. Residual draws NO bytes, so consumed() is unchanged.
-    assert_eq!(consumed, 8, "Twineedle: two movers × (crit, acc, damage, poison byte) = 8");
+    assert_eq!(consumed, 8, "Twineedle: two movers × (crit, damage, acc, poison byte) = 8");
     // Concrete real Gen-1: Twineedle (Bug pow 25) Snorlax→Snorlax: per-hit 15, ×2 = 30,
     // + the 700/16 = 43 poison chip = 73 total hp lost.
     assert_eq!((per_hit, per_hit * 2), (15, 30), "real Gen-1: Twineedle per-hit 15, ×2 = 30");
@@ -5082,13 +5082,12 @@ fn multi_hit_twineedle_poison_type_immune() {
     assert_eq!(status, None, "Poison-type immune to Twineedle's poison (reused #VetoIf guard)");
 }
 
-/// The data sanity witness: all 10 multi-hit moves are genuinely DATA (the authored
-/// RepeatHits op-lists), not native code. NONE deferred — Twineedle's poison is the
-/// composed `final_hit: OnFinal { chance, ops }` rider.
+/// Multi-hit counts and poison remain authored data. Twineedle's game bridge
+/// dispatches the shared poison hook after repeats and before its guarded draw.
 #[test]
 fn p4_authored_as_data() {
     install_canonical();
-    use dotzuki_rules::{FinalHitRider, HitCount, Op, Predicate, Rational, Selector};
+    use dotzuki_rules::{FinalHitRider, HitCount, Op, Predicate, Selector};
     // The 7 TwoToFive moves carry RepeatHits(TwoToFive, Target).
     for sid in ["multi.doubleslap", "multi.comet_punch", "multi.fury_attack",
                 "multi.pin_missile", "multi.spike_cannon", "multi.barrage", "multi.fury_swipes"] {
@@ -5096,26 +5095,22 @@ fn p4_authored_as_data() {
             count: HitCount::TwoToFive, target: Selector::Target, final_hit: FinalHitRider::None
         }), "{sid} is a TwoToFive RepeatHits");
     }
-    // Double Kick + Bonemerang carry RepeatHits(Fixed(2), Target).
-    for sid in ["multi.double_kick", "multi.bonemerang"] {
+    // Double Kick, Bonemerang and Twineedle carry RepeatHits(Fixed(2), Target).
+    for sid in ["multi.double_kick", "multi.bonemerang", "multi.twineedle"] {
         assert!(super::record_has_op(sid, &Op::RepeatHits {
             count: HitCount::Fixed(2), target: Selector::Target, final_hit: FinalHitRider::None
         }), "{sid} is a Fixed(2) RepeatHits");
     }
-    // Twineedle carries RepeatHits(Fixed(2)) + the OnFinal poison rider (the COMPOSED
-    // P2 side-status machinery: poison-type immunity + Substitute block + InflictStatus).
-    assert!(super::record_has_op("multi.twineedle", &Op::RepeatHits {
-        count: HitCount::Fixed(2),
-        target: Selector::Target,
-        final_hit: FinalHitRider::OnFinal {
-            chance: Rational { num: 52, den: 256 },
-            ops: vec![
-                Op::VetoIf { cond: Predicate::HasType("Poison".into()), silent: false },
-                Op::VetoIf { cond: Predicate::HasVolatile("Substitute".into()), silent: false },
-                Op::InflictStatus { status: "poison".into(), target: Selector::Target, amount: Default::default() },
-            ],
-        },
-    }), "twineedle is Fixed(2) RepeatHits + the OnFinal 52/256 poison rider (NOT deferred)");
+    let poison = move_effect_for(MoveId::PoisonSting).unwrap();
+    let hook = super::hook_for(poison.id, super::Event::DamagingHit).unwrap();
+    assert_eq!(hook.chance, Some((52, 256)));
+    for op in [
+        Op::VetoIf { cond: Predicate::HasType("Poison".into()), silent: false },
+        Op::VetoIf { cond: Predicate::HasVolatile("Substitute".into()), silent: false },
+        Op::InflictStatus { status: "poison".into(), target: Selector::Target, amount: Default::default() },
+    ] {
+        assert!(super::record_has_op("side.poison_1", &op), "Twineedle reuses the authored poison guards and status");
+    }
     for m in [MoveId::Doubleslap, MoveId::CometPunch, MoveId::FuryAttack, MoveId::PinMissile,
               MoveId::SpikeCannon, MoveId::Barrage, MoveId::FurySwipes,
               MoveId::DoubleKick, MoveId::Bonemerang, MoveId::Twineedle] {

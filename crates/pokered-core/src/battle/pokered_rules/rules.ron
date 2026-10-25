@@ -682,28 +682,14 @@ Ruleset(
                 Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: Fixed(2), target: Target) ]),
             ]),
 
-        // ── TWINEEDLE (TwineedleEffect): 2 fixed hits + 20%+1 (52/256) poison on the
-        //    FINAL hit only. The poison rider draws its chance byte at the legacy
-        //    side_effect ordinal (after the count) and runs the SAME guards a poison
-        //    side-status uses (poison-type immunity + Substitute block + the binding
-        //    no-status guard) — composing the P2 side-status machinery with the hit
-        //    index. NOT deferred. ──
+        // ── TWINEEDLE: repeat the damage, then the game bridge dispatches the
+        //    authored side.poison_1 hook. Its status/type/Substitute guards must
+        //    precede the 52/256 chance draw; a doll broken by either hit cancels it.
         Effect(id: "multi.twineedle", kind: Move, power: 25, type: "Bug", accuracy: 100,
             hooks: [
                 Hook(on: "ModifyDamage",  do: [ DealMoveDamage ]),
                 Hook(on: "Effectiveness", order: 100, do: [ ApplyTypeChart ]),
-                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(
-                    count: Fixed(2),
-                    target: Target,
-                    final_hit: OnFinal(
-                        chance: [52, 256],
-                        ops: [
-                            VetoIf(cond: HasType("Poison")),
-                            VetoIf(cond: HasVolatile("Substitute")),
-                            InflictStatus(status: "poison", target: Target),
-                        ],
-                    ),
-                ) ]),
+                Hook(on: "DamagingHit", order: 100, do: [ RepeatHits(count: Fixed(2), target: Target) ]),
             ]),
     ],
 )
