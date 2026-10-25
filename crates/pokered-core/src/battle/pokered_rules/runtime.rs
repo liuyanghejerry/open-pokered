@@ -155,6 +155,19 @@ pub fn move_announcement(
     msgs
 }
 
+/// The action's first caption also identifies its typed animation handoff.
+pub(crate) fn move_action_caption(
+    state: &EngineState<PokeredRules>, actor: BattlerRef, move_id: MoveId,
+    names: Option<&BattleNameContext>,
+) -> String {
+    let name = display_name_named(state, actor, names);
+    if super::trapping_continued(actor.side == 0, move_id) {
+        format!("{name}'s\nattack continues!")
+    } else {
+        format!("{name} used {}!", move_name(move_id, false))
+    }
+}
+
 fn battler_at<'a>(state: &'a EngineState<PokeredRules>, who: BattlerRef) -> &'a EngineBattler<PokeredRules> {
     if who.side == 0 {
         &state.player_battlers[who.slot as usize]
@@ -359,7 +372,11 @@ pub(crate) fn translate_turn_named_with_faints(
                         });
                     }
                 } else {
-                    msgs.extend(move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None));
+                    let mut announcement = move_announcement(&display_name_named(state, actor, names), &display_name_named(state, opp_ref(actor), names), move_name(*move_, false), crit, missed, eff, None);
+                    if super::trapping_continued(actor.side == 0, *move_) {
+                        announcement[0] = move_action_caption(state, actor, *move_, names);
+                    }
+                    msgs.extend(announcement);
                 }
                 // A 999-capped attempt has no StatChanged event, but still
                 // prints BuildingRageText followed by NothingHappenedText.

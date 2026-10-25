@@ -1,0 +1,503 @@
+{
+  "scope": "Restore trapping continuation narration and preserve its typed animation handoff. Original isolated helper dispatch, native prepared FIGHT and actual renderer; not full original-turn, clock or m49 parity.",
+  "source": {
+    "head": "553b6b61355db03c73234864cb390a824174f182",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541"
+  },
+  "original_oracle": {
+    "status": "passed",
+    "scope": "Isolated original trapping status-helper branches with prepared flag, counter, registers, stack and short names. Read-only hooks observe PrintText receiving AttackContinuesText, counter decrement and animation-address return. Not full turns, rendered dialogue or animation timing.",
+    "source_sha256": "c58e55bb191623528a52f6fb6fa23166c6fb040f7ea6124bef8bf954ed902c4f",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "cases": [
+      {
+        "side": 0,
+        "active": false,
+        "remaining": 1,
+        "entry": "CheckPlayerStatusConditions.MultiturnMoveCheck",
+        "text_calls": [],
+        "return": {
+          "hl": 53346,
+          "zero_flag": false,
+          "remaining": 1
+        }
+      },
+      {
+        "side": 0,
+        "active": false,
+        "remaining": 4,
+        "entry": "CheckPlayerStatusConditions.MultiturnMoveCheck",
+        "text_calls": [],
+        "return": {
+          "hl": 53346,
+          "zero_flag": false,
+          "remaining": 4
+        }
+      },
+      {
+        "side": 0,
+        "active": true,
+        "remaining": 1,
+        "entry": "CheckPlayerStatusConditions.MultiturnMoveCheck",
+        "text_calls": [
+          {
+            "hook": "PrintText",
+            "hl": 23166
+          }
+        ],
+        "return": {
+          "hl": 22292,
+          "zero_flag": true,
+          "remaining": 0
+        }
+      },
+      {
+        "side": 0,
+        "active": true,
+        "remaining": 4,
+        "entry": "CheckPlayerStatusConditions.MultiturnMoveCheck",
+        "text_calls": [
+          {
+            "hook": "PrintText",
+            "hl": 23166
+          }
+        ],
+        "return": {
+          "hl": 22292,
+          "zero_flag": true,
+          "remaining": 3
+        }
+      },
+      {
+        "side": 1,
+        "active": false,
+        "remaining": 1,
+        "entry": "CheckEnemyStatusConditions.checkIfUsingMultiturnMove",
+        "text_calls": [],
+        "return": {
+          "hl": 53351,
+          "zero_flag": false,
+          "remaining": 1
+        }
+      },
+      {
+        "side": 1,
+        "active": false,
+        "remaining": 4,
+        "entry": "CheckEnemyStatusConditions.checkIfUsingMultiturnMove",
+        "text_calls": [],
+        "return": {
+          "hl": 53351,
+          "zero_flag": false,
+          "remaining": 4
+        }
+      },
+      {
+        "side": 1,
+        "active": true,
+        "remaining": 1,
+        "entry": "CheckEnemyStatusConditions.checkIfUsingMultiturnMove",
+        "text_calls": [
+          {
+            "hook": "PrintText",
+            "hl": 23166
+          }
+        ],
+        "return": {
+          "hl": 26516,
+          "zero_flag": true,
+          "remaining": 0
+        }
+      },
+      {
+        "side": 1,
+        "active": true,
+        "remaining": 4,
+        "entry": "CheckEnemyStatusConditions.checkIfUsingMultiturnMove",
+        "text_calls": [
+          {
+            "hook": "PrintText",
+            "hl": 23166
+          }
+        ],
+        "return": {
+          "hl": 26516,
+          "zero_flag": true,
+          "remaining": 3
+        }
+      }
+    ]
+  },
+  "native_finding": {
+    "status": "confirmed source plus native turn narration",
+    "native_evidence": "audit-1328-zero-trap-rage-probe.json",
+    "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c core.asm:3554-3568/5928-5943, data/text/text_2.asm:1060-1063",
+    "finding": "Both original trapping continuation status handlers print AttackContinuesText before animation, skipping ordinary used-move announcement. Native prepared Wrap second turns on both sides still announce used WRAP! for both immune-zero and ordinary damage.",
+    "scope": "Original source comparison, no original-ROM rendered text timing assertion. The native probe drained presentations but observed queued strings; a dedicated renderer witness is still needed before repair."
+  },
+  "red_original_test_revision": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_trap_continuation_caption",
+      "--",
+      "--nocapture"
+    ],
+    "base": "553b6b61355db03c73234864cb390a824174f182",
+    "test_sha256": "ecafb9fda32c2ee21842f06d79122e6fa26361a684cf027c7164337a4845ae1b",
+    "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exit": 101,
+    "seconds": 21.82129757408984
+  },
+  "fixture_correction": "Ordinary NPC enemies do not spend PP. Corrected the initial test revision after the first green-caption run exposed that unrelated expectation; production code unchanged.",
+  "fixture_failure": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_trap_continuation_caption",
+      "--",
+      "--nocapture"
+    ],
+    "base": "553b6b61355db03c73234864cb390a824174f182",
+    "test_sha256": "ecafb9fda32c2ee21842f06d79122e6fa26361a684cf027c7164337a4845ae1b",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "exit": 101,
+    "seconds": 14.150381006067619
+  },
+  "focused": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_trap_continuation_caption",
+      "--",
+      "--nocapture"
+    ],
+    "base": "553b6b61355db03c73234864cb390a824174f182",
+    "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "exit": 0,
+    "seconds": 15.482469241018407
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "553b6b61355db03c73234864cb390a824174f182",
+    "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "exit": 0,
+    "seconds": 49.77857571898494
+  },
+  "core_totals": {
+    "passed": 3751,
+    "failed": 0,
+    "ignored": 1
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "553b6b61355db03c73234864cb390a824174f182",
+    "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "exit": 0,
+    "seconds": 92.34456649795175
+  },
+  "app_totals": {
+    "passed": 393,
+    "failed": 0,
+    "ignored": 38
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T01:30:59.656075+00:00",
+    "source": {
+      "head": "553b6b61355db03c73234864cb390a824174f182",
+      "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+      "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 92.41880577302072,
+        "log": "audit-1331-trap-caption-app-test-driver.log",
+        "log_sha256": "acc0390597a3aa97bb40fa008e556d7ec1c5bbf5d185ca3527fa2777a11abb88"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 89.302857376053,
+        "log": "audit-1331-trap-caption-gba-build-driver.log",
+        "log_sha256": "48f74d138d398f22284817b5599389590f06a2f46bc80cf11c59e174eb96fd0b"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 4.193314922042191,
+        "log": "audit-1331-trap-caption-gba-perf-driver.log",
+        "log_sha256": "a83550563e0da4ad9dc2c12cf483a405ff45606f43d0a7e01e97065d75e60f27"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 78.08966378797777,
+        "log": "audit-1331-trap-caption-memory-build-driver.log",
+        "log_sha256": "ccab24c88dfee23fa5de9a78b5d102c72882c46f151113243e6c00f3e90077a6"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 180.0997187430039,
+        "log": "audit-1331-trap-caption-memory-run-driver.log",
+        "log_sha256": "0fc3bcc45e644af7262082e1a887420fc3e115cc1d9f725f23c3659b02a3c51d"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1331-trap-caption-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 35.29808622400742,
+        "log": "audit-1331-trap-caption-native-build-driver.log",
+        "log_sha256": "94fd2e5e97f0a6f7b6257b373ad16068a5281b0c5de150ece63a68b5e4aa466b"
+      }
+    ],
+    "finished": "2026-10-25T01:38:59.193734+00:00",
+    "unchanged_source": true
+  },
+  "native_build": {
+    "head": "553b6b61355db03c73234864cb390a824174f182",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered",
+    "exit_code": 0,
+    "candidate_sha256": "7fedafffa7516eaf19fc12f3978615a6bbe3a7aa908bb3869bb64f06fd318cc1",
+    "candidate": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1331-trap-caption",
+    "seconds": 31.011771894060075,
+    "historical_binaries_unchanged": true,
+    "hardlinks_only": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "553b6b61355db03c73234864cb390a824174f182",
+      "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+      "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541",
+      "binary_sha256": "7fedafffa7516eaf19fc12f3978615a6bbe3a7aa908bb3869bb64f06fd318cc1"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1331-trap-caption",
+    "status": "passed",
+    "seconds": 52.1175244479673,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "553b6b61355db03c73234864cb390a824174f182",
+      "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+      "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541",
+      "binary_sha256": "7fedafffa7516eaf19fc12f3978615a6bbe3a7aa908bb3869bb64f06fd318cc1"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1331-trap-caption",
+    "status": "passed",
+    "seconds": 140.5808889559703,
+    "unchanged_source_and_binary": true
+  },
+  "gba_performance": {
+    "head": "553b6b61355db03c73234864cb390a824174f182",
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "bb2a3a455014177ad9da40b04c0061fd59b1a651c9ca7e09e0ccc71584332cc3",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "36e811dff94e70fccd218a901fd1642d74959c4a8cb7c580b77872484d771a48",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 3.5028075069421902,
+    "failures": [],
+    "metrics": "audit-1331-trap-caption-gba-perf-metrics.json",
+    "log": "audit-1331-trap-caption-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "553b6b61355db03c73234864cb390a824174f182",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "7838a7ed6819447c1c20c636775bf563a005ed62088c31ddc9d3d262b779a3f5",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+    "seconds": 179.73693788202945,
+    "frames": 324120,
+    "cases": 13,
+    "min_heap": 7816,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "render_comparison": {
+    "input_trace_sha256": "c15804ff88cf09ded43ac07208e47bfff0b2126a97138b4d98fb0d2c2a53ba76",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1331-trap-caption-visual.rs",
+    "source_sha256": "9391b797eb0056b3063b712ed8d4b537bcaaca5e77eb60690757904ede9db9d3",
+    "frame": 112,
+    "before": {
+      "base": "553b6b61355db03c73234864cb390a824174f182",
+      "source": "audit-1331-trap-caption-visual.rs",
+      "source_sha256": "9391b797eb0056b3063b712ed8d4b537bcaaca5e77eb60690757904ede9db9d3",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "c4e25ef54415ed7cd53a6e35f7fc48eff2a00e9a2633d7a70bed5354ef0c9a00"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "1fe7f74ac37c16ee2ad10876cb4ed7ec5410e934b7a68dc67b97da2445bca914"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "4e034c0c8513ce3c3fdbf24dfa4737460d75e4b3d27afc1f02ae09aa61af62a0"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "0ed2d91d2769f5863d77ed6ba192de786f9064f44ecca14a174312638789f205",
+      "output": "STAGE attack=1\nCAPTURE frame=112 completed_turns=1 enemy_display_hp=450 draws=3 message=Some(\"MEWTWO used WRAP!\") phase=ShowingText { messages: [\"MEWTWO used WRAP!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX can't move!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "53e70450f820ec794a99a0fcdd387306c5500e7bf306f5009397ce1b0171a4c6"
+    },
+    "after": {
+      "source_identity": {
+        "head": "553b6b61355db03c73234864cb390a824174f182",
+        "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+        "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "0fb48a55ce54775163859b9b1ccc09d5e21abd7fb99f063c3c979b5aba1d3665"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "93c4b4f3e350302ac7a9d459c121e7e923434298ce586340c94399b33a9aa8fd"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "aa76c8e580d5ab9f12032bf7f55aa6d1938a8f2d8b3df1470942c33ec65ed4f5"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "c314f9a61eed13ca02f00898d20389cd32bbd0d75a51ce9900159fc4930e9eec",
+      "output": "STAGE attack=1\nCAPTURE frame=112 completed_turns=1 enemy_display_hp=450 draws=3 message=Some(\"MEWTWO's\\nattack continues!\") phase=ShowingText { messages: [\"MEWTWO's\\nattack continues!\", \"Enemy SNORLAX's\\nRAGE is building!\", \"Enemy SNORLAX's ATTACK rose!\", \"Enemy SNORLAX can't move!\"], current: 0, wait_frames: 10, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "8e1c28d8f646d5c77ea829d336815476a2773fafe9a1ac69738f9dcd206e9e36"
+    },
+    "deleted_exe_bytes": 36329936
+  },
+  "images": {
+    "before": {
+      "path": "docs/screenshots/trap-continuation-caption-before.png",
+      "sha256": "53e70450f820ec794a99a0fcdd387306c5500e7bf306f5009397ce1b0171a4c6"
+    },
+    "after": {
+      "path": "docs/screenshots/trap-continuation-caption-after.png",
+      "sha256": "8e1c28d8f646d5c77ea829d336815476a2773fafe9a1ac69738f9dcd206e9e36"
+    }
+  },
+  "visual_review": {
+    "utc": "2026-10-25T01:39:58.447360+00:00",
+    "images": [
+      "audit-1331-trap-caption-before.png",
+      "audit-1331-trap-caption-after.png"
+    ],
+    "frame": 112,
+    "review": "Both actual-renderer PNGs viewed. Before: MEWTWO used WRAP! After: MEWTWO's / attack continues! Same sprites, HP bars and panel; text is visible and fits. Captured inputs compare byte-for-byte. Numeric snapshot in both: target HP450, RNG draws3, Rage stage1. Scope prepared battle with immune target, not original text/font/layout timing or full PokemonGame/audio-clock."
+  },
+  "memory_log_archive": {
+    "original": "audit-1331-trap-caption-memory-candidate.log",
+    "gzip": "audit-1331-trap-caption-memory-candidate.log.gz",
+    "original_sha256": "3a595239378054aae91846007fed01d79c64d50f3cbddaa57108194b27bf5fe7",
+    "gzip_sha256": "70055bc734a515bb1624f49f453d3e1c7f1d6d0b99d009084403996f06fb99c6",
+    "original_bytes": 5690086,
+    "gzip_bytes": 434081,
+    "bytes_saved": 5256005,
+    "roundtrip_verified": true
+  }
+}

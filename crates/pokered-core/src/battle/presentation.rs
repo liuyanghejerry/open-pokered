@@ -290,11 +290,7 @@ impl BattlePresentation {
             }
             match event {
                 TurnEvent::MoveUsed { actor, move_ } => self.queued.push(MoveStep {
-                    announcement: format!(
-                        "{} used {}!",
-                        runtime::display_name_named(state, *actor, names),
-                        move_name(*move_, false)
-                    ),
+                    announcement: runtime::move_action_caption(state, *actor, *move_, names),
                     hits: {
                         let recorded = super::pokered_rules::presented_hits(actor.side == 0);
                         let mut staged = hp;

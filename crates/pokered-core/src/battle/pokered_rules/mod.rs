@@ -1498,6 +1498,8 @@ thread_local! {
     // Successful gains followed by attempts blocked at an actual Attack of 999.
     static RAGE_OUTCOME: RefCell<[Option<(MoveId, u8, u8)>; 2]> = const { RefCell::new([None, None]) };
     static PRESENTED_EFFECTIVENESS: RefCell<[Option<(MoveId, Effectiveness, bool)>; 2]> = const { RefCell::new([None, None]) };
+    // Preserve the executed continuation even if a later residual faints its user.
+    static TRAPPING_CONTINUED: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
     /// CantLowerAnymore belongs to this action, even if a later Haze resets stages.
     static PRIMARY_STAT_FLOOR: RefCell<[Option<MoveId>; 2]> = const { RefCell::new([None, None]) };
 }
@@ -1509,6 +1511,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
     PRIMARY_STAT_FLOOR.with(|moves| moves.borrow_mut()[who.side as usize] = None);
     HIT_SURVIVAL.with(|moves| moves.borrow_mut()[who.side as usize] = None);
     RAGE_OUTCOME.with(|gains| gains.borrow_mut()[who.side as usize] = None);
+    TRAPPING_CONTINUED.with(|moves| moves.borrow_mut()[who.side as usize] = None);
 }
 
 /// Clear both sides' current moves + the per-turn Substitute-created flags (call
@@ -1520,6 +1523,7 @@ pub fn clear_current_moves() {
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
     HIT_SURVIVAL.with(|moves| *moves.borrow_mut() = [None, None]);
     RAGE_OUTCOME.with(|gains| *gains.borrow_mut() = [None, None]);
+    TRAPPING_CONTINUED.with(|moves| *moves.borrow_mut() = [None, None]);
     PRESENTED_EFFECTIVENESS.with(|c| *c.borrow_mut() = [None, None]);
     PRIMARY_STAT_FLOOR.with(|moves| *moves.borrow_mut() = [None, None]);
     ohko::clear();
@@ -1527,6 +1531,10 @@ pub fn clear_current_moves() {
 
 fn primary_stat_floor(player: bool, move_id: MoveId) -> bool {
     PRIMARY_STAT_FLOOR.with(|moves| moves.borrow()[usize::from(!player)] == Some(move_id))
+}
+
+pub(super) fn trapping_continued(player: bool, move_id: MoveId) -> bool {
+    TRAPPING_CONTINUED.with(|moves| moves.borrow()[usize::from(!player)] == Some(move_id))
 }
 
 /// Captured while this action resolves, before a later Conversion or switch
@@ -2486,6 +2494,7 @@ fn trapping_lockin(
     let existing = ctx.effects.iter().position(|entry| entry.host == source
         && matches!(entry.kind, PokeVolatile::Trapping { .. }));
     if let Some(idx) = existing {
+        TRAPPING_CONTINUED.with(|moves| moves.borrow_mut()[source.side as usize] = Some(current_move_for(source).id));
         if let PokeVolatile::Trapping { turns_left, .. } = &mut ctx.effects[idx].kind {
             *turns_left = turns_left.saturating_sub(1);
         }
