@@ -5,7 +5,7 @@ use alloc::rc::Rc;
 use std::rc::Rc;
 use pokered_audio::sfx_data::SfxId;
 use pokered_core::battle::state::StatusCondition as CoreStatus;
-use pokered_core::battle::state::{status2, status3};
+use pokered_core::battle::state::status2;
 use pokered_core::battle::{
     BallAnimOutcome, BattleAnimEvent, BattlePhase, BattleScreen,
     BattleTransition as CoreTransition, IntroPhase,
@@ -517,6 +517,8 @@ pub struct BattleVisualEffects {
     seismic_hide_raster: Option<MonRasterTransfer>,
     /// Player-side tilemap edge and hidden tail of `AnimationTransformMon`.
     transform_raster: Option<MonRasterTransfer>,
+    /// ChangeMonPic has loaded the copied picture for the current action.
+    transform_picture_changed: bool,
     /// Preserve the user's picture on the scanout where Selfdestruct or
     /// Explosion dispatches HideMonPic; the hidden tilemap appears next frame.
     hide_mon_one_frame: Option<MonSide>,
@@ -694,6 +696,7 @@ impl BattleVisualEffects {
         self.substitute_reveal_delay = [0; 2];
         self.seismic_hide_raster = None;
         self.transform_raster = None;
+        self.transform_picture_changed = false;
         self.hide_mon_one_frame = None;
         self.bg_palette.reset();
         self.current_attacker_species = pokered_data::species::Species::Rhydon;
@@ -885,6 +888,7 @@ impl BattleVisualEffects {
         self.substitute_reveal_delay = [0; 2];
         self.seismic_hide_raster = None;
         self.transform_raster = None;
+        self.transform_picture_changed = false;
         self.hide_mon_one_frame = None;
         self.bg_palette.reset();
         self.anim_player.start(anim_index, player_is_attacker);
@@ -961,6 +965,7 @@ impl Default for BattleVisualEffects {
             substitute_reveal_delay: [0; 2],
             seismic_hide_raster: None,
             transform_raster: None,
+            transform_picture_changed: false,
             hide_mon_one_frame: None,
             move_animation_capture_scene: false,
             intro_anim: IntroAnimState::None,
@@ -1397,6 +1402,7 @@ impl BattleVisualEffects {
                         self.substitute_reveal_delay = [0; 2];
                         self.seismic_hide_raster = None;
                         self.transform_raster = None;
+                        self.transform_picture_changed = false;
                         self.hide_mon_one_frame = None;
                         self.bg_palette.reset();
                         self.current_attacker_species = if player_is_attacker {
@@ -1417,6 +1423,10 @@ impl BattleVisualEffects {
                                 self.anim_layer.clear();
                                 self.anim_layer_pending.clear();
                             }
+                        } else if !self.animations_enabled && move_id == MoveId::Transform && !missed {
+                            // TransformEffect calls ChangeMonPic directly when
+                            // animations are off; the picture still changes.
+                            self.apply_anim_effect(AnimEffect::TransformMon);
                         } else {
                             // MoveAnimation .animationsDisabled: no animation (and no
                             // per-command sounds), just DelayFrames 30 before the
@@ -1577,6 +1587,7 @@ impl BattleVisualEffects {
                 0
             }
             AnimEffect::TransformMon => {
+                self.transform_picture_changed = true;
                 self.transform_raster = Some(MonRasterTransfer {
                     side: attacker,
                     frame: 0,
@@ -2566,7 +2577,7 @@ impl BattleVisualEffects {
         self.short_flash.tick();
         self.long_flash.tick();
         self.hide_mon_one_frame = None;
-        if self.anim_player.is_finished() {
+        if self.anim_player.is_finished() && self.anim_wait == 0 {
             self.transform_raster = None;
         }
         self.bg_palette.begin_frame();
@@ -3076,6 +3087,16 @@ impl BattleVisualEffects {
         }
 
         (dx, dy)
+    }
+
+    fn displayed_species(&self, screen: &BattleScreen) -> [pokered_data::species::Species; 2] {
+        let mut species = [screen.player_species, screen.enemy_species];
+        if self.transform_picture_changed {
+            if let Some((player, copied)) = screen.presentation.current_transform_target() {
+                species[usize::from(!player)] = copied;
+            }
+        }
+        species
     }
 
     fn player_visible_now(&self) -> bool {
@@ -4021,29 +4042,11 @@ pub fn draw_battle(
     } else {
         screen.player_display_name(is_zh)
     };
-    let enemy_sprite = species_to_sprite_name(&format!("{}", screen.enemy_species));
-    let player_sprite = species_to_sprite_name(&format!("{}", screen.player_species));
-
-    // AnimationTransformMon (ChangeMonPic): a transformed mon is drawn
-    // with the opposing mon's sprite — the front sprite on the enemy
-    // side, the back sprite on the player side.
-    let (enemy_transformed, player_transformed) = match screen.battle_state.as_ref() {
-        Some(bs) => (
-            bs.enemy.battle_status3 & status3::TRANSFORMED != 0,
-            bs.player.battle_status3 & status3::TRANSFORMED != 0,
-        ),
-        None => (false, false),
-    };
-    let enemy_sprite = if enemy_transformed {
-        player_sprite.clone()
-    } else {
-        enemy_sprite
-    };
-    let player_sprite = if player_transformed {
-        species_to_sprite_name(&format!("{}", screen.enemy_species))
-    } else {
-        player_sprite
-    };
+    // ChangeMonPic copies once at the animation command. Later opponent
+    // switches must not replace that retained picture.
+    let [player_species, enemy_species] = effects.displayed_species(screen);
+    let enemy_sprite = species_to_sprite_name(&format!("{enemy_species}"));
+    let player_sprite = species_to_sprite_name(&format!("{player_species}"));
 
     // Build combined VRAM tileset and tile buffer
     let mut tile_buf = ScreenTileBuffer::new(fb.width() / TILE_SIZE, fb.height() / TILE_SIZE); // filled with $7F (space)
@@ -6422,6 +6425,10 @@ mod old_man_render_tests {
 #[cfg(test)]
 #[path = "battle_faint_tests.rs"]
 mod faint_tests;
+
+#[cfg(test)]
+#[path = "battle_transform_tests.rs"]
+mod transform_tests;
 
 #[cfg(test)]
 mod applying_audio_owner_tests {

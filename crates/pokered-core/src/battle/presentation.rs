@@ -9,7 +9,7 @@ use dotzuki_engine::battle::{
     stack::{EffectState, HpChangeCause, TurnEvent, TurnLog},
     BattleState,
 };
-use pokered_data::{lang_data::move_name, moves::MoveId};
+use pokered_data::{lang_data::move_name, moves::MoveId, species::Species};
 use serde::{Deserialize, Serialize};
 
 /// The existing text publication owner, without transient move/VFX state.
@@ -27,6 +27,14 @@ pub struct TextPagePublication {
     faint_waiting: bool,
     #[serde(default)]
     level_ups: Vec<Option<LevelUpDisplay>>,
+    #[serde(default)]
+    transforms: Vec<Option<TransformDisplay>>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+struct TransformDisplay {
+    player: bool,
+    species: Species,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -41,6 +49,7 @@ pub(super) struct LevelUpDisplay {
 struct MoveStep {
     announcement: String,
     level_up: Option<LevelUpDisplay>,
+    transform: Option<TransformDisplay>,
     faint: Option<FaintCue>,
     faint_continuation: bool,
     faint_text_published: bool,
@@ -57,7 +66,7 @@ struct MoveStep {
 impl MoveStep {
     fn faint(cue: FaintCue, announcement: String, hp: [u16; 2]) -> Self {
         Self {
-            announcement, level_up: None, faint: Some(cue), faint_continuation: false,
+            announcement, level_up: None, transform: None, faint: Some(cue), faint_continuation: false,
             faint_text_published: false, move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal, leech_seed: false,
             charge: None, missed: false, player: cue.side == super::FaintSide::Player,
             hp, hits: Vec::new(),
@@ -66,10 +75,20 @@ impl MoveStep {
 
     fn level_up(announcement: String, display: LevelUpDisplay) -> Self {
         Self {
-            announcement, level_up: Some(display), faint: None,
+            announcement, level_up: Some(display), transform: None, faint: None,
             faint_continuation: false, faint_text_published: false,
             move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal,
             leech_seed: false, charge: None, missed: false, player: true,
+            hp: [0; 2], hits: Vec::new(),
+        }
+    }
+
+    fn transform(announcement: String, display: TransformDisplay) -> Self {
+        Self {
+            announcement, level_up: None, transform: Some(display), faint: None,
+            faint_continuation: false, faint_text_published: false,
+            move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal,
+            leech_seed: false, charge: None, missed: false, player: display.player,
             hp: [0; 2], hits: Vec::new(),
         }
     }
@@ -100,6 +119,7 @@ impl BattlePresentation {
             faint_serial: self.serial, active_faint: self.current_faint,
             faint_waiting: self.current_faint.is_some() && self.waiting,
             level_ups: self.pages.iter().map(|step| step.as_ref().and_then(|step| step.level_up)).collect(),
+            transforms: self.pages.iter().map(|step| step.as_ref().and_then(|step| step.transform)).collect(),
         }
     }
 
@@ -108,15 +128,16 @@ impl BattlePresentation {
         self.page = saved.page;
         if self.current_faint.is_some() { self.waiting = false; }
         self.current_faint = None;
-        self.queued.retain(|step| step.faint.is_none() && step.level_up.is_none());
+        self.queued.retain(|step| step.faint.is_none() && step.level_up.is_none() && step.transform.is_none());
         for page in &mut self.pages {
             if page.as_ref().is_some_and(|step| step.faint.is_some()) { *page = None; }
         }
         // This vector is positional: all-None ordinary pages must survive
         // capture -> restore -> capture just as pages with a faint cue do.
-        let count = saved.faints.len().max(saved.level_ups.len());
+        let count = saved.faints.len().max(saved.level_ups.len()).max(saved.transforms.len());
         let mut faints = saved.faints.into_iter();
         let mut level_ups = saved.level_ups.into_iter();
+        let mut transforms = saved.transforms.into_iter();
         self.pages = (0..count).map(|_| {
             let mut step = faints.next().flatten().map(|(cue, continuation, published)| {
                 let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
@@ -126,6 +147,9 @@ impl BattlePresentation {
             });
             if let Some(display) = level_ups.next().flatten() {
                 step = Some(MoveStep::level_up(String::new(), display));
+            }
+            if let Some(display) = transforms.next().flatten() {
+                step = Some(MoveStep::transform(String::new(), display));
             }
             step
         }).collect();
@@ -239,6 +263,7 @@ impl BattlePresentation {
             MoveStep {
                 announcement,
                 level_up: None,
+                transform: None,
                 faint: None,
                 faint_continuation: false,
                 faint_text_published: false,
@@ -285,6 +310,20 @@ impl BattlePresentation {
             .any(|step| step.level_up.is_some_and(|display| display.active))
     }
 
+    pub(super) fn holds_species(&self, player: bool) -> bool {
+        self.enabled && self.queued.iter().chain(self.pages.iter().flatten())
+            .any(|step| step.transform.is_some_and(|display| display.player == player))
+    }
+
+    /// The species copied by this action, for AnimationTransformMon's picture
+    /// transfer before the result page publishes the stable display identity.
+    pub fn current_transform_target(&self) -> Option<(bool, Species)> {
+        let (_, move_id, player) = self.current?;
+        if move_id != MoveId::Transform || self.current_move_missed() { return None; }
+        self.pages.iter().skip(self.page? + 1).flatten().filter_map(|step| step.transform)
+            .find(|display| display.player == player).map(|display| (player, display.species))
+    }
+
     pub(super) fn queue_level_up(&mut self, announcement: String, display: LevelUpDisplay) {
         if self.enabled { self.queued.push(MoveStep::level_up(announcement, display)); }
     }
@@ -310,6 +349,7 @@ impl BattlePresentation {
                 self.queued.push(MoveStep {
                     announcement,
                     level_up: None,
+                    transform: None,
                     faint: None,
                     faint_continuation: false,
                     faint_text_published: false,
@@ -331,34 +371,43 @@ impl BattlePresentation {
                 });
             }
             match event {
-                TurnEvent::MoveUsed { actor, move_ } => self.queued.push(MoveStep {
-                    announcement: runtime::move_action_caption(state, *actor, *move_, names),
-                    level_up: None,
-                    hits: {
-                        let recorded = super::pokered_rules::presented_hits(actor.side == 0);
-                        let mut staged = hp;
-                        let mut hits = Vec::new();
-                        if recorded[5] > 1 {
-                            for loss in recorded.iter().take(recorded[5] as usize) {
-                                let target = usize::from(actor.side == 0);
-                                staged[target] = staged[target].saturating_sub(*loss);
-                                hits.push(staged);
+                TurnEvent::MoveUsed { actor, move_ } => {
+                    let missed = super::pokered_rules::presented_move_missed(actor.side == 0, *move_).unwrap_or(false);
+                    self.queued.push(MoveStep {
+                        announcement: runtime::move_action_caption(state, *actor, *move_, names),
+                        level_up: None,
+                        transform: None,
+                        hits: {
+                            let recorded = super::pokered_rules::presented_hits(actor.side == 0);
+                            let mut staged = hp;
+                            let mut hits = Vec::new();
+                            if recorded[5] > 1 {
+                                for loss in recorded.iter().take(recorded[5] as usize) {
+                                    let target = usize::from(actor.side == 0);
+                                    staged[target] = staged[target].saturating_sub(*loss);
+                                    hits.push(staged);
+                                }
                             }
-                        }
-                        hits
-                    },
-                    faint: None,
-                    faint_continuation: false,
-                    faint_text_published: false,
-                    move_id: Some(*move_),
-                    effectiveness: super::pokered_rules::presented_effectiveness(actor.side == 0, *move_)
-                        .unwrap_or(pokered_data::types::Effectiveness::Normal),
-                    leech_seed: false,
-                    charge: None,
-                    missed: super::pokered_rules::presented_move_missed(actor.side == 0, *move_).unwrap_or(false),
-                    player: actor.side == 0,
-                    hp,
-                }),
+                            hits
+                        },
+                        faint: None,
+                        faint_continuation: false,
+                        faint_text_published: false,
+                        move_id: Some(*move_),
+                        effectiveness: super::pokered_rules::presented_effectiveness(actor.side == 0, *move_)
+                            .unwrap_or(pokered_data::types::Effectiveness::Normal),
+                        leech_seed: false,
+                        charge: None,
+                        missed,
+                        player: actor.side == 0,
+                        hp,
+                    });
+                    if *move_ == MoveId::Transform && !missed && effects.iter().any(|entry|
+                        entry.host == *actor && matches!(entry.kind, PokeVolatile::Transformed)) {
+                        let (caption, species) = runtime::transformed_result(state, *actor, names);
+                        self.queued.push(MoveStep::transform(caption, TransformDisplay { player: actor.side == 0, species }));
+                    }
+                },
                 TurnEvent::Missed { actor } => {
                     if let Some(step) = self
                         .queued
@@ -407,9 +456,9 @@ impl BattlePresentation {
                 page_step.faint_continuation = page != 0;
                 Some(page_step)
             }));
-        } else if step.as_ref().is_some_and(|step| step.level_up.is_some()) {
-            // DrawPlayerHUDAndHPBar precedes GrewLevelText, including its
-            // first page when a translated or long nickname wraps the text.
+        } else if step.as_ref().is_some_and(|step| step.level_up.is_some() || step.transform.is_some()) {
+            // Growth HUD and copied identity updates precede the first result
+            // page, including translated or long captions spanning pages.
             if count > 0 {
                 self.pages.push(step);
                 self.pages.extend((1..count).map(|_| None));
@@ -427,7 +476,7 @@ impl BattlePresentation {
         }
         self.page = Some(page);
         let step = self.pages.get(page).and_then(Option::as_ref);
-        self.waiting = step.is_some_and(|step| !step.faint_continuation && step.level_up.is_none());
+        self.waiting = step.is_some_and(|step| !step.faint_continuation && step.level_up.is_none() && step.transform.is_none());
         self.hit_index = 0;
         if !step.is_some_and(|step| step.faint_continuation) {
             self.current_faint = step.and_then(|step| step.faint).map(|cue| {
@@ -482,6 +531,11 @@ impl BattleScreen {
     pub(super) fn activate_text_page(&mut self, page: usize) -> bool {
         let first_publication = self.presentation.activate(page);
         if first_publication {
+            if let Some(display) = self.presentation.pages.get(page)
+                .and_then(Option::as_ref).and_then(|step| step.transform) {
+                if display.player { self.player_species = display.species; }
+                else { self.enemy_species = display.species; }
+            }
             if let Some(display) = self.presentation.pages.get(page)
                 .and_then(Option::as_ref).and_then(|step| step.level_up).filter(|display| display.active) {
                 self.player_level = display.level;
@@ -657,6 +711,53 @@ mod tests {
         let battle = second_plain_text_page(true);
         let mut json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
         json["text_publication"].as_object_mut().unwrap().remove("level_ups");
+        let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
+        let mut restored = BattleScreen::new(true); saved.restore_into(&mut restored);
+        restored.update_frame(BattleInput::none());
+        assert_eq!(restored.current_message.as_deref(), Some("Second page"));
+        assert!(!restored.presentation.waiting);
+    }
+
+    #[test]
+    fn transform_first_result_page_and_snapshot_roundtrip_publish_identity() {
+        use crate::snapshot::BattleSnapshot;
+        for player in [false, true] {
+            let make = |species| create_pokemon_with_moves(species, 40, [0x9a, 0x78],
+                [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+            let mut battle = BattleScreen::from_parties(true, &[make(Species::Mewtwo)], &[make(Species::Mewtwo)], None);
+            battle.set_presentation_enabled(true);
+            let bs = battle.battle_state.as_mut().unwrap();
+            let side = if player { &mut bs.player } else { &mut bs.enemy };
+            side.active_mon_mut().species = Species::Snorlax;
+            let caption = "COPYMASTER transformed into SNORLAX! This prepared result spans several text pages.".to_string();
+            battle.presentation.queued.push(MoveStep::transform(caption.clone(), TransformDisplay { player, species: Species::Snorlax }));
+            battle.sync_display_from_state();
+            assert_eq!(if player { battle.player_species } else { battle.enemy_species }, Species::Mewtwo);
+            battle.show_text_then(vec!["COPYMASTER used TRANSFORM!".to_string(), caption.clone()], BattlePhase::PlayerMenu);
+            let mut seen = false;
+            for _ in 0..1000 {
+                let json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+                let saved: BattleSnapshot = serde_json::from_value(json.clone()).unwrap();
+                saved.restore_into(&mut battle);
+                assert_eq!(serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap(), json);
+                if battle.current_message.as_ref().is_some_and(|m| m.contains("transformed")) {
+                    assert_ne!(battle.current_message.as_ref().unwrap(), &caption);
+                    assert_eq!(if player { battle.player_species } else { battle.enemy_species }, Species::Snorlax);
+                    assert!(!battle.presentation.waiting);
+                    seen = true; break;
+                }
+                battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            }
+            assert!(seen, "missing first result page");
+        }
+    }
+
+    #[test]
+    fn publication_snapshots_without_transform_metadata_keep_existing_pages() {
+        use crate::snapshot::BattleSnapshot;
+        let battle = second_plain_text_page(true);
+        let mut json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+        json["text_publication"].as_object_mut().unwrap().remove("transforms");
         let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
         let mut restored = BattleScreen::new(true); saved.restore_into(&mut restored);
         restored.update_frame(BattleInput::none());

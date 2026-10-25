@@ -19,6 +19,7 @@ use pokered_data::lang_data::{move_name, species_name};
 use pokered_data::move_data::MoveData;
 use pokered_data::moves::MoveId;
 use pokered_data::pokemon_data::get_base_stats;
+use pokered_data::species::Species;
 use pokered_data::types::{Effectiveness, PokemonType};
 
 use dotzuki_engine::battle::stack::{EffectId, EffectState};
@@ -174,6 +175,12 @@ fn battler_at<'a>(state: &'a EngineState<PokeredRules>, who: BattlerRef) -> &'a 
     } else {
         &state.opponent_battlers[who.slot as usize]
     }
+}
+
+pub(in crate::battle) fn transformed_result(state: &EngineState<PokeredRules>, actor: BattlerRef, names: Option<&BattleNameContext>) -> (String, Species) {
+    let species = battler_at(state, actor).species;
+    let copied = species_name(species, false).to_uppercase();
+    (format!("{} transformed into\n{copied}!", display_name_named(state, actor, names)), species)
 }
 
 /// Display name: UPPERCASE species, "Enemy "-prefixed on side 1.
@@ -435,9 +442,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 if md.effect == pokered_data::moves::MoveEffect::TransformEffect
                     && !missed && effects.iter().any(|entry|
                         entry.host == actor && matches!(entry.kind, PokeVolatile::Transformed)) {
-                    let copied = species_name(battler_at(state, actor).species, false).to_uppercase();
-                    msgs.push(format!("{} transformed into\n{copied}!",
-                        display_name_named(state, actor, names)));
+                    msgs.push(transformed_result(state, actor, names).0);
                 }
                 // The actual hit receipt orders Substitute break/Pay Day text
                 // before faint handling. A broken doll cancels the coin effect.
