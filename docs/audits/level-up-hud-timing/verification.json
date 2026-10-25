@@ -1,0 +1,307 @@
+{
+  "scope": "Source-level original experience.asm publication order; eight prepared public-FIGHT turns and four additional unit tests. Actual renderer frame3 comparison. No original-ROM execution or original-renderer timing claim.",
+  "original_reference": {
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "source": "engine/battle/experience.asm",
+    "order": "Print GainedText before calculating the new level; copy active stats and DrawPlayerHUDAndHPBar before GrewLevelText; bench growth does not redraw active HUD."
+  },
+  "red": {
+    "head": "0eb386749075b69650a4d86564dc7869a919780f",
+    "source_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55",
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "e54c9d739324fe377f1b8a44dd038653b2a3592021f5d622ec8c9e4681058533"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "250cb3c8f1dba46019f17cdf8a326af959348d9385065ede7bb8c0e72f9d6a68"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "fb0996630e751777323786da197dfc972b001fa2961a25bf5f7639382b7111cf"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exit": 101,
+    "seconds": 0.01754569704644382,
+    "log_sha256": "c2eaee44a91177fae8be3ed1aaf35940f503f15b647f048890c585c8be6b3511",
+    "exe_sha256": "f27a39f2afa3a7cc083d7a70c7668a81642415264e56c9f2ad04937faffbb352",
+    "deleted_exe_bytes": 14888992,
+    "scope": "8 prepared public FIGHT turns drained; 4 tests, both action orders, EXP.ALL, saved gained page and presentation-disabled controls."
+  },
+  "counts": {
+    "core": [
+      3772,
+      0,
+      1
+    ],
+    "app-test": [
+      393,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "0eb386749075b69650a4d86564dc7869a919780f",
+    "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55",
+    "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+    "exit": 0,
+    "seconds": 38.33425645099487
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "0eb386749075b69650a4d86564dc7869a919780f",
+    "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55",
+    "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+    "exit": 0,
+    "seconds": 83.75081152305938
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T03:29:35.645252+00:00",
+    "source": {
+      "head": "0eb386749075b69650a4d86564dc7869a919780f",
+      "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+      "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 83.8101856620051,
+        "log": "audit-1336-level-hud-app-test-driver.log",
+        "log_sha256": "11f14f542e6cda0e208a9ea6bc251bc7c4a05f399ed1f580768de726c721040d"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 71.33531139406841,
+        "log": "audit-1336-level-hud-gba-build-driver.log",
+        "log_sha256": "33fa80ca7f2b968aaf1a83534bbd65e94ba32f035871a3f0923c617640365e9c"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.2433555690804496,
+        "log": "audit-1336-level-hud-gba-perf-driver.log",
+        "log_sha256": "b9dd7cc432d094523475e694cdc36de88f8f1ec9b56d77adf4aec001b8201e95"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 69.57165528798942,
+        "log": "audit-1336-level-hud-memory-build-driver.log",
+        "log_sha256": "d975fb1ae7db3cd4cf90e8fda0c20e35b3fcded21a202c2206c4aec6cb21768f"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 190.60238679498434,
+        "log": "audit-1336-level-hud-memory-run-driver.log",
+        "log_sha256": "4178e0f09d635fc102fa229a79b1f73fc73cb0813d2718296349151820316785"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1336-level-hud-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 31.11139060591813,
+        "log": "audit-1336-level-hud-native-build-driver.log",
+        "log_sha256": "afb97897711365a9266def6aec03cdd04688f324929b5c0ecb3d14cc37f93fae"
+      }
+    ],
+    "finished": "2026-10-25T03:37:05.403047+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "0eb386749075b69650a4d86564dc7869a919780f",
+      "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+      "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55",
+      "binary_sha256": "906054681d1872c5f7502282bbb98c1ec7ba3d581437fee9826a2ba304eee774"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1336-level-hud",
+    "status": "passed",
+    "seconds": 51.44376882002689,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "0eb386749075b69650a4d86564dc7869a919780f",
+      "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+      "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55",
+      "binary_sha256": "906054681d1872c5f7502282bbb98c1ec7ba3d581437fee9826a2ba304eee774"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1336-level-hud",
+    "status": "passed",
+    "seconds": 141.79451842303388,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "0eb386749075b69650a4d86564dc7869a919780f",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "4bfcdb24ed38107ffde5de01af7ded5a859d691e63fa17209134702c309a2ef4",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+    "seconds": 190.30152380594518,
+    "frames": 323040,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "0eb386749075b69650a4d86564dc7869a919780f",
+    "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "1f8e62a42681ec04c6bdbbcb7f9770d7fe905229a91a61b6d6a27a0a5af70db9",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "aa923b385d61a6f89970adad8e1c592ecd7ba4b39933f315cf8832531c905c3c",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.7833248539827764,
+    "failures": [],
+    "metrics": "audit-1336-level-hud-gba-perf-metrics.json",
+    "log": "audit-1336-level-hud-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "bae30d4cb014ded2c4578961f9b7b94a7ddf929e4b7d02fbbb9076dc212e244a",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1336-level-hud-visual.rs",
+    "source_sha256": "9c2bd5800906b1bdfafc7d9b42c7e061b6a9fb08829bfc5f4676c028eab388cf",
+    "frame": 3,
+    "before": {
+      "head": "0eb386749075b69650a4d86564dc7869a919780f",
+      "tree": "865dd04541e68f6b298c3b55689cc3ef74f285e7",
+      "source": "audit-1336-level-hud-visual.rs",
+      "source_sha256": "9c2bd5800906b1bdfafc7d9b42c7e061b6a9fb08829bfc5f4676c028eab388cf",
+      "exe_sha256": "2205e562b91fc95dc9a99a4c6c57e988e2ff3d37d4994874d33b73c98745ca6e",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "e54c9d739324fe377f1b8a44dd038653b2a3592021f5d622ec8c9e4681058533"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "250cb3c8f1dba46019f17cdf8a326af959348d9385065ede7bb8c0e72f9d6a68"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "fb0996630e751777323786da197dfc972b001fa2961a25bf5f7639382b7111cf"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "output": "CAPTURE frame=3 level=21 hp=69 max_hp=80 draws=3 message=Some(\"Enemy SNORLAX used SPLASH!\")\n",
+      "image_sha256": "a1fbf49655f01ff62d3528e8aa75e9c543c6ed8f18cf96ef5aa0bfb490b4b07c"
+    },
+    "after": {
+      "source_identity": {
+        "head": "0eb386749075b69650a4d86564dc7869a919780f",
+        "diff_sha256": "c2ee95e79c772c64561689d941ad34b503202a60af626a92d480116fc5414b42",
+        "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "3f7b6d07f37f4828d41028d98555856792211d51cb163cc68f2798163cc0d9c6"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "bb836971d1ab809b1d62b889e07cb08cb4ba1ff837105c38e79f3d5e1452571d"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "99026dd54e06c350503bcb59cf3afba990211e5309418b11d0e9cb01d6170607"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "6c54712e9bd25f5eec175a5fccd27c44b71e5c6aec1994023617e5a0ee6da3bd",
+      "output": "CAPTURE frame=3 level=20 hp=69 max_hp=76 draws=3 message=Some(\"Enemy SNORLAX used SPLASH!\")\n",
+      "image_sha256": "ac246df51a231cfc3f16f59a8cfe0b829f46f4a68f5b442d84eb85178c14297c"
+    },
+    "deleted_exe_bytes": 36287744
+  },
+  "visual_inspection": {
+    "both_images_inspected": true,
+    "frame": 3,
+    "before": "Enemy SNORLAX used SPLASH; ACE already shows L21 and69/80HP.",
+    "after": "Same Splash announcement; ACE retains L20 and69/76HP until its growth notice.",
+    "scope": "Actual renderer, same four input frames and RNG3. Later HP/level publication verified in integration tests, not this early frame.",
+    "before_sha256": "a1fbf49655f01ff62d3528e8aa75e9c543c6ed8f18cf96ef5aa0bfb490b4b07c",
+    "after_sha256": "ac246df51a231cfc3f16f59a8cfe0b829f46f4a68f5b442d84eb85178c14297c"
+  },
+  "test_sha256": "72296ab7dfeb83120ac68553c64f30eb08fe5c35fedbb4196ea6834a570f6b55"
+}

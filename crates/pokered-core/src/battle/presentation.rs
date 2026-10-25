@@ -25,11 +25,22 @@ pub struct TextPagePublication {
     active_faint: Option<(u32, FaintCue)>,
     #[serde(default)]
     faint_waiting: bool,
+    #[serde(default)]
+    level_ups: Vec<Option<LevelUpDisplay>>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub(super) struct LevelUpDisplay {
+    pub active: bool,
+    pub level: u8,
+    pub hp: u16,
+    pub max_hp: u16,
 }
 
 #[derive(Debug, Clone)]
 struct MoveStep {
     announcement: String,
+    level_up: Option<LevelUpDisplay>,
     faint: Option<FaintCue>,
     faint_continuation: bool,
     faint_text_published: bool,
@@ -46,10 +57,20 @@ struct MoveStep {
 impl MoveStep {
     fn faint(cue: FaintCue, announcement: String, hp: [u16; 2]) -> Self {
         Self {
-            announcement, faint: Some(cue), faint_continuation: false,
+            announcement, level_up: None, faint: Some(cue), faint_continuation: false,
             faint_text_published: false, move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal, leech_seed: false,
             charge: None, missed: false, player: cue.side == super::FaintSide::Player,
             hp, hits: Vec::new(),
+        }
+    }
+
+    fn level_up(announcement: String, display: LevelUpDisplay) -> Self {
+        Self {
+            announcement, level_up: Some(display), faint: None,
+            faint_continuation: false, faint_text_published: false,
+            move_id: None, effectiveness: pokered_data::types::Effectiveness::Normal,
+            leech_seed: false, charge: None, missed: false, player: true,
+            hp: [0; 2], hits: Vec::new(),
         }
     }
 }
@@ -78,6 +99,7 @@ impl BattlePresentation {
             })).collect(),
             faint_serial: self.serial, active_faint: self.current_faint,
             faint_waiting: self.current_faint.is_some() && self.waiting,
+            level_ups: self.pages.iter().map(|step| step.as_ref().and_then(|step| step.level_up)).collect(),
         }
     }
 
@@ -86,18 +108,27 @@ impl BattlePresentation {
         self.page = saved.page;
         if self.current_faint.is_some() { self.waiting = false; }
         self.current_faint = None;
-        self.queued.retain(|step| step.faint.is_none());
+        self.queued.retain(|step| step.faint.is_none() && step.level_up.is_none());
         for page in &mut self.pages {
             if page.as_ref().is_some_and(|step| step.faint.is_some()) { *page = None; }
         }
         // This vector is positional: all-None ordinary pages must survive
         // capture -> restore -> capture just as pages with a faint cue do.
-        self.pages = saved.faints.into_iter().map(|faint| faint.map(|(cue, continuation, published)| {
-            let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
-            step.faint_continuation = continuation;
-            step.faint_text_published = published;
+        let count = saved.faints.len().max(saved.level_ups.len());
+        let mut faints = saved.faints.into_iter();
+        let mut level_ups = saved.level_ups.into_iter();
+        self.pages = (0..count).map(|_| {
+            let mut step = faints.next().flatten().map(|(cue, continuation, published)| {
+                let mut step = MoveStep::faint(cue, String::new(), [0; 2]);
+                step.faint_continuation = continuation;
+                step.faint_text_published = published;
+                step
+            });
+            if let Some(display) = level_ups.next().flatten() {
+                step = Some(MoveStep::level_up(String::new(), display));
+            }
             step
-        })).collect();
+        }).collect();
         self.serial = saved.faint_serial;
         self.current_faint = saved.active_faint;
         self.waiting = saved.faint_waiting;
@@ -207,6 +238,7 @@ impl BattlePresentation {
             step_index,
             MoveStep {
                 announcement,
+                level_up: None,
                 faint: None,
                 faint_continuation: false,
                 faint_text_published: false,
@@ -248,6 +280,15 @@ impl BattlePresentation {
         self.enabled && (!self.queued.is_empty() || self.pages.iter().any(Option::is_some))
     }
 
+    pub(super) fn holds_level_up(&self) -> bool {
+        self.enabled && self.queued.iter().chain(self.pages.iter().flatten())
+            .any(|step| step.level_up.is_some_and(|display| display.active))
+    }
+
+    pub(super) fn queue_level_up(&mut self, announcement: String, display: LevelUpDisplay) {
+        if self.enabled { self.queued.push(MoveStep::level_up(announcement, display)); }
+    }
+
     pub(super) fn record_turn(
         &mut self,
         log: &TurnLog<PokeredRules>,
@@ -268,6 +309,7 @@ impl BattlePresentation {
             if let Some(announcement) = runtime::presentation_hp_message_named(event, state, effects, names) {
                 self.queued.push(MoveStep {
                     announcement,
+                    level_up: None,
                     faint: None,
                     faint_continuation: false,
                     faint_text_published: false,
@@ -291,6 +333,7 @@ impl BattlePresentation {
             match event {
                 TurnEvent::MoveUsed { actor, move_ } => self.queued.push(MoveStep {
                     announcement: runtime::move_action_caption(state, *actor, *move_, names),
+                    level_up: None,
                     hits: {
                         let recorded = super::pokered_rules::presented_hits(actor.side == 0);
                         let mut staged = hp;
@@ -364,6 +407,13 @@ impl BattlePresentation {
                 page_step.faint_continuation = page != 0;
                 Some(page_step)
             }));
+        } else if step.as_ref().is_some_and(|step| step.level_up.is_some()) {
+            // DrawPlayerHUDAndHPBar precedes GrewLevelText, including its
+            // first page when a translated or long nickname wraps the text.
+            if count > 0 {
+                self.pages.push(step);
+                self.pages.extend((1..count).map(|_| None));
+            }
         } else {
             self.pages.extend((0..count).map(|_| None));
             if count > 0 { *self.pages.last_mut().unwrap() = step; }
@@ -377,7 +427,7 @@ impl BattlePresentation {
         }
         self.page = Some(page);
         let step = self.pages.get(page).and_then(Option::as_ref);
-        self.waiting = step.is_some_and(|step| !step.faint_continuation);
+        self.waiting = step.is_some_and(|step| !step.faint_continuation && step.level_up.is_none());
         self.hit_index = 0;
         if !step.is_some_and(|step| step.faint_continuation) {
             self.current_faint = step.and_then(|step| step.faint).map(|cue| {
@@ -429,6 +479,22 @@ impl BattlePresentation {
 }
 
 impl BattleScreen {
+    pub(super) fn activate_text_page(&mut self, page: usize) -> bool {
+        let first_publication = self.presentation.activate(page);
+        if first_publication {
+            if let Some(display) = self.presentation.pages.get(page)
+                .and_then(Option::as_ref).and_then(|step| step.level_up).filter(|display| display.active) {
+                self.player_level = display.level;
+                self.player_max_hp = display.max_hp;
+                self.hp_bar_anim.set_target(
+                    BattleSide::Player, display.hp, display.max_hp, self.player_species,
+                    &mut self.player_hp,
+                );
+            }
+        }
+        first_publication
+    }
+
     pub fn set_presentation_enabled(&mut self, enabled: bool) {
         if self.presentation.enabled == enabled {
             return;
@@ -495,6 +561,108 @@ mod tests {
         pokemon::stats::create_pokemon_with_moves,
     };
     use pokered_data::species::Species;
+
+    fn growth_screen(level: u8, active: usize, transformed: bool) -> BattleScreen {
+        let make = |species, level| create_pokemon_with_moves(species, level, [0x9a, 0x78],
+            [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None]).unwrap();
+        let mut mon = make(Species::Mewtwo, level); mon.hp -= 7; mon.set_nickname("ACE");
+        let party = if level == 5 { vec![mon, mon] } else { vec![mon] };
+        let mut enemy = make(Species::Snorlax, 100); enemy.hp = 0;
+        let mut battle = BattleScreen::from_parties(true, &party, &[enemy], None);
+        let bs = battle.battle_state.as_mut().unwrap();
+        bs.player.active_pokemon_index = active;
+        bs.party_gain_exp_flags[0] = true;
+        if level == 5 { bs.party_gain_exp_flags[1] = true; }
+        if transformed {
+            bs.player.preserve_original_identity();
+            bs.player.active_mon_mut().species = Species::Snorlax;
+            bs.player.set_status3(super::super::state::status3::TRANSFORMED);
+        }
+        battle.set_presentation_enabled(true);
+        battle
+    }
+
+    #[test]
+    fn matching_bench_and_active_growth_captions_keep_party_order() {
+        for active in [0, 1] {
+            let mut battle = growth_screen(5, active, false);
+            let messages = battle.process_exp_gain();
+            assert_eq!(messages.iter().filter(|m| *m == "ACE grew to level 10!").count(), 2);
+            battle.show_text_then(messages, BattlePhase::PlayerMenu);
+            let mut previous = None; let mut growth_count = 0;
+            for _ in 0..1000 {
+                if battle.current_message != previous {
+                    if battle.current_message.as_deref() == Some("ACE grew to level 10!") {
+                        growth_count += 1;
+                        let expected = if growth_count > active { (10, 36, 43) } else { (5, 19, 26) };
+                        assert_eq!((battle.player_level, battle.player_hp, battle.player_max_hp), expected);
+                        assert!(!battle.presentation.waiting);
+                    }
+                    previous = battle.current_message.clone();
+                }
+                if battle.phase == BattlePhase::PlayerMenu { break; }
+                battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+            }
+            assert_eq!(growth_count, 2);
+            assert_eq!(battle.phase, BattlePhase::PlayerMenu);
+        }
+    }
+
+    #[test]
+    fn transformed_growth_updates_hp_and_level_without_replacing_battle_species() {
+        let mut battle = growth_screen(20, 0, true);
+        let messages = battle.process_exp_gain();
+        battle.show_text_then(messages, BattlePhase::PlayerMenu);
+        assert_eq!((battle.player_level, battle.player_hp, battle.player_max_hp), (20, 69, 76));
+        for _ in 0..1000 {
+            if battle.current_message.as_deref() == Some("ACE grew to level 21!") {
+                assert_eq!((battle.player_level, battle.player_hp, battle.player_max_hp), (21, 73, 80));
+                assert_eq!(battle.player_species, Species::Snorlax);
+                return;
+            }
+            battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        }
+        panic!("missing transformed growth notice");
+    }
+
+    #[test]
+    fn growth_first_page_and_snapshot_roundtrip_publish_one_hud_update() {
+        use crate::snapshot::BattleSnapshot;
+        let mut battle = growth_screen(20, 0, false);
+        let text = "ACE grew to level 21! This prepared caption spans several pages to exercise the first publication.".to_string();
+        battle.presentation.queue_level_up(text.clone(), LevelUpDisplay { active: true, level: 21, hp: 73, max_hp: 80 });
+        battle.show_text_then(vec!["Gained experience".to_string(), text.clone()], BattlePhase::PlayerMenu);
+        for _ in 0..1000 {
+            let json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+            let saved: BattleSnapshot = serde_json::from_value(json.clone()).unwrap();
+            saved.restore_into(&mut battle);
+            assert_eq!(serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap(), json);
+            if battle.current_message.as_ref().is_some_and(|m| m.starts_with("ACE grew")) {
+                assert_ne!(battle.current_message.as_ref().unwrap(), &text);
+                assert_eq!((battle.player_level, battle.player_hp, battle.player_max_hp), (21, 73, 80));
+                assert!(!battle.hp_bar_anim.is_active());
+                assert!(!battle.presentation.waiting);
+                battle.update_frame(BattleInput::none());
+                assert_eq!((battle.player_level, battle.player_hp, battle.player_max_hp), (21, 73, 80));
+                return;
+            }
+            battle.update_frame(BattleInput { a: true, ..BattleInput::none() });
+        }
+        panic!("missing first growth page");
+    }
+
+    #[test]
+    fn publication_snapshots_without_growth_metadata_keep_existing_pages() {
+        use crate::snapshot::BattleSnapshot;
+        let battle = second_plain_text_page(true);
+        let mut json = serde_json::to_value(BattleSnapshot::capture(&battle)).unwrap();
+        json["text_publication"].as_object_mut().unwrap().remove("level_ups");
+        let saved: BattleSnapshot = serde_json::from_value(json).unwrap();
+        let mut restored = BattleScreen::new(true); saved.restore_into(&mut restored);
+        restored.update_frame(BattleInput::none());
+        assert_eq!(restored.current_message.as_deref(), Some("Second page"));
+        assert!(!restored.presentation.waiting);
+    }
 
     fn second_plain_text_page(presentation_enabled: bool) -> BattleScreen {
         let mut battle = BattleScreen::new(true);

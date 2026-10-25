@@ -1629,7 +1629,10 @@ impl BattleScreen {
         if let Some(ref bs) = self.battle_state {
             let p = bs.player.active_mon();
             self.player_species = p.species;
-            self.player_level = p.level;
+            if !self.presentation.holds_level_up() {
+                self.player_level = p.level;
+                self.player_max_hp = p.max_hp;
+            }
             if !self.presentation.holds_hp() { self.hp_bar_anim.set_target(
                 BattleSide::Player,
                 p.hp,
@@ -1637,7 +1640,6 @@ impl BattleScreen {
                 p.species,
                 &mut self.player_hp,
             ); }
-            self.player_max_hp = p.max_hp;
             self.player_status = p.status;
             self.player_party_size = bs.player.party.len();
             self.player_pokeball_status = derive_pokeball_status(&bs.player.party);
@@ -2306,7 +2308,7 @@ impl BattleScreen {
                 }
                 let faint = self.presentation.faint_at(current);
                 if faint.is_none() { self.current_message = Some(messages[current].clone()); }
-                let first_publication = self.presentation.activate(current);
+                let first_publication = self.activate_text_page(current);
                 if self.presentation.waiting || first_publication { return ScreenAction::Continue; }
                 if faint.is_some_and(|cue| cue.text.is_some()) {
                     self.current_message = Some(messages[current].clone());
@@ -3036,7 +3038,7 @@ learn {learn_name}!")];
         if self.presentation.faint_at(0).is_none() {
             self.current_message = Some(expanded[0].clone());
         }
-        self.presentation.activate(0);
+        self.activate_text_page(0);
         self.phase = BattlePhase::ShowingText {
             messages: expanded,
             current: 0,
@@ -5369,8 +5371,6 @@ learn {learn_name}!")];
             }
         }
 
-        self.sync_display_from_state();
-
         let mut msgs = vec![];
         if let Some(bs) = self.battle_state.as_ref() {
             use experience::gain::{ExperienceAwardKind, ExperienceNotice};
@@ -5383,7 +5383,7 @@ learn {learn_name}!")];
                 let mon = bs.player.party_mon(idx);
                 let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
                 let name = mon.display_name(&mut name_buf);
-                msgs.push(match *notice {
+                let message = match *notice {
                     ExperienceNotice::Gained { amount, kind, .. } => match kind {
                         ExperienceAwardKind::Ordinary => format!("{name} gained {amount} exp. points!"),
                         ExperienceAwardKind::Boosted => format!("{name} gained a boosted {amount} exp. points!"),
@@ -5392,9 +5392,18 @@ learn {learn_name}!")];
                     ExperienceNotice::Leveled { level, .. } => format!("{name} grew to level {level}!"),
                     ExperienceNotice::Learned { move_id, .. } => format!("{name} learned {}!",
                         pokered_data::lang_data::move_name(move_id, false)),
-                });
+                };
+                if let ExperienceNotice::Leveled { level, hp, max_hp, .. } = *notice {
+                    // Queue bench notices too: two party members may have
+                    // identical names/levels, so matching must retain order.
+                    self.presentation.queue_level_up(message.clone(), presentation::LevelUpDisplay {
+                        active: idx == bs.player.active_pokemon_index, level, hp, max_hp,
+                    });
+                }
+                msgs.push(message);
             }
         }
+        self.sync_display_from_state();
 
         // Full moveset: queue the forget/replace prompt (learnmove.asm) — the
         // mon does NOT silently lose its 4th move.
