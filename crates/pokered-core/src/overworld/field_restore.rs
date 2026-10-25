@@ -194,6 +194,12 @@ impl PatternMemory {
             .get(usize::from(address.checked_sub(0x8000)?))
             .copied()
     }
+    /// Initialize a synchronous native resource projection before timed
+    /// ownership begins. Timed foreground/IRQ transfers must use their bus;
+    /// this initialization is not a source instruction or completion receipt.
+    pub fn initialize_native_byte(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
+        self.write(address, value)
+    }
     pub(super) fn write(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
         let offset = address
             .checked_sub(0x8000)
@@ -369,8 +375,8 @@ impl VideoCopyWork {
             child.step(bus).map_err(VideoServiceError::Bus)?;
             self.request.as_mut().unwrap().size = child.size_port();
             if child.finished() {
-                self.source_offset = child.source_offset();
-                self.destination = child.destination();
+                self.source_offset = child.source_offset().ok_or(VideoServiceError::Protocol(RestoreError::NoRequest))?;
+                self.destination = child.destination().ok_or(VideoServiceError::Protocol(RestoreError::NoRequest))?;
                 self.request.as_mut().unwrap().serviced_epoch = Some(*accepted_epoch);
                 return Ok(true);
             }

@@ -1,0 +1,3134 @@
+[
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 16768,
+    "destination": 32768,
+    "double": false,
+    "bg_before": 1,
+    "loaded_before": 4,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 65,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 1,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 16960,
+    "destination": 34816,
+    "double": false,
+    "bg_before": 1,
+    "loaded_before": 4,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 64,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 66,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 136,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 1,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 4,
+    "tiles": 128,
+    "source": 23168,
+    "destination": 34816,
+    "double": true,
+    "bg_before": 1,
+    "loaded_before": 4,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65484,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65485,
+            "value": 90,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65486,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65487,
+            "value": 136,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65483,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 1,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 4,
+    "tiles": 32,
+    "source": 25224,
+    "destination": 38400,
+    "double": false,
+    "bg_before": 1,
+    "loaded_before": 4,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 136,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 98,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 150,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 4,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 1,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 21952,
+    "destination": 35008,
+    "double": false,
+    "bg_before": 0,
+    "loaded_before": 5,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 192,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 85,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 192,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 136,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 21184,
+    "destination": 35200,
+    "double": false,
+    "bg_before": 0,
+    "loaded_before": 5,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 192,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 82,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 137,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 18880,
+    "destination": 35392,
+    "double": false,
+    "bg_before": 0,
+    "loaded_before": 5,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 192,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 73,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 64,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 138,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 16768,
+    "destination": 32768,
+    "double": false,
+    "bg_before": 0,
+    "loaded_before": 5,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 65,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 128,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  },
+  {
+    "bank": 5,
+    "tiles": 12,
+    "source": 16960,
+    "destination": 34816,
+    "double": false,
+    "bg_before": 0,
+    "loaded_before": 5,
+    "instructions": [
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65466,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65464,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65419,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65479,
+            "value": 64,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65480,
+            "value": 66,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65481,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65482,
+            "value": 136,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 8,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 4,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 8,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65478,
+            "value": 4,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 24,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Read": {
+            "port": 65419,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65464,
+            "value": 5,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": {
+          "Write": {
+            "port": 8192,
+            "value": 5,
+            "at_tcycle": 12
+          }
+        }
+      },
+      {
+        "tcycles": 12,
+        "access": null
+      },
+      {
+        "tcycles": 12,
+        "access": {
+          "Write": {
+            "port": 65466,
+            "value": 0,
+            "at_tcycle": 8
+          }
+        }
+      },
+      {
+        "tcycles": 16,
+        "access": null
+      }
+    ]
+  }
+]

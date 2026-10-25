@@ -401,6 +401,35 @@ fn resolve_block_with_connections(
     border_block
 }
 
+/// The live block/connection source shared by raster drawing and video
+/// request production. Keep the row cache: bare-metal drawing must not resolve
+/// the same block and connection separately for all sixteen of its tiles.
+struct BackgroundMapTiles<'a> {
+    map_json: Option<&'a MapJson>,
+    width: u8,
+    height: u8,
+    blocks: &'a [u8],
+    border: u8,
+    blockset: &'a [u8],
+}
+impl BackgroundMapTiles<'_> {
+    fn tile(&self, x: i32, y: i32, last: &mut Option<(i32, i32, u8)>) -> Option<u8> {
+        let bx = x.div_euclid(4);
+        let by = y.div_euclid(4);
+        let block = match *last {
+            Some((lx, ly, block)) if lx == bx && ly == by => block,
+            _ => {
+                let block = resolve_block_with_connections(self.map_json, self.width,
+                    self.height, self.blocks, self.border, bx, by);
+                *last = Some((bx, by, block));
+                block
+            }
+        };
+        self.blockset.get(usize::from(block) * blockset_data::BLOCK_SIZE
+            + y.rem_euclid(4) as usize * 4 + x.rem_euclid(4) as usize).copied()
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct OverworldBackgroundKey {
     map: u8,
@@ -922,6 +951,8 @@ fn draw_background_tiles(
         }
         _ => (visible_x, visible_y, true),
     };
+    let tile_source = BackgroundMapTiles { map_json, width: map_w, height: map_h,
+        blocks: blk, border: border_block, blockset };
     for ty in tile_y {
         let screen_y = ty * TILE_SIZE as i32 - camera_y;
         if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
@@ -949,37 +980,12 @@ fn draw_background_tiles(
                 world_tx = world_tx.rem_euclid(map_w as i32 * 4);
             }
 
-            let bx = world_tx.div_euclid(4);
-            let mut by = world_ty.div_euclid(4);
-            if shake_offset_y != 0 {
-                by = by.rem_euclid(map_h as i32);
-            }
-            let sub_x = world_tx.rem_euclid(4) as usize;
-            let sub_y = world_ty.rem_euclid(4) as usize;
-
-            let block_id = match last_block {
-                Some((last_bx, last_by, block_id)) if last_bx == bx && last_by == by => block_id,
-                _ => {
-                    let block_id = resolve_block_with_connections(
-                        map_json,
-                        map_w,
-                        map_h,
-                        blk,
-                        border_block,
-                        bx,
-                        by,
-                    );
-                    last_block = Some((bx, by, block_id));
-                    block_id
-                }
-            };
-
-            let block_offset = block_id as usize * blockset_data::BLOCK_SIZE;
-            let tile_idx = blockset
-                .get(block_offset + sub_y * 4 + sub_x)
-                .copied()
-                .map(usize::from)
-                .unwrap_or(0);
+            // Elevator shake wraps source rows before tile lookup.
+            let world_ty = if shake_offset_y != 0 {
+                world_ty.rem_euclid(i32::from(map_h) * 4)
+            } else { world_ty };
+            let tile_idx = tile_source.tile(world_tx, world_ty, &mut last_block)
+                .map(usize::from).unwrap_or(0);
 
             let tile = if tile_idx == ANIM_FLOWER_TILE as usize {
                 flower_ts.map_or_else(|| ts.get(tile_idx), |fts| fts.get(0))
@@ -3613,3 +3619,6 @@ mod fly_arrival_tests {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod silph_departure_tests;
+
+mod map_tile_snapshot;
+pub(crate) use map_tile_snapshot::{stationary_map_tile_snapshot, MapTileSnapshot, MapTileSnapshotError};

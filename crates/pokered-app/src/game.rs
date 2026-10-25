@@ -12,6 +12,10 @@ macro_rules! dbg_eprintln {
     }};
 }
 
+#[path = "field_video_inputs.rs"]
+mod field_video_inputs;
+#[path = "field_oam_inputs.rs"]
+mod field_oam_inputs;
 #[path = "field_flash.rs"]
 pub(crate) mod field_flash;
 #[path = "field_restore_assets.rs"]
@@ -706,6 +710,8 @@ pub struct PokemonGame {
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
     pub(crate) field_flash: Option<Box<field_flash::FieldFlash>>,
     pub(crate) source_display: pokered_core::overworld::display_work_time::DisplayWorkTime,
+    #[cfg(any(test, feature = "debug-server"))]
+    pub(crate) source_audio_work: Option<(u64, Result<pokered_audio::source_clock::AudioFrameWork, pokered_audio::source_clock::AudioClockError>)>,
     post_capture_flow: Option<Box<post_capture::PostCaptureFlow>>,
     pub stats_screen: Option<StatsScreenState>,
     pub slots_screen: Option<SlotsScreen>,
@@ -1398,6 +1404,8 @@ impl PokemonGame {
             rare_candy_flow: None,
             field_flash: None,
             source_display: Default::default(),
+            #[cfg(any(test, feature = "debug-server"))]
+            source_audio_work: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1579,6 +1587,8 @@ impl PokemonGame {
             rare_candy_flow: None,
             field_flash: None,
             source_display: Default::default(),
+            #[cfg(any(test, feature = "debug-server"))]
+            source_audio_work: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -1709,6 +1719,8 @@ impl PokemonGame {
             rare_candy_flow: None,
             field_flash: None,
             source_display: Default::default(),
+            #[cfg(any(test, feature = "debug-server"))]
+            source_audio_work: None,
             post_capture_flow: None,
             pending_fly_map: false,
             fly_departure_screen_frames: 0,
@@ -2402,7 +2414,7 @@ impl PokemonGame {
             .map_err(|e| format!("failed to parse save from {:?}: {:?}", path, e))?;
         pokered_core::log_save!("save loaded from {:?}", path);
         self.pending_softboiled_user = None;
-        self.field_flash = None;
+        self.discard_field_flash();
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -2426,7 +2438,7 @@ impl PokemonGame {
         if matches!(screen, GameScreen::Overworld | GameScreen::StartMenu) {
             self.source_display.finish_legacy_party_sprite_owner();
         }
-        if screen != GameScreen::PartyScreen { self.field_flash = None; }
+        if screen != GameScreen::PartyScreen { self.discard_field_flash(); }
         if self.state.screen == GameScreen::StartMenu && screen != GameScreen::StartMenu && self.start_menu.has_source_entry() {
             self.overworld.suspend_source_foreground();
         }
@@ -3054,7 +3066,7 @@ impl PokemonGame {
     #[cfg(not(target_os = "none"))]
     fn soft_reset_host(&mut self) {
         self.pending_softboiled_user = None;
-        self.field_flash = None;
+        self.discard_field_flash();
         self.overworld.clear_field_poison();
         self.overworld.clear_retained_field_text();
         self.overworld.suspend_source_foreground();
@@ -3544,6 +3556,8 @@ impl PokemonGame {
     }
 
     pub fn update(&mut self, input: &InputState) {
+        #[cfg(any(test, feature = "debug-server"))]
+        { self.source_audio_work = None; }
         #[cfg(any(target_os = "none", test))]
         if self.platform_reset_requested { return; }
         self.source_display.begin_native_update();
@@ -3732,19 +3746,19 @@ impl PokemonGame {
         // hSoftReset=16; releasing the combo does not reset that counter.
         // This adapter supplies one poll per Game update, not a model of
         // every original foreground owner's polling cadence.
-        if self.soft_reset_counter.poll(input.raw_current()) {
+        if !self.field_irq_owns_clock() && self.soft_reset_counter.poll(input.raw_current()) {
             self.soft_reset();
             return;
         }
 
         // Tick play time every frame once the game proper has started
         // (TrackPlayTime from VBlank — see game_timer_active).
-        if self.game_timer_active() {
+        if self.field_flash.is_none() && self.game_timer_active() {
             self.save_data.game_data.play_time.tick();
         }
 
-        if let Some(ref audio) = self.audio {
-            audio.update_frame();
+        if self.field_flash.is_none() {
+            if let Some(ref audio) = self.audio { audio.update_frame(); }
         }
 
         if self.black_screen_frames > 0 {
@@ -5234,6 +5248,8 @@ impl PokemonGame {
                     StartMenuAction::OpenPokemon => {
                         self.source_display.begin_legacy_party_sprite_hide()
                             .expect("foreground party caller outside active IRQ");
+                        self.overworld.player_presentation.suppress_current_image();
+                        self.overworld.npc_presentation.suppress_current_images();
                         ScreenAction::Transition(GameScreen::PartyScreen)
                     },
                     StartMenuAction::OpenItem => ScreenAction::Transition(GameScreen::Bag),
@@ -7309,11 +7325,19 @@ impl PokemonGame {
             _ => serde_json::Value::Null,
         };
         snapshot["field_flash"] = self.debug_field_flash().unwrap_or(serde_json::Value::Null);
+        snapshot["source_audio_work"] = match self.source_audio_work {
+            Some((frame, Ok(work))) => serde_json::json!({"host_frame":frame,"supported":true,"tcycles":work.cycles}),
+            Some((frame, Err(error))) => serde_json::json!({"host_frame":frame,"supported":false,"error":format!("{error:?}")}),
+            None => serde_json::Value::Null,
+        };
         snapshot["source_display"] = serde_json::json!({
             "elapsed_tcycles": self.source_display.elapsed(),
             "sprite_updates_enabled": self.source_display.sprite_updates_enabled(),
             "vblank_epoch": self.source_display.device().vblank_epoch(),
             "pending_interrupts": self.source_display.device().pending_interrupts(),
+            "active_vblank": self.source_display.active_vblank(),
+            "interrupt_returns": pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&self.source_display),
+            "palette_stores": self.source_display.palette_store_receipts(),
             "lcdc": self.source_display.device().read_port(0xff40).ok(),
             "ly": self.source_display.device().read_port(0xff44).ok(),
             "bgp": self.source_display.device().read_port(0xff47).ok(),

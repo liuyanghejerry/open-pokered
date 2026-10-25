@@ -22,6 +22,17 @@ pub struct NpcScreenPose {
     pub visible: bool,
     pub image: NpcImage,
 }
+/// Native legacy publication's pixel registers. Hidden actors retain these
+/// values; world coordinates are not a request to recalculate an invisible
+/// sprite's screen position. The common IRQ may later own adjusted writes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct OamPixelRegisters {
+    pub x: u8,
+    pub y: u8,
+    pub adjusted_x: u8,
+    pub adjusted_y: u8,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct NpcPresentation {
     #[serde(default)]
@@ -31,6 +42,8 @@ pub struct NpcPresentation {
     poses: Vec<NpcScreenPose>,
     shadow_poses: Vec<NpcScreenPose>,
     player_walking: bool,
+    #[serde(default)]
+    oam_pixels: Vec<OamPixelRegisters>,
     #[serde(default)]
     scan_player: (u16, u16),
     #[serde(default)]
@@ -87,7 +100,9 @@ impl NpcPresentation {
             self.follow_animation = vec![(0, 0); npcs.len()];
             self.poses.clear();
             self.shadow_poses.clear();
-
+            // Map object loading zeroes these registers, including hidden
+            // and off-screen object slots. No captured scene state is used.
+            self.oam_pixels = vec![OamPixelRegisters::default(); npcs.len()];
         }
         self.player_walking = player_walking;
         self.scan_player = player;
@@ -113,6 +128,20 @@ impl NpcPresentation {
                 Direction::Left => (-px, 0),
                 Direction::Right => (px, 0),
             };
+            if let Some(registers) = self.oam_pixels.get_mut(slot) {
+                if n.visible && image.visible {
+                    registers.x = (64 + (i32::from(n.x) - i32::from(player.0)) * 16
+                        + dx - camera.0 + self.origin_adjustments[slot].0) as u8;
+                    registers.y = (60 + (i32::from(n.y) - i32::from(player.1)) * 16
+                        + dy - camera.1 + self.origin_adjustments[slot].1) as u8;
+                }
+                // Existing native publication is a legacy projection, not a
+                // newly executed source ISR. Do not issue a RETI receipt here.
+                if n.sprite_id != 0 {
+                    registers.adjusted_x = registers.x & 0xf0;
+                    registers.adjusted_y = registers.y.wrapping_add(4) & 0xf0;
+                }
+            }
             self.shadow_poses.push(NpcScreenPose {
                 x: 64 + (i32::from(n.x) - i32::from(player.0)) * 16 + dx - camera.0
                     + self.origin_adjustments[slot].0,
@@ -221,6 +250,13 @@ impl NpcPresentation {
     pub fn image_suppressed(&self, map: MapId, slot: usize) -> bool {
         self.map == Some(map) && self.oam_cleared
             && self.poses.get(slot).is_none_or(|pose| !pose.visible)
+    }
+    /// Current logical image and retained pixel registers, before the two
+    /// display-publication latches. Legacy snapshots missing registers remain
+    /// explicitly unavailable until a genuine map initialization.
+    pub fn current_oam_input(&self, map: MapId, slot: usize) -> Option<(NpcImage, OamPixelRegisters)> {
+        if self.map != Some(map) { return None; }
+        Some((*self.images.get(slot)?, *self.oam_pixels.get(slot)?))
     }
     pub fn pose(&self, map: MapId, slot: usize) -> Option<NpcScreenPose> {
         (self.map == Some(map))
@@ -781,6 +817,11 @@ impl PlayerPresentation {
     pub fn image_suppressed(&self, map: MapId) -> bool {
         self.map == Some(map) && self.oam_cleared && self.displayed.is_none()
     }
+    /// Outer None means no native map publication; inner None is a genuinely
+    /// suppressed current image. Neither is the delayed hardware image.
+    pub fn current_oam_image(&self, map: MapId) -> Option<Option<PlayerImage>> {
+        (self.map == Some(map)).then_some(self.current)
+    }
     pub fn image(&self, map: MapId) -> Option<PlayerImage> {
         (self.map == Some(map)).then_some(self.displayed).flatten()
     }
@@ -883,5 +924,61 @@ mod player_tests {
             })
         );
         assert!(b.image(MapId::ViridianCity).is_none());
+    }
+}
+
+
+#[cfg(test)]
+mod current_oam_input_tests {
+    use super::*;
+    use crate::overworld::OverworldScreen;
+    use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn hidden_current_pixels_retain_the_last_registers_instead_of_recalculating_world_position() {
+        let field = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        let mut npc = field.npc_states[0].clone();
+        let mut p = NpcPresentation::default();
+        npc.visible = false;
+        p.publish(MapId::RockTunnel1F, core::slice::from_ref(&npc), (15,3), (0,0), false);
+        let (image, pixels) = p.current_oam_input(MapId::RockTunnel1F, 0).unwrap();
+        assert!(!image.visible);
+        assert_eq!(pixels, OamPixelRegisters::default());
+        npc.x = 15; npc.y = 3; npc.walk_counter = 0; npc.visible = true;
+        p.update_images_before_movement(core::slice::from_ref(&npc));
+        p.publish(MapId::RockTunnel1F, core::slice::from_ref(&npc), (15,3), (0,0), false);
+        let (_, visible) = p.current_oam_input(MapId::RockTunnel1F, 0).unwrap();
+        assert_eq!((visible.x,visible.y,visible.adjusted_x,visible.adjusted_y), (64,60,64,64));
+        npc.visible = false; npc.x = 30; npc.y = 20;
+        p.update_images_before_movement(core::slice::from_ref(&npc));
+        p.publish(MapId::RockTunnel1F, core::slice::from_ref(&npc), (15,3), (0,0), false);
+        let (image, hidden) = p.current_oam_input(MapId::RockTunnel1F, 0).unwrap();
+        assert!(!image.visible);
+        assert_eq!(hidden, visible);
+        assert_eq!(p.current_oam_input(MapId::PalletTown,0), None);
+        let saved = serde_json::to_vec(&p).unwrap();
+        let copy: NpcPresentation = serde_json::from_slice(&saved).unwrap();
+        assert_eq!(copy.current_oam_input(MapId::RockTunnel1F,0), p.current_oam_input(MapId::RockTunnel1F,0));
+    }
+
+    #[test]
+    fn absent_legacy_registers_and_suppressed_player_are_distinct_from_uninitialized_publication() {
+        let field = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        let npc = &field.npc_states[0];
+        let mut p = NpcPresentation::default();
+        p.publish(MapId::RockTunnel1F, core::slice::from_ref(npc), (15,3), (0,0), false);
+        let mut saved = serde_json::to_value(&p).unwrap();
+        saved.as_object_mut().unwrap().remove("oam_pixels");
+        let mut old: NpcPresentation = serde_json::from_value(saved).unwrap();
+        assert_eq!(old.current_oam_input(MapId::RockTunnel1F,0), None);
+        old.publish(MapId::RockTunnel1F, core::slice::from_ref(npc), (15,3), (0,0), false);
+        assert_eq!(old.current_oam_input(MapId::RockTunnel1F,0), None);
+        let mut player = PlayerPresentation::default();
+        assert_eq!(player.current_oam_image(MapId::RockTunnel1F), None);
+        player.publish(MapId::RockTunnel1F, Direction::Down, false, false);
+        assert!(player.current_oam_image(MapId::RockTunnel1F).unwrap().is_some());
+        player.suppress_current_image();
+        assert_eq!(player.current_oam_image(MapId::RockTunnel1F), Some(None));
+        assert!(player.image(MapId::RockTunnel1F).is_some(), "current input is not the delayed displayed image");
     }
 }

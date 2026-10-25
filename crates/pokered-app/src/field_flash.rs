@@ -3,16 +3,17 @@
 //! LCD-off children execute against the shared Game display time/device.
 //! VBlank upload/IRQ integration and original/native timing still need validation.
 use super::field_restore_assets::NativePatternAssets;
+#[path = "field_flash_irq.rs"]
+mod irq;
 use super::*;
 use pokered_core::overworld::display_clear_oam_work::ClearShadowOamWork;
-use pokered_core::overworld::display_dma_work::DisplayDmaWork;
 use pokered_core::overworld::display_lcd_work::{DisableLcdWork, EnableLcdWork};
 use pokered_core::overworld::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
 use pokered_core::overworld::display_palette_work::DisplayPaletteWork;
 use pokered_core::overworld::display_work_time::DisplayWorkError;
 use pokered_core::overworld::far_pattern_copy_work::FarPatternCopyCall;
 use pokered_core::overworld::field_restore::{
-    FieldRestoreWork, PatternMemory, RestoreOperation, SpriteSlot, VideoCopyWork, VideoServiceError,
+    FieldRestoreWork, PatternMemory, RestoreOperation, SpriteSlot,
 };
 use pokered_core::overworld::indoor_sprite_clear_work::IndoorSpriteClearWork;
 use pokered_core::overworld::indoor_sprite_prefix_work::IndoorSpritePrefixWork;
@@ -50,6 +51,29 @@ fn draw_flash_frame(frame: &FlashFrame, fb: &mut FrameBuffer) {
     fb.copy_from(frame);
     #[cfg(all(target_os = "none", target_arch = "arm"))]
     unpack_flash_frame(frame, fb);
+}
+
+fn apply_flash_palette(raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster, fb: &mut FrameBuffer) {
+    for (index, span) in raster.spans().iter().enumerate() {
+        if span.palette == 0xe4 { continue; }
+        let end = raster.spans().get(index + 1).map_or(160 * 144, |next| next.start);
+        let mut pixel = span.start;
+        while pixel < end {
+            let y = u32::from(pixel / 160);
+            let from = u32::from(pixel % 160);
+            let until = (end - (pixel / 160) * 160).min(160);
+            if span.palette == 0 {
+                fb.fill_rect(from, y, u32::from(until) - from, 1, Rgba::WHITE);
+            } else {
+                for x in from..u32::from(until) {
+                    let color = fb.get_index(x, y).unwrap() as u8;
+                    fb.set_pixel_index(x, y, dotzuki_renderer::palette::GbColor::from_u8(
+                        (span.palette >> (color * 2)) & 3));
+                }
+            }
+            pixel += until - from as u16;
+        }
+    }
 }
 
 // Four monochrome plane bits expanded into four little-endian index bytes.
@@ -98,34 +122,28 @@ enum DisplayChild {
     ColdSpriteBank(SpriteBankCallWork),
 }
 
-/// Read-only edge receipts, not DelayFrame/IRQ-return receipts. The full
-/// foreground child still needs the common IRQ owner and its actual RETI.
+/// Passive observations of real foreground waits and ClearSprites return.
 #[derive(serde::Serialize)]
-struct FieldWaitEdges {
-    edges: u64,
-    armed_epoch: u64,
-    target_epoch: u64,
+struct FieldWaitReceipt {
+    requested: u8,
+    armed_returns: u64,
     armed_tcycles: u64,
-    reached_epoch: Option<u64>,
-    reached_tcycles: Option<u64>,
+    completed_returns: Option<u64>,
+    completed_tcycles: Option<u64>,
 }
 
 pub(crate) struct FieldFlash {
     text: PartyFieldText,
     work: FieldRestoreWork,
     patterns: PatternMemory,
-    video: Option<VideoCopyWork>,
-    video_service_epoch: Option<u64>,
-    video_instructions_returned: bool,
-    clear_oam_armed_epoch: Option<u64>,
-    clear_dma: Option<DisplayDmaWork>,
-    wait_until_vblank: Option<u64>,
-    waits: Vec<FieldWaitEdges>,
+    waits: Vec<FieldWaitReceipt>,
+    cleared_oam_at_ret: Option<(u64, bool)>,
+    last_bulk_copy_temp_at_ret: Option<u8>,
     #[cfg(feature = "debug-server")]
     traced_operation: Option<usize>,
     party: FrameBuffer,
     map: FlashFrame,
-    white_from: Option<u64>,
+    map_key: crate::render::session::FlashMapVisualKey,
     show_map: bool,
     display_child: Option<DisplayChild>,
     font_flags: u8,
@@ -137,6 +155,7 @@ pub(crate) struct FieldFlash {
     cold_sprite_bank: Option<SpriteBankCallWork>,
     facing: Vec<pokered_core::overworld::Direction>,
     error: Option<String>,
+    irq: Option<irq::FieldIrq>,
 }
 
 impl PokemonGame {
@@ -174,18 +193,14 @@ impl PokemonGame {
             text,
             work,
             patterns: PatternMemory::default(),
-            video: None,
-            video_service_epoch: None,
-            video_instructions_returned: false,
-            clear_oam_armed_epoch: None,
-            clear_dma: None,
-            wait_until_vblank: None,
             waits: Vec::new(),
+            cleared_oam_at_ret: None,
+            last_bulk_copy_temp_at_ret: None,
             #[cfg(feature = "debug-server")]
             traced_operation: None,
             party,
             map,
-            white_from: None,
+            map_key: crate::render::session::FlashMapVisualKey::new(),
             show_map: false,
             display_child: None,
             font_flags: 1,
@@ -197,7 +212,14 @@ impl PokemonGame {
             cold_sprite_bank: None,
             facing,
             error: None,
+            irq: None,
         }));
+        let mut flow = self.field_flash.take().unwrap();
+        match irq::FieldIrq::new(self, &mut flow) {
+            Ok(irq) => flow.irq = Some(irq),
+            Err(error) => flow.error = Some(error),
+        }
+        self.field_flash = Some(flow);
     }
 
     pub(super) fn update_field_flash(&mut self, input: &InputState) {
@@ -223,14 +245,19 @@ impl PokemonGame {
             self.field_flash = Some(flow);
             return;
         }
+        self.source_display.set_physical_buttons(raw);
         let printing = !flow.text.returned();
-        let returned = self.overworld.tick_party_field_text(&mut flow.text, raw);
+        let returned = if printing { self.overworld.tick_party_field_text(&mut flow.text, raw) } else { true };
         if printing && self.overworld.sfx_event == OverworldSfxEvent::TextAdvance {
             if let Some(audio) = &self.audio {
                 audio.play_sfx(SfxId::PressAB);
             }
         }
         if !returned {
+            if self.game_timer_active() { self.save_data.game_data.play_time.tick(); }
+            if let Some(audio) = &self.audio {
+                audio.update_frame();
+            }
             self.field_flash = Some(flow);
             return;
         }
@@ -246,11 +273,17 @@ impl PokemonGame {
     }
 
     fn service_field_flash(&mut self, flow: &mut FieldFlash) -> Result<bool, String> {
-        let epoch = self.frame_count;
         if self.overworld.state.current_map as u8 != flow.work.map_id() {
             return Err("map changed under FLASH caller".into());
         }
+        self.attach_field_irq(flow)?;
         loop {
+            if !self.service_field_irq(flow)? { return Ok(false); }
+            if self.source_display.remaining() == 0 { return Ok(false); }
+            if flow.irq.as_ref().is_some_and(|i| i.delay.is_some() || i.copy.is_some()) {
+                self.step_field_wait(flow)?;
+                continue;
+            }
             // A child may exhaust the host grant between any two source
             // instructions. Keep it, its registers and already written bytes;
             // the next native update grants time without replaying the work.
@@ -362,14 +395,6 @@ impl PokemonGame {
                                 flow.indoor_slot = Some(work.clone());
                             }
                         }
-                        if matches!(flow.work.operation(), Some(RestoreOperation::WhitePalettes)) {
-                            flow.white_from = Some(epoch + 1);
-                        } else if matches!(
-                            flow.work.operation(),
-                            Some(RestoreOperation::LoadMapPalettes)
-                        ) {
-                            flow.white_from = None;
-                        }
                         if matches!(
                             flow.work.operation(),
                             Some(RestoreOperation::ClearShadowOam)
@@ -377,14 +402,15 @@ impl PokemonGame {
                             let map = self.overworld.state.current_map;
                             self.overworld.player_presentation.clear_shadow_oam(map);
                             self.overworld.npc_presentation.clear_shadow_oam(map);
-                            flow.clear_oam_armed_epoch =
-                                Some(self.source_display.device().vblank_epoch());
+                            flow.cleared_oam_at_ret = Some((self.source_display.elapsed(),
+                                self.source_display.shadow_oam().iter().all(|&b| b == 0)));
                         }
                         flow.display_child = None;
                         if matches!(
                             flow.work.operation(),
                             Some(RestoreOperation::BulkPatternCopy(_))
                         ) {
+                            flow.last_bulk_copy_temp_at_ret = Some(self.source_display.source_rom_bank_temp());
                             if let Some(parent) = flow.indoor_transfer.as_mut() {
                                 if !parent.copy_returned() {
                                     return Err(
@@ -396,6 +422,7 @@ impl PokemonGame {
                         flow.work.child_returned();
                     }
                     Err(DisplayWorkError::Budget) => return Ok(false),
+                    Err(DisplayWorkError::InterruptPending) => continue,
                     Err(error) => return Err(format!("{error:?}")),
                 }
             }
@@ -403,125 +430,6 @@ impl PokemonGame {
             // grant. The Game owner retains that overrun in its next budget.
             if self.source_display.remaining() == 0 {
                 return Ok(false);
-            }
-            if let Some(until) = flow.wait_until_vblank {
-                // A host grant may begin after the previous VBlank and end
-                // before the next one. Count actual new LCD edges; a host
-                // frame number cannot acknowledge a Delay3/DelayFrame wait.
-                while self.source_display.device().vblank_epoch() < until {
-                    if self.source_display.remaining() == 0 {
-                        return Ok(false);
-                    }
-                    self.source_display
-                        .idle_to_vblank_edge()
-                        .map_err(|e| format!("{e:?}"))?;
-                }
-                let receipt = flow.waits.last_mut().ok_or("missing FLASH wait receipt")?;
-                receipt.reached_epoch = Some(self.source_display.device().vblank_epoch());
-                receipt.reached_tcycles = Some(self.source_display.elapsed());
-                flow.wait_until_vblank = None;
-                // This acknowledges only the plan's physical-edge boundary.
-                // Do not record a fabricated interrupt return; the complete
-                // DelayFrames instructions/IRQ tail remain to be integrated.
-                flow.work.child_returned();
-            }
-            if let Some(video) = flow.video.as_mut() {
-                // Host updates only grant time. Wait for a new physical LCD
-                // edge before touching the request, including when the host
-                // counter advanced while the LCD was disabled/restarted.
-                let armed = video.armed_epoch().ok_or("video request not armed")?;
-                while flow.video_service_epoch.is_none()
-                    && self.source_display.device().vblank_epoch() <= armed
-                {
-                    self.source_display
-                        .idle_to_vblank_edge()
-                        .map_err(|e| format!("{e:?}"))?;
-                    if self.source_display.remaining() == 0 {
-                        return Ok(false);
-                    }
-                }
-                let accepted = *flow
-                    .video_service_epoch
-                    .get_or_insert(self.source_display.device().vblank_epoch());
-                let resources = self
-                    .resources
-                    .as_mut()
-                    .ok_or("graphics resources unavailable")?;
-                let assets = NativePatternAssets::new(resources);
-                if !flow.video_instructions_returned {
-                    let mut bus = self.source_display.pattern_bus(&mut flow.patterns, &assets);
-                    match video.service_until_blocked(accepted, &mut bus) {
-                        Ok(()) => (),
-                        Err(VideoServiceError::Bus(DisplayWorkError::Budget)) => return Ok(false),
-                        Err(error) => return Err(format!("{error:?}")),
-                    }
-                    flow.video_instructions_returned = true;
-                }
-                // Source VBlank copies patterns before CALL hDMARoutine.
-                // Only this clear-page transfer is integrated here; complete
-                // PrepareOAMData, IRQ tail/audio and RETI ownership remain open.
-                if flow
-                    .clear_oam_armed_epoch
-                    .is_some_and(|armed| accepted > armed)
-                {
-                    if flow.clear_dma.is_none() {
-                        match self.source_display.execute(DisplayInstruction {
-                            tcycles: 24,
-                            access: None,
-                        }) {
-                            Ok(_) => flow.clear_dma = Some(DisplayDmaWork::default()),
-                            Err(DisplayWorkError::Budget) => return Ok(false),
-                            Err(error) => return Err(format!("{error:?}")),
-                        }
-                    }
-                    loop {
-                        match flow
-                            .clear_dma
-                            .as_mut()
-                            .unwrap()
-                            .step(&mut self.source_display)
-                        {
-                            Ok(Some(_)) => (),
-                            Ok(None) => break,
-                            Err(DisplayWorkError::Budget) => return Ok(false),
-                            Err(error) => return Err(format!("{error:?}")),
-                        }
-                    }
-                    if self
-                        .source_display
-                        .device()
-                        .oam()
-                        .iter()
-                        .any(|&byte| byte != 0)
-                    {
-                        return Err("cleared OAM DMA did not publish the shadow page".into());
-                    }
-                    let map = self.overworld.state.current_map;
-                    self.overworld.player_presentation.publish_cleared_oam(map);
-                    self.overworld.npc_presentation.publish_cleared_oam(map);
-                    flow.clear_dma = None;
-                    flow.clear_oam_armed_epoch = None;
-                }
-                // This is the pattern subroutine's RET, not a whole interrupt
-                // RETI. Full IRQ tail/audio/OAM and foreground DelayFrame
-                // ownership remain to be integrated; do not fabricate a
-                // record_interrupt_return receipt here.
-                video.resume().map_err(|e| format!("{e:?}"))?;
-                flow.video_service_epoch = None;
-                flow.video_instructions_returned = false;
-                if !video.finished() {
-                    video
-                        .arm(self.source_display.device().vblank_epoch())
-                        .map_err(|e| format!("{e:?}"))?;
-                    continue;
-                }
-                flow.video = None;
-                if let Some(parent) = flow.indoor_transfer.as_mut() {
-                    if !parent.copy_returned() {
-                        return Err("indoor video returned outside transfer boundary".into());
-                    }
-                }
-                flow.work.child_returned();
             }
             #[cfg(feature = "debug-server")]
             if flow.traced_operation != Some(flow.work.operation_index()) {
@@ -546,21 +454,10 @@ impl PokemonGame {
                     continue;
                 }
                 RestoreOperation::WaitVBlanks(frames) => {
-                    // DelayFrames enters its loop before decrementing C.
-                    let edges = if frames == 0 { 256 } else { u64::from(frames) };
-                    let armed = self.source_display.device().vblank_epoch();
-                    let target = armed
-                        .checked_add(edges)
-                        .ok_or("FLASH VBlank deadline overflow")?;
-                    flow.waits.push(FieldWaitEdges {
-                        edges,
-                        armed_epoch: armed,
-                        target_epoch: target,
-                        armed_tcycles: self.source_display.elapsed(),
-                        reached_epoch: None,
-                        reached_tcycles: None,
-                    });
-                    flow.wait_until_vblank = Some(target);
+                    flow.waits.push(FieldWaitReceipt { requested: frames,
+                        armed_returns: pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&self.source_display),
+                        armed_tcycles: self.source_display.elapsed(), completed_returns: None, completed_tcycles: None });
+                    flow.irq.as_mut().ok_or("missing IRQ owner")?.delay = Some(pokered_core::overworld::display_delay_work::DelayFramesWork::new(frames));
                     continue;
                 }
                 RestoreOperation::DisableLcd => {
@@ -626,12 +523,8 @@ impl PokemonGame {
                     {
                         return Err("prepared indoor video copy differs from transfer plan".into());
                     }
-                    let mut video = VideoCopyWork::new(copy);
-                    video
-                        .arm(self.source_display.device().vblank_epoch())
-                        .map_err(|e| format!("{e:?}"))?;
-                    flow.video = Some(video);
-                    return Ok(false);
+                    self.begin_field_video_copy(flow, copy)?;
+                    continue;
                 }
                 RestoreOperation::SetFontFlags(flags) => flow.font_flags = flags,
                 RestoreOperation::SetSpriteSet(set) => flow.sprite_set = set,
@@ -734,6 +627,7 @@ impl PokemonGame {
                         self.state.config.language,
                     );
                     copy_flash_frame(&flow.party, &mut flow.map);
+                    flow.map_key = crate::render::session::FlashMapVisualKey::new();
                 }
                 RestoreOperation::LoadMapPalettes => {
                     if self.overworld.dark_cave.is_dark() {
@@ -769,10 +663,28 @@ impl PokemonGame {
                 // The native renderer resolves raw sprite IDs directly from
                 // the same resources (no physical OAM/VRAM slot indirection).
                 // Screen buffer2 is the actual retained `flow.map` image.
-                RestoreOperation::LoadScreenBuffer2
-                | RestoreOperation::DefaultPaletteCommand
-                | RestoreOperation::SetAutoBg(_) => {}
-                RestoreOperation::Return => return Ok(true),
+                RestoreOperation::LoadScreenBuffer2 => {
+                    flow.irq.as_mut().ok_or("missing IRQ owner")?.background_is_map = true;
+                }
+                RestoreOperation::DefaultPaletteCommand => {},
+                RestoreOperation::SetAutoBg(enabled) => {
+                    self.source_display.execute(DisplayInstruction { tcycles: 12,
+                        access: Some(pokered_core::overworld::display_lcd_work::DisplayAccess::Write {
+                            port: pokered_core::overworld::video_copy_caller_work::AUTO_BG_ENABLED,
+                            value: u8::from(enabled), at_tcycle: 8 }) }).map_err(|e| format!("{e:?}"))?;
+                }
+                RestoreOperation::Return => {
+                    match self.source_display.execute(DisplayInstruction { tcycles: 16, access: None }) {
+                        Ok(_) => {
+                            self.source_display.set_vblank_dispatch_enabled(false);
+                            self.source_display.device_mut().end_native_background_scanout();
+                            return Ok(true);
+                        }
+                        Err(DisplayWorkError::InterruptPending) => continue,
+                        Err(DisplayWorkError::Budget) => return Ok(false),
+                        Err(error) => return Err(format!("foreground RET: {error:?}")),
+                    }
+                }
                 RestoreOperation::SetWindowY(y) => {
                     return Err(format!("unsupported FLASH window y={y}"))
                 }
@@ -787,16 +699,14 @@ impl PokemonGame {
         let flow = self.field_flash.as_ref()?;
         Some(serde_json::json!({
             "operation": flow.work.operation(),
-            "white_from": flow.white_from,
+            "palette_store_receipts": self.source_display.palette_store_receipts(),
+            "background_palette_raster": self.source_display.device().background_palette_raster(),
             "show_map": flow.show_map,
-            "wait_until": flow.wait_until_vblank,
-            "wait_clock": "device_edges_only_IRQ_return_pending",
+            "irq": &flow.irq,
+            "wait_clock": "common_IRQ_RETI",
             "waits": &flow.waits,
-            "video": &flow.video,
-            "video_service_epoch": flow.video_service_epoch,
-            "video_instructions_returned": flow.video_instructions_returned,
-            "clear_oam_armed_epoch": flow.clear_oam_armed_epoch,
-            "clear_dma_pending": flow.clear_dma.is_some(),
+            "cleared_oam_at_ret": flow.cleared_oam_at_ret,
+            "last_bulk_copy_temp_at_ret": flow.last_bulk_copy_temp_at_ret,
             "sprite_slots": &flow.slots,
             "indoor_slot_parent": &flow.indoor_slot,
             "indoor_transfer_parent": &flow.indoor_transfer,
@@ -819,6 +729,10 @@ impl PokemonGame {
     }
 
     pub(crate) fn field_flash_white_frame(&self) -> bool {
+        self.field_flash_frame_visible() && self.field_flash_is_white()
+    }
+
+    fn field_flash_frame_visible(&self) -> bool {
         self.state.screen == GameScreen::PartyScreen
             && self.black_screen_frames == 0
             && self.post_capture_flow.is_none()
@@ -826,13 +740,19 @@ impl PokemonGame {
             && self.evolution_anim.is_none()
             && self.hof_ceremony.is_none()
             && self.credits.is_none()
-            && self.field_flash_is_white()
+    }
+
+    pub(crate) fn field_flash_map_key(&self) -> Option<crate::render::session::FlashMapVisualKey> {
+        if !self.field_flash_frame_visible() || self.field_flash_is_white() { return None; }
+        self.field_flash.as_ref().filter(|flow| flow.show_map).map(|flow| {
+            flow.map_key.clone().with_palette_revision(self.source_display.device()
+                .background_palette_raster().map_or(0, |raster| raster.revision()))
+        })
     }
 
     pub(super) fn field_flash_is_white(&self) -> bool {
-        self.field_flash.as_ref().is_some_and(|flow| {
-            flow.white_from.is_some_and(|start| self.frame_count >= start)
-        })
+        self.field_flash.is_some() && self.source_display.device()
+            .background_palette_raster().is_some_and(|raster| raster.is_white())
     }
 
     pub(super) fn draw_field_flash(&self, fb: &mut FrameBuffer) {
@@ -843,6 +763,9 @@ impl PokemonGame {
         }
         if flow.show_map {
             draw_flash_frame(&flow.map, fb);
+            if let Some(raster) = self.source_display.device().background_palette_raster() {
+                apply_flash_palette(raster, fb);
+            }
             return;
         }
         fb.copy_from(&flow.party);
@@ -866,12 +789,71 @@ impl PokemonGame {
                 );
             }
         }
+        if let Some(raster) = self.source_display.device().background_palette_raster() {
+            apply_flash_palette(raster, fb);
+        }
     }
 }
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 mod tests {
     use super::*;
+
+    // Component fixtures enter after the source party drawer's UpdateSprites
+    // and use the same real virtual audio owner as --no-audio normal boot.
+    fn begin_fixture_flash(game: &mut PokemonGame, message: &str) {
+        game.audio = Some(AudioOutput::new_pcm());
+        let audio = game.audio.as_ref().unwrap();
+        audio.play_music(pokered_audio::music_data::MusicId::DUNGEON3);
+        audio.update_frame();
+        game.overworld.publish_npc_frame(false);
+        game.overworld.player_presentation.suppress_current_image();
+        game.overworld.npc_presentation.suppress_current_images();
+        game.begin_field_flash(message);
+        assert!(game.field_flash.as_ref().unwrap().error.is_none(), "{:?}", game.field_flash.as_ref().unwrap().error);
+    }
+
+
+    #[test]
+    fn flash_samples_the_final_native_caption_only_when_text_returns() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        game.state.screen = GameScreen::PartyScreen;
+        game.overworld.set_no_text_delay(false);
+        begin_fixture_flash(&mut game, "A blinding FLASH lights the area!");
+        for _ in 0..600 {
+            game.update(&InputState::new());
+            let irq = game.field_flash.as_ref().unwrap().irq.as_ref().unwrap();
+            assert!(!irq.attached);
+            assert!(irq.ui.tiles.is_empty(), "printing must not sample a raster no IRQ can read");
+            assert!(irq.ui.patterns.is_empty());
+        }
+        assert!(game.overworld.displayed_field_dialogue().unwrap().waiting_for_input());
+        let mut acknowledge = InputState::new();
+        acknowledge.press(GbButton::A);
+        game.update(&acknowledge);
+        let flow = game.field_flash.as_ref().unwrap();
+        assert!(flow.error.is_none(), "{:?}", flow.error);
+        assert!(flow.text.returned());
+        let irq = flow.irq.as_ref().unwrap();
+        assert!(irq.attached);
+        assert_eq!(irq.ui.revision, 1);
+        assert_eq!(irq.ui.tiles.len(), 360);
+        for y in 0..144 {
+            for x in 0..160 {
+                let tile = irq.ui.tiles[(y / 8 * 20 + x / 8) as usize];
+                let pattern = irq.ui.patterns[usize::from(tile)];
+                let row = (y % 8) as usize;
+                let shift = 7 - x % 8;
+                let shade = ((pattern[row * 2] >> shift) & 1)
+                    | (((pattern[row * 2 + 1] >> shift) & 1) << 1);
+                assert_eq!(shade, flow.party.get_index(x, y).unwrap() as u8);
+            }
+        }
+        let final_raster = irq.ui.clone();
+        game.update(&InputState::new());
+        assert_eq!(game.field_flash.as_ref().unwrap().irq.as_ref().unwrap().ui, final_raster);
+    }
 
     #[test]
     fn gba_flash_unpack_matches_every_bitplane_pair() {
@@ -945,8 +927,9 @@ mod tests {
             None,
         );
         game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
-        game.begin_field_flash("FLASH");
+        begin_fixture_flash(&mut game, "FLASH");
         let mut flow = game.field_flash.take().unwrap();
+        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
         // Isolate the real plan's Delay3→return boundary so later LCD polling
         // cannot mask an early wait return. This is a unit fixture, not a
         // game-runtime setter or an ordinary-playthrough claim.
@@ -995,8 +978,9 @@ mod tests {
             None,
         );
         game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
-        game.begin_field_flash("FLASH");
+        begin_fixture_flash(&mut game, "FLASH");
         let mut flow = game.field_flash.take().unwrap();
+        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
         game.source_display.begin_native_update();
         while game.source_display.device().vblank_epoch() == 0 {
             game.source_display.idle_to_device_event().unwrap();
@@ -1004,21 +988,27 @@ mod tests {
         // Arm after this grant's VBlank. Its remaining time ends before the
         // next VBlank, regardless of the unrelated host frame counter.
         let edge = game.source_display.device().vblank_epoch();
-        let mut video = VideoCopyWork::new(PatternCopy {
+        // Controlled unit boundary: the earlier legacy edge is retired.
+        // This sets fixture IF only, never an interrupt-return receipt or
+        // evidence of a normally executed previous IRQ.
+        game.source_display.device_mut().acknowledge_interrupt(1);
+        let before = flow.patterns.bytes()[..192].to_vec();
+        let copy = PatternCopy {
             source: PatternSource::WalkingPlayer,
             source_offset: 0,
             destination: 0x8000,
             tiles: 12,
             format: CopyFormat::TwoBpp,
-        });
-        video.arm(edge).unwrap();
-        flow.video = Some(video);
-        let before = flow.patterns.bytes().to_vec();
+        };
+        let mut plan = serde_json::to_value(&flow.work).unwrap();
+        plan["operations"] = serde_json::json!([{"VideoPatternCopy": copy}, "Return"]);
+        plan["next"] = serde_json::json!(0);
+        flow.work = serde_json::from_value(plan).unwrap();
         game.frame_count = edge + 1;
         assert!(!game.service_field_flash(&mut flow).unwrap());
         assert_eq!(game.source_display.device().vblank_epoch(), edge);
-        assert_eq!(flow.video.as_ref().unwrap().requested_tiles(), Some(8));
-        assert_eq!(flow.patterns.bytes(), before);
+        assert_eq!(game.source_display.video_requests().snapshot(CopyFormat::TwoBpp).size, Some(8));
+        assert_eq!(&flow.patterns.bytes()[..192], &before);
     }
 
     #[test]
@@ -1055,8 +1045,9 @@ mod tests {
         else {
             panic!("successful FLASH required");
         };
-        game.begin_field_flash(&message);
+        begin_fixture_flash(&mut game, &message);
         let mut flow = game.field_flash.take().unwrap();
+        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
         game.source_display.set_shadow_oam(&[0x5a; 160]).unwrap();
         let mut saw_lcd_off = false;
         let mut saw_pending_child = false;
@@ -1088,12 +1079,12 @@ mod tests {
         assert!(game.source_display.device().lcd_enabled());
         assert!(flow.display_child.is_none());
         assert!(
-            game.source_display.shadow_oam().iter().all(|&b| b == 0),
-            "ClearSprites must clear the actual shadow page"
+            flow.cleared_oam_at_ret.is_some_and(|(_, zero)| zero),
+            "ClearSprites must clear the actual shadow page at its own RET"
         );
         assert!(
-            game.source_display.device().oam().iter().all(|&b| b == 0),
-            "cleared shadow bytes must reach hardware OAM through DMA"
+            game.source_display.device().oam().chunks_exact(4).all(|object| object == [160, 0, 0, 0]),
+            "subsequent actual PrepareOAM/DMA hides every unused object at Y=160"
         );
         assert_eq!(
             game.source_display.device().read_port(0xff47).unwrap(),
@@ -1109,9 +1100,9 @@ mod tests {
             0xe0
         );
         assert_eq!(
-            game.source_display.source_rom_bank_temp(),
-            5,
-            "bulk sprite copies must execute the FarCopyData2 caller"
+            flow.last_bulk_copy_temp_at_ret,
+            Some(5),
+            "observe FarCopyData2 at its RET before later video callers reuse the shared temp port"
         );
         let map = game.overworld.state.current_map;
         assert!(
@@ -1157,10 +1148,11 @@ mod tests {
                 let FieldMoveOutcome::Flash { message } = result else {
                     panic!("FLASH caller");
                 };
-                game.begin_field_flash(&message);
+                begin_fixture_flash(&mut game, &message);
                 let mut input = InputState::new();
                 let mut saw_white = false;
                 let mut returned = false;
+                let mut saw_no_irq_lcd_off = false;
                 for t in 0..500 {
                     input.begin_frame();
                     input.press(GbButton::Down);
@@ -1169,7 +1161,22 @@ mod tests {
                     } else {
                         input.release(GbButton::A);
                     }
+                    let suspended_audio = (!game.source_display.device().lcd_enabled())
+                        .then(|| format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels));
+                    let old_time = game.save_data.game_data.play_time;
+                    let old_returns = pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&game.source_display);
                     game.update(&input);
+                    if let Some(channels) = suspended_audio {
+                        if game.source_audio_work.is_none() {
+                            let elapsed = |t: pokered_core::save::game_data::PlayTime| u64::from(t.hours) * 216000
+                                + u64::from(t.minutes) * 3600 + u64::from(t.seconds) * 60 + u64::from(t.frames);
+                            assert_eq!(elapsed(game.save_data.game_data.play_time) - elapsed(old_time),
+                                pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&game.source_display) - old_returns,
+                                "play time follows completed source IRQs, including an epilogue split across host grants");
+                            assert_eq!(format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels), channels);
+                            saw_no_irq_lcd_off = true;
+                        }
+                    }
                     assert_eq!(
                         (game.overworld.state.player.x, game.overworld.state.player.y),
                         (x, y)
@@ -1178,15 +1185,12 @@ mod tests {
                         game.overworld.state.player.movement_state,
                         pokered_core::overworld::MovementState::Idle
                     );
-                    let Some(flow) = game.field_flash.as_ref() else {
+                    let Some(_) = game.field_flash.as_ref() else {
                         returned = true;
                         break;
                     };
                     assert_eq!(game.state.screen, GameScreen::PartyScreen);
-                    if flow
-                        .white_from
-                        .is_some_and(|start| game.frame_count >= start)
-                    {
+                    if game.field_flash_is_white() {
                         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::BLACK);
                         game.draw_field_flash(&mut fb);
                         assert!((0..144)
@@ -1196,8 +1200,10 @@ mod tests {
                 }
                 assert!(
                     returned && saw_white,
-                    "notice, white-out and full restoration must return"
+                    "notice, white-out and full restoration must return: map={map:?} error={:?}",
+                    game.field_flash.as_ref().and_then(|f| f.error.as_ref())
                 );
+                assert!(saw_no_irq_lcd_off, "the case must exercise a grant beginning LCD-off without a new audio update");
                 assert_eq!(game.state.screen, GameScreen::Overworld);
                 assert_eq!(game.overworld.state.current_map, map);
                 assert!(!game.overworld.dark_cave.is_dark());
@@ -1248,7 +1254,7 @@ mod tests {
                 else {
                     panic!("FLASH caller required");
                 };
-                game.begin_field_flash(&message);
+                begin_fixture_flash(&mut game, &message);
                 let mut session = crate::render::session::RenderSession::new();
                 let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                 let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
@@ -1256,18 +1262,25 @@ mod tests {
                 let mut returned_at = None;
                 let mut saw_white = false;
                 let mut reused_white = false;
+                let mut reused_map = false;
                 let mut checked_interruption = false;
+                let mut checked_map_interruption = false;
+                let mut last_map_key = None;
                 for frame in 0..500 {
                     let mut input = InputState::new();
                     if frame % 20 == 0 {
                         input.press(GbButton::A);
                     }
                     game.update(&input);
+                    let map_key = game.field_flash_map_key();
                     let reused = matches!(
                         session.render(&mut game, &mut retained, &mut scroll),
                         crate::render::session::FrameUpdate::Reuse
                     );
                     reused_white |= reused && game.field_flash_is_white();
+                    reused_map |= reused && map_key.is_some();
+                    if map_key.is_some() && map_key != last_map_key { assert!(!reused); }
+                    last_map_key = map_key.clone();
                     let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                     game.draw(&mut full);
                     for y in 0..144 {
@@ -1295,10 +1308,17 @@ mod tests {
                             .all(|x| retained.get_pixel(x, y) == full.get_pixel(x, y))));
                         checked_interruption = true;
                     }
-                    if let Some(flow) = game.field_flash.as_ref() {
-                        saw_white |= flow
-                            .white_from
-                            .is_some_and(|start| game.frame_count >= start);
+                    if reused && map_key.is_some() && !checked_map_interruption {
+                        game.black_screen_frames = 1;
+                        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
+                        assert!((0..144).all(|y| (0..160).all(|x| retained.get_pixel(x,y) == Some(Rgba::BLACK))));
+                        game.black_screen_frames = 0;
+                        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
+                        assert!((0..144).all(|y| (0..160).all(|x| retained.get_pixel(x,y) == full.get_pixel(x,y))));
+                        checked_map_interruption = true;
+                    }
+                    if game.field_flash.is_some() {
+                        saw_white |= game.field_flash_is_white();
                     } else {
                         let first = *returned_at.get_or_insert(frame);
                         if frame - first >= 8 {
@@ -1308,8 +1328,133 @@ mod tests {
                     }
                 }
                 assert!(returned && saw_white && reused_white && checked_interruption);
+                assert!(reused_map && checked_map_interruption, "frozen map reuse and takeover restoration must be exercised");
                 assert_eq!(game.state.screen, GameScreen::Overworld);
             }
         }
     }
+    #[test]
+    fn frozen_flash_map_cache_invalidates_snapshot_writes_and_replaced_callers() {
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        game.state.screen = GameScreen::PartyScreen;
+        begin_fixture_flash(&mut game, "FLASH");
+        // Constructed renderer fixture: no source continuation is advanced.
+        let flow = game.field_flash.as_mut().unwrap();
+        flow.show_map = true;
+        flow.map.clear(Rgba::BLACK);
+        let mut session = crate::render::session::RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
+        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Reuse));
+        assert_eq!(retained.get_pixel(0,0), Some(Rgba::BLACK));
+        let flow = game.field_flash.as_mut().unwrap();
+        flow.map.clear(Rgba::WHITE);
+        flow.map_key = crate::render::session::FlashMapVisualKey::new();
+        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
+        assert_eq!(retained.get_pixel(0,0), Some(Rgba::WHITE));
+        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Reuse));
+        // Keep the old identity alive in both this variable and the session;
+        // restarting without an intervening render must never reuse its page.
+        let old_key = game.field_flash_map_key().unwrap();
+        game.discard_field_flash();
+        begin_fixture_flash(&mut game, "FLASH AGAIN");
+        let flow = game.field_flash.as_mut().unwrap();
+        flow.show_map = true;
+        flow.map.clear(Rgba::BLACK);
+        assert_ne!(game.field_flash_map_key().unwrap(), old_key);
+        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
+        assert_eq!(retained.get_pixel(0,0), Some(Rgba::BLACK));
+    }
+
+    #[test]
+    fn completed_palette_raster_invalidates_the_retained_map_without_revealing_unscanned_pixels() {
+        use pokered_core::overworld::display_lcd_work::DisplayAccess;
+        use crate::render::session::FrameUpdate;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        game.state.screen = GameScreen::PartyScreen;
+        begin_fixture_flash(&mut game, "FLASH");
+        let flow = game.field_flash.as_mut().unwrap();
+        flow.show_map = true;
+        flow.map.clear(Rgba::BLACK);
+        // Renderer fixture uses the real time/device bus, without pretending
+        // that these controlled writes are a complete gameplay continuation.
+        for _ in 0..2 {
+            game.source_display.begin_native_update();
+            game.source_display.idle_to_target().unwrap();
+        }
+        game.source_display.device_mut().begin_native_background_scanout(0xe4);
+        let mut session = crate::render::session::RenderSession::new();
+        let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
+        for (line, palette, top, bottom) in [
+            (20, 0, Rgba::BLACK, Rgba::WHITE),
+            (7, 0xe4, Rgba::WHITE, Rgba::BLACK),
+        ] {
+            game.source_display.begin_native_update();
+            while game.source_display.device().read_port(0xff44).unwrap() != line {
+                game.source_display.execute(DisplayInstruction { tcycles:4, access:None }).unwrap();
+            }
+            game.source_display.execute(DisplayInstruction { tcycles:12,
+                access:Some(DisplayAccess::Write { port:0xff47,value:palette,at_tcycle:8 }) }).unwrap();
+            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Reuse),
+                "a register store must not redraw pixels the LCD has not completed");
+            game.source_display.idle_to_target().unwrap();
+            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
+            for y in 0..144 {
+                for x in 0..160 {
+                    assert_eq!(fb.get_pixel(x,y),Some(if y<u32::from(line) {top}else{bottom}));
+                }
+            }
+            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Reuse));
+            game.source_display.begin_native_update();
+            game.source_display.idle_to_target().unwrap();
+            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
+            assert!((0..144).all(|y| (0..160).all(|x| fb.get_pixel(x,y)==Some(bottom))));
+        }
+    }
+    #[test]
+    fn abandoning_an_attached_flash_discards_active_irq_and_lcd_off_continuations() {
+        for seek_lcd_off in [false, true] {
+            for exit in 0..3 {
+                let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
+                    false, None, false, true, #[cfg(feature = "debug-server")] None);
+                game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+                game.overworld.state.player.x = 15; game.overworld.state.player.y = 3;
+                game.state.screen = GameScreen::PartyScreen;
+                begin_fixture_flash(&mut game, "FLASH");
+                let mut reached = false;
+                for frame in 0..200 {
+                    let mut input = InputState::new();
+                    if frame % 20 == 0 { input.press(GbButton::A); }
+                    game.update(&input);
+                    let attached = game.field_irq_owns_clock();
+                    if attached && if seek_lcd_off { !game.source_display.device().lcd_enabled() }
+                        else { game.source_display.active_vblank() } { reached = true; break; }
+                    assert!(game.field_flash.as_ref().is_some_and(|f| f.error.is_none()), "fixture must reach a real busy source caller");
+                }
+                assert!(reached, "must exercise the selected active IRQ/LCD-off state");
+                let path = std::env::temp_dir().join(format!("flash-irq-abandon-{}-{}-{}.sav", std::process::id(), seek_lcd_off, exit));
+                match exit {
+                    0 => { std::fs::write(&path, export_sram(&game.save_data)).unwrap(); game.load_from_path(&path).unwrap(); std::fs::remove_file(&path).unwrap(); }
+                    1 => game.handle_transition(GameScreen::TitleScreen),
+                    _ => { game.save_path = Some(path); game.soft_reset(); }
+                }
+                assert!(game.field_flash.is_none());
+                assert!(!game.source_display.active_vblank());
+                assert!(!game.source_display.pending_vblank_dispatch());
+                assert!(game.source_display.device().lcd_enabled());
+                assert_eq!(game.source_audio_work, None);
+                // A subsequent native UI owner can acquire the bus; no stale
+                // attached IRQ is mistaken for an interrupted continuation.
+                game.source_display.begin_legacy_party_sprite_hide().unwrap();
+                game.update(&InputState::new());
+                assert!(!game.source_display.active_vblank());
+            }
+        }
+    }
+
 }

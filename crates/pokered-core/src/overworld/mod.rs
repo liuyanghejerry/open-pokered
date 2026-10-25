@@ -154,3 +154,21 @@ mod tests_npc_availability;
 mod tests_npc_ready_pause;
 #[cfg(test)]
 mod tests_npc_screen_boundary;
+
+// Source VBlank children use the shared display time/device.
+pub mod auto_bg_transfer_work;
+pub mod bg_redraw_work;
+pub mod queued_bg_copy_work;
+pub mod moving_bg_work;
+pub mod vblank_video_work;
+pub mod vblank_prologue_work;
+pub mod vblank_pre_audio_work;
+pub mod fade_audio_work;
+pub mod vblank_audio_dispatch_work;
+pub mod vblank_after_music_work;
+pub mod read_joypad_work;
+pub mod track_play_time_work;
+pub mod video_request_ports;
+pub mod video_copy_caller_work;
+pub mod display_interrupt_entry_work;
+pub mod vblank_irq_work;

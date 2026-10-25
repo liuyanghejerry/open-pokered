@@ -94,6 +94,18 @@ fn fixture(move_id: MoveId, badges: u8, map: MapId) -> PokemonGame {
     game.state.screen = GameScreen::PartyScreen;
     game.party_screen = PartyScreenState::new(game.save_data.party.to_vec());
     game.party_screen.set_cursor(1);
+    if move_id == MoveId::Flash {
+        // This component fixture replaces ordinary map/menu entry. Bind the
+        // same real virtual sequencer and native actor publication as the
+        // normal --no-audio path; it is not original-music timing evidence.
+        game.audio = Some(AudioOutput::new_pcm());
+        let audio = game.audio.as_ref().unwrap();
+        audio.play_music(MusicId::DUNGEON3);
+        audio.update_frame();
+        game.overworld.publish_npc_frame(false);
+        game.overworld.player_presentation.suppress_current_image();
+        game.overworld.npc_presentation.suppress_current_images();
+    }
     game
 }
 fn choose_field_move(game: &mut PokemonGame) {

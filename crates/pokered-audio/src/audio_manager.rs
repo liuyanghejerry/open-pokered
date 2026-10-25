@@ -487,6 +487,18 @@ impl AudioManager {
         Ok(song)
     }
 
+    /// Read the existing native song/volume under the same source-frame guard.
+    /// No sequencer update, default bank or captured channel state is supplied.
+    pub fn source_irq_context(
+        &self,
+    ) -> Result<crate::source_clock::AudioIrqContext, crate::source_clock::AudioClockError> {
+        use crate::source_clock::{frame_instructions::SourceSong, AudioClockError, AudioIrqContext};
+        let bank = self.engine.last_music_id().and_then(SourceSong::from_music)
+            .ok_or(AudioClockError::UnsupportedSoundBank)?.bank();
+        self.source_frame_song(bank, 0)?;
+        Ok(AudioIrqContext { bank, nr50: self.nr50() })
+    }
+
     fn source_frame_resume_error<E>(
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
         error: crate::source_clock::AudioClockError,

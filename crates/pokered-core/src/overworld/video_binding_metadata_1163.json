@@ -1,0 +1,712 @@
+[
+  {
+    "source": {
+      "Sprite": 1
+    },
+    "bank": 5,
+    "address": 16768,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 2
+    },
+    "bank": 5,
+    "address": 17152,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 3
+    },
+    "bank": 5,
+    "address": 17536,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 4
+    },
+    "bank": 5,
+    "address": 17920,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 5
+    },
+    "bank": 5,
+    "address": 18304,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 6
+    },
+    "bank": 5,
+    "address": 18688,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 7
+    },
+    "bank": 5,
+    "address": 19072,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 8
+    },
+    "bank": 5,
+    "address": 19456,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 9
+    },
+    "bank": 5,
+    "address": 19840,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 10
+    },
+    "bank": 5,
+    "address": 20224,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 11
+    },
+    "bank": 5,
+    "address": 20608,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 12
+    },
+    "bank": 5,
+    "address": 20992,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 13
+    },
+    "bank": 5,
+    "address": 21376,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 14
+    },
+    "bank": 5,
+    "address": 21760,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 15
+    },
+    "bank": 5,
+    "address": 22144,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 16
+    },
+    "bank": 5,
+    "address": 22528,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 17
+    },
+    "bank": 5,
+    "address": 22912,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 18
+    },
+    "bank": 5,
+    "address": 23296,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 19
+    },
+    "bank": 5,
+    "address": 23680,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 20
+    },
+    "bank": 5,
+    "address": 24064,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 21
+    },
+    "bank": 5,
+    "address": 24448,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 22
+    },
+    "bank": 5,
+    "address": 24640,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 23
+    },
+    "bank": 5,
+    "address": 25024,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 24
+    },
+    "bank": 5,
+    "address": 25408,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 25
+    },
+    "bank": 5,
+    "address": 25792,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 26
+    },
+    "bank": 5,
+    "address": 26176,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 27
+    },
+    "bank": 5,
+    "address": 26560,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 28
+    },
+    "bank": 5,
+    "address": 26944,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 29
+    },
+    "bank": 5,
+    "address": 27328,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 30
+    },
+    "bank": 5,
+    "address": 27712,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 31
+    },
+    "bank": 4,
+    "address": 16384,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 32
+    },
+    "bank": 4,
+    "address": 16384,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 33
+    },
+    "bank": 4,
+    "address": 16768,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 34
+    },
+    "bank": 4,
+    "address": 17152,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 35
+    },
+    "bank": 4,
+    "address": 17536,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 36
+    },
+    "bank": 4,
+    "address": 17728,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 37
+    },
+    "bank": 4,
+    "address": 17920,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 38
+    },
+    "bank": 4,
+    "address": 18112,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 39
+    },
+    "bank": 4,
+    "address": 18304,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 40
+    },
+    "bank": 4,
+    "address": 18496,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 41
+    },
+    "bank": 4,
+    "address": 18688,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 42
+    },
+    "bank": 4,
+    "address": 18880,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 43
+    },
+    "bank": 4,
+    "address": 19072,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 44
+    },
+    "bank": 4,
+    "address": 19264,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 45
+    },
+    "bank": 4,
+    "address": 19456,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 46
+    },
+    "bank": 4,
+    "address": 19648,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 47
+    },
+    "bank": 4,
+    "address": 19840,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 48
+    },
+    "bank": 4,
+    "address": 20224,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 49
+    },
+    "bank": 4,
+    "address": 20608,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 50
+    },
+    "bank": 4,
+    "address": 20608,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 51
+    },
+    "bank": 5,
+    "address": 28096,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 52
+    },
+    "bank": 5,
+    "address": 28288,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 53
+    },
+    "bank": 5,
+    "address": 28480,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 54
+    },
+    "bank": 5,
+    "address": 28672,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 55
+    },
+    "bank": 5,
+    "address": 28672,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 56
+    },
+    "bank": 5,
+    "address": 28864,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 57
+    },
+    "bank": 5,
+    "address": 29248,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 58
+    },
+    "bank": 5,
+    "address": 29632,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 59
+    },
+    "bank": 5,
+    "address": 30016,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 60
+    },
+    "bank": 5,
+    "address": 30400,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 61
+    },
+    "bank": 4,
+    "address": 20800,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 62
+    },
+    "bank": 4,
+    "address": 20864,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 63
+    },
+    "bank": 4,
+    "address": 20928,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 64
+    },
+    "bank": 4,
+    "address": 20992,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 65
+    },
+    "bank": 4,
+    "address": 21056,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 66
+    },
+    "bank": 4,
+    "address": 21120,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 67
+    },
+    "bank": 4,
+    "address": 21184,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 68
+    },
+    "bank": 4,
+    "address": 21248,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 69
+    },
+    "bank": 4,
+    "address": 21248,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 70
+    },
+    "bank": 4,
+    "address": 21312,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 71
+    },
+    "bank": 4,
+    "address": 21312,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Sprite": 72
+    },
+    "bank": 4,
+    "address": 21312,
+    "bytes": 64,
+    "format": "TwoBpp"
+  },
+  {
+    "source": "WalkingPlayer",
+    "bank": 5,
+    "address": 16768,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": "BicyclePlayer",
+    "bank": 5,
+    "address": 16384,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": "SurfingPlayer",
+    "bank": 5,
+    "address": 30400,
+    "bytes": 384,
+    "format": "TwoBpp"
+  },
+  {
+    "source": "Font",
+    "bank": 4,
+    "address": 23168,
+    "bytes": 1024,
+    "format": "OneBppDouble"
+  },
+  {
+    "source": "TextBox",
+    "bank": 4,
+    "address": 25224,
+    "bytes": 512,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Flower": 1
+    },
+    "bank": 0,
+    "address": 7961,
+    "bytes": 16,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Flower": 2
+    },
+    "bank": 0,
+    "address": 7977,
+    "bytes": 16,
+    "format": "TwoBpp"
+  },
+  {
+    "source": {
+      "Flower": 3
+    },
+    "bank": 0,
+    "address": 7993,
+    "bytes": 16,
+    "format": "TwoBpp"
+  }
+]

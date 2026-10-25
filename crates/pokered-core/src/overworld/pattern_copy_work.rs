@@ -5,6 +5,8 @@ use super::field_restore::{PatternCopy, PatternSource};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PatternAccess {
+    /// Logical request-port IO on the same checked instruction bus.
+    Display(super::display_lcd_work::DisplayAccess),
     /// Mutable VRAM is sampled at the access cycle, subject to LCD gating.
     ReadVram { address: u16, at_tcycle: u8 },
     /// POP DE reads both stack bytes within one indivisible instruction.
@@ -234,7 +236,7 @@ mod tests {
             }
             self.cycles += u32::from(i.tcycles);
             Ok(match i.access {
-                Some(PatternAccess::ReadVram { .. }) => unreachable!("asset-copy test bus"),
+                Some(PatternAccess::ReadVram { .. }) | Some(PatternAccess::Display(_)) => unreachable!("asset-copy test bus"),
                 Some(PatternAccess::Read { offset, .. }) => {
                     Some(u16::from((offset as u8).wrapping_mul(3)))
                 }

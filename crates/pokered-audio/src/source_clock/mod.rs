@@ -53,6 +53,13 @@ pub struct AudioFrameWork {
     pub cycles: u32,
 }
 
+/// Supported native song bank and live volume for the field IRQ handoff.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AudioIrqContext {
+    pub bank: u8,
+    pub nr50: u8,
+}
+
 /// Admission and completion outcomes for guarded audio work. Source progress
 /// and the native sequencer commit are distinct: preserve retained work after
 /// any accepted instruction and follow the particular API's resume contract.

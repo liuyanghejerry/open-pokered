@@ -20,6 +20,20 @@ pub struct DisplayInstruction {
 pub trait DisplayInstructionBus {
     type Error;
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error>;
+    /// Optional exact execution of a prefix with no port accesses or caller
+    /// effects. Return the accepted instruction count, preserving the normal
+    /// start-before-deadline budget rule. Zero means use ordinary stepping.
+    /// Implementations must prove interrupts cannot interleave the prefix;
+    /// this is not permission to replace a scene with a captured duration.
+    fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        _instructions: I,
+    ) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(0)
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum DisableStep {

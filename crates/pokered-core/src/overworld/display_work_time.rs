@@ -15,9 +15,29 @@ pub enum DisplayWorkError {
     Budget,
     NoPendingVBlank,
     InterruptBusy,
+    /// A foreground instruction has not executed: the attached owner must
+    /// service the pending VBlank before retrying that same continuation.
+    InterruptPending,
     NoActiveVBlank,
     Device(DisplayDeviceError),
     Resource(RestoreError),
+}
+
+/// Passive hosted diagnostic captured at an actual source-bus palette store.
+/// It neither advances time nor authorizes a display/IRQ continuation. Unlike
+/// saved device state, an observation is not restored from a snapshot.
+#[cfg(not(target_os = "none"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub struct PaletteStoreReceipt {
+    pub port: u16,
+    pub before: u8,
+    pub value: u8,
+    pub tcycles: u64,
+    pub ly: u8,
+    pub mode: u8,
+    pub vblank_epoch: u64,
+    pub lcd_enabled: bool,
+    pub blank_first_frame: bool,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -25,11 +45,23 @@ pub struct DisplayWorkTime {
     elapsed: u64,
     deadline: u64,
     device: DisplayDevice,
+    // Bounded diagnostics only: one latest observation per BGP/OBP port.
+    // Kept off GBA entirely and never serialized as causal source history.
+    #[cfg(not(target_os = "none"))]
+    #[serde(skip)]
+    palette_stores: [Option<PaletteStoreReceipt>; 3],
     // Ephemeral: snapshots always restart the full device check. Device
     // mutation is exposed only through an invalidating mutable accessor.
     #[serde(skip)]
     idle_period_cached: bool,
+    // Test oracle: retain the original fully checked interval observer while
+    // comparing the reserved instruction path at every access boundary.
+    #[cfg(test)]
+    #[serde(skip)]
+    check_each_display_interval: bool,
     shadow_oam: Vec<u8>,
+    #[serde(default)]
+    video_requests: super::video_request_ports::VideoRequestPorts,
     /// Actual native caller/control effects. Missing old snapshot fields stay
     /// unknown until a caller writes them; default native boot projects1.
     #[serde(default)]
@@ -50,6 +82,10 @@ pub struct DisplayWorkTime {
     selected_rom_bank: u8,
     #[serde(default)]
     active_vblank: bool,
+    /// Opt-in only when a complete native IRQ owner is attached. Legacy
+    /// projections must not stop at an interrupt they cannot yet service.
+    #[serde(default)]
+    vblank_dispatch_enabled: bool,
     /// Native divider projection; original boot/reset phase is not recovered.
     #[serde(default)]
     divider_counter: u16,
@@ -88,8 +124,13 @@ impl Default for DisplayWorkTime {
             elapsed: 0,
             deadline: 0,
             device,
+            #[cfg(not(target_os = "none"))]
+            palette_stores: [None; 3],
             idle_period_cached: false,
+            #[cfg(test)]
+            check_each_display_interval: false,
             shadow_oam: vec![0; 160],
+            video_requests: super::video_request_ports::VideoRequestPorts::default(),
             sprite_updates_enabled: Some(1),
             legacy_party_sprite_owner: false,
             legacy_sprite_hide: None,
@@ -99,6 +140,7 @@ impl Default for DisplayWorkTime {
             rom_bank_temp: 0,
             selected_rom_bank: projected_bank(),
             active_vblank: false,
+            vblank_dispatch_enabled: false,
             divider_counter: 0,
             frame_counter: 0,
             random_add: 0,
@@ -112,6 +154,28 @@ impl Default for DisplayWorkTime {
 }
 
 impl DisplayWorkTime {
+    /// Handoff from the synchronous native producer: it has no outstanding
+    /// video request. Establish idle sizes/control only, never ROM addresses
+    /// or a recovered original initialization/IRQ history.
+    pub fn establish_native_video_idle(&mut self, enabled: u8) -> Result<(), DisplayWorkError> {
+        if self.active_vblank || self.vblank_dispatch_enabled { return Err(DisplayWorkError::InterruptBusy); }
+        use super::video_copy_caller_work::{AUTO_BG_ENABLED, COPY_SIZE, DOUBLE_SIZE};
+        for (port, value) in [(AUTO_BG_ENABLED, enabled), (COPY_SIZE, 0), (DOUBLE_SIZE, 0)] {
+            self.video_requests.write(port, value);
+        }
+        Ok(())
+    }
+    pub fn video_requests(&self) -> &super::video_request_ports::VideoRequestPorts {
+        &self.video_requests
+    }
+
+    /// Actual write-point observations on this source instruction bus only.
+    /// Direct diagnostic device mutations and snapshot restore provide none.
+    #[cfg(not(target_os = "none"))]
+    pub fn palette_store_receipts(&self) -> &[Option<PaletteStoreReceipt>; 3] {
+        &self.palette_stores
+    }
+
     #[inline(always)]
     pub fn device(&self) -> &DisplayDevice {
         &self.device
@@ -143,6 +207,23 @@ impl DisplayWorkTime {
             .checked_add(1)
             .expect("interrupt return counter overflow");
     }
+    /// Attach/detach the bounded IME-enabled, non-nested VBlank dispatcher.
+    /// This neither accepts IF nor advances a suspended instruction.
+    pub fn set_vblank_dispatch_enabled(&mut self, enabled: bool) {
+        self.vblank_dispatch_enabled = enabled;
+    }
+    pub fn pending_vblank_dispatch(&self) -> bool {
+        self.vblank_dispatch_enabled && !self.active_vblank
+            && self.device.pending_interrupts() & 1 != 0
+    }
+    #[inline(always)]
+    fn check_interrupt_dispatch(&self) -> Result<(), DisplayWorkError> {
+        if self.pending_vblank_dispatch() {
+            Err(DisplayWorkError::InterruptPending)
+        } else {
+            Ok(())
+        }
+    }
     pub fn active_vblank(&self) -> bool {
         self.active_vblank
     }
@@ -157,10 +238,23 @@ impl DisplayWorkTime {
         if self.device.pending_interrupts() & 1 == 0 {
             return Err(DisplayWorkError::NoPendingVBlank);
         }
-        self.reserve()?;
+        // Hardware acceptance is the dispatcher itself, not a foreground
+        // instruction. Budget failure must leave IF and active state intact.
+        self.reserve_time()?;
         self.device.acknowledge_interrupt(1);
         self.active_vblank = true;
         self.elapse(20)
+    }
+    /// Consume decoded work only inside the attached ISR. This bounded audio
+    /// bridge has no nested interrupt or VRAM access; foreground stays blocked
+    /// until all work and the actual epilogue finish. APU IO phase is separate.
+    pub(crate) fn consume_vblank_body_work(&mut self, remaining: &mut u32) -> Result<(), DisplayWorkError> {
+        super::vblank_return_work::VBlankReturnBus::check_active_vblank(self)?;
+        self.reserve_time()?;
+        let consumed = u64::from(*remaining).min(self.remaining());
+        self.elapse(consumed)?;
+        *remaining -= consumed as u32;
+        Ok(())
     }
     pub fn source_loaded_rom_bank(&self) -> u8 {
         self.loaded_rom_bank
@@ -245,6 +339,9 @@ impl DisplayWorkTime {
 
     #[inline(always)]
     fn read_display_port(&self, port: u16) -> Result<u8, DisplayDeviceError> {
+        if super::video_request_ports::VideoRequestPorts::contains(port) {
+            return self.video_requests.read(port).ok_or(DisplayDeviceError::UnsupportedPort(port));
+        }
         if port == super::sprite_update_control_work::SPRITE_UPDATES_PORT {
             self.sprite_updates_enabled
                 .ok_or(DisplayDeviceError::UnsupportedPort(port))
@@ -303,6 +400,29 @@ impl DisplayWorkTime {
     pub fn remaining(&self) -> u64 {
         self.deadline.saturating_sub(self.elapsed)
     }
+    /// Execute an IRQ child's access to an external device on this same clock.
+    /// Admission precedes all time and device effects. A final instruction may
+    /// overrun a native grant, exactly like the display bus; never re-admit its
+    /// suffix after performing the access. The external owner holds its device
+    /// exclusively across this call and supplies an infallible register access.
+    pub fn execute_external_irq_access<T>(
+        &mut self,
+        tcycles: u8,
+        at_tcycle: u8,
+        access: impl FnOnce() -> T,
+    ) -> Result<T, DisplayWorkError> {
+        if !self.active_vblank {
+            return Err(DisplayWorkError::NoActiveVBlank);
+        }
+        if tcycles == 0 || tcycles & 3 != 0 || at_tcycle > tcycles || at_tcycle & 3 != 0 {
+            return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidPhase));
+        }
+        self.reserve()?;
+        self.elapse(u64::from(at_tcycle))?;
+        let result = access();
+        self.elapse(u64::from(tcycles - at_tcycle))?;
+        Ok(result)
+    }
     #[inline(always)]
     pub fn begin_native_update(&mut self) {
         self.deadline = self
@@ -312,6 +432,11 @@ impl DisplayWorkTime {
     }
     #[inline(always)]
     fn reserve(&self) -> Result<(), DisplayWorkError> {
+        self.reserve_time()?;
+        self.check_interrupt_dispatch()
+    }
+    #[inline(always)]
+    fn reserve_time(&self) -> Result<(), DisplayWorkError> {
         self.device.validate().map_err(DisplayWorkError::Device)?;
         if self.device.observed_tcycles() != self.elapsed {
             return Err(DisplayWorkError::Device(
@@ -337,8 +462,8 @@ impl DisplayWorkTime {
         self.elapsed = next;
         Ok(())
     }
-    // Only exclusive display/pattern buses call this after reservation. Their
-    // leases prevent external replacement of time/device state.
+    // Only reserved instructions call this. Their exclusive borrow prevents
+    // external replacement of time/device state during the instruction.
     #[inline(always)]
     fn elapse_reserved(&mut self, cycles: u8) -> Result<(), DisplayWorkError> {
         self.idle_period_cached = false;
@@ -352,6 +477,18 @@ impl DisplayWorkTime {
         self.divider_counter = self.divider_counter.wrapping_add(u16::from(cycles));
         self.elapsed = next;
         Ok(())
+    }
+    /// The direct instruction owner has just validated and reserved this
+    /// instruction. Its exclusive borrow lasts through both sides of a port
+    /// access, whose checked store preserves the device invariants. Reuse the
+    /// same bounded observer as the existing exclusive display/pattern buses.
+    #[inline(always)]
+    fn elapse_display_instruction(&mut self, cycles: u8) -> Result<(), DisplayWorkError> {
+        #[cfg(test)]
+        if self.check_each_display_interval {
+            return self.elapse(u64::from(cycles));
+        }
+        self.elapse_reserved(cycles)
     }
     #[inline(always)]
     pub fn idle_to_target(&mut self) -> Result<(), DisplayWorkError> {
@@ -431,7 +568,7 @@ impl DisplayInstructionBus for DisplayWorkTime {
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         if instruction.access.is_none() {
             self.reserve()?;
-            self.elapse(u64::from(instruction.tcycles))?;
+            self.elapse_display_instruction(instruction.tcycles)?;
             return Ok(None);
         }
         self.execute_display_general(instruction)
@@ -450,6 +587,7 @@ impl DisplayWorkTime {
                     self.read_display_port(port)
                         .map_err(DisplayWorkError::Device)?;
                 }
+                DisplayAccess::Write { port, .. } if super::video_request_ports::VideoRequestPorts::contains(port) => (),
                 DisplayAccess::Write { port, .. }
                     if [
                         0xff00,
@@ -483,7 +621,7 @@ impl DisplayWorkTime {
         self.reserve()?;
         let (value, consumed) = match instruction.access {
             Some(DisplayAccess::Read { port, at_tcycle }) => {
-                self.elapse(u64::from(at_tcycle))?;
+                self.elapse_display_instruction(at_tcycle)?;
                 (
                     Some(
                         self.read_display_port(port)
@@ -497,8 +635,10 @@ impl DisplayWorkTime {
                 value,
                 at_tcycle,
             }) => {
-                self.elapse(u64::from(at_tcycle))?;
-                if port == super::sprite_update_control_work::SPRITE_UPDATES_PORT {
+                self.elapse_display_instruction(at_tcycle)?;
+                if super::video_request_ports::VideoRequestPorts::contains(port) {
+                    self.video_requests.write(port, value);
+                } else if port == super::sprite_update_control_work::SPRITE_UPDATES_PORT {
                     self.sprite_updates_enabled = Some(value);
                 } else if port == 0xff00 {
                     self.joypad_select = value & 0x30;
@@ -525,15 +665,31 @@ impl DisplayWorkTime {
                 } else if (0xc300..0xc3a0).contains(&port) {
                     self.shadow_oam[usize::from(port - 0xc300)] = value;
                 } else {
+                    #[cfg(not(target_os = "none"))]
+                    let receipt = (0xff47..=0xff49).contains(&port).then(|| PaletteStoreReceipt {
+                        port,
+                        before: self.device.read_port(port).expect("validated palette port"),
+                        value,
+                        tcycles: self.elapsed,
+                        ly: self.device.read_port(0xff44).expect("LY port"),
+                        mode: self.device.mode(),
+                        vblank_epoch: self.device.vblank_epoch(),
+                        lcd_enabled: self.device.lcd_enabled(),
+                        blank_first_frame: self.device.blank_first_frame(),
+                    });
                     self.device
                         .write_port(port, value, 0xc3)
                         .map_err(DisplayWorkError::Device)?;
+                    #[cfg(not(target_os = "none"))]
+                    if let Some(receipt) = receipt {
+                        self.palette_stores[usize::from(port - 0xff47)] = Some(receipt);
+                    }
                 }
                 (None, at_tcycle)
             }
             None => (None, 0),
         };
-        self.elapse(u64::from(instruction.tcycles - consumed))?;
+        self.elapse_display_instruction(instruction.tcycles - consumed)?;
         Ok(value)
     }
 }
@@ -577,12 +733,43 @@ impl DisplayBus<'_> {
             if self.time.elapsed >= self.time.deadline {
                 return Err(DisplayWorkError::Budget);
             }
+            self.time.check_interrupt_dispatch()?;
         }
         Ok(())
     }
 }
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
+    fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        instructions: I,
+    ) -> Result<usize, Self::Error> {
+        // The bounded IRQ is non-nested. Foreground execution must keep its
+        // instruction-by-instruction pending-interrupt dispatch checks.
+        if !self.time.active_vblank {
+            return Ok(0);
+        }
+        let mut instructions = instructions.peekable();
+        if instructions.peek().is_none_or(|i| i.access.is_some()) {
+            return Ok(0);
+        }
+        self.reserve()?;
+        let available = self.time.remaining();
+        let (mut cycles, mut count) = (0u64, 0usize);
+        for instruction in instructions {
+            if instruction.access.is_some() || cycles >= available {
+                break;
+            }
+            cycles = cycles.checked_add(u64::from(instruction.tcycles))
+                .expect("plain instruction run overflow");
+            count += 1;
+        }
+        // No source writes/effects occur inside this interval. The real
+        // device still processes every LCD/DMA edge against unchanged shadow
+        // OAM; divider wrap and final-instruction budget overrun are exact.
+        self.time.elapse(cycles)?;
+        Ok(count)
+    }
     #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         match instruction.access {
@@ -626,8 +813,19 @@ pub struct PatternBus<'a, A> {
 }
 impl<A> DisplayInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
+    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
-        DisplayInstructionBus::execute(self.time, instruction)
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return DisplayInstructionBus::execute(self.time, instruction);
+        }
+        // Both instruction kinds share one exclusive time lease. A checked
+        // display write invalidates it just as it does on DisplayBus; plain
+        // instructions and reads can keep the same validated device.
+        let mut display = DisplayBus { time: self.time, validated: self.validated };
+        let result = display.execute(instruction);
+        self.validated = display.validated;
+        result
     }
 }
 
@@ -635,6 +833,11 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
     #[inline(always)]
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error> {
+        if let Some(PatternAccess::Display(access)) = instruction.access {
+            return DisplayInstructionBus::execute(self, DisplayInstruction {
+                tcycles: instruction.tcycles, access: Some(access),
+            }).map(|value| value.map(u16::from));
+        }
         if instruction.access.is_none() {
             self.check_memory()?;
             self.reserve()?;
@@ -689,6 +892,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
             if self.time.elapsed >= self.time.deadline {
                 return Err(DisplayWorkError::Budget);
             }
+            self.time.check_interrupt_dispatch()?;
         }
         Ok(())
     }
@@ -741,6 +945,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                     ))?;
                 None
             }
+            Some(PatternAccess::Display(_)) => unreachable!("delegated before pattern validation"),
             None => None,
         };
         self.reserve()?;
@@ -780,6 +985,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                 }
                 at_tcycle
             }
+            Some(PatternAccess::Display(_)) => unreachable!("delegated before pattern validation"),
             None => 0,
         };
         self.elapse(instruction.tcycles - consumed)?;
@@ -1117,6 +1323,7 @@ mod tests {
                     }
                     time.deadline = time.elapsed + budget;
                     let mut reference = time.clone();
+                    reference.check_each_display_interval = true;
                     let mut work = DisableLcdWork::default();
                     let mut expected_work = work;
                     for _ in 0..3 {
@@ -1161,8 +1368,125 @@ mod tests {
                         reference =
                             serde_json::from_value(serde_json::to_value(&reference).unwrap())
                                 .unwrap();
+                        reference.check_each_display_interval = true;
                         time.begin_native_update();
                         reference.begin_native_update();
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn active_irq_plain_runs_match_instruction_budgets_dma_and_lcd_edges() {
+        let code: Vec<_> = [4, 12, 0, 16, 8, 24, 4, 8].into_iter().cycle().take(8192)
+            .map(|tcycles| DisplayInstruction { tcycles, access: None }).collect();
+        for lcdc in [0x11, 0x91, 0x93, 0xb3] {
+            for offset in [0, 79, 252, 65_660] {
+                for dma in [false, true] {
+                    for budget in (0..=256u64).step_by(4).chain([511, 4096, 65535, 70224]) {
+                        let mut time = DisplayWorkTime::default();
+                        time.begin_native_update();
+                        time.device_mut().request_interrupt(1);
+                        time.enter_pending_vblank().unwrap();
+                        time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                        time.device_mut().write_port(0xff4b, 7, 0xc3).unwrap();
+                        time.elapse(offset).unwrap();
+                        time.set_shadow_oam(&(0..160).map(|i| i as u8).collect::<Vec<_>>()).unwrap();
+                        if dma { time.device_mut().write_port(0xff46, 0xc3, 0xc3).unwrap(); }
+                        time.deadline = time.elapsed + budget;
+                        let mut reference = time.clone();
+                        let actual = time.display_bus().execute_plain_run(code.iter().copied());
+                        let mut count = 0;
+                        let expected = loop {
+                            let Some(&instruction) = code.get(count) else { break Ok(count); };
+                            match reference.execute(instruction) {
+                                Ok(_) => count += 1,
+                                Err(DisplayWorkError::Budget) if count > 0 => break Ok(count),
+                                Err(error) => break Err(error),
+                            }
+                        };
+                        assert_eq!(actual, expected);
+                        assert_eq!(serde_json::to_value(&time).unwrap(), serde_json::to_value(&reference).unwrap());
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn plain_run_refuses_foreground_and_stops_before_port_access_without_effects() {
+        let code = [
+            DisplayInstruction { tcycles: 4, access: None },
+            DisplayInstruction { tcycles: 12, access: Some(DisplayAccess::Write { port: 0xff47, value: 0xe4, at_tcycle: 8 }) },
+        ];
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.set_vblank_dispatch_enabled(true);
+        time.device_mut().request_interrupt(1);
+        let before = serde_json::to_value(&time).unwrap();
+        assert_eq!(time.display_bus().execute_plain_run(code.into_iter()), Ok(0));
+        assert_eq!(serde_json::to_value(&time).unwrap(), before);
+        assert_eq!(time.execute(code[0]), Err(DisplayWorkError::InterruptPending));
+        time.enter_pending_vblank().unwrap();
+        let start = time.elapsed();
+        assert_eq!(time.display_bus().execute_plain_run(code.into_iter()), Ok(1));
+        assert_eq!(time.elapsed(), start + 4);
+        assert_eq!(time.device().read_port(0xff47).unwrap(), 0);
+        time.execute(code[1]).unwrap();
+        assert_eq!(time.device().read_port(0xff47).unwrap(), 0xe4);
+        assert!(time.active_vblank());
+        assert_eq!(time.interrupt_returns, 0);
+    }
+
+    #[test]
+    fn direct_display_intervals_match_checked_observer_through_dma_ports_and_resume() {
+        let read = |port| DisplayInstruction {
+            tcycles: 12,
+            access: Some(DisplayAccess::Read { port, at_tcycle: 8 }),
+        };
+        let write = |port, value| DisplayInstruction {
+            tcycles: 12,
+            access: Some(DisplayAccess::Write { port, value, at_tcycle: 8 }),
+        };
+        let instructions = [
+            DisplayInstruction { tcycles: 4, access: None },
+            read(0xff44), read(0xff04), write(0xc300, 17),
+            write(0xff46, 0xc3), write(0xc300, 23),
+            write(0xff47, 0xe4), write(0xff48, 0xd0),
+            write(0xff43, 3), write(0xff4a, 8),
+            write(0xff40, 0x11), read(0xff44),
+            write(0xff40, 0xb3), read(0xff41),
+            write(0xff46, 0xc2), read(0xff01),
+            write(0xff41, 8), write(0xff0f, 0),
+        ];
+        for lcdc in [0x11, 0x91, 0x93, 0xb1] {
+            for offset in [0, 3, 4, 79, 80, 251, 65_660, 70_220] {
+                for budget in [0, 4, 12, 70224] {
+                    let mut time = DisplayWorkTime::default();
+                    time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                    time.elapse(offset).unwrap();
+                    time.deadline = time.elapsed + budget;
+                    let mut reference = time.clone();
+                    reference.check_each_display_interval = true;
+                    for (index, instruction) in instructions.into_iter().cycle().take(72).enumerate() {
+                        let actual = time.execute(instruction);
+                        assert_eq!(actual, reference.execute(instruction),
+                            "lcdc={lcdc} offset={offset} budget={budget} index={index}");
+                        assert_eq!(serde_json::to_value(&time).unwrap(),
+                            serde_json::to_value(&reference).unwrap());
+                        assert_eq!(time.palette_store_receipts(), reference.palette_store_receipts());
+                        if actual == Err(DisplayWorkError::Budget) {
+                            time.begin_native_update();
+                            reference.begin_native_update();
+                        }
+                        if index % 9 == 8 {
+                            time = serde_json::from_value(serde_json::to_value(&time).unwrap()).unwrap();
+                            reference = serde_json::from_value(serde_json::to_value(&reference).unwrap()).unwrap();
+                            assert!(!time.check_each_display_interval);
+                            assert!(!reference.check_each_display_interval);
+                            reference.check_each_display_interval = true;
+                        }
                     }
                 }
             }
@@ -1265,6 +1589,7 @@ mod tests {
             }
             let mut time = seed.clone();
             let mut reference = seed;
+            reference.check_each_display_interval = true;
             let mut bus = time.display_bus();
             for instruction in instructions {
                 assert_eq!(
@@ -1952,3 +2277,68 @@ mod sprite_control_tests_1159 {
         }
     }
 }
+
+#[cfg(all(test, not(target_os = "none")))]
+mod palette_store_receipt_tests {
+    use super::*;
+    fn instruction(port: u16, value: u8) -> DisplayInstruction {
+        DisplayInstruction { tcycles: 12, access: Some(DisplayAccess::Write { port, value, at_tcycle: 8 }) }
+    }
+    #[test]
+    fn palette_receipt_samples_actual_io_cycle_across_lcd_boundaries_without_advancing_device() {
+        for offset in [0, 4, 76, 80, 248, 252, 452, 456, 65560, 65664, 70212] {
+            for port in 0xff47..=0xff49 {
+                let mut time = DisplayWorkTime::default();
+                time.begin_native_update();
+                time.elapse(offset).unwrap();
+                let mut expected = time.device().clone();
+                expected.observe_time(offset + 8, time.shadow_oam()).unwrap();
+                let ly = expected.read_port(0xff44).unwrap();
+                let mode = expected.mode();
+                let epoch = expected.vblank_epoch();
+                expected.write_port(port, 0xe4, 0xc3).unwrap();
+                expected.observe_time(offset + 12, time.shadow_oam()).unwrap();
+                time.display_bus().execute(instruction(port, 0xe4)).unwrap();
+                let receipt = time.palette_store_receipts()[usize::from(port - 0xff47)].unwrap();
+                assert_eq!((receipt.port, receipt.before, receipt.value), (port, 0, 0xe4));
+                assert_eq!((receipt.tcycles, receipt.ly, receipt.mode, receipt.vblank_epoch), (offset + 8, ly, mode, epoch));
+                assert_eq!(time.elapsed(), offset + 12);
+                assert_eq!(time.device(), &expected);
+            }
+        }
+    }
+    #[test]
+    fn unchanged_palette_writes_are_observed_but_denied_instructions_are_not() {
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.execute(instruction(0xff47, 0)).unwrap();
+        assert_eq!(time.palette_store_receipts()[0].unwrap().tcycles, 8);
+        time.execute(instruction(0xff48, 0xd0)).unwrap();
+        time.execute(instruction(0xff49, 0xe0)).unwrap();
+        let receipts = *time.palette_store_receipts();
+        assert!(receipts.iter().all(Option::is_some));
+        time.idle_to_target().unwrap();
+        let state = serde_json::to_value(&time).unwrap();
+        assert_eq!(time.execute(instruction(0xff47, 0xe4)), Err(DisplayWorkError::Budget));
+        assert_eq!(*time.palette_store_receipts(), receipts);
+        assert_eq!(serde_json::to_value(&time).unwrap(), state);
+        assert!(time.execute(instruction(0xabcd, 0xe4)).is_err());
+        assert_eq!(*time.palette_store_receipts(), receipts);
+    }
+    #[test]
+    fn snapshot_restores_device_but_never_fabricates_past_observations() {
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.execute(instruction(0xff47, 0xe4)).unwrap();
+        let json = serde_json::to_value(&time).unwrap();
+        assert!(json.get("palette_stores").is_none());
+        let restored: DisplayWorkTime = serde_json::from_value(json).unwrap();
+        assert_eq!(restored.device(), time.device());
+        assert_eq!(restored.elapsed(), time.elapsed());
+        assert!(restored.palette_store_receipts().iter().all(Option::is_none));
+    }
+}
+
+#[cfg(test)]
+#[path = "display_irq_dispatch_tests.rs"]
+mod irq_dispatch_tests;

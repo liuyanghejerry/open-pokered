@@ -115,6 +115,31 @@ impl AudioOutput {
     pub fn last_music_id(&self) -> Option<MusicId> {
         self.manager.borrow_mut().last_music_id()
     }
+    /// Inspect the live native sound owner before attaching a source IRQ.
+    pub fn source_irq_context(&self) -> Result<crate::source_clock::AudioIrqContext, crate::source_clock::AudioClockError> {
+        self.manager.borrow_mut().source_irq_context()
+    }
+
+    /// Begin a source instruction cursor without advancing the native song.
+    pub fn begin_source_audio_frame_with_bus(&self, bank: u8, mute: u8) -> Result<
+        crate::source_clock::frame_instructions::SourceAudioFrame, crate::source_clock::AudioClockError,
+    > {
+        self.manager.borrow_mut().begin_source_audio_frame_with_bus(bank, mute)
+    }
+
+    /// Resume only the retained cursor. A refused instruction leaves its
+    /// prefix intact; the callback must not reenter this output/manager.
+    pub fn resume_source_audio_frame_with_bus<E>(&self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        execute: impl FnMut(&mut crate::apu::Apu, crate::source_clock::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<E>>,
+    > {
+        let result = self.manager.borrow_mut().resume_source_audio_frame_with_bus(work, execute);
+        if result.is_ok() { self.last_frame.set(clock_now()); }
+        result
+    }
+
     pub fn update_frame(&self) {
         let now = clock_now();
         let elapsed = now.wrapping_sub(self.last_frame.replace(now));

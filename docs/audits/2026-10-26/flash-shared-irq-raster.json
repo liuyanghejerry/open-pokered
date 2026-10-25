@@ -1,0 +1,194 @@
+{
+  "master": "5b3cd42342aa9aabc2546fb5f925c3b7d2a9a414",
+  "integration_base": "eaac17f8f441b4f1d2fe8351462cd7aeeb2f0ff4",
+  "code_diff_sha256": "3f9db8f08808bb66b8f8b4be5347e2ab98b02d30d3f4cf6898f95a4824df4ca9",
+  "native_binary_sha256": "962d1062e3d277ca2e04296415b1af91db31d1ca2e893e79fc77f711f644b688",
+  "master_native_binary_sha256": "e6e189e7f0647a04e65d8c9c1b1dfc6c33d39dc28e4fb822ad324ebe51f67ae7",
+  "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+  "reference_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "original_source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "native_runs": [
+    {
+      "repeat": 1,
+      "origin": 960,
+      "status": "passed",
+      "first_overworld_after_ack": 205
+    },
+    {
+      "repeat": 2,
+      "origin": 960,
+      "status": "passed",
+      "first_overworld_after_ack": 205
+    }
+  ],
+  "repeat_identical": true,
+  "images": {
+    "master": {
+      "png_sha256": "ddf8982c7d6b49c947a970c7f95dfaaf1ed82fe13919c247d258a99b6e2cb559",
+      "rgb_sha256": "4fc62eaf326a48c58586a8e50ee3c8fb1dfd7068ef7056e35ec65b1202afcd65",
+      "first_nonwhite_row": 0,
+      "last_nonwhite_row": 143,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1344-flash-master/1/frames/frame-0196.png"
+    },
+    "prior_shared_irq": {
+      "png_sha256": "52e05ab3f92385f224983cba92d64c6a1fe9523f4b617424786da333e9eedf08",
+      "rgb_sha256": "a8d7fd7d9527a14f4bccf5b4ef1bcaf6a4852910c0b2497a9eda961badf31fb1",
+      "first_nonwhite_row": 0,
+      "last_nonwhite_row": 143,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1344-flash-shared-irq/1/frames/frame-0196.png"
+    },
+    "candidate": {
+      "png_sha256": "2c1f6efe6655e47bc3c8e5bdc68825517312e2bc9fdd4377e1be3dc00376d5c1",
+      "rgb_sha256": "84d1dd36167c47765435e5b9614f7900fbbdc59acd46ffb12ebbdb5e523ea6e3",
+      "first_nonwhite_row": 20,
+      "last_nonwhite_row": 143,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1345-flash-palette-raster/1/frames/frame-0196.png"
+    },
+    "original": {
+      "png_sha256": "e02a9441f78514015ec4cb6b5b49f9b9be9f260634fac97bb587aba355c8b8f8",
+      "rgb_sha256": "84d1dd36167c47765435e5b9614f7900fbbdc59acd46ffb12ebbdb5e523ea6e3",
+      "first_nonwhite_row": 20,
+      "last_nonwhite_row": 143,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1157-original-map-tiles/reference-1/frame-0197.png"
+    },
+    "entry_candidate": {
+      "png_sha256": "7387a150d97f07322c643b22d4552ec75bb3a6932b4d58080f6f52bc7e59eb06",
+      "rgb_sha256": "29d53b884547a718fefada1313e7c4b85d59aa9047a6ad5ed5459d52b0cda815",
+      "first_nonwhite_row": 1,
+      "last_nonwhite_row": 25,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1345-flash-palette-raster/1/frames/frame-0160.png"
+    },
+    "entry_original": {
+      "png_sha256": "e18cce42343c7a5a33d349c8b10d1cf87e02ff28a18b6050822efd7266e3e48f",
+      "rgb_sha256": "088696a33cfe13aced6426289a58e9b36b97689d166265a595a36c3ec5dc13f6",
+      "first_nonwhite_row": 0,
+      "last_nonwhite_row": 16,
+      "local_evidence_path": ".task-tmp/fidelity-39-plus/audit-1157-original-map-tiles/reference-1/frame-0161.png"
+    }
+  },
+  "palette_store_receipts": [
+    {
+      "first_capture": 160,
+      "before": 228,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 25,
+      "mode": 0,
+      "port": 65351,
+      "tcycles": 78662676,
+      "value": 0,
+      "vblank_epoch": 1120
+    },
+    {
+      "first_capture": 160,
+      "before": 0,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 25,
+      "mode": 0,
+      "port": 65352,
+      "tcycles": 78662688,
+      "value": 0,
+      "vblank_epoch": 1120
+    },
+    {
+      "first_capture": 160,
+      "before": 0,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 25,
+      "mode": 0,
+      "port": 65353,
+      "tcycles": 78662700,
+      "value": 0,
+      "vblank_epoch": 1120
+    },
+    {
+      "first_capture": 195,
+      "before": 0,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 20,
+      "mode": 2,
+      "port": 65351,
+      "tcycles": 81127084,
+      "value": 228,
+      "vblank_epoch": 1154
+    },
+    {
+      "first_capture": 195,
+      "before": 0,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 20,
+      "mode": 3,
+      "port": 65352,
+      "tcycles": 81127104,
+      "value": 208,
+      "vblank_epoch": 1154
+    },
+    {
+      "first_capture": 195,
+      "before": 0,
+      "blank_first_frame": false,
+      "lcd_enabled": true,
+      "ly": 20,
+      "mode": 3,
+      "port": 65353,
+      "tcycles": 81127124,
+      "value": 224,
+      "vblank_epoch": 1154
+    }
+  ],
+  "core_library_passed": 3433,
+  "application_library_passed": 438,
+  "application_library_ignored": 40,
+  "gba_build": {
+    "command": [
+      "cargo",
+      "+nightly-2025-12-07",
+      "build",
+      "--release",
+      "--features",
+      "perf-benchmark",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered/crates/pokered-gba",
+    "exit_code": 0,
+    "seconds": 104.52697704100137,
+    "base": "eaac17f8f441b4f1d2fe8351462cd7aeeb2f0ff4",
+    "diff_sha256": "3f9db8f08808bb66b8f8b4be5347e2ab98b02d30d3f4cf6898f95a4824df4ca9",
+    "profile": "unmodified release profile; original perf-benchmark feature",
+    "unchanged_source": true
+  },
+  "gba_performance": {
+    "head": "eaac17f8f441b4f1d2fe8351462cd7aeeb2f0ff4",
+    "diff_sha256": "3f9db8f08808bb66b8f8b4be5347e2ab98b02d30d3f4cf6898f95a4824df4ca9",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "db73263d9cd66ad9347070831a71c72db3aa4093401d8dce79f3f39508fb4e3e",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "3a31adf61cffc61b3446c522a9f65a534eb56c7739374c8eec2758a9ef088257",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 4.727527533999819,
+    "failures": [
+      "overworld-idle-v1/update_avg_ticks regressed from 333 to 389 ticks (allowed at most 382.9; 15% or 25 ticks)",
+      "overworld-movement-v1/update_avg_ticks regressed from 343 to 401 ticks (allowed at most 394.4; 15% or 25 ticks)",
+      "battle-entry-v1/update_avg_ticks regressed from 192 to 228 ticks (allowed at most 220.8; 15% or 25 ticks)",
+      "trainer-battle-entry-v1/update_avg_ticks regressed from 202 to 245 ticks (allowed at most 232.3; 15% or 25 ticks)",
+      "pokedex-entry-v1/update_avg_ticks regressed from 93 to 129 ticks (allowed at most 118.0; 15% or 25 ticks)"
+    ],
+    "metrics": "audit-1345-palette-raster-gba-perf-metrics.json",
+    "log": "audit-1345-palette-raster-gba-perf.log"
+  },
+  "limitations": [
+    "Current raster candidate GBA build passed, but five original performance update metrics failed. No thresholds changed. Actual FLASH duration and remaining GBA runtime checks are pending.",
+    "Initial native whiteout starts at LY25; original routine entry LY16 and first image preserves only through row16. Native projection is not full original entry/physical-time parity.",
+    "Complete FLASH input return timing and GBA real restoration duration still require verification; first-map image match alone does not establish them.",
+    "Party-to-START restoration still missing; Haze skipped-turn caption backlog remains."
+  ]
+}

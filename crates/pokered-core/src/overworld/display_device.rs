@@ -17,6 +17,9 @@
 //! the VBlank service. Mode-3 fetch costs use the documented data algorithm;
 //! no claim is made that every provider's mid-scanline quirk is reproduced.
 use crate::alloc_prelude::*;
+#[path = "display_palette_raster.rs"]
+mod palette_raster;
+pub use palette_raster::{BackgroundPaletteRaster, PaletteSpan};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DisplayDeviceError {
@@ -71,6 +74,10 @@ pub struct DisplayDevice {
     ie: u8,
     dma: Option<OamDma>,
     oam: Vec<u8>,
+    /// Optional scanout of the retained native background during a source
+    /// display caller. Ordinary native rendering does not allocate this.
+    #[serde(default)]
+    palette_raster: Option<Box<BackgroundPaletteRaster>>,
 }
 // A constructor-checked interval keeps the one-period proof local and avoids
 // recomputing the same 64-bit subtraction in both the time owner and device.
@@ -215,6 +222,7 @@ impl DisplayDevice {
             ie: 0,
             dma: None,
             oam: vec![0; 160],
+            palette_raster: None,
         }
     }
     pub fn mode(&self) -> u8 {
@@ -314,6 +322,9 @@ impl DisplayDevice {
                     self.window_y_reached = false;
                     // Disabling does not perform an LYC comparison/IRQ edge.
                     self.stat_irq_line = false;
+                    if let Some(raster) = self.palette_raster.as_mut() {
+                        raster.blank_now();
+                    }
                 } else if !was_enabled && self.lcd_enabled() {
                     self.ly = 0;
                     self.phase = RasterPhase::EnableStore;
@@ -321,7 +332,11 @@ impl DisplayDevice {
                     self.first_frame = true;
                     self.window_y_reached = self.wy == 0;
                     self.stat_edge();
+                    if let Some(raster) = self.palette_raster.as_mut() {
+                        raster.begin_frame(0);
+                    }
                 }
+                self.record_background_palette();
             }
             0xff41 => {
                 // The source game keeps these interrupt enables clear. STAT
@@ -359,7 +374,10 @@ impl DisplayDevice {
             }
             0xff4a => self.wy = value,
             0xff4b => self.wx = value,
-            0xff47 => self.bgp = value,
+            0xff47 => {
+                self.bgp = value;
+                self.record_background_palette();
+            }
             0xff48 => self.obp0 = value,
             0xff49 => self.obp1 = value,
             _ => return Err(DisplayDeviceError::UnsupportedPort(port)),
@@ -456,6 +474,9 @@ impl DisplayDevice {
                 self.phase_remaining = prelude - self.mode3_length;
             }
             HBlank if self.ly == 143 => {
+                if let Some(raster) = self.palette_raster.as_mut() {
+                    raster.complete_frame();
+                }
                 self.ly = 144;
                 self.phase = VBlank;
                 self.phase_remaining = 456;
@@ -480,6 +501,10 @@ impl DisplayDevice {
                 self.phase_remaining = 80;
                 self.first_frame = false;
                 self.window_y_reached = self.wy == 0;
+                let palette = self.effective_background_palette();
+                if let Some(raster) = self.palette_raster.as_mut() {
+                    raster.begin_frame(palette);
+                }
             }
             VBlank => {
                 self.ly += 1;
@@ -516,6 +541,7 @@ impl DisplayDevice {
             || self.stat_enable != 0
             || self.oam.len() != 160
             || self.observed_tcycles != from
+            || self.palette_raster.is_some()
         {
             return false;
         }
@@ -562,7 +588,7 @@ impl DisplayDevice {
         self.observe_time_after_validation(tcycles, shadow_oam)
     }
 
-    /// The exclusive PatternBus has validated the device and retains its
+    /// The instruction owner has validated the device and retains its
     /// mutable borrow. Its checked writes and event transitions preserve
     /// validity; no external snapshot/device replacement can interleave.
     #[inline(always)]
@@ -630,6 +656,7 @@ impl DisplayDevice {
             // Startup, changed scroll/window latches and live transfers keep
             // the ordinary event path below.
             if remaining >= 154 * 456
+                && self.palette_raster.is_none()
                 && self.lcd_enabled()
                 && !self.first_frame
                 && self.dma.is_none()

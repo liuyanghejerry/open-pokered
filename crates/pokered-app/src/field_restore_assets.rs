@@ -175,7 +175,7 @@ fn stored_pattern_byte(
 /// ResourceManager decoded palette indices preserve the original 2bpp layout.
 /// Font's 1bpp source is reconstructed only if both bitplanes are identical;
 /// no colored source is silently collapsed into a fake monochrome byte.
-fn pattern_byte(tiles: &TileSet, offset: u16, one_bpp: bool) -> Option<u8> {
+pub(crate) fn pattern_byte(tiles: &TileSet, offset: u16, one_bpp: bool) -> Option<u8> {
     let bytes_per_tile = if one_bpp { 8 } else { 16 };
     let tile_index = usize::from(offset) / bytes_per_tile;
     if tile_index >= tiles.len() {

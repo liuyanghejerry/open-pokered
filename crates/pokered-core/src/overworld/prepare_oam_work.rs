@@ -301,6 +301,22 @@ impl PrepareOamWork {
     pub fn finished(&self) -> bool {
         self.next == self.code.len()
     }
+    /// Retain all observable instructions/effects and the exact cursor at a
+    /// refused instruction. Only the bus can opt into an effect-free prefix.
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        while !self.finished() {
+            let count = bus.execute_plain_run(
+                self.code[self.next..].iter()
+                    .take_while(|i| i.after.is_none() && i.bus.access.is_none())
+                    .map(|i| i.bus),
+            )?;
+            self.next += count;
+            if count == 0 {
+                self.step(bus)?;
+            }
+        }
+        Ok(())
+    }
     pub fn step<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,
@@ -324,6 +340,48 @@ impl PrepareOamWork {
 mod tests {
     use super::super::display_work_time::{DisplayWorkError, DisplayWorkTime};
     use super::*;
+    #[test]
+    fn irq_runner_preserves_each_oam_effect_budget_cursor_and_snapshot_resume() {
+        for data in [include_str!("prepare_oam_cases_1113.json"), include_str!("prepare_oam_constructed_1113.json")] {
+            let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
+            for case in fixture["cases"].as_array().unwrap() {
+                let state: PrepareOamState = serde_json::from_value(case["before"].clone()).unwrap();
+                let template = PrepareOamWork::new(state).unwrap();
+                let shadow: Vec<u8> = serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
+                for budget in (0..4096u64).step_by(97).chain([4, 12, 20, 65535]) {
+                    let mut time = DisplayWorkTime::default();
+                    time.begin_native_update();
+                    time.device_mut().request_interrupt(1);
+                    time.enter_pending_vblank().unwrap();
+                    time.set_shadow_oam(&shadow).unwrap();
+                    let mut value = serde_json::to_value(&time).unwrap();
+                    value["deadline"] = (time.elapsed() + budget).into();
+                    let mut time: DisplayWorkTime = serde_json::from_value(value).unwrap();
+                    let mut reference = time.clone();
+                    let (mut work, mut expected_work) = (template.clone(), template.clone());
+                    for _ in 0..2 {
+                        let actual = work.run(&mut time.display_bus());
+                        let expected = loop {
+                            match expected_work.step(&mut reference) {
+                                Ok(Some(_)) => (),
+                                Ok(None) => break Ok(()),
+                                Err(error) => break Err(error),
+                            }
+                        };
+                        assert_eq!(actual, expected);
+                        assert_eq!(serde_json::to_value((&time, &work)).unwrap(), serde_json::to_value((&reference, &expected_work)).unwrap());
+                        if actual.is_ok() { break; }
+                        assert_eq!(actual, Err(DisplayWorkError::Budget));
+                        (time, work) = serde_json::from_value(serde_json::to_value((&time, &work)).unwrap()).unwrap();
+                        (reference, expected_work) = serde_json::from_value(serde_json::to_value((&reference, &expected_work)).unwrap()).unwrap();
+                        time.begin_native_update(); reference.begin_native_update();
+                    }
+                    assert!(work.finished());
+                    assert!(time.active_vblank());
+                }
+            }
+        }
+    }
     #[test]
     fn every_original_flash_oam_case_matches_bytes_adjustments_and_cpu_cost() {
         for (data, count, constructed) in [
