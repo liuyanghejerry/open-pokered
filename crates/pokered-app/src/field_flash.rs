@@ -302,21 +302,21 @@ impl PokemonGame {
                                 true
                             })
                         } else {
-                            work.step(&mut self.source_display).map(|i| i.is_some())
+                            work.step(&mut *self.source_display).map(|i| i.is_some())
                         }
                     }
                     DisplayChild::Palette(work) => {
-                        work.step(&mut self.source_display).map(|i| i.is_some())
+                        work.step(&mut *self.source_display).map(|i| i.is_some())
                     }
-                    DisplayChild::EnableSprites(work) => work.step(&mut self.source_display),
+                    DisplayChild::EnableSprites(work) => work.step(&mut *self.source_display),
                     DisplayChild::ClearOam(work) => {
-                        work.step(&mut self.source_display).map(|i| i.is_some())
+                        work.step(&mut *self.source_display).map(|i| i.is_some())
                     }
-                    DisplayChild::IndoorSpritePrefix(work) => work.step(&mut self.source_display),
-                    DisplayChild::IndoorSpriteSlot(work) => work.step(&mut self.source_display),
-                    DisplayChild::IndoorSpriteTransfer(work) => work.step(&mut self.source_display),
-                    DisplayChild::IndoorSpriteClear(work) => work.step(&mut self.source_display),
-                    DisplayChild::ColdSpriteBank(work) => work.step(&mut self.source_display),
+                    DisplayChild::IndoorSpritePrefix(work) => work.step(&mut *self.source_display),
+                    DisplayChild::IndoorSpriteSlot(work) => work.step(&mut *self.source_display),
+                    DisplayChild::IndoorSpriteTransfer(work) => work.step(&mut *self.source_display),
+                    DisplayChild::IndoorSpriteClear(work) => work.step(&mut *self.source_display),
+                    DisplayChild::ColdSpriteBank(work) => work.step(&mut *self.source_display),
                     DisplayChild::Copy(work) => {
                         let resources = self
                             .resources
@@ -455,7 +455,7 @@ impl PokemonGame {
                 }
                 RestoreOperation::WaitVBlanks(frames) => {
                     flow.waits.push(FieldWaitReceipt { requested: frames,
-                        armed_returns: pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&self.source_display),
+                        armed_returns: pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*self.source_display),
                         armed_tcycles: self.source_display.elapsed(), completed_returns: None, completed_tcycles: None });
                     flow.irq.as_mut().ok_or("missing IRQ owner")?.delay = Some(pokered_core::overworld::display_delay_work::DelayFramesWork::new(frames));
                     continue;
@@ -1164,14 +1164,14 @@ mod tests {
                     let suspended_audio = (!game.source_display.device().lcd_enabled())
                         .then(|| format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels));
                     let old_time = game.save_data.game_data.play_time;
-                    let old_returns = pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&game.source_display);
+                    let old_returns = pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*game.source_display);
                     game.update(&input);
                     if let Some(channels) = suspended_audio {
                         if game.source_audio_work.is_none() {
                             let elapsed = |t: pokered_core::save::game_data::PlayTime| u64::from(t.hours) * 216000
                                 + u64::from(t.minutes) * 3600 + u64::from(t.seconds) * 60 + u64::from(t.frames);
                             assert_eq!(elapsed(game.save_data.game_data.play_time) - elapsed(old_time),
-                                pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&game.source_display) - old_returns,
+                                pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*game.source_display) - old_returns,
                                 "play time follows completed source IRQs, including an epilogue split across host grants");
                             assert_eq!(format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels), channels);
                             saw_no_irq_lcd_off = true;

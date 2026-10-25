@@ -7,6 +7,9 @@ use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstruct
 use super::field_restore::{PatternAssets, PatternMemory, RestoreError};
 use super::pattern_copy_work::{PatternAccess, PatternInstruction, PatternInstructionBus};
 use crate::alloc_prelude::*;
+#[path = "native_display_clock.rs"]
+mod native_display_clock;
+pub use native_display_clock::NativeDisplayClock;
 
 pub const NATIVE_FRAME_T_CYCLES: u64 = 154 * 456;
 

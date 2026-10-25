@@ -709,7 +709,8 @@ pub struct PokemonGame {
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
     pub(crate) field_flash: Option<Box<field_flash::FieldFlash>>,
-    pub(crate) source_display: pokered_core::overworld::display_work_time::DisplayWorkTime,
+    // The instruction owner is independent of the ordinary Game field layout.
+    pub(crate) source_display: Box<pokered_core::overworld::display_work_time::NativeDisplayClock>,
     #[cfg(any(test, feature = "debug-server"))]
     pub(crate) source_audio_work: Option<(u64, Result<pokered_audio::source_clock::AudioFrameWork, pokered_audio::source_clock::AudioClockError>)>,
     post_capture_flow: Option<Box<post_capture::PostCaptureFlow>>,
@@ -3560,15 +3561,13 @@ impl PokemonGame {
         { self.source_audio_work = None; }
         #[cfg(any(target_os = "none", test))]
         if self.platform_reset_requested { return; }
-        self.source_display.begin_native_update();
         // Complete an older native hide child before the foreground runs.
-        if !self.source_display.service_legacy_sprite_hide().expect("valid native sprite hide") {
+        if !self.source_display.begin_native_frame().expect("valid native sprite hide") {
             self.source_display.idle_to_target().expect("valid native display time");
             return;
         }
         self.update_native_inner(input);
-        self.source_display.service_legacy_sprite_hide().expect("valid native sprite hide");
-        self.source_display.idle_to_target().expect("valid shared native display time");
+        self.source_display.finish_native_frame().expect("valid shared native display time");
     }
 
     fn update_native_inner(&mut self, input: &InputState) {
@@ -3650,6 +3649,21 @@ impl PokemonGame {
     #[cfg(feature = "debug-server")]
     pub fn debug_work_pending(&self) -> bool {
         self.pending_debug_frames > 0 || !self.pending_debug_inputs.is_empty()
+    }
+
+    /// The source IRQ owns clock/input work while attached. Keep that handoff
+    /// separate from the large screen dispatch, including its ordinary path.
+    #[inline(always)]
+    fn update_native_clock(&mut self, input: &InputState) -> bool {
+        if !self.field_irq_owns_clock() && self.soft_reset_counter.poll(input.raw_current()) {
+            self.soft_reset();
+            return true;
+        }
+        if self.field_flash.is_none() {
+            if self.game_timer_active() { self.save_data.game_data.play_time.tick(); }
+            if let Some(ref audio) = self.audio { audio.update_frame(); }
+        }
+        false
     }
 
     fn update_inner(&mut self, input: &InputState) {
@@ -3746,20 +3760,7 @@ impl PokemonGame {
         // hSoftReset=16; releasing the combo does not reset that counter.
         // This adapter supplies one poll per Game update, not a model of
         // every original foreground owner's polling cadence.
-        if !self.field_irq_owns_clock() && self.soft_reset_counter.poll(input.raw_current()) {
-            self.soft_reset();
-            return;
-        }
-
-        // Tick play time every frame once the game proper has started
-        // (TrackPlayTime from VBlank — see game_timer_active).
-        if self.field_flash.is_none() && self.game_timer_active() {
-            self.save_data.game_data.play_time.tick();
-        }
-
-        if self.field_flash.is_none() {
-            if let Some(ref audio) = self.audio { audio.update_frame(); }
-        }
+        if self.update_native_clock(input) { return; }
 
         if self.black_screen_frames > 0 {
             self.black_screen_frames -= 1;
@@ -7336,7 +7337,7 @@ impl PokemonGame {
             "vblank_epoch": self.source_display.device().vblank_epoch(),
             "pending_interrupts": self.source_display.device().pending_interrupts(),
             "active_vblank": self.source_display.active_vblank(),
-            "interrupt_returns": pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&self.source_display),
+            "interrupt_returns": pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*self.source_display),
             "palette_stores": self.source_display.palette_store_receipts(),
             "lcdc": self.source_display.device().read_port(0xff40).ok(),
             "ly": self.source_display.device().read_port(0xff44).ok(),

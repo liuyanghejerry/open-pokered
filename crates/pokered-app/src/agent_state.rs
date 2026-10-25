@@ -217,7 +217,7 @@ impl PokemonGame {
         Ok(GameSnapshot {
             version: 2,
             frame_count: self.frame_count,
-            source_display: Some(self.source_display.clone()),
+            source_display: Some(self.source_display.as_time().clone()),
             screen,
             save_data: self.save_data.clone(),
             overworld: OverworldSnapshot::capture(&self.overworld),
@@ -265,11 +265,11 @@ impl PokemonGame {
             GameScreenTag::Battle => GameScreen::Battle,
         };
         self.frame_count = snapshot.frame_count;
-        self.source_display = snapshot.source_display.clone().unwrap_or_else(|| {
+        self.source_display = Box::new(snapshot.source_display.clone().unwrap_or_else(|| {
             pokered_core::overworld::display_work_time::DisplayWorkTime::legacy_native_projection(
                 snapshot.frame_count,
             )
-        });
+        }).into());
         self.save_data = snapshot.save_data.clone();
         snapshot.overworld.restore_into(&mut self.overworld);
         snapshot.battle.restore_into(&mut self.battle);

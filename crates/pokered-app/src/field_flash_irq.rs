@@ -154,7 +154,7 @@ impl PokemonGame {
     pub(in crate::game) fn discard_field_flash(&mut self) {
         if let Some(flow) = self.field_flash.take() {
             if flow.irq.as_ref().is_some_and(|irq| irq.attached) {
-                self.source_display = pokered_core::overworld::display_work_time::DisplayWorkTime::legacy_native_projection(self.frame_count);
+                self.source_display = Box::new(pokered_core::overworld::display_work_time::DisplayWorkTime::legacy_native_projection(self.frame_count).into());
             }
             #[cfg(any(test, feature = "debug-server"))]
             { self.source_audio_work = None; }
@@ -245,14 +245,14 @@ impl PokemonGame {
             }
             let bind = |format| -> Result<VBlankPatternWork, String> {
                 match self.source_display.video_requests().snapshot(format).size {
-                    Some(0) => VBlankPatternWork::idle_from_live(&self.source_display, format)
+                    Some(0) => VBlankPatternWork::idle_from_live(&*self.source_display, format)
                         .map_err(|e| format!("{e:?}")),
                     Some(_) => {
                         let binding = irq
                             .binding
                             .filter(|b| b.format == format)
                             .ok_or("active video source identity unavailable")?;
-                        VBlankPatternWork::from_live_request(&self.source_display, binding)
+                        VBlankPatternWork::from_live_request(&*self.source_display, binding)
                             .map_err(|e| format!("{e:?}"))
                     }
                     None => Err("unknown native video request size".into()),
@@ -272,7 +272,7 @@ impl PokemonGame {
                 };
                 let input = super::super::field_oam_inputs::field_oam_input(
                     &self.overworld,
-                    &self.source_display,
+                    &*self.source_display,
                     slots,
                 )
                 .map_err(|e| format!("native actor input: {e:?}"))?;
@@ -382,7 +382,7 @@ impl PokemonGame {
         let assets = NativePatternAssets::new(resources);
         loop {
             match irq.work.as_mut().unwrap().run_until_boundary(
-                &mut self.source_display,
+                &mut *self.source_display,
                 &mut flow.patterns,
                 &assets,
             ) {
@@ -398,7 +398,7 @@ impl PokemonGame {
                         irq.audio = Some(Box::new(audio.begin_source_audio_frame_with_bus(bank, 0)
                             .map_err(|e| format!("source audio entry: {e:?}"))?));
                     }
-                    let time = &mut self.source_display;
+                    let time = &mut *self.source_display;
                     let result = audio.resume_source_audio_frame_with_bus(
                         irq.audio.as_mut().unwrap(), |apu, instruction| {
                             let offset = match instruction.access {
@@ -471,9 +471,9 @@ impl PokemonGame {
     pub(super) fn step_field_wait(&mut self, flow: &mut FieldFlash) -> Result<bool, String> {
         let irq = flow.irq.as_mut().ok_or("FLASH IRQ input missing")?;
         let result = if let Some(delay) = irq.delay.as_mut() {
-            delay.step(&mut self.source_display)
+            delay.step(&mut *self.source_display)
         } else if let Some(copy) = irq.copy.as_mut() {
-            copy.step(&mut self.source_display)
+            copy.step(&mut *self.source_display)
         } else {
             return Ok(true);
         };
@@ -491,7 +491,7 @@ impl PokemonGame {
                         .waits
                         .last_mut()
                         .ok_or("missing foreground wait observation")?;
-                    receipt.completed_returns = Some(pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&self.source_display));
+                    receipt.completed_returns = Some(pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*self.source_display));
                     receipt.completed_tcycles = Some(self.source_display.elapsed());
                 } else {
                     irq.copy = None;

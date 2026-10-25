@@ -518,7 +518,7 @@ impl DisplayDevice {
         }
         self.stat_edge();
     }
-    /// Exact periodic state in an unmodified VBlank. No OBJ/window/STAT/DMA
+    /// Exact settled periodic state. No OBJ/window/STAT/DMA
     /// work can change a line length or publish data during this interval.
     /// The bounded predicate also rejects malformed deserialized state; all
     /// other states continue through the fully validated event path.
@@ -530,12 +530,9 @@ impl DisplayDevice {
         self.try_idle_checked_period(period)
     }
     #[inline(always)]
-    fn idle_period_eligible(&self, from: u64) -> bool {
-        if self.phase != RasterPhase::VBlank
-            || self.lcdc & 0xa2 != 0x80
-            || (self.first_frame | self.stat_irq_line | self.window_y_reached)
-            || !(144..=153).contains(&self.ly)
-            || !(1..=456).contains(&self.phase_remaining)
+    pub(super) fn idle_period_eligible(&self, from: u64) -> bool {
+        if self.lcdc & 0xa2 != 0x80
+            || (self.first_frame | self.stat_irq_line)
             || self.mode3_length != 172 + u16::from(self.scx & 7)
             || self.dma.is_some()
             || self.stat_enable != 0
@@ -545,7 +542,21 @@ impl DisplayDevice {
         {
             return false;
         }
-        true
+        let phase_limit = match self.phase {
+            RasterPhase::Mode2 if self.ly < 144 => 80,
+            RasterPhase::Mode3 if self.ly < 144 => self.mode3_length,
+            RasterPhase::HBlank if self.ly < 144 => {
+                (if self.ly < 143 { 372 } else { 376 }) - self.mode3_length
+            }
+            RasterPhase::AdvanceLy if (1..144).contains(&self.ly) => 4,
+            RasterPhase::VBlank if (144..=153).contains(&self.ly) => 456,
+            _ => return false,
+        };
+        (1..=phase_limit).contains(&self.phase_remaining)
+            && self.window_y_reached
+                == (self.ly < 144
+                    && (self.wy < self.ly
+                        || (self.wy == self.ly && self.phase != RasterPhase::AdvanceLy)))
     }
     #[inline(always)]
     pub(super) fn try_idle_checked_period(&mut self, period: CheckedFramePeriod) -> bool {
@@ -562,6 +573,17 @@ impl DisplayDevice {
         debug_assert!(self.idle_period_eligible(period.from));
         self.observed_tcycles = period.target;
         self.vblank_epoch += 1;
+        self.iflags |= 1;
+    }
+
+    /// An exclusive native clock may defer unchanged whole periods. Its
+    /// eligibility receipt is invalidated before any mutable device access.
+    pub(super) fn advance_eligible_periods(&mut self, periods: u32, target: u64) {
+        debug_assert!(periods != 0);
+        debug_assert!(self.idle_period_eligible(self.observed_tcycles));
+        debug_assert_eq!(target - self.observed_tcycles, u64::from(periods) * 154 * 456);
+        self.observed_tcycles = target;
+        self.vblank_epoch += u64::from(periods);
         self.iflags |= 1;
     }
 
@@ -1041,6 +1063,37 @@ mod tests {
                     small.observe_time(time, &[0; 160]).unwrap();
                 }
                 assert_eq!(fast, small, "frame={frame} wy={wy}");
+            }
+        }
+    }
+    #[test]
+    fn periodic_idle_matches_small_steps_from_every_settled_phase() {
+        for scx in [0, 1, 7] {
+            for wy in [0, 1, 17, 143, 144, 255] {
+                let mut base = DisplayDevice::powered_off(0);
+                base.write_port(0xff40, 0x91, 0xc3).unwrap();
+                base.write_port(0xff43, scx, 0xc3).unwrap();
+                base.write_port(0xff4a, wy, 0xc3).unwrap();
+                base.observe_time(2 * 154 * 456, &[0; 160]).unwrap();
+                // Visit both sides of each phase transition over a full scan.
+                let end = base.observed_tcycles + 154 * 456;
+                while base.observed_tcycles < end {
+                    let start = base.observed_tcycles;
+                    for tail in [0, u64::from(base.phase_remaining) - 1] {
+                        let mut fast = base.clone();
+                        fast.observe_time(start + tail, &[0; 160]).unwrap();
+                        let mut small = fast.clone();
+                        let target = start + tail + 154 * 456;
+                        assert!(fast.try_idle_vblank_period(target));
+                        let mut at = start + tail;
+                        while at < target {
+                            at = (at + 4096).min(target);
+                            small.observe_time(at, &[0; 160]).unwrap();
+                        }
+                        assert_eq!(fast, small, "scx={scx} wy={wy} start={start} tail={tail}");
+                    }
+                    base.observe_time(start + u64::from(base.phase_remaining), &[0; 160]).unwrap();
+                }
             }
         }
     }
