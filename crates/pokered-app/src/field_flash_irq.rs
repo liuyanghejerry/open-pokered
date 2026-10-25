@@ -20,6 +20,51 @@ use pokered_core::overworld::{
     video_request_ports::PatternRomBinding,
 };
 
+struct FieldAudioBus<'a> {
+    time: pokered_core::overworld::display_work_time::DisplayBus<'a>,
+}
+
+#[cfg(test)]
+#[path = "field_flash_audio_bus_tests.rs"]
+mod audio_bus_tests;
+impl pokered_audio::source_clock::apu_bus::SourceAudioFrameBus for FieldAudioBus<'_> {
+    type Error = DisplayWorkError;
+
+    fn execute(
+        &mut self,
+        apu: &mut pokered_audio::apu::Apu,
+        instruction: pokered_audio::source_clock::apu_bus::ApuInstruction,
+    ) -> Result<Option<u8>, Self::Error> {
+        use pokered_audio::source_clock::apu_bus::ApuAccess;
+        let offset = match instruction.access {
+            Some(ApuAccess::Read { at_tcycle, .. })
+            | Some(ApuAccess::Write { at_tcycle, .. }) => at_tcycle,
+            None => 0,
+        };
+        self.time.execute_external_irq_access(instruction.tcycles, offset, || {
+            match instruction.access {
+                Some(ApuAccess::Read { address, .. }) => Some(apu.read_register(address)),
+                Some(ApuAccess::Write { address, value, .. }) => {
+                    apu.write_register(address, value); None
+                }
+                None => None,
+            }
+        })
+    }
+
+    fn execute_plain_run(
+        &mut self,
+        _apu: &mut pokered_audio::apu::Apu,
+        tcycles: &[u8],
+    ) -> Result<usize, Self::Error> {
+        use pokered_core::overworld::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
+        self.time.execute_plain_run(tcycles.iter().map(|&tcycles| DisplayInstruction {
+            tcycles,
+            access: None,
+        }))
+    }
+}
+
 #[derive(serde::Serialize)]
 pub(super) struct FieldIrq {
     pub attached: bool,
@@ -389,7 +434,7 @@ impl PokemonGame {
                 Ok(IrqProgress::Instruction) => (),
                 Ok(IrqProgress::NeedsAudio3) => {
                     use pokered_audio::source_clock::{
-                        AudioAdmissionError, apu_bus::ApuAccess,
+                        AudioAdmissionError,
                         frame_instructions::FrameStepError,
                     };
                     let audio = self.audio.as_ref().ok_or("native audio owner unavailable")?;
@@ -400,24 +445,9 @@ impl PokemonGame {
                     }
                     // One exclusive display bus spans the audio continuation;
                     // each instruction still observes its own IO/budget edge.
-                    let mut time = self.source_display.display_bus();
-                    let result = audio.resume_source_audio_frame_with_bus(
-                        irq.audio.as_mut().unwrap(), |apu, instruction| {
-                            let offset = match instruction.access {
-                                Some(ApuAccess::Read { at_tcycle, .. })
-                                | Some(ApuAccess::Write { at_tcycle, .. }) => at_tcycle,
-                                None => 0,
-                            };
-                            time.execute_external_irq_access(instruction.tcycles, offset, || {
-                                match instruction.access {
-                                    Some(ApuAccess::Read { address, .. }) => Some(apu.read_register(address)),
-                                    Some(ApuAccess::Write { address, value, .. }) => {
-                                        apu.write_register(address, value); None
-                                    }
-                                    None => None,
-                                }
-                            })
-                        },
+                    let result = audio.resume_source_audio_frame_with_runner(
+                        irq.audio.as_mut().unwrap(),
+                        FieldAudioBus { time: self.source_display.display_bus() },
                     );
                     let work = match result {
                         Ok(work) => work,

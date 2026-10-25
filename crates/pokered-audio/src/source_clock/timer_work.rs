@@ -59,6 +59,45 @@ impl EffectInstructionWork {
     pub fn finished(&self) -> bool {
         self.stage == EffectStage::Done
     }
+    /// Fixed instruction prefixes within the current source basic block. The
+    /// data-dependent final branch and the actual APU store remain separate.
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use EffectStage::*;
+        let (code, index): (&[u8], u8) = match self.stage {
+            Entry(n) => (&[8, 12, 8, 8, 8, 12, 4, 8, 4, 8], n),
+            Paired(n) if n < 4 => (&[12, 8, 8, 4], n),
+            Duty(n) | Pitch(n) => (&[12, 8, 12, 12], n),
+            Execute(n) if n < 4 => (&[8, 12, 8, 12], n),
+            Noise(n) if n < 3 => (&[12, 8, 12], n),
+            Delay(n) | Extent(n) if n < 4 => (&[12, 8, 8, 4], n),
+            Rate(n) if n < 6 => (&[4, 12, 8, 8, 8, 4], n),
+            Apply(n) => (&[8, 16, 8, 8, 12, 8, 8, 12, 8, 12], n),
+            Subtract(n) if n < 6 => (&[16, 4, 8, 4, 4, 4], n),
+            Add(n) if n < 5 => (&[16, 4, 8, 8, 4], n),
+            Output(n) => (&[4, 8, 24], n),
+            Register(n) => (&[4, 12, 4, 12, 4, 8, 4, 4, 8, 16], n),
+            Decay(n) => (&[12, 16], n),
+            _ => return &[],
+        };
+        &code[usize::from(index)..]
+    }
+
+    /// Commit exactly the accepted prefix. Only its last instruction can
+    /// leave this block, so the existing transition logic remains authoritative.
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize) -> u32 {
+        use EffectStage::*;
+        let prefix = self.plain_prefix();
+        assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        match &mut self.stage {
+            Entry(n) | Paired(n) | Duty(n) | Execute(n) | Noise(n) | Pitch(n)
+            | Delay(n) | Extent(n) | Rate(n) | Apply(n) | Subtract(n) | Add(n)
+            | Output(n) | Register(n) | Decay(n) => *n += (count - 1) as u8,
+            _ => unreachable!("nonempty plain prefix"),
+        }
+        self.advance();
+        cycles
+    }
     pub(crate) fn peek(&self) -> Option<u8> {
         use EffectStage::*;
         let i = self.input;
@@ -588,6 +627,31 @@ mod tests {
             assert!(work.finished());
             assert_eq!(work.next(), None);
         }
+    }
+
+    #[test]
+    fn every_effect_plain_prefix_preserves_all_instruction_boundaries_and_stores() {
+        let mut prefixes = 0;
+        for case in fixture().effects {
+            let mut cursor = EffectInstructionWork::new(case.input).unwrap();
+            while !cursor.finished() {
+                for count in 1..=cursor.plain_prefix().len() {
+                    let mut expected = cursor;
+                    let mut cycles = 0;
+                    for &t in &cursor.plain_prefix()[..count] {
+                        assert_eq!(expected.pending_apu_write(), None);
+                        assert_eq!(expected.next(), Some(t));
+                        cycles += u32::from(t);
+                    }
+                    let mut actual = cursor;
+                    assert_eq!(actual.accept_plain_prefix(count), cycles);
+                    assert_eq!(actual, expected);
+                    prefixes += 1;
+                }
+                cursor.next();
+            }
+        }
+        assert!(prefixes > 10_000);
     }
 
     #[test]

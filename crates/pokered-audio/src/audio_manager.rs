@@ -622,7 +622,7 @@ impl AudioManager {
     pub fn resume_source_audio_frame_with_bus<E>(
         &mut self,
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
-        mut execute: impl FnMut(
+        execute: impl FnMut(
             &mut crate::apu::Apu,
             crate::source_clock::apu_bus::ApuInstruction,
         ) -> Result<Option<u8>, E>,
@@ -630,6 +630,22 @@ impl AudioManager {
         crate::source_clock::AudioFrameWork,
         crate::source_clock::AudioAdmissionError<
             crate::source_clock::frame_instructions::FrameStepError<E>,
+        >,
+    > {
+        self.resume_source_audio_frame_with_runner(work, execute)
+    }
+
+    /// Resume with an owner that can also admit exact plain-instruction runs.
+    /// All preflight, fingerprint and once-only commit checks are shared with
+    /// the single-instruction callback API above.
+    pub fn resume_source_audio_frame_with_runner<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &mut self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        mut bus: B,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<B::Error>,
         >,
     > {
         use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
@@ -654,9 +670,7 @@ impl AudioManager {
         let prepared = self
             .prepare_source_frame()
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
-        work.run_with_bus(&self.engine.sequencer, |op| {
-            execute(&mut self.engine.apu, op)
-        })
+        work.run_with_bus(&self.engine.sequencer, &mut self.engine.apu, &mut bus)
         .map_err(AudioAdmissionError::Admission)?;
         if prepared.work()
             != (AudioFrameWork {

@@ -140,6 +140,19 @@ impl AudioOutput {
         result
     }
 
+    /// Resume under an exclusive owner that supports exact instruction runs.
+    pub fn resume_source_audio_frame_with_runner<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        bus: B,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<B::Error>>,
+    > {
+        let result = self.manager.borrow_mut().resume_source_audio_frame_with_runner(work, bus);
+        if result.is_ok() { self.last_frame.set(clock_now()); }
+        result
+    }
+
     pub fn update_frame(&self) {
         let now = clock_now();
         let elapsed = now.wrapping_sub(self.last_frame.replace(now));

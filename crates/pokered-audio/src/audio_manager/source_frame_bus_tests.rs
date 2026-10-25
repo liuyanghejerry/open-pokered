@@ -230,8 +230,33 @@ fn whole_source_apu_accesses_match_original_and_commit_never_replays_batch_outpu
 
 #[test]
 fn source_frame_runner_matches_single_instructions_through_refusal_and_resume() {
+    struct PrefixBus<'a> {
+        ops: &'a mut Vec<ApuInstruction>,
+        allowance: usize,
+        enabled: bool,
+        combined: &'a mut usize,
+    }
+    impl crate::source_clock::apu_bus::SourceAudioFrameBus for PrefixBus<'_> {
+        type Error = &'static str;
+        fn execute(&mut self, apu: &mut crate::apu::Apu, op: ApuInstruction) -> Result<Option<u8>, Self::Error> {
+            if self.ops.len() == self.allowance { return Err("yield"); }
+            self.ops.push(op);
+            Ok(execute(apu, op))
+        }
+        fn execute_plain_run(&mut self, apu: &mut crate::apu::Apu, cycles: &[u8]) -> Result<usize, Self::Error> {
+            if !self.enabled { return Ok(0); }
+            let count = cycles.len().min(self.allowance - self.ops.len());
+            if count == 0 { return Err("yield"); }
+            self.ops.extend(cycles[..count].iter().map(|&t| ApuInstruction::plain(t)));
+            apu.tick_n(cycles[..count].iter().map(|&t| u32::from(t)).sum());
+            *self.combined += 1;
+            Ok(count)
+        }
+    }
     let fixture: BusFixture =
         serde_json::from_str(include_str!("../source_clock/frame_bus_golden.json")).unwrap();
+    let mut combined = 0;
+    for enabled in [false, true] {
     for case in fixture.cases.iter().step_by(37) {
         for allowance in [1, 17, 31, 128] {
             let manager = at_frame(case);
@@ -242,17 +267,16 @@ fn source_frame_runner_matches_single_instructions_through_refusal_and_resume() 
             loop {
                 let frozen = actual.clone();
                 assert_eq!(
-                    actual.run_with_bus(&manager.sequencer, |_| Err("denied")),
+                    actual.run_with_bus(&manager.sequencer, &mut actual_apu,
+                        &mut |_: &mut crate::apu::Apu, _: ApuInstruction| Err::<Option<u8>, _>("denied")),
                     Err(FrameStepError::Clock("denied")),
                 );
                 assert_eq!(actual, frozen);
                 actual = serde_json::from_slice(&serde_json::to_vec(&actual).unwrap()).unwrap();
                 let mut actual_ops = Vec::new();
                 let mut expected_ops = Vec::new();
-                let result = actual.run_with_bus(&manager.sequencer, |op| {
-                    if actual_ops.len() == allowance { return Err("yield"); }
-                    actual_ops.push(op);
-                    Ok(execute(&mut actual_apu, op))
+                let result = actual.run_with_bus(&manager.sequencer, &mut actual_apu, &mut PrefixBus {
+                    ops: &mut actual_ops, allowance, enabled, combined: &mut combined,
                 });
                 let reference = loop {
                     match expected.try_step_with_bus(&manager.sequencer, |op| {
@@ -271,11 +295,13 @@ fn source_frame_runner_matches_single_instructions_through_refusal_and_resume() 
                 assert_eq!(actual_apu.playback_state(), expected_apu.playback_state());
                 if result.is_ok() { break; }
             }
-            actual.run_with_bus(&manager.sequencer, |_| -> Result<_, ()> {
+            actual.run_with_bus(&manager.sequencer, &mut actual_apu, &mut |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> {
                 panic!("completed frame must not execute")
             }).unwrap();
         }
     }
+    }
+    assert!(combined > 0);
 }
 
 #[test]

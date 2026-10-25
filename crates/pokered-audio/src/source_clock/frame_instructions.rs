@@ -435,13 +435,14 @@ impl SourceAudioFrame {
         self.step_inner(seq, execute)
     }
     /// Keep an effect child borrowed until it returns or the clock refuses an
-    /// instruction. Each instruction still visits the caller's bus; only the
-    /// enclosing frame dispatch and duplicate effect lookup are avoided.
-    pub(crate) fn run_with_bus<E>(
+    /// instruction. The bus may accept a fixed prefix without APU accesses;
+    /// otherwise each instruction retains its original individual callback.
+    pub(crate) fn run_with_bus<B: super::apu_bus::SourceAudioFrameBus>(
         &mut self,
         seq: &Sequencer,
-        mut execute: impl FnMut(super::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
-    ) -> Result<(), FrameStepError<E>> {
+        apu: &mut crate::apu::Apu,
+        bus: &mut B,
+    ) -> Result<(), FrameStepError<B::Error>> {
         use super::apu_bus::ApuInstruction;
         if !self.physical_output {
             return Err(FrameStepError::ChangedProgram);
@@ -450,13 +451,23 @@ impl SourceAudioFrame {
             if let Stage::Effect(work) = &mut self.stage {
                 assert!(!work.finished(), "pending effect");
                 loop {
+                    let prefix = work.plain_prefix();
+                    if prefix.len() > 1 {
+                        let count = bus.execute_plain_run(apu, prefix)
+                            .map_err(FrameStepError::Clock)?;
+                        if count != 0 {
+                            self.cycles += work.accept_plain_prefix(count);
+                            if work.finished() { break; }
+                            continue;
+                        }
+                    }
                     let mut accepted = 0;
                     let done = work.try_step_with_apu(|t, write| {
                         let op = write.map_or_else(
                             || ApuInstruction::plain(t),
                             |w| ApuInstruction::write(t, w.address, w.value),
                         );
-                        execute(op)?;
+                        bus.execute(apu, op)?;
                         accepted = t;
                         Ok(())
                     }).map_err(FrameStepError::Clock)?;
@@ -465,7 +476,7 @@ impl SourceAudioFrame {
                 }
                 self.stage = Stage::Tail(0);
             } else {
-                self.step_inner(seq, &mut execute)?;
+                self.step_inner(seq, |op| bus.execute(apu, op))?;
             }
         }
         Ok(())
