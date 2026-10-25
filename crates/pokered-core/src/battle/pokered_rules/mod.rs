@@ -951,7 +951,7 @@ fn record_id_for_move(m: MoveId) -> &'static str {
         MoveId::Recover | MoveId::Softboiled => "heal.recover",
         MoveId::Splash => "move.splash",
         // ── P2 side-status moves (chance-gated InflictStatus) ──
-        MoveId::PoisonSting => "side.poison_1",   // PoisonSideEffect1, 51/256
+        MoveId::PoisonSting => "side.poison_1",   // PoisonSideEffect1, 52/256
         MoveId::Sludge | MoveId::Smog => "side.poison_2", // PoisonSideEffect2, 102/256
         MoveId::Ember => "side.burn_1",           // BurnSideEffect1, 26/256
         MoveId::FireBlast => "side.burn_2",       // BurnSideEffect2, 77/256
@@ -3352,7 +3352,8 @@ fn target_has_substitute(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef) 
 fn secondary_status_precluded(ctx: &BattleCtx<'_, PokeredRules>, target: BattlerRef, source: BattlerRef) -> bool {
     let pm = current_move_for(source);
     let immune_type = match pm.effect {
-        MoveEffect::PoisonSideEffect1 | MoveEffect::PoisonSideEffect2 => PokemonType::Poison,
+        MoveEffect::PoisonSideEffect1 | MoveEffect::PoisonSideEffect2
+        | MoveEffect::TwineedleEffect => PokemonType::Poison,
         MoveEffect::BurnSideEffect1 | MoveEffect::BurnSideEffect2
         | MoveEffect::FreezeSideEffect1 | MoveEffect::FreezeSideEffect2
         | MoveEffect::ParalyzeSideEffect1 | MoveEffect::ParalyzeSideEffect2 => pm.move_type,
@@ -3442,6 +3443,16 @@ fn bridge_damaging_hit(
         })));
     let before = ctx.battler(source).stat_stages.clone();
     let result = run_bridge(ctx, relay, target, source, source_effect, Event::DamagingHit);
+    // Twineedle replaces its effect with POISON_SIDE_EFFECT1 in the original.
+    // Dispatch that authored hook after both hits, through the usual pre-roll
+    // guards. A Substitute broken by either hit clears the effect before this
+    // dispatch, even though a later break does not cancel the hit sequence.
+    if matches!(result, HandlerResult::Unchanged)
+        && source_effect_is(source_effect, "multi.twineedle") {
+        if let Some(poison) = move_effect_for(MoveId::PoisonSting) {
+            return run_bridge(ctx, relay, target, source, poison.id, Event::DamagingHit);
+        }
+    }
     if self_boost && [StatIndex::Attack, StatIndex::Defense, StatIndex::Speed,
         StatIndex::Special, StatIndex::Accuracy, StatIndex::Evasion].into_iter()
         .any(|stat| ctx.battler(source).stat_stages.get(stat) != before.get(stat)) {

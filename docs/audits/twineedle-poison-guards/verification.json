@@ -1,0 +1,353 @@
+{
+  "scope": "36 original PoisonEffect guard slices;48 prepared public-FIGHT regression turns. Original second-hit Substitute cancellation additionally follows source control flow; no full original multihit turn or original renderer timing claim.",
+  "original": {
+    "status": "passed",
+    "scope": "Prepared original PoisonEffect entry with POISON_SIDE_EFFECT1 as used by Twineedle final dispatch. Read-only hooks stop the observation at infliction entry, a precondition veto, or rejected-chance return. Confirms guard/RNG ordering only; no complete original multi-hit turn, second-hit doll-break dispatch, animation, narration or poison residual claim.",
+    "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/battle/effects.asm78-118",
+    "source_sha256": "6999bc80f055d4b3dfafb46b8a5188e64d2372f103a800cde33a479c5f6e374e",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "pyboy": "2.8.1",
+    "cases": [
+      {"side":0,"case":"eligible","raw":51,"prepared_status":0,"types":[0,0],"substitute":false,"result":{"branch":"inflict","draws":1,"draw_indices":[0],"target_status_before_infliction":0}},
+      {"side":0,"case":"eligible","raw":52,"prepared_status":0,"types":[0,0],"substitute":false,"result":{"branch":"chance_rejected","draws":1,"draw_indices":[0],"target_status_before_infliction":0}},
+      {"side":0,"case":"burned","raw":51,"prepared_status":16,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":16}},
+      {"side":0,"case":"burned","raw":52,"prepared_status":16,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":16}},
+      {"side":0,"case":"poisoned","raw":51,"prepared_status":8,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":8}},
+      {"side":0,"case":"poisoned","raw":52,"prepared_status":8,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":8}},
+      {"side":0,"case":"paralyzed","raw":51,"prepared_status":64,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":64}},
+      {"side":0,"case":"paralyzed","raw":52,"prepared_status":64,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":64}},
+      {"side":0,"case":"asleep","raw":51,"prepared_status":7,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":7}},
+      {"side":0,"case":"asleep","raw":52,"prepared_status":7,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":7}},
+      {"side":0,"case":"frozen","raw":51,"prepared_status":32,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":32}},
+      {"side":0,"case":"frozen","raw":52,"prepared_status":32,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":32}},
+      {"side":0,"case":"poison_type1","raw":51,"prepared_status":0,"types":[3,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":0,"case":"poison_type1","raw":52,"prepared_status":0,"types":[3,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":0,"case":"poison_type2","raw":51,"prepared_status":0,"types":[0,3],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":0,"case":"poison_type2","raw":52,"prepared_status":0,"types":[0,3],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":0,"case":"substitute","raw":51,"prepared_status":0,"types":[0,0],"substitute":true,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":0,"case":"substitute","raw":52,"prepared_status":0,"types":[0,0],"substitute":true,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"eligible","raw":51,"prepared_status":0,"types":[0,0],"substitute":false,"result":{"branch":"inflict","draws":1,"draw_indices":[0],"target_status_before_infliction":0}},
+      {"side":1,"case":"eligible","raw":52,"prepared_status":0,"types":[0,0],"substitute":false,"result":{"branch":"chance_rejected","draws":1,"draw_indices":[0],"target_status_before_infliction":0}},
+      {"side":1,"case":"burned","raw":51,"prepared_status":16,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":16}},
+      {"side":1,"case":"burned","raw":52,"prepared_status":16,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":16}},
+      {"side":1,"case":"poisoned","raw":51,"prepared_status":8,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":8}},
+      {"side":1,"case":"poisoned","raw":52,"prepared_status":8,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":8}},
+      {"side":1,"case":"paralyzed","raw":51,"prepared_status":64,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":64}},
+      {"side":1,"case":"paralyzed","raw":52,"prepared_status":64,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":64}},
+      {"side":1,"case":"asleep","raw":51,"prepared_status":7,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":7}},
+      {"side":1,"case":"asleep","raw":52,"prepared_status":7,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":7}},
+      {"side":1,"case":"frozen","raw":51,"prepared_status":32,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":32}},
+      {"side":1,"case":"frozen","raw":52,"prepared_status":32,"types":[0,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":32}},
+      {"side":1,"case":"poison_type1","raw":51,"prepared_status":0,"types":[3,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"poison_type1","raw":52,"prepared_status":0,"types":[3,0],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"poison_type2","raw":51,"prepared_status":0,"types":[0,3],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"poison_type2","raw":52,"prepared_status":0,"types":[0,3],"substitute":false,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"substitute","raw":51,"prepared_status":0,"types":[0,0],"substitute":true,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}},
+      {"side":1,"case":"substitute","raw":52,"prepared_status":0,"types":[0,0],"substitute":true,"result":{"branch":"precondition_veto","draws":0,"draw_indices":[],"target_status_before_infliction":0}}
+    ],
+    "full_output_sha256": "cc0ce032072651c0d9588c761304b155e7984228a5b5bc8c6d81e9fa0eeaf364"
+  },
+  "red": {
+    "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+    "source_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff",
+    "exit": 101,
+    "seconds": 0.009571586037054658,
+    "libs": {
+      "pokered_app": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+        "sha256": "d5c9ab2d383330eb30b03d7d5b3301b6d248d3709e71cd135417a73f9b91ad4d"
+      },
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "d68826d89b6950951cc2c919ffb612e4df0cbfc6ccf2b9143c1eb8cec505fe6e"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "pokered_renderer": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+        "sha256": "10ffb6c484a9930febccd88b0887c34fb781dae342e7cb9a54c86c6b4e1dfbb8"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "exe_sha256": "5f55ed3233bc6cef5c081f21eb7583564dce69fcb0a42b4b671d4232ce746b0c",
+    "deleted_exe_bytes": 14831528,
+    "log_sha256": "2c20823b2e7c18f7d983a00e246b427d305158375efbd933e35dfad697c21b31",
+    "scope": "3 tests execute all48 prepared public FIGHT turns with drained presentations; original preconditions and new poison boundary assertions."
+  },
+  "counts": {
+    "core": [
+      3761,
+      0,
+      1
+    ],
+    "app-test": [
+      393,
+      0,
+      38
+    ]
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+    "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff",
+    "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+    "exit": 0,
+    "seconds": 31.221135059953667
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+    "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff",
+    "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+    "exit": 0,
+    "seconds": 70.86821165005676
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T02:47:11.535555+00:00",
+    "source": {
+      "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+      "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+      "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 70.91667668602895,
+        "log": "audit-1334-twineedle-app-test-driver.log",
+        "log_sha256": "3daa82201f2772cbb2293b207980a8f72d792e297ae904fb5776768d7a8f3610"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 81.09069280000404,
+        "log": "audit-1334-twineedle-gba-build-driver.log",
+        "log_sha256": "60309d628f48d499985c294e111c885da5b37d9ad8b453906454e0514540c51c"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.382851846050471,
+        "log": "audit-1334-twineedle-gba-perf-driver.log",
+        "log_sha256": "f9f9fe33b951fe1bb4dcb8593a4d407e114fa1bd92ec6a34e37ed36bb182dee0"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 78.15340776299126,
+        "log": "audit-1334-twineedle-memory-build-driver.log",
+        "log_sha256": "0954d78f6ddf239d71e7c178daf8423df6413df387864ec6d0adaad9742d2713"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 174.3465637959307,
+        "log": "audit-1334-twineedle-memory-run-driver.log",
+        "log_sha256": "f1112e7149cf349423dc104828b5428f8cde03971d5705b925ee82dadb61fccb"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1334-twineedle-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 31.33001344196964,
+        "log": "audit-1334-twineedle-native-build-driver.log",
+        "log_sha256": "e053c951e6653493c6c9cd7af1dbc5f4614608a006a1576043036868ba2972d0"
+      }
+    ],
+    "finished": "2026-10-25T02:54:30.844251+00:00",
+    "unchanged_source": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+      "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+      "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff",
+      "binary_sha256": "5a83ee3ed1b809bb18457cc366662a7bf44853d01ca06e063e059d6f3639da4d"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1334-twineedle",
+    "status": "passed",
+    "seconds": 40.91543151496444,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+      "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+      "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff",
+      "binary_sha256": "5a83ee3ed1b809bb18457cc366662a7bf44853d01ca06e063e059d6f3639da4d"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1334-twineedle",
+    "status": "passed",
+    "seconds": 159.76889724796638,
+    "unchanged_source_and_binary": true
+  },
+  "memory": {
+    "pass": true,
+    "error": null,
+    "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "064a6d55a38b44448686bc6f31f0744cb3c67f85e0c3fcf5204a59e6a94ada75",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+    "seconds": 174.0214667309774,
+    "frames": 323040,
+    "cases": 13,
+    "min_heap": 4928,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "performance": {
+    "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+    "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "09e26a93dd8045d8d21685c70141389ced1cc9b39293b04afaed9a4189e8f054",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "db83e8f1486f7d9b1559236dffd70fff40092a32322021f92c121e27ac69f878",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.944616634049453,
+    "failures": [],
+    "metrics": "audit-1334-twineedle-gba-perf-metrics.json",
+    "log": "audit-1334-twineedle-gba-perf.log"
+  },
+  "render": {
+    "input_trace_sha256": "5dac24782c387d90b768ca5d3dba1dda240415d29f22a254f4965bfec09594e1",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1334-twineedle-visual.rs",
+    "source_sha256": "57896f0e0350ce082c3faae099c479e08a669840a068decd2c4c653894eed90f",
+    "frame": 427,
+    "before": {
+      "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+      "tree": "3e4ef35b1da76e2ae4abc27773bc04c807f9e1f9",
+      "source": "audit-1334-twineedle-visual.rs",
+      "source_sha256": "57896f0e0350ce082c3faae099c479e08a669840a068decd2c4c653894eed90f",
+      "exe_sha256": "ca903f95377e3024ed0a2f1e22b6489dfecf83792dcbc22a9829538855583806",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "d5c9ab2d383330eb30b03d7d5b3301b6d248d3709e71cd135417a73f9b91ad4d"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "d68826d89b6950951cc2c919ffb612e4df0cbfc6ccf2b9143c1eb8cec505fe6e"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "10ffb6c484a9930febccd88b0887c34fb781dae342e7cb9a54c86c6b4e1dfbb8"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "frame": 427,
+      "input_trace_sha256": "5dac24782c387d90b768ca5d3dba1dda240415d29f22a254f4965bfec09594e1",
+      "output": "STAGE attack=0\nCAPTURE frame=427 completed_turns=0 player_display_hp=450 draws=4 message=Some(\"SNORLAX was poisoned!\") phase=ShowingText { messages: [\"SNORLAX used SPLASH!\", \"No effect!\", \"Enemy MEWTWO used TWINEEDLE!\", \"Hit 2 times!\", \"SNORLAX was poisoned!\", \"SNORLAX's SUBSTITUTE broke!\"], current: 4, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "b03e7d931e566ad0b1c9f9b2ff97ac8f7ced1e409fafbed658286d6021992872"
+    },
+    "after": {
+      "source_identity": {
+        "head": "7188eab7a3745d285f6e9f4c3536db75ac281d07",
+        "diff_sha256": "0f60b66a12904c4e33526126ea722217fe97df3d3003523616f503d33991b86d",
+        "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "f46fe161b7578a5fef2050330c9e0583a124d6961c93b60c91fa2bccb009a132"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "0358d4874acecf53ac8a5ab713f4ca908ec08be44eb5d9779fdf5d1fb282e832"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "d9fd5cdeed6ff0f5bd84861cd9288a2c734e2a0a919cd729b17d4d8dcd802e3d"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "d0edca7f703eb7ccce5dfaabd7454ed9493333e05133c86c31b640538a3dff4e",
+      "output": "STAGE attack=0\nCAPTURE frame=427 completed_turns=0 player_display_hp=450 draws=3 message=Some(\"SNORLAX's SUBSTITUTE broke!\") phase=ShowingText { messages: [\"SNORLAX used SPLASH!\", \"No effect!\", \"Enemy MEWTWO used TWINEEDLE!\", \"Hit 2 times!\", \"SNORLAX's SUBSTITUTE broke!\"], current: 4, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "5f4abf5af4309008b2a94e5c93a258716e1cad950cc487982fa12de947c200d5"
+    },
+    "deleted_exe_bytes": 36334336
+  },
+  "visual_inspection": {
+    "both_images_inspected": true,
+    "frame": 427,
+    "before": "SNORLAX was poisoned! and PSN,450/450 HP",
+    "after": "SNORLAX's SUBSTITUTE broke! and L100,450/450 HP",
+    "before_sha256": "b03e7d931e566ad0b1c9f9b2ff97ac8f7ced1e409fafbed658286d6021992872",
+    "after_sha256": "5f4abf5af4309008b2a94e5c93a258716e1cad950cc487982fa12de947c200d5",
+    "scope": "Actual battle renderer from prepared public FIGHT inputs; identical input trace/frame; no original render/audio timing claim."
+  },
+  "test_sha256": "f420569a16739fac09972663b4cec4541f673c30bf59b34d87eabc54371231ff"
+}
