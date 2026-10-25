@@ -12,6 +12,46 @@ use super::timer_work::{ChannelEffectWorkInput, EffectInstructionWork};
 use super::{AudioClockError, AudioFrameWork};
 use crate::{music_data::MusicId, sequencer::Sequencer};
 
+// Keep the persisted FNV-1a fingerprint exactly, including inactive programs.
+// On Thumb-1 the generic u64 multiply calls __aeabi_lmul for every byte.
+fn program_fingerprint(data: &[u8]) -> u64 {
+    data.iter().fold(0xcbf2_9ce4_8422_2325, |hash, &byte| {
+        let value = hash ^ u64::from(byte);
+        #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
+        {
+            fnv_multiply_arm32(value)
+        }
+        #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
+        {
+            value.wrapping_mul(0x0000_0100_0000_01b3)
+        }
+    })
+}
+
+// The prime is 2^40 + 435. Both 16-bit partial products and their carry fit
+// in u32; the upper word intentionally wraps modulo 2^32, as in the u64 hash.
+#[cfg(any(
+    test,
+    all(target_arch = "arm", target_pointer_width = "32", target_os = "none")
+))]
+#[inline]
+fn fnv_multiply_arm32(value: u64) -> u64 {
+    let lo = value as u32;
+    let hi = (value >> 32) as u32;
+    let low_product = (lo & 0xffff) * 435;
+    let high_product = (lo >> 16) * 435 + (low_product >> 16);
+    let result_lo = (low_product & 0xffff) | (high_product << 16);
+    let result_hi = hi
+        .wrapping_mul(435)
+        .wrapping_add(high_product >> 16)
+        .wrapping_add(lo << 8);
+    (u64::from(result_hi) << 32) | u64::from(result_lo)
+}
+
+#[cfg(test)]
+#[path = "frame_fingerprint_tests.rs"]
+mod fingerprint_tests;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
     any(test, feature = "source-clock-serde"),
@@ -103,9 +143,6 @@ impl NativeStart {
         Self {
             voices: core::array::from_fn(|i| {
                 let c = &seq.channels[i];
-                let hash = c.data.iter().fold(0xcbf29ce484222325u64, |h, b| {
-                    (h ^ u64::from(*b)).wrapping_mul(0x100000001b3)
-                });
                 Voice {
                     active: c.active,
                     id: c.sound_id,
@@ -127,7 +164,7 @@ impl NativeStart {
                     vib_rate: c.vibrato.rate,
                     frequency: c.frequency,
                     saved_low: c.freq_lo_saved,
-                    data_fingerprint: hash,
+                    data_fingerprint: program_fingerprint(&c.data),
                 }
             }),
             music_tempo: seq.music_tempo,
