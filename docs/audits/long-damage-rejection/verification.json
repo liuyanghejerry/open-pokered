@@ -1,0 +1,883 @@
+{
+  "scope": "Remove the 65-draw rejection cutoff. Keep the zero/one early return and rotation. Original isolated RandomizeDamage, native prepared FIGHT and actual renderer; overall phase ordering and full game/clock/m49 validation are outside this repair.",
+  "source": {
+    "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f"
+  },
+  "original_oracle": {
+    "status": "passed",
+    "source_sha256": "a307edb7c5bc614306f7a7a85f6fc98d9b0dcef47b48ff6357df24027bef9387",
+    "pyboy": "2.8.1",
+    "scope": "Original RandomizeDamage subroutine execution with prepared RAM/registers/stack and actual BattleRandom link seeds. Read-only hooks, no ROM patch, no formula reimplementation or full-battle/UI/timing claim.",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "source_reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c engine/battle/core.asm RandomizeDamage",
+    "case_count": 256,
+    "full_output_sha256": "284d5069d909d1c3acf2eaa4b10ff60d0518ea728618146b04a2eccb1cccd4c7",
+    "prepared": {
+      "uniform_seed_list_length": 10,
+      "initial_index": 2,
+      "initial_damage": 2
+    },
+    "observed_groups": [
+      {
+        "uniform_seed_values": [
+          179,
+          181,
+          183,
+          185,
+          187,
+          189,
+          191,
+          193,
+          195,
+          197,
+          199,
+          201,
+          203,
+          205,
+          207,
+          209,
+          211,
+          213,
+          215,
+          217,
+          219,
+          221,
+          223,
+          225,
+          227,
+          229,
+          231,
+          233,
+          235,
+          237,
+          239,
+          241,
+          243,
+          245,
+          247,
+          249,
+          251,
+          253
+        ],
+        "damage": 1,
+        "draws": 1,
+        "final_index": 3
+      },
+      {
+        "uniform_seed_values": [
+          36,
+          38,
+          40,
+          42,
+          44,
+          46,
+          48,
+          50,
+          88,
+          90,
+          92,
+          94,
+          96,
+          98,
+          100,
+          138,
+          140,
+          142,
+          144,
+          146,
+          148,
+          150,
+          152,
+          190,
+          192,
+          194,
+          196,
+          198,
+          200,
+          202,
+          204,
+          242,
+          244,
+          246,
+          248,
+          250,
+          252,
+          254
+        ],
+        "damage": 1,
+        "draws": 8,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          7,
+          9,
+          19,
+          29,
+          39,
+          49,
+          59,
+          61,
+          69,
+          71,
+          79,
+          81,
+          89,
+          91,
+          101,
+          111,
+          121,
+          131,
+          141,
+          143,
+          151,
+          153,
+          161,
+          163,
+          171,
+          173
+        ],
+        "damage": 1,
+        "draws": 17,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          12,
+          14,
+          16,
+          18,
+          20,
+          22,
+          24,
+          26,
+          28,
+          30,
+          32,
+          34,
+          104,
+          106,
+          108,
+          110,
+          112,
+          114,
+          116,
+          118,
+          120,
+          182,
+          184,
+          186,
+          188,
+          206
+        ],
+        "damage": 1,
+        "draws": 26,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          3,
+          5,
+          21,
+          23,
+          37,
+          41,
+          55,
+          57,
+          73,
+          75,
+          105,
+          107,
+          109,
+          123,
+          125,
+          139,
+          157,
+          159,
+          175,
+          177
+        ],
+        "damage": 1,
+        "draws": 35,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          4,
+          8,
+          52,
+          62,
+          66,
+          72,
+          76,
+          86,
+          124,
+          130,
+          134,
+          154,
+          158,
+          168,
+          178,
+          212,
+          216,
+          226,
+          236,
+          240
+        ],
+        "damage": 1,
+        "draws": 44,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          13,
+          15,
+          17,
+          43,
+          45,
+          47,
+          77,
+          99,
+          103,
+          127,
+          129,
+          133,
+          155
+        ],
+        "damage": 1,
+        "draws": 53,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          54,
+          60,
+          82,
+          122,
+          128,
+          156,
+          162,
+          174,
+          180,
+          208,
+          214,
+          220,
+          230
+        ],
+        "damage": 1,
+        "draws": 62,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          31,
+          63,
+          87,
+          95,
+          97,
+          113,
+          137,
+          145
+        ],
+        "damage": 1,
+        "draws": 71,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          6,
+          70,
+          80,
+          166,
+          176,
+          222,
+          224,
+          232
+        ],
+        "damage": 1,
+        "draws": 80,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          1,
+          33,
+          35,
+          65,
+          67,
+          147
+        ],
+        "damage": 1,
+        "draws": 89,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          0,
+          58,
+          64,
+          160,
+          218,
+          234
+        ],
+        "damage": 1,
+        "draws": 98,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          51,
+          83,
+          115,
+          149,
+          165
+        ],
+        "damage": 1,
+        "draws": 107,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          10,
+          74,
+          84,
+          132,
+          170
+        ],
+        "damage": 1,
+        "draws": 116,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          53,
+          85,
+          117,
+          119
+        ],
+        "damage": 1,
+        "draws": 125,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          68,
+          126,
+          164,
+          228
+        ],
+        "damage": 1,
+        "draws": 134,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          25,
+          135,
+          167
+        ],
+        "damage": 1,
+        "draws": 143,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          56,
+          78,
+          238
+        ],
+        "damage": 1,
+        "draws": 152,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          11,
+          169
+        ],
+        "damage": 1,
+        "draws": 161,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          2,
+          136
+        ],
+        "damage": 1,
+        "draws": 170,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          27
+        ],
+        "damage": 1,
+        "draws": 179,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          210
+        ],
+        "damage": 1,
+        "draws": 188,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          93
+        ],
+        "damage": 1,
+        "draws": 197,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          172
+        ],
+        "damage": 1,
+        "draws": 206,
+        "final_index": 1
+      },
+      {
+        "uniform_seed_values": [
+          255
+        ],
+        "damage": 2,
+        "draws": 1,
+        "final_index": 3
+      },
+      {
+        "uniform_seed_values": [
+          102
+        ],
+        "damage": 2,
+        "draws": 8,
+        "final_index": 1
+      }
+    ],
+    "trace_note": "Full read-only BattleRandom index traces are retained locally; all observed outcomes are grouped here without losing any input/result pair."
+  },
+  "native_reproduction": {
+    "scope": "510 prepared public FIGHT/drained turns, both sides, raw0..254 uniform actual LinkRng. Actor level1 attack1, defender defense250 gives typed damage2 including critical. Raw255 excluded due separate accuracy-before-variance gap. Compare to isolated original RandomizeDamage damage2 index2, plus native two critical/accuracy draws.",
+    "parent": "553b6b61355db03c73234864cb390a824174f182",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "1fe7f74ac37c16ee2ad10876cb4ed7ec5410e934b7a68dc67b97da2445bca914"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "source_sha256": "7688fc4759e21ea9f47816b661a9d9cd69ac452affa743d82a9a5dc34a7e2dd1",
+    "exe_sha256": "fa778a09f69d2a190efaab819d9aa4e88b999dd9b83a954475b12a5b6944627c",
+    "exit": 0,
+    "seconds": 0.12391330802347511,
+    "deleted_exe_bytes": 12149504,
+    "full_output_sha256": "d938ddab127d00b2ffe0a64ed6d68987dd60c9e40d5b8895d9510d92cd1cdb44",
+    "cases": 510,
+    "mismatched_draw_cases": 120,
+    "damage_mismatches": 0,
+    "first_mismatch": {
+      "enemy": false,
+      "raw": 0,
+      "damage": 1,
+      "draws": 67,
+      "original_variance": {
+        "damage": 1,
+        "draws": 98,
+        "final_index": 1
+      }
+    }
+  },
+  "red_standalone_pre_fix": {
+    "scope": "Standalone Rust test harness linked to verified parent native libraries. Source not copied into tracked test tree during1331 validation.",
+    "parent": "553b6b61355db03c73234864cb390a824174f182",
+    "libs": {
+      "pokered_core": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+        "sha256": "1fe7f74ac37c16ee2ad10876cb4ed7ec5410e934b7a68dc67b97da2445bca914"
+      },
+      "pokered_data": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+        "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+      },
+      "dotzuki_engine": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+        "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+      }
+    },
+    "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+    "command": [
+      "rustc",
+      "--edition=2021",
+      "--test",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-test.rs",
+      "-L",
+      "dependency=/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps",
+      "-o",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-red.bin",
+      "--extern",
+      "pokered_core=/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+      "--extern",
+      "pokered_data=/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+      "--extern",
+      "dotzuki_engine=/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib"
+    ],
+    "exe_sha256": "94535c2b55cbc3acd600d8175320090b94ec2a441ff9f0dce440b6ebec9ba130",
+    "exit": 101,
+    "seconds": 0.07903280493337661,
+    "deleted_exe_bytes": 14777096
+  },
+  "red_scope_note": "The standalone red/control run links verified 553b6b6 native libraries. The intervening 1331 change only touches trapping captions; the before-render capture is from immediate parent 6ed0896.",
+  "focused": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--test",
+      "fidelity_long_damage_rejection",
+      "--",
+      "--nocapture"
+    ],
+    "base": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+    "diff_sha256": "f1c858084cf4a773f545693c9c2583fa51197a3e3f10412595c315eb9c983ad9",
+    "exit": 0,
+    "seconds": 15.609142905916087
+  },
+  "core": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-core",
+      "--no-fail-fast"
+    ],
+    "base": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "exit": 0,
+    "seconds": 49.63260174402967
+  },
+  "core_totals": {
+    "passed": 3753,
+    "failed": 0,
+    "ignored": 1
+  },
+  "scripted_fixture_corrections": {
+    "diagnostic_tests": 202,
+    "nonterminating_all_zero_fixtures": 43,
+    "scripts_replaced": 45,
+    "existing_assertions_changed": false,
+    "disable_fixture": "Explicit zero accuracy/slot/duration samples, then zero critical/accuracy and raw 179 variance; preserves the one-turn expiration assertion.",
+    "diagnostic_output_sha256": "15d838b900e0eb0da85a3bba9ee8aa858bba3938c21c83c781d4ccef833999e6"
+  },
+  "app": {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--offline",
+      "-p",
+      "pokered-app",
+      "--lib"
+    ],
+    "base": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "exit": 0,
+    "seconds": 80.47149127605371
+  },
+  "app_totals": {
+    "passed": 393,
+    "failed": 0,
+    "ignored": 38
+  },
+  "validation": {
+    "status": "passed",
+    "started": "2026-10-25T01:48:41.437176+00:00",
+    "source": {
+      "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+      "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+      "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f"
+    },
+    "commands": [
+      {
+        "name": "app-test",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-app-test.py"
+        ],
+        "exit": 0,
+        "seconds": 80.5420155118918,
+        "log": "audit-1332-long-variance-app-test-driver.log",
+        "log_sha256": "71e0b5fe9fc2edc19f041b1819f54d79731b3a8b8c6bb2ab4896456d35fff6de"
+      },
+      {
+        "name": "gba-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-gba-build.py"
+        ],
+        "exit": 0,
+        "seconds": 62.976137968944386,
+        "log": "audit-1332-long-variance-gba-build-driver.log",
+        "log_sha256": "70466061f32d4cac8203c9599026c914217b870db137c93628fe50ae2594e14b"
+      },
+      {
+        "name": "gba-perf",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-gba-perf.py"
+        ],
+        "exit": 0,
+        "seconds": 3.2148212289903313,
+        "log": "audit-1332-long-variance-gba-perf-driver.log",
+        "log_sha256": "b3f1958e6c74b3a5a3a7548709cfb93bb92e3ea6ebf04b13a9b8fff619be5f2c"
+      },
+      {
+        "name": "memory-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-memory-build.py"
+        ],
+        "exit": 0,
+        "seconds": 59.60501519893296,
+        "log": "audit-1332-long-variance-memory-build-driver.log",
+        "log_sha256": "d865f93c12d7e51ec90f3a6dc6a31a2a0796abb55675e98f003a53107e54f824"
+      },
+      {
+        "name": "memory-run",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-memory-run.py",
+          "candidate"
+        ],
+        "exit": 0,
+        "seconds": 169.94522319699172,
+        "log": "audit-1332-long-variance-memory-run-driver.log",
+        "log_sha256": "1ccdccd8d4b09213bcc49578c6490dffff9c1ac64d4c2ba2320cf349c0c6d136"
+      },
+      {
+        "name": "native-build",
+        "command": [
+          "/usr/bin/python3",
+          "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1332-long-variance-native-build.py"
+        ],
+        "exit": 0,
+        "seconds": 28.71210511692334,
+        "log": "audit-1332-long-variance-native-build-driver.log",
+        "log_sha256": "b965d914e086632e188609bb7e2bc7ef36e204317b81c8c900f6b9961a05d444"
+      }
+    ],
+    "finished": "2026-10-25T01:55:26.520006+00:00",
+    "unchanged_source": true
+  },
+  "native_build": {
+    "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ],
+    "cwd": "/home/jerry/develop/open-pokered",
+    "exit_code": 0,
+    "candidate_sha256": "48ddf8d1af1100ca0ed7c9bd8047b4c2a16c1ad17eca35a7b6b216072d8531b4",
+    "candidate": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1332-long-variance",
+    "seconds": 24.865247608046047,
+    "historical_binaries_unchanged": true,
+    "hardlinks_only": true
+  },
+  "native_m06": {
+    "mode": "m06",
+    "source": {
+      "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+      "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+      "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+      "binary_sha256": "48ddf8d1af1100ca0ed7c9bd8047b4c2a16c1ad17eca35a7b6b216072d8531b4"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1332-long-variance",
+    "status": "passed",
+    "seconds": 50.3877910830779,
+    "unchanged_source_and_binary": true
+  },
+  "native_scenarios": {
+    "mode": "scenarios",
+    "source": {
+      "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+      "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+      "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f",
+      "binary_sha256": "48ddf8d1af1100ca0ed7c9bd8047b4c2a16c1ad17eca35a7b6b216072d8531b4"
+    },
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1332-long-variance",
+    "status": "passed",
+    "seconds": 145.97218315606005,
+    "unchanged_source_and_binary": true
+  },
+  "gba_performance": {
+    "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "hashes": {
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba": "6bbd711a434ff10d0b6be8d7ef8040a806f1617f5469dd604dd3b776806b9510",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "e3092e5ec9afda753689c8b353a07b18143f5320b7860f6a5472a9d08d3e0da0",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/src/main.rs": "3e9b00e79429c64ba4007d6ef66d23231114e1d365f2eaaa3f50d51759cf5e36",
+      "/home/jerry/develop/open-pokered/crates/pokered-gba/perf-baseline.json": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+      "/home/jerry/develop/open-pokered/scripts/gba_performance.py": "6578ea611e55413b7603b65a91b019f08e3b2a38b571076204d3b2f12e8e2403",
+      "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-current-1306": "f1d4e8f28adbaee0ff72913f351bfb60a06980f1058cb84ff56d6c1e967b52c2"
+    },
+    "frames": 8280,
+    "seconds": 2.7815661169588566,
+    "failures": [],
+    "metrics": "audit-1332-long-variance-gba-perf-metrics.json",
+    "log": "audit-1332-long-variance-gba-perf.log"
+  },
+  "gba_memory": {
+    "pass": true,
+    "error": null,
+    "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+    "hashes": {
+      ".task-tmp/fidelity-1064-payday-target/thumbv4t-none-eabi/release/pokered-gba.gba": "dc15269e789c5341825ce4e2f49164fa3c21cd85e6242f8f82a1c1426e0ef946",
+      ".task-tmp/fidelity-1064-payday-target/debug/pokered-app": "e1bf73f9ace7a8f5a65b75063b8555012b7dc2893044ca3c16730941d976cc99",
+      "crates/pokered-gba/src/memory_scenarios.rs": "1abf0f8cc371be3270e656739127e994058ac2cf9d6891efe627d0d0ff246937",
+      "crates/pokered-gba/src/heap_probe.rs": "6addd85cbd02720339082e18d38710cbc567147473c8faaa21afee28f7237546"
+    },
+    "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+    "seconds": 169.54679099400528,
+    "frames": 324120,
+    "cases": 13,
+    "min_heap": 7816,
+    "min_stack": 8704,
+    "scope": "Unchanged original GBA memory-scenarios fixture and Evidence parser, canonical ROM opened directly, no ROM copies; controlled stress validation, not story parity."
+  },
+  "render_comparison": {
+    "input_trace_sha256": "54768fe4e79e2bab72b3b4475cae32e8f9b3c7585f07c3db09e49d99aacd2c19",
+    "inputs_identical": true,
+    "scope": "Prepared public FIGHT; actual BattleVisualEffects and draw_battle, same input and frame. No full PokemonGame/audio-clock or original-ROM timing claim.",
+    "source": "audit-1332-long-variance-visual.rs",
+    "source_sha256": "3021b08064bcf6991ee6f3c7126fb263d51808280cce686181b7f37a7930345e",
+    "frame": 139,
+    "before": {
+      "base_source_identity": {
+        "head": "553b6b61355db03c73234864cb390a824174f182",
+        "diff_sha256": "cac3c55a6f63a7b6cfd80992aec2b4140f3178420b4de447ea1de65e2e2576e5",
+        "test_sha256": "db77f66f986860191296c3b405bb2f088c1dc95baddbd93baf0fc2e624d12541"
+      },
+      "source": "audit-1332-long-variance-visual.rs",
+      "source_sha256": "3021b08064bcf6991ee6f3c7126fb263d51808280cce686181b7f37a7930345e",
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "0fb48a55ce54775163859b9b1ccc09d5e21abd7fb99f063c3c979b5aba1d3665"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "93c4b4f3e350302ac7a9d459c121e7e923434298ce586340c94399b33a9aa8fd"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "aa76c8e580d5ab9f12032bf7f55aa6d1938a8f2d8b3df1470942c33ec65ed4f5"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "f3c4e298a0d64b9da30ec0236feafcd961286b051a5316c980218807d471ef2c",
+      "note": "Validated1331 parent production; prepared enemy attacker and player defender expose numericHP. Superseded unused first capture executable was removed.",
+      "base": "6ed0896ca46d96635df981b1721847a1231fbe73",
+      "base_tree": "697598d3fde1bc02264b917cc54b205688843c7f",
+      "base_commit_verified_against_validated_source": true,
+      "output": "STAGE attack=0\nCAPTURE frame=139 completed_turns=0 player_display_hp=668 draws=67 message=Some(\"Critical hit!\") phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used TACKLE!\", \"Critical hit!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "7aea4ac7a402cd40761ca9fcf48de2aafa09081979c5c31f41a65e674891cb05"
+    },
+    "after": {
+      "source_identity": {
+        "head": "6ed0896ca46d96635df981b1721847a1231fbe73",
+        "diff_sha256": "d2ee2dabf6b60db1213b0483ded3a2e7fb9b4d4595e74e7923fe7ac8462e23ab",
+        "test_sha256": "9ae4d003753fd9caa1a9a8681756c4a58df6753ec124548486917d49c1592c3f"
+      },
+      "libs": {
+        "pokered_app": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_app-7f5399e806138e26.rlib",
+          "sha256": "6e399c56ca65b13582aa4351831455a9fc2dfaa63ad1293ded37c7ac9ea15d9b"
+        },
+        "pokered_core": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_core-9662cb1d58c301fe.rlib",
+          "sha256": "aaa34b3d5050126dc53bafa6a2f2c141747b7a0e49fd0fcd527f4274b891ccab"
+        },
+        "pokered_data": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_data-9472cd84b9c0e033.rlib",
+          "sha256": "374c236031d23441e40b7adae8ec3b3af81ca469bca539eb6c45f66cf9417515"
+        },
+        "pokered_renderer": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libpokered_renderer-65cb98710bd3c182.rlib",
+          "sha256": "8694026289eaf371595465f153b511bc78e9c93454e5d1deb59261de4ce88339"
+        },
+        "dotzuki_engine": {
+          "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/deps/libdotzuki_engine-b1f8e3b1ec2d0b17.rlib",
+          "sha256": "eed1392d4c4d37a4543a40dce6c71534895233b06f50b4cd96195094816bf801"
+        }
+      },
+      "exe_sha256": "140ce62319d39f19f77733e79b41987d19cbb9092b40902d6dcf3434b0798171",
+      "output": "STAGE attack=0\nCAPTURE frame=139 completed_turns=0 player_display_hp=665 draws=100 message=Some(\"Critical hit!\") phase=ShowingText { messages: [\"SNORLAX is fast asleep!\", \"Enemy MEWTWO used TACKLE!\", \"Critical hit!\"], current: 2, wait_frames: 0, next_phase: PlayerMenu, backdrop: Battle }\n",
+      "image_sha256": "f47c228af13b45a4814e781230ab5c22a25ea843eeed15d0dbbce42d5dc42b20"
+    },
+    "deleted_exe_bytes": 36337840
+  },
+  "images": {
+    "before": {
+      "path": "docs/screenshots/long-damage-rejection-before.png",
+      "sha256": "7aea4ac7a402cd40761ca9fcf48de2aafa09081979c5c31f41a65e674891cb05"
+    },
+    "after": {
+      "path": "docs/screenshots/long-damage-rejection-after.png",
+      "sha256": "f47c228af13b45a4814e781230ab5c22a25ea843eeed15d0dbbce42d5dc42b20"
+    }
+  },
+  "visual_review": {
+    "utc": "2026-10-25T01:57:27.631896+00:00",
+    "frame": 139,
+    "images": [
+      "audit-1332-long-variance-before.png",
+      "audit-1332-long-variance-after.png"
+    ],
+    "review": "Both actual-renderer PNGs viewed. Same Critical hit caption, sprites, panel and prepared sleeping Snorlax defender. Numeric player HP is668/999before and665/999after. Captured input traces match exactly. Corresponding draw counts67before/100after. This demonstrates native visible impact, not a complete original-turn/clock comparison."
+  },
+  "memory_log_archive": {
+    "original": "audit-1332-long-variance-memory-candidate.log",
+    "gzip": "audit-1332-long-variance-memory-candidate.log.gz",
+    "original_sha256": "3a595239378054aae91846007fed01d79c64d50f3cbddaa57108194b27bf5fe7",
+    "gzip_sha256": "70055bc734a515bb1624f49f453d3e1c7f1d6d0b99d009084403996f06fb99c6",
+    "original_bytes": 5690086,
+    "gzip_bytes": 434081,
+    "bytes_saved": 5256005,
+    "roundtrip_verified": true
+  }
+}

@@ -66,6 +66,13 @@ fn canonical_install_reuses_the_current_thread_registry() {
     assert_eq!(second_effects, first_effects, "combined move effects were rebuilt");
 }
 
+// These damage fixtures need accepted variance samples as well as low gate
+// rolls. An exhausted all-zero ScriptedRng repeats zero forever and can never
+// finish the original RandomizeDamage rejection loop. Raw 179 rotates to 217.
+fn finite_damage_rolls() -> ScriptedRng {
+    ScriptedRng::new([0, 0, 179].repeat(32))
+}
+
 // ─── Scenario shape (mirrors the stack_parity DamageScenario, PokeredRules-side) ─
 
 /// Per-mover RNG bytes in pokered's `MoveRandoms` FIELD order. Only the
@@ -644,9 +651,9 @@ fn headbutt_flinches_and_blocks_target_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Headbutt },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Headbutt },
     ];
-    // All-zero rng ⇒ the 30% flinch chance byte (0 < 77) fires; the faster mover
+    // The zero flinch sample (0 < 77) fires after accepted variance; the faster mover
     // (Tauros) flinches the enemy, whose move is then blocked.
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -766,7 +773,7 @@ fn explosion_kos_the_user_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Explosion },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Explosion },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -970,7 +977,7 @@ fn counter_reflects_twice_physical_damage_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Counter },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -999,7 +1006,7 @@ fn counter_ignores_special_damage_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Counter },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Thundershock },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1029,7 +1036,7 @@ fn counter_ignores_ground_physical_damage_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Counter },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Earthquake },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1090,7 +1097,7 @@ fn hyper_beam_installs_recharge_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::HyperBeam },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1119,7 +1126,7 @@ fn hyper_beam_ko_skips_recharge_via_decoupled_stack() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::HyperBeam },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1187,7 +1194,7 @@ fn fly_strike_turn_deals_damage_and_clears() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1255,7 +1262,7 @@ fn fly_invulnerable_target_cannot_be_hit() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Fly },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1287,7 +1294,7 @@ fn gust_misses_fly_invulnerability_gen1() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Fly },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Gust },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1317,7 +1324,7 @@ fn swift_hits_through_fly_invulnerability() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Fly },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Swift },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1347,7 +1354,7 @@ fn solarbeam_strikes_but_is_not_invulnerable() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Solarbeam },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1373,7 +1380,7 @@ fn thrash_first_use_installs_lock() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Thrash },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1406,7 +1413,7 @@ fn thrash_exhaustion_self_confuses() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1438,7 +1445,7 @@ fn rage_use_installs_lock() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Rage },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1469,7 +1476,7 @@ fn rage_attack_rises_when_hit() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Rage },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1500,7 +1507,7 @@ fn wrap_installs_trap_and_binds_the_foe() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Wrap },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1602,7 +1609,7 @@ fn bide_accumulates_damage_taken() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Bide },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -1820,7 +1827,7 @@ fn substitute_absorbs_the_hit() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert_eq!(state.opponent_battlers[0].hp, e_hp0, "the mon's real HP is fully protected");
@@ -1890,7 +1897,7 @@ fn substitute_breaks_without_overflow() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -1991,7 +1998,7 @@ fn multi_hit_all_hits_hit_the_substitute() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::DoubleKick },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        let mut rng = finite_damage_rolls();
         let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
         4000 - state.opponent_battlers[0].hp
     };
@@ -2015,7 +2022,7 @@ fn multi_hit_all_hits_hit_the_substitute() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::DoubleKick },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert_eq!(state.opponent_battlers[0].hp, e_hp0, "BOTH hits went to the doll — the mon's real HP is untouched");
@@ -2050,7 +2057,7 @@ fn recoil_and_drain_read_real_damage_through_a_sub() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::DoubleEdge },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        let mut rng = finite_damage_rolls();
         let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
         assert!(state.player_battlers[0].hp < p_hp0, "the user recoils off the real damage even though the sub absorbed it");
         assert_eq!(state.opponent_battlers[0].hp, e_hp0, "the foe's real HP is protected by its doll");
@@ -2073,7 +2080,7 @@ fn recoil_and_drain_read_real_damage_through_a_sub() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::MegaDrain },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        let mut rng = finite_damage_rolls();
         let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
         assert!(state.player_battlers[0].hp > 500, "the user heals from draining the doll (real damage)");
     }
@@ -2130,7 +2137,7 @@ fn substitute_created_flag_survives_a_same_turn_break() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Substitute },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -2170,7 +2177,7 @@ fn counter_behind_a_sub_reflects_the_real_damage() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Counter },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert_eq!(state.player_battlers[0].hp, p_hp0, "the doll protected the counter-user's real HP");
@@ -2244,7 +2251,7 @@ fn recoil_bypasses_the_users_own_substitute() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::DoubleEdge },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(state.player_battlers[0].hp < p_hp0, "recoil hit the attacker's REAL HP, not its own doll");
@@ -2275,7 +2282,7 @@ fn residual_poison_narrates_hurt_by_poison() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     let text = super::runtime::translate_turn(&log, &state, &effects);
     assert!(text.iter().any(|l| l.contains("is hurt by POISON!")), "poison residual narrated: {text:?}");
@@ -2298,7 +2305,7 @@ fn residual_burn_narrates_hurt_by_burn() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     let text = super::runtime::translate_turn(&log, &state, &effects);
     assert!(text.iter().any(|l| l.contains("is hurt by its BURN!")), "burn residual narrated: {text:?}");
@@ -2362,7 +2369,7 @@ fn toxic_residual_narrates_hurt_by_poison_once() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     let text = super::runtime::translate_turn(&log, &state, &effects);
     assert_eq!(
@@ -2405,7 +2412,7 @@ fn toxic_and_leech_both_narrate_distinctly() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     let text = super::runtime::translate_turn(&log, &state, &effects);
     assert!(text.iter().any(|l| l.contains("is hurt by POISON!")), "toxic line present: {text:?}");
@@ -2472,7 +2479,7 @@ fn conversion_type_override_grants_stab() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Surf },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        let mut rng = finite_damage_rolls();
         let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
         2000 - state.opponent_battlers[0].hp
     };
@@ -2599,7 +2606,7 @@ fn disable_counter_decrements_and_expires() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Thundershock },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -2636,7 +2643,7 @@ fn conversion_defensive_override_confers_immunity() {
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
             BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
         ];
-        let mut rng = ScriptedRng::new(vec![0u8; 64]);
+        let mut rng = finite_damage_rolls();
         let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
         2000 - state.opponent_battlers[0].hp
     };
@@ -2669,7 +2676,7 @@ fn conversion_narration_honours_defender_override() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Surf },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     let with_override = super::runtime::translate_turn(&log, &state, &effects);
@@ -2693,7 +2700,7 @@ fn disable_faster_user_target_decrements_same_turn() {
     clear_current_moves();
     clear_last_move_live();
     set_current_move(BattlerRef::PLAYER, real_move(MoveId::Disable));
-    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Tackle)); // NOT the disabled move
+    set_current_move(BattlerRef::OPPONENT, real_move(MoveId::Tackle)); // the selected slot expires before this move
     set_last_move_live(BattlerRef::OPPONENT, MoveId::BodySlam); // the move to disable
     let opp = {
         let mut stats = EnumMap::new();
@@ -2712,7 +2719,8 @@ fn disable_faster_user_target_decrements_same_turn() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Disable },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    // Disable accuracy/slot/one-turn duration, then Tackle crit/accuracy/variance.
+    let mut rng = ScriptedRng::new(vec![0, 0, 0, 0, 0, 179]);
     let _ = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
 
     assert!(
@@ -2740,7 +2748,7 @@ fn struggle_recoils_half_the_damage_dealt() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Struggle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -2769,7 +2777,7 @@ fn dream_eater_drains_from_sleeping_target() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::DreamEater },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -2830,7 +2838,7 @@ fn fire_move_defrosts_frozen_target() {
     ];
     // All-zero stream: Ember's 26/256 burn roll WOULD pass — but the frozen
     // (already-statused) target can't be burned; it is defrosted instead.
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_r, log) = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -2862,7 +2870,7 @@ fn non_fire_move_does_not_defrost() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Tackle },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Splash },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules, &mut state, &mut effects, actions, &mut rng,
     );
@@ -4290,7 +4298,7 @@ fn primary_paralysis_follows_red_type_and_substitute_rules() {
                     kind: PokeVolatile::Substitute,
                 }]
             } else { vec![] };
-            let mut rng = ScriptedRng::new(vec![0; 16]);
+            let mut rng = finite_damage_rolls();
             StackDriver::execute_turn(&PokeredRules, &mut state, &mut effects, [
                 BattleAction::Fight { move_: move_id },
                 BattleAction::Fight { move_: MoveId::Splash },
@@ -5285,7 +5293,7 @@ fn dizzy_punch_is_pure_damage_no_confusion_rider() {
         },
         BattleAction::<PokeredRules>::Nothing,
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let _ = StackDriver::execute_turn_logged(
         &PokeredRules,
         &mut state,
@@ -5323,7 +5331,7 @@ fn seeded_attacker_knockout_cannot_revive_the_seeder_or_allow_its_move() {
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Thunderbolt },
         BattleAction::<PokeredRules>::Fight { move_: MoveId::Solarbeam },
     ];
-    let mut rng = ScriptedRng::new(vec![0u8; 64]);
+    let mut rng = finite_damage_rolls();
     let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     let text = super::runtime::translate_turn(&log, &state, &effects);
     assert_eq!(state.opponent_battlers[0].hp, 0);
@@ -5345,7 +5353,7 @@ fn later_conversion_does_not_reclassify_an_earlier_attack() {
     let mut effects = Vec::new();
     let actions = [BattleAction::<PokeredRules>::Fight {move_:MoveId::Surf},
         BattleAction::<PokeredRules>::Fight {move_:MoveId::Conversion}];
-    let mut rng = ScriptedRng::new(vec![0u8; 128]);
+    let mut rng = finite_damage_rolls();
     let (_, log) = StackDriver::execute_turn_logged(&PokeredRules, &mut state, &mut effects, actions, &mut rng);
     assert!(effects.iter().any(|effect| effect.host == BattlerRef::OPPONENT && matches!(effect.kind,
         PokeVolatile::TypeOverride {type1:PokemonType::Water,type2:PokemonType::Ice})));
@@ -5363,7 +5371,7 @@ fn later_conversion_cannot_turn_an_earlier_hit_into_a_visual_miss() {
         vec![engine_battler(&Mon::new(Species::Gengar,400,100),MoveId::MegaPunch)],
         vec![engine_battler(&Mon::new(Species::Porygon,4000,50),MoveId::Conversion)]);
     let mut effects=Vec::new();
-    let mut rng=ScriptedRng::new(vec![0u8;128]);
+    let mut rng=finite_damage_rolls();
     let (_,log)=StackDriver::execute_turn_logged(&PokeredRules,&mut state,&mut effects,
         [BattleAction::<PokeredRules>::Fight {move_:MoveId::MegaPunch},
          BattleAction::<PokeredRules>::Fight {move_:MoveId::Conversion}],&mut rng);
