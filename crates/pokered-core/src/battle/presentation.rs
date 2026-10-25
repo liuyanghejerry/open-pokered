@@ -374,7 +374,14 @@ impl BattlePresentation {
                 TurnEvent::MoveUsed { actor, move_ } => {
                     let missed = super::pokered_rules::presented_move_missed(actor.side == 0, *move_).unwrap_or(false);
                     self.queued.push(MoveStep {
-                        announcement: runtime::move_action_caption(state, *actor, *move_, names),
+                        announcement: if *move_ == MoveId::Rest && !missed
+                            && super::pokered_rules::rest_had_status(actor.side == 0).is_some() {
+                            // HealEffect prints the sleep result before playing
+                            // Rest's animation and updating the HP bar.
+                            runtime::rest_sleep_caption(state, *actor, names)
+                        } else {
+                            runtime::move_action_caption(state, *actor, *move_, names)
+                        },
                         level_up: None,
                         transform: None,
                         hits: {
