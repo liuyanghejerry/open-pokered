@@ -1,0 +1,165 @@
+{
+  "status": "passed",
+  "scope": "Twelve prepared HazeEffect calls to animation entry and two selected-FF ExecuteMove entries to ExecuteMoveDone. Read-only hooks; no full turn or rendering/timing claim. No ROM patch or injected code.",
+  "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "state_sha256": "5d18af482935da1df05d7bb7762c76c19300a571e392c0e55ed0a59433912ea4",
+  "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+  "source_sha256": "2924d65dfc71db4ccb8bc271290646048c41acbd620a26e0b4202f3557323810",
+  "pyboy": "2.8.1",
+  "cases": [
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 0,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 2,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 8,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 16,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 32,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 0,
+      "target_initial_status": 64,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 0,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 2,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 8,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 16,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 32,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "haze",
+      "actor_side": 1,
+      "target_initial_status": 64,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 150,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "skip",
+      "actor_side": 0,
+      "target_initial_status": 0,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    },
+    {
+      "mode": "skip",
+      "actor_side": 1,
+      "target_initial_status": 0,
+      "result": {
+        "target_status": 0,
+        "target_selected_move": 255,
+        "print_text_calls": 0,
+        "rng_draws": 0
+      }
+    }
+  ]
+}
