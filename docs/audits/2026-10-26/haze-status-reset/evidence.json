@@ -1,0 +1,179 @@
+{
+  "base": "5b3cd42342aa9aabc2546fb5f925c3b7d2a9a414",
+  "code_commit": "7b60e0ad425052710851a9abe58ceab24855ce2e",
+  "validated_source": {
+    "patch_sha256": "b27d81e76853f5dcd89824e56a3b909c318f50c2d840af3e1a35ae864bfe651a",
+    "files": {
+      "crates/pokered-core/src/battle/pokered_rules/mod.rs": "9fbb85908e0466de40223bd9e568438810592a8abae522ceac5475481ef98700",
+      "crates/pokered-core/src/battle/pokered_rules/runtime.rs": "7fe402d4c768256735428b53bccb7c6522cb2563c86a383e132bf5e2bc17cb83",
+      "crates/pokered-core/tests/fidelity_haze_cured_action.rs": "fee51fc2ebd231c7df855e5496dedcc1d011fe6a9d27ab45d711ea4960aa8802"
+    }
+  },
+  "native_binary_sha256": "4302dbe41dd2347210464c211395d18e875304c8cee63ec47b5aa3d94c36ad56",
+  "unit_tests": {
+    "core": {
+      "programs": 70,
+      "passed": 3798,
+      "failed": 0,
+      "ignored": 1
+    },
+    "app": {
+      "programs": 1,
+      "passed": 407,
+      "failed": 0,
+      "ignored": 40
+    },
+    "focused_tests": 4,
+    "controlled_fight_turns": 60
+  },
+  "runtime": {
+    "fresh_new_game_through": "m06",
+    "subsystem_scenarios_passed": 11,
+    "save_continue_separate_process": true,
+    "full_m01_m49_playthrough": false
+  },
+  "gba": {
+    "emulator": "mGBA 0.10.5",
+    "performance_failures": [],
+    "performance_metrics": {
+      "suite": "autopilot-v1",
+      "emulator": "mGBA0.10.5 core bridge, full render/audio, no frame skip",
+      "scenarios": {
+        "intro-title-v1": {
+          "scenario": "intro-title-v1",
+          "samples": 250,
+          "update_avg_ticks": 105,
+          "update_core_avg_ticks": 96,
+          "update_flush_avg_ticks": 1,
+          "renders": 115,
+          "draw_per_frame_ticks": 1206,
+          "draw_max_ticks": 9849,
+          "present_per_frame_ticks": 354,
+          "present_max_ticks": 782
+        },
+        "oak-dialogue-v1": {
+          "scenario": "oak-dialogue-v1",
+          "samples": 600,
+          "update_avg_ticks": 173,
+          "update_core_avg_ticks": 163,
+          "update_flush_avg_ticks": 1,
+          "renders": 307,
+          "draw_per_frame_ticks": 2898,
+          "draw_max_ticks": 9044,
+          "present_per_frame_ticks": 392,
+          "present_max_ticks": 782
+        },
+        "overworld-idle-v1": {
+          "scenario": "overworld-idle-v1",
+          "samples": 1400,
+          "update_avg_ticks": 374,
+          "update_core_avg_ticks": 365,
+          "update_flush_avg_ticks": 1,
+          "renders": 0,
+          "draw_per_frame_ticks": 0,
+          "draw_max_ticks": 0,
+          "present_per_frame_ticks": 0,
+          "present_max_ticks": 0
+        },
+        "overworld-movement-v1": {
+          "scenario": "overworld-movement-v1",
+          "samples": 240,
+          "update_avg_ticks": 387,
+          "update_core_avg_ticks": 377,
+          "update_flush_avg_ticks": 1,
+          "renders": 24,
+          "draw_per_frame_ticks": 207,
+          "draw_max_ticks": 2885,
+          "present_per_frame_ticks": 70,
+          "present_max_ticks": 770
+        },
+        "battle-entry-v1": {
+          "scenario": "battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 212,
+          "update_core_avg_ticks": 201,
+          "update_flush_avg_ticks": 1,
+          "renders": 369,
+          "draw_per_frame_ticks": 2629,
+          "draw_max_ticks": 8864,
+          "present_per_frame_ticks": 566,
+          "present_max_ticks": 782
+        },
+        "trainer-battle-entry-v1": {
+          "scenario": "trainer-battle-entry-v1",
+          "samples": 500,
+          "update_avg_ticks": 232,
+          "update_core_avg_ticks": 221,
+          "update_flush_avg_ticks": 1,
+          "renders": 224,
+          "draw_per_frame_ticks": 2365,
+          "draw_max_ticks": 10184,
+          "present_per_frame_ticks": 344,
+          "present_max_ticks": 782
+        },
+        "pokedex-entry-v1": {
+          "scenario": "pokedex-entry-v1",
+          "samples": 400,
+          "update_avg_ticks": 116,
+          "update_core_avg_ticks": 105,
+          "update_flush_avg_ticks": 1,
+          "renders": 1,
+          "draw_per_frame_ticks": 41,
+          "draw_max_ticks": 16496,
+          "present_per_frame_ticks": 1,
+          "present_max_ticks": 767
+        }
+      }
+    },
+    "memory_scenarios_passed": 13,
+    "memory_frames": 323040,
+    "min_heap_bytes": 4928,
+    "min_stack_bytes": 8704,
+    "memory_rom_sha256": "f29b77a6d63c7bcac8198e2399529929e75d500163ea447f922b531e0336907b"
+  },
+  "captures": {
+    "before": {
+      "path": "docs/screenshots/haze-status-reset-before.png",
+      "sha256": "a94866ffa803d9b999081176ce70ca8afca12a3e62fe16a8a86be0b16d257dd5",
+      "head": "5b3cd42342aa9aabc2546fb5f925c3b7d2a9a414",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_binary_sha256": "f35cac71ca1d2c72be6f23719fa82b5b75c59e8333e5748aaa6c1ceedb281199"
+    },
+    "after": {
+      "path": "docs/screenshots/haze-status-reset-after.png",
+      "sha256": "4a87fa3e707788f966dc2c283eeae467ee5847a445fefc797db482783bbabfa7",
+      "head": "5f6d4d1db33f1d04538d0d3700a55a8b24ba10ab",
+      "diff_sha256": "db631624f9433f005d77482b7bd46a8a68b685d2c2a30ffeea85d7736abf07aa",
+      "capture_binary_sha256": "60dc582b32dbc6cea2c4a3f0c67f1ba2e564e047e64d1df58cc5cd54e60736ee"
+    }
+  },
+  "render_comparison": {
+    "before_source": {
+      "head": "5b3cd42342aa9aabc2546fb5f925c3b7d2a9a414",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "after_source": {
+      "head": "5f6d4d1db33f1d04538d0d3700a55a8b24ba10ab",
+      "diff_sha256": "db631624f9433f005d77482b7bd46a8a68b685d2c2a30ffeea85d7736abf07aa"
+    },
+    "fixture_sha256": "a9e3b49f99544baa390419c4aa8fd786b7b0ccf383e5a0662652e6ce6f935bbe",
+    "fixed_inputs_sha256": "dc9e211b270f9652d1d73e9282bca8154f862f0f93d0311b2f15688e8f0ca8b6",
+    "capture_count_each": 42,
+    "changed": [
+      "enemy-freeze-240.png",
+      "enemy-freeze-320.png",
+      "enemy-freeze-480.png",
+      "enemy-sleep-240.png",
+      "enemy-sleep-320.png",
+      "enemy-sleep-480.png",
+      "player-freeze-240.png",
+      "player-freeze-320.png",
+      "player-freeze-480.png",
+      "player-sleep-240.png",
+      "player-sleep-320.png",
+      "player-sleep-480.png"
+    ],
+    "slower_haze_controls_pixel_identical": true,
+    "scope": "Six prepared public FIGHT sequences with actual BattleVisualEffects/draw_battle, 481 updates and fixed inputs. Not full PokemonGame/audio or original-ROM timing proof."
+  }
+}

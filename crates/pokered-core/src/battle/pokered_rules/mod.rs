@@ -149,8 +149,9 @@ pub enum PokeVolatile {
     /// frontend consumes this once at the actor boundary using its PP policy.
     PlayerPpChargePending,
     /// Per-turn narration receipt from a gate whose cause is consumed in-place.
+    /// `None` denotes a silent forfeit, such as Haze clearing a selected move.
     /// Not exported to legacy flags or rebuilt on a later turn.
-    BlockedAction { reason: super::CannotMoveReason },
+    BlockedAction { reason: Option<super::CannotMoveReason> },
     /// Per-turn call narration; the resolved move executes after status gates.
     CalledMove { caller: MoveId, resolved: MoveId, failed: bool },
     /// Inert.
@@ -1678,6 +1679,16 @@ fn block_action(
     source: BattlerRef,
     reason: super::CannotMoveReason,
 ) -> HandlerResult {
+    record_blocked_action(ctx, source, Some(reason))
+}
+
+/// `None` records an actual silent forfeit, rather than inferring it later
+/// from a status that another action may already have cured.
+fn record_blocked_action(
+    ctx: &mut BattleCtx<'_, PokeredRules>,
+    source: BattlerRef,
+    reason: Option<super::CannotMoveReason>,
+) -> HandlerResult {
     ctx.effects.push(EffectState {
         id: EffectId(0x50_fc2 + source.side as u32),
         host: source,
@@ -2903,10 +2914,14 @@ fn haze_reset(
             kind: PokeVolatile::HazeCuredMove,
         });
     }
+    // HazeEffect_ explicitly clears both Disable slots and counters before
+    // applying the volatile-status masks. Dropping the effect clears both
+    // legacy fields when the completed turn is written back.
     ctx.effects.retain(|e| {
         !matches!(
             e.kind,
             PokeVolatile::Confused { .. }
+                | PokeVolatile::Disable { .. }
                 | PokeVolatile::LeechSeed
                 | PokeVolatile::Toxic { .. }
                 | PokeVolatile::FocusEnergy
@@ -2936,7 +2951,7 @@ fn haze_cured_gate(
         .iter()
         .any(|e| e.host == source && matches!(e.kind, PokeVolatile::HazeCuredMove))
     {
-        HandlerResult::Fail
+        record_blocked_action(ctx, source, None)
     } else {
         HandlerResult::Unchanged
     }
