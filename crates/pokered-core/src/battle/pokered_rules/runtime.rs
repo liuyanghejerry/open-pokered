@@ -247,8 +247,14 @@ fn opp_ref(who: BattlerRef) -> BattlerRef {
 
 fn blocked_action_reason(effects: &[EffectState<PokeredRules>], who: BattlerRef) -> Option<crate::battle::CannotMoveReason> {
     effects.iter().find_map(|entry| match entry.kind {
-        PokeVolatile::BlockedAction { reason } if entry.host == who => Some(reason),
+        PokeVolatile::BlockedAction { reason } if entry.host == who => reason,
         _ => None,
+    })
+}
+
+fn blocked_action_is_silent(effects: &[EffectState<PokeredRules>], who: BattlerRef) -> bool {
+    effects.iter().any(|entry| {
+        entry.host == who && matches!(entry.kind, PokeVolatile::BlockedAction { reason: None })
     })
 }
 
@@ -491,7 +497,9 @@ pub(crate) fn translate_turn_named_with_faints(
                 multi_hit_stats_published = false;
                 current_actor = None;
                 current_block = Some(*actor);
-                msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
+                if !blocked_action_is_silent(effects, *actor) {
+                    msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
+                }
             }
             TurnEvent::Fainted { who } => {
                 if let Some(plan) = faint_plan {
@@ -591,6 +599,7 @@ pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &E
 
 pub(crate) fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], names: Option<&BattleNameContext>) -> Option<String> {
     match event {
+        TurnEvent::Blocked { actor } if blocked_action_is_silent(effects, *actor) => None,
         TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,effects,*actor))),
         TurnEvent::Damaged { target, cause: Some(cause), .. } => {
             let name=display_name_named(state,*target,names);
