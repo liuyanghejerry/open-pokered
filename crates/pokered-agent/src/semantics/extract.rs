@@ -210,6 +210,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "printFieldTextParts",
     "continueFieldTextParts",
     "printItemFieldText",
+    "printItemFieldTextParts",
     "acknowledgeFieldText",
     "bikeShopOffer",
     "fieldCry",
@@ -1033,6 +1034,8 @@ mod tests {
             ("CinnabarLabMetronomeRoom", "talkScientist1", "TM_35", "EVENT_GOT_TM35"),
             ("SafariZoneSecretHouse", "talkFishingGuru", "HM03", "EVENT_GOT_HM03"),
             ("CopycatsHouse2F", "talkCopycat", "TM31", "EVENT_GOT_TM31"),
+            ("BillsHouse", "talkBill", "SS_TICKET", "EVENT_GOT_SS_TICKET"),
+            ("Route12SuperRodHouse", "talkFishingGuru", "SUPER_ROD", "EVENT_GOT_SUPER_ROD"),
         ] {
             let scene = pokered_data::embedded_scenes::get_scene_ast(room).unwrap();
             let mut coverage = CoverageAccum::default();

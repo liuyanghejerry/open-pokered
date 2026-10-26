@@ -191,7 +191,7 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::PrintTextCry { text: string(0)?, species: string(1)? }.into_script_command())
         });
 
-        for name in ["printFieldTextParts", "continueFieldTextParts", "printItemFieldText", "acknowledgeFieldText"] {
+        for name in ["printFieldTextParts", "continueFieldTextParts", "printItemFieldText", "printItemFieldTextParts", "acknowledgeFieldText"] {
             engine.register_async_fn(name, move |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
                 let values = args.iter().map(|value| value.to_json(ctx)).collect::<JsResult<Vec<_>>>()?;
                 let command = PokemonScriptCommand::from_custom(name, &values)
@@ -1445,6 +1445,7 @@ mod tests {
             export async function reward() {
                 await game.printFieldTextParts(["one", "two"], "prompt");
                 await game.printItemFieldText("receipt", "SFX_GET_ITEM_1");
+                await game.printItemFieldTextParts(["offer", "receipt"], "SFX_GET_KEY_ITEM", true);
                 await game.continueFieldTextParts(["explanation"], true);
                 await game.acknowledgeFieldText();
             }
@@ -1452,6 +1453,7 @@ mod tests {
         let expected = [
             PokemonScriptCommand::PrintFieldTextParts { parts: vec!["one".into(), "two".into()], prompt: FieldTextPrompt::Protected },
             PokemonScriptCommand::PrintItemFieldText { text: "receipt".into(), sound_id: "SFX_GET_ITEM_1".into() },
+            PokemonScriptCommand::PrintItemFieldTextParts { parts: vec!["offer".into(), "receipt".into()], sound_id: "SFX_GET_KEY_ITEM".into(), prompt: FieldTextPrompt::Button },
             PokemonScriptCommand::ContinueFieldTextParts { parts: vec!["explanation".into()], prompt: FieldTextPrompt::Button },
             PokemonScriptCommand::AcknowledgeFieldText,
         ];
