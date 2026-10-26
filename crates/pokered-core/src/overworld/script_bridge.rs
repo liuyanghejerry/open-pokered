@@ -57,6 +57,7 @@ pub enum ScriptEffect {
     BillPokemonList { state: Box<super::bill_pokemon_list::BillPokemonListState> },
     BikeShopOffer { state: super::bike_shop::BikeShopOfferState },
     FieldCry { state: super::field_cry::FieldCryState },
+    FieldRewardText { state: Box<super::field_reward_text::FieldRewardTextState> },
     StaticEncounter { state: Box<super::static_encounter::StaticEncounterState> },
     PokedexRating { state: Box<super::pokedex_rating::PokedexRatingState> },
 
@@ -441,6 +442,7 @@ impl ScriptEffect {
             ScriptEffect::BikeShopOffer { state } => json!({ "effect": "BikeShopOffer", "state": state }),
             ScriptEffect::PokedexRating { state } => json!({ "effect": "PokedexRating", "state": state }),
             ScriptEffect::FieldCry { state } => json!({ "effect": "FieldCry", "state": state }),
+            ScriptEffect::FieldRewardText { state } => json!({ "effect": state.label(), "phase": state.debug_phase(), "state": state }),
             ScriptEffect::StaticEncounter { state } => json!({ "effect": "StaticEncounter", "state": state }),
             ScriptEffect::FieldCryContinuation { state } => json!({ "effect": "FieldCryContinuation", "state": state }),
             ScriptEffect::JigglypuffSong { state } => json!({ "effect": "JigglypuffSong", "state": state }),
@@ -881,6 +883,9 @@ pub fn dispatch_command_with_names(
         // `pokered-data::script_api`).
         ScriptCommand::Custom { name, args } => {
             let mut effect = dispatch_custom(name, args);
+            if let ScriptEffect::FieldRewardText { state } = &mut effect {
+                state.resolve_texts(|text| resolve_placeholders(text, player_name, rival_name, starter_name));
+            }
             if let ScriptEffect::ShowItemDialogue { text, .. } | ScriptEffect::PrintFieldText { text, .. } = &mut effect {
                 *text = resolve_placeholders(text, player_name, rival_name, starter_name);
             }
@@ -980,6 +985,15 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::PokedexRating { text, owned } => ScriptEffect::PokedexRating {
             state: Box::new(super::pokedex_rating::PokedexRatingState::new(text, owned)),
 
+        },
+        PokemonScriptCommand::PrintFieldTextParts { parts, prompt } => ScriptEffect::FieldRewardText {
+            state: Box::new(super::field_reward_text::FieldRewardTextState::parts(parts, prompt)),
+        },
+        PokemonScriptCommand::PrintItemFieldText { text, sound_id } => ScriptEffect::FieldRewardText {
+            state: Box::new(super::field_reward_text::FieldRewardTextState::receipt(text, sound_id)),
+        },
+        PokemonScriptCommand::AcknowledgeFieldText => ScriptEffect::FieldRewardText {
+            state: Box::new(super::field_reward_text::FieldRewardTextState::outer_ack()),
         },
         PokemonScriptCommand::FieldCry { text, species } => ScriptEffect::FieldCry {
             state: super::field_cry::FieldCryState::new(text, species),

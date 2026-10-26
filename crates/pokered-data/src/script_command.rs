@@ -39,6 +39,12 @@ pub enum PokemonScriptCommand {
     PrintFieldText { text: String, retain_window: bool, prompt: FieldTextPrompt, leading_sound: Option<String> },
     /// Outer HoldTextDisplayOpen: wait for A release and close only the retained owner.
     FinishFieldText,
+    /// Explicit source PARA boundaries followed by an inner text terminator.
+    PrintFieldTextParts { parts: Vec<String>, prompt: FieldTextPrompt },
+    /// Inner receipt text and real sound completion, retaining the cursor.
+    PrintItemFieldText { text: String, sound_id: String },
+    /// Silent DisplayTextID ACK, A-release hold, then CloseTextDisplay.
+    AcknowledgeFieldText,
     /// Route22GatePlayerMovingScript: unlock, Delay3, then finish simulation.
     Route22GuardReturn,
     /// Cycling gate callbacks clear simulation before Joypad, preserving held input.
@@ -137,6 +143,9 @@ impl PokemonScriptCommand {
         match self {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
+            Self::PrintFieldTextParts { .. } => "printFieldTextParts",
+            Self::PrintItemFieldText { .. } => "printItemFieldText",
+            Self::AcknowledgeFieldText => "acknowledgeFieldText",
             Self::Route22GuardReturn => "route22GuardReturn",
             Self::CyclingGateReturn => "cyclingGateReturn",
             Self::AskFieldYesNo { .. } => "askFieldYesNo",
@@ -202,6 +211,12 @@ impl PokemonScriptCommand {
                 if let Some(sound) = leading_sound { args.push(json!(sound)); }
                 args
             },
+            Self::PrintFieldTextParts { parts, prompt } => vec![json!(parts), match prompt {
+                FieldTextPrompt::Done => json!(false),
+                FieldTextPrompt::Button => json!(true),
+                FieldTextPrompt::Protected => json!("prompt"),
+            }],
+            Self::PrintItemFieldText { text, sound_id } => vec![json!(text), json!(sound_id)],
             Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
             Self::FieldCryContinuation { mut texts, species } => {
                 assert_eq!(texts.len(), 3, "validated far/PARA/CONT payload");
@@ -266,6 +281,7 @@ impl PokemonScriptCommand {
             | Self::WaitMusic
             | Self::WaitSound
             | Self::FinishFieldText
+            | Self::AcknowledgeFieldText
             | Self::Route22GuardReturn
             | Self::CyclingGateReturn
             | Self::VendingDelivery => vec![],
@@ -361,6 +377,24 @@ impl PokemonScriptCommand {
                 Self::PrintTextCry { text: string(0)?, species: string(1)? }
             },
             "finishFieldText" => Self::FinishFieldText,
+            "printFieldTextParts" => {
+                if args.len() != 2 { return Err("printFieldTextParts: paragraphs and terminator expected".into()); }
+                let parts = strings(0)?;
+                if parts.is_empty() || parts.iter().any(String::is_empty) {
+                    return Err("printFieldTextParts: paragraphs must be nonempty strings".into());
+                }
+                Self::PrintFieldTextParts { parts, prompt: FieldTextPrompt::from_argument(args.get(1))? }
+            },
+            "printItemFieldText" => {
+                if args.len() != 2 { return Err("printItemFieldText: text and sound expected".into()); }
+                let (text, sound_id) = (string(0)?, string(1)?);
+                if text.is_empty() || sound_id.is_empty() { return Err("printItemFieldText: text and sound must not be empty".into()); }
+                Self::PrintItemFieldText { text, sound_id }
+            },
+            "acknowledgeFieldText" => {
+                if !args.is_empty() { return Err("acknowledgeFieldText: no arguments expected".into()); }
+                Self::AcknowledgeFieldText
+            },
             "route22GuardReturn" => {
                 if !args.is_empty() { return Err("route22GuardReturn: no arguments expected".into()); }
                 Self::Route22GuardReturn
@@ -545,6 +579,30 @@ mod tests {
                 PokemonScriptCommand::from_custom(&name, &args).unwrap_err(),
                 "silphRocketDeparture: no arguments expected"
             );
+        }
+    }
+
+    #[test]
+    fn field_reward_commands_preserve_explicit_paragraphs_and_validate_arguments() {
+        for prompt in [FieldTextPrompt::Done, FieldTextPrompt::Button, FieldTextPrompt::Protected] {
+            let expected = PokemonScriptCommand::PrintFieldTextParts {
+                parts: vec!["first".into(), "second".into()], prompt,
+            };
+            let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!("custom command required"); };
+            assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+        }
+        for (name, args) in [
+            ("printFieldTextParts", vec![json!([]), json!(false)]),
+            ("printFieldTextParts", vec![json!(["text", ""]), json!(false)]),
+            ("printFieldTextParts", vec![json!(["text", 1]), json!(false)]),
+            ("printFieldTextParts", vec![json!(["text"]), json!("invalid")]),
+            ("printFieldTextParts", vec![json!(["text"])]),
+            ("printItemFieldText", vec![json!("receipt"), json!("")]),
+            ("printItemFieldText", vec![json!(""), json!("SFX_GET_ITEM_1")]),
+            ("printItemFieldText", vec![json!("receipt"), json!(true)]),
+            ("acknowledgeFieldText", vec![json!(false)]),
+        ] {
+            assert!(PokemonScriptCommand::from_custom(name, &args).is_err(), "{name}: {args:?}");
         }
     }
 

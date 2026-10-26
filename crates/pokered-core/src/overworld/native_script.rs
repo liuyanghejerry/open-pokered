@@ -551,6 +551,26 @@ impl ScriptHost for NativeHost {
                 if !level.is_finite() || !(1. ..=100.).contains(&level) || level != level as u8 as f64 { return Err("staticEncounter: level must be an integer from 1 to 100".into()); }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(text),serde_json::json!(species),serde_json::json!(level as u8)])?))
             },
+            "printFieldTextParts" => {
+                if v.len() != 2 { return Err("printFieldTextParts: paragraphs and terminator expected".into()); }
+                let parts = args::string_array(&v[0], name)?;
+                let prompt = match &v[1] {
+                    Value::Bool(value) => serde_json::json!(value),
+                    Value::Text(value) => serde_json::json!(value),
+                    _ => return Err("printFieldTextParts: invalid terminator".into()),
+                };
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(parts), prompt])?))
+            },
+            "printItemFieldText" => {
+                if v.len() != 2 { return Err("printItemFieldText: text and sound expected".into()); }
+                let text = args::text(&v[0], name)?;
+                let sound = args::text(&v[1], name)?;
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(text), serde_json::json!(sound)])?))
+            },
+            "acknowledgeFieldText" => {
+                if !v.is_empty() { return Err("acknowledgeFieldText: no arguments expected".into()); }
+                Ok(pokemon(PokemonScriptCommand::AcknowledgeFieldText))
+            },
             "fieldCry" | "printTextCry" => {
                 if v.len() != 2 { return Err(format!("{name}: text and species expected")); }
                 let string = |index: usize| match &v[index] {
@@ -3030,9 +3050,10 @@ mod tests {
                 let commands = drive_fidelity_scene(&mut e, handler, room, "", &[0]);
                 let receipts: Vec<_> = commands.iter().filter_map(|c| {
                     let ScriptCommand::Custom { name, args } = c else { return None };
-                    if name != "showItemDialogue" { return None }
+                    if !matches!(name.as_str(), "showItemDialogue" | "printItemFieldText") { return None }
                     match pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap() {
                         pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. } => Some(sound_id),
+                        pokered_data::script_command::PokemonScriptCommand::PrintItemFieldText { sound_id, .. } => Some(Some(sound_id)),
                         _ => unreachable!(),
                     }
                 }).collect();

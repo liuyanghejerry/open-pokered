@@ -1,0 +1,295 @@
+{
+  "base": "e084fc3ff7475564c3cf148eab79d7f6ee42cc03",
+  "candidate_build": {
+    "source": {
+      "head": "e084fc3ff7475564c3cf148eab79d7f6ee42cc03",
+      "diff_sha256": "94f4e6459e11f7ba6f30c401b7f521a9ac9d54612358e20037070b2952ec73cd",
+      "untracked_sha256": {
+        "crates/pokered-app/src/game/field_reward_text_tests.rs": "29ad67a17963ecc72d5769f7232f750b09caa3a694012a2f82c0dc94facad319",
+        "crates/pokered-core/src/overworld/field_reward_text.rs": "bf0c580835892ba7a64ad2931365ddc9debd0cb374efd3b7b3b26455d59409b4",
+        "crates/pokered-core/src/overworld/field_reward_text/tests.rs": "95475d0bf7aa2abf78478a01712f7e49e532694375911b2c253bc634e4534b26"
+      }
+    },
+    "candidate_sha256": "2c8559381118114ab159ceda1fbfc1830e5bbe1330612bf0b45f48415c69b2ac",
+    "command": [
+      "cargo",
+      "build",
+      "--bin",
+      "pokered-app",
+      "--features",
+      "debug-server",
+      "--locked",
+      "--offline"
+    ]
+  },
+  "native_results": {
+    "mode": "after",
+    "build": {
+      "head": "e084fc3ff7475564c3cf148eab79d7f6ee42cc03",
+      "diff_sha256": "94f4e6459e11f7ba6f30c401b7f521a9ac9d54612358e20037070b2952ec73cd",
+      "untracked_sha256": {
+        "crates/pokered-app/src/game/field_reward_text_tests.rs": "29ad67a17963ecc72d5769f7232f750b09caa3a694012a2f82c0dc94facad319",
+        "crates/pokered-core/src/overworld/field_reward_text.rs": "bf0c580835892ba7a64ad2931365ddc9debd0cb374efd3b7b3b26455d59409b4",
+        "crates/pokered-core/src/overworld/field_reward_text/tests.rs": "95475d0bf7aa2abf78478a01712f7e49e532694375911b2c253bc634e4534b26"
+      }
+    },
+    "binary_sha256": "2c8559381118114ab159ceda1fbfc1830e5bbe1330612bf0b45f48415c69b2ac",
+    "scope": "Prepared saves; ordinary boot/CONTINUE and input-only NPC interactions. Logical sequencer runs with device output off. No original emulator timing claim.",
+    "cases": [
+      {
+        "map": "CinnabarLabMetronomeRoom",
+        "repeat_identical": true,
+        "cue_frame": 848,
+        "flag_at_sound_start": false,
+        "first_flag_tick": 73,
+        "dialogue_at_tick150": "NINTEN received TM35!",
+        "bag": [
+          {
+            "item": "Tm35",
+            "qty": 1
+          }
+        ]
+      },
+      {
+        "map": "SafariZoneSecretHouse",
+        "repeat_identical": true,
+        "cue_frame": 1003,
+        "flag_at_sound_start": false,
+        "first_flag_tick": 73,
+        "dialogue_at_tick150": "NINTEN received HM03!",
+        "bag": [
+          {
+            "item": "Hm03",
+            "qty": 1
+          }
+        ]
+      }
+    ],
+    "status": "passed",
+    "helper_sha256": "6fedc4b92316b59c031af31dc94f0e88dd0c445ac6280a24f44200180a004c32"
+  },
+  "original_results": {
+    "source": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933",
+    "runtime_setters": false,
+    "cases": [
+      {
+        "map": "CinnabarLabMetronomeRoom",
+        "repeats_identical": true,
+        "first_flag_tick": 73,
+        "receipt_retained_without_input": true,
+        "held_A_then_release": true
+      },
+      {
+        "map": "SafariZoneSecretHouse",
+        "repeats_identical": true,
+        "first_flag_tick": 73,
+        "receipt_retained_without_input": true,
+        "held_A_then_release": true
+      }
+    ],
+    "status": "passed",
+    "helper_sha256": "17adf16c3b4eef04e6711c4aaace1c08fcf1ee2e6acce58d1241953d4f20c88f"
+  },
+  "matched_screenshots": {
+    "mode": "master at the candidate screenshot host frame",
+    "cases": [
+      {
+        "map": "CinnabarLabMetronomeRoom",
+        "host_frame": 998,
+        "master_relative_fanfare_tick": 201,
+        "candidate_relative_fanfare_tick": 150,
+        "image_sha256": "b7634cc38a551326d8c0ccb93d94c0ff73e375c16fe8e8402ef697a7daba9c3e",
+        "matches_prior_master_state": true
+      },
+      {
+        "map": "SafariZoneSecretHouse",
+        "host_frame": 1153,
+        "master_relative_fanfare_tick": 257,
+        "candidate_relative_fanfare_tick": 150,
+        "image_sha256": "11db713eda8c78c6a671d9c451298aaf8bac2d13a319c2f1619e9cc4dd31ea25",
+        "matches_prior_master_state": true
+      }
+    ],
+    "status": "passed"
+  },
+  "cases": [
+    {
+      "map": "CinnabarLabMetronomeRoom",
+      "native_fixture_sha256": "9ba5d18a1ed609a0656cb131dea7d6a2843197b52171fb791737f8d36c9d223a",
+      "original_fixture_sha256": "1d480a52e307db40a8f4572f7eb5160f28e456e5c87751ad87aa00b6553abaa3",
+      "repeat_checks": {
+        "before": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "9cdb7bdcc72954ca7ec6504460e5428c8d98f6cad45a39412e4d21bca8dd936b",
+            "0ba9b607fe022c5e448c34d65b13b740317594574edf27ea4c106c637be089c2"
+          ]
+        },
+        "after": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "3f10be03776b8391431cf5ab7473a18bc3cf6d4a706c42f7eb4b126d1ac09dda",
+            "a186a68e20c980a01ec21952165a9f3e15b448aaf6467c301c657c4c96239c0c"
+          ]
+        },
+        "original": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "8db1b6047df0cc59c586ea5b20eda19bb391d4d6105bb204e640f3119bb3ce9d",
+            "8db1b6047df0cc59c586ea5b20eda19bb391d4d6105bb204e640f3119bb3ce9d"
+          ]
+        }
+      },
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "SafariZoneSecretHouse",
+      "native_fixture_sha256": "3a0f1d3fb6b5330c39c638a24bf848f2faf4b7296a876e1c1e68b229a9502a00",
+      "original_fixture_sha256": "e3912fa5f08f2f90e95e5c36afa2eb72f1665ac268470a669188c9626b0f108b",
+      "repeat_checks": {
+        "before": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "535ad102949c7877732bb8f439b4b007dc24f100dc14bb1f7ce36d5ae9e6fc1f",
+            "6ebcdd8f82e71265feae40786e7f695af369278d54136b7164019f0428928bb1"
+          ]
+        },
+        "after": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "89c6398e0617115390cb8899ac46838d2ec6901068c9cc785016e5fca2ab4a0a",
+            "406e6933637b9184d82707d7b73e0d6d24805bb0dbb55c0b2cb9fbe8d816a0af"
+          ]
+        },
+        "original": {
+          "frames_and_images_identical": true,
+          "record_sha256": [
+            "214469db87ca98e985bcca5b6d70b56fa04f05cf6a2c1e6e216a22062b6e59dd",
+            "214469db87ca98e985bcca5b6d70b56fa04f05cf6a2c1e6e216a22062b6e59dd"
+          ]
+        }
+      },
+      "separate_process_continue_runs": 2
+    }
+  ],
+  "limits": [
+    "The NPC comparisons use prepared saves; the independent fresh NEW GAME first-clear chain is recorded separately in validation.fresh_m49.",
+    "Original fixtures were prepared using the original map loader and SAVE; formal reference recordings cold booted them with no runtime setters.",
+    "Native persistence used the explicit debug save operation after the input-only NPC recording, then a separate-process normal CONTINUE.",
+    "No claim of exact source CPU-cycle or font/layout parity."
+  ],
+  "artifacts": {
+    "hm03-after.png": {
+      "bytes": 23725,
+      "sha256": "b3c30f242796147d3ac34d7c382dddf45235cfbd76d5a798f430bb595609d458"
+    },
+    "hm03-before.png": {
+      "bytes": 33929,
+      "sha256": "11db713eda8c78c6a671d9c451298aaf8bac2d13a319c2f1619e9cc4dd31ea25"
+    },
+    "recordings.json.gz": {
+      "bytes": 17967,
+      "sha256": "e68cbd8765b6d6c8cc014c0ee8b3f1f32a799ddf8b27c1178452d8289a3fbf1c"
+    },
+    "tm35-after.png": {
+      "bytes": 11573,
+      "sha256": "82934ba83536dcfefbe97d1123ffa8038f401aeb937667299d9e3a056ed9c671"
+    },
+    "tm35-before.png": {
+      "bytes": 20062,
+      "sha256": "b7634cc38a551326d8c0ccb93d94c0ff73e375c16fe8e8402ef697a7daba9c3e"
+    },
+    "fresh-first-clear.json.gz": {
+      "bytes": 4448,
+      "sha256": "e32e1a75d099fca40d92a4ed8ed608b29868df76dd7187365ed253f082a066cc"
+    }
+  },
+  "validation": {
+    "focused_core_tests": 5,
+    "focused_app_tests": 2,
+    "focused_boa_protocol_tests": 2,
+    "core_library": {
+      "passed": 3290,
+      "failed": 0,
+      "ignored": 0,
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--lib",
+        "--locked",
+        "--offline"
+      ]
+    },
+    "core_integrations": 514,
+    "data_with_boa": {
+      "passed": 479,
+      "ignored": 1
+    },
+    "app_full": "cargo test -p pokered-app --features debug-server --locked --offline passed",
+    "production_libraries_clippy_correctness": "passed",
+    "all_targets_clippy": "failed in byte-identical master bench/test files; see audit-1363-reward-clippy-existing-failures.json",
+    "arm_release_check": "passed",
+    "seeded_scenarios": 11,
+    "fresh_m49": {
+      "status": "passed",
+      "fresh_new_game": true,
+      "seed": 42,
+      "speed": 0,
+      "seconds": 7292.189997555994,
+      "unchanged_source_and_binary": true,
+      "champion_hall_of_fame_credits": true,
+      "independent_continue": {
+        "map_name": "PalletTown",
+        "badges": 255,
+        "hall_of_fame_count": 1,
+        "frame_count": 608
+      },
+      "evidence": "fresh-first-clear.json.gz"
+    },
+    "ci": "Exact-head GitHub Actions checks are tracked on the PR; local checks do not substitute for CI."
+  },
+  "test_only_update_after_native_recordings": {
+    "file": "crates/pokered-core/src/overworld/native_script.rs",
+    "test": "fidelity_reward_receipts_use_original_fanfare_only_on_success",
+    "before_sha256": "81954860da355c9d9c82ed6eb1532ff1394ec4eec8e862873e9308850552680e",
+    "after_sha256": "0252ffd5405ae015eb463491bc8e74e45af9590377bd6010d5256158f96c858f",
+    "outside_named_test_bytes_identical": true,
+    "patch_sha256": "1e5bca8faca17e5819c95a258629b0c7478c086eac7f7e6329b5bb5e46e20776",
+    "production_binary_unchanged_by_test_edit": true
+  },
+  "translation_validation": {
+    "results": [
+      {
+        "map": "CinnabarLabMetronomeRoom",
+        "english_and_chinese_words_preserved": true,
+        "order_preserved": true
+      },
+      {
+        "map": "SafariZoneSecretHouse",
+        "english_and_chinese_words_preserved": true,
+        "order_preserved": true
+      }
+    ],
+    "stock_checker_limit": "The speaker-block checker reports structural differences because these NPCs now use explicit command arguments. This check includes both @t and t strings in script order, ignoring whitespace only."
+  },
+  "final_changed_source_sha256": {
+    "crates/pokered-app/src/game.rs": "5176837d06a96fdcbb0d033465290253140efde9f050f4f45be9be33a33b41ce",
+    "crates/pokered-app/src/game/field_reward_text_tests.rs": "29ad67a17963ecc72d5769f7232f750b09caa3a694012a2f82c0dc94facad319",
+    "crates/pokered-core/src/overworld/field_reward_text.rs": "bf0c580835892ba7a64ad2931365ddc9debd0cb374efd3b7b3b26455d59409b4",
+    "crates/pokered-core/src/overworld/field_reward_text/tests.rs": "95475d0bf7aa2abf78478a01712f7e49e532694375911b2c253bc634e4534b26",
+    "crates/pokered-core/src/overworld/mod.rs": "25c481d3dc979e19e152dfe249ae5d6416606487f948a40965d8b5c5dd896894",
+    "crates/pokered-core/src/overworld/native_script.rs": "0252ffd5405ae015eb463491bc8e74e45af9590377bd6010d5256158f96c858f",
+    "crates/pokered-core/src/overworld/screen.rs": "e2f0499476f296cd1813fc6f7c66e00153b1919698fc4de4e1c1f87271d2a895",
+    "crates/pokered-core/src/overworld/script_bridge.rs": "540ad3b278094e8d4a2bb98e87fe365ba4ac1aecf46850abccf3278cd2cff5ba",
+    "crates/pokered-core/src/overworld/update.rs": "81468f3be6e2001618bfbd100bb50aec47c5f4f69e877dfb9399bc6b4f710a10",
+    "crates/pokered-data/maps/CinnabarLabMetronomeRoom/script.scene": "f7739ab499d55735e2a01b936af610586d0f71d5c561d8f98d94106eb1772013",
+    "crates/pokered-data/maps/SafariZoneSecretHouse/script.scene": "80e188f4be7f5f4c48c1cc12485b7eeaddd2715824753b18995a0584a74e60c2",
+    "crates/pokered-data/src/script_api.rs": "f42422a30fe952e56656297831f843e04f04dc62e944c1f1bd3c42b5c57546cb",
+    "crates/pokered-data/src/script_command.rs": "746dd4df70254089be8166ae6dbd177b2d71ada840cd642cfae50bc71d45f0c0",
+    "crates/pokered-data/src/script_function_catalog.rs": "d019d7c494cec8ea315838dc87dfe3617e86c039be6e4c4c9c6b902bc10ce6a1"
+  }
+}
