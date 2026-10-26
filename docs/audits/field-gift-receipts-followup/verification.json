@@ -322,8 +322,40 @@
       "binary_unchanged": true
     },
     "fresh_run": "audit-1367-followup-fresh-native-m49.json",
-    "fresh_status_at_preparation": "running, retrying league after a normal champion loss; not counted as passed",
-    "ci": "not started"
+    "ci": "not started",
+    "fresh_status": "passed; see fresh-run.json and fresh-m49.json.gz",
+    "fresh_result": {
+      "status": "passed",
+      "seconds": 7874.918562805993,
+      "seed": 42,
+      "speed": 0,
+      "fresh_new_game": true,
+      "helper_sha256": "dffee4ef0d3bdfb4ac15be9c75a999ca825cb6985bb304111de51fb743a4f25b",
+      "unchanged_source_and_binary": true,
+      "temporary_harness_removed": true,
+      "binary_sha256": "bd6c2ecb314a808b7be4d601a6303ab353c7765613f86eb9e39fe85bd6567c2f",
+      "driver_file_count": 1189,
+      "source_evidence_sha256": {
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-checks.json": "dc3c05010f3d5d6d2952145dbe3296526e0fc2148b6f5175cdc76882fb04bc9a",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-checks-v2.json": "30c35bebdf5c67d631f2fff71564343ba771dc324401ef779e678a71b68b263b",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1367-followup-harness.json": "4e33e1d87ebf733be04115ead49ee764608bc86bf0996d48e1261042caf13863",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-changed-source.tar.gz": "1867272fc90b6a79b89d25e13af50f567f24a609f33b42982ad6898ae799147c",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-test-only-proof.json": "f7620883ca02524950dde1d460c3e95e8ab16e18e90dc5a01e7820e1fd2958a9"
+      },
+      "raw_run_manifest_sha256": "b7915ad8fc0768e8c9f1bb94101c3cc4d0501cfdc37d0fd5b7de2c3337735c64",
+      "m49_artifact_sha256": "33defeeb570fb5837b5c0434e495d80851b4091dbb1f4598db8c0a01f6dba1a6",
+      "ending_save_sha256": "17b17b8979f899fac809ead6643da39b7f6bca07a067165bde6ca8e2d35b0930",
+      "independent_continue": {
+        "frame_count": 608,
+        "screen": "overworld",
+        "map_name": "PalletTown",
+        "player_x": 5,
+        "player_y": 6,
+        "badges": 255,
+        "hall_of_fame_count": 1
+      },
+      "note": "Frozen four-gift gameplay binary bd6c2ecb, not relabeled as current branch binary 06650508. The documented source comparison covers the merged agent semantics correction and test-only assertion update. Normal champion blackout and existing league retry occurred; source/binary did not change."
+    }
   },
   "current_source_comparison": {
     "fresh_binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-gift-followups-1365",
