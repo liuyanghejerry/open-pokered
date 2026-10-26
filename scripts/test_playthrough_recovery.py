@@ -28,6 +28,73 @@ class ForestRecoveryTests(unittest.TestCase):
         game.train_until.assert_not_called()
 
 
+class ShipRivalRecoveryTests(unittest.TestCase):
+    def game(self, level=30):
+        game = Mock()
+        state = {
+            'screen': 'overworld', 'map_name': 'VermilionCity',
+            'battle_phase': 'TrainerVictory { player_won: false }',
+            'battle_live': {'player_party': [{'hp': 0}]},
+            'party': [{'level': level}],
+        }
+        game.st.side_effect = lambda: state
+        def train(target, *_):
+            state['party'][0]['level'] = target
+            return True
+        game.train_until.side_effect = train
+        return game, state
+
+    @patch.object(late, 'board_ss_anne')
+    def test_each_confirmed_loss_earns_more_levels_before_boarding(self, board):
+        game, _ = self.game(28)
+        board.side_effect = [AssertionError('rival loss'), AssertionError('rival loss'), 'aboard']
+        self.assertEqual(late.m16_ss_anne(game), 'aboard')
+        self.assertEqual([call.args[0] for call in game.train_until.call_args_list], [30, 32])
+        self.assertEqual(board.call_count, 3)
+        self.assertEqual(game.heal_pokecenter.call_count, 2)
+        game.d.cmd.assert_not_called()
+
+    @patch.object(late, 'board_ss_anne')
+    def test_level_30_loss_still_prepares_the_next_attempt(self, board):
+        game, _ = self.game()
+        board.side_effect = [AssertionError('rival loss'), None]
+        late.m16_ss_anne(game)
+        game.train_until.assert_called_once_with(
+            32, 'Route6', (12, 25), ((11, 3), 'VermilionCity', 'VermilionPokecenter'))
+
+    @patch.object(late, 'board_ss_anne', side_effect=AssertionError('rival loss'))
+    def test_repeated_losses_keep_the_three_attempt_limit(self, board):
+        game, _ = self.game()
+        with self.assertRaisesRegex(AssertionError, 'rival loss'):
+            late.m16_ss_anne(game)
+        self.assertEqual(board.call_count, 3)
+        self.assertEqual([call.args[0] for call in game.train_until.call_args_list], [32, 34])
+
+    def test_navigation_or_unfinished_battle_errors_are_not_retried(self):
+        for changes in [
+            {'screen': 'battle'}, {'map_name': 'SSAnne2F'},
+            {'battle_phase': 'PlayerMenu'}, {'battle_live': None},
+            {'battle_live': {'player_party': [{'hp': 0}, {'hp': 1}]}},
+        ]:
+            with self.subTest(changes=changes):
+                game, state = self.game()
+                state.update(changes)
+                with patch.object(late, 'board_ss_anne', side_effect=RuntimeError('unrelated')) as board:
+                    with self.assertRaisesRegex(RuntimeError, 'unrelated'):
+                        late.m16_ss_anne(game)
+                    self.assertEqual(board.call_count, 1)
+                game.train_until.assert_not_called()
+
+    @patch.object(late, 'board_ss_anne', side_effect=AssertionError('rival loss'))
+    def test_stalled_preparation_is_reported_without_another_attempt(self, board):
+        game, _ = self.game()
+        game.train_until.side_effect = None
+        game.train_until.return_value = False
+        with self.assertRaisesRegex(AssertionError, 'ship preparation stalled'):
+            late.m16_ss_anne(game)
+        self.assertEqual(board.call_count, 1)
+
+
 class SilphRecoveryTests(unittest.TestCase):
     def game(self, losses):
         game=Mock()

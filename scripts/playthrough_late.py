@@ -425,17 +425,20 @@ def m16_ss_anne(g):
             return board_ss_anne(g)
         except (AssertionError, RuntimeError):
             s = g.st()
-            if (attempt == 2 or s["map_name"] != "VermilionCity"
-                    or s.get("battle_live", {}).get("player", {}).get("hp") != 0):
+            party = (s.get("battle_live") or {}).get("player_party", [])
+            if (attempt == 2 or s.get("screen") != "overworld"
+                    or s.get("map_name") != "VermilionCity"
+                    or 'player_won: false' not in s.get("battle_phase", "")
+                    or not party or not all(mon["hp"] == 0 for mon in party)):
                 raise
             print(f"[m16] rival blackout {attempt + 1}: boarding again")
-            # A fresh party can reach the ship below Razor Leaf's level.
-            # Earn it in nearby grass after a loss, rather than spending
-            # all remaining attempts on a burned Tackle user.
-            if s["party"][0]["level"] < 30:
-                heal = ((11, 3), "VermilionCity", "VermilionPokecenter")
-                assert g.train_until(30, "Route6", (12, 25), heal), "ship preparation stalled"
-                g.heal_pokecenter(*heal)
+            # Razor Leaf at L30 can still lose this fight. Every remaining
+            # attempt earns more XP in nearby grass; reaching L32 also lets
+            # the starter evolve through the normal post-battle flow.
+            target = min(100, max(30, s["party"][0]["level"] + 2))
+            heal = ((11, 3), "VermilionCity", "VermilionPokecenter")
+            assert g.train_until(target, "Route6", (12, 25), heal), "ship preparation stalled"
+            g.heal_pokecenter(*heal)
 
 
 def board_ss_anne(g):
