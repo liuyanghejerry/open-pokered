@@ -3068,10 +3068,19 @@ mod tests {
         let scene = pokered_data::embedded_scenes::get_scene_ast("Route16FlyHouse").unwrap();
         let mut e = NativeScriptEngine::new();
         e.load_map("Route16FlyHouse", &scene);
+        let is_fly_explanation = |command: &ScriptCommand| match command {
+            ScriptCommand::ShowText { text } => text.starts_with("HM02 is FLY"),
+            ScriptCommand::Custom { name, args } if name == "printFieldTextParts" => {
+                let command = pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap();
+                matches!(command, pokered_data::script_command::PokemonScriptCommand::PrintFieldTextParts { parts, .. }
+                    if parts.first().is_some_and(|text| text.starts_with("HM02 is FLY")))
+            }
+            _ => false,
+        };
         let first = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY"))));
+        assert!(!first.iter().any(is_fly_explanation));
         let repeat = drive_fidelity_scene(&mut e, "talkBrunetteGirl", true, "", &[]);
-        assert!(matches!(&repeat[0], ScriptCommand::ShowText { text } if text.starts_with("HM02 is FLY")));
+        assert!(is_fly_explanation(&repeat[0]));
         let scene = pokered_data::embedded_scenes::get_scene_ast("BikeShop").unwrap();
         for choice in [0, 1] {
             e = NativeScriptEngine::new();

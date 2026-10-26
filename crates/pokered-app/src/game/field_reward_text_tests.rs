@@ -1,6 +1,6 @@
 //! Cold SRAM -> CONTINUE -> ordinary gift dialogue with real audio/PCM.
 use super::*;
-use pokered_core::foreground_input::{A, B, DOWN, UP};
+use pokered_core::foreground_input::{A, B, DOWN, LEFT, RIGHT, UP};
 use pokered_core::save::{sram_export::export_sram, sram_import::import_sram, SaveData};
 use pokered_data::{
     event_flags::EventFlag, items::ItemId, maps::MapId, moves::MoveId, species::Species,
@@ -13,14 +13,18 @@ struct Case {
     y: u8,
     flag: EventFlag,
     item: ItemId,
+    face: u8,
+    flag_before_sound: bool,
 }
-const CASES: [Case; 2] = [
+const CASES: [Case; 6] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
         y: 3,
         flag: EventFlag::EVENT_GOT_TM35,
         item: ItemId::Tm35,
+        face: UP,
+        flag_before_sound: false,
     },
     Case {
         map: MapId::SafariZoneSecretHouse,
@@ -28,6 +32,44 @@ const CASES: [Case; 2] = [
         y: 4,
         flag: EventFlag::EVENT_GOT_HM03,
         item: ItemId::Hm03,
+        face: UP,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::CeladonDiner,
+        x: 1,
+        y: 1,
+        flag: EventFlag::EVENT_GOT_COIN_CASE,
+        item: ItemId::CoinCase,
+        face: LEFT,
+        flag_before_sound: true,
+    },
+    Case {
+        map: MapId::CeladonMart3F,
+        x: 16,
+        y: 3,
+        flag: EventFlag::EVENT_GOT_TM18,
+        item: ItemId::Tm18,
+        face: DOWN,
+        flag_before_sound: true,
+    },
+    Case {
+        map: MapId::Route16FlyHouse,
+        x: 2,
+        y: 4,
+        flag: EventFlag::EVENT_GOT_HM02,
+        item: ItemId::Hm02,
+        face: UP,
+        flag_before_sound: true,
+    },
+    Case {
+        map: MapId::SilphCo11F,
+        x: 6,
+        y: 5,
+        flag: EventFlag::EVENT_GOT_MASTER_BALL,
+        item: ItemId::MasterBall,
+        face: RIGHT,
+        flag_before_sound: false,
     },
 ];
 
@@ -48,6 +90,8 @@ impl Session {
             (B, GbButton::B),
             (DOWN, GbButton::Down),
             (UP, GbButton::Up),
+            (LEFT, GbButton::Left),
+            (RIGHT, GbButton::Right),
         ] {
             if buttons & bit != 0 {
                 self.input.press(key);
@@ -86,7 +130,8 @@ impl Session {
         save.game_data.position.y_block = case.y / 2;
         save.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Fast;
         if full_bag {
-            for id in 1..=20 {
+            // Exclude MASTER_BALL so a full bag cannot stack this gift.
+            for id in 2..=21 {
                 save.game_data.bag.add_item(ItemId::from_id(id), 1).unwrap();
             }
         }
@@ -190,7 +235,7 @@ impl Session {
 
     fn talk(&mut self) {
         for _ in 0..16 {
-            self.step(UP);
+            self.step(self.case.face);
         }
         for _ in 0..16 {
             self.step(0);
@@ -242,7 +287,7 @@ fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat(
         let mut session = Session::boot(case, false);
         session.reach("SoundWait");
         assert_eq!(session.quantity(), 1);
-        assert!(!session.received());
+        assert_eq!(session.received(), case.flag_before_sound, "{:?}", case.map);
         let mut audible = 0;
         for tick in 0..600 {
             if session.phase("OuterAck") {
@@ -250,6 +295,9 @@ fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat(
             }
             if session.step(if (8..11).contains(&tick) { B | DOWN } else { 0 }) {
                 audible += 1;
+            }
+            if session.phase("SoundWait") {
+                assert_eq!(session.received(), case.flag_before_sound, "{:?}", case.map);
             }
         }
         assert!(
@@ -276,6 +324,13 @@ fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat(
             session.step(0);
         }
         assert!(session.game.overworld.displayed_field_dialogue().is_none());
+        assert_eq!(
+            (
+                session.game.overworld.state.player.x,
+                session.game.overworld.state.player.y
+            ),
+            (case.x.into(), case.y.into())
+        );
         assert_eq!(session.quantity(), 1);
         let saved = import_sram(&export_sram(&session.game.build_save_data())).unwrap();
         assert_ne!(
