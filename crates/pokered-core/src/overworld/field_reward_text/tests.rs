@@ -99,6 +99,99 @@ fn roundtrip(field: &mut Field) {
 }
 
 #[test]
+fn copycat_leading_paragraph_keeps_receipt_and_resumes_after_a_snapshot() {
+    let flag = "EVENT_GOT_TM31";
+    let mut field = begin((MapId::CopycatsHouse2F, 4, 4, flag), false);
+    field.script_bag_names = vec!["POKE_DOLL".into()];
+    field.script_engine.seed_set("bag", &field.script_bag_names);
+    to_sound(&mut field, flag);
+    for _ in 0..10 {
+        step(&mut field, 0, true);
+    }
+    for _ in 0..20 {
+        if phase(&field)
+            == Some(Phase::Protected {
+                remaining: 3,
+                next: Prompt::FirstParagraph,
+            })
+        {
+            break;
+        }
+        step(&mut field, 0, false);
+    }
+    assert_eq!(
+        phase(&field),
+        Some(Phase::Protected {
+            remaining: 3,
+            next: Prompt::FirstParagraph
+        })
+    );
+    roundtrip(&mut field);
+    let last = field.source_foreground().unwrap().last();
+    for remaining in [2, 1] {
+        step(&mut field, A | DOWN, false);
+        assert_eq!(
+            phase(&field),
+            Some(Phase::Protected {
+                remaining,
+                next: Prompt::FirstParagraph
+            })
+        );
+        assert_eq!(field.source_foreground().unwrap().last(), last);
+    }
+    step(&mut field, 0, false);
+    for _ in 0..180 {
+        step(&mut field, 0, false);
+    }
+    assert_eq!(phase(&field), Some(Phase::Prompt(Prompt::FirstParagraph)));
+    let (first, second) = field
+        .displayed_field_dialogue()
+        .unwrap()
+        .get_display_text()
+        .unwrap();
+    assert!(format!("{first} {second}").contains("received TM31"));
+    assert!(!field.unified_flags().get_flag(flag));
+    step(&mut field, B, false);
+    assert_eq!(
+        phase(&field),
+        Some(Phase::FirstParagraphClear { remaining: 20 })
+    );
+    let last = field.source_foreground().unwrap().last();
+    for tick in 1..20 {
+        step(&mut field, if tick < 4 { A | DOWN } else { 0 }, false);
+        assert_eq!(field.source_foreground().unwrap().last(), last);
+        assert_eq!(
+            field
+                .displayed_field_dialogue()
+                .unwrap()
+                .get_display_text()
+                .unwrap(),
+            (String::new(), String::new())
+        );
+        if tick == 9 {
+            roundtrip(&mut field);
+        }
+    }
+    step(&mut field, 0, false);
+    assert_eq!(phase(&field), Some(Phase::Printing));
+    for _ in 0..1000 {
+        if phase(&field) == Some(Phase::Prompt(Prompt::Paragraph)) {
+            break;
+        }
+        step(&mut field, 0, false);
+    }
+    assert_eq!(phase(&field), Some(Phase::Prompt(Prompt::Paragraph)));
+    let (first, second) = field
+        .displayed_field_dialogue()
+        .unwrap()
+        .get_display_text()
+        .unwrap();
+    assert!(format!("{first} {second}").contains("MIMIC"));
+    assert!(!field.unified_flags().get_flag(flag));
+    assert_eq!((field.state.player.x, field.state.player.y), (4, 4));
+}
+
+#[test]
 fn both_embedded_gifts_set_flag_after_sound_then_require_outer_ack() {
     for case in CASES {
         let mut field = begin(case, false);

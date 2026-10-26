@@ -18,6 +18,7 @@ enum Ending {
 enum Prompt {
     NativePage,
     Paragraph,
+    FirstParagraph,
     Return,
 }
 
@@ -28,6 +29,7 @@ enum Phase {
     Protected { remaining: u8, next: Prompt },
     Prompt(Prompt),
     ParagraphClear { remaining: u8 },
+    FirstParagraphClear { remaining: u8 },
     SoundWait,
     OuterAck,
     CloseWait,
@@ -40,6 +42,8 @@ pub struct FieldRewardTextState {
     part: usize,
     ending: Ending,
     phase: Phase,
+    #[serde(default)]
+    continues_text: bool,
 }
 
 impl FieldRewardTextState {
@@ -50,7 +54,14 @@ impl FieldRewardTextState {
             part: 0,
             ending: Ending::Inner(prompt),
             phase: Phase::Start,
+            continues_text: false,
         }
+    }
+
+    pub fn continuation(parts: Vec<String>, prompt: FieldTextPrompt) -> Self {
+        let mut state = Self::parts(parts, prompt);
+        state.continues_text = true;
+        state
     }
 
     pub fn receipt(text: String, sound: String) -> Self {
@@ -59,6 +70,7 @@ impl FieldRewardTextState {
             part: 0,
             ending: Ending::Sound(sound),
             phase: Phase::Start,
+            continues_text: false,
         }
     }
 
@@ -68,11 +80,13 @@ impl FieldRewardTextState {
             part: 0,
             ending: Ending::Outer,
             phase: Phase::Start,
+            continues_text: false,
         }
     }
 
     pub fn label(&self) -> &'static str {
         match self.ending {
+            Ending::Inner(_) if self.continues_text => "ContinueFieldTextParts",
             Ending::Inner(_) => "PrintFieldTextParts",
             Ending::Sound(_) => "PrintItemFieldText",
             Ending::Outer => "AcknowledgeFieldText",
@@ -135,6 +149,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.retain_field_text = true;
                     state.phase = Phase::OuterAck;
                     return self.tick_field_reward_text(state);
+                }
+                if state.continues_text {
+                    // A leading PARA keeps the receipt visible until its own
+                    // protected manual scroll; it must not open a new box.
+                    if self.pending_dialogue.is_none() {
+                        self.pending_dialogue = self.last_script_dialogue.take();
+                    }
+                    self.retain_field_text = true;
+                    state.phase = Phase::Protected {
+                        remaining: 3,
+                        next: Prompt::FirstParagraph,
+                    };
+                    return false;
                 }
                 self.reward_text_part(state, false);
                 state.phase = Phase::Printing;
@@ -225,25 +252,38 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                         self.pending_dialogue.as_mut().unwrap().advance();
                         state.phase = Phase::Printing;
                     }
-                    Prompt::Paragraph => {
+                    Prompt::Paragraph | Prompt::FirstParagraph => {
                         self.pending_dialogue = None;
                         self.last_script_dialogue =
                             Some(BedroomDialogue::from_pages(vec![DialoguePage {
                                 line1: "".into(),
                                 line2: "".into(),
                             }]));
-                        state.phase = Phase::ParagraphClear { remaining: 20 };
+                        state.phase = if next == Prompt::FirstParagraph {
+                            Phase::FirstParagraphClear { remaining: 20 }
+                        } else {
+                            Phase::ParagraphClear { remaining: 20 }
+                        };
                     }
                     Prompt::Return => return self.reward_text_return(state),
                 }
             }
-            Phase::ParagraphClear { remaining } => {
+            Phase::ParagraphClear { remaining } | Phase::FirstParagraphClear { remaining } => {
+                let first = matches!(state.phase, Phase::FirstParagraphClear { .. });
                 if remaining > 1 {
-                    state.phase = Phase::ParagraphClear {
-                        remaining: remaining - 1,
+                    state.phase = if first {
+                        Phase::FirstParagraphClear {
+                            remaining: remaining - 1,
+                        }
+                    } else {
+                        Phase::ParagraphClear {
+                            remaining: remaining - 1,
+                        }
                     };
                 } else {
-                    state.part += 1;
+                    if !first {
+                        state.part += 1;
+                    }
                     self.reward_text_part(state, true);
                     state.phase = Phase::Printing;
                     return self.tick_field_reward_text(state);

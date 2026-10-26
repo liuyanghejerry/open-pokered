@@ -41,6 +41,8 @@ pub enum PokemonScriptCommand {
     FinishFieldText,
     /// Explicit source PARA boundaries followed by an inner text terminator.
     PrintFieldTextParts { parts: Vec<String>, prompt: FieldTextPrompt },
+    /// Continue the retained cursor through a leading PARA and an inner terminator.
+    ContinueFieldTextParts { parts: Vec<String>, prompt: FieldTextPrompt },
     /// Inner receipt text and real sound completion, retaining the cursor.
     PrintItemFieldText { text: String, sound_id: String },
     /// Silent DisplayTextID ACK, A-release hold, then CloseTextDisplay.
@@ -144,6 +146,7 @@ impl PokemonScriptCommand {
             Self::PrintFieldText { .. } => "printFieldText",
             Self::FinishFieldText => "finishFieldText",
             Self::PrintFieldTextParts { .. } => "printFieldTextParts",
+            Self::ContinueFieldTextParts { .. } => "continueFieldTextParts",
             Self::PrintItemFieldText { .. } => "printItemFieldText",
             Self::AcknowledgeFieldText => "acknowledgeFieldText",
             Self::Route22GuardReturn => "route22GuardReturn",
@@ -211,7 +214,8 @@ impl PokemonScriptCommand {
                 if let Some(sound) = leading_sound { args.push(json!(sound)); }
                 args
             },
-            Self::PrintFieldTextParts { parts, prompt } => vec![json!(parts), match prompt {
+            Self::PrintFieldTextParts { parts, prompt }
+            | Self::ContinueFieldTextParts { parts, prompt } => vec![json!(parts), match prompt {
                 FieldTextPrompt::Done => json!(false),
                 FieldTextPrompt::Button => json!(true),
                 FieldTextPrompt::Protected => json!("prompt"),
@@ -377,13 +381,18 @@ impl PokemonScriptCommand {
                 Self::PrintTextCry { text: string(0)?, species: string(1)? }
             },
             "finishFieldText" => Self::FinishFieldText,
-            "printFieldTextParts" => {
-                if args.len() != 2 { return Err("printFieldTextParts: paragraphs and terminator expected".into()); }
+            "printFieldTextParts" | "continueFieldTextParts" => {
+                if args.len() != 2 { return Err(format!("{name}: paragraphs and terminator expected")); }
                 let parts = strings(0)?;
                 if parts.is_empty() || parts.iter().any(String::is_empty) {
-                    return Err("printFieldTextParts: paragraphs must be nonempty strings".into());
+                    return Err(format!("{name}: paragraphs must be nonempty strings"));
                 }
-                Self::PrintFieldTextParts { parts, prompt: FieldTextPrompt::from_argument(args.get(1))? }
+                let prompt = FieldTextPrompt::from_argument(args.get(1))?;
+                if name == "continueFieldTextParts" {
+                    Self::ContinueFieldTextParts { parts, prompt }
+                } else {
+                    Self::PrintFieldTextParts { parts, prompt }
+                }
             },
             "printItemFieldText" => {
                 if args.len() != 2 { return Err("printItemFieldText: text and sound expected".into()); }
@@ -585,11 +594,13 @@ mod tests {
     #[test]
     fn field_reward_commands_preserve_explicit_paragraphs_and_validate_arguments() {
         for prompt in [FieldTextPrompt::Done, FieldTextPrompt::Button, FieldTextPrompt::Protected] {
-            let expected = PokemonScriptCommand::PrintFieldTextParts {
-                parts: vec!["first".into(), "second".into()], prompt,
-            };
-            let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!("custom command required"); };
-            assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+            for expected in [
+                PokemonScriptCommand::PrintFieldTextParts { parts: vec!["first".into(), "second".into()], prompt },
+                PokemonScriptCommand::ContinueFieldTextParts { parts: vec!["first".into(), "second".into()], prompt },
+            ] {
+                let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!("custom command required"); };
+                assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
+            }
         }
         for (name, args) in [
             ("printFieldTextParts", vec![json!([]), json!(false)]),
@@ -603,6 +614,9 @@ mod tests {
             ("acknowledgeFieldText", vec![json!(false)]),
         ] {
             assert!(PokemonScriptCommand::from_custom(name, &args).is_err(), "{name}: {args:?}");
+            if name == "printFieldTextParts" {
+                assert!(PokemonScriptCommand::from_custom("continueFieldTextParts", &args).is_err());
+            }
         }
     }
 

@@ -989,6 +989,9 @@ fn dispatch_custom(name: &str, args: &[Value]) -> ScriptEffect {
         PokemonScriptCommand::PrintFieldTextParts { parts, prompt } => ScriptEffect::FieldRewardText {
             state: Box::new(super::field_reward_text::FieldRewardTextState::parts(parts, prompt)),
         },
+        PokemonScriptCommand::ContinueFieldTextParts { parts, prompt } => ScriptEffect::FieldRewardText {
+            state: Box::new(super::field_reward_text::FieldRewardTextState::continuation(parts, prompt)),
+        },
         PokemonScriptCommand::PrintItemFieldText { text, sound_id } => ScriptEffect::FieldRewardText {
             state: Box::new(super::field_reward_text::FieldRewardTextState::receipt(text, sound_id)),
         },
