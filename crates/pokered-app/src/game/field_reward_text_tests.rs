@@ -16,7 +16,7 @@ struct Case {
     face: u8,
     flag_before_sound: bool,
 }
-const CASES: [Case; 6] = [
+const CASES: [Case; 7] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
@@ -69,6 +69,15 @@ const CASES: [Case; 6] = [
         flag: EventFlag::EVENT_GOT_MASTER_BALL,
         item: ItemId::MasterBall,
         face: RIGHT,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::Route12Gate2F,
+        x: 3,
+        y: 5,
+        flag: EventFlag::EVENT_GOT_TM39,
+        item: ItemId::Tm39,
+        face: UP,
         flag_before_sound: false,
     },
 ];
@@ -246,8 +255,11 @@ impl Session {
     }
 
     fn talk(&mut self) {
-        let expected = if self.case.map == MapId::Route12SuperRodHouse
-            && !self.game.overworld.script_flags().get("EVENT_GOT_SUPER_ROD").copied().unwrap_or(false)
+        let expected = if (self.case.map == MapId::Route12SuperRodHouse
+            && !self.game.overworld.script_flags().get("EVENT_GOT_SUPER_ROD").copied().unwrap_or(false))
+            || (self.case.map == MapId::PokemonFanClub && !self.received()
+                && self.game.save_data.game_data.bag.item_quantity(ItemId::BikeVoucher) == 0
+                && self.game.save_data.game_data.bag.item_quantity(ItemId::Bicycle) == 0)
         {
             "AskFieldYesNo"
         } else {
@@ -308,6 +320,9 @@ impl Drop for Session {
 fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat() {
     for case in CASES {
         let mut session = Session::boot(case, false);
+        // A wandering giver may move while the player approaches. Lock the
+        // dialogue position, rather than the position before facing the NPC.
+        let interaction_position = (session.game.overworld.state.player.x, session.game.overworld.state.player.y);
         session.reach("SoundWait");
         assert_eq!(session.quantity(), 1);
         assert_eq!(session.received(), case.flag_before_sound, "{:?}", case.map);
@@ -352,7 +367,7 @@ fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat(
                 session.game.overworld.state.player.x,
                 session.game.overworld.state.player.y
             ),
-            (case.x.into(), case.y.into())
+            interaction_position
         );
         assert_eq!(session.quantity(), 1);
         let saved = import_sram(&export_sram(&session.game.build_save_data())).unwrap();
@@ -414,3 +429,6 @@ mod copycat;
 
 #[path = "field_reward_text_tests/continuations.rs"]
 mod continuations;
+
+#[path = "field_reward_text_tests/warden_voucher.rs"]
+mod warden_voucher;
