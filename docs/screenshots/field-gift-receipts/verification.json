@@ -250,7 +250,19 @@
       },
       "evidence": "fresh-first-clear.json.gz"
     },
-    "ci": "Exact-head GitHub Actions checks are tracked on the PR; local checks do not substitute for CI."
+    "ci": "Exact-head GitHub Actions checks are tracked on the PR; local checks do not substitute for CI.",
+    "agent": {
+      "passed": 64,
+      "failed": 0,
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-agent",
+        "--locked",
+        "--offline"
+      ]
+    }
   },
   "test_only_update_after_native_recordings": {
     "file": "crates/pokered-core/src/overworld/native_script.rs",
@@ -290,6 +302,13 @@
     "crates/pokered-data/maps/SafariZoneSecretHouse/script.scene": "80e188f4be7f5f4c48c1cc12485b7eeaddd2715824753b18995a0584a74e60c2",
     "crates/pokered-data/src/script_api.rs": "f42422a30fe952e56656297831f843e04f04dc62e944c1f1bd3c42b5c57546cb",
     "crates/pokered-data/src/script_command.rs": "746dd4df70254089be8166ae6dbd177b2d71ada840cd642cfae50bc71d45f0c0",
-    "crates/pokered-data/src/script_function_catalog.rs": "d019d7c494cec8ea315838dc87dfe3617e86c039be6e4c4c9c6b902bc10ce6a1"
+    "crates/pokered-data/src/script_function_catalog.rs": "d019d7c494cec8ea315838dc87dfe3617e86c039be6e4c4c9c6b902bc10ce6a1",
+    "crates/pokered-agent/src/semantics/extract.rs": "7a017f9357fe759171f5d209c1fb323dfeb574bd26277d76706a03baa4f027e3"
+  },
+  "post_recording_semantics_update": {
+    "file": "crates/pokered-agent/src/semantics/extract.rs",
+    "gameplay_source_and_scenes_unchanged_from": "6bad8cc6c1a0a2568bbac72c38fd5d1d1adac7e7",
+    "reason": "Initial CI coverage rejected the new presentation command names. Register all three as presentation while preserving giveItem/setFlag effects. Full agent suite and its strict unknown-construct audit pass.",
+    "failed_job": "https://github.com/liuyanghejerry/open-pokered/actions/runs/40379184471/job/121770453398"
   }
 }
