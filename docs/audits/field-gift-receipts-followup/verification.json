@@ -1,0 +1,424 @@
+{
+  "scope": "Prepared-save ordinary native input replays of the embedded four-gift candidate, not a full playthrough or original CPU timing proof. No scripts-dir override. Native device output is off; actual PCM is checked by app tests.",
+  "base_master": "e084fc3ff7475564c3cf148eab79d7f6ee42cc03",
+  "base_pending_two_gift_diff_sha256": "94f4e6459e11f7ba6f30c401b7f521a9ac9d54612358e20037070b2952ec73cd",
+  "candidate_sha256": "bd6c2ecb314a808b7be4d601a6303ab353c7765613f86eb9e39fe85bd6567c2f",
+  "build_source_manifest_sha256": "ff9a01cca4e627e43718428bfb4ad7ebdb7288fa25358591bd35cc61f4796b60",
+  "build_changed_files_sha256": {
+    "crates/pokered-app/src/game/field_reward_text_tests.rs": "24669b3f10310db900244155cfb6affac3fbebdec7914a90b64bc40ae4370ccf",
+    "crates/pokered-core/src/overworld/native_script.rs": "0252ffd5405ae015eb463491bc8e74e45af9590377bd6010d5256158f96c858f",
+    "crates/pokered-data/maps/CeladonDiner/script.scene": "a41ab1040b0daf18dce104c707a53ef48214f4e0d303c244e2da14188fa3a821",
+    "crates/pokered-data/maps/CeladonMart3F/script.scene": "9f1f927370c6a2f08056b559e0e5a9e2eaa2e24424f381f138b305c3450c2565",
+    "crates/pokered-data/maps/Route16FlyHouse/script.scene": "4ba25ec3ba05f3d341cffc54eb5be708f54b7c5e32e669632db75c7286cd563e",
+    "crates/pokered-data/maps/SilphCo11F/script.scene": "94d97357a9a71530e239dc39885db9a2be8a8d2138905368a0de0008caf1b41c"
+  },
+  "test_only_followup": {
+    "file": "crates/pokered-core/src/overworld/native_script.rs",
+    "method": "All bytes outside the named #[test] function inside the cfg(test) tests module are identical. This is stronger than comparing a prefix before a cfg(test) import.",
+    "test_function": "fidelity_fly_explanation_only_on_repeat_and_bike_menu_displays_price",
+    "outside_named_test_identical": true,
+    "before_sha256": "0252ffd5405ae015eb463491bc8e74e45af9590377bd6010d5256158f96c858f",
+    "after_sha256": "1e9b693cba0c22cdcea109d184ad9f4c14686ea84e308761e4144284ea52f714",
+    "binary_source_manifest": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-checks.json",
+    "updated_test_source_manifest": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-checks-v2.json",
+    "next_batch_patch": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-ready.patch",
+    "next_batch_patch_sha256": "2f231bef3769760e5687f85062dc84953dfeecdab5a5cbf81df7f3a99853fb52",
+    "dry_apply_check": true,
+    "not_applied_to_frozen_worktree": true
+  },
+  "comparisons": [
+    {
+      "success_identical_to_disk_candidate": true,
+      "fullbag_identical_to_disk_candidate": true,
+      "map": "CeladonDiner",
+      "fixture_sha256": "c842363702a9cf49f3be87d828bc9f548eaa6bfebf0714d6b17f34593c24a3ea",
+      "host_frame": 1115,
+      "before_sha256": "5f9f71f4ad51a39cfa2bc0737e79c570b764d4db1ebd329c9437118e98f120c2",
+      "after_sha256": "9ee3091df1df879d380a0e3154068eb55f907c33c9dc498999ba96cd21a6b0c5",
+      "separate_continue_repeats": 2,
+      "original_flag_before_sound": true
+    },
+    {
+      "success_identical_to_disk_candidate": true,
+      "fullbag_identical_to_disk_candidate": true,
+      "map": "CeladonMart3F",
+      "fixture_sha256": "3c53bd418ac0acbc7c60fa60eda42a22a404097b28c75de8bbc19d045c23f62b",
+      "host_frame": 1008,
+      "before_sha256": "c13179673b05cb8bfa758cdee99c1f4870ee394d612f48c9ec6399a5f4112870",
+      "after_sha256": "9e3f8cd8616bc724002d5dde2e20e6925ad8b009c24f354e8a2039d24f4a33bf",
+      "separate_continue_repeats": 2,
+      "original_flag_before_sound": true
+    },
+    {
+      "success_identical_to_disk_candidate": true,
+      "fullbag_identical_to_disk_candidate": true,
+      "map": "Route16FlyHouse",
+      "fixture_sha256": "602d1a8e0b85ceeba7cc34dbedb4d3d5057f174f87b45d21c42ee6de5ba2f6d2",
+      "host_frame": 1045,
+      "before_sha256": "c3f78eafedfdc4bc4d5caa195b46a6a3a28bf50c2d34b8c902fd375990efe1fc",
+      "after_sha256": "4b6bbe9162f5628de60c111c5d958777197002752cfd491d5ada084ebdfc7937",
+      "separate_continue_repeats": 2,
+      "original_flag_before_sound": true
+    },
+    {
+      "success_identical_to_disk_candidate": true,
+      "fullbag_identical_to_disk_candidate": true,
+      "map": "SilphCo11F",
+      "fixture_sha256": "94984743edf64d5a7cfb25d243c7c5fab578ba89f1e06c51e134d7e9034f5a9d",
+      "host_frame": 1221,
+      "before_sha256": "ab80d60285456229944f33a1403fcc90daccf1ec10a7d894668955e7f0363eb9",
+      "after_sha256": "da39746b58adaf464f8844d137f143c409ab073428f17397deca14e4b71c649b",
+      "separate_continue_repeats": 2,
+      "original_flag_before_sound": false
+    }
+  ],
+  "patch_sha256": "2f231bef3769760e5687f85062dc84953dfeecdab5a5cbf81df7f3a99853fb52",
+  "recordings_sha256": "2595568859357109804fb5df180e744390b66671810f8fdc98a48a9a534d19dd",
+  "historical_validation": {
+    "app_focused": "2 tests covering success and full bag for all six gift callers, with real sequencer PCM, held/released inputs, repeat dialogue and SRAM serialization",
+    "core_library": 3290,
+    "data_with_boa": {
+      "passed": 479,
+      "ignored": 1
+    },
+    "arm_release_check": "passed",
+    "full_fresh_new_game": {
+      "status": "running",
+      "pid": 2657576,
+      "result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-fresh-native-m49.json",
+      "binary_sha256": "bd6c2ecb314a808b7be4d601a6303ab353c7765613f86eb9e39fe85bd6567c2f",
+      "fresh_new_game": true,
+      "independent_of_W_lifetime": true
+    },
+    "ci": "not started; no followup PR yet",
+    "prior_failure": "Initial core run had one obsolete ShowText-only FLY explanation assertion. It was updated to check the same first/repeat behavior through the new text command; test-only proof is included."
+  },
+  "current_master": "95152068aeabf6042f5f49c3b5744b8c6bb48da9",
+  "current_candidate_sha256": "0665050803f653ab9c9619fb526b4b1e87bd8a381f0c69a7d208caf69f3526b4",
+  "current_validation": {
+    "local_native_and_tests": [
+      {
+        "name": "native-build",
+        "command": [
+          "cargo",
+          "build",
+          "--bin",
+          "pokered-app",
+          "--features",
+          "debug-server",
+          "--locked",
+          "--offline"
+        ],
+        "exit_code": 0,
+        "seconds": 21.854229283999302,
+        "summaries": []
+      },
+      {
+        "name": "core-lib",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-core",
+          "--lib",
+          "--locked",
+          "--offline"
+        ],
+        "exit_code": 0,
+        "seconds": 28.671669909002958,
+        "summaries": [
+          [
+            "ok",
+            "3290",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "name": "app-lib",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-app",
+          "--lib",
+          "--features",
+          "debug-server",
+          "--locked",
+          "--offline"
+        ],
+        "exit_code": 0,
+        "seconds": 74.56006261600123,
+        "summaries": [
+          [
+            "ok",
+            "409",
+            "0",
+            "40"
+          ]
+        ]
+      },
+      {
+        "name": "data-boa",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-data",
+          "--features",
+          "script-boa",
+          "--locked",
+          "--offline"
+        ],
+        "exit_code": 0,
+        "seconds": 8.42572716200084,
+        "summaries": [
+          [
+            "ok",
+            "313",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "2",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "3",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "11",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "12",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "21",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "9",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "9",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "1",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "19",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "15",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "30",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "9",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "10",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "3",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "11",
+            "0",
+            "0"
+          ],
+          [
+            "ok",
+            "1",
+            "0",
+            "1"
+          ]
+        ]
+      },
+      {
+        "name": "agent",
+        "command": [
+          "cargo",
+          "test",
+          "-p",
+          "pokered-agent",
+          "--lib",
+          "--locked",
+          "--offline"
+        ],
+        "exit_code": 0,
+        "seconds": 13.309025969996583,
+        "summaries": [
+          [
+            "ok",
+            "64",
+            "0",
+            "0"
+          ]
+        ]
+      }
+    ],
+    "arm_check": {
+      "status": "passed",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 13.510248512000544,
+      "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-four-gifts-arm-recheck.log",
+      "previous_failure_manifest": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-four-gifts-build-build-checks.json",
+      "worktree_moved_from": "/home/jerry/develop/open-pokered/.task-tmp/field-gift-followups-1371",
+      "worktree_moved_to": "/home/jerry/develop/.task-tmp/field-gift-followups-1371",
+      "reason": "Nested worktree inherited outer Cargo workspace for standalone GBA crate. Move outside parent workspace, without source or manifest edits.",
+      "source_unchanged": true,
+      "binary_unchanged": true
+    },
+    "fresh_run": "audit-1367-followup-fresh-native-m49.json",
+    "fresh_status_at_preparation": "running, retrying league after a normal champion loss; not counted as passed",
+    "ci": "not started"
+  },
+  "current_source_comparison": {
+    "fresh_binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-gift-followups-1365",
+    "fresh_binary_sha256": "bd6c2ecb314a808b7be4d601a6303ab353c7765613f86eb9e39fe85bd6567c2f",
+    "current_worktree": "/home/jerry/develop/.task-tmp/field-gift-followups-1371",
+    "current_master": "95152068aeabf6042f5f49c3b5744b8c6bb48da9",
+    "reconstructed_old_source_base": "e084fc3ff7475564c3cf148eab79d7f6ee42cc03",
+    "reconstructed_old_source_archive": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1365-followup-changed-source.tar.gz",
+    "files_checked": 2369,
+    "different_files": [
+      "crates/pokered-agent/src/semantics/extract.rs",
+      "crates/pokered-core/src/overworld/native_script.rs"
+    ],
+    "claim": "2369 compile-input files compared: all except one test-only file and the already-merged agent semantics correction are byte-identical to the frozen four-gift recording / fresh binary. The new binary identity remains distinct and has its own local checks and recaptured screenshots.",
+    "inspected_differences": {
+      "crates/pokered-core/src/overworld/native_script.rs": "Exactly matches the documented test-only followup archive; only the named FLY explanation assertion changed from the recorded binary.",
+      "crates/pokered-agent/src/semantics/extract.rs": "Exactly the already-merged PR424 extractor fix: three presentation commands added to NO_STATE_COMMANDS plus a test. No gameplay state-machine change."
+    }
+  },
+  "current_captures": {
+    "before": {
+      "mode": "before",
+      "binary_sha256": "34774b529bb51507d755891342544a59116f2b087ef83fd030cec62549d98aaa",
+      "base_master": "95152068aeabf6042f5f49c3b5744b8c6bb48da9",
+      "scope": "New raw screenshots from the current master binary and new current-master four-gift binary. Replayed existing ordinary input prefixes; each side has its own confirmations, not claimed as identical input timelines. Common prepared SRAM, initial frame and capture frame.",
+      "cases": [
+        {
+          "map": "CeladonDiner",
+          "frame": 1115,
+          "image_sha256": "5f9f71f4ad51a39cfa2bc0737e79c570b764d4db1ebd329c9437118e98f120c2",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "CeladonMart3F",
+          "frame": 1008,
+          "image_sha256": "c13179673b05cb8bfa758cdee99c1f4870ee394d612f48c9ec6399a5f4112870",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "Route16FlyHouse",
+          "frame": 1045,
+          "image_sha256": "c3f78eafedfdc4bc4d5caa195b46a6a3a28bf50c2d34b8c902fd375990efe1fc",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "SilphCo11F",
+          "frame": 1221,
+          "image_sha256": "ab80d60285456229944f33a1403fcc90daccf1ec10a7d894668955e7f0363eb9",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        }
+      ],
+      "status": "passed",
+      "helper_sha256": "0adba642798f421e20231178a75ff5023e64d16cccc7658681b0a37d48311d5c"
+    },
+    "after": {
+      "mode": "after",
+      "binary_sha256": "0665050803f653ab9c9619fb526b4b1e87bd8a381f0c69a7d208caf69f3526b4",
+      "base_master": "95152068aeabf6042f5f49c3b5744b8c6bb48da9",
+      "scope": "New raw screenshots from the current master binary and new current-master four-gift binary. Replayed existing ordinary input prefixes; each side has its own confirmations, not claimed as identical input timelines. Common prepared SRAM, initial frame and capture frame.",
+      "cases": [
+        {
+          "map": "CeladonDiner",
+          "frame": 1115,
+          "image_sha256": "9ee3091df1df879d380a0e3154068eb55f907c33c9dc498999ba96cd21a6b0c5",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "CeladonMart3F",
+          "frame": 1008,
+          "image_sha256": "9e3f8cd8616bc724002d5dde2e20e6925ad8b009c24f354e8a2039d24f4a33bf",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "Route16FlyHouse",
+          "frame": 1045,
+          "image_sha256": "4b6bbe9162f5628de60c111c5d958777197002752cfd491d5ada084ebdfc7937",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        },
+        {
+          "map": "SilphCo11F",
+          "frame": 1221,
+          "image_sha256": "da39746b58adaf464f8844d137f143c409ab073428f17397deca14e4b71c649b",
+          "repeats_identical": true,
+          "matches_existing_evidence": true
+        }
+      ],
+      "status": "passed",
+      "helper_sha256": "0adba642798f421e20231178a75ff5023e64d16cccc7658681b0a37d48311d5c"
+    }
+  }
+}
