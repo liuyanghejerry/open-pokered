@@ -1,0 +1,191 @@
+{
+  "status": "passed local validation and complete fresh NEW GAME; CI pending",
+  "base": "a34d447fe12cbd67b6d36c4b1b927b477e87cf6e",
+  "before_binary_sha256": "0665050803f653ab9c9619fb526b4b1e87bd8a381f0c69a7d208caf69f3526b4",
+  "after_binary_sha256": "44fc0d7989ec4411f374c7b71831c4ea39fedf03e67b722de6548163dbb2408a",
+  "reference": "pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "screenshots": {
+    "same_frame": 1270,
+    "same_prepared_save": true,
+    "same_initial_pixels": true,
+    "prior_inputs": "Each side uses ordinary adaptive confirmation to reach its receipt, then neutral input; NOT an identical-timeline comparison. Extra recorded identical-timeline controls exist locally but are not receipt-matched evidence."
+  },
+  "tests": {
+    "core_library_pass": 3291,
+    "app_library_pass": 412,
+    "app_library_ignored": 40,
+    "data_boa_pass": 479,
+    "data_boa_ignored": 1,
+    "agent_pass": 64,
+    "arm_release_check": "passed"
+  },
+  "fresh_m49": {
+    "status": "passed",
+    "seconds": 7409.163937795005,
+    "seed": 42,
+    "fresh_new_game": true,
+    "unchanged_source_and_binary": true,
+    "milestones": 49,
+    "ending_save": "ending.sav.gz",
+    "independent_continue": {
+      "map": "PalletTown",
+      "badges": 255,
+      "hall_of_fame_count": 1
+    },
+    "record": "fresh-m01-m49.json.gz"
+  },
+  "source_reconstruction": {
+    "master": "a34d447fe12cbd67b6d36c4b1b927b477e87cf6e",
+    "frozen_source_tree": "934ecf723e8a439c9402727cb6e54f8895a7252c",
+    "current_tree": "f751485e4b222fb4995a4845dd455cee9c9189ad",
+    "runtime_source_different_files": [],
+    "worktree": "/home/jerry/develop/.task-tmp/copycat-gift-1372",
+    "branch": "fix/copycat-gift-confirmation-1372",
+    "frozen_binary": "44fc0d7989ec4411f374c7b71831c4ea39fedf03e67b722de6548163dbb2408a",
+    "comparison_scope": "All crates plus Cargo.toml/Cargo.lock; documentation changes excluded. Code staged for review, not committed."
+  },
+  "diagnostics": [
+    "Initial no-doll recording compared newline source text with space-joined get_state dialogue; controller was interrupted and retained. Corrected v2 passed all four native branch controls; product code unchanged.",
+    "Identical-timeline screenshot experiments reached different dialogue stages; their assumptions failed or produced only stage comparisons. Final paired images explicitly use adaptive earlier confirmations and the same host-frame index."
+  ],
+  "artifacts": {
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-continue-1.json.gz": {
+      "sha256": "c586c07b0ec02f54bb919f625ce6cfc87daed7ce797c49ab5a66a79c072dc3a5",
+      "bytes": 1690
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-continue-2.json.gz": {
+      "sha256": "390fe03fe5a937243fbf9acbbfd7ab42fa905e028e33c296717152d95c49370d",
+      "bytes": 1691
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-full-bag-1.json.gz": {
+      "sha256": "37a38ed43335aba11463ede4e208f00d3fe09f0a83f4aa445e18e4505d35f2bf",
+      "bytes": 15871
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-full-bag-2.json.gz": {
+      "sha256": "af5fc5eec22141904573409d5c1f0f49f6d045e8e8ccb66cd165031ac1550cc1",
+      "bytes": 15871
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-no-doll-1.json.gz": {
+      "sha256": "e0daf1e140b63d4d8fec24a1bda2d2138c3df962364d68138f6f6dcc9a710173",
+      "bytes": 7904
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-no-doll-2.json.gz": {
+      "sha256": "89419514754361cfb3868c4eb23a9c18928edaeaba98d52310db6198678e8842",
+      "bytes": 7904
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-success-1.json.gz": {
+      "sha256": "479cf1c3f9696c6fe0d74828bcb4ff67e730f6d60fae6fef4a7c02446bd21a78",
+      "bytes": 8049
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/candidate-success-2.json.gz": {
+      "sha256": "7c288b05b9069adb50c2fe8a9d853f4e5434c9ae1248db5906642b674c946b45",
+      "bytes": 8050
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/current-master-1.json.gz": {
+      "sha256": "de86b49c1c150034370faf86a342000489d86151b11dbbe097059e84acd17b5e",
+      "bytes": 2250
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/current-master-2.json.gz": {
+      "sha256": "712b477e9e6fa37577f0a274bb1118c0d9904e8351e1ad196207a5df5f9aa581",
+      "bytes": 2250
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/ending.sav.gz": {
+      "sha256": "f5411d8072bc1508699fafa5bac7b96b2c8fcacc7dbabd49d70652ed5d22dbbe",
+      "bytes": 665
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/fresh-driver.log.gz": {
+      "sha256": "adcc9162e369706fc5721a5758658deb83dc4d5ee5e9447fcc6942c8db201e58",
+      "bytes": 3571
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/fresh-m01-m49.json.gz": {
+      "sha256": "87a30c37e71986fea77e7c402edffc02644a618647360b8c2faaf2bc20e50b0f",
+      "bytes": 19977
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/full-bag.sav.gz": {
+      "sha256": "6dd0f15fcb716fbfa491e82849c015a148363a0e125f160a39c6ab2a19f34795",
+      "bytes": 1161
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/no-doll.sav.gz": {
+      "sha256": "887a590a76f1b918f6c4244b6a0e647b2d2adee13cc851923fca7eed60a58858",
+      "bytes": 1132
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-full-bag-1.json.gz": {
+      "sha256": "b6a1af3d12705246974a073f15d6f6469275138cec97c0d11129ea287675b0c6",
+      "bytes": 2068
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-full-bag-2.json.gz": {
+      "sha256": "b6a1af3d12705246974a073f15d6f6469275138cec97c0d11129ea287675b0c6",
+      "bytes": 2068
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-no-doll-1.json.gz": {
+      "sha256": "1dc01e653dc93792648997f6ecde97ee4baa98e087beeb2b0ccbca768e9c6d65",
+      "bytes": 1390
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-no-doll-2.json.gz": {
+      "sha256": "1dc01e653dc93792648997f6ecde97ee4baa98e087beeb2b0ccbca768e9c6d65",
+      "bytes": 1390
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-success-1.json.gz": {
+      "sha256": "09e35e55369b94b444ae51a63b5bf31cfa5985999e31444755eea746af10a6ff",
+      "bytes": 2574
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/original-success-2.json.gz": {
+      "sha256": "09e35e55369b94b444ae51a63b5bf31cfa5985999e31444755eea746af10a6ff",
+      "bytes": 2574
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/source-and-build-proofs.json.gz": {
+      "sha256": "cfaec846f7d14730c22f740883f382e1dd3334fce08f5edcef2e2858b5855f42",
+      "bytes": 164043
+    },
+    "docs/audits/2026-10-27/copycat-gift-confirmation/success.sav.gz": {
+      "sha256": "32fc73d6b863146b61d11294d1c1a7bd5c6180c65b9938e97e9719e3ca3b2ab3",
+      "bytes": 1135
+    },
+    "docs/screenshots/copycat-gift-confirmation/after-1270.png": {
+      "sha256": "1ea16ce77639c3b3bbbd80c32c6ce79753f06074a787bdc54d2d8e3e61e4361d",
+      "bytes": 20192
+    },
+    "docs/screenshots/copycat-gift-confirmation/before-1270.png": {
+      "sha256": "98265f46f357a031b2de0ca2eee69cd5df66f2102a4d7ddaad3cb1c24d5139b8",
+      "bytes": 20402
+    }
+  },
+  "current_branch_tests": [
+    {
+      "name": "core-gifts",
+      "exit_code": 0,
+      "summaries": [
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "app-gifts",
+      "exit_code": 0,
+      "summaries": [
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "agent",
+      "exit_code": 0,
+      "summaries": [
+        [
+          "ok",
+          "64",
+          "0",
+          "0"
+        ]
+      ]
+    }
+  ]
+}

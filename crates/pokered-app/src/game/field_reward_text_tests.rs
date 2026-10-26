@@ -120,6 +120,16 @@ impl Session {
     }
 
     fn boot(case: Case, full_bag: bool) -> Self {
+        let items: Vec<_> = if full_bag {
+            // Exclude MASTER_BALL so a full bag cannot stack this gift.
+            (2..=21).map(|id| (ItemId::from_id(id), 1)).collect()
+        } else {
+            Vec::new()
+        };
+        Self::boot_with_items(case, &items)
+    }
+
+    fn boot_with_items(case: Case, items: &[(ItemId, u8)]) -> Self {
         let mut save = SaveData::new();
         save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
         save.game_data.player_id = 1234;
@@ -129,11 +139,8 @@ impl Session {
         save.game_data.position.x_block = case.x / 2;
         save.game_data.position.y_block = case.y / 2;
         save.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Fast;
-        if full_bag {
-            // Exclude MASTER_BALL so a full bag cannot stack this gift.
-            for id in 2..=21 {
-                save.game_data.bag.add_item(ItemId::from_id(id), 1).unwrap();
-            }
+        for &(item, quantity) in items {
+            save.game_data.bag.add_item(item, quantity).unwrap();
         }
         let mut mon = pokered_core::pokemon::stats::create_pokemon_with_moves(
             Species::Bulbasaur,
@@ -257,7 +264,11 @@ impl Session {
             if self.phase(target) {
                 return;
             }
-            let keys = if self.game.overworld.dialogue_needs_button() {
+            // Observe an inner return before pressing it; a held B during
+            // Protected would otherwise consume that prompt on its first poll.
+            let keys = if self.game.overworld.active_script_effect_value().is_some_and(|value| {
+                value["phase"].as_str().is_some_and(|phase| phase.starts_with("Prompt("))
+            }) {
                 B
             } else {
                 0
@@ -385,3 +396,6 @@ fn cold_continue_full_bag_never_marks_the_gift_received() {
         assert_eq!(std::fs::read(&session.path).unwrap(), session.original_sram);
     }
 }
+
+#[path = "field_reward_text_tests/copycat.rs"]
+mod copycat;

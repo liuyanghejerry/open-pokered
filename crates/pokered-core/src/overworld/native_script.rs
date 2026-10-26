@@ -551,13 +551,13 @@ impl ScriptHost for NativeHost {
                 if !level.is_finite() || !(1. ..=100.).contains(&level) || level != level as u8 as f64 { return Err("staticEncounter: level must be an integer from 1 to 100".into()); }
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(text),serde_json::json!(species),serde_json::json!(level as u8)])?))
             },
-            "printFieldTextParts" => {
-                if v.len() != 2 { return Err("printFieldTextParts: paragraphs and terminator expected".into()); }
+            "printFieldTextParts" | "continueFieldTextParts" => {
+                if v.len() != 2 { return Err(format!("{name}: paragraphs and terminator expected")); }
                 let parts = args::string_array(&v[0], name)?;
                 let prompt = match &v[1] {
                     Value::Bool(value) => serde_json::json!(value),
                     Value::Text(value) => serde_json::json!(value),
-                    _ => return Err("printFieldTextParts: invalid terminator".into()),
+                    _ => return Err(format!("{name}: invalid terminator")),
                 };
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(parts), prompt])?))
             },

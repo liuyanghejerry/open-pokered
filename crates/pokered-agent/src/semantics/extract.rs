@@ -208,6 +208,7 @@ const NO_STATE_COMMANDS: &[&str] = &[
     // Gift text/acknowledgement only presents the caller's transaction.
     // giveItem and setFlag remain separate, visible event-graph effects.
     "printFieldTextParts",
+    "continueFieldTextParts",
     "printItemFieldText",
     "acknowledgeFieldText",
     "bikeShopOffer",
@@ -1031,6 +1032,7 @@ mod tests {
         for (room, handler, item, flag) in [
             ("CinnabarLabMetronomeRoom", "talkScientist1", "TM_35", "EVENT_GOT_TM35"),
             ("SafariZoneSecretHouse", "talkFishingGuru", "HM03", "EVENT_GOT_HM03"),
+            ("CopycatsHouse2F", "talkCopycat", "TM31", "EVENT_GOT_TM31"),
         ] {
             let scene = pokered_data::embedded_scenes::get_scene_ast(room).unwrap();
             let mut coverage = CoverageAccum::default();
@@ -1040,6 +1042,9 @@ mod tests {
             assert!(gift.reads.contains(&StatePredicate::FlagRead { flag: flag.into() }));
             assert!(gift.effects.contains(&StateEffect::ItemGiven { item: item.into(), qty: Some(1) }));
             assert!(gift.effects.contains(&StateEffect::FlagSet { flag: flag.into() }));
+            if room == "CopycatsHouse2F" {
+                assert!(gift.effects.contains(&StateEffect::ItemTaken { item: "POKE_DOLL".into(), qty: Some(1) }));
+            }
         }
     }
 

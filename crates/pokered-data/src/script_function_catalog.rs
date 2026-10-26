@@ -11,6 +11,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "bikeShopOffer",
     "billPokemonList",
     "choosePartyPokemon",
+    "continueFieldTextParts",
     "cyclingGateReturn",
     "depositDaycare",
     "elevatorMenu",
