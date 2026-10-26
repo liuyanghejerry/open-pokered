@@ -191,6 +191,15 @@ impl ScriptApiRegistrar for PokemonScriptApi {
             Ok(PokemonScriptCommand::PrintTextCry { text: string(0)?, species: string(1)? }.into_script_command())
         });
 
+        for name in ["printFieldTextParts", "printItemFieldText", "acknowledgeFieldText"] {
+            engine.register_async_fn(name, move |args: &[JsValue], ctx: &mut Context| -> JsResult<ScriptCommand> {
+                let values = args.iter().map(|value| value.to_json(ctx)).collect::<JsResult<Vec<_>>>()?;
+                let command = PokemonScriptCommand::from_custom(name, &values)
+                    .map_err(|message| boa_engine::JsNativeError::typ().with_message(message))?;
+                Ok(command.into_script_command())
+            });
+        }
+
         // FoundItemText prints, plays GET_ITEM_1, then closes without A.
         engine.register_async_fn(
             "showItemDialogue",
@@ -1426,6 +1435,31 @@ mod tests {
         assert_eq!(engine.tick(), Some(expected));
         assert_eq!(engine.signal_done(CommandResult::Void).unwrap(),
             Some(ScriptCommand::ShowText { text: "returned".into() }));
+    }
+
+    #[test]
+    fn field_reward_commands_suspend_the_boa_caller_until_completion() {
+        use crate::script_command::{FieldTextPrompt, PokemonScriptCommand};
+        let mut engine = ScriptEngine::with_api(&PokemonScriptApi);
+        engine.load_script(r#"
+            export async function reward() {
+                await game.printFieldTextParts(["one", "two"], "prompt");
+                await game.printItemFieldText("receipt", "SFX_GET_ITEM_1");
+                await game.acknowledgeFieldText();
+            }
+        "#).unwrap();
+        let expected = [
+            PokemonScriptCommand::PrintFieldTextParts { parts: vec!["one".into(), "two".into()], prompt: FieldTextPrompt::Protected },
+            PokemonScriptCommand::PrintItemFieldText { text: "receipt".into(), sound_id: "SFX_GET_ITEM_1".into() },
+            PokemonScriptCommand::AcknowledgeFieldText,
+        ];
+        let mut next = engine.call_function("reward", &[]).unwrap();
+        for command in expected {
+            assert_eq!(next, Some(command.into_script_command()));
+            assert_eq!(engine.tick(), next);
+            next = engine.signal_done(CommandResult::Void).unwrap();
+        }
+        assert!(next.is_none());
     }
 
     #[test]

@@ -18,6 +18,7 @@ pub mod static_encounter;
 pub mod field_cry_continuation;
 pub mod jigglypuff_song;
 mod field_text;
+pub mod field_reward_text;
 mod field_yes_no;
 mod pokecenter_nurse;
 pub mod fishing;

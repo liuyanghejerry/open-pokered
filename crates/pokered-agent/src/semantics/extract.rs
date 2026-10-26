@@ -205,6 +205,11 @@ const NO_STATE_COMMANDS: &[&str] = &[
     "showText",
     // Inner PrintText returns to its caller; it only presents dialogue.
     "printFieldText",
+    // Gift text/acknowledgement only presents the caller's transaction.
+    // giveItem and setFlag remain separate, visible event-graph effects.
+    "printFieldTextParts",
+    "printItemFieldText",
+    "acknowledgeFieldText",
     "bikeShopOffer",
     "fieldCry",
     "fieldCryContinuation",
@@ -1019,6 +1024,23 @@ mod tests {
             3,
             "dialogue must not invent a second item/event effect"
         );
+    }
+
+    #[test]
+    fn explicit_gift_text_preserves_the_actual_rewards_and_completion_flags() {
+        for (room, handler, item, flag) in [
+            ("CinnabarLabMetronomeRoom", "talkScientist1", "TM_35", "EVENT_GOT_TM35"),
+            ("SafariZoneSecretHouse", "talkFishingGuru", "HM03", "EVENT_GOT_HM03"),
+        ] {
+            let scene = pokered_data::embedded_scenes::get_scene_ast(room).unwrap();
+            let mut coverage = CoverageAccum::default();
+            let map = extract_map_with_coverage(&scene, &mut coverage);
+            assert!(coverage.unknown.is_empty(), "{room}: {:?}", coverage.unknown);
+            let gift = map.storylines.iter().find(|s| s.storyline == handler).unwrap();
+            assert!(gift.reads.contains(&StatePredicate::FlagRead { flag: flag.into() }));
+            assert!(gift.effects.contains(&StateEffect::ItemGiven { item: item.into(), qty: Some(1) }));
+            assert!(gift.effects.contains(&StateEffect::FlagSet { flag: flag.into() }));
+        }
     }
 
     #[test]

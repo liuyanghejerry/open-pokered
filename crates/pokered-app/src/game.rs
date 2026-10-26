@@ -13921,6 +13921,10 @@ use reset_counter::SoftResetCounter;
 mod bike_shop_no_delay_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/field_reward_text_tests.rs"]
+mod field_reward_text_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/pidgey_field_cry_audio_tests.rs"]
 mod pidgey_field_cry_audio_tests;
 
