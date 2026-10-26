@@ -45,6 +45,8 @@ pub enum PokemonScriptCommand {
     ContinueFieldTextParts { parts: Vec<String>, prompt: FieldTextPrompt },
     /// Inner receipt text and real sound completion, retaining the cursor.
     PrintItemFieldText { text: String, sound_id: String },
+    /// Explicit receipt paragraphs, real fanfare, then an optional inner prompt.
+    PrintItemFieldTextParts { parts: Vec<String>, sound_id: String, prompt: FieldTextPrompt },
     /// Silent DisplayTextID ACK, A-release hold, then CloseTextDisplay.
     AcknowledgeFieldText,
     /// Route22GatePlayerMovingScript: unlock, Delay3, then finish simulation.
@@ -148,6 +150,7 @@ impl PokemonScriptCommand {
             Self::PrintFieldTextParts { .. } => "printFieldTextParts",
             Self::ContinueFieldTextParts { .. } => "continueFieldTextParts",
             Self::PrintItemFieldText { .. } => "printItemFieldText",
+            Self::PrintItemFieldTextParts { .. } => "printItemFieldTextParts",
             Self::AcknowledgeFieldText => "acknowledgeFieldText",
             Self::Route22GuardReturn => "route22GuardReturn",
             Self::CyclingGateReturn => "cyclingGateReturn",
@@ -221,6 +224,11 @@ impl PokemonScriptCommand {
                 FieldTextPrompt::Protected => json!("prompt"),
             }],
             Self::PrintItemFieldText { text, sound_id } => vec![json!(text), json!(sound_id)],
+            Self::PrintItemFieldTextParts { parts, sound_id, prompt } => vec![json!(parts), json!(sound_id), match prompt {
+                FieldTextPrompt::Done => json!(false),
+                FieldTextPrompt::Button => json!(true),
+                FieldTextPrompt::Protected => json!("prompt"),
+            }],
             Self::BikeShopOffer { texts } => texts.into_iter().map(Value::String).collect(),
             Self::FieldCryContinuation { mut texts, species } => {
                 assert_eq!(texts.len(), 3, "validated far/PARA/CONT payload");
@@ -399,6 +407,15 @@ impl PokemonScriptCommand {
                 let (text, sound_id) = (string(0)?, string(1)?);
                 if text.is_empty() || sound_id.is_empty() { return Err("printItemFieldText: text and sound must not be empty".into()); }
                 Self::PrintItemFieldText { text, sound_id }
+            },
+            "printItemFieldTextParts" => {
+                if args.len() != 3 { return Err("printItemFieldTextParts: paragraphs, sound and terminator expected".into()); }
+                let parts = strings(0)?;
+                let sound_id = string(1)?;
+                if parts.is_empty() || parts.iter().any(String::is_empty) || sound_id.is_empty() {
+                    return Err("printItemFieldTextParts: paragraphs and sound must not be empty".into());
+                }
+                Self::PrintItemFieldTextParts { parts, sound_id, prompt: FieldTextPrompt::from_argument(args.get(2))? }
             },
             "acknowledgeFieldText" => {
                 if !args.is_empty() { return Err("acknowledgeFieldText: no arguments expected".into()); }
@@ -597,6 +614,7 @@ mod tests {
             for expected in [
                 PokemonScriptCommand::PrintFieldTextParts { parts: vec!["first".into(), "second".into()], prompt },
                 PokemonScriptCommand::ContinueFieldTextParts { parts: vec!["first".into(), "second".into()], prompt },
+                PokemonScriptCommand::PrintItemFieldTextParts { parts: vec!["offer".into(), "receipt".into()], sound_id: "SFX_GET_KEY_ITEM".into(), prompt },
             ] {
                 let ScriptCommand::Custom { name, args } = expected.clone().into_script_command() else { panic!("custom command required"); };
                 assert_eq!(PokemonScriptCommand::from_custom(&name, &args), Ok(expected));
@@ -611,6 +629,11 @@ mod tests {
             ("printItemFieldText", vec![json!("receipt"), json!("")]),
             ("printItemFieldText", vec![json!(""), json!("SFX_GET_ITEM_1")]),
             ("printItemFieldText", vec![json!("receipt"), json!(true)]),
+            ("printItemFieldTextParts", vec![json!([]), json!("SFX_GET_ITEM_1"), json!(false)]),
+            ("printItemFieldTextParts", vec![json!(["receipt", ""]), json!("SFX_GET_ITEM_1"), json!(false)]),
+            ("printItemFieldTextParts", vec![json!(["receipt"]), json!(""), json!(true)]),
+            ("printItemFieldTextParts", vec![json!(["receipt"]), json!("SFX_GET_ITEM_1"), json!("later")]),
+            ("printItemFieldTextParts", vec![json!(["receipt"]), json!("SFX_GET_ITEM_1")]),
             ("acknowledgeFieldText", vec![json!(false)]),
         ] {
             assert!(PokemonScriptCommand::from_custom(name, &args).is_err(), "{name}: {args:?}");

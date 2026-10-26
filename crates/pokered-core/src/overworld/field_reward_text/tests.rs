@@ -25,7 +25,7 @@ fn step(field: &mut Field, buttons: u8, playing: bool) -> (usize, usize) {
     field.update_frame(ForegroundJoypad::as_field_input(buttons));
     assert_eq!(field.source_foreground_error(), None);
     let sounds = core::mem::take(&mut field.audio_requests).into_iter().filter(|request| {
-        matches!(request, OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_GET_ITEM_1")
+        matches!(request, OverworldAudioRequest::PlaySound { sound_id } if sound_id == "SFX_GET_ITEM_1" || sound_id == "SFX_GET_KEY_ITEM")
     }).count();
     let gifts = core::mem::take(&mut field.game_data_requests)
         .into_iter()
@@ -43,6 +43,18 @@ fn begin(case: (MapId, u16, u16, &str), already_received: bool) -> Field {
     field.player_name = "RED".into();
     field.set_text_delay_frames(1);
     field.set_flag_live(flag, already_received);
+    if map == MapId::BillsHouse {
+        for name in ["EVENT_MET_BILL", "EVENT_MET_BILL_2", "EVENT_USED_CELL_SEPARATOR_ON_BILL", "EVENT_BILL_SAID_USE_CELL_SEPARATOR"] {
+            field.set_flag_live(name, true);
+        }
+        let mut flags = *field.toggleable_object_flags();
+        for (bit, hidden) in [(0x61, true), (0x62, false), (0x63, true), (7, true), (9, false)] {
+            if hidden { flags[bit / 8] |= 1 << (bit % 8); }
+            else { flags[bit / 8] &= !(1 << (bit % 8)); }
+        }
+        field.set_toggleable_object_flags(flags);
+        field.apply_hidden_object_flags();
+    }
     for _ in 0..2 {
         step(&mut field, 0, false);
     }
@@ -96,6 +108,46 @@ fn roundtrip(field: &mut Field) {
         serde_json::to_value(OverworldSnapshot::capture(field)).unwrap(),
         before
     );
+}
+
+#[test]
+fn bill_post_sound_button_wait_discards_short_taps_but_accepts_a_held_button() {
+    let flag = "EVENT_GOT_SS_TICKET";
+    for held in [false, true] {
+        for button in [A, B] {
+            let mut field = begin((MapId::BillsHouse, 4, 5, flag), false);
+            to_sound(&mut field, flag);
+            for frame in 0..20 {
+                let keys = if frame >= 4 && (held || frame < 6) { button } else { 0 };
+                step(&mut field, keys, true);
+                assert_eq!(phase(&field), Some(Phase::SoundWait));
+                assert!(!field.unified_flags().get_flag(flag));
+            }
+            roundtrip(&mut field);
+            for _ in 0..16 { step(&mut field, if held { button } else { 0 }, false); }
+            if !held {
+                assert_eq!(phase(&field), Some(Phase::Prompt(Prompt::Return)));
+                assert!(!field.unified_flags().get_flag(flag));
+                assert_ne!(field.toggleable_object_flags()[7 / 8] & (1 << (7 % 8)), 0);
+                roundtrip(&mut field);
+                step(&mut field, button, false);
+                for _ in 0..16 { step(&mut field, 0, false); }
+            }
+            assert!(field.unified_flags().get_flag(flag));
+            assert_eq!(field.toggleable_object_flags()[7 / 8] & (1 << (7 % 8)), 0);
+            assert_ne!(field.toggleable_object_flags()[9 / 8] & (1 << (9 % 8)), 0);
+        }
+    }
+}
+
+#[test]
+fn older_receipt_snapshots_default_to_no_post_sound_prompt() {
+    let mut old = serde_json::to_value(FieldRewardTextState::receipt("receipt".into(), "SFX_GET_ITEM_1".into())).unwrap();
+    old.as_object_mut().unwrap().remove("post_sound_prompt");
+    old.as_object_mut().unwrap().remove("continues_text");
+    let restored: FieldRewardTextState = serde_json::from_value(old).unwrap();
+    assert_eq!(restored.post_sound_prompt, FieldTextPrompt::Done);
+    assert!(!restored.continues_text);
 }
 
 #[test]

@@ -130,6 +130,10 @@ impl Session {
     }
 
     fn boot_with_items(case: Case, items: &[(ItemId, u8)]) -> Self {
+        Self::boot_with_preparation(case, items, |_| {})
+    }
+
+    fn boot_with_preparation(case: Case, items: &[(ItemId, u8)], prepare: impl FnOnce(&mut SaveData)) -> Self {
         let mut save = SaveData::new();
         save.player_name = pokered_data::charmap::encode_string("RED").unwrap();
         save.game_data.player_id = 1234;
@@ -151,6 +155,7 @@ impl Session {
         .unwrap();
         mon.ot_id = 1234;
         save.party.add(mon).unwrap();
+        prepare(&mut save);
         let original_sram = export_sram(&save);
         assert_eq!(
             import_sram(&original_sram)
@@ -241,6 +246,13 @@ impl Session {
     }
 
     fn talk(&mut self) {
+        let expected = if self.case.map == MapId::Route12SuperRodHouse
+            && !self.game.overworld.script_flags().get("EVENT_GOT_SUPER_ROD").copied().unwrap_or(false)
+        {
+            "AskFieldYesNo"
+        } else {
+            "FieldRewardText"
+        };
         for _ in 0..16 {
             self.step(self.case.face);
         }
@@ -255,7 +267,7 @@ impl Session {
         }
         assert_eq!(
             self.game.overworld.active_script_effect_label().as_deref(),
-            Some("FieldRewardText")
+            Some(expected)
         );
     }
 
@@ -399,3 +411,6 @@ fn cold_continue_full_bag_never_marks_the_gift_received() {
 
 #[path = "field_reward_text_tests/copycat.rs"]
 mod copycat;
+
+#[path = "field_reward_text_tests/continuations.rs"]
+mod continuations;

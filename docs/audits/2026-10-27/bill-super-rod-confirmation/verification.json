@@ -1,0 +1,55 @@
+{
+  "base": "b432cff60d1a7902cabc583feafaa26a8241955e",
+  "runtime_tree": "4da69f476c6c89488c5f2522c5fe899e7e0a6af2",
+  "frozen_runtime_tree": "d0c0a34815a69b869f75d6e81871be6f4be4d42e",
+  "runtime_diff": [],
+  "candidate_binary_sha256": "859b986f4d0b626bb25fd16e56094341325248688d998735a2c79b65a8e49854",
+  "master_binary_sha256": "44fc0d7989ec4411f374c7b71831c4ea39fedf03e67b722de6548163dbb2408a",
+  "current_master_before": {
+    "cases": 2,
+    "repeats_each": 2,
+    "same_frame_as_candidate": true,
+    "matching_dialogue_stage_inputs_not_identical_prefixes": true
+  },
+  "prepared_candidate": {
+    "cases": 9,
+    "repeats_each": 2,
+    "independent_continue_runs": 18,
+    "fresh_new_game": false
+  },
+  "fresh_manifest": "fresh-new-game.json.gz",
+  "fresh_status": "passed",
+  "files": {
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/BillsHouse-full-bag.sav.gz": "a4576808663291c070d1d219fce413df6dde5045b30a996c97961d2797881e16",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/BillsHouse-normal.sav.gz": "b8e5bfa6a1769f70f0af7593ea7f364951a9282845631318226fa405bc564f70",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/README.md": "4eede760613b615a639485ad2cf6f5b73e15a20473a0782712c3a84776a523a4",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/Route12SuperRodHouse-full-bag.sav.gz": "5da01cc2c881f35e6bce66367c932a2e6397bec10c488a90004e45cb3a4dcf6f",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/Route12SuperRodHouse-normal.sav.gz": "aba6b912f3c3b35f079f23d288fdd6111d44e70461770d680b8e544116a4bf2d",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/audit-1371-continuation-build-build-checks.json.gz": "6564a03385f08a77aad44a3cd58b55cbe54dcbb993f851e5d2c415aa5e5e4f93",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/audit-1373-bill-local-build-checks.json.gz": "a96f99bfcebf09ba81ef3e244f8142c7f8bb4ea46a02806f88073fc921887f3a",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/current-master-before.json.gz": "62e6503b4907c2a69fa34dde138460545ffc9fa5733c10eb5263b2eb6b1d2914",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/ending-verification.json.gz": "f601be1b086891f2b94f4458848d22ee066d861449be3dc4f9cf8989e984356e",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/ending.sav.gz": "5fa188fe31984a25a321d0d173e8af92ed555061b25590879a580f6d34af099e",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/fresh-driver.log.gz": "350a7e67a27f5abee83119b842f74b39d33602102a2c52ade36b12649eb729b4",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/fresh-new-game.json.gz": "64ae773e58f07f89d17dfbe1aa2c7e6268a04c0782be6312806804ce0a725a8c",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/prepared-controls-original-verification.json": "5a4add90d21cf97d48d38f95adc9420600e4ed25abf39e27d4b6170b8f309d54",
+    "docs/audits/2026-10-27/bill-super-rod-confirmation/recordings.json.gz": "fd0f1d76560ed29084a22a6b52843447552bf2b6c255a442e59eb5ef5c587c75",
+    "docs/screenshots/bill-super-rod-confirmation/BillsHouse-after.png": "95098aa3ff5dace46af8ce1b35931151417a93bdcd97b31395851f253894a079",
+    "docs/screenshots/bill-super-rod-confirmation/BillsHouse-before.png": "de2f9dab37fc18df7bbd427a4c167ff2d4ce4daed54ca4926872f6bd93582543",
+    "docs/screenshots/bill-super-rod-confirmation/Route12SuperRodHouse-after.png": "3ef100cf31273762ad793b33937a3571cd5bb28a23026b7b64f11b95ca508cd8",
+    "docs/screenshots/bill-super-rod-confirmation/Route12SuperRodHouse-before.png": "6682c7f8138b4850fb18284385f30e624c19389ffa84caf75957edfb7219124b"
+  },
+  "fresh_seconds": 8673.222649111005,
+  "fresh_source_and_binary_unchanged": true,
+  "normal_champion_losses_before_clear": 3,
+  "first_clear": {
+    "badges": 255,
+    "hall_of_fame_count": 1,
+    "separate_continue": true,
+    "map": "PalletTown",
+    "position": [
+      5,
+      6
+    ]
+  }
+}

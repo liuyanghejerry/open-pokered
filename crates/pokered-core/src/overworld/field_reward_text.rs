@@ -44,6 +44,8 @@ pub struct FieldRewardTextState {
     phase: Phase,
     #[serde(default)]
     continues_text: bool,
+    #[serde(default)]
+    post_sound_prompt: FieldTextPrompt,
 }
 
 impl FieldRewardTextState {
@@ -55,6 +57,7 @@ impl FieldRewardTextState {
             ending: Ending::Inner(prompt),
             phase: Phase::Start,
             continues_text: false,
+            post_sound_prompt: FieldTextPrompt::Done,
         }
     }
 
@@ -65,12 +68,18 @@ impl FieldRewardTextState {
     }
 
     pub fn receipt(text: String, sound: String) -> Self {
+        Self::receipt_parts(vec![text], sound, FieldTextPrompt::Done)
+    }
+
+    pub fn receipt_parts(parts: Vec<String>, sound: String, prompt: FieldTextPrompt) -> Self {
+        assert!(!parts.is_empty(), "validated explicit receipt paragraphs");
         Self {
-            parts: vec![text],
+            parts,
             part: 0,
             ending: Ending::Sound(sound),
             phase: Phase::Start,
             continues_text: false,
+            post_sound_prompt: prompt,
         }
     }
 
@@ -81,6 +90,7 @@ impl FieldRewardTextState {
             ending: Ending::Outer,
             phase: Phase::Start,
             continues_text: false,
+            post_sound_prompt: FieldTextPrompt::Done,
         }
     }
 
@@ -136,6 +146,22 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.last_script_dialogue = self.pending_dialogue.take();
         state.phase = Phase::Done;
         true
+    }
+
+    fn reward_text_end(&mut self, state: &mut FieldRewardTextState, prompt: FieldTextPrompt) -> bool {
+        match prompt {
+            FieldTextPrompt::Done => self.reward_text_return(state),
+            FieldTextPrompt::Protected => {
+                state.phase = Phase::Protected { remaining: 3, next: Prompt::Return };
+                false
+            }
+            FieldTextPrompt::Button => {
+                // TX_PROMPT_BUTTON polls immediately, including a button held
+                // across WaitForSoundToFinish. A released early tap is lost.
+                state.phase = Phase::Prompt(Prompt::Return);
+                self.tick_field_reward_text(state)
+            }
+        }
     }
 
     pub(super) fn tick_field_reward_text(&mut self, state: &mut FieldRewardTextState) -> bool {
@@ -194,18 +220,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     };
                 } else {
                     match &state.ending {
-                        Ending::Inner(FieldTextPrompt::Done) => {
-                            return self.reward_text_return(state)
-                        }
-                        Ending::Inner(FieldTextPrompt::Protected) => {
-                            state.phase = Phase::Protected {
-                                remaining: 3,
-                                next: Prompt::Return,
-                            };
-                        }
-                        Ending::Inner(FieldTextPrompt::Button) => {
-                            state.phase = Phase::Prompt(Prompt::Return);
-                            return self.tick_field_reward_text(state);
+                        Ending::Inner(prompt) => {
+                            let prompt = *prompt;
+                            return self.reward_text_end(state, prompt);
                         }
                         Ending::Sound(sound_id) => {
                             self.audio_requests.push(OverworldAudioRequest::PlaySound {
@@ -296,7 +313,8 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 {
                     return false;
                 }
-                return self.reward_text_return(state);
+                let prompt = state.post_sound_prompt;
+                return self.reward_text_end(state, prompt);
             }
             Phase::OuterAck => {
                 if self.tick_retained_field_outer_ack() {

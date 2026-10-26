@@ -567,6 +567,17 @@ impl ScriptHost for NativeHost {
                 let sound = args::text(&v[1], name)?;
                 Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(text), serde_json::json!(sound)])?))
             },
+            "printItemFieldTextParts" => {
+                if v.len() != 3 { return Err("printItemFieldTextParts: paragraphs, sound and terminator expected".into()); }
+                let parts = args::string_array(&v[0], name)?;
+                let sound = args::text(&v[1], name)?;
+                let prompt = match &v[2] {
+                    Value::Bool(value) => serde_json::json!(value),
+                    Value::Text(value) => serde_json::json!(value),
+                    _ => return Err("printItemFieldTextParts: invalid terminator".into()),
+                };
+                Ok(pokemon(PokemonScriptCommand::from_custom(name, &[serde_json::json!(parts), serde_json::json!(sound), prompt])?))
+            },
             "acknowledgeFieldText" => {
                 if !v.is_empty() { return Err("acknowledgeFieldText: no arguments expected".into()); }
                 Ok(pokemon(PokemonScriptCommand::AcknowledgeFieldText))
@@ -2607,6 +2618,7 @@ mod tests {
                     let result = match command {
                         ScriptCommand::GiveItem { .. } => { offered += 1; CommandResult::Bool(accepted) },
                         ScriptCommand::ShowChoice { .. } => CommandResult::Number(0.0),
+                        ScriptCommand::Custom { ref name, .. } if name == "askFieldYesNo" => CommandResult::Number(0.0),
                         ScriptCommand::TakeItem { .. } => { voucher_removed = true; CommandResult::Void },
                         _ => CommandResult::Void,
                     };
@@ -3050,10 +3062,11 @@ mod tests {
                 let commands = drive_fidelity_scene(&mut e, handler, room, "", &[0]);
                 let receipts: Vec<_> = commands.iter().filter_map(|c| {
                     let ScriptCommand::Custom { name, args } = c else { return None };
-                    if !matches!(name.as_str(), "showItemDialogue" | "printItemFieldText") { return None }
+                    if !matches!(name.as_str(), "showItemDialogue" | "printItemFieldText" | "printItemFieldTextParts") { return None }
                     match pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap() {
                         pokered_data::script_command::PokemonScriptCommand::ShowItemDialogue { sound_id, .. } => Some(sound_id),
-                        pokered_data::script_command::PokemonScriptCommand::PrintItemFieldText { sound_id, .. } => Some(Some(sound_id)),
+                        pokered_data::script_command::PokemonScriptCommand::PrintItemFieldText { sound_id, .. }
+                        | pokered_data::script_command::PokemonScriptCommand::PrintItemFieldTextParts { sound_id, .. } => Some(Some(sound_id)),
                         _ => unreachable!(),
                     }
                 }).collect();

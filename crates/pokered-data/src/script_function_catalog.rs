@@ -66,6 +66,7 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "printFieldText",
     "printFieldTextParts",
     "printItemFieldText",
+    "printItemFieldTextParts",
     "printTextCry",
     "readingMenu",
     "replaceTileBlock",
