@@ -3337,14 +3337,29 @@ mod tests {
     // than asserting their source spelling. The caller chooses menu responses.
     #[test]
     fn fidelity_tm36_description_is_repeat_only_and_receipt_has_fanfare() {
+        use pokered_data::script_command::PokemonScriptCommand as P;
         let scene = pokered_data::embedded_scenes::get_scene_ast("SilphCo2F").unwrap();
         let mut e = NativeScriptEngine::new(); e.load_map("SilphCo2F", &scene);
+        let is_explanation = |command: &ScriptCommand| match command {
+            ScriptCommand::ShowText { text } => text.contains("SELFDESTRUCT"),
+            ScriptCommand::Custom { name, args } if name == "printFieldTextParts" => {
+                matches!(P::from_custom(name, args).unwrap(), P::PrintFieldTextParts { parts, .. }
+                    if parts.iter().any(|text| text.contains("SELFDESTRUCT")))
+            }
+            _ => false,
+        };
         let first = drive_fidelity_scene(&mut e, "talkSilphWorkerF", true, "", &[]);
-        assert!(!first.iter().any(|c| matches!(c, ScriptCommand::ShowText {text} if text.contains("SELFDESTRUCT"))));
-        assert!(first.iter().any(|c| matches!(c, ScriptCommand::Custom {name,args} if name == "showItemDialogue" && args[1] == "SFX_GET_ITEM_1")));
+        assert!(!first.iter().any(is_explanation));
+        assert!(first.iter().any(|command| matches!(command,
+            ScriptCommand::Custom { name, args } if name == "printItemFieldText"
+                && matches!(P::from_custom(name, args).unwrap(), P::PrintItemFieldText { text, sound_id }
+                    if text == "<PLAYER> got TM36!" && sound_id == "SFX_GET_ITEM_1"))));
+        assert_eq!(first.last(), Some(&P::AcknowledgeFieldText.into_script_command()));
+        assert!(e.get_flag("EVENT_GOT_TM36"));
         let repeat = drive_fidelity_scene(&mut e, "talkSilphWorkerF", true, "", &[]);
-        assert!(matches!(&repeat[0], ScriptCommand::ShowText {text} if text.contains("SELFDESTRUCT")));
-        assert_eq!(repeat.len(), 1);
+        assert!(is_explanation(&repeat[0]));
+        assert_eq!(repeat[1], P::AcknowledgeFieldText.into_script_command());
+        assert_eq!(repeat.len(), 2, "repeat only explains the move, then waits for input");
     }
 
     #[test]

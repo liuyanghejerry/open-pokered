@@ -1,0 +1,152 @@
+{
+  "status": "verified for focused PR; not a whole-game fidelity completion claim",
+  "base": "ea4788a444bf7c92594ea5b1349e70d6b41c180e",
+  "implementation": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+  "current_binary_sha256": "af523476e5e78aeb60e94b992235824e0b36ba2ed092454cf847388e12fa8677",
+  "source_composition": {
+    "observed_at": "2026-10-27T07:38:06.456452+00:00",
+    "base": "ea4788a444bf7c92594ea5b1349e70d6b41c180e",
+    "head": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+    "independent_candidate": "41cf00a6fdbd77980702bb7601a4c7c29622d070",
+    "changed_files": [
+      "crates/pokered-app/src/game/field_reward_text_tests.rs",
+      "crates/pokered-core/src/overworld/native_script.rs",
+      "crates/pokered-data/maps/SilphCo2F/script.scene"
+    ],
+    "scene_byte_identical_to_independent_candidate": true,
+    "core_test_byte_identical_to_independent_candidate": true,
+    "parent_test_equals_master_plus_tm36_case": true,
+    "all_other_master_files_preserved": true,
+    "files_sha256": {
+      "crates/pokered-app/src/game/field_reward_text_tests.rs": "3caf10e0e6cd0d3f6766a8a92a4a1588d4a866960bcd03c0cf8dd9ed45c816bd",
+      "crates/pokered-core/src/overworld/native_script.rs": "7eec2782c313ea001b41298768863b35edb593e9bda1a71a0afc1821991117b8",
+      "crates/pokered-data/maps/SilphCo2F/script.scene": "ea5b4b127eb51b8df9afc18001d3f5dfb2c4e8b5ffae9166cf9ed44fd0a058ba"
+    }
+  },
+  "baseline_equivalence": {
+    "observed_at": "2026-10-27T07:40:39.268765+00:00",
+    "master": "ea4788a444bf7c92594ea5b1349e70d6b41c180e",
+    "compiled_source": "49d7a589974b8ad6037d30d2b04ca5d57b84f393",
+    "compiled_tree": "644d1e665ecf63db6b72666e4485057c74324093",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-tm41-current-1386",
+    "binary_sha256": "433071d0424123ef7c2704763c6606a39d8995cf7adbfac51345438679d0b0ee",
+    "all_recorded_crates_cargo_fixture_inputs_byte_identical": true,
+    "input_count": 2377,
+    "build_checks": "audit-1386-tm41-current-build-build-checks.json",
+    "scope": "Exact source-byte equivalence for recorded current-master baseline; no claim that older independent full NEW GAME binary equals this current binary."
+  },
+  "original_case_count": 5,
+  "original_repeats": 2,
+  "current_case_count": 4,
+  "current_repeats": 2,
+  "independent_continue_count": 8,
+  "paired": {
+    "status": "passed",
+    "base": "ea4788a444bf7c92594ea5b1349e70d6b41c180e",
+    "candidate": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+    "candidate_compiled_source_head": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+    "candidate_source_note": "Current master ea4788a4 plus TM36 scene and tests.",
+    "target_frame": 1181,
+    "scope": "Same original SRAM, initial image, asset root and absolute capture frame. Separate recorded input prefixes advance each dialogue to its receipt; these prefixes are explicitly not claimed identical. Current master baseline compiled49d7a589 has all2377recordedinputs byte-identical to masterea4788a4; exact proof audit-1387-master-native-equivalence.json.",
+    "runs": [
+      {
+        "side": "before",
+        "repeats": 2,
+        "binary_sha256": "433071d0424123ef7c2704763c6606a39d8995cf7adbfac51345438679d0b0ee",
+        "image": "7c15d7cd17faafb4b95fc9e17b3d3aa3d7acedab16ab12ae126dd98541547b9b",
+        "initial": "1e4e2515b3c26f57142a3f48d9813f26c2027f0627738a98a67aefe9cb5beae2",
+        "frame": 1181
+      },
+      {
+        "side": "after",
+        "repeats": 2,
+        "binary_sha256": "af523476e5e78aeb60e94b992235824e0b36ba2ed092454cf847388e12fa8677",
+        "image": "42b66dadbf85908560c010153e785708314ee86b0c280ae93e4807f59a0f7eb5",
+        "initial": "1e4e2515b3c26f57142a3f48d9813f26c2027f0627738a98a67aefe9cb5beae2",
+        "frame": 1181
+      }
+    ],
+    "helper_sha256": "b6e2636fcf297b70a6e929b0b2aa7985986042a54b4f51871b31ff45faf05fc4"
+  },
+  "visual_review": {
+    "status": "manually-reviewed",
+    "observed_at": "2026-10-27T07:46:24.146266+00:00",
+    "base": "ea4788a444bf7c92594ea5b1349e70d6b41c180e",
+    "candidate": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+    "target_frame": 1181,
+    "before": "SilphCo2F at10,2 full map already visible; receipt closed.",
+    "after": "Same scene and player position; complete NINTEN got TM36! receipt retained for acknowledgement.",
+    "no_unexpected_map_or_player_difference": true,
+    "input_prefixes_identical": false,
+    "initial_image_and_absolute_frame_identical": true
+  },
+  "independent_fullfresh": {
+    "binary_sha256": "3639ed6ae46e096c3604625490359169dacbcb2badbb3568ee1a02451456ffd9",
+    "seconds": 8101.99752968899,
+    "status": "passed",
+    "unchanged_source_and_binary": true
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "34eac0df75b390b65dcfe8d1203ec5f7680efeff386e32e6715271b931fc1b36",
+      "bytes": 17319
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "da474235beb5a3edc04b857dcdc34baa94062792e612ff8ab8209a488b509838",
+      "bytes": 22943
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "4c47878ecb09452b39797181adaf27203fb4e68484baaaa67e93758d85b5b0ff",
+      "bytes": 5755
+    },
+    "current-checks.json.gz": {
+      "sha256": "089154f6b7c1e5913b8b2432c1dce74bc6d3fc8e687a17e8f648cafd96b38138",
+      "bytes": 108172
+    },
+    "current-master-recordings.json.gz": {
+      "sha256": "06702d1bbb742449ec5c41641842f7a4243e163c0bbe082e0f5b535c6606f986",
+      "bytes": 8552
+    },
+    "fresh-run.json.gz": {
+      "sha256": "ca71407bc1c0f981c42c6184be884f37201738af193ad6f948b8177b08ce7033",
+      "bytes": 54804
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "3ba26c09d2e72431ced59e38b3a5b6efe3e42fbdab0a3a6f16793444519fa75a",
+      "bytes": 19911
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "0fa3639f7fb43a66e9715996d9818b0a7890653c064af33500c96bd7be9ceac5",
+      "bytes": 3769
+    },
+    "first-clear.sav.gz": {
+      "sha256": "ac6b89f380a4a0e1dceefd269d1ed52dffe8fb0323270a6be22d1e5c25b386fc",
+      "bytes": 670
+    },
+    "SilphCo2F-normal.sav.gz": {
+      "sha256": "cde2e4192665f8aefde6be1afe5beb9ac4655722e6320fe9a2e21bd019120e8c",
+      "bytes": 1114
+    },
+    "SilphCo2F-full-bag.sav.gz": {
+      "sha256": "d2fb65ce140c1f18776d3fd1af24084c33f56865d59c3dd6eb96023fa84141ab",
+      "bytes": 1141
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "bf64ead8e6770a8601abed42c5e29dde07b601711cfffbb97db140d8cc6a0ada",
+      "bytes": 650531
+    },
+    "docs/screenshots/tm36-confirmation/before.png": {
+      "sha256": "7c15d7cd17faafb4b95fc9e17b3d3aa3d7acedab16ab12ae126dd98541547b9b",
+      "bytes": 7632
+    },
+    "docs/screenshots/tm36-confirmation/after.png": {
+      "sha256": "42b66dadbf85908560c010153e785708314ee86b0c280ae93e4807f59a0f7eb5",
+      "bytes": 5246
+    },
+    "README.md": {
+      "sha256": "3bb6e4600b88dd6149a8a085b8e74f1abef3bf8abf49b0b53bd1bbcdc027055e",
+      "bytes": 3221
+    }
+  }
+}
