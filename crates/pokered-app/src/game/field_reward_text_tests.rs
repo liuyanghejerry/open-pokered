@@ -461,5 +461,8 @@ mod fuji;
 #[path = "field_reward_text_tests/warden_voucher.rs"]
 mod warden_voucher;
 
+#[path = "field_reward_text_tests/bike_shop.rs"]
+mod bike_shop;
+
 #[path = "field_reward_text_tests/town_map.rs"]
 mod town_map;
