@@ -16,7 +16,7 @@ struct Case {
     face: u8,
     flag_before_sound: bool,
 }
-const CASES: [Case; 8] = [
+const CASES: [Case; 9] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
@@ -86,6 +86,15 @@ const CASES: [Case; 8] = [
         y: 5,
         flag: EventFlag::EVENT_GOT_TM39,
         item: ItemId::Tm39,
+        face: UP,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::CeladonCity,
+        x: 22,
+        y: 17,
+        flag: EventFlag::EVENT_GOT_TM41,
+        item: ItemId::Tm41,
         face: UP,
         flag_before_sound: false,
     },
