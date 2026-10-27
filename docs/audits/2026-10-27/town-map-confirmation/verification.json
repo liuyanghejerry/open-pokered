@@ -1,0 +1,157 @@
+{
+  "status": "verified for focused PR; not a whole-game fidelity completion claim",
+  "base": "f7bee8d643012448a30fefd89651a5241dadf131",
+  "implementation": "1ef435b0016dd387eb7d2b742f64d8b71797c10b",
+  "current_binary_sha256": "4d341a8b1ae2eaac5bdd8359134aea8b2ee53dbc5e0ad5989fcc34744be9deb9",
+  "source_composition": {
+    "head": "1ef435b0016dd387eb7d2b742f64d8b71797c10b",
+    "base": "f7bee8d643012448a30fefd89651a5241dadf131",
+    "old_head": "9f232b5007776924481f596b18a957b0662317ed",
+    "unchanged_TownMap_production_and_child_test": {
+      "crates/pokered-data/maps/BluesHouse/script.scene": "78ace083ef7548201408240e87f4c1508fffc5c38e98c3e308f8e9a5c8bc07fd",
+      "crates/pokered-app/src/game/field_reward_text_tests/town_map.rs": "99306feaebaa3e56667113539ee7149e77ecfd30df8579fd7cad97d655d82a25"
+    },
+    "parent_test_merge": "Exact latestmaster parent plusTownMap module",
+    "frozen_fullfresh_untouched": true
+  },
+  "baseline_equivalence": {
+    "master": "f7bee8d643012448a30fefd89651a5241dadf131",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-bicycle-current-1380",
+    "binary_sha256": "e9957ae00c1105a41872f5986dca78a85e74bb2829c17f2f41406df36e7ee929",
+    "compiled_source": "ff80f1b1121bd28e2eaecbda4294a19ab1f452de",
+    "all_recorded_compile_inputs_identical": true,
+    "input_count": 2375,
+    "build": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1380-bicycle-current-build-build-checks.json",
+    "scope": "Exact crate/Cargo/fixture content matchescurrentmasterf7. Reuse immutable nativebuild with sourceidentity verified; no claimnew build."
+  },
+  "build_preflight_diagnostic": {
+    "initial_helper_sha256": "e73bf1084e025333d5a5cd2c4f772569d87a5424036e36f081625bff36d1ec96",
+    "failure": "Candidate name remained old1381; preflight correctly rejected existing binary before any Cargo or protected-file mutation.",
+    "corrected_helper": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1383-town-map-current-build-v2.py",
+    "correction": "Only name of new frozen output changed to1383; original helper and old0f7 binary retained.",
+    "old_binary_sha256": "0f7f46b4eb21e8e3f86d5f542fac4c23339e28f50d9fbb6c96fb61ba7f8371a5"
+  },
+  "original_case_count": 3,
+  "original_repeats": 2,
+  "current_case_count": 3,
+  "current_repeats": 2,
+  "independent_continue_count": 6,
+  "paired": {
+    "status": "passed",
+    "base": "f7bee8d643012448a30fefd89651a5241dadf131",
+    "candidate": "1ef435b0016dd387eb7d2b742f64d8b71797c10b",
+    "target_frame": 1125,
+    "scope": "Same original SRAM, initial image, asset root and absolute capture frame. Separate recorded input prefixes advance each dialogue to its receipt; these prefixes are explicitly not claimed identical. Frozen master e995 crate/Cargo/fixture inputs match masterf7 exactly; recorded inaudit-1383-master-native-equivalence.json.",
+    "runs": [
+      {
+        "side": "before",
+        "repeats": 2,
+        "binary_sha256": "e9957ae00c1105a41872f5986dca78a85e74bb2829c17f2f41406df36e7ee929",
+        "image": "db00dee80d95650ba120d332c4e6914de94d104e8b701bcedc007c2da5c1d5f6",
+        "initial": "18cfa8b4f22b0f7e607abc3d706f5a8fc952a4d39e304e6b0e1a8c4a8e973d58",
+        "frame": 1125
+      },
+      {
+        "side": "after",
+        "repeats": 2,
+        "binary_sha256": "4d341a8b1ae2eaac5bdd8359134aea8b2ee53dbc5e0ad5989fcc34744be9deb9",
+        "image": "39c359c0181fbf149e06f26720593b68a205c6a78ba9354a1176e31547cf901c",
+        "initial": "18cfa8b4f22b0f7e607abc3d706f5a8fc952a4d39e304e6b0e1a8c4a8e973d58",
+        "frame": 1125
+      }
+    ],
+    "helper_sha256": "5c3b8e6a0800be87a8b618bec782974b9acd2223a04d8d9913510bf4806d94ec"
+  },
+  "visual_review": {
+    "status": "manually-reviewed",
+    "at": "2026-10-27T05:18:21.652579+00:00",
+    "paired_result": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1383-town-map-current-paired/result.json",
+    "base": "f7bee8d643012448a30fefd89651a5241dadf131",
+    "candidate": "1ef435b0016dd387eb7d2b742f64d8b71797c10b",
+    "target_frame": 1125,
+    "finding": "Before receipt alreadyclosed, after receipt reads NINTEN got a TOWN MAP! withoutclipping; correct tablemapabsence. InitialsameSRAM/assets/images; repeats2eachpassed. Explicitlydifferentdialogueinputprefixes retained.",
+    "images": {
+      "before": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1383-town-map-current-paired/before-1/before.png",
+        "sha256": "db00dee80d95650ba120d332c4e6914de94d104e8b701bcedc007c2da5c1d5f6"
+      },
+      "after": {
+        "path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1383-town-map-current-paired/after-1/after.png",
+        "sha256": "39c359c0181fbf149e06f26720593b68a205c6a78ba9354a1176e31547cf901c"
+      }
+    }
+  },
+  "independent_fullfresh": {
+    "binary_sha256": "79dffc8c7a8dd798a66222ac33832c1e873cdf46b696c4103355d1f927d94a0f",
+    "seconds": 8367.153661504999,
+    "status": "passed",
+    "unchanged_source_and_binary": true
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "37b9b99a1a98794eec5211c73310b62f8029e1aee79f48f1ce06b248faac17e6",
+      "bytes": 10046
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "7ca94ece29753e0a2e0c7405ef712f8a28d78198bdbcea5a7eaefb8c3f5e57e3",
+      "bytes": 12092
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "5f5dc6a0b883c30dae6bdab926da3ca7dceeba26aed330806dd2024530472a1f",
+      "bytes": 2959
+    },
+    "current-checks.json.gz": {
+      "sha256": "e3d314a84345773c45116288b8c3e093768c475ba1fdad1d5bfa3268346b70fb",
+      "bytes": 108066
+    },
+    "current-master-recordings.json.gz": {
+      "sha256": "599b858a5798ee6f7d7b5ac0b1938bdd57b1100d9c3e44d1df7f349bcdec64f5",
+      "bytes": 8858
+    },
+    "fresh-run.json.gz": {
+      "sha256": "6973742f5aee387f5f6ed9ac033051c69fe55b4117975c21b799c453d8cb7c7b",
+      "bytes": 54686
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "4d4cd6b1e53ae0525615851f827ca03755e0a572d7e6ce936a39ebc2d7e741e1",
+      "bytes": 19885
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "413b759e115fe08aea246c6a223e9391f90b5dddf31736fb8dc4787a17487fbf",
+      "bytes": 3802
+    },
+    "first-clear.sav.gz": {
+      "sha256": "b7e2a5ac9cc2575a634a5e91501230d434cae176c782bf26a035dc32ee3ef3a4",
+      "bytes": 669
+    },
+    "BluesHouse-normal.sav.gz": {
+      "sha256": "e395c815e90aabd6b6d8d78f781fb7cadccf1640dd345d54ccf0dc8ab11ec466",
+      "bytes": 1103
+    },
+    "BluesHouse-full-bag.sav.gz": {
+      "sha256": "94c8e4a3e7cb7d7a9af5224fc891d9cc4ebf4357c03fe9a22a29352b234856a7",
+      "bytes": 1130
+    },
+    "BluesHouse-no-dex.sav.gz": {
+      "sha256": "f38621f3bcdbd5f3f2fa8edc98c97e858d52f29698448e75f04a6a93703bd416",
+      "bytes": 1102
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "1ea5557bc9538415b9677e38b0b9e3151cdc76d11fe1108d40f92fef5844aa6e",
+      "bytes": 174176
+    },
+    "docs/screenshots/town-map-confirmation/before.png": {
+      "sha256": "db00dee80d95650ba120d332c4e6914de94d104e8b701bcedc007c2da5c1d5f6",
+      "bytes": 24631
+    },
+    "docs/screenshots/town-map-confirmation/after.png": {
+      "sha256": "39c359c0181fbf149e06f26720593b68a205c6a78ba9354a1176e31547cf901c",
+      "bytes": 18316
+    },
+    "README.md": {
+      "sha256": "9f7282abac8084ca4ef05769def3ad3ecfb3324c76ea9faf9a201d5a2bca8e67",
+      "bytes": 2869
+    }
+  }
+}
