@@ -264,9 +264,15 @@ impl Session {
     }
 
     fn talk(&mut self) {
-        let expected = if self.case.map == MapId::Route12SuperRodHouse
-            && !self.game.overworld.script_flags().get("EVENT_GOT_SUPER_ROD").copied().unwrap_or(false)
-        {
+        let rod_flag = match self.case.map {
+            MapId::VermilionOldRodHouse => Some("EVENT_GOT_OLD_ROD"),
+            MapId::FuchsiaGoodRodHouse => Some("EVENT_GOT_GOOD_ROD"),
+            MapId::Route12SuperRodHouse => Some("EVENT_GOT_SUPER_ROD"),
+            _ => None,
+        };
+        let expected = if rod_flag.is_some_and(|flag| {
+            !self.game.overworld.script_flags().get(flag).copied().unwrap_or(false)
+        }) {
             "AskFieldYesNo"
         } else {
             "FieldRewardText"

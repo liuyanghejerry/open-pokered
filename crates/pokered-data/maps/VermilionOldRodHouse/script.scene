@@ -1,51 +1,39 @@
-// VermilionOldRodHouse — translated from the original disassembly
-// (scripts/VermilionOldRodHouse.asm, text/VermilionOldRodHouse.asm) to the real
-// Game DSL API surface. Single-NPC item-gate house: the FISHING GURU gives the
-// OLD ROD once (gated on EVENT_GOT_OLD_ROD, the BIT_GOT_OLD_ROD status bit of
-// the original) after a YES/NO prompt, then greets the player on later visits.
-//
-
+// VermilionOldRodHouse: original gift status precedes all receipt paragraphs.
 game_scene VermilionOldRodHouse {
-  // ── FISHING GURU (npc 1) — gives the OLD ROD ────────────────────────────
   @storyline("talkFishingGuru") {
     @trigger(map = "VermilionOldRodHouse", npc = 1)
     @if (getFlag("EVENT_GOT_OLD_ROD")) {
-      // Already gave the rod (.HowAreTheFishBitingText).
-      @speaker("") {
-        @t("Hello there, <PLAYER>!\n\nHow are the fish biting?", "你好啊， <PLAYER>！\n\n鱼上钩的情况怎么样？")
-      }
+      printFieldTextParts([
+        t("Hello there, <PLAYER>!", "你好啊， <PLAYER>！"),
+        t("How are the fish biting?", "鱼上钩的情况怎么样？")
+      ], false)
     } @else {
-      // .DoYouLikeToFishText → YesNoChoice.
-      @speaker("") {
-        @t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？")
-      }
-      @choice {
-        @option(@t("YES", "是")) {
-          // .TakeThisText + GiveItem OLD_ROD + .FishingIsAWayOfLifeText.
-          given = giveItem("OLD_ROD", 1)
-          @if (given) {
-            @speaker("") {
-              @t("Grand! I like your style!\n\nTake this and fish, young\none!", "太棒了！我喜欢你的风格！\n\n拿上这个去钓鱼吧，年轻人！")
-            }
-
-            setFlag("EVENT_GOT_OLD_ROD")
-            showItemDialogue(@t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！"))
-            @speaker("") {
-              @t("Fishing is a way of life!\n\nFrom the seas to rivers, go\nout and land the big one,\nyoung one!", "钓鱼是一种生活方式！\n\n从大海到河流，出去钓上一条大\n家伙吧，年轻人！")
-            }
-          } @else {
-            @speaker("") {
-              @t("Oh no!\n\nYou have no room for my\ngift!", "哎呀！\n\n你没有空间装下我的礼物了！")
-            }
-          }
+      answer = askFieldYesNo(t("I'm the FISHING GURU!\n\nI simply Looove fishing!\n\nDo you like to fish?", "我就是垂钓大师！\n\n我超喜欢钓鱼！\n\n你喜欢钓鱼吗？"), t("YES", "是"), t("NO", "否"))
+      @if (answer == 0) {
+        given = giveItem("OLD_ROD", 1)
+        @if (given) {
+          setFlag("EVENT_GOT_OLD_ROD")
+          printItemFieldTextParts([
+            t("Grand! I like your style!", "太棒了！我喜欢你的风格！"),
+            t("Take this and fish, young\none!", "拿上这个去钓鱼吧，年轻人！"),
+            t("<PLAYER> received an OLD\nROD!", "<PLAYER>获得了破旧钓竿！")
+          ], "SFX_GET_ITEM_1", false)
+          continueFieldTextParts([
+            t("Fishing is a way of life!", "钓鱼是一种生活方式！"),
+            t("From the seas to rivers, go\nout and land the big one,\nyoung one!", "从大海到河流，出去钓上一条大\n家伙吧，年轻人！")
+          ], false)
+        } @else {
+          printFieldTextParts([
+            t("Oh no!", "哎呀！"),
+            t("You have no room for my\ngift!", "你没有空间装下我的礼物了！")
+          ], false)
         }
-        @option(@t("NO", "否")) {
-          // .ThatsSoDisappointingText.
-          @speaker("") {
-            @t("Oh... That's so\ndisappointing...", "哦……真令人失望……")
-          }
-        }
+      } @else {
+        printFieldTextParts([
+          t("Oh... That's so\ndisappointing...", "哦……真令人失望……")
+        ], false)
       }
     }
+    acknowledgeFieldText()
   }
 }

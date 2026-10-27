@@ -1035,6 +1035,8 @@ mod tests {
             ("SafariZoneSecretHouse", "talkFishingGuru", "HM03", "EVENT_GOT_HM03"),
             ("CopycatsHouse2F", "talkCopycat", "TM31", "EVENT_GOT_TM31"),
             ("BillsHouse", "talkBill", "SS_TICKET", "EVENT_GOT_SS_TICKET"),
+            ("VermilionOldRodHouse", "talkFishingGuru", "OLD_ROD", "EVENT_GOT_OLD_ROD"),
+            ("FuchsiaGoodRodHouse", "talkFishingGuru", "GOOD_ROD", "EVENT_GOT_GOOD_ROD"),
             ("Route12SuperRodHouse", "talkFishingGuru", "SUPER_ROD", "EVENT_GOT_SUPER_ROD"),
         ] {
             let scene = pokered_data::embedded_scenes::get_scene_ast(room).unwrap();

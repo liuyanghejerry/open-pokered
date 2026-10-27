@@ -18,6 +18,27 @@ const ROD: Case = Case {
     // use obtained() and never the parent helper's event-flag accessor.
     ..BILL
 };
+const OLD_ROD: Case = Case {
+    map: MapId::VermilionOldRodHouse,
+    item: ItemId::OldRod,
+    ..ROD
+};
+const GOOD_ROD: Case = Case {
+    map: MapId::FuchsiaGoodRodHouse,
+    x: 5,
+    y: 4,
+    item: ItemId::GoodRod,
+    ..ROD
+};
+
+fn rod_flag(case: Case) -> (&'static str, u8) {
+    match case.map {
+        MapId::VermilionOldRodHouse => ("EVENT_GOT_OLD_ROD", 3),
+        MapId::FuchsiaGoodRodHouse => ("EVENT_GOT_GOOD_ROD", 4),
+        MapId::Route12SuperRodHouse => ("EVENT_GOT_SUPER_ROD", 5),
+        _ => panic!("not a fishing guru: {:?}", case.map),
+    }
+}
 
 fn boot(case: Case, full: bool) -> Session {
     let items: Vec<_> = if full {
@@ -49,7 +70,7 @@ fn obtained(session: &Session) -> bool {
     if session.case.map == MapId::BillsHouse {
         session.received()
     } else {
-        session.game.overworld.script_flags().get("EVENT_GOT_SUPER_ROD").copied().unwrap_or(false)
+        session.game.overworld.script_flags().get(rod_flag(session.case).0).copied().unwrap_or(false)
     }
 }
 
@@ -153,33 +174,42 @@ fn bill_accepts_either_button_held_across_the_real_fanfare() {
 }
 
 #[test]
-fn super_rod_keeps_receipt_for_the_leading_paragraph_and_persists_its_early_status_bit() {
-    let mut session = boot(ROD, false);
-    answer(&mut session, true);
-    assert_eq!((session.quantity(), obtained(&session)), (1, true));
-    session.reach("SoundWait");
-    let mut audible = 0;
-    for frame in 0..300 {
-        audible += usize::from(session.step(if (8..11).contains(&frame) { A | DOWN } else { 0 }));
+fn rods_keep_receipts_until_acknowledgement_and_persist_their_early_status_bits() {
+    for (case, receipt, wait) in [
+        (OLD_ROD, "OLD", "Prompt(FirstParagraph)"),
+        (GOOD_ROD, "GOOD", "OuterAck"),
+        (ROD, "SUPER ROD", "Prompt(FirstParagraph)"),
+    ] {
+        let mut session = boot(case, false);
+        answer(&mut session, true);
+        // The bag and status bit are already updated during the introduction,
+        // before the receipt and its fanfare appear.
         assert_eq!((session.quantity(), obtained(&session)), (1, true));
+        assert!(!session.phase("SoundWait"));
+        session.reach("SoundWait");
+        let mut audible = 0;
+        for frame in 0..300 {
+            audible += usize::from(session.step(if (8..11).contains(&frame) { A | DOWN } else { 0 }));
+            assert_eq!((session.quantity(), obtained(&session)), (1, true));
+        }
+        assert!(audible > 10);
+        assert!(session.phase(wait));
+        assert!(visible(&session).contains(receipt));
+        finish(&mut session, true);
+        let saved = import_sram(&export_sram(&session.game.build_save_data())).unwrap();
+        assert_eq!(saved.game_data.bag.item_quantity(case.item), 1);
+        assert_ne!(saved.game_data.status_flags[0] & (1 << rod_flag(case).1), 0);
+        session.talk();
+        finish(&mut session, true);
+        assert_eq!(session.quantity(), 1);
     }
-    assert!(audible > 10);
-    assert!(session.phase("Prompt(FirstParagraph)"));
-    assert!(visible(&session).contains("SUPER ROD"));
-    finish(&mut session, true);
-    let saved = import_sram(&export_sram(&session.game.build_save_data())).unwrap();
-    assert_eq!(saved.game_data.bag.item_quantity(ItemId::SuperRod), 1);
-    assert_ne!(saved.game_data.status_flags[0] & (1 << 5), 0);
-    session.talk();
-    finish(&mut session, true);
-    assert_eq!(session.quantity(), 1);
 }
 
 #[test]
-fn bill_and_super_rod_full_bag_leave_gifts_and_bill_guards_unchanged() {
-    for case in [BILL, ROD] {
+fn bill_and_rods_full_bag_leave_gifts_and_bill_guards_unchanged() {
+    for case in [BILL, OLD_ROD, GOOD_ROD, ROD] {
         let mut session = boot(case, true);
-        if case.map == MapId::Route12SuperRodHouse { answer(&mut session, true); }
+        if case.map != MapId::BillsHouse { answer(&mut session, true); }
         finish(&mut session, true);
         assert!(!obtained(&session));
         assert_eq!(session.quantity(), 0);
@@ -190,10 +220,12 @@ fn bill_and_super_rod_full_bag_leave_gifts_and_bill_guards_unchanged() {
 }
 
 #[test]
-fn super_rod_decline_does_not_give_an_item_or_set_the_status_bit() {
-    let mut session = boot(ROD, false);
-    answer(&mut session, false);
-    finish(&mut session, true);
-    assert_eq!((session.quantity(), obtained(&session)), (0, false));
-    assert_eq!(std::fs::read(&session.path).unwrap(), session.original_sram);
+fn declining_rods_does_not_give_an_item_or_set_the_status_bit() {
+    for case in [OLD_ROD, GOOD_ROD, ROD] {
+        let mut session = boot(case, false);
+        answer(&mut session, false);
+        finish(&mut session, true);
+        assert_eq!((session.quantity(), obtained(&session)), (0, false));
+        assert_eq!(std::fs::read(&session.path).unwrap(), session.original_sram);
+    }
 }
