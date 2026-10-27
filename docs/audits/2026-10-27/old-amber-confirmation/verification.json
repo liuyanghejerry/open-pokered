@@ -1,0 +1,216 @@
+{
+  "status": "verified for focused PR; not a whole-game fidelity completion claim",
+  "base": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+  "implementation": "398151e0bae072b3ae4b00ba6a09f0936cbee59b",
+  "current_binary_sha256": "3389e5ebfb61ce4c6d25fd89c6e3b8148b7361eae46970404417ceb9077d9e48",
+  "source_composition": {
+    "observed_at": "2026-10-27T08:11:37.338747+00:00",
+    "base": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+    "head": "398151e0bae072b3ae4b00ba6a09f0936cbee59b",
+    "independent_candidate": "b76b2c34ce6438c5f0acf75a2c6dac270e614f0a",
+    "changed_files": [
+      "crates/pokered-app/src/game/field_reward_text_tests.rs",
+      "crates/pokered-app/src/game/field_reward_text_tests/old_amber.rs",
+      "crates/pokered-data/maps/Museum1F/script.scene",
+      "crates/pokered-data/story/graph.json"
+    ],
+    "scene_and_child_test_and_story_graph_byte_identical_to_independent_candidate": true,
+    "parent_test_equals_master_plus_old_amber_module": true,
+    "all_other_master_files_preserved": true,
+    "includes_merged_tm36": true,
+    "previous_base_validation": "audit-1388-old-amber-current-source.json",
+    "files_sha256": {
+      "crates/pokered-app/src/game/field_reward_text_tests.rs": "3e21e54c80bd87ad2bc1c1c8a2980e59e7738a74bb18f281ed4fcd28b87c44cc",
+      "crates/pokered-app/src/game/field_reward_text_tests/old_amber.rs": "37a63ece8a7fe4706e827a17b0d56b14a2b7816fd709d648e767fb5b3a26bb9f",
+      "crates/pokered-data/maps/Museum1F/script.scene": "f2c37b8e1768d675f47f062a9501aee3cc4d01a3f53b2bae604040e52ae5c184",
+      "crates/pokered-data/story/graph.json": "38f851f0605695dbc301003dc64eda4fd685515a037070cdfb792e6b8e078b96"
+    }
+  },
+  "baseline_equivalence": {
+    "observed_at": "2026-10-27T08:12:53.489147+00:00",
+    "master": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+    "compiled_source": "e0f23672c80ff6632ada712f0ffad36dfcb209e6",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-tm36-current-1387",
+    "binary_sha256": "af523476e5e78aeb60e94b992235824e0b36ba2ed092454cf847388e12fa8677",
+    "all_recorded_crates_cargo_fixture_inputs_byte_identical": true,
+    "input_count": 2377,
+    "build_checks": "audit-1387-tm36-current-build-build-checks.json"
+  },
+  "original_case_count": 5,
+  "original_repeats": 2,
+  "current_case_count": 4,
+  "current_repeats": 2,
+  "independent_continue_count": 8,
+  "paired": {
+    "status": "passed",
+    "base": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+    "candidate": "398151e0bae072b3ae4b00ba6a09f0936cbee59b",
+    "target_frame": 1388,
+    "scope": "Same original SRAM, initial image, asset root and absolute capture frame. Separate recorded input prefixes advance each dialogue to its receipt; these prefixes are explicitly not claimed identical. Frozenaf523476 compiled e0f23672 all2377recordedinputs match mastera77884b9; proof audit-1388-master-native-equivalence.json.",
+    "runs": [
+      {
+        "side": "before",
+        "repeats": 2,
+        "binary_sha256": "af523476e5e78aeb60e94b992235824e0b36ba2ed092454cf847388e12fa8677",
+        "image": "ef115db6662bf4663c9063ce61df2075ab91f98c8b061621b877ff800a1f4c66",
+        "initial": "baf81f19a4dc991cfdca7237a0a20596fa90d51e13c5945ed0635f8f73068d4f",
+        "frame": 1388
+      },
+      {
+        "side": "after",
+        "repeats": 2,
+        "binary_sha256": "3389e5ebfb61ce4c6d25fd89c6e3b8148b7361eae46970404417ceb9077d9e48",
+        "image": "95b055c66fe5f96bb103a1f18e8ef1282bcdb6bf98043942efacd236baeafa22",
+        "initial": "baf81f19a4dc991cfdca7237a0a20596fa90d51e13c5945ed0635f8f73068d4f",
+        "frame": 1388
+      }
+    ],
+    "helper_sha256": "8e85cbdcb3f112eefc62cc836bb8ed7817d3a0d85fdc385f50a67d7763161baa"
+  },
+  "visual_review": {
+    "status": "manually-reviewed",
+    "observed_at": "2026-10-27T08:23:11.634077+00:00",
+    "base": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+    "candidate": "398151e0bae072b3ae4b00ba6a09f0936cbee59b",
+    "target_frame": 1388,
+    "before": "Museum backroom player15,3; receipt closed and OldAmber display16,2 stillvisible.",
+    "after": "Same map/player; full NINTEN received OLD AMBER! awaits acknowledgement; display removed.",
+    "npc_visibility_matches_readonly_state": true,
+    "input_prefixes_identical": false,
+    "initial_image_and_absolute_frame_identical": true,
+    "scope": "Latest mastera778 andcandidate398; ordinaryNPCtimingmaydifferbecausebeforefieldalreadyresumed."
+  },
+  "display_persistence": [
+    {
+      "case": "audit-1388-old-amber-current-v2-native-early-b",
+      "record": "audit-1388-old-amber-current-v2-native-early-b/Museum1F-1/record.json",
+      "display_visible_after_continue": false
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-early-b",
+      "record": "audit-1388-old-amber-current-v2-native-early-b/Museum1F-2/record.json",
+      "display_visible_after_continue": false
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-full-bag",
+      "record": "audit-1388-old-amber-current-v2-native-full-bag/Museum1F-1/record.json",
+      "display_visible_after_continue": true
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-full-bag",
+      "record": "audit-1388-old-amber-current-v2-native-full-bag/Museum1F-2/record.json",
+      "display_visible_after_continue": true
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-held-a",
+      "record": "audit-1388-old-amber-current-v2-native-held-a/Museum1F-1/record.json",
+      "display_visible_after_continue": false
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-held-a",
+      "record": "audit-1388-old-amber-current-v2-native-held-a/Museum1F-2/record.json",
+      "display_visible_after_continue": false
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-held-b",
+      "record": "audit-1388-old-amber-current-v2-native-held-b/Museum1F-1/record.json",
+      "display_visible_after_continue": false
+    },
+    {
+      "case": "audit-1388-old-amber-current-v2-native-held-b",
+      "record": "audit-1388-old-amber-current-v2-native-held-b/Museum1F-2/record.json",
+      "display_visible_after_continue": false
+    }
+  ],
+  "story_graph_correction": {
+    "initial_failed_build": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1383-old-amber-build-build-checks.json",
+    "failure": "Agent graph_json_matches_committed_file detected missinggeneratedOldAmber hideedge;63otherAgenttests passed.",
+    "generator_exit": 0,
+    "post_generation_audit_error": "Initialreviewhelper assumednodes key;actualgraphschemaonlyedges. Generatoroutputwasvalid;reviewcorrectedwithoutregeneratingorchangingoutput.",
+    "before_sha256": "24eef920fb7b322fc11f80530fa777b5d9af735e913ab5b7a37e3776e52ccdc4",
+    "after_sha256": "38f851f0605695dbc301003dc64eda4fd685515a037070cdfb792e6b8e078b96",
+    "added_edges": [
+      {
+        "from": "script:Museum1F:talkScientist1",
+        "kind": "hides",
+        "to": "object:MUSEUM_1F_OBJ_5"
+      }
+    ],
+    "removed_edges": [],
+    "removed_regenerable_output": {
+      "path": "/home/jerry/develop/.task-tmp/npc-gifts-1375/target/agent/world_semantics.json",
+      "bytes": 5327214,
+      "sha256": "a4de4763ad524e7c660aa24ccf0348ffd6b73e1f9a597c0b33ad0a57d945ae4f",
+      "reason": "Regenerable output written bysuccessfulgen_event_graph; graphcommittedseparately."
+    }
+  },
+  "independent_fullfresh": {
+    "binary_sha256": "ac902034016f96714a5292ca8bdacfb76be4a5b0afa31517ede1d8bfc63f1793",
+    "seconds": 7835.223759585002,
+    "status": "passed",
+    "unchanged_source_and_binary": true
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "25a8ffeadcbd4e342c2e3a1c86284fbd215dfe39749e7f4e1e424c433b019ff9",
+      "bytes": 18358
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "33801fa3f05f6d37507319a4e4453e251c422fe5f5e10f1ba5b0034581c35c62",
+      "bytes": 26632
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "f0f87cc7d089a2eb57fa47e0c0eb0b53a8f7436153656b5ee6374e6a9a3a30a5",
+      "bytes": 7630
+    },
+    "current-checks.json.gz": {
+      "sha256": "fcbedc433c49d1c58b897e20e0080c81384607a01ccc88f5b5ae23cec2b088cc",
+      "bytes": 108226
+    },
+    "current-master-recordings.json.gz": {
+      "sha256": "d49480f63119772c64d9b488525ff1c020a1e20d0813736dfc21165c7c02c10c",
+      "bytes": 9017
+    },
+    "fresh-run.json.gz": {
+      "sha256": "9a06d08a92025214ee4d238528dd6c9a5d7a365fe437b22568f56c5c5bc6c6f3",
+      "bytes": 54666
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "4d62b28cbebce013e267bd8f20931d7222a87f7f11f89f480f02e95ca0f2be81",
+      "bytes": 20058
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "a3ce7886228625f59eb4041afeb5f8823bcaae3baf547e407816958294dff95d",
+      "bytes": 3712
+    },
+    "first-clear.sav.gz": {
+      "sha256": "9c12bb2a9c55ca63930cd0a9640f7c49cbb14b301c1d3679eed5e4b8528ab134",
+      "bytes": 674
+    },
+    "Museum1F-normal.sav.gz": {
+      "sha256": "43b595e2d15f7976a9da55bd669acf03e8bb35fbd91bd5f2e412fa24421f40cd",
+      "bytes": 1131
+    },
+    "Museum1F-full-bag.sav.gz": {
+      "sha256": "4b307700cbe4982f0affad9615614cc6688c0df35d15810180a8aedd2bf45aa6",
+      "bytes": 1158
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "943320565f04cbd86fbc2c28c13d233ebcc0303b97bdcc601f91047b3eb1f713",
+      "bytes": 416480
+    },
+    "docs/screenshots/old-amber-confirmation/before.png": {
+      "sha256": "ef115db6662bf4663c9063ce61df2075ab91f98c8b061621b877ff800a1f4c66",
+      "bytes": 28884
+    },
+    "docs/screenshots/old-amber-confirmation/after.png": {
+      "sha256": "95b055c66fe5f96bb103a1f18e8ef1282bcdb6bf98043942efacd236baeafa22",
+      "bytes": 18116
+    },
+    "README.md": {
+      "sha256": "80cc5d7b59bd43e56df0eef18ac075e21ba89ea1d2f385868d7f9ff329d06e60",
+      "bytes": 3027
+    }
+  }
+}

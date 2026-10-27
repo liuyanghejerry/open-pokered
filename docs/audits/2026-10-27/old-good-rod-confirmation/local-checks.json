@@ -1,0 +1,89 @@
+{
+  "status": "passed",
+  "candidate_sha256": "bf9b83dfb53e09be68449214ecd8de09ba7fde38446fc9c586a694fb88c5759b",
+  "phases": [
+    {
+      "name": "native-build",
+      "command": [
+        "cargo",
+        "build",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 21.357075592008187,
+      "summaries": [],
+      "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-build-native-build.log"
+    },
+    {
+      "name": "data-boa",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-data",
+        "--lib",
+        "--features",
+        "script-boa",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 6.2286225160059985,
+      "summaries": [
+        [
+          "ok",
+          "313",
+          "0",
+          "0"
+        ]
+      ],
+      "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-build-data-boa.log"
+    },
+    {
+      "name": "app-lib",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--lib",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 73.06849710700044,
+      "summaries": [
+        [
+          "ok",
+          "417",
+          "0",
+          "40"
+        ]
+      ],
+      "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-build-app-lib.log"
+    },
+    {
+      "name": "arm-check",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 13.49586246900435,
+      "summaries": [],
+      "log": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-build-arm-check.log"
+    }
+  ],
+  "source_tree": "1f210723971e8083b099c0e37af84c3243208617"
+}

@@ -973,6 +973,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect=Some(script_bridge::ScriptEffect::StaticEncounter { state });
             Some(done)
         } else { None };
+        let reward_text_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::FieldRewardText { .. })) {
+            let Some(script_bridge::ScriptEffect::FieldRewardText { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_field_reward_text(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::FieldRewardText { state });
+            Some(done)
+        } else { None };
         let field_cry_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::FieldCry { .. })) {
             let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -1035,6 +1041,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let owns_print_window = matches!(effect,
                 script_bridge::ScriptEffect::PrintFieldText { retain_window: true, .. }
                 | script_bridge::ScriptEffect::PokecenterNurseOffer { .. }
+                | script_bridge::ScriptEffect::FieldRewardText { .. }
                 | script_bridge::ScriptEffect::PokecenterFarewell { .. });
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
@@ -1053,7 +1060,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = bill_tick_done.or(nurse_tick_done).or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = bill_tick_done.or(nurse_tick_done).or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(reward_text_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
 
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;

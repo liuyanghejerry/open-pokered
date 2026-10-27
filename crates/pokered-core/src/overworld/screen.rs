@@ -1711,6 +1711,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     }
 
     pub fn dialogue_needs_button(&self) -> bool {
+        if let Some(super::script_bridge::ScriptEffect::FieldRewardText { state }) = &self.active_script_effect {
+            return state.needs_button();
+        }
         let native_page = self.pending_dialogue.as_ref().is_some_and(|d| d.has_more_pages());
         match self.active_script_effect.as_ref() {
             Some(super::script_bridge::ScriptEffect::PokecenterNurseOffer { state }) => return state.needs_button(native_page),
@@ -1734,6 +1737,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// final DONE returns to an outer ACK without drawing another arrow.
     /// Other text callers keep their existing cursor presentation policy.
     pub fn dialogue_shows_prompt_arrow(&self) -> bool {
+        if let Some(super::script_bridge::ScriptEffect::FieldRewardText { state }) = &self.active_script_effect {
+            return state.shows_arrow();
+        }
         if let Some(super::script_bridge::ScriptEffect::PokecenterFarewell { state }) = &self.active_script_effect {
             return state.shows_arrow(self.pending_dialogue.as_ref().is_some_and(|d| d.has_more_pages()));
         }

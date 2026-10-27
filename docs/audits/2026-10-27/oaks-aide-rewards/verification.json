@@ -1,0 +1,351 @@
+{
+  "status": "verified for focused PR; broader fidelity goal remains incomplete",
+  "base": "d696a0e338cabc2b001be6ef2f24baba599ddc9e",
+  "implementation": "be817d78defc99f5e6d79604c9a495dec0d33f3d",
+  "compiled_source_head": "9e7d11f2901a3ffcad4ee37eb4cd21403bf21de0",
+  "current_binary_sha256": "c3a5e4d8eff78f3ea737b5c5cdfe882bcb4a735f152c0b41b22ca2295e4fd0f6",
+  "source_composition": {
+    "at": "2026-10-27T08:34:22.563832+00:00",
+    "head": "9e7d11f2901a3ffcad4ee37eb4cd21403bf21de0",
+    "integration_parent": "1bc01d915e98fde282a6fc75f1548da63a846f99",
+    "independent_head": "cf9b60606ef9cf19951da0d00a6ad50a5a47d646",
+    "changed_files": [
+      "crates/pokered-data/maps/Route2Gate/script.scene",
+      "crates/pokered-data/maps/Route11Gate2F/script.scene",
+      "crates/pokered-data/maps/Route15Gate2F/script.scene",
+      "crates/pokered-app/src/game/field_reward_text_tests/oaks_aide.rs",
+      "crates/pokered-app/src/game/field_reward_text_tests.rs",
+      "crates/pokered-core/src/overworld/native_script.rs"
+    ],
+    "script_and_child_test_equal_independent": true,
+    "core_equals_base_plus_exact_independent_test_delta": true,
+    "parent_equals_integration_parent_plus_aide_module": true,
+    "all_other_files_equal_integration_parent": true,
+    "scope": "Integration includes still-open PR437; after its merge verify all source identity against merged master.",
+    "initial_verifier_correction": "Whole core file equality to old branch rejected because newer master contains unrelated merged tests. Verified exact original test-only delta applied to latest base instead; no source change to bypass assertion."
+  },
+  "original_scenarios_per_map": 6,
+  "current_scenarios_per_map": 6,
+  "maps": [
+    "Route2Gate",
+    "Route11Gate2F",
+    "Route15Gate2F"
+  ],
+  "repeats": 2,
+  "independent_continue_count": 36,
+  "paired": {
+    "status": "passed",
+    "base": "1bc01d915e98fde282a6fc75f1548da63a846f99",
+    "candidate": "9e7d11f2901a3ffcad4ee37eb4cd21403bf21de0",
+    "scope": "Same original SRAM, initial image, absolute capture frame and assets. Separate recorded input prefixes advance each text engine; identical button inputs are not claimed. Candidate pauses on Here you go before giving the reward, whereas baseline has already advanced to receipt/description. No state setters or save writes. PR437 base is not claimed merged until independently verified.",
+    "cases": [
+      {
+        "map": "Route2Gate",
+        "repeats": 2,
+        "frame": 1257,
+        "initial": "55d5508bd4fe3bf6e73c32d665d6f7194c969e5eb1b82751549d714059372665",
+        "before_image": "0e7c1c253792c6e5caffb8d2b02320e6a2e9aca8f29ca76cc07676f75e3aecc3",
+        "after_image": "878871dbb62d29d249eb8561a1af8569dadd1db74be470167631445298fea06d",
+        "before_bag": [
+          {
+            "item": "Hm05",
+            "qty": 1
+          }
+        ],
+        "after_bag": [],
+        "before_dialogue": "The HM FLASH lights even the darkest dungeons.",
+        "after_dialogue": "Here you go!"
+      },
+      {
+        "map": "Route11Gate2F",
+        "repeats": 2,
+        "frame": 1263,
+        "initial": "9f000b2642266f7334e9cf1d7853c4d84417d16796d29a560c5c44898ea6e202",
+        "before_image": "a5d3f182716e46a5ce0fa318898455c00a62b4bf2e65ee4c5d82de52d86dc565",
+        "after_image": "b4dd188d49d0292b3201b61b0ef41eeec57ae3fa6839bdbd1718d0da562bc125",
+        "before_bag": [
+          {
+            "item": "Itemfinder",
+            "qty": 1
+          }
+        ],
+        "after_bag": [],
+        "before_dialogue": "There are items on the ground that can't be seen.",
+        "after_dialogue": "Here you go!"
+      },
+      {
+        "map": "Route15Gate2F",
+        "repeats": 2,
+        "frame": 1261,
+        "initial": "b8c213a9ebd47d94936dcff7bf2372faa78c6c49836693a952e7f2ecd065d8a6",
+        "before_image": "986dcc7c8a4e22a6c22ceb23621cd357351de9984a7dc50912c200f003d5cd1c",
+        "after_image": "d4018db991682b8a36dc33377d90a71703e9c429f616106dc6b93ae448c0bb3d",
+        "before_bag": [
+          {
+            "item": "ExpAll",
+            "qty": 1
+          }
+        ],
+        "after_bag": [],
+        "before_dialogue": "EXP.ALL gives EXP points to all the POKeMON with you,",
+        "after_dialogue": "Here you go!"
+      }
+    ],
+    "helper_sha256": "54b958f9d834f30a6cb0f622cb3c5c9bb22b4ef37cca60d2f86dbcacb66b62db"
+  },
+  "visual_review": {
+    "at": "2026-10-27T08:50:09.324438+00:00",
+    "status": "manually-reviewed",
+    "maps": [
+      {
+        "map": "Route2Gate",
+        "frame": 1257,
+        "before_image": "0e7c1c253792c6e5caffb8d2b02320e6a2e9aca8f29ca76cc07676f75e3aecc3",
+        "after_image": "878871dbb62d29d249eb8561a1af8569dadd1db74be470167631445298fea06d",
+        "initial_images_equal": true
+      },
+      {
+        "map": "Route11Gate2F",
+        "frame": 1263,
+        "before_image": "a5d3f182716e46a5ce0fa318898455c00a62b4bf2e65ee4c5d82de52d86dc565",
+        "after_image": "b4dd188d49d0292b3201b61b0ef41eeec57ae3fa6839bdbd1718d0da562bc125",
+        "initial_images_equal": true
+      },
+      {
+        "map": "Route15Gate2F",
+        "frame": 1261,
+        "before_image": "986dcc7c8a4e22a6c22ceb23621cd357351de9984a7dc50912c200f003d5cd1c",
+        "after_image": "d4018db991682b8a36dc33377d90a71703e9c429f616106dc6b93ae448c0bb3d",
+        "initial_images_equal": true
+      }
+    ],
+    "observation": "All six PNGs viewed: same map and player placement; baseline shows reward description after item granted, candidate shows Here you go before reward. No clipping, missing actor or misplaced player observed. Separate text-advance input prefixes disclosed."
+  },
+  "independent_fresh": {
+    "at": "2026-10-27T08:46:41.790598+00:00",
+    "status": "passed",
+    "fresh_seconds": 8116.209414424986,
+    "binary_sha256": "63b7dd75b2d438f784a4cb8a7331e0e0de28ac409b7b08de98bd2b9834edc8c5",
+    "all_49_milestones": true,
+    "separate_continue": {
+      "map_name": "PalletTown",
+      "player_x": 5,
+      "player_y": 6,
+      "badges": 255,
+      "hall_of_fame_count": 1
+    },
+    "source_evidence_reverified": true,
+    "old_processes_gone": true,
+    "scope": "Independent aide cf9b6060 on base99c2, not the current integration build c3a5e4d8. No fresh restart or intervention."
+  },
+  "diagnostics": {
+    "audit-1385-aide-original-denial-correction.json": {
+      "at": "2026-10-27T06:27:28.314384+00:00",
+      "classification": "Diagnostic driver expected-value error, not original game failure",
+      "original_values_source": "pret/pokered@fbcf7d0e constants/script_constants.asm:44-47; also ram/hram.asm:298-305",
+      "wrong_expected_values": {
+        "insufficient": 2,
+        "refuse": 3
+      },
+      "actual_and_source_correct_values": {
+        "insufficient": 128,
+        "refuse": 255
+      },
+      "fix": "Only expected constants and new output prefix changed; same fixtures and exact button driver. Initial failed result/record files preserved. Fullbag original3x2 passed in first version and is retained.",
+      "original_helper_sha256": "25fc6f89d8c3990650c51ece32ac959e94bc70ccbacfb3d1bbbc28294aa3c84d",
+      "corrected_helper_sha256": "2967216bc6b03b29f685ac66664ee4f0cd7bcc08f10258ab07325f8fb87a58ae"
+    },
+    "audit-1386-aide-held-original-summary-correction.json": {
+      "type": "diagnostic-summary-correction",
+      "note": "Original held-control summary compared field-entry count with before facing, so normal pre-dialogue walking made field_resumed_during_hold incorrectly true. Immutable per-frame traces and actual inputs are intact. This analysis compares the start and end of the receipt interval. No product change, rerun, or alteration to original evidence.",
+      "rows": [
+        {
+          "scenario": "held-a",
+          "map": "Route2Gate",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 74
+        },
+        {
+          "scenario": "held-a",
+          "map": "Route11Gate2F",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 73
+        },
+        {
+          "scenario": "held-a",
+          "map": "Route15Gate2F",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 73
+        },
+        {
+          "scenario": "held-b",
+          "map": "Route2Gate",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 74
+        },
+        {
+          "scenario": "held-b",
+          "map": "Route11Gate2F",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 73
+        },
+        {
+          "scenario": "held-b",
+          "map": "Route15Gate2F",
+          "initial_entries": 33,
+          "at_cue": 49,
+          "end_hold": 49,
+          "field_resumed_during_hold": false,
+          "first_flag_set": 73
+        }
+      ]
+    },
+    "audit-1388-aide-paired-driver-correction.json": {
+      "at": "2026-10-27T08:41:00.463421+00:00",
+      "initial_attempt": "audit-1388-aide-current-paired/result.json",
+      "status": "failed comparator assumption, not product regression",
+      "observed": "Replaying candidate prompt-specific input prefix on legacy master stopped at the initial question, before YES/NO. The expected already-given inventory assertion was therefore invalid for that shared prefix.",
+      "correction": "Use each implementation’s independently recorded input prefix; capture same original SRAM, initial image and absolute frame. Explicitly disclose prefixes differ. All reward, flag, phase and persistence expectations retained in separate current controls.",
+      "fixed_helper": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1388-aide-current-paired-v2.py"
+    }
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "3bb43d2988e2846d9e603590b5161101b3216f450cbbb888d182f46fa03d1644",
+      "bytes": 37567
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "4e882d31d2e945d9e7340b11dce54de5c820e5ef9e768c02e9f1befee2d6ea03",
+      "bytes": 165781
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "08352148c5e2aa84f3f5a867bbe644e90edffe8e2d5553a8b6e5978b37080567",
+      "bytes": 21354
+    },
+    "current-baseline-recordings.json.gz": {
+      "sha256": "48fc5b45842f0869e4fe43d319cb9d513dc1ce95150b5ed6f7b34db535718d77",
+      "bytes": 36566
+    },
+    "current-checks.json.gz": {
+      "sha256": "0f8ddd7ab06961570486f64bb949ce93376d32e8a09c1d140abb4fe7ed5373c4",
+      "bytes": 108268
+    },
+    "fresh-run.json.gz": {
+      "sha256": "cf7e9f956d2ff37b93bf3c68b5c5762b5124d78316c1479fe32c827876c38687",
+      "bytes": 54615
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "58f28801d8d691435c4bccb1a9a9695adba6118c859d225d980dead7e73630ea",
+      "bytes": 19957
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "802e7c1cc63bb8d740003d9e5685b50dfd35f00c428285ae00ce08f791084851",
+      "bytes": 3739
+    },
+    "first-clear.sav.gz": {
+      "sha256": "6223a142af986557661008f1627335808ecc4e5821ae6d5aeb34bf4de15e8323",
+      "bytes": 667
+    },
+    "Route2Gate-normal.sav.gz": {
+      "sha256": "ffe3370f313e2681582cd6c3e35599a073fc4cce77158c0b201e6982f4f263f7",
+      "bytes": 1094
+    },
+    "Route2Gate-full-bag.sav.gz": {
+      "sha256": "d4dc91d1ea8977b57f041e53166a8d2886dd2a3b3b4b01f257efa06b8075f26e",
+      "bytes": 1121
+    },
+    "Route2Gate-insufficient.sav.gz": {
+      "sha256": "e95283c506c29949063ea4035c018f306f4f0f845c1101338bf73a60eaa017a2",
+      "bytes": 1094
+    },
+    "Route11Gate2F-normal.sav.gz": {
+      "sha256": "bbecf54bfb3461961dd18d78bd6eb05847c451c1ada30fb76449fbb0e6ed53ce",
+      "bytes": 1089
+    },
+    "Route11Gate2F-full-bag.sav.gz": {
+      "sha256": "3022495ae390d473b27186f42b4b775567c9147928d6965e9d11bdef3ad3a86d",
+      "bytes": 1117
+    },
+    "Route11Gate2F-insufficient.sav.gz": {
+      "sha256": "6f4e4c210665049eee2850ee5a4ef9a3efc28532784224f365859d163149a5f6",
+      "bytes": 1089
+    },
+    "Route15Gate2F-normal.sav.gz": {
+      "sha256": "a66f347c061e3d15d86971ceaaf6863812c0cdb6de6bb545492c81785bc016ac",
+      "bytes": 1078
+    },
+    "Route15Gate2F-full-bag.sav.gz": {
+      "sha256": "1bad3492f290b18ae87fd500a9818b5d18cc153aa586cbee80b39449bef9fc27",
+      "bytes": 1104
+    },
+    "Route15Gate2F-insufficient.sav.gz": {
+      "sha256": "c0088ca8e2f338132c73137b269a69df51d6049a94f92fb5464c59a05b52e5db",
+      "bytes": 1078
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "45604c26c46ae9eb73db5b7a2abb277620cb9d054eb5db96813dd3e70596f285",
+      "bytes": 330219
+    },
+    "docs/screenshots/oaks-aide-rewards/Route2Gate-before.png": {
+      "sha256": "0e7c1c253792c6e5caffb8d2b02320e6a2e9aca8f29ca76cc07676f75e3aecc3",
+      "bytes": 27740
+    },
+    "docs/screenshots/oaks-aide-rewards/Route2Gate-after.png": {
+      "sha256": "878871dbb62d29d249eb8561a1af8569dadd1db74be470167631445298fea06d",
+      "bytes": 27263
+    },
+    "docs/screenshots/oaks-aide-rewards/Route11Gate2F-before.png": {
+      "sha256": "a5d3f182716e46a5ce0fa318898455c00a62b4bf2e65ee4c5d82de52d86dc565",
+      "bytes": 23993
+    },
+    "docs/screenshots/oaks-aide-rewards/Route11Gate2F-after.png": {
+      "sha256": "b4dd188d49d0292b3201b61b0ef41eeec57ae3fa6839bdbd1718d0da562bc125",
+      "bytes": 23420
+    },
+    "docs/screenshots/oaks-aide-rewards/Route15Gate2F-before.png": {
+      "sha256": "986dcc7c8a4e22a6c22ceb23621cd357351de9984a7dc50912c200f003d5cd1c",
+      "bytes": 16292
+    },
+    "docs/screenshots/oaks-aide-rewards/Route15Gate2F-after.png": {
+      "sha256": "d4018db991682b8a36dc33377d90a71703e9c429f616106dc6b93ae448c0bb3d",
+      "bytes": 15646
+    },
+    "README.md": {
+      "sha256": "78cc15091ca9b516f977b0a91bc19dcb9669eaa38d393d7312425710f7d0047a",
+      "bytes": 3357
+    }
+  },
+  "merged_master_integration": {
+    "at": "2026-10-27T08:54:24.167543+00:00",
+    "pr": 437,
+    "head": "1bc01d915e98fde282a6fc75f1548da63a846f99",
+    "merge": "d696a0e338cabc2b001be6ef2f24baba599ddc9e",
+    "previous_master": "a77884b94ff3a7d85e2d5623c6616ca1196fb936",
+    "aide_head": "be817d78defc99f5e6d79604c9a495dec0d33f3d",
+    "master_tree_equals_verified_pr_head": true,
+    "baseline_all_inputs_equal_merged_master": 2378,
+    "aide_build_all_inputs_equal_current_branch": 2379,
+    "source_build_unchanged": true,
+    "root_unchanged": true,
+    "branch_cleanup_pending": false,
+    "owned_local_remote_branch_removed": "fix/old-amber-confirmation-1383",
+    "worktree_reused": "/home/jerry/develop/.task-tmp/npc-gifts-1375",
+    "cleanup_note": "Root checkout remains protected old FLASH branch; git branch -d there refused because that checkout lacks newer commits. Ordinary -d from aide worktree succeeded after checking ancestry in master and aide HEAD. No force deletion."
+  }
+}

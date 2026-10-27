@@ -1,0 +1,176 @@
+{
+  "status": "local controls passed; fresh and delivery pending",
+  "candidate_sha256": "859b986f4d0b626bb25fd16e56094341325248688d998735a2c79b65a8e49854",
+  "source_tree": "d0c0a34815a69b869f75d6e81871be6f4be4d42e",
+  "master": "95152068aeabf6042f5f49c3b5744b8c6bb48da9",
+  "source_proof": "audit-1371-continuation-source-proof.json",
+  "build_checks": "audit-1371-continuation-build-build-checks.json",
+  "passed_native_cases": [
+    {
+      "map": "BillsHouse",
+      "variant": "early-pulse",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "BillsHouse",
+      "variant": "held-a",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "BillsHouse",
+      "variant": "held-b",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "BillsHouse",
+      "variant": "full-bag",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "variant": "early-pulse",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "variant": "held-a",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "variant": "held-b",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "variant": "full-bag",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "Route12SuperRodHouse",
+      "variant": "decline",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    }
+  ],
+  "native_interruption": {
+    "status": "interrupted",
+    "observed_exit_code": 143,
+    "controller_pid": 2782420,
+    "controller_missing_verified": true,
+    "time": "2026-10-26T20:31:42.589545+00:00",
+    "completed_cases_revalidated": [
+      {
+        "map": "BillsHouse",
+        "variant": "early-pulse",
+        "repeats_identical": true,
+        "separate_process_continue_runs": 2
+      },
+      {
+        "map": "BillsHouse",
+        "variant": "held-a",
+        "repeats_identical": true,
+        "separate_process_continue_runs": 2
+      }
+    ],
+    "partial_case": "BillsHouse-held-b-1",
+    "partial_case_not_counted": true,
+    "game_failure_observed": false,
+    "reason": "Tool session exited 143; cause not established. No corresponding controller or prepared-control game process remains. Fresh chain process 2786719 and its game 2786722 are distinct and were left running.",
+    "helper_sha256": "9999a0b8b488a2b7089ba3995ba27f46945b4e2c678a24e2d79fa7f53c0dcd5c"
+  },
+  "all_source_records": {
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-early-pulse-1/record.json": "9b54d6296a9ceda87dba22158bf30b7708f277a86960e4cecf27e6e3fc4b8305",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-early-pulse-1-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-early-pulse-2/record.json": "4e9476c6f97c96cc1b5511f36e47b9cde4cb7bc94d3ee3dbc4d4405f69ec0db4",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-early-pulse-2-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-held-a-1/record.json": "be845a90c6c908b527ec81f0421a325baedb375dc3d7820512a812f24b576679",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-held-a-1-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-held-a-2/record.json": "7f426cfd7ebfd322615b03f82f5706be4a63b09600ed474544e705147645d744",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native/BillsHouse-held-a-2-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-held-b-1/record.json": "29eb990102f691b8a1a60caa5ba22a8e681889ac72af50abf6362e08c5ead1ae",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-held-b-1-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-held-b-2/record.json": "f75b71d39abb1f61bf1a9c428fe835ad9e438f4d4f7f9be2eda8ac236f1c30c5",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-held-b-2-continue/record.json": "3b94453b0471235eac9623527263efca6f11185b8c0141bf82413de1abb3e6eb",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-full-bag-1/record.json": "a7735e7877eb120cb1ad891241e89ebb34462fda1097b34a9d9b08e6d18207e5",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-full-bag-1-continue/record.json": "feb709dbaa8530f7193639e07d98606f6781dad106794d2d538c38f6131fa0e1",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-full-bag-2/record.json": "c2cd0dc8ae494f3352fc05352b771f988d80a1c98d2fa61fe1fe1e3ab652a780",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/BillsHouse-full-bag-2-continue/record.json": "feb709dbaa8530f7193639e07d98606f6781dad106794d2d538c38f6131fa0e1",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-early-pulse-1/record.json": "769ba36b3b6ca0b84a971554056aa3197338ae14e0f53f44e0dfe8f88b833044",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-early-pulse-1-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-early-pulse-2/record.json": "affbefe8c46af12fcb431dac7a66c4c2a977b12c9baf63439f052748ad1602d1",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-early-pulse-2-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-a-1/record.json": "99ff86fc090f2f8c26ee88c1459c8511d9000f61449ccb1708c8a7141953c996",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-a-1-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-a-2/record.json": "de7cc7a850cfcd5465c1e095507c0a71f65cd0c446d3c1eeaef7ddee1bf751c4",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-a-2-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-b-1/record.json": "aa0136e5d86771d694db0aa567e203266a5148ae44947e2859e0623e2f142d4e",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-b-1-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-b-2/record.json": "d14a494090baf58d1a9155e9ec73fde52884682b35593f0f84f0b080dd2905bf",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-held-b-2-continue/record.json": "c85ec4965bf784898b829c867f824275309bbd6ba2b39c1007b59cba0274a94c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-full-bag-1/record.json": "737c3a4d35c92244f2b1fc577faaf34a799836bdca0fa56fbee97158325493ec",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-full-bag-1-continue/record.json": "d65f8a2cf2eded304bf708fcfe097814475fa01d4348a97024a6ca142346feba",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-full-bag-2/record.json": "c4e658e8ca7b2c8ddc80ea13ede8970f18867bc1f898edd47a32bbfe278e906b",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-full-bag-2-continue/record.json": "d65f8a2cf2eded304bf708fcfe097814475fa01d4348a97024a6ca142346feba",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-decline-1/record.json": "b1e483fb9d84a6017174ed018b1e3b9929538b2c8a441f701be6266d01c8f4ed",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-decline-1-continue/record.json": "077f11d7d59dc3b4eab9ba3cff53d19a5e6c8b600175ed3581e91eff2e46680a",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-decline-2/record.json": "d399ca00c5d8c42129215b1b6b33a6995035ae9598970b4fad554eb3e3014851",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-native-v2/Route12SuperRodHouse-decline-2-continue/record.json": "077f11d7d59dc3b4eab9ba3cff53d19a5e6c8b600175ed3581e91eff2e46680a",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-original/BillsHouse-1/record.json": "70b2a40921bbe153c2d4941fb4c8a6fb93589625ffe4d19d3eceb93c2426f519",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-original/BillsHouse-2/record.json": "70b2a40921bbe153c2d4941fb4c8a6fb93589625ffe4d19d3eceb93c2426f519",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-original/Route12SuperRodHouse-1/record.json": "1edcc09061622d0284ef9f9f8a83796e01f473719f29efbe3333b9c7d1f6a662",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-original/Route12SuperRodHouse-2/record.json": "1edcc09061622d0284ef9f9f8a83796e01f473719f29efbe3333b9c7d1f6a662",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-master/BillsHouse-1/record.json": "dc64383b1dd3136e66f2d7bdb2a8481d13a7ea2ded2910422e384828220ba99f",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-master/BillsHouse-2/record.json": "4e4898cf7ccc7a6f665d11476f2f62f65e816744942d947a96febb78144d3f74",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-master/Route12SuperRodHouse-1/record.json": "0425408b93858fc2bb693708e7891fea9803309348bd745f5f1351992a2cc6b5",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1369-continuation-master/Route12SuperRodHouse-2/record.json": "c4eeee2f2041acd9fb1571275027867040ad7ed59100f822ff2ee027af187d89",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-early-pulse-1/record.json": "14eb32f78c5b270adfa053cbe13d497f5be6e7cded0246409767f4abff282c79",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-early-pulse-2/record.json": "14eb32f78c5b270adfa053cbe13d497f5be6e7cded0246409767f4abff282c79",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-held-a-1/record.json": "d942d17bdb7ff73ac9eec28f3de0eabb2f014308f2a3c1cd8a72fcbc4101a32d",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-held-a-2/record.json": "d942d17bdb7ff73ac9eec28f3de0eabb2f014308f2a3c1cd8a72fcbc4101a32d",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-held-b-1/record.json": "a7300b7497c99e1548c6d692e14a620d7f9b16e27e92acf21d75daa0b6d81f1c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/BillsHouse-held-b-2/record.json": "a7300b7497c99e1548c6d692e14a620d7f9b16e27e92acf21d75daa0b6d81f1c",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-early-pulse-1/record.json": "fc5a4d2ec30dd19b421cc7ead0da5ec2aa0d51d4b877fbf6f2efd416dc246a5e",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-early-pulse-2/record.json": "fc5a4d2ec30dd19b421cc7ead0da5ec2aa0d51d4b877fbf6f2efd416dc246a5e",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-held-a-1/record.json": "1a4afb25018bdda2514ba515b335ac7152ee6938febb357d3a8ccd6e3d416205",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-held-a-2/record.json": "1a4afb25018bdda2514ba515b335ac7152ee6938febb357d3a8ccd6e3d416205",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-held-b-1/record.json": "b8e147d12ce76724f839b803a5e78f41e9616c506ef96a7fe99bcfcccbdeafa1",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1370-continuation-input-original/Route12SuperRodHouse-held-b-2/record.json": "b8e147d12ce76724f839b803a5e78f41e9616c506ef96a7fe99bcfcccbdeafa1",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/BillsHouse-full-bag-1/record.json": "6683f44c13bf1803a1446d20484662e60babad55355cb1c3ae5cb2a47d6e4080",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/BillsHouse-full-bag-2/record.json": "6683f44c13bf1803a1446d20484662e60babad55355cb1c3ae5cb2a47d6e4080",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/BillsHouse-success-1/record.json": "92721bbf2667e47dc3a672de1b0f4fa19e383fe41c3179bd70310e25dee031df",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/BillsHouse-success-2/record.json": "92721bbf2667e47dc3a672de1b0f4fa19e383fe41c3179bd70310e25dee031df",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-decline-1/record.json": "403e217bbc24e461d0df4c40872c2a1441e8f7d6e5f1903960330cab61ae7ddf",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-decline-2/record.json": "403e217bbc24e461d0df4c40872c2a1441e8f7d6e5f1903960330cab61ae7ddf",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-full-bag-1/record.json": "4b8d7e8df1551450512423a36e14d8f83dea733d3b460c11fc70a4ba0ff1b843",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-full-bag-2/record.json": "4b8d7e8df1551450512423a36e14d8f83dea733d3b460c11fc70a4ba0ff1b843",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-success-1/record.json": "a2a84c98400a85a50aa8a13141e7deb7c811f9b89ae97f8b92571a1c96130a0d",
+    "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-continuation-controls-original/Route12SuperRodHouse-success-2/record.json": "a2a84c98400a85a50aa8a13141e7deb7c811f9b89ae97f8b92571a1c96130a0d"
+  },
+  "gzip_roundtrip_verified": true,
+  "screenshot_scope": "Same save, initial screen and absolute frame, with separate ordinary dialogue-confirmation prefixes; not an identical full input timeline. Earlier identical-timeline Bill image only showed different intro progress and is diagnostic, not the receipt-retention before image.",
+  "fresh_manifest": "audit-1371-continuation-fresh-native-m49.json",
+  "fresh_status_at_packaging": "running",
+  "separate_process_continue_runs": 18,
+  "ordinary_original_controls": "audit-1371-continuation-controls-original/result.json",
+  "original_input_controls": "audit-1370-continuation-input-original/result.json",
+  "files": {
+    "Route12SuperRodHouse-normal.sav": "197435e876d61141bae7756c6996d54ab6c7d147613c5606d6d512160c9a4bb9",
+    "BillsHouse-after.png": "95098aa3ff5dace46af8ce1b35931151417a93bdcd97b31395851f253894a079",
+    "BillsHouse-full-bag.sav": "0bd63081459e69405c18ccfb24d9376173db297d2c6a21cb3e2347209bbda173",
+    "Route12SuperRodHouse-before.png": "6682c7f8138b4850fb18284385f30e624c19389ffa84caf75957edfb7219124b",
+    "Route12SuperRodHouse-after.png": "3ef100cf31273762ad793b33937a3571cd5bb28a23026b7b64f11b95ca508cd8",
+    "recordings.json.gz": "fd0f1d76560ed29084a22a6b52843447552bf2b6c255a442e59eb5ef5c587c75",
+    "Route12SuperRodHouse-full-bag.sav": "3cdf3a3514e6970287291b35d88524bfb3019ab5ba30d2be198888201c3fbacb",
+    "BillsHouse-normal.sav": "9ae92f891e56e94d69e69a62c4dfb7d911f3fec3a35380567a1657ea5337ffb7",
+    "BillsHouse-before.png": "de2f9dab37fc18df7bbd427a4c167ff2d4ce4daed54ca4926872f6bd93582543"
+  }
+}

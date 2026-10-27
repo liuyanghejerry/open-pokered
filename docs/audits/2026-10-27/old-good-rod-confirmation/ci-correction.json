@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-27T01:22:44.576896+00:00",
+  "original_ci_head": "7b40ece2cfb1f10c23654f8c7c76f1fcb487b473",
+  "ci_run": 40428749917,
+  "ci_job": 121940989495,
+  "failure": "Coverage: fidelity_fishing_bag_full_does_not_promise_or_sound_a_gift recognized only legacy ShowText and showItemDialogue commands. The updated rods emit typed field-text commands.",
+  "local_before": "The same assertion reproduced in the focused core test; 0 passed, 1 failed, 3292 filtered.",
+  "correction": "Decode typed paragraph commands in the existing regression; preserve give-before-promise, bag-full and fanfare checks, and add successful-event checks and all three rod variants.",
+  "runtime_unchanged": true,
+  "runtime_identity": "All current compiled source matches source_commit 473351d6 except changes below #[cfg(test)] mod tests in native_script.rs. The frozen bf9b83df game recordings retain their original identity.",
+  "command": "cargo test -p pokered-core --locked --offline",
+  "local_after": {
+    "suites": 70,
+    "unit_tests": 3293,
+    "all_tests": 3807,
+    "failed": 0,
+    "doc_tests_ignored": 1
+  },
+  "log_sha256": "5cc94f96672e3587c711f3067ef84718b72bcff49d4a27b58b2e2af5243432ee",
+  "log_bytes": 344338,
+  "first_local_attempt": "Compilation initially lacked sparse-checkout docs/audits/hof-pc-load fixtures; restoring that tracked fixture directory allowed the failure to reproduce.",
+  "ci_after": "Pending new-head CI; local success does not imply CI success."
+}
