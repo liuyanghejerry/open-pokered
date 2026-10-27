@@ -1,0 +1,140 @@
+{
+  "status": "local-prepared-and-full-fresh-passed",
+  "base": "877667400bc387456bf716feaace65972e6d2468",
+  "source_commit": "13596a948167b7c46a5d89d02829a05901e37c0f",
+  "frozen_source_head": "e71b74903aa2af1d062a3c6660c2d7c1d985e066",
+  "frozen_source_tree": "0eaabfa8b5e24646306a31932e018456225035b4",
+  "source_identity": "All crates/Cargo files are identical between source_commit13596a94 and frozen-source e71b7490. Rebase only incorporates master driver changes; the completed fresh used that same merged PR428 driver in its immutable harness.",
+  "baseline_identity": "All crates/Cargo on baseline e5b1c6a6 are identical to master87766740; retained paired before images identify their original runtime honestly.",
+  "baseline_binary_sha256": "859b986f4d0b626bb25fd16e56094341325248688d998735a2c79b65a8e49854",
+  "candidate_binary_sha256": "7a8e94da848e5cfae2c07e0e99d52b6e7d6050e0bb12e9b5f7ac1d98f847677d",
+  "prepared_cases": 4,
+  "repeats_each": 2,
+  "separate_continue_runs": 8,
+  "prepared_scope": "Original SRAM fixtures, ordinary CONTINUE and real buttons. Debug SAVE plus separate process CONTINUE are recorded separately from full NEW GAME.",
+  "images": {
+    "scope": "Same original save, initial screen and absolute capture frame; dialogue-confirmation prefixes differ; each side repeated twice.",
+    "MrFujisHouse_frame": 1074,
+    "MrPsychicsHouse_frame": 976,
+    "visually_reviewed": true
+  },
+  "checks": {
+    "app": 419,
+    "app_ignored": 40,
+    "core_unit": 3293,
+    "core_including_integration": 3807,
+    "core_doc_ignored": 1,
+    "data_boa": 479,
+    "data_ignored": 1,
+    "agent": 64,
+    "arm": "passed",
+    "new_full_checks": {
+      "core": {
+        "passed": 3807,
+        "ignored": 1,
+        "log_sha256": "59a88a0927ee77f986ac5d9f6ccc6a843419b1219ea0d402e07c9bff01fb6bbe"
+      },
+      "agent": {
+        "passed": 64,
+        "ignored": 0,
+        "log_sha256": "7842be56f7815aeb759c28f075d48d2e7d4fcece21c1a19a5a1193606a3812b2"
+      }
+    }
+  },
+  "fresh": {
+    "status": "passed",
+    "seconds": 8046.471847856999,
+    "milestones": 49,
+    "seed": 42,
+    "speed": 0,
+    "source_and_binary_unchanged": true,
+    "ending": "Champion/Hall of Fame/credits/TheEnd/title/ending SAVE/separate process CONTINUE",
+    "continued_map": "PalletTown",
+    "badges": 255,
+    "hall_of_fame_count": 1
+  },
+  "artifacts": [
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/MrPsychicsHouse-normal.sav.gz",
+      "bytes": 1067,
+      "sha256": "d84e9c7ffb57c0ca26af804b79cf3d64dc5c02e9394416639554b4f4b5d7a172"
+    },
+    {
+      "path": "docs/screenshots/fuji-psychic-gift-confirmation/MrPsychicsHouse-before.png",
+      "bytes": 17988,
+      "sha256": "aeda8f0328ec2601bc7475e8cf6e206a4734f2ebc8d1ec2264bb862103124508"
+    },
+    {
+      "path": "docs/screenshots/fuji-psychic-gift-confirmation/MrFujisHouse-after.png",
+      "bytes": 12111,
+      "sha256": "a6cbafcb1715fb5bf5ca146be560125664639e22e709f63a42f391e6d10118a7"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/MrPsychicsHouse-full-bag.sav.gz",
+      "bytes": 1092,
+      "sha256": "6f7ef335a0fb858d823e8ce3dfb6a494a13f360575cc2bdb1895e86f38296848"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/MrFujisHouse-full-bag.sav.gz",
+      "bytes": 1186,
+      "sha256": "49aa62aa594fb13498c06485e2abb3b46180220119395152d1bfc694bebca0bb"
+    },
+    {
+      "path": "docs/screenshots/fuji-psychic-gift-confirmation/MrFujisHouse-before.png",
+      "bytes": 12545,
+      "sha256": "95f0831416e0dc918df22986bdf54c3d7b99f41570253fe278faf5ae31bb977d"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/recordings.json.gz",
+      "bytes": 36351,
+      "sha256": "787442f547028ece90f298354b58ff4015ff1d01cb4ee993fc531f09be62c567"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/audit-1374-fuji-after427-build-build-checks.json.gz",
+      "bytes": 108157,
+      "sha256": "7220b28b04de2b01a4205fd2d9b855264f0ee551f6f7252ef9798a0e5e93c76a"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/audit-1374-fuji-after427-source-proof.json.gz",
+      "bytes": 541,
+      "sha256": "d4c9803a8246410795c175aaeb1bca7789569a2090e0973dc662bb37bc152140"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/MrFujisHouse-normal.sav.gz",
+      "bytes": 1158,
+      "sha256": "2a95e28a391cf2f1ea73fefba2c706892f997faaa8eed90610632223d8b94b91"
+    },
+    {
+      "path": "docs/screenshots/fuji-psychic-gift-confirmation/MrPsychicsHouse-after.png",
+      "bytes": 10862,
+      "sha256": "1ff70ba107e702c2a5842d825736761e0068b1e0e91845532799c06197c9376f"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/fresh-run.json.gz",
+      "bytes": 54786,
+      "sha256": "d3b90edb928862767051430558a0a7537a6e6bc75aba53b7f978e486a798cb15"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/fresh-milestones.json.gz",
+      "bytes": 19917,
+      "sha256": "04064a5548cddd720611c68adb4814601d0d1080a9e11023d6f410063ad2fbf8"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/first-clear.sav.gz",
+      "bytes": 664,
+      "sha256": "30d1db3c7a5771673785305a95074c3e65a177707f3d26da72bb11531b6dd613"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/fresh-driver.log.gz",
+      "bytes": 3763,
+      "sha256": "d8b8275f4f9a82fb0edcd598c65a7baf53edf49a823c1daca3cbd6f066e4662a"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/README.md",
+      "bytes": 943,
+      "sha256": "cefb0e69793e508b16c316676ca67437046295699910ab5236ed249bdde1610a"
+    }
+  ],
+  "all_fresh_driver_files_match_current_source": true,
+  "bilingual_paragraphs_preserved": true
+}
