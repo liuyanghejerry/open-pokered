@@ -3,7 +3,7 @@
   "base": "877667400bc387456bf716feaace65972e6d2468",
   "source_commit": "473351d669c837e762292688d6e92aaf9b7e86c7",
   "source_tree_of_frozen_binary": "1f210723971e8083b099c0e37af84c3243208617",
-  "source_identity": "git diff between frozen source tree and this commit is empty for all crates, Cargo.toml and Cargo.lock. No production source changes after original build.",
+  "source_identity": "Frozen source tree and source_commit 473351d6 match all crates/Cargo. Subsequent changes are documentation plus cfg(test)-only core script assertions; runtime source and the recorded binary are unchanged.",
   "baseline_binary_sha256": "859b986f4d0b626bb25fd16e56094341325248688d998735a2c79b65a8e49854",
   "candidate_binary_sha256": "bf9b83dfb53e09be68449214ecd8de09ba7fde38446fc9c586a694fb88c5759b",
   "baseline_identity": "Frozen build source d0c0a348 matches all compiled crates/Cargo on master87766740; current baseline screenshots replayed afresh twice in audit1377.",
@@ -84,7 +84,10 @@
     "data_boa": 479,
     "data_ignored": 1,
     "agent": 64,
-    "arm": "passed"
+    "arm": "passed",
+    "core_unit": 3293,
+    "core_including_integration": 3807,
+    "core_doc_ignored": 1
   },
   "earlier_failure": "First helper incorrectly expected held B to retain GOOD ROD outer ACK. Actual original exits without release at tick80. Preserved partial failed recording; corrected expectation repeated twice separately.",
   "first_fresh_attempt": "Stopped at m16 after three normal ship-rival defeats and is preserved as failed. The complete NEW GAME retry used merged PR428: ordinary training to levels30/32 after two defeats, third fight won; all later milestones passed.",
@@ -205,6 +208,12 @@
       "path": "prepared-recordings.json.gz",
       "bytes": 91108,
       "sha256": "feb4258c84a38587b72a55fa04d1bdaee411c64f1cb600a1fe964b545789ec4e"
+    },
+    {
+      "path": "ci-correction.json",
+      "bytes": 1488,
+      "sha256": "51b6657731ea7c1b175a069a000cc0690fd6a2dbe01f2a92085f129d892b5cc6"
     }
-  ]
+  ],
+  "ci_correction": "ci-correction.json"
 }
