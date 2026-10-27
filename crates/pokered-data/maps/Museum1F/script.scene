@@ -112,19 +112,29 @@ game_scene Museum1F {
   @storyline("talkScientist1") {
     @trigger(map = "Museum1F", npc = 3)
     @if (getFlag("EVENT_GOT_OLD_AMBER")) {
-      @speaker("") { @t("Ssh! Get the OLD AMBER\nchecked!", "嘘！把古老的琥珀拿去检验！") }
+      printFieldTextParts([
+        @t("Ssh! Get the OLD AMBER\nchecked!", "嘘！把古老的琥珀拿去检验！")
+      ], false)
     } @else {
-      @speaker("") {
-        @t("Ssh! I think that this chunk\nof AMBER contains POKeMON\nDNA!\n\nIt would be great if POKeMON\ncould be resurrected from\nit!\n\nBut, my colleagues just\nignore me!\n\nSo I have a favor to ask!\n\nTake this to a POKeMON LAB\nand get it examined!", "嘘！我觉得这块琥珀里面含有宝\n可梦的DNA！\n\n如果能从里面复活出宝可梦就好\n了！\n\n但是，我的同事们都不理我！\n\n所以我有一个请求！\n\n把这个拿到宝可梦研究所去检验\n吧！")
-      }
+      printFieldTextParts([
+        @t("Ssh! I think that this chunk\nof AMBER contains POKeMON\nDNA!", "嘘！我觉得这块琥珀里面含有宝\n可梦的DNA！"),
+        @t("It would be great if POKeMON\ncould be resurrected from\nit!", "如果能从里面复活出宝可梦就好\n了！"),
+        @t("But, my colleagues just\nignore me!", "但是，我的同事们都不理我！"),
+        @t("So I have a favor to ask!", "所以我有一个请求！"),
+        @t("Take this to a POKeMON LAB\nand get it examined!", "把这个拿到宝可梦研究所去检验\n吧！")
+      ], "prompt")
       given = giveItem("OLD_AMBER", 1)
       @if (given) {
         setFlag("EVENT_GOT_OLD_AMBER")
-        showItemDialogue(@t("<PLAYER> received OLD AMBER!", "<PLAYER>获得了古老的琥珀！"), "SFX_GET_ITEM_1")
+        hideObjectByName("MUSEUM_1F_OBJ_5")
+        printItemFieldText(@t("<PLAYER> received OLD AMBER!", "<PLAYER>获得了古老的琥珀！"), "SFX_GET_ITEM_1")
       } @else {
-        @speaker("") { @t("You don't have space for\nthis!", "你的背包没有空间了！") }
+        printFieldTextParts([
+          @t("You don't have space for\nthis!", "你的背包没有空间了！")
+        ], false)
       }
     }
+    acknowledgeFieldText()
   }
 
   // ── Scientist3 — flavor (npc 4) ────────────────────────────────────────

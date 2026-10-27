@@ -16,7 +16,7 @@ struct Case {
     face: u8,
     flag_before_sound: bool,
 }
-const CASES: [Case; 8] = [
+const CASES: [Case; 10] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
@@ -88,6 +88,24 @@ const CASES: [Case; 8] = [
         item: ItemId::Tm39,
         face: UP,
         flag_before_sound: false,
+    },
+    Case {
+        map: MapId::CeladonCity,
+        x: 22,
+        y: 17,
+        flag: EventFlag::EVENT_GOT_TM41,
+        item: ItemId::Tm41,
+        face: UP,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::SilphCo2F,
+        x: 10,
+        y: 2,
+        flag: EventFlag::EVENT_GOT_TM36,
+        item: ItemId::Tm36,
+        face: UP,
+        flag_before_sound: true,
     },
 ];
 
@@ -273,6 +291,31 @@ impl Session {
     }
 
     fn talk(&mut self) {
+        if self.case.map == MapId::Route1 {
+            // The sample giver wanders vertically. Approach using ordinary
+            // movement before facing him; never freeze or reposition the NPC.
+            for _ in 0..128 {
+                let npc = &self.game.overworld.npc_states[0];
+                let player = &self.game.overworld.state.player;
+                if player.x == npc.x + 1 && player.y == npc.y && npc.walk_counter == 0 {
+                    for _ in 0..16 { self.step(LEFT); }
+                    self.step(0);
+                    for _ in 0..6 { self.step(A); }
+                    for _ in 0..6 { self.step(0); }
+                    if self.game.overworld.active_script_effect_label().is_some() {
+                        assert_eq!(self.game.overworld.active_script_effect_label().as_deref(), Some("FieldRewardText"));
+                        return;
+                    }
+                    continue;
+                }
+                let button = if player.x < npc.x + 1 { RIGHT }
+                    else if player.x > npc.x + 1 { LEFT }
+                    else if player.y < npc.y { DOWN } else { UP };
+                for _ in 0..16 { self.step(button); }
+                for _ in 0..8 { self.step(0); }
+            }
+            panic!("could not speak to the wandering sample giver");
+        }
         let rod_flag = match self.case.map {
             MapId::VermilionOldRodHouse => Some("EVENT_GOT_OLD_ROD"),
             MapId::FuchsiaGoodRodHouse => Some("EVENT_GOT_GOOD_ROD"),
@@ -458,6 +501,9 @@ mod continuations;
 #[path = "field_reward_text_tests/fuji.rs"]
 mod fuji;
 
+#[path = "field_reward_text_tests/route1.rs"]
+mod route1;
+
 #[path = "field_reward_text_tests/warden_voucher.rs"]
 mod warden_voucher;
 
@@ -466,6 +512,9 @@ mod bike_shop;
 
 #[path = "field_reward_text_tests/town_map.rs"]
 mod town_map;
+
+#[path = "field_reward_text_tests/old_amber.rs"]
+mod old_amber;
 
 #[path = "field_reward_text_tests/oaks_aide.rs"]
 mod oaks_aide;
