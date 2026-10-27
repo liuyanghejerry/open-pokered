@@ -64,6 +64,12 @@ pub struct NotePreparation {
 }
 impl NotePreparation {
     pub fn new(input: PreparationInput) -> Option<Self> {
+        Self::with_drum_context(input, None)
+    }
+    pub(crate) fn with_drum_context(
+        input: PreparationInput,
+        noise_busy: Option<bool>,
+    ) -> Option<Self> {
         // Supported commands cannot change flags2 or the noise-mode bit. Reject
         // unsupported modes before accepting any of the caller's instructions.
         NoteLengthInstructions::new(NoteLengthInput {
@@ -75,7 +81,7 @@ impl NotePreparation {
             flags1: input.stream.state.flags1,
             flags2: input.flags2,
         })?;
-        let stream = StreamInstructions::new(input.stream).ok()?;
+        let stream = StreamInstructions::with_drum_context(input.stream, noise_busy).ok()?;
         Some(Self {
             input,
             stage: Stage::Stream(stream),

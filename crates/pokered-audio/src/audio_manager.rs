@@ -302,14 +302,13 @@ impl AudioManager {
         &self,
     ) -> Result<crate::source_clock::PreparedAudioFrame, crate::source_clock::AudioClockError> {
         use crate::source_clock::{AudioClockError, PreparedAudioFrame};
-        if matches!(
-            self.engine.last_music_id(),
-            Some(MusicId::SILPH_CO | MusicId::DUNGEON3 | MusicId::POKECENTER)
-        ) && !self.engine.is_fading()
-            && !self.low_health_alarm_enabled
-            && self.music_paused == 0
-        {
-            PreparedAudioFrame::from_shared_music(&self.engine.sequencer)
+        let song = self
+            .engine
+            .last_music_id()
+            .and_then(crate::source_clock::frame_instructions::SourceSong::from_music)
+            .ok_or(AudioClockError::UnsupportedSoundBank)?;
+        if !self.engine.is_fading() && !self.low_health_alarm_enabled && self.music_paused == 0 {
+            PreparedAudioFrame::from_shared_music(&self.engine.sequencer, song)
         } else {
             Err(AudioClockError::UnsupportedSoundBank)
         }
@@ -369,7 +368,11 @@ impl AudioManager {
             Some(MusicId::SILPH_CO | MusicId::DUNGEON3) => 31,
             _ => return Err(AudioClockError::UnsupportedSoundBank),
         };
-        if bank != expected_bank || mute != 0 || self.music_after_sfx.is_some() || self.music_paused != 0 {
+        if bank != expected_bank
+            || mute != 0
+            || self.music_after_sfx.is_some()
+            || self.music_paused != 0
+        {
             return Err(AudioClockError::UnsupportedSoundBank);
         }
         let seq = &self.engine.sequencer;
@@ -492,11 +495,20 @@ impl AudioManager {
     pub fn source_irq_context(
         &self,
     ) -> Result<crate::source_clock::AudioIrqContext, crate::source_clock::AudioClockError> {
-        use crate::source_clock::{frame_instructions::SourceSong, AudioClockError, AudioIrqContext};
-        let bank = self.engine.last_music_id().and_then(SourceSong::from_music)
-            .ok_or(AudioClockError::UnsupportedSoundBank)?.bank();
+        use crate::source_clock::{
+            frame_instructions::SourceSong, AudioClockError, AudioIrqContext,
+        };
+        let bank = self
+            .engine
+            .last_music_id()
+            .and_then(SourceSong::from_music)
+            .ok_or(AudioClockError::UnsupportedSoundBank)?
+            .bank();
         self.source_frame_song(bank, 0)?;
-        Ok(AudioIrqContext { bank, nr50: self.nr50() })
+        Ok(AudioIrqContext {
+            bank,
+            nr50: self.nr50(),
+        })
     }
 
     fn source_frame_resume_error<E>(
@@ -638,7 +650,9 @@ impl AudioManager {
     /// Resume with an owner that can also admit exact plain-instruction runs.
     /// All preflight, fingerprint and once-only commit checks are shared with
     /// the single-instruction callback API above.
-    pub fn resume_source_audio_frame_with_runner<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+    pub fn resume_source_audio_frame_with_runner<
+        B: crate::source_clock::apu_bus::SourceAudioFrameBus,
+    >(
         &mut self,
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
         mut bus: B,
@@ -671,7 +685,7 @@ impl AudioManager {
             .prepare_source_frame()
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
         work.run_with_bus(&self.engine.sequencer, &mut self.engine.apu, &mut bus)
-        .map_err(AudioAdmissionError::Admission)?;
+            .map_err(AudioAdmissionError::Admission)?;
         if prepared.work()
             != (AudioFrameWork {
                 cycles: work.cycles(),
@@ -693,7 +707,11 @@ impl AudioManager {
     /// direct hardware writes override whatever the sound engine put there.
     pub fn update_frame(&mut self) {
         if self.music_paused != 0 {
-            if self.music_paused == 1 && self.engine.sequencer.channels[..4].iter().any(|ch| ch.active) {
+            if self.music_paused == 1
+                && self.engine.sequencer.channels[..4]
+                    .iter()
+                    .any(|ch| ch.active)
+            {
                 self.engine.apu.write_register(0xff25, 0);
                 self.engine.apu.write_register(0xff1a, 0);
                 self.engine.apu.write_register(0xff1a, 0x80);
@@ -721,8 +739,10 @@ impl AudioManager {
 
     /// WaitForSoundToFinish ignores wave SFX (CHAN7) and an enabled alarm.
     pub fn payout_sound_pending(&self) -> bool {
-        !self.low_health_alarm_enabled && [4, 5, 7].iter()
-            .any(|&index| self.engine.sequencer.channels[index].active)
+        !self.low_health_alarm_enabled
+            && [4, 5, 7]
+                .iter()
+                .any(|&index| self.engine.sequencer.channels[index].active)
     }
 
     /// A reset/scene stop must also release a minigame's music pause.

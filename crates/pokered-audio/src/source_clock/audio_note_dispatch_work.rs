@@ -16,12 +16,25 @@ pub struct MusicCommandState {
 
 /// Supports speed/volume, duty, octave and ordinary notes for music channels.
 /// Calls, loops, other control commands and noise/SFX require separate paths.
+#[cfg(test)]
 pub fn music_dispatch_work(
     channel: u8,
     bytes: &[u8],
     state: MusicCommandState,
     vibrato_reload: u8,
 ) -> Option<(MusicCommandState, u8, usize, u32)> {
+    let (result, cycles) =
+        music_dispatch_with_context(channel, bytes, state, vibrato_reload, None)?;
+    Some((result.state, result.note, result.next_ptr, cycles))
+}
+
+pub fn music_dispatch_with_context(
+    channel: u8,
+    bytes: &[u8],
+    state: MusicCommandState,
+    vibrato_reload: u8,
+    noise_busy: Option<bool>,
+) -> Option<(super::note_stream_instructions::StreamResult, u32)> {
     use super::note_stream_instructions::{StreamInput, StreamInstructions};
     if channel >= 4 {
         return None;
@@ -44,25 +57,32 @@ pub fn music_dispatch_work(
                 ptr += 1;
             }
             0xe0..=0xe7 => (),
+            0xeb => {
+                bytes.get(ptr + 2)?;
+                break;
+            }
             0x00..=0xcf => break,
             _ => return None,
         }
     }
-    let mut work = StreamInstructions::new(StreamInput {
-        channel,
-        ptr: 0,
-        return_ptr: 0,
-        loop_counter: 0,
-        state,
-        vibrato_reload,
-    })
+    let mut work = StreamInstructions::with_drum_context(
+        StreamInput {
+            channel,
+            ptr: 0,
+            return_ptr: 0,
+            loop_counter: 0,
+            state,
+            vibrato_reload,
+        },
+        noise_busy,
+    )
     .ok()?;
     while !work.finished() {
         work.try_step(bytes, |_| Ok::<(), core::convert::Infallible>(()))
             .ok()?;
     }
     let result = work.result()?;
-    Some((result.state, result.note, result.next_ptr, work.cycles()))
+    Some((result, work.cycles()))
 }
 
 #[cfg(test)]

@@ -2,6 +2,9 @@
 //! enclosing PlayNextNote RET. Physical APU writes/native updates are not owned.
 use super::channel_output_instructions::{ChannelOutputInstructions, OutputInput, OutputRoutine};
 use super::note_math_instructions::FrequencyInstructions;
+use super::pitch_slide_instructions::{
+    InitPitchSlideInput, InitPitchSlideInstructions, InitPitchSlideResult,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -29,6 +32,11 @@ pub struct NotePitchResult {
     pub saved_frequency_low: u8,
     /// DE returned by ApplyWavePatternAndFrequency, not a full APU snapshot.
     pub wave_return_frequency: Option<u16>,
+    #[cfg_attr(
+        any(test, feature = "source-clock-serde"),
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    pub pitch_slide: Option<InitPitchSlideResult>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -58,6 +66,8 @@ enum Stage {
     FrequencyCall(u8),
     Frequency(FrequencyInstructions),
     PitchCheck(u8),
+    SlideCall,
+    Slide(InitPitchSlideInstructions),
     PairGate(u8),
     PairPop,
     PairJump,
@@ -88,15 +98,42 @@ pub struct NotePitchInstructions {
     /// The rest-on-wave path reads NR51 before clearing channel 3's routing.
     #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
     rest_nr51: Option<u8>,
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    slide_input: Option<InitPitchSlideInput>,
 }
 #[path = "note_pitch_bus.rs"]
 mod bus;
 impl NotePitchInstructions {
     pub fn new(input: NotePitchInput) -> Option<Self> {
+        Self::new_inner(input, None)
+    }
+    /// The following note's length and target must be supplied by its stream
+    /// owner. Initialization runs even when a paired SFX suppresses output.
+    pub fn with_pitch_slide(
+        input: NotePitchInput,
+        note_delay: u8,
+        length_modifier: u8,
+        target_frequency: u16,
+    ) -> Option<Self> {
+        if input.note >= 0xc0 || input.flags1 & 16 == 0 {
+            return None;
+        }
+        let slide = InitPitchSlideInput {
+            channel: input.channel,
+            current_frequency: 0,
+            target_frequency,
+            note_delay,
+            length_modifier,
+            flags1: input.flags1,
+        };
+        InitPitchSlideInstructions::new(slide)?;
+        Self::new_inner(input, Some(slide))
+    }
+    fn new_inner(input: NotePitchInput, slide_input: Option<InitPitchSlideInput>) -> Option<Self> {
         if !matches!(input.bank, 2 | 31)
             || input.channel >= 3
             || input.note >= 0xd0
-            || input.flags1 & 16 != 0
+            || (input.flags1 & 16 != 0) != slide_input.is_some()
             || (input.channel == 0 && input.paired_sfx_active != (input.source_sfx_id != 0))
             || (input.note < 0xc0 && input.pitch_base.is_none())
         {
@@ -109,9 +146,11 @@ impl NotePitchInstructions {
             result: NotePitchResult {
                 saved_frequency_low: input.previous_frequency_low,
                 wave_return_frequency: None,
+                pitch_slide: None,
             },
             cycles: 0,
             rest_nr51: None,
+            slide_input,
         })
     }
     pub fn finished(&self) -> bool {
@@ -141,6 +180,22 @@ impl NotePitchInstructions {
         }
     }
     pub fn try_step<E>(&mut self, execute: impl FnOnce(u8) -> Result<(), E>) -> Result<bool, E> {
+        if let Stage::Slide(work) = &mut self.stage {
+            let mut accepted = 0;
+            let done = work.try_step(|t| {
+                execute(t)?;
+                accepted = t;
+                Ok(())
+            })?;
+            self.cycles += u32::from(accepted);
+            if done {
+                let result = work.result().expect("completed slide initialization");
+                self.frequency = result.returned_frequency;
+                self.result.pitch_slide = Some(result);
+                self.stage = Stage::PairGate(0);
+            }
+            return Ok(false);
+        }
         if let Stage::Frequency(work) = &mut self.stage {
             let t = work.next_cycles().expect("pending frequency instruction");
             execute(t)?;
@@ -218,7 +273,9 @@ impl NotePitchInstructions {
             RestCall(n) => [8, 24][n as usize],
             RestRestart(n) => [8, 8, 8, 8, 8][n as usize],
             FrequencyCall(n) => [8, 8, 12, 8, 8, 24][n as usize],
+            PitchCheck(4) if self.slide_input.is_some() => 8,
             PitchCheck(n) => [8, 12, 8, 12, 12][n as usize],
+            SlideCall => 24,
             PairGate(n) => {
                 if n < 10 {
                     [16, 4, 8, 8, 12, 8, 4, 8, 8, 4][n as usize]
@@ -248,7 +305,7 @@ impl NotePitchInstructions {
             SaveFrequency(n) => [12, 8, 8, 24][n as usize],
             Return => 16,
             Done => return None,
-            Frequency(_) | Output { .. } => unreachable!("child owns its instruction"),
+            Frequency(_) | Slide(_) | Output { .. } => unreachable!("child owns its instruction"),
         })
     }
     fn advance(&mut self) {
@@ -327,10 +384,21 @@ impl NotePitchInstructions {
             }
             PitchCheck(n) => {
                 if n == 4 {
-                    PairGate(0)
+                    if self.slide_input.is_some() {
+                        SlideCall
+                    } else {
+                        PairGate(0)
+                    }
                 } else {
                     PitchCheck(n + 1)
                 }
+            }
+            SlideCall => {
+                let input = InitPitchSlideInput {
+                    current_frequency: self.frequency,
+                    ..self.slide_input.expect("prevalidated slide input")
+                };
+                Slide(InitPitchSlideInstructions::new(input).expect("prevalidated slide divisor"))
             }
             PairGate(n) => {
                 if n == 10 {
@@ -392,7 +460,7 @@ impl NotePitchInstructions {
             }
             Return => Done,
             Done => Done,
-            Frequency(_) | Output { .. } => unreachable!("child owns its progress"),
+            Frequency(_) | Slide(_) | Output { .. } => unreachable!("child owns its progress"),
         };
     }
 }

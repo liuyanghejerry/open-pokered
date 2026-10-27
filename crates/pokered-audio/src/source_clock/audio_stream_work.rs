@@ -2,7 +2,7 @@
 //! The supported tonal commands, noise rests and finite/infinite loops are accepted.
 //! Pointer targets are native data offsets, never original ROM addresses.
 use super::audio_math_work::next_music_byte_work_cycles;
-use super::audio_note_dispatch_work::{music_dispatch_work, MusicCommandState};
+use super::audio_note_dispatch_work::{music_dispatch_with_context, MusicCommandState};
 use crate::alloc_prelude::*;
 
 #[derive(Debug)]
@@ -13,9 +13,11 @@ pub struct MusicStreamWork {
     pub return_ptr: usize,
     pub loop_counter: u8,
     pub tempo: Option<u16>,
+    pub panning: Option<u8>,
     pub vibrato_reload: u8,
     pub linear_commands: Vec<u8>,
     pub control_cycles: u32,
+    pub drum: Option<super::drum_start_instructions::DrumStartResult>,
 }
 
 fn byte(data: &[u8], ptr: &mut usize) -> Option<u8> {
@@ -34,7 +36,29 @@ fn word(data: &[u8], ptr: &mut usize) -> Option<usize> {
 /// the ordinary helper accounts for the single PlayNextNote entry and note.
 /// Unrelated commands, truncation, and an unbounded immediate command loop
 /// stop instead of fabricating a note or a channel return.
+#[cfg(test)]
 pub fn music_stream_work(
+    channel: u8,
+    data: &[u8],
+    ptr: usize,
+    return_ptr: usize,
+    loop_counter: u8,
+    state: MusicCommandState,
+    vibrato_reload: u8,
+) -> Option<MusicStreamWork> {
+    music_stream_work_with_drum(
+        channel,
+        data,
+        ptr,
+        return_ptr,
+        loop_counter,
+        state,
+        vibrato_reload,
+        None,
+    )
+}
+
+pub fn music_stream_work_with_drum(
     channel: u8,
     data: &[u8],
     mut ptr: usize,
@@ -42,6 +66,7 @@ pub fn music_stream_work(
     mut loop_counter: u8,
     mut state: MusicCommandState,
     mut vibrato_reload: u8,
+    noise_busy: Option<bool>,
 ) -> Option<MusicStreamWork> {
     if channel >= 4 {
         return None;
@@ -50,6 +75,7 @@ pub fn music_stream_work(
     // CALL GetNextMusicByte / LD D,A / CP sound_ret / JP NZ.
     let not_return = 24 + next + 4 + 8 + 16;
     let mut tempo = None;
+    let mut panning = None;
     let mut control_cycles = 0;
     let mut linear = Vec::new();
     for _ in 0..100 {
@@ -273,8 +299,11 @@ pub fn music_stream_work(
                     + 12
                     + 16;
             }
-            0xf0 => {
-                let _volume = byte(data, &mut ptr)?;
+            0xee | 0xf0 => {
+                let value = byte(data, &mut ptr)?;
+                if command == 0xee {
+                    panning = Some(value);
+                }
                 control_cycles += not_return
                     + 8
                     + 16
@@ -286,12 +315,12 @@ pub fn music_stream_work(
                     + 4
                     + 8
                     + 12
-                    + 7 * (8 + 12)
+                    + (if command == 0xee { 4 } else { 7 }) * (8 + 12)
                     + 8
                     + 8
                     + 24
                     + next
-                    + 12
+                    + if command == 0xee { 16 } else { 12 }
                     + 16;
             }
             0xd0..=0xdf | 0xec => {
@@ -301,20 +330,36 @@ pub fn music_stream_work(
                 }
             }
             0xe0..=0xe7 => linear.push(command),
-            0x00..=0xcf => {
+            0xeb | 0x00..=0xcf => {
                 linear.push(command);
-                let (state, note, _, _) =
-                    music_dispatch_work(channel, &linear, state, vibrato_reload)?;
-                return Some(MusicStreamWork {
+                if command == 0xeb {
+                    // The slide command transfers directly to its following
+                    // note's length handler, without another command dispatch.
+                    linear.push(byte(data, &mut ptr)?);
+                    linear.push(byte(data, &mut ptr)?);
+                    linear.push(byte(data, &mut ptr)?);
+                } else if channel == 3 && command & 0xf0 == 0xb0 {
+                    linear.push(byte(data, &mut ptr)?);
+                }
+                let (result, _) = music_dispatch_with_context(
+                    channel,
+                    &linear,
                     state,
-                    note,
+                    vibrato_reload,
+                    noise_busy,
+                )?;
+                return Some(MusicStreamWork {
+                    state: result.state,
+                    note: result.note,
                     next_ptr: ptr,
                     return_ptr,
                     loop_counter,
                     tempo,
+                    panning,
                     vibrato_reload,
                     linear_commands: linear,
                     control_cycles,
+                    drum: result.drum,
                 });
             }
             _ => return None,

@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('rom',type=Path);p.add_argument('symbols',type=Path);p.add_argument('output',type=Path);p.add_argument('--through-length',action='store_true');p.add_argument('--whole-note',action='store_true');args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('rom',type=Path);p.add_argument('symbols',type=Path);p.add_argument('output',type=Path);p.add_argument('--through-length',action='store_true');p.add_argument('--whole-note',action='store_true');p.add_argument('--stereo-only',action='store_true');args=p.parse_args()
     if args.whole_note:args.through_length=True
     spec=importlib.util.spec_from_file_location('oracle',Path(__file__).with_name('generate-timer-instructions.py'));o=importlib.util.module_from_spec(spec);spec.loader.exec_module(o)
     rom=args.rom.read_bytes();assert hashlib.sha256(rom).hexdigest()==o.ROM_SHA
@@ -38,6 +38,13 @@ def main():
             for sound_id in (20,133,134):
                 for note in (0x00,0xa0):
                     cases.append(dict(label='cry-whole',channel=ch,data=[note],state=dict(state,flags1=1,speed=6,volume=0x40 if ch==2 else 0xb3,duty=0xc0,octave=6),vibrato_reload=4,ptr=0,return_ptr=0,loop_counter=0,source_sfx_id=sound_id,frequency_modifier=255))
+    if args.stereo_only:
+        cases=[]
+        for ch in range(4):
+            for mask in (0,0xa5):
+                note=0xc3 if ch==3 else 0x03
+                for label,data in [('stereo-linear',[0xee,mask,note]),('stereo-call',[0xfd,6,0,0xee,mask,note,0xee,mask^255,0xff])]:
+                    cases.append(dict(label=label,channel=ch,data=data,state=dict(state,flags1=4 if ch==3 else 0),vibrato_reload=0,ptr=0,return_ptr=0,loop_counter=0))
     output=[]
     for prefix in ('Audio1','Audio3'):
         bank,entry=symbols[prefix+'_PlayNextNote'];_,stop=symbols[prefix+'_note_length']
@@ -54,7 +61,7 @@ def main():
                     elif cmd&0xf0==0xd0:offset+=1 if ch==3 else 2
                     elif cmd in (0xe8,) or 0xe0<=cmd<=0xe7:offset+=1
                     elif cmd in (0xea,0xed):offset+=3
-                    elif cmd in (0xec,0xf0):offset+=2
+                    elif cmd in (0xec,0xee,0xf0):offset+=2
                     else:return
             scan(case['ptr'])
             if case['state']['flags1']&2:scan(case['return_ptr'])
@@ -94,6 +101,7 @@ def main():
             assert rom[bank*0x4000+wave_write-0x4000]==0x77
             wave_written=any(pc==wave_write for pc,_ in trace)
             result=dict(state=result_state,note=r['D'],next_ptr=pointer('wChannelCommandPointers'),return_ptr=pointer('wChannelReturnAddresses'),loop_counter=loop_counter,tempo=tempo,vibrato_reload=byte('wChannelVibratoDelayCounterReloadValues'),vibrato_extent=byte('wChannelVibratoExtents'),vibrato_rate=byte('wChannelVibratoRates'),wave_instrument=m.get(symbols['wMusicWaveInstrument'][1]) if wave_written else None,master_volume=m.get(0xff24))
+            if args.stereo_only:result['panning']=m[symbols['wStereoPanning'][1]]
             i={key:case[key] for key in ('channel','ptr','return_ptr','loop_counter','state','vibrato_reload')}
             if args.through_length:
                 boundary='NoiseReturned' if ch==3 else 'NotePitch'
