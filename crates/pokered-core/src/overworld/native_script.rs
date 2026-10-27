@@ -3020,17 +3020,34 @@ mod tests {
 
     #[test]
     fn fidelity_fishing_bag_full_does_not_promise_or_sound_a_gift() {
-        for map in ["VermilionOldRodHouse", "FuchsiaGoodRodHouse"] {
+        for (map, flag) in [
+            ("VermilionOldRodHouse", "EVENT_GOT_OLD_ROD"),
+            ("FuchsiaGoodRodHouse", "EVENT_GOT_GOOD_ROD"),
+            ("Route12SuperRodHouse", "EVENT_GOT_SUPER_ROD"),
+        ] {
             let scene = pokered_data::embedded_scenes::get_scene_ast(map).unwrap();
             for room in [true, false] {
                 let mut e = NativeScriptEngine::new();
                 e.load_map(map, &scene);
                 let commands = drive_fidelity_scene(&mut e, "talkFishingGuru", room, "", &[0]);
                 let give_at = commands.iter().position(|c| matches!(c, ScriptCommand::GiveItem { .. })).unwrap();
-                let promise = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.starts_with("Grand!")));
-                assert_eq!(promise.is_some(), room);
+                let promise = commands.iter().position(|c| match c {
+                    ScriptCommand::ShowText { text } => text.starts_with("Grand!"),
+                    ScriptCommand::Custom { name, args }
+                        if matches!(name.as_str(), "printFieldTextParts" | "printItemFieldTextParts") => {
+                        let command = pokered_data::script_command::PokemonScriptCommand::from_custom(name, args).unwrap();
+                        matches!(command,
+                            pokered_data::script_command::PokemonScriptCommand::PrintFieldTextParts { parts, .. }
+                            | pokered_data::script_command::PokemonScriptCommand::PrintItemFieldTextParts { parts, .. }
+                            if parts.first().is_some_and(|text| text.starts_with("Grand!")))
+                    }
+                    _ => false,
+                });
+                assert_eq!(promise.is_some(), room, "{map}, room={room}");
                 if let Some(at) = promise { assert!(give_at < at); }
-                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")), room);
+                assert_eq!(commands.iter().any(|c| matches!(c, ScriptCommand::Custom { name, .. }
+                    if matches!(name.as_str(), "showItemDialogue" | "printItemFieldText" | "printItemFieldTextParts"))), room);
+                assert_eq!(e.get_flag(flag), room, "{map}, room={room}");
             }
         }
     }
@@ -3047,6 +3064,8 @@ mod tests {
             ("Route16FlyHouse", "talkBrunetteGirl", "", "SFX_GET_KEY_ITEM"),
             ("CopycatsHouse2F", "talkCopycat", "POKE_DOLL", "SFX_GET_ITEM_1"),
             ("SafariZoneSecretHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
+            ("VermilionOldRodHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
+            ("FuchsiaGoodRodHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
             ("Route12SuperRodHouse", "talkFishingGuru", "", "SFX_GET_ITEM_1"),
             ("CeladonMart3F", "talkClerk", "", "SFX_GET_ITEM_1"),
             ("Route2Gate", "talkOaksAide", "", "SFX_GET_ITEM_1"),
