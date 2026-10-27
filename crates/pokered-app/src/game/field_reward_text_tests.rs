@@ -420,3 +420,6 @@ mod copycat;
 
 #[path = "field_reward_text_tests/continuations.rs"]
 mod continuations;
+
+#[path = "field_reward_text_tests/bike_shop.rs"]
+mod bike_shop;
