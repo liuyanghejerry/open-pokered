@@ -466,3 +466,6 @@ mod bike_shop;
 
 #[path = "field_reward_text_tests/town_map.rs"]
 mod town_map;
+
+#[path = "field_reward_text_tests/oaks_aide.rs"]
+mod oaks_aide;
