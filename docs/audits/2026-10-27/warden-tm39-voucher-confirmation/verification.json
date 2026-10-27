@@ -1,0 +1,201 @@
+{
+  "status": "ready for focused PR",
+  "base": "a94ac3cf32424cf3cda4182712d634d6f756c83c",
+  "source_head": "5905323a28e94ff87116fcf130bb6a50a0e90332",
+  "runtime_build_head": "1feb954279c6c51e2a49c989ec133336f2f82ecc",
+  "candidate_binary_sha256": "1b166d91db45c279cb18315bcb33d29016442c8043b1976b7dd5af6fd4e6de6f",
+  "frozen_fresh_source": "012038101ab5fe37e0376762b4cace5ceb726665",
+  "runtime_byte_identical_to_completed_full_fresh": true,
+  "source_difference_from_fresh": [
+    "crates/pokered-core/src/overworld/native_script.rs"
+  ],
+  "source_difference_scope": "cfg(test) coverage correction only",
+  "all_current_source_hashes_and_fresh_driver_files_verified": true,
+  "bilingual_paragraphs_preserved": true,
+  "checks": {
+    "core_including_integration": 3807,
+    "core_unit": 3293,
+    "app": 422,
+    "app_ignored": 40,
+    "data_boa": 479,
+    "data_ignored": 1,
+    "core_doc_ignored": 1,
+    "agent": 64,
+    "arm": "passed"
+  },
+  "prepared": {
+    "original_cases": 6,
+    "current_native_cases": 6,
+    "repeats_each": 2,
+    "separate_continue": 12,
+    "runtime_state_setters": false
+  },
+  "paired": {
+    "cases": 4,
+    "repeats_per_side": 2,
+    "images": 8,
+    "same_original_save_initial_frame_and_absolute_capture_frame": true,
+    "input_prefixes_differ": true,
+    "prior_cue_images_asserted": true,
+    "equal_to_previously_visually_reviewed_images": true
+  },
+  "fresh": {
+    "status": "passed",
+    "seconds": 8180.371608856993,
+    "milestones": 49,
+    "ending": "Champion/Hall of Fame/credits/TheEnd/title/ending SAVE/separate process CONTINUE",
+    "continued_map": "PalletTown",
+    "badges": 255,
+    "hall_of_fame_count": 1,
+    "source_and_binary_unchanged": true
+  },
+  "frozen_source_evidence_members": {
+    "audit-1377-pending-gifts-build-v2-build-checks.json": {
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1377-pending-gifts-build-v2-build-checks.json",
+      "sha256": "4a302169508af21cb40c42009535ae1b153139d457e5965fd3a71e6ba91cc0aa"
+    },
+    "audit-1377-pending-gifts-harness.json": {
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1377-pending-gifts-harness.json",
+      "sha256": "2d3bac59bb5ea3cb845a47a4125f85ce415847cb71ca5db689efd88f5d34ee5f"
+    },
+    "audit-1377-pending-gifts-source-proof.json": {
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1377-pending-gifts-source-proof.json",
+      "sha256": "b9bb7f43271491664f38cf5ce2a74ffd20d110e69f8642c661b087e908a136a2"
+    },
+    "audit-1377-pending-gifts-changed-source.tar.gz": {
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1377-pending-gifts-changed-source.tar.gz",
+      "sha256": "88f4060b3f1778d0604557e40a9d18eccc86995ccff89bf6636aea6d869c3781"
+    },
+    "audit-1377-pending-gifts-ready.patch": {
+      "original_path": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1377-pending-gifts-ready.patch",
+      "sha256": "d681b8dbc070f889f05ef5dd974dffb20017225cde2fd46f494e9d1014f41d74"
+    }
+  },
+  "artifacts": [
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/PokemonFanClub-full-bag.sav.gz",
+      "bytes": 1173,
+      "sha256": "0cfdb898e1c998163c74660f2effd9e2a2b09263cc58586fa78b8e63ba9df9e0"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/PokemonFanClub-normal.sav.gz",
+      "bytes": 1147,
+      "sha256": "7e45215ba686d7fc547054b41d1e3ef6fb52392762f125d9068e6a3bafe5245a"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/README.md",
+      "bytes": 1441,
+      "sha256": "f9a842d9c6f644ab00106bd19651fb95945712128db52cfa005451cfc3ab2f38"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/Route12Gate2F-full-bag.sav.gz",
+      "bytes": 1098,
+      "sha256": "590053f155f8b2aae4edaebc0e1a2c9f9ccf7421e149a4e39992a6df6ed1caad"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/Route12Gate2F-normal.sav.gz",
+      "bytes": 1072,
+      "sha256": "e5bcabd657a9889501cea16d806821dd077f50c2d45ade117861c1b04ca96a68"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/WardensHouse-full-bag.sav.gz",
+      "bytes": 1133,
+      "sha256": "4425b23214fffc0d810e223f0e2b2eaa671a0993d53c23b9afe7a5fe91359f58"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/WardensHouse-normal.sav.gz",
+      "bytes": 1109,
+      "sha256": "486c1cfdfae788a6adaae19185c11942338a7c45143e5288889659d11bb16b18"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/current-checks.json.gz",
+      "bytes": 215703,
+      "sha256": "424b737d061ed3370caad00548c797c8a8a1009f471e63e40aa44026056de017"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/current-paired-recordings.json.gz",
+      "bytes": 6217,
+      "sha256": "00bbc9a427dfc3f2eb3a1bfd76e5a6dad0358d0faa7929b123ecd1d8d2e231e1"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/current-prepared-recordings.json.gz",
+      "bytes": 44438,
+      "sha256": "2ba1e5ff3e6e1d87be1b4c3c68352640d5329450178e301d3cb73b76aa99a632"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/first-clear.sav.gz",
+      "bytes": 668,
+      "sha256": "7873af8a53039b0154b1533042699fad7d90af8fde831648bad4c5dbadf10288"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/fresh-driver.log.gz",
+      "bytes": 3742,
+      "sha256": "7708cc1ccdbf7a8355041eddb9c927fd45aa7d13dd3ac3e70c8f06ef169c0dce"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/fresh-milestones.json.gz",
+      "bytes": 19930,
+      "sha256": "7c72b5fa0e9efabcfd78dd00294e32373cfc5e67d5f163bd680f839259357061"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/fresh-run.json.gz",
+      "bytes": 54669,
+      "sha256": "51fd211c63810e6dda87916c3c32cedda306e423585c19b27dcd8252291f07b2"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/fresh-source-evidence.tar.gz",
+      "bytes": 202037,
+      "sha256": "747372837ac47715f980ea5f59b507d0352a917068389b057ed9499b17d96380"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/original-independent-recordings.json.gz",
+      "bytes": 108324,
+      "sha256": "9490ad8531e394d58d4fe416f04ffbecd742f05ee7cbc6b2cfb9108eb10d6b3d"
+    },
+    {
+      "path": "docs/audits/2026-10-27/warden-tm39-voucher-confirmation/original-independent-summaries.json.gz",
+      "bytes": 2450,
+      "sha256": "b7f14e574f3ae6147b281c1cefe62e38a2b2ecda6cb477d0bbcbf2d8530a37fe"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/PokemonFanClub-1-after.png",
+      "bytes": 9861,
+      "sha256": "8525aa8c60b8430fc5073dda1c16336e5f2a1a812ecaffcf2c8b20f09fea19f7"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/PokemonFanClub-1-before.png",
+      "bytes": 9804,
+      "sha256": "6456de5aca774d88b3191cb8d0ca40b43389e3be0dafac4daf9805d1d816cddd"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/Route12Gate2F-1-after.png",
+      "bytes": 21011,
+      "sha256": "f542de8f3880bd750c5cffd9b514f09b14ab647c76bbbd8d6f2b364a311b681d"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/Route12Gate2F-1-before.png",
+      "bytes": 30025,
+      "sha256": "8c44f475c038fa57ca0ca187365830ef36ff8290b3a027320c26dccfc9753e14"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/WardensHouse-1-after.png",
+      "bytes": 24513,
+      "sha256": "98cd96e9f1faf0f89821fcb9023cb4e399f0e91d0dac0d0ed0539d877c9f9a26"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/WardensHouse-1-before.png",
+      "bytes": 24392,
+      "sha256": "a5b2e192051ad6967e12396b626b09b78a886a3d565a1f8e2d2b53d221331c5a"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/WardensHouse-2-after.png",
+      "bytes": 24206,
+      "sha256": "bfa60a44ce46a6c40c295f31635dfc82671f4875c87cfca335e2427eb2767f84"
+    },
+    {
+      "path": "docs/screenshots/warden-tm39-voucher-confirmation/WardensHouse-2-before.png",
+      "bytes": 34062,
+      "sha256": "df92c02ac2df8f8247a8e2b39685a2a369d6abe2f09254383a06f25a5d378905"
+    }
+  ]
+}
