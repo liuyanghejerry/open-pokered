@@ -512,3 +512,6 @@ mod bike_shop;
 
 #[path = "field_reward_text_tests/town_map.rs"]
 mod town_map;
+
+#[path = "field_reward_text_tests/old_amber.rs"]
+mod old_amber;
