@@ -4116,16 +4116,51 @@ mod tests {
 
     #[test]
     fn fidelity_warden_teeth_text_and_hm04_fanfare_order() {
+        use pokered_data::script_command::PokemonScriptCommand;
+
         for room in [false, true] {
             let mut engine = NativeScriptEngine::new();
             engine.load_map("WardensHouse", &pokered_data::embedded_scenes::get_scene_ast("WardensHouse").unwrap());
             engine.seed_set("bag", &["GOLD_TEETH".into()]);
             let commands = drive_fidelity_scene(&mut engine, "talkWarden", room, "", &[]);
-            let receipt_count = commands.iter().filter(|c| matches!(c, ScriptCommand::Custom { name, .. } if name == "showItemDialogue")).count();
-            assert_eq!(receipt_count, 1 + usize::from(room));
-            let teeth = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.contains("popped"))).unwrap();
-            let thanks = commands.iter().position(|c| matches!(c, ScriptCommand::ShowText { text } if text.contains("Thanks, kid"))).unwrap();
-            assert!(teeth < thanks);
+            let decoded: Vec<_> = commands.iter().enumerate().filter_map(|(index, command)| {
+                let ScriptCommand::Custom { name, args } = command else { return None };
+                PokemonScriptCommand::from_custom(name, args).ok().map(|command| (index, command))
+            }).collect();
+            let receipts: Vec<_> = decoded.iter().filter_map(|(index, command)| match command {
+                PokemonScriptCommand::ShowItemDialogue { text, sound_id } =>
+                    Some((*index, text.clone(), sound_id.as_deref())),
+                PokemonScriptCommand::PrintItemFieldText { text, sound_id } =>
+                    Some((*index, text.clone(), Some(sound_id.as_str()))),
+                PokemonScriptCommand::PrintItemFieldTextParts { parts, sound_id, .. } =>
+                    Some((*index, parts.join("\n"), Some(sound_id.as_str()))),
+                _ => None,
+            }).collect();
+            assert_eq!(receipts.len(), 1 + usize::from(room));
+            assert!(receipts.iter().all(|(_, _, sound)| *sound == Some("SFX_GET_ITEM_1")));
+            assert!(receipts[0].1.contains("GOLD TEETH"));
+            let text_at = |needle: &str| commands.iter().enumerate().find_map(|(index, command)| {
+                if matches!(command, ScriptCommand::ShowText { text } if text.contains(needle)) {
+                    return Some(index);
+                }
+                decoded.iter().any(|(at, command)| *at == index && match command {
+                    PokemonScriptCommand::PrintFieldTextParts { parts, .. }
+                    | PokemonScriptCommand::ContinueFieldTextParts { parts, .. } =>
+                        parts.iter().any(|text| text.contains(needle)),
+                    _ => false,
+                }).then_some(index)
+            }).unwrap();
+            let teeth = text_at("popped");
+            let thanks = text_at("Thanks, kid");
+            let take = commands.iter().position(|c| matches!(c,
+                ScriptCommand::TakeItem { item_id, quantity } if item_id == "GOLD_TEETH" && *quantity == 1)).unwrap();
+            let give = commands.iter().position(|c| matches!(c,
+                ScriptCommand::GiveItem { item_id, quantity } if item_id == "HM04" && *quantity == 1)).unwrap();
+            assert!(receipts[0].0 < teeth && teeth < take && take < thanks && thanks < give);
+            if room {
+                assert!(give < receipts[1].0 && receipts[1].1.contains("HM04"));
+            }
+            assert!(engine.get_flag("EVENT_GAVE_GOLD_TEETH"));
             assert_eq!(engine.get_flag("EVENT_GOT_HM04"), room);
         }
     }
