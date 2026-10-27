@@ -1,5 +1,5 @@
 {
-  "status": "local-prepared-and-full-fresh-passed",
+  "status": "Current-base local checks and prepared controls passed; full fresh result below identifies the separate earlier frozen candidate.",
   "base": "877667400bc387456bf716feaace65972e6d2468",
   "source_commit": "13596a948167b7c46a5d89d02829a05901e37c0f",
   "frozen_source_head": "e71b74903aa2af1d062a3c6660c2d7c1d985e066",
@@ -131,10 +131,61 @@
     },
     {
       "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/README.md",
-      "bytes": 943,
-      "sha256": "cefb0e69793e508b16c316676ca67437046295699910ab5236ed249bdde1610a"
+      "bytes": 1324,
+      "sha256": "60c45d3a48a1f793aeca15994661cbecd2a39490cb16ff3fb11d8af37cf94eda"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/current-base-build.json.gz",
+      "bytes": 107914,
+      "sha256": "34b3723253e5d846ece730750a8390f19cb347877ff32f002c4084e5fef12cce"
+    },
+    {
+      "path": "docs/audits/2026-10-27/fuji-psychic-gift-confirmation/current-base-recordings.json.gz",
+      "bytes": 23516,
+      "sha256": "deb22de2d18aed3de2bec1ab0280b8f0fc3fabec9880054cf0f2116ece47eb02"
     }
   ],
   "all_fresh_driver_files_match_current_source": true,
-  "bilingual_paragraphs_preserved": true
+  "bilingual_paragraphs_preserved": true,
+  "latest_base_validation": {
+    "base": "d124973c7292af1861751cb14a5c2b7d90babc36",
+    "source_commit": "d1239c9d28819161e4b910d116785101f0575fba",
+    "candidate_binary_sha256": "d85ba8e21485f1c976cde3bbf15149ea6293a0d8f6231ce200d6f2fe4348dce9",
+    "scope": "Current branch rebuilt after merging independently validated Old/Good Rod PR429. Native success/full-bag each twice for Poke Flute/TM29, eight separate process CONTINUE passed. Prepared controls are separate from the earlier full NEW GAME verdict.",
+    "checks": {
+      "native-build": {
+        "exit_code": 0,
+        "passed": 0,
+        "ignored": 0
+      },
+      "app-lib": {
+        "exit_code": 0,
+        "passed": 419,
+        "ignored": 40
+      },
+      "core": {
+        "exit_code": 0,
+        "passed": 3807,
+        "ignored": 1
+      },
+      "data-boa": {
+        "exit_code": 0,
+        "passed": 479,
+        "ignored": 1
+      },
+      "agent": {
+        "exit_code": 0,
+        "passed": 64,
+        "ignored": 0
+      },
+      "arm-check": {
+        "exit_code": 0,
+        "passed": 0,
+        "ignored": 0
+      }
+    },
+    "baseline": "Frozen PR429 runtime bf9b83df matches masterd124 except cfg(test) coverage correction in native_script.rs.",
+    "paired_images": "Both sides replayed twice with current master baseline and current rebuilt candidate. All four PNGs are byte-identical to the committed, visually reviewed before/after images.",
+    "full_fresh_scope": "Full NEW GAME 8046-second verdict uses frozen7a8e94da at e71b7490 / implementation13596a94 before PR429 master merge. It is not relabeled as a fresh run of d85ba8e2. PR429 has its own full NEW GAME proof. Combined seven-gift fresh remains separately running."
+  }
 }
