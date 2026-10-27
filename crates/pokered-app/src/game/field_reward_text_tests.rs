@@ -463,3 +463,6 @@ mod warden_voucher;
 
 #[path = "field_reward_text_tests/bike_shop.rs"]
 mod bike_shop;
+
+#[path = "field_reward_text_tests/old_amber.rs"]
+mod old_amber;
