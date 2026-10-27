@@ -16,7 +16,7 @@ struct Case {
     face: u8,
     flag_before_sound: bool,
 }
-const CASES: [Case; 6] = [
+const CASES: [Case; 8] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
@@ -69,6 +69,24 @@ const CASES: [Case; 6] = [
         flag: EventFlag::EVENT_GOT_MASTER_BALL,
         item: ItemId::MasterBall,
         face: RIGHT,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::MrPsychicsHouse,
+        x: 6,
+        y: 3,
+        flag: EventFlag::EVENT_GOT_TM29,
+        item: ItemId::Tm29,
+        face: LEFT,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::Route12Gate2F,
+        x: 3,
+        y: 5,
+        flag: EventFlag::EVENT_GOT_TM39,
+        item: ItemId::Tm39,
+        face: UP,
         flag_before_sound: false,
     },
 ];
@@ -143,6 +161,15 @@ impl Session {
         save.game_data.position.x_block = case.x / 2;
         save.game_data.position.y_block = case.y / 2;
         save.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Fast;
+        if case.map == MapId::MrFujisHouse {
+            for flag in [EventFlag::EVENT_RESCUED_MR_FUJI, EventFlag::EVENT_RESCUED_MR_FUJI_2] {
+                save.game_data.event_flags[flag.byte_offset()] |= flag.bit_mask();
+            }
+            pokered_data::toggleable_objects::set_object_shown(
+                &mut save.game_data.toggleable_object_flags,
+                pokered_data::toggleable_objects::ToggleableObject::MR_FUJI.bit_index(),
+            );
+        }
         for &(item, quantity) in items {
             save.game_data.bag.add_item(item, quantity).unwrap();
         }
@@ -254,7 +281,11 @@ impl Session {
         };
         let expected = if rod_flag.is_some_and(|flag| {
             !self.game.overworld.script_flags().get(flag).copied().unwrap_or(false)
-        }) {
+        })
+            || (self.case.map == MapId::PokemonFanClub && !self.received()
+                && self.game.save_data.game_data.bag.item_quantity(ItemId::BikeVoucher) == 0
+                && self.game.save_data.game_data.bag.item_quantity(ItemId::Bicycle) == 0)
+        {
             "AskFieldYesNo"
         } else {
             "FieldRewardText"
@@ -314,6 +345,9 @@ impl Drop for Session {
 fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat() {
     for case in CASES {
         let mut session = Session::boot(case, false);
+        // A wandering giver may move while the player approaches. Lock the
+        // dialogue position, rather than the position before facing the NPC.
+        let interaction_position = (session.game.overworld.state.player.x, session.game.overworld.state.player.y);
         session.reach("SoundWait");
         assert_eq!(session.quantity(), 1);
         assert_eq!(session.received(), case.flag_before_sound, "{:?}", case.map);
@@ -358,7 +392,7 @@ fn cold_continue_gifts_wait_for_actual_fanfare_and_outer_ack_then_cannot_repeat(
                 session.game.overworld.state.player.x,
                 session.game.overworld.state.player.y
             ),
-            (case.x.into(), case.y.into())
+            interaction_position
         );
         assert_eq!(session.quantity(), 1);
         let saved = import_sram(&export_sram(&session.game.build_save_data())).unwrap();
@@ -420,6 +454,12 @@ mod copycat;
 
 #[path = "field_reward_text_tests/continuations.rs"]
 mod continuations;
+
+#[path = "field_reward_text_tests/fuji.rs"]
+mod fuji;
+
+#[path = "field_reward_text_tests/warden_voucher.rs"]
+mod warden_voucher;
 
 #[path = "field_reward_text_tests/bike_shop.rs"]
 mod bike_shop;
