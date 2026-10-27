@@ -455,7 +455,23 @@ fn bike_sale_and_both_cancel_inputs_keep_money_items_and_final_response_owner() 
                     break;
                 }
             }
-            assert!(text(&field).is_some_and(|s| s.starts_with("How do you like your new")));
+            // The owned-bike branch now prints retained field paragraphs.
+            // Observe the visible greeting after typing, without supplying
+            // another acknowledgement or depending on its command variant.
+            let mut greeting = String::new();
+            for _ in 0..1000 {
+                if let Some((top, bottom)) = field
+                    .displayed_field_dialogue()
+                    .and_then(|dialogue| dialogue.get_display_text())
+                {
+                    greeting = format!("{top} {bottom}");
+                    if greeting.starts_with("How do you like your new") {
+                        break;
+                    }
+                }
+                field.update_frame(input(false, false));
+            }
+            assert!(greeting.starts_with("How do you like your new"), "{greeting}");
             assert!(field.pending_choice.is_none());
             assert!(field.game_data_requests.is_empty());
         }
