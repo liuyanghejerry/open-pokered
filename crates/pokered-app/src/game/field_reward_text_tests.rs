@@ -16,7 +16,7 @@ struct Case {
     face: u8,
     flag_before_sound: bool,
 }
-const CASES: [Case; 6] = [
+const CASES: [Case; 7] = [
     Case {
         map: MapId::CinnabarLabMetronomeRoom,
         x: 7,
@@ -69,6 +69,15 @@ const CASES: [Case; 6] = [
         flag: EventFlag::EVENT_GOT_MASTER_BALL,
         item: ItemId::MasterBall,
         face: RIGHT,
+        flag_before_sound: false,
+    },
+    Case {
+        map: MapId::MrPsychicsHouse,
+        x: 6,
+        y: 3,
+        flag: EventFlag::EVENT_GOT_TM29,
+        item: ItemId::Tm29,
+        face: LEFT,
         flag_before_sound: false,
     },
 ];
@@ -143,6 +152,15 @@ impl Session {
         save.game_data.position.x_block = case.x / 2;
         save.game_data.position.y_block = case.y / 2;
         save.game_data.options.text_speed = pokered_core::options_menu::TextSpeed::Fast;
+        if case.map == MapId::MrFujisHouse {
+            for flag in [EventFlag::EVENT_RESCUED_MR_FUJI, EventFlag::EVENT_RESCUED_MR_FUJI_2] {
+                save.game_data.event_flags[flag.byte_offset()] |= flag.bit_mask();
+            }
+            pokered_data::toggleable_objects::set_object_shown(
+                &mut save.game_data.toggleable_object_flags,
+                pokered_data::toggleable_objects::ToggleableObject::MR_FUJI.bit_index(),
+            );
+        }
         for &(item, quantity) in items {
             save.game_data.bag.add_item(item, quantity).unwrap();
         }
@@ -420,3 +438,6 @@ mod copycat;
 
 #[path = "field_reward_text_tests/continuations.rs"]
 mod continuations;
+
+#[path = "field_reward_text_tests/fuji.rs"]
+mod fuji;
