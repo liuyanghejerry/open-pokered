@@ -1,0 +1,149 @@
+{
+  "status": "verified for focused PR; not a whole-game fidelity completion claim",
+  "base": "77b71d60664b08b1f44331a051b3816a0d552362",
+  "implementation": "49d7a589974b8ad6037d30d2b04ca5d57b84f393",
+  "current_binary_sha256": "433071d0424123ef7c2704763c6606a39d8995cf7adbfac51345438679d0b0ee",
+  "source_composition": {
+    "observed_at": "2026-10-27T06:49:07.873348+00:00",
+    "base": "77b71d60664b08b1f44331a051b3816a0d552362",
+    "head": "49d7a589974b8ad6037d30d2b04ca5d57b84f393",
+    "independent_candidate": "cf1ca75f77d1395c8df484f2f6277f77d561bc0f",
+    "changed_files": [
+      "crates/pokered-app/src/game/field_reward_text_tests.rs",
+      "crates/pokered-data/maps/CeladonCity/script.scene"
+    ],
+    "scene_byte_identical_to_independent_candidate": true,
+    "parent_test_equals_master_plus_tm41_case": true,
+    "unrelated_changes_preserved": true,
+    "files_sha256": {
+      "crates/pokered-app/src/game/field_reward_text_tests.rs": "764719e0db951366d1920833d52bbe20ead83f2f803c596d692acb38741b053b",
+      "crates/pokered-data/maps/CeladonCity/script.scene": "31c424f5ea5ffbc19987e92c66f8b8edfea1755b834742abd1daca56414f591e"
+    }
+  },
+  "baseline_equivalence": {
+    "master": "77b71d60664b08b1f44331a051b3816a0d552362",
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/debug/pokered-app-fidelity-route1-current-1385",
+    "binary_sha256": "ba4f029abc877e00d5844d6b26d077965982bc1db049b11c4ca648d1940805ed",
+    "compiled_source": "40c71d75daa85543b3927cab65a0d34a3bf5fe5c",
+    "checked_input_files": 2377,
+    "all_inputs_identical_to_master": true,
+    "build_manifest": "audit-1385-route1-current-build-build-checks.json",
+    "observed_at": "2026-10-27T06:50:14.476948+00:00"
+  },
+  "original_case_count": 5,
+  "original_repeats": 2,
+  "current_case_count": 4,
+  "current_repeats": 2,
+  "independent_continue_count": 8,
+  "paired": {
+    "status": "passed",
+    "base": "77b71d60664b08b1f44331a051b3816a0d552362",
+    "candidate": "49d7a589974b8ad6037d30d2b04ca5d57b84f393",
+    "target_frame": 1196,
+    "scope": "Same original SRAM, initial image, asset root and absolute capture frame. Separate recorded input prefixes advance each dialogue to its receipt; these prefixes are explicitly not claimed identical. Master runtimeba4 compiled40c71d75 equals master77 for all2377recordedinputs; audit-1386-master-native-equivalence.json records identity separately from candidate currentbuild.",
+    "runs": [
+      {
+        "side": "before",
+        "repeats": 2,
+        "binary_sha256": "ba4f029abc877e00d5844d6b26d077965982bc1db049b11c4ca648d1940805ed",
+        "image": "4019b365e7a9b739652a16d069d7cc230568f5d5aae1c88c6b51958f4390f453",
+        "initial": "8e3d842c41e5703ccca5743f94fbe8edc66b609ed999ae44208a6e02e591812d",
+        "frame": 1196
+      },
+      {
+        "side": "after",
+        "repeats": 2,
+        "binary_sha256": "433071d0424123ef7c2704763c6606a39d8995cf7adbfac51345438679d0b0ee",
+        "image": "8f2a0b34c43ae844e2514481231bbc3ec80b812983ac496775c60aee0fd5aad3",
+        "initial": "8e3d842c41e5703ccca5743f94fbe8edc66b609ed999ae44208a6e02e591812d",
+        "frame": 1196
+      }
+    ],
+    "helper_sha256": "4b830d847ccd78a07451856efb282861bc873eb146683b8f71d42b814cd16f01"
+  },
+  "visual_review": {
+    "status": "manually-reviewed",
+    "target_frame": 1196,
+    "base": "77b71d60664b08b1f44331a051b3816a0d552362",
+    "candidate": "49d7a589974b8ad6037d30d2b04ca5d57b84f393",
+    "observed_at": "2026-10-27T06:59:38.007059+00:00",
+    "before": "Full map visible; receipt already closed.",
+    "after": "Same map/player at22,17; complete NINTEN received TM41! text remains and waits for acknowledgement.",
+    "no_unexpected_map_or_player_difference": true,
+    "input_prefixes_identical": false,
+    "initial_image_and_absolute_frame_identical": true,
+    "images": {
+      "before": "4019b365e7a9b739652a16d069d7cc230568f5d5aae1c88c6b51958f4390f453",
+      "after": "8f2a0b34c43ae844e2514481231bbc3ec80b812983ac496775c60aee0fd5aad3"
+    }
+  },
+  "independent_fullfresh": {
+    "binary_sha256": "c93dcb85904a0805ec3745ebcb9a3b597068c7adb922426c08074b5de536a42c",
+    "seconds": 7455.599924748007,
+    "status": "passed",
+    "unchanged_source_and_binary": true
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "ef2691734a7d47116d7d18fdd9adff804ad94ee0e52d5f9903c545049ede7cc1",
+      "bytes": 17540
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "901e3593d4e7f57e4e6fb44508982f3ea66b0f161e205ea25ed33f40e53f2a93",
+      "bytes": 23195
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "e7dd2155c49c149f552b38ee4b0df0e1696ff38889cc16852f5509932d85e4da",
+      "bytes": 6331
+    },
+    "current-checks.json.gz": {
+      "sha256": "a71dbe21c5892b3c2cf1fa499b6be3b3f0a6a80cc9a0e59351f1cc616a86205f",
+      "bytes": 108182
+    },
+    "current-master-recordings.json.gz": {
+      "sha256": "85a72be3e579a7da0b6927dad4b1c8c65072f262ac2ada2981c56be5a3a34968",
+      "bytes": 8656
+    },
+    "fresh-run.json.gz": {
+      "sha256": "b2c2ef8c91a3e0c8424a2be1390b61b87b21529562c05bb085a43e0422e70342",
+      "bytes": 54643
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "ec60fca4af656b6d60ff5b345ee3d3a89c8d80832f924238d28c1b8be73082e7",
+      "bytes": 19867
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "a0b2bd5866d3fbc0103e46f5257759d15addbb6927273a7d5e4e1d0fa2b19ba1",
+      "bytes": 3631
+    },
+    "first-clear.sav.gz": {
+      "sha256": "fdfe5b61c0e7f66842fe0045cf7787253f48f99c48e84771f552b004058edd74",
+      "bytes": 670
+    },
+    "CeladonCity-normal.sav.gz": {
+      "sha256": "98b06b9731cf1249cd25a43867d860d2ffa6c95231db48b10c140cfdeec976c4",
+      "bytes": 1173
+    },
+    "CeladonCity-full-bag.sav.gz": {
+      "sha256": "1588b34e1099dbafe129cacd1c153839983d64e9bd3259db2c227d93743eb75b",
+      "bytes": 1198
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "616da0105ad769f5cc058d536b29666ed06ea1513ca52cbc63fafac7b534d87c",
+      "bytes": 280346
+    },
+    "docs/screenshots/tm41-confirmation/before.png": {
+      "sha256": "4019b365e7a9b739652a16d069d7cc230568f5d5aae1c88c6b51958f4390f453",
+      "bytes": 34589
+    },
+    "docs/screenshots/tm41-confirmation/after.png": {
+      "sha256": "8f2a0b34c43ae844e2514481231bbc3ec80b812983ac496775c60aee0fd5aad3",
+      "bytes": 24122
+    },
+    "README.md": {
+      "sha256": "be9f3bb47b69c94ff0ed84f6965e07b2593407b94616bf324be509df4a9feb73",
+      "bytes": 3038
+    }
+  }
+}

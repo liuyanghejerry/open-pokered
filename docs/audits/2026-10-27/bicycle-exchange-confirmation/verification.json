@@ -1,0 +1,121 @@
+{
+  "status": "verified for focused PR; not a whole-game fidelity completion claim",
+  "base": "ed885f178a7d2f4746f0368fe173727240f10830",
+  "implementation": "ff80f1b1121bd28e2eaecbda4294a19ab1f452de",
+  "current_binary_sha256": "e9957ae00c1105a41872f5986dca78a85e74bb2829c17f2f41406df36e7ee929",
+  "composition": {
+    "head": "ff80f1b1121bd28e2eaecbda4294a19ab1f452de",
+    "base": "ed885f178a7d2f4746f0368fe173727240f10830",
+    "previous_private_head": "d2b113038838d9852fc2cea8a1daa71602b70149",
+    "changed_files_vs_master": [
+      "crates/pokered-app/src/game/field_reward_text_tests.rs",
+      "crates/pokered-app/src/game/field_reward_text_tests/bike_shop.rs",
+      "crates/pokered-core/src/overworld/tests_field_question_ack.rs",
+      "crates/pokered-data/maps/BikeShop/script.scene"
+    ],
+    "conflict": "Only shared test module declarations; kept current master tests and appended original bike_shop module. No production conflict.",
+    "bike_production_and_specific_tests_unchanged": true,
+    "old_fullfresh_remains_independent": "5f1f1a9f sourcee979 on pre-Fuji/NPG baseline; current merged candidate has newer already-merged unrelated maps."
+  },
+  "original_case_count": 7,
+  "original_repeats": 2,
+  "current_case_count": 5,
+  "current_repeats": 2,
+  "independent_continue_count": 10,
+  "paired": {
+    "status": "passed",
+    "base": "ed885f178a7d2f4746f0368fe173727240f10830",
+    "candidate": "ff80f1b1121bd28e2eaecbda4294a19ab1f452de",
+    "target_frame": 1178,
+    "scope": "Same original SRAM, initial image, asset root and absolute capture frame. Separate recorded input prefixes advance each dialogue to its receipt; these prefixes are explicitly not claimed identical. Current master runtime1b compiled implementation equals mastered885; core test-only changes are recorded separately in the baseline validation manifest.",
+    "runs": [
+      {
+        "side": "before",
+        "repeats": 2,
+        "binary_sha256": "1b166d91db45c279cb18315bcb33d29016442c8043b1976b7dd5af6fd4e6de6f",
+        "image": "9167e68986a29bca73a115e13498ad769631c94a92f58bfccc42c9cbf33e141a",
+        "initial": "22aba0ac4fc9d18166a86a3b17fadef1b07e81fb5d2595a2a1d1e0dd635171dc",
+        "frame": 1178
+      },
+      {
+        "side": "after",
+        "repeats": 2,
+        "binary_sha256": "e9957ae00c1105a41872f5986dca78a85e74bb2829c17f2f41406df36e7ee929",
+        "image": "ff0d53b9148aab1d76c9ef9989efd70e3c496aecea3c006488d55c5c9efc9f23",
+        "initial": "22aba0ac4fc9d18166a86a3b17fadef1b07e81fb5d2595a2a1d1e0dd635171dc",
+        "frame": 1178
+      }
+    ],
+    "helper_sha256": "00833f8214a3b1dcb95547c21216c528040144f275be10ec0142d26b5fbd767b"
+  },
+  "visual_review": "各录制两次，使用相同原始 SRAM、资源及绝对帧 1178；推进各自文字的输入前缀不同，均保留完整命令。两侧初始画面相同，录制结果重复一致。两张截图已人工检查：旧版已回地图，新版完整保留兑换文字，无裁切。",
+  "independent_fullfresh": {
+    "binary_sha256": "5f1f1a9f8104a5413bd84dd1cfdc1d9784ba3ada28f2a9153a6db1a5241cc81e",
+    "seconds": 8289.345325818023,
+    "status": "passed",
+    "unchanged_source_and_binary": true
+  },
+  "bilingual_paragraphs_preserved": true,
+  "artifacts": {
+    "original-recordings.json.gz": {
+      "sha256": "2a61bfd883e82bedf4ac14a62bb6de953a615464df9bd22432fe430823b19a59",
+      "bytes": 23090
+    },
+    "current-prepared-recordings.json.gz": {
+      "sha256": "f6393ea34a4a5f9e310599933ec61e0cf53e045185ca2e0a22718afb5a1c886d",
+      "bytes": 36092
+    },
+    "current-paired-recordings.json.gz": {
+      "sha256": "a2eed11eee0d9376789838a78900f07932c1a3150d44391a990dc790319b5f0a",
+      "bytes": 5422
+    },
+    "current-checks.json.gz": {
+      "sha256": "b936487d302e9f2ef6ab24bbb822e164618a3482d43002f6fbec0a1fd4b1582c",
+      "bytes": 108026
+    },
+    "fresh-run.json.gz": {
+      "sha256": "bf9f2eb1e0792a7699ae333af0fff781d580564b80d28024f98daee525459669",
+      "bytes": 54791
+    },
+    "fresh-milestones.json.gz": {
+      "sha256": "7f37116ecdb598959b70b32034eb73ca9a5cfa2d702ce668a54ecab2a85a39c8",
+      "bytes": 19997
+    },
+    "fresh-driver.log.gz": {
+      "sha256": "9d596ca92d40d282268e9a3a00194b3d72a7d413df93a62d62c1227ffac9a5ab",
+      "bytes": 3771
+    },
+    "first-clear.sav.gz": {
+      "sha256": "ce821630794cfa91c9ee9e8d37ec9793b82d8808bbcb0dffd4fa4d89a0ebc515",
+      "bytes": 673
+    },
+    "BikeShop-normal.sav.gz": {
+      "sha256": "f5552b82dce9622a1f795f5ccb30aba958738cc942d6b4c6c928026337c3461e",
+      "bytes": 1113
+    },
+    "BikeShop-full-bag.sav.gz": {
+      "sha256": "ebdaa3ad03b431564b1e680e1df46f0c68b7f31d5c83e4728e688f3bab4716b6",
+      "bytes": 1135
+    },
+    "fresh-source-evidence.tar.gz": {
+      "sha256": "00c3a8424be6f0b032845981bd0948b134e0dce277f4fa1396b3bfc41d3376a7",
+      "bytes": 287447
+    },
+    "additional-control-driver-diagnostics.json.gz": {
+      "sha256": "a100d2f3c68d6eb7e59e097ed79ee498bccf135e2d77b8c4596874715f523498",
+      "bytes": 14862
+    },
+    "docs/screenshots/bicycle-exchange-confirmation/before.png": {
+      "sha256": "9167e68986a29bca73a115e13498ad769631c94a92f58bfccc42c9cbf33e141a",
+      "bytes": 23589
+    },
+    "docs/screenshots/bicycle-exchange-confirmation/after.png": {
+      "sha256": "ff0d53b9148aab1d76c9ef9989efd70e3c496aecea3c006488d55c5c9efc9f23",
+      "bytes": 17726
+    },
+    "README.md": {
+      "sha256": "3ee57f31d927719a212df7f1ffc7e26a11290c2ff0bdcb614f147b087f37e70d",
+      "bytes": 2336
+    }
+  }
+}
