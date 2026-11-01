@@ -515,3 +515,6 @@ mod town_map;
 
 #[path = "field_reward_text_tests/old_amber.rs"]
 mod old_amber;
+
+#[path = "field_reward_text_tests/oaks_aide.rs"]
+mod oaks_aide;
