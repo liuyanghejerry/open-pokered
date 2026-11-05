@@ -19,7 +19,7 @@ bitflags = "2"
 serde = { version = "1", default-features = false, features = ["derive"], optional = true }
 
 # The sequencer/APU supports alloc + no_std on GBA; device backends remain optional.
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "688db209603860be52da3e6a77abe9de4182e495" }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b8cdd36ea6053237594bca21471df650445a3d84" }
 
 # An allocation-free VBlank counter keeps PSG tempo independent of slow draws.
 [target.'cfg(target_os = "none")'.dependencies]
@@ -32,9 +32,17 @@ critical-section = "1"
 # feature activation only affects those targets, not `cargo build`.
 [dev-dependencies]
 serde = { version = "1", default-features = false, features = ["derive"] }
-dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "688db209603860be52da3e6a77abe9de4182e495", features = ["serde"] }
+dotzuki-audio = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b8cdd36ea6053237594bca21471df650445a3d84", features = ["serde"] }
 serde_json = "1"
 
 [[example]]
 name = "export_source_audio_frames"
+required-features = ["source-clock-serde"]
+
+[[example]]
+name = "export_source_percussion_frames"
+required-features = ["source-clock-serde"]
+
+[[example]]
+name = "export_source_slide_frames"
 required-features = ["source-clock-serde"]

@@ -31,6 +31,29 @@ use pokered_data::ui_layout::schema::{
 use pokered_renderer::FrameBuffer;
 use pokered_ui::TilePos;
 
+#[cfg(target_os = "none")]
+use alloc::rc::Rc as FlashSnapshotIdentity;
+#[cfg(not(target_os = "none"))]
+use std::sync::Arc as FlashSnapshotIdentity;
+
+/// An owned identity for one immutable retained map image. Keeping the old
+/// token alive prevents allocator address reuse across replaced callers.
+#[derive(Clone, Debug)]
+pub(crate) struct FlashMapVisualKey(FlashSnapshotIdentity<()>, u64);
+impl FlashMapVisualKey {
+    pub(crate) fn new() -> Self { Self(FlashSnapshotIdentity::new(()), 0) }
+    pub(crate) fn with_palette_revision(mut self, revision: u64) -> Self {
+        self.1 = revision;
+        self
+    }
+}
+impl PartialEq for FlashMapVisualKey {
+    fn eq(&self, other: &Self) -> bool {
+        FlashSnapshotIdentity::ptr_eq(&self.0, &other.0) && self.1 == other.1
+    }
+}
+impl Eq for FlashMapVisualKey {}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct TitleVisualKey {
     phase: TitlePhase,
@@ -1901,6 +1924,8 @@ pub struct RenderSession {
     last_hof: Option<super::HofVisualKey>,
     last_credits: Option<super::CreditsVisualKey>,
     last_takeover_active: bool,
+    last_flash_white: bool,
+    last_flash_map: Option<FlashMapVisualKey>,
     last_static_splash: Option<SplashPhase>,
     last_language_select: Option<Lang>,
     last_title: Option<TitleVisualKey>,
@@ -1943,6 +1968,8 @@ impl RenderSession {
         let last_hof = self.last_hof.take();
         let last_credits = self.last_credits.take();
         let last_takeover_active = self.last_takeover_active;
+        let last_flash_white = self.last_flash_white;
+        let last_flash_map = self.last_flash_map.take();
         let last_static_splash = self.last_static_splash.take();
         let last_language_select = self.last_language_select.take();
         let last_title = self.last_title.take();
@@ -1978,7 +2005,12 @@ impl RenderSession {
             .as_ref()
             .map(|hof| super::hof_visual_key(hof, game.state.config.language));
         let credits = game.credits.as_ref().map(super::credits_visual_key);
-        let takeover_active = black_screen
+        let field_flash_active = game.field_flash.is_some();
+        // Text still redraws. White and immutable map snapshots can reuse the
+        // current page; actual snapshot writes and other takeovers invalidate.
+        let flash_white = game.field_flash_white_frame();
+        let flash_map = game.field_flash_map_key();
+        let takeover_active = field_flash_active || black_screen
             || trade.is_some()
             || evolution.is_some()
             || hof.is_some()
@@ -2060,8 +2092,10 @@ impl RenderSession {
             .as_ref()
             .zip(last_bag.as_ref())
             .and_then(|(current, previous)| current.quantity_change_from(previous));
-        let party =
-            (game.state.screen == GameScreen::PartyScreen).then(|| PartyVisualKey::new(game));
+        // FLASH retains the party caller while its text/map takeover changes
+        // pixels independently of the ordinary party cursor/icon key.
+        let party = (game.state.screen == GameScreen::PartyScreen && !field_flash_active)
+            .then(|| PartyVisualKey::new(game));
         let party_selection_change = party
             .as_ref()
             .zip(last_party.as_ref())
@@ -2169,6 +2203,9 @@ impl RenderSession {
             hof != last_hof
         } else if credits.is_some() {
             credits != last_credits
+        } else if field_flash_active {
+            if flash_white { !last_flash_white }
+            else { flash_map.as_ref().is_none_or(|key| last_flash_map.as_ref() != Some(key)) }
         } else if last_takeover_active {
             // The takeover replaced the ordinary screen contents. Restore
             // that screen even when its own visual state did not change.
@@ -2634,6 +2671,8 @@ impl RenderSession {
         self.last_hof = hof;
         self.last_credits = credits;
         self.last_takeover_active = takeover_active;
+        self.last_flash_white = flash_white;
+        self.last_flash_map = flash_map;
         self.last_static_splash = static_splash;
         self.last_language_select = language_select;
         self.last_title = title;

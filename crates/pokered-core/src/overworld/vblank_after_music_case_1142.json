@@ -1,0 +1,101 @@
+{
+  "scope": "Passive original ordinary FLASH recording, no runtime RAM/register setters, selected afterMusic-to-return PC boundaries; native composition unit only, not whole Game replay",
+  "ROM_SHA256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "passive_PC_events_sha256": "b80d074f99fa457ae24a53d46c8c33ba2f2553a06d1aed1d9c0ba8c8d68b9b42",
+  "timer_input": {
+    "ignore_counter": 189,
+    "flags5": 0,
+    "flags6": 3,
+    "joy_pressed": 1,
+    "joy_held": 1,
+    "time": {
+      "hours": 0,
+      "minutes": 4,
+      "seconds": 6,
+      "frames": 54,
+      "maxed": false
+    }
+  },
+  "loaded_bank_at_entry": 31,
+  "saved_bank": 4,
+  "total_T": 896,
+  "events": [
+    {
+      "names": [
+        "VBlank.afterMusic"
+      ],
+      "cycles": 101584208,
+      "PC": 8340,
+      "bank": 0,
+      "loaded_rom_bank": 31,
+      "selected_rom_bank": 31,
+      "IME": false
+    },
+    {
+      "names": [
+        "Bankswitch"
+      ],
+      "cycles": 101584252,
+      "PC": 13782,
+      "bank": 0,
+      "loaded_rom_bank": 31,
+      "selected_rom_bank": 31,
+      "IME": false
+    },
+    {
+      "names": [
+        "TrackPlayTime"
+      ],
+      "cycles": 101584344,
+      "PC": 19950,
+      "bank": 6,
+      "loaded_rom_bank": 6,
+      "selected_rom_bank": 6,
+      "IME": false
+    },
+    {
+      "names": [
+        "Bankswitch.Return"
+      ],
+      "cycles": 101584568,
+      "PC": 13796,
+      "bank": 0,
+      "loaded_rom_bank": 6,
+      "selected_rom_bank": 6,
+      "IME": false
+    },
+    {
+      "names": [
+        "ReadJoypad"
+      ],
+      "cycles": 101584668,
+      "PC": 351,
+      "bank": 0,
+      "loaded_rom_bank": 31,
+      "selected_rom_bank": 31,
+      "IME": false
+    },
+    {
+      "names": [
+        "VBlank.RETI"
+      ],
+      "cycles": 101585088,
+      "PC": 8366,
+      "bank": 0,
+      "loaded_rom_bank": 4,
+      "selected_rom_bank": 4,
+      "IME": false
+    },
+    {
+      "names": [
+        "DisableLCD.RET"
+      ],
+      "cycles": 101585104,
+      "PC": 122,
+      "bank": 0,
+      "loaded_rom_bank": 4,
+      "selected_rom_bank": 4,
+      "IME": true
+    }
+  ]
+}

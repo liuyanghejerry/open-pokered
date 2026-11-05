@@ -39,6 +39,48 @@ fn execute(apu: &mut crate::apu::Apu, instruction: ApuInstruction) -> Option<u8>
     value
 }
 
+#[test]
+fn every_field_song_keeps_source_frames_and_native_channel_updates_in_sync() {
+    let mut failures = Vec::new();
+    for &song in SourceSong::ALL {
+        for confirmation in [false, true] {
+            let mut manager = powered(song.music());
+            let mut failed = None;
+            for frame in 0..4096 {
+                if confirmation && frame % 37 == 0 {
+                    manager.play_sfx(SfxId::PressAB);
+                }
+                let mut work = match manager.begin_source_audio_frame_with_bus(song.bank(), 0) {
+                    Ok(work) => work,
+                    Err(error) => {
+                        failed = Some(format!(
+                            "{song:?} confirmation{confirmation} frame {frame}: {error:?}"
+                        ));
+                        break;
+                    }
+                };
+                if let Err(error) = manager
+                    .resume_source_audio_frame_with_bus(&mut work, |apu, instruction| {
+                        Ok::<_, ()>(execute(apu, instruction))
+                    })
+                {
+                    failed = Some(format!(
+                        "{song:?} confirmation{confirmation} frame {frame}: {error:?}"
+                    ));
+                    break;
+                }
+            }
+            if let Some(failed) = failed {
+                failures.push(failed);
+            }
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "unsupported legal field music: {failures:#?}"
+    );
+}
+
 #[derive(serde::Deserialize)]
 struct CpuCase {
     song: SourceSong,
@@ -46,6 +88,8 @@ struct CpuCase {
     frame: usize,
     cycles: u32,
     trace: Vec<(u16, u8)>,
+    #[serde(default)]
+    initial_noise_override: Option<u8>,
 }
 #[derive(serde::Deserialize)]
 struct CpuFixture {
@@ -61,6 +105,8 @@ struct BusCase {
     nr51: u8,
     initial_wave_override: Option<u8>,
     accesses: Vec<(usize, u16, u8, String, u16, u8)>,
+    #[serde(default)]
+    initial_noise_override: Option<u8>,
 }
 #[derive(serde::Deserialize)]
 struct BusFixture {
@@ -75,6 +121,20 @@ fn at_frame(case: &BusCase) -> AudioManager {
         if frame < case.frame {
             manager.update_frame();
         }
+    }
+    if let Some(instrument) = case.initial_noise_override {
+        let noise = &mut manager.sequencer.channels[7];
+        noise.reset();
+        noise.data = crate::sfx_data::get_sfx_track(SfxId::from_u8(instrument - 1).unwrap())
+            .channels[3]
+            .unwrap()
+            .to_vec();
+        noise.active = true;
+        noise.sound_id = instrument;
+        noise.note_speed = 1;
+        noise.delay_counter = 1;
+        noise.flags1.insert(crate::ChannelFlags1::NOISE_OR_SFX);
+        manager.sequencer.sfx_playing = true;
     }
     manager.apu.write_register(0xff24, case.nr50);
     manager.apu.write_register(0xff25, case.nr51);
@@ -92,14 +152,81 @@ fn whole_source_apu_accesses_match_original_and_commit_never_replays_batch_outpu
         serde_json::from_str(include_str!("../source_clock/frame_bus_golden.json")).unwrap();
     assert_eq!(cpu.cases.len(), 311);
     assert_eq!(bus.cases.len(), 957);
+    assert_eq!(check_whole_source_frames(&cpu, &bus), 10101);
+}
+
+#[test]
+fn percussion_frames_match_original_starts_busy_drops_noise_notes_and_endings() {
+    let cpu: CpuFixture = serde_json::from_str(include_str!(
+        "../source_clock/percussion_frame_work_golden.json"
+    ))
+    .unwrap();
+    let bus: BusFixture = serde_json::from_str(include_str!(
+        "../source_clock/percussion_frame_bus_golden.json"
+    ))
+    .unwrap();
+    assert_eq!(cpu.cases.len(), 106);
+    assert_eq!(bus.cases.len(), 318);
+    // Four explicit busy-voice fixtures complement 102 ordinary playback
+    // states. Every input is replayed against three independently traced ports.
+    assert_eq!(
+        cpu.cases
+            .iter()
+            .filter(|c| c.initial_noise_override.is_some())
+            .count(),
+        4
+    );
+    assert_eq!(
+        bus.cases
+            .iter()
+            .filter(|c| c.initial_noise_override.is_some())
+            .count(),
+        12
+    );
+    let expected_accesses = bus.cases.iter().map(|c| c.accesses.len()).sum::<usize>();
+    assert!(expected_accesses > 1000);
+    assert_eq!(check_whole_source_frames(&cpu, &bus), expected_accesses);
+}
+
+#[test]
+fn safari_slide_frames_match_original_with_and_without_paired_sfx() {
+    let cpu: CpuFixture =
+        serde_json::from_str(include_str!("../source_clock/slide_frame_work_golden.json")).unwrap();
+    let bus: BusFixture =
+        serde_json::from_str(include_str!("../source_clock/slide_frame_bus_golden.json")).unwrap();
+    assert_eq!(cpu.cases.len(), 128);
+    assert_eq!(bus.cases.len(), 384);
+    assert!(cpu
+        .cases
+        .iter()
+        .all(|case| case.song == SourceSong::SafariZone && case.initial_noise_override.is_none()));
+    let expected = bus
+        .cases
+        .iter()
+        .map(|case| case.accesses.len())
+        .sum::<usize>();
+    assert_eq!(expected, 744);
+    assert_eq!(check_whole_source_frames(&cpu, &bus), expected);
+}
+
+fn check_whole_source_frames(cpu: &CpuFixture, bus: &BusFixture) -> usize {
     let mut total_accesses = 0;
     for (case_index, case) in bus.cases.iter().enumerate() {
         let source = cpu
             .cases
             .iter()
             .find(|source| {
-                (source.song, source.confirmation, source.frame)
-                    == (case.song, case.confirmation, case.frame)
+                (
+                    source.song,
+                    source.confirmation,
+                    source.frame,
+                    source.initial_noise_override,
+                ) == (
+                    case.song,
+                    case.confirmation,
+                    case.frame,
+                    case.initial_noise_override,
+                )
             })
             .unwrap();
         assert_eq!(source.cycles, case.cycles);
@@ -225,7 +352,124 @@ fn whole_source_apu_accesses_match_original_and_commit_never_replays_batch_outpu
         assert_eq!(manager.apu.playback_state(), expected_apu.playback_state());
         total_accesses += next_access;
     }
-    assert_eq!(total_accesses, 10101);
+    total_accesses
+}
+
+#[test]
+fn source_frame_runner_matches_single_instructions_through_refusal_and_resume() {
+    struct PrefixBus<'a> {
+        ops: &'a mut Vec<ApuInstruction>,
+        allowance: usize,
+        enabled: bool,
+        combined: &'a mut usize,
+    }
+    impl crate::source_clock::apu_bus::SourceAudioFrameBus for PrefixBus<'_> {
+        type Error = &'static str;
+        fn execute(
+            &mut self,
+            apu: &mut crate::apu::Apu,
+            op: ApuInstruction,
+        ) -> Result<Option<u8>, Self::Error> {
+            if self.ops.len() == self.allowance {
+                return Err("yield");
+            }
+            self.ops.push(op);
+            Ok(execute(apu, op))
+        }
+        fn execute_plain_run(
+            &mut self,
+            apu: &mut crate::apu::Apu,
+            cycles: &[u8],
+        ) -> Result<usize, Self::Error> {
+            if !self.enabled {
+                return Ok(0);
+            }
+            let count = cycles.len().min(self.allowance - self.ops.len());
+            if count == 0 {
+                return Err("yield");
+            }
+            self.ops
+                .extend(cycles[..count].iter().map(|&t| ApuInstruction::plain(t)));
+            apu.tick_n(cycles[..count].iter().map(|&t| u32::from(t)).sum());
+            *self.combined += 1;
+            Ok(count)
+        }
+    }
+    let fixture: BusFixture =
+        serde_json::from_str(include_str!("../source_clock/frame_bus_golden.json")).unwrap();
+    let mut combined = 0;
+    for enabled in [false, true] {
+        for case in fixture.cases.iter().step_by(37) {
+            for allowance in [1, 17, 31, 128] {
+                let manager = at_frame(case);
+                let mut actual = manager
+                    .begin_source_audio_frame_with_bus(case.song.bank(), 0)
+                    .unwrap();
+                let mut expected = actual.clone();
+                let mut actual_apu = manager.apu.clone();
+                let mut expected_apu = actual_apu.clone();
+                loop {
+                    let frozen = actual.clone();
+                    assert_eq!(
+                        actual.run_with_bus(
+                            &manager.sequencer,
+                            &mut actual_apu,
+                            &mut |_: &mut crate::apu::Apu, _: ApuInstruction| Err::<Option<u8>, _>(
+                                "denied"
+                            )
+                        ),
+                        Err(FrameStepError::Clock("denied")),
+                    );
+                    assert_eq!(actual, frozen);
+                    actual = serde_json::from_slice(&serde_json::to_vec(&actual).unwrap()).unwrap();
+                    let mut actual_ops = Vec::new();
+                    let mut expected_ops = Vec::new();
+                    let result = actual.run_with_bus(
+                        &manager.sequencer,
+                        &mut actual_apu,
+                        &mut PrefixBus {
+                            ops: &mut actual_ops,
+                            allowance,
+                            enabled,
+                            combined: &mut combined,
+                        },
+                    );
+                    let reference = loop {
+                        match expected.try_step_with_bus(&manager.sequencer, |op| {
+                            if expected_ops.len() == allowance {
+                                return Err("yield");
+                            }
+                            expected_ops.push(op);
+                            Ok(execute(&mut expected_apu, op))
+                        }) {
+                            Ok(true) => break Ok(()),
+                            Ok(false) => (),
+                            Err(error) => break Err(error),
+                        }
+                    };
+                    assert_eq!(result, reference);
+                    assert_eq!(actual_ops, expected_ops);
+                    assert_eq!(actual, expected);
+                    assert_eq!(actual_apu.playback_state(), expected_apu.playback_state());
+                    if result.is_ok() {
+                        break;
+                    }
+                }
+                actual
+                    .run_with_bus(
+                        &manager.sequencer,
+                        &mut actual_apu,
+                        &mut |_: &mut crate::apu::Apu,
+                              _: ApuInstruction|
+                         -> Result<Option<u8>, ()> {
+                            panic!("completed frame must not execute")
+                        },
+                    )
+                    .unwrap();
+            }
+        }
+    }
+    assert!(combined > 0);
 }
 
 #[test]
@@ -289,6 +533,105 @@ fn live_manager_resumes_across_refusals_and_commits_one_logical_tick_per_frame()
 }
 
 #[test]
+fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit() {
+    for data in [
+        include_str!("../source_clock/frame_bus_golden.json"),
+        include_str!("../source_clock/percussion_frame_bus_golden.json"),
+        include_str!("../source_clock/slide_frame_bus_golden.json"),
+    ] {
+        let fixture: BusFixture = serde_json::from_str(data).unwrap();
+        for case in fixture.cases.iter().step_by(17) {
+            for allowance in [1, 17, usize::MAX] {
+                let mut manager = at_frame(case);
+                let mut reference = at_frame(case);
+                let mut cursor = None;
+                let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+                let mut iteration = 0;
+                loop {
+                    // Refuse the first instruction even on the new-frame path.
+                    let limit = if iteration == 0 { 0 } else { allowance };
+                    iteration += 1;
+                    let mut actual_ops = Vec::new();
+                    let mut expected_ops = Vec::new();
+                    let actual = manager.service_source_audio_frame(
+                        &mut cursor, case.song.bank(), 0,
+                        |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                            if actual_ops.len() == limit { return Err("yield"); }
+                            actual_ops.push(op);
+                            Ok(execute(apu, op))
+                        },
+                    );
+                    let expected_result = reference.resume_source_audio_frame_with_bus(
+                        &mut expected, |apu, op| {
+                            if expected_ops.len() == limit { return Err("yield"); }
+                            expected_ops.push(op);
+                            Ok(execute(apu, op))
+                        },
+                    );
+                    assert_eq!(actual, expected_result);
+                    assert_eq!(actual_ops, expected_ops);
+                    assert_eq!(cursor.as_deref(), Some(&expected));
+                    assert_eq!(native(&manager), native(&reference));
+                    assert_eq!(manager.apu.playback_state(), reference.apu.playback_state());
+                    if actual.is_ok() {
+                        let repeated = manager.service_source_audio_frame(
+                            &mut cursor, case.song.bank(), 0,
+                            |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, &str> {
+                                panic!("completed frame must not replay")
+                            },
+                        );
+                        assert_eq!(repeated, actual);
+                        assert_eq!(native(&manager), native(&reference));
+                        break;
+                    }
+                }
+            }
+            // Also exercise entry and completion within one exclusive borrow.
+            let mut manager = at_frame(case);
+            let mut reference = at_frame(case);
+            let mut cursor = None;
+            let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+            let mut actual_ops = Vec::new();
+            let mut expected_ops = Vec::new();
+            let actual = manager.service_source_audio_frame(&mut cursor, case.song.bank(), 0,
+                |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                    actual_ops.push(op); Ok::<_, ()>(execute(apu, op))
+                });
+            let expected_result = reference.resume_source_audio_frame_with_bus(&mut expected,
+                |apu, op| { expected_ops.push(op); Ok::<_, ()>(execute(apu, op)) });
+            assert_eq!(actual, expected_result);
+            assert!(actual.is_ok());
+            assert_eq!(actual_ops, expected_ops);
+            assert_eq!(native(&manager), native(&reference));
+            assert_eq!(manager.apu.playback_state(), reference.apu.playback_state());
+        }
+    }
+}
+
+#[test]
+fn exclusive_source_service_rejects_unsupported_entry_and_changed_retained_state() {
+    let mut manager = powered(MusicId::POKECENTER);
+    let mut cursor = None;
+    let before = native(&manager);
+    assert!(matches!(manager.service_source_audio_frame(&mut cursor, 31, 0,
+        |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> { panic!("invalid entry") }),
+        Err(AudioAdmissionError::Preflight(_))));
+    assert!(cursor.is_none());
+    assert_eq!(native(&manager), before);
+    let mut instructions = 0;
+    assert_eq!(manager.service_source_audio_frame(&mut cursor, 2, 0,
+        |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+            if instructions == 1 { return Err("yield"); }
+            instructions += 1; Ok(execute(apu, op))
+        }), Err(AudioAdmissionError::Admission(FrameStepError::Clock("yield"))));
+    manager.sequencer.channels[0].data[0] ^= 1;
+    assert!(matches!(manager.service_source_audio_frame(&mut cursor, 2, 0,
+        |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> { panic!("changed program") }),
+        Err(AudioAdmissionError::SourceFailed(_))));
+    assert!(cursor.as_ref().unwrap().cycles() > 0);
+}
+
+#[test]
 fn both_source_entry_modes_reject_pending_volume_and_native_pause() {
     use crate::source_clock::AudioClockError;
     for music in [MusicId::POKECENTER, MusicId::SILPH_CO, MusicId::DUNGEON3] {
@@ -304,10 +647,14 @@ fn both_source_entry_modes_reject_pending_volume_and_native_pause() {
             manager.set_music_paused(paused);
             let before = native(&manager);
             let apu_before = format!("{:?}", manager.apu);
-            assert!(matches!(manager.begin_source_audio_frame(bank, 0),
-                Err(AudioClockError::UnsupportedSoundBank)));
-            assert!(matches!(manager.begin_source_audio_frame_with_bus(bank, 0),
-                Err(AudioClockError::UnsupportedSoundBank)));
+            assert!(matches!(
+                manager.begin_source_audio_frame(bank, 0),
+                Err(AudioClockError::UnsupportedSoundBank)
+            ));
+            assert!(matches!(
+                manager.begin_source_audio_frame_with_bus(bank, 0),
+                Err(AudioClockError::UnsupportedSoundBank)
+            ));
             assert_eq!(native(&manager), before);
             assert_eq!(format!("{:?}", manager.apu), apu_before);
         }
