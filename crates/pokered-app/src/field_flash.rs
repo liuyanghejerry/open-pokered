@@ -170,6 +170,12 @@ impl PokemonGame {
     }
 
     pub(super) fn begin_party_menu_restore(&mut self, input: &InputState) {
+        // HandleMenuInput plays PRESS_AB for the accepted cancellation before
+        // StartMenu_Pokemon.exitMenu reloads graphics. A remaining SWAP on
+        // CHAN6 keeps running while this confirmation replaces CHAN5.
+        if let Some(audio) = &self.audio {
+            audio.play_sfx(SfxId::PressAB);
+        }
         // This frame's real party consumer has just read its cancel/select
         // key. Keep that last foreground read through the resource waits.
         let owner = self.overworld.begin_source_field();

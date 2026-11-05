@@ -162,6 +162,12 @@ fn party_return_completes_after_a_recent_party_swap_sound() {
             frame(&mut game, &mut input, 0);
         }
         frame(&mut game, &mut input, 2);
+        {
+            let manager = game.audio.as_ref().unwrap().manager.lock().unwrap();
+            assert_eq!(manager.sequencer.channels[4].sound_id, SfxId::PressAB as u8);
+            assert!(manager.sequencer.channels[5].active);
+            assert_eq!(manager.sequencer.channels[5].sound_id, SfxId::Swap as u8);
+        }
         for _ in 0..600 {
             frame(&mut game, &mut input, 0);
             if game.field_flash.is_none() {
