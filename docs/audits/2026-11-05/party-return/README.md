@@ -1,10 +1,10 @@
 # Party menu return and SWAP audio
 
-Code commit `48ee3d86`, stacked on FLASH PR #324 (`9fc696cf`) and master
+Code commit `ff00099a`, stacked on FLASH PR #324 (`9fc696cf`) and master
 `303aaceb`. This extracts the remaining Party return behavior from #144; it
 does not assert that every other change in that old mixed draft is covered.
 
-Cancelling the ordinary party menu restores the saved START background,
+Cancelling the ordinary party menu plays the accepted PressAB sound, then restores the saved START background,
 sprite patterns and map palettes before accepting menu input. A short Down/A
 pulse during restoration is discarded; a direction held until the next real
 poll moves the START cursor once. Holding the closing B does not close START
@@ -25,7 +25,7 @@ after refusal and serialization; complete manager tests check native state,
 partial continuation, input rejection and exactly one audio commit per frame.
 
 Validation uses frozen native binary SHA-256
-`4fa314febb13cab47f003a12083858352de234a23817128be2deb4c861f110c4`.
+`58088488b46d7b3e10f7d02cb41ff401ae8c9cf085d9008c87fea19e2e52bedc`.
 All compiled source-file hashes match the code commit. Application 467 tests,
 core 3,981 tests, audio 222 tests, Python driver 11 tests, and ARM check pass.
 The existing ignored tests remain ignored (40 application, 1 core).
@@ -46,8 +46,8 @@ Prepared-save controls:
   and short controls restore exactly the saved START image; held Down selects
   ITEM. No autopilot, frame skipping, or recording-time RAM writes.
 
-**Remaining limitation:** default GBA restoration takes 214 physical frames
-(3.583 seconds). This is not original-speed parity. The original/native LCD
+**Remaining limitation:** default GBA restoration takes 227 physical frames
+(3.801 seconds). This is not original-speed parity. The original/native LCD
 entry phases are not claimed identical. The latest complete NEW GAME through
 m49, ending autosave and independent CONTINUE is still running; prepared saves
 are not counted as a fresh playthrough verdict.
