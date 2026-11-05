@@ -1,0 +1,179 @@
+{
+  "code_commit": "48ee3d869b876da484d4d6132c42ecfbafb75c25",
+  "base_pr": 324,
+  "base_head": "9fc696cf6edf7b9bd7da25d9d6313c118c6f2a3d",
+  "master": "303aaceb5f3f4fab13330c05432b9ef2234d6a7f",
+  "tested_native_binary_sha256": "4fa314febb13cab47f003a12083858352de234a23817128be2deb4c861f110c4",
+  "compiled_sources_match_code_commit": true,
+  "checks": [
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "flash-focused",
+      "exit_code": 0,
+      "passed": 15,
+      "ignored": 0
+    },
+    {
+      "name": "party-focused",
+      "exit_code": 0,
+      "passed": 3,
+      "ignored": 0
+    },
+    {
+      "name": "app-lib",
+      "exit_code": 0,
+      "passed": 467,
+      "ignored": 40
+    },
+    {
+      "name": "core",
+      "exit_code": 0,
+      "passed": 3981,
+      "ignored": 1
+    },
+    {
+      "name": "audio",
+      "exit_code": 0,
+      "passed": 222,
+      "ignored": 0
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "driver_tests_passed": 11,
+  "original_swap_cases": 30,
+  "original_swap_apu_accesses": 126,
+  "native_city_cases": 3,
+  "native_city_repeats": 2,
+  "native_city_before_after_same_initial_image_and_frame": true,
+  "native_multi_map": {
+    "status": "passed",
+    "binary_sha256": "4fa314febb13cab47f003a12083858352de234a23817128be2deb4c861f110c4",
+    "cases": [
+      {
+        "place": "bedroom",
+        "case": "neutral",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "bedroom",
+        "case": "short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "bedroom",
+        "case": "held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "dark",
+        "case": "neutral",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 35,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "dark",
+        "case": "short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 35,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "dark",
+        "case": "held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 35,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "safari",
+        "case": "neutral",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "safari",
+        "case": "short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      },
+      {
+        "place": "safari",
+        "case": "held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_start_tick": 34,
+        "state_and_images_repeat_identical": true
+      }
+    ],
+    "binary_unchanged": true
+  },
+  "actual_swap": {
+    "status": "passed",
+    "repeats": 2,
+    "independent_continue": 2,
+    "binary_sha256": "4fa314febb13cab47f003a12083858352de234a23817128be2deb4c861f110c4",
+    "prepared_sram_sha256": "176cc22e3f0405d807dfc0472929083470e07ed4e7f550e2d807bb19bb59af12",
+    "repeat_identical": true,
+    "pcm_audio_active": true,
+    "scope": "Controlled two-mon ordinary cold CONTINUE, actual action-menu SWITCH/down/A then immediate B. No writes after recording starts; SAVE and independent CONTINUE preserve the exchanged party."
+  },
+  "gba_rom_sha256": "2dddfae87de0bc4fa8671b9ec7dedace6629629baf236071d340ac74c6a6b3f6",
+  "gba": [
+    {
+      "case": "neutral",
+      "repeats": 2,
+      "frames_repeat_identical": 600,
+      "final_sha256": "f2a4a67fc58ddd70a4866143860df9baad45f13ad27a0696373dc309d25a9ac4",
+      "first_restored_start_frame": 214,
+      "seconds": 3.5829391479492188
+    },
+    {
+      "case": "short",
+      "repeats": 2,
+      "frames_repeat_identical": 600,
+      "final_sha256": "f2a4a67fc58ddd70a4866143860df9baad45f13ad27a0696373dc309d25a9ac4",
+      "first_restored_start_frame": 214,
+      "seconds": 3.5829391479492188
+    },
+    {
+      "case": "held",
+      "repeats": 2,
+      "frames_repeat_identical": 600,
+      "final_sha256": "5ad5cd8eda29d7c13a7c5be09fee230d537807e845ece7c880242da69cc53fac",
+      "first_restored_start_frame": null,
+      "seconds": null
+    }
+  ],
+  "fresh_new_game": "Running on frozen binary; no completion claim.",
+  "limitations": [
+    "Default GBA party restoration takes 214 physical frames (3.583 seconds); remaining performance gap.",
+    "Original/native physical LCD entry phases are not asserted identical."
+  ]
+}
