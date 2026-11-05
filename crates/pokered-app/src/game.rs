@@ -4782,7 +4782,11 @@ impl PokemonGame {
                             hof_teams: hof_team_records(&self.save_data),
                         };
                         let mut pc = PcScreen::new_with_language(entry, &open, self.state.config.language);
-                        pc.set_quantity_text_delay_frames(self.state.config.text_speed.delay_frames());
+                        pc.configure_field_text(self.state.config.text_speed.delay_frames(),
+                            self.overworld.no_text_delay(), self.overworld.foreground_observation().cloned());
+                        if let Some(disabled) = pc.take_field_text_delay_change() {
+                            self.overworld.set_no_text_delay(disabled);
+                        }
                         self.pc_screen = Some(pc);
                         ScreenAction::Transition(GameScreen::PC)
                     } else if self.overworld.pending_hof_ceremony {
@@ -6179,6 +6183,9 @@ impl PokemonGame {
                     if used_input.a && key_sound_allowed {
                         if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
                     };
+                    if let Some(disabled) = pc.take_field_text_delay_change() {
+                        self.overworld.set_no_text_delay(disabled);
+                    }
 
                     // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
                     self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
@@ -12914,7 +12921,11 @@ mod pc_quantity_owner_230 {
     for _ in 0..2 {tick(&mut g,&mut input,&mut held,vec![GbButton::A]);}
     let expected=match cursor {0=>(5,3),1=>(3,5),2=>(4,4),_=>unreachable!()};
     assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::Potion),expected.0);assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),expected.1);
-    if cursor==2 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::TossConfirm);}
+    if cursor==2 {
+     let pc=g.pc_screen.as_ref().unwrap();
+     assert_eq!(pc.phase(),PcPhase::Message);
+     assert_eq!(pc.message_underlay(),Some(PcPhase::ItemList));
+    }
     assert!(!save_path.exists());
    }
    if let Some(root)=capture{std::fs::write(root.join(&context).join("frames.json"),serde_json::to_vec_pretty(&rows).unwrap()).unwrap();}

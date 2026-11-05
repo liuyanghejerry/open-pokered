@@ -74,9 +74,11 @@ fn capture_tui_zh_descriptions() {
         a: true,
         ..MenuInput::none()
     };
-    while pc.phase() == PcPhase::Message {
-        pc.update_frame(a, &mut ctx);
+    for frame in 0..4000 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
     }
+    assert_eq!(pc.phase(), PcPhase::MainMenu);
     for _ in 0..2 {
         pc.update_frame(
             MenuInput {
@@ -87,8 +89,9 @@ fn capture_tui_zh_descriptions() {
         );
     }
     pc.update_frame(a, &mut ctx);
-    while pc.phase() == PcPhase::Message {
-        pc.update_frame(a, &mut ctx);
+    for frame in 0..4000 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
     }
     pc.update_frame(
         MenuInput {
@@ -98,10 +101,13 @@ fn capture_tui_zh_descriptions() {
         &mut ctx,
     );
     pc.update_frame(a, &mut ctx);
-    let pages = pc.message_page_count();
-    for _ in 0..pages {
-        pc.update_frame(a, &mut ctx);
+    for frame in 0..4000 {
+        if pc.message_lines().concat().contains("学习装置")
+            && pc.rating_visible_chars() == Some(pc.message_lines().concat().chars().count()) { break; }
+        pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
     }
+    assert!(pc.message_lines().concat().contains("学习装置"));
+    assert_eq!(pc.rating_visible_chars(), Some(pc.message_lines().concat().chars().count()));
     game.draw(&mut fb);
     save(&fb, "tui-pc-oak-rating-50");
 
