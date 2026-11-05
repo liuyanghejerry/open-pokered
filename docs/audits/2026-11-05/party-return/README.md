@@ -1,3 +1,9 @@
+Current follow-up: the initial fresh route failed at m44 on a short nurse
+sprite sheet, and the default GBA retry then exposed an OAM allocation panic.
+Both are fixed and verified from ordinary SRAM in [the Indigo follow-up](indigo/README.md).
+The latest source is `cf65687f`; a new unseeded route is running. The results
+below describe the earlier retained comparison, not a completed fresh route.
+
 # Party menu return and SWAP audio
 
 Code commit `ff00099a`, stacked on FLASH PR #324 (`9fc696cf`) and master
