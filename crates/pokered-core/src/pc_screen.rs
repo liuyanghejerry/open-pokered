@@ -34,6 +34,8 @@ use pokered_data::items::ItemId;
 
 mod rating;
 use rating::RatingPhase;
+mod message;
+use message::{MessageEnd, MessageWait};
 
 /// How the PC was opened (which original entry point).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -196,6 +198,10 @@ enum AfterMessage {
     ItemList,
     /// After "Accessed PROF.OAK's PC...": show the rating YES/NO prompt.
     OaksConfirmPage,
+    OaksConfirmMenu,
+    ChangeBoxConfirm,
+    ReleaseConfirm,
+    TossConfirm,
     /// After the "#DEX completion is:" page: show the rating text page.
     OaksRating,
     /// After the rating text page: show "Closed link to PROF.OAK's PC."
@@ -287,6 +293,16 @@ pub struct PcScreen {
     msg_lines: Vec<String>,
     msg_page: usize,
     msg_next: AfterMessage,
+    message_pages: Vec<(usize, usize)>,
+    message_text: Option<Box<crate::overworld::BedroomDialogue>>,
+    message_end: MessageEnd,
+    message_wait: Option<MessageWait>,
+    message_wait_after_ack: bool,
+    text_no_delay: bool,
+    field_text_delay_change: Option<bool>,
+    entering_sub_pc: bool,
+    closing_pc: bool,
+    clear_text_delay_on_close: bool,
     rating_phase: Option<RatingPhase>,
     rating_text: Option<Box<crate::overworld::BedroomDialogue>>,
     rating_input: crate::foreground_input::ForegroundJoypad,
@@ -367,6 +383,16 @@ impl PcScreen {
             msg_lines: Vec::new(),
             msg_page: 0,
             msg_next: AfterMessage::Exit,
+            message_pages: Vec::new(),
+            message_text: None,
+            message_end: MessageEnd::Prompt,
+            message_wait: None,
+            message_wait_after_ack: false,
+            text_no_delay: entry != PcEntry::PokemonCenter,
+            field_text_delay_change: (entry != PcEntry::PokemonCenter).then_some(true),
+            entering_sub_pc: false,
+            closing_pc: false,
+            clear_text_delay_on_close: false,
             rating_phase: None,
             rating_text: None,
             rating_input: crate::foreground_input::ForegroundJoypad::default(),
@@ -419,6 +445,7 @@ impl PcScreen {
                     vec![format!("{} turned on", open.player_name), "the PC.".into()],
                     AfterMessage::MainMenu,
                 );
+                screen.message_wait_after_ack = true;
             }
             // Direct access prints _TurnedOnPC2Text (same wording).
             PcEntry::PlayersPc => {
@@ -456,7 +483,7 @@ impl PcScreen {
         self.msg_page
     }
     pub fn message_page_count(&self) -> usize {
-        self.msg_lines.len().div_ceil(MSG_LINES_PER_PAGE).max(1)
+        self.message_pages.len().max(1)
     }
     pub fn main_menu(&self) -> &PcMainMenuState {
         &self.main_menu
@@ -573,13 +600,27 @@ impl PcScreen {
         };
         self.msg_page = 0;
         self.msg_next = next;
+        self.prepare_message(MessageEnd::Prompt);
         self.phase = PcPhase::Message;
     }
 
     fn advance_message(&mut self) {
-        if (self.msg_page + 1) * MSG_LINES_PER_PAGE < self.msg_lines.len() {
+        if self.msg_page + 1 < self.message_pages.len() {
+            let previous_end = self.message_pages[self.msg_page].1;
             self.msg_page += 1;
+            let continued = self.message_pages[self.msg_page].0 < previous_end;
+            self.start_message_page(false, continued);
+            self.message_wait = Some(MessageWait::PageDelay(if continued { 10 } else { 20 }));
             return;
+        }
+        self.message_wait = None;
+        self.message_text = None;
+        // HandleMenuInput resumes the last real text poll, not the host's
+        // per-frame edge history from a protected display/sound interval.
+        if let Some(last) = self.rating_input.last() { self.ordinary_menu_last_buttons = last; }
+        if self.entering_sub_pc && matches!(self.msg_next, AfterMessage::BillsMenu | AfterMessage::ItemMenu | AfterMessage::LeagueHoF) {
+            self.write_field_text_delay(true);
+            self.entering_sub_pc = false;
         }
         match self.msg_next {
             AfterMessage::MainMenu => self.enter_main_menu(),
@@ -591,11 +632,18 @@ impl PcScreen {
                 self.begin_item_question(true, true);
             }
             // "Accessed PROF.OAK's PC..." → the YES/NO rating prompt.
-            AfterMessage::OaksConfirmPage => self.enter_oaks_confirm(),
+            AfterMessage::OaksConfirmPage => self.set_warning(
+                vec!["Want to get your".into(), "#DEX rated?".into()],
+                AfterMessage::OaksConfirmMenu, MessageEnd::Done, &[]),
+            AfterMessage::OaksConfirmMenu => self.enter_oaks_confirm(),
+            AfterMessage::ChangeBoxConfirm => self.phase = PcPhase::ChangeBoxConfirm,
+            AfterMessage::ReleaseConfirm => self.phase = PcPhase::ReleaseConfirm,
+            AfterMessage::TossConfirm => self.phase = PcPhase::TossConfirm,
             // "#DEX completion is: ..." → the rating itself.
             AfterMessage::OaksRating => {
                 let lines = dex_rating_text(self.dex_owned).split('\n').map(|s| s.to_string()).collect();
                 self.set_message(lines, AfterMessage::OaksClosed);
+                self.continue_message_lines();
                 self.start_rating_text(false, true);
             }
             // Rating text → "Closed link to PROF.OAK's PC." (_ClosedOaksPCText)
@@ -706,12 +754,15 @@ impl PcScreen {
     /// Preserve immediate cry completion for hosts without an audio backend.
     pub fn update_frame_without_audio_with_text_input(&mut self, input: MenuInput, ctx: &mut PcContext, held_ab: bool) -> PcScreenAction {
         let action = self.update_frame_with_text_input(input, ctx, false, held_ab);
-        if self.waiting_for_cry {
+        if self.waiting_for_cry || self.closing_pc {
             self.update_frame_with_text_input(MenuInput { up: false, down: false, a: false, b: false }, ctx, false, held_ab)
         } else { action }
     }
 
-    pub fn waiting_for_sound(&self) -> bool { self.waiting_for_cry || self.rating_waiting_for_audio() }
+    pub fn waiting_for_sound(&self) -> bool {
+        self.waiting_for_cry || self.rating_waiting_for_audio() || self.closing_pc
+            || matches!(self.message_wait, Some(MessageWait::BeforeSound | MessageWait::AfterSound))
+    }
 
     fn start_mon_cry(&mut self, species: pokered_data::species::Species) -> bool {
         if self.finishing_cry { return false; }
@@ -740,6 +791,10 @@ impl PcScreen {
         let before = self.phase;
         let buttons = held.bits();
         self.observe_rating_input(buttons);
+        if self.message_wait.is_some() || self.rating_phase.is_some() || self.closing_pc {
+            let none = MenuInput { a:false, b:false, up:false, down:false };
+            return (self.update_frame_sampled(none, ctx, sound_playing.unwrap_or(false), held.a || held.b), none);
+        }
         // hFrameCounter advances even while Delay20/list redraw protects input.
         self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
         if before == PcPhase::LeagueHoF {
@@ -784,7 +839,9 @@ impl PcScreen {
                 MenuInput { a:held.a, b:held.b, up:held.up, down:held.down }
             } else { input };
             if !blocked { self.item_swap_last_buttons = buttons; }
+            if used.a || used.b { self.write_field_text_delay(false); }
             let action = self.update_item_list_with_select(used, select, ctx);
+            if self.phase == PcPhase::ItemList && (used.a || used.b) { self.write_field_text_delay(true); }
             return (action, used);
         }
         self.item_swap_last_buttons = buttons;
@@ -828,6 +885,45 @@ impl PcScreen {
     }
 
     fn update_frame_sampled(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool, held_ab: bool) -> PcScreenAction {
+        if self.closing_pc {
+            if sound_playing { return PcScreenAction::Continue; }
+            self.closing_pc = false;
+            if self.clear_text_delay_on_close { self.write_field_text_delay(false); }
+            return PcScreenAction::Exit;
+        }
+        let before = self.phase;
+        let choosing = input.a || input.b;
+        if choosing && matches!(before, PcPhase::MonList | PcPhase::ItemList) {
+            self.write_field_text_delay(false);
+        }
+        let action = self.update_frame_sampled_inner(input, ctx, sound_playing, held_ab);
+        if before == PcPhase::MainMenu && self.phase == PcPhase::Message {
+            self.message_wait = Some(MessageWait::BeforeSound);
+            self.entering_sub_pc = matches!(self.msg_next,
+                AfterMessage::BillsMenu | AfterMessage::ItemMenu | AfterMessage::LeagueHoF);
+        } else if before != PcPhase::Message && self.phase == PcPhase::Message
+            && self.sfx.last() == Some(&PcSfx::WithdrawDeposit) {
+            self.message_wait = Some(MessageWait::BeforeSound);
+        }
+        if matches!(self.phase, PcPhase::MonList | PcPhase::ItemList)
+            && (self.phase != before || choosing) {
+            self.write_field_text_delay(true);
+        }
+        if self.phase != before && matches!(self.phase,
+            PcPhase::ReleaseConfirm | PcPhase::ChangeBoxConfirm | PcPhase::TossConfirm | PcPhase::OaksConfirm) {
+            self.write_field_text_delay(false);
+        }
+        let sub_pc = matches!(before, PcPhase::BillsMenu | PcPhase::ItemMenu | PcPhase::LeagueHoF);
+        if action == PcScreenAction::Exit {
+            self.closing_pc = true;
+            self.clear_text_delay_on_close = sub_pc;
+            return PcScreenAction::Continue;
+        }
+        if self.phase == PcPhase::MainMenu && sub_pc { self.write_field_text_delay(false); }
+        action
+    }
+
+    fn update_frame_sampled_inner(&mut self, input: MenuInput, ctx: &mut PcContext, sound_playing: bool, held_ab: bool) -> PcScreenAction {
         if self.rating_phase.is_some() { self.tick_rating(sound_playing); return PcScreenAction::Continue; }
 
         // DisplayTwoOptionMenu holds its drawn cursor and ignores all input
@@ -862,18 +958,7 @@ impl PcScreen {
             return action;
         }
         match self.phase {
-            PcPhase::Message => {
-                if input.a || input.b {
-                    let was_exit = self.msg_next == AfterMessage::Exit
-                        && (self.msg_page + 1) * MSG_LINES_PER_PAGE >= self.msg_lines.len();
-                    self.advance_message();
-                    if was_exit {
-                        self.sfx.push(PcSfx::TurnOff);
-                        return PcScreenAction::Exit;
-                    }
-                }
-                PcScreenAction::Continue
-            }
+            PcPhase::Message => self.tick_message(sound_playing),
             PcPhase::MainMenu => self.update_main_menu(input),
             PcPhase::BillsMenu => self.update_bills_menu(input, ctx),
             PcPhase::MonList => self.update_mon_list(input, ctx),
@@ -1108,7 +1193,10 @@ impl PcScreen {
                     // "When you change a #MON BOX, data will be saved. Is
                     // that okay?" (_WhenYouChangeBoxText) YES/NO.
                     self.yes_selected = true;
-                    self.phase = PcPhase::ChangeBoxConfirm;
+                    self.set_warning(vec![
+                        "When you change a".into(), "#MON BOX, data".into(),
+                        "will be saved.".into(), "Is that okay?".into(),
+                    ], AfterMessage::ChangeBoxConfirm, MessageEnd::Done, &[(0, 2), (1, 3), (3, 4)]);
                     PcScreenAction::Continue
                 }
             },
@@ -1147,7 +1235,12 @@ impl PcScreen {
                     // bills_pc.asm BillsPCRelease: straight to the "gone
                     // forever" confirmation, no STATS popup.
                     self.yes_selected = true;
-                    self.phase = PcPhase::ReleaseConfirm;
+                    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
+                    let name = ctx.pc_storage.current_box().get(self.mon_cursor)
+                        .map(|m| m.display_name(&mut name_buf)).unwrap_or("");
+                    self.set_warning(vec!["Once released,".into(), format!("{} is", name),
+                        "gone forever. OK?".into()], AfterMessage::ReleaseConfirm,
+                        MessageEnd::Done, &[(0, 2), (1, 3)]);
                 }
                 MonListMode::Withdraw | MonListMode::Deposit => {
                     self.mon_action_cursor = 0;
@@ -1226,11 +1319,11 @@ impl PcScreen {
                                     vec![
                                         format!("{} is", name),
                                         "taken out.".into(),
-                                        format!("Got {}", name),
-                                        String::new(),
+                                        format!("Got {}.", name),
                                     ],
                                     AfterMessage::BillsMenu,
                                 );
+                                self.continue_message_lines();
                             } else {
                                 self.enter_bills_menu();
                             }
@@ -1291,6 +1384,7 @@ impl PcScreen {
                         ],
                         AfterMessage::BillsMenu,
                     );
+                    self.continue_message_lines();
                 } else {
                     self.enter_bills_menu();
                 }
@@ -1651,7 +1745,8 @@ impl PcScreen {
                 ItemListMode::Toss => {
                     // "Is it OK to toss {ITEM}?" (_IsItOKToTossItemText) YES/NO.
                     self.yes_selected = true;
-                    self.phase = PcPhase::TossConfirm;
+                    self.set_warning(vec!["Is it OK to toss".into(), format!("{}?", item_name(*item))],
+                        AfterMessage::TossConfirm, MessageEnd::Prompt, &[]);
                 }
             }
         }
@@ -1720,6 +1815,9 @@ impl PcScreen {
             }
             ItemListMode::Toss => unreachable!(),
         }
+        // Key items transfer directly from the list, bypassing the quantity
+        // caller. Both callers wait for this sound before printing receipt text.
+        self.message_wait = Some(MessageWait::BeforeSound);
     }
 
     fn update_toss_confirm(&mut self, input: MenuInput, ctx: &mut PcContext) -> PcScreenAction {
@@ -1834,6 +1932,110 @@ impl PcScreen {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn ordinary_pc_text_requires_printing_and_a_fresh_prompt_press() {
+        let mut w = World::new();
+        let mut s = PcScreen::new(PcEntry::PokemonCenter, &open_ctx());
+        s.configure_field_text(5, false, None);
+        for _ in 0..2 {
+            s.update_frame(NONE, &mut w.ctx());
+            assert_eq!(s.message_visible_chars(), Some(0));
+        }
+        s.update_frame(NONE, &mut w.ctx());
+        assert_eq!(s.message_visible_chars(), Some(1));
+        for _ in 0..4 { s.update_frame(NONE, &mut w.ctx()); }
+        assert_eq!(s.message_visible_chars(), Some(1));
+        // A held through the last letter accelerates text, but cannot also
+        // accept the prompt or select BILL's PC.
+        for _ in 0..160 { s.update_frame(A, &mut w.ctx()); }
+        assert_eq!(s.phase(), PcPhase::Message);
+        assert!(s.message_text.as_ref().unwrap().waiting_for_input());
+        s.take_sfx();
+        s.update_frame(NONE, &mut w.ctx());
+        s.update_frame_with_sound(A, &mut w.ctx(), true);
+        assert_eq!(s.take_sfx(), [PcSfx::TextAdvance]);
+        for _ in 0..30 {
+            s.update_frame_with_sound(A, &mut w.ctx(), true);
+            assert_eq!(s.phase(), PcPhase::Message);
+        }
+        for _ in 0..4 { s.update_frame(NONE, &mut w.ctx()); }
+        assert_eq!(s.phase(), PcPhase::MainMenu);
+    }
+
+    #[test]
+    fn key_item_receipt_waits_for_sound_after_the_actual_list_selection() {
+        for mode in [ItemListMode::Withdraw, ItemListMode::Deposit] {
+            let (mut s, mut w) = select_fixture(mode, &[(ItemId::Bicycle, 1)]);
+            if mode == ItemListMode::Withdraw { w.bag = Inventory::new_bag(); }
+            else { w.pc_items = Inventory::new_pc(); }
+            s.take_sfx();
+            s.update_frame_with_held_input(A, PcHeldInput { a: true, ..Default::default() },
+                &mut w.ctx(), Some(false));
+            assert_eq!(s.phase(), PcPhase::Message);
+            assert_eq!(s.take_sfx(), [PcSfx::WithdrawDeposit]);
+            let quantities = if mode == ItemListMode::Withdraw { (1, 0) } else { (0, 1) };
+            for tick in 0..60 {
+                s.update_frame_with_held_input(NONE,
+                    PcHeldInput { a: tick == 4, ..Default::default() }, &mut w.ctx(), Some(true));
+                assert_eq!(s.message_visible_chars(), Some(0));
+                assert_eq!(s.phase(), PcPhase::Message);
+                assert_eq!((w.bag.item_quantity(ItemId::Bicycle), w.pc_items.item_quantity(ItemId::Bicycle)), quantities);
+            }
+            skip_message(&mut s, &mut w);
+            assert_eq!(s.phase(), PcPhase::ItemList);
+            assert_eq!((w.bag.item_quantity(ItemId::Bicycle), w.pc_items.item_quantity(ItemId::Bicycle)), quantities);
+        }
+    }
+
+    #[test]
+    fn change_box_text_cannot_accept_an_early_yes_or_save() {
+        let mut w = World::new();
+        let mut s = ordinary_ready(PcEntry::BillsPc, &mut w);
+        for _ in 0..3 { s.update_frame(DOWN, &mut w.ctx()); }
+        s.update_frame(A, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::Message);
+        assert_eq!(s.message_underlay(), Some(PcPhase::BillsMenu));
+        // Original CHANGE BOX control: the fresh A at +4 is still within
+        // the first ManualTextScroll Delay3, not an accepted YES.
+        for tick in 1..=60 {
+            let held = PcHeldInput { a: matches!(tick, 1 | 4 | 5), up: matches!(tick, 2 | 3), ..Default::default() };
+            s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(false));
+            assert_eq!(s.phase(), PcPhase::Message, "tick {tick}");
+            assert_eq!(s.message_page(), 0);
+            assert_eq!(w.pc_storage.current_box_index(), 0);
+            assert!(!s.take_save_request());
+        }
+        skip_message(&mut s, &mut w);
+        assert_eq!(s.phase(), PcPhase::ChangeBoxConfirm);
+        assert_eq!(s.message_page_lines(), ["Is that okay?"]);
+        assert!(s.yes_selected(), "preserve the original YES default");
+        assert_eq!(w.pc_storage.current_box_index(), 0);
+        assert!(!s.take_save_request());
+    }
+
+    #[test]
+    fn pc_subsystem_sound_and_shutdown_do_not_consume_short_buttons() {
+        let mut w = World::new();
+        let mut s = ordinary_ready(PcEntry::PokemonCenter, &mut w);
+        s.update_frame(A, &mut w.ctx());
+        for tick in 0..40 {
+            s.update_frame_with_sound(if tick == 4 { A } else { NONE }, &mut w.ctx(), true);
+            assert_eq!(s.message_visible_chars(), Some(0));
+            assert_eq!(s.message_page(), 0);
+        }
+        skip_message(&mut s, &mut w);
+        assert_eq!(s.phase(), PcPhase::BillsMenu);
+        assert_eq!(s.take_field_text_delay_change(), Some(true));
+        s.update_frame(B, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::MainMenu);
+        assert_eq!(s.take_field_text_delay_change(), Some(false));
+        s.take_sfx();
+        assert_eq!(s.update_frame_with_sound(B, &mut w.ctx(), false), PcScreenAction::Continue);
+        assert_eq!(s.take_sfx(), [PcSfx::TurnOff]);
+        for _ in 0..30 { assert_eq!(s.update_frame_with_sound(A, &mut w.ctx(), true), PcScreenAction::Continue); }
+        assert_eq!(s.update_frame_with_sound(NONE, &mut w.ctx(), false), PcScreenAction::Exit);
+    }
+
     fn ordinary_ready(entry: PcEntry, w: &mut World) -> PcScreen {
         let mut s = PcScreen::new(entry, &open_ctx());
         skip_message(&mut s, w);
@@ -1954,6 +2156,7 @@ mod tests {
         world.bag.replace_item_slots(slots).unwrap();
         world.pc_items.replace_item_slots(slots).unwrap();
         let mut screen = PcScreen::new(PcEntry::PlayersPc, &open_ctx());
+        skip_message(&mut screen, &mut world);
         screen.phase = PcPhase::ItemList;
         screen.item_mode = mode;
         (screen, world)
@@ -2424,7 +2627,7 @@ mod tests {
                     match mode {
                         ItemListMode::Withdraw=>{assert_eq!(w.bag.item_quantity(ItemId::Potion),5);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),3);},
                         ItemListMode::Deposit=>{assert_eq!(w.bag.item_quantity(ItemId::Potion),3);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),5);},
-                        ItemListMode::Toss=>{assert_eq!(s.phase(),PcPhase::TossConfirm);assert_eq!(w.bag.item_quantity(ItemId::Potion),4);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);},
+                        ItemListMode::Toss=>{assert_eq!(s.phase(),PcPhase::Message);assert_eq!(s.msg_next,AfterMessage::TossConfirm);assert_eq!(w.bag.item_quantity(ItemId::Potion),4);assert_eq!(w.pc_items.item_quantity(ItemId::Potion),4);},
                     }
                 }
             }
@@ -2504,9 +2707,8 @@ mod tests {
                 s.item_qty = 1;
                 s.update_frame(MenuInput { a: true, b, up: true, down: true }, &mut w.ctx());
                 assert_eq!(s.item_qty(), 1, "A keeps chosen quantity mode{mode:?} B{b}");
-                assert_eq!(s.phase(), if mode == ItemListMode::Toss {
-                    PcPhase::TossConfirm
-                } else { PcPhase::Message });
+                assert_eq!(s.phase(), PcPhase::Message);
+                if mode == ItemListMode::Toss { assert_eq!(s.msg_next, AfterMessage::TossConfirm); }
                 match mode {
                     ItemListMode::Withdraw => {
                         assert_eq!(w.pc_items.item_quantity(ItemId::Potion), 3);
@@ -2611,10 +2813,20 @@ mod tests {
     }
 
     /// Advance through every page of the current message.
+    fn acknowledge_pc_page(screen: &mut PcScreen, w: &mut World) {
+        let page = screen.message_page();
+        let lines = screen.message_lines().to_vec();
+        for frame in 0..4000 {
+            screen.update_frame(if frame % 8 == 0 { A } else { NONE }, &mut w.ctx());
+            if screen.phase() != PcPhase::Message || screen.message_page() != page || screen.message_lines() != lines { return; }
+        }
+        panic!("PC page did not acknowledge with fresh presses");
+    }
+
     fn skip_message(screen: &mut PcScreen, w: &mut World) {
         for frame in 0..4000 {
             if screen.phase() != PcPhase::Message { break; }
-            let input = if screen.rating_phase.is_some() && frame % 8 != 0 { NONE } else { A };
+            let input = if frame % 8 == 0 { A } else { NONE };
             assert_eq!(screen.update_frame(input, &mut w.ctx()), PcScreenAction::Continue);
         }
         assert_ne!(screen.phase(), PcPhase::Message, "message did not finish with fresh presses");
@@ -2832,8 +3044,7 @@ mod tests {
             &[
                 "BULBASAUR is".to_string(),
                 "taken out.".to_string(),
-                "Got BULBASAUR".to_string(),
-                String::new(),
+                "Got BULBASAUR.".to_string(),
             ]
         );
         skip_message(&mut s, &mut w);
@@ -2882,6 +3093,8 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::MonList);
         s.update_frame(A, &mut w.ctx()); // pick mon → confirm
+        assert_eq!(s.phase(), PcPhase::Message);
+        skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::ReleaseConfirm);
         assert!(s.yes_selected());
         // Select NO explicitly: back to the list, mon kept.
@@ -2892,6 +3105,7 @@ mod tests {
         assert_eq!(w.pc_storage.current_box().count(), 1);
         // Again, this time YES.
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // stay on YES
         s.update_frame(A, &mut w.ctx());
         finish_confirmation_wait(&mut s, &mut w);
@@ -2925,6 +3139,9 @@ mod tests {
             s.update_frame(DOWN, &mut w.ctx());
         }
         s.update_frame(A, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::Message);
+        skip_message(&mut s, &mut w);
+        s.take_sfx();
         assert_eq!(s.phase(), PcPhase::ChangeBoxConfirm);
         // NO → back, no switch, no save.
         s.update_frame(DOWN, &mut w.ctx());
@@ -2936,6 +3153,8 @@ mod tests {
         // YES → box list, cursor starts on the current box. (The bills menu
         // restored its saved cursor, so CHANGE BOX is still selected.)
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
+        s.take_sfx();
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
         finish_confirmation_wait(&mut s, &mut w);
@@ -2963,6 +3182,7 @@ mod tests {
             s.update_frame(DOWN, &mut w.ctx());
         }
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
         s.update_frame(UP, &mut w.ctx()); // YES
         s.update_frame(A, &mut w.ctx());
         finish_confirmation_wait(&mut s, &mut w);
@@ -3257,6 +3477,7 @@ mod tests {
         assert_eq!(s.phase(), PcPhase::ItemQuantity);
         s.update_frame(UP, &mut w.ctx()); // 2
         s.update_frame(A, &mut w.ctx());
+        skip_message(&mut s, &mut w);
         finish_item_question(&mut s, &mut w);
         if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         assert_eq!(s.phase(), PcPhase::TossConfirm);
@@ -3276,6 +3497,7 @@ mod tests {
         finish_item_question(&mut s, &mut w);
         if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(A, &mut w.ctx()); // qty 1
+        skip_message(&mut s, &mut w);
         finish_item_question(&mut s, &mut w);
         if s.phase()==PcPhase::ItemQuantityPrompt {finish_quantity_prompt(&mut s,&mut w);}
         s.update_frame(UP, &mut w.ctx()); // stay on YES
@@ -3353,17 +3575,19 @@ mod tests {
         };
         let mut s = PcScreen::new(PcEntry::PokemonCenter, &open);
         open_oaks_confirm(&mut s, &mut w);
-        // YES → completion page (2 pages: 8 lines).
+        // YES → completion heading, counts and rating heading (authored PARA).
         s.update_frame(UP, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
         finish_confirmation_wait(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::Message);
         assert_eq!(s.dex_seen(), 25);
         assert_eq!(s.dex_owned(), 25);
-        assert_eq!(s.message_page_count(), 2);
-        s.update_frame(A, &mut w.ctx()); // page 2
+        assert_eq!(s.message_page_count(), 3);
+        acknowledge_pc_page(&mut s, &mut w);
         assert_eq!(s.message_page(), 1);
-        s.update_frame(A, &mut w.ctx()); // → rating text
+        acknowledge_pc_page(&mut s, &mut w);
+        assert_eq!(s.message_page(), 2);
+        acknowledge_pc_page(&mut s, &mut w); // → rating text
         assert_eq!(
             s.message_lines(),
             &[
@@ -3376,11 +3600,12 @@ mod tests {
         // Printing owns the window; prior audio and the selected fanfare
         // must both finish before a fresh silent rating confirmation.
         s.take_sfx();
-        for _ in 0..2000 {
-            s.update_frame_with_sound(NONE, &mut w.ctx(), true);
+        for frame in 0..2000 {
+            s.update_frame_with_sound(if frame % 8 == 0 { A } else { NONE }, &mut w.ctx(), true);
             if s.rating_waiting_for_audio() { break; }
         }
         assert!(s.rating_waiting_for_audio());
+        assert_eq!(s.take_sfx(), [PcSfx::TextAdvance, PcSfx::TextAdvance]);
         for _ in 0..60 { s.update_frame_with_sound(A, &mut w.ctx(), true); }
         assert!(s.take_sfx().is_empty(), "prior SFX must finish first");
         s.update_frame_with_sound(NONE, &mut w.ctx(), false);
@@ -3416,12 +3641,11 @@ mod tests {
             s.update_frame(A, &mut w.ctx());
             finish_confirmation_wait(&mut s, &mut w);
             // Skip the completion pages.
-            while s.phase() == PcPhase::Message
-                && !s.message_lines().first().map_or(false, |l| {
+            for frame in 0..4000 {
+                if s.phase() != PcPhase::Message || s.message_lines().first().is_some_and(|l| {
                     text.split('\n').next().unwrap() == l
-                })
-            {
-                s.update_frame(A, &mut w.ctx());
+                }) { break; }
+                s.update_frame(if frame % 8 == 0 { A } else { NONE }, &mut w.ctx());
             }
             let expected: Vec<String> = text.split('\n').map(|l| l.to_string()).collect();
             assert_eq!(s.message_lines(), expected.as_slice());
@@ -3484,10 +3708,10 @@ mod tests {
             .unwrap();
         s.update_frame(A, &mut w.ctx()); // WITHDRAW
         assert_eq!(s.message_page_count(), 2);
-        s.update_frame(A, &mut w.ctx());
+        acknowledge_pc_page(&mut s, &mut w);
         assert_eq!(s.message_page(), 1);
         assert_eq!(s.phase(), PcPhase::Message);
-        s.update_frame(A, &mut w.ctx());
+        acknowledge_pc_page(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::BillsMenu);
     }
 
@@ -3639,7 +3863,7 @@ mod tests {
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(DOWN, &mut w.ctx());
         s.update_frame(A, &mut w.ctx());
-        for _ in 0..8 {
+        for _ in 0..2000 {
             s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
             if s.phase() == PcPhase::LeagueHoF { break; }
             s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));

@@ -66,9 +66,11 @@ fn step(pc: &mut PcScreen, save: &mut SaveData, input: MenuInput) {
 }
 
 fn skip_msg(pc: &mut PcScreen, save: &mut SaveData) {
-    while pc.phase() == PcPhase::Message {
-        step(pc, save, A);
+    for frame in 0..4000 {
+        if pc.phase() != PcPhase::Message { break; }
+        step(pc, save, if frame % 8 == 0 { A } else { MenuInput::none() });
     }
+    assert_ne!(pc.phase(), PcPhase::Message, "PC text did not finish with fresh presses");
 }
 
 fn press(pc: &mut PcScreen, save: &mut SaveData, input: MenuInput, n: usize) {

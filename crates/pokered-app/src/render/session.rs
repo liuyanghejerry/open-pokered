@@ -1352,10 +1352,22 @@ impl PcVisualKey {
         hash_byte(&mut visual_hash, game.pc_stats_return_frame.unwrap_or(8).min(8));
         match phase {
             PcPhase::Message => {
-                hash_u32(&mut visual_hash, pc.rating_visible_chars().map_or(u32::MAX, |n| n as u32));
+                hash_u32(&mut visual_hash, pc.message_visible_chars().map_or(u32::MAX, |n| n as u32));
                 hash_u32(&mut visual_hash, pc.message_page() as u32);
-                let start = pc.message_page() * 4;
-                for line in pc.message_lines().iter().skip(start).take(4) {
+                hash_byte(&mut visual_hash, pc.message_underlay().map_or(u8::MAX, |p| p as u8));
+                hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                hash_u32(&mut visual_hash, pc.item_list_scroll() as u32);
+                match pc.message_underlay() {
+                    Some(PcPhase::BillsMenu) => hash_u32(&mut visual_hash, game.save_data.pc_storage.current_box_index() as u32),
+                    Some(PcPhase::MonList) => {
+                        for mon in game.save_data.pc_storage.current_box().iter() { hash_pc_mon(&mut visual_hash, mon); }
+                    }
+                    Some(PcPhase::ItemList) => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                    _ => {},
+                }
+                for line in pc.message_page_lines() {
                     for &byte in line.as_bytes() {
                         hash_byte(&mut visual_hash, byte);
                     }
