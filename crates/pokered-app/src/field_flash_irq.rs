@@ -92,7 +92,7 @@ impl FieldIrq {
     pub(super) fn new(game: &mut PokemonGame, flow: &mut FieldFlash) -> Result<Self, String> {
         let map_tiles = crate::render::stationary_map_tile_snapshot(&game.overworld)
             .map_err(|e| format!("native map input: {e:?}"))?;
-        let native_grass = if flow.origin == RestorationOrigin::StartMenu {
+        let native_grass = if flow.origin.returns_to_map_with_actors() {
             Some(super::super::field_oam_inputs::stationary_grass_inputs(&game.overworld, &map_tiles.tiles)
                 .map_err(|e| format!("native stationary grass: {e:?}"))?)
         } else { None };
