@@ -292,6 +292,9 @@ impl SourceAudioFrame {
             } else if i == 4 || i == 5 {
                 super::press_ab_work::source_pulse_id(i, start.voices[i].id, &seq.channels[i].data)
                     .unwrap_or(0)
+            } else if i == 7 {
+                super::press_ab_work::source_noise_id(start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
             } else {
                 start.voices[i].id
             }
@@ -310,8 +313,7 @@ impl SourceAudioFrame {
                     4 | 5 => super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data).is_some()
                         && seq.sfx_tempo == 0x100,
                     7 => {
-                        PressAbInstructions::noise_data(v.id)
-                            == Some(seq.channels[i].data.as_slice())
+                        super::press_ab_work::source_noise_id(v.id, &seq.channels[i].data).is_some()
                             && v.duty == 0
                     }
                     _ => false,

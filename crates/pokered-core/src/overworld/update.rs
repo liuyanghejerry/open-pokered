@@ -2957,6 +2957,16 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .map(|(slot, npc)| (slot, npc.walk_counter)).collect();
             self.player_presentation.tick(self.state.player.facing, self.state.walk_counter != 0 || self.player_moving_direction != 0);
             self.npc_presentation.update_images_before_movement(&self.npc_states);
+            let blockset = pokered_data::blockset_data::blockset_for_tileset(map.tileset);
+            self.npc_presentation.sample_grass_priorities(&self.npc_states,
+                tileset_data::get_grass_tile(map.tileset), |x, y| {
+                    if x < 0 || y < 0 || x >= i32::from(map.width) * 4
+                        || y >= i32::from(map.height) * 4 { return None; }
+                    let block = *map.blocks.get((y / 4) as usize * usize::from(map.width)
+                        + (x / 4) as usize)?;
+                    blockset.get(usize::from(block) * 16
+                        + (y % 4) as usize * 4 + (x % 4) as usize).copied()
+                });
             if matches!(&self.active_script_effect, Some(script_bridge::ScriptEffect::FollowNpc {
                 phase: script_bridge::FollowNpcPhase::Following { .. }, ..
             })) {

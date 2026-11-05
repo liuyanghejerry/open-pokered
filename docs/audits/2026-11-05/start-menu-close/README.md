@@ -1,6 +1,7 @@
 Current source and regression follow-up: [Indigo indoor reload](indigo/README.md).
 The branch now includes the Party resource/memory fixes and master CI disk fix.
-The indoor partial-slot blocker is repaired and a new complete route is running.
+The indoor partial-slot blocker is repaired. The fresh NEW GAME → m49 route, ending autosave and independent CONTINUE passed (8,148.91 seconds) on frozen release `28b3c6e9…`, source `f482e587`.
+The additional earliest-cancel audio handoff fix and its separate verification are documented in [fast cancellation](fast-cancel/README.md).
 Earlier records below retain their original scope and timing qualifications.
 
 # START close: restore the map before returning control
@@ -28,7 +29,7 @@ The default release GBA ROM (`9b8fa1e5db1d46cbf3cc0585032a5bb198d93807f8a4deb225
 
 ## Validation and scope
 
-Local application tests: 1,090 successful test executions, 92 existing ignored. Core: 3,982 successful executions, one existing ignored. Targeted menu tests, native debug build and ARM check passed. Frozen-source guards confirmed that builds did not modify the protected working tree or earlier frozen binaries. A fresh NEW GAME → m49 run is pending and is not claimed complete here.
+Local application tests: 1,090 successful test executions, 92 existing ignored. Core: 3,982 successful executions, one existing ignored. Targeted menu tests, native debug build and ARM check passed. Frozen-source guards confirmed that builds did not modify the protected working tree or earlier frozen binaries. The fresh full START route has since passed; see the source-qualified follow-up at the top of this report.
 
 The resource/input repair is verified. Overall animation equivalence remains **PARTIAL**: subsequent coordinate commitment is two logical frames later than the reference, and complete actor/camera trajectories have not been declared equivalent. GBA physical elapsed time is not original Game Boy timing. Fonts and dialogue layout remain the project's intentional differences. Native grass input is sampled from the current stationary map; general NPC grass masking is a separate pending fix.
 

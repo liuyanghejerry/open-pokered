@@ -186,7 +186,7 @@ impl PressAbInstructions {
         work.swap_channel = Some(channel);
         Some(work)
     }
-    /// A canonical CHAN8 drum stream. `source_sfx_id` remains CHAN5's raw ID,
+    /// A canonical CHAN8 drum or START-menu stream. `source_sfx_id` remains CHAN5's raw ID,
     /// which the common ending/frequency helpers inspect for a concurrent cry.
     pub fn new_noise(
         input: PressAbInput,
@@ -209,6 +209,9 @@ impl PressAbInstructions {
         Some(Self::initial(input, Some((instrument, panning))))
     }
     pub(crate) fn noise_data(instrument: u8) -> Option<&'static [u8]> {
+        if instrument == super::press_ab_work::SOURCE_START_MENU_ID {
+            return Some(crate::sfx_data::SFX_START_MENU_CH8);
+        }
         if !(1..=19).contains(&instrument) {
             return None;
         }

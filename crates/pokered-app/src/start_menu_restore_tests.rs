@@ -93,6 +93,45 @@ fn start_close_cached_frames_match_full_draw_until_map_control_returns() {
 }
 
 #[test]
+fn earliest_start_cancel_keeps_unfinished_opening_noise_without_locking() {
+    run(|| {
+        let (mut game, mut input) = fixture(MapId::ViridianCity, 20, 30);
+        frame(&mut game, &mut input, B);
+        for _ in 0..120 {
+            frame(&mut game, &mut input, 0);
+            if game.state.screen == GameScreen::Overworld { break; }
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        for _ in 0..8 { frame(&mut game, &mut input, 0); }
+        // Actual START, then B on the first ready input frame. Do not wait
+        // for the CHAN8 opening sound or inject a replacement sound.
+        for _ in 0..4 {
+            frame(&mut game, &mut input, START);
+            if game.state.screen == GameScreen::StartMenu { break; }
+        }
+        assert_eq!(game.state.screen, GameScreen::StartMenu);
+        for _ in 0..64 {
+            if game.start_menu.input_ready() { break; }
+            frame(&mut game, &mut input, 0);
+        }
+        assert!(game.start_menu.input_ready());
+        {
+            let audio = game.audio.as_ref().unwrap().manager.lock().unwrap();
+            assert!(audio.sequencer.channels[7].active);
+            assert_eq!(audio.sequencer.channels[7].sound_id, SfxId::StartMenu as u8);
+        }
+        frame(&mut game, &mut input, B);
+        for _ in 0..120 {
+            frame(&mut game, &mut input, 0);
+            if game.state.screen == GameScreen::Overworld { break; }
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        assert!(game.field_flash.is_none());
+        assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (20, 30));
+    });
+}
+
+#[test]
 fn held_start_and_exit_a_finish_restoration_without_reopening_or_waiting_for_release() {
     run(|| {
         for key in [START, A] {
