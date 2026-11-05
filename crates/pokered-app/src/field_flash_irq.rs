@@ -329,10 +329,14 @@ impl PokemonGame {
             let prepare = if enabled != 1 {
                 PrepareOamWork::control_only(enabled)
             } else {
-                let slots = if flow.slots.is_empty() {
-                    &irq.initial_slots
-                } else {
+                // Indoor reloads build an assignment prefix while VBlank can
+                // still see the previous published images. That prefix is
+                // not a complete binding table for the visible actors: keep
+                // their entry bindings until all assignments are available.
+                let slots = if flow.slots.len() == irq.initial_slots.len() {
                     &flow.slots
+                } else {
+                    &irq.initial_slots
                 };
                 let input = super::super::field_oam_inputs::field_oam_input_with_grass(
                     &self.overworld,

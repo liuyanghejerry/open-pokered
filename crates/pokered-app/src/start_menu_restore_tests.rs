@@ -40,7 +40,8 @@ fn fixture(map: MapId, x: u16, y: u16) -> (PokemonGame, InputState) {
 fn start_close_owns_resource_waits_and_discards_short_direction_pulses() {
     run(|| {
         for (map, x, y) in [(MapId::ViridianCity, 20, 30),
-            (MapId::RedsHouse2F, 3, 6), (MapId::RockTunnel1F, 15, 3)] {
+            (MapId::RedsHouse2F, 3, 6), (MapId::RockTunnel1F, 15, 3),
+            (MapId::IndigoPlateauLobby, 7, 6)] {
             let (mut game, mut input) = fixture(map, x, y);
             let facing = game.overworld.state.player.facing;
             let darkness = game.overworld.dark_cave.map_pal_offset;
@@ -64,6 +65,11 @@ fn start_close_owns_resource_waits_and_discards_short_direction_pulses() {
             for _ in 0..8 { frame(&mut game, &mut input, 0); }
             assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (x, y));
             assert_eq!(game.overworld.state.player.facing, facing);
+            // A rendered map alone does not prove that the caller returned.
+            frame(&mut game, &mut input, START);
+            for _ in 0..80 { frame(&mut game, &mut input, 0); }
+            assert_eq!(game.state.screen, GameScreen::StartMenu);
+            assert!(game.start_menu.input_ready());
         }
     });
 }
