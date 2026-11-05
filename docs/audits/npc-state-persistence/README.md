@@ -1,5 +1,8 @@
 # NPC saved state and original displacement counters
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The old SRAM writer emitted 512 zero bytes for both sprite tables; the importer skipped them. Thus an NPC that naturally walked from Route 1 (5,24) to (5,25) returned to its home (5,24) after physical SAVE and an independent-process CONTINUE. The player correctly remained at (5,21).
 
 SaveData now retains the two 16×16-byte original tables. The live save writer projects actor positions, facing, stride direction/counter and delays into them; CONTINUE restores these logical fields. Source map coordinates name the stride destination, while the generic engine retains its origin until the last pixel: the bridge translates in both directions. Displacement bytes have a game-owned lifetime and survive saves and frame snapshots. True map replacement resets them, including a same-map warp. Unknown imported table bytes survive codec round trips.

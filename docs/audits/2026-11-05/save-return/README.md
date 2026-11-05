@@ -1,5 +1,8 @@
 # SAVE returns to the field
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 SAVE cancellation and completion now restore screen buffer 2, wait for held A to be released, then execute CloseTextDisplay. The player returns to the field instead of reopening START. Cancel retains TwoOptionMenu's 15-frame choice delay, preserves facing/position, and cannot write SRAM. The successful save still commits once before restoration begins.
 
 Production commit: `32ace488f18840ca0ae32221456c0cde92a8836f`. Before: START stack `efef56d6670c0c9e42900feb7ab7858fe352b0e5` (production `f482e587`). The before/after SAVE prompt states and screenshot hashes are identical for all four cases. Fonts and the existing save-card layout are outside this change.

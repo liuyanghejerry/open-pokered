@@ -1,5 +1,8 @@
 # Finite PressAB APU instruction propagation
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 `PressAbInstructions::try_step_with_bus` forwards the actual APU accesses of the
 already supported finite PressAB program through its existing retained CPU cursor.
 The clock-only API remains available. No channel-ending support has been widened:

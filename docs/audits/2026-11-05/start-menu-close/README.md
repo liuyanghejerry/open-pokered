@@ -1,3 +1,6 @@
+
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
 Current source and regression follow-up: [Indigo indoor reload](indigo/README.md).
 The branch now includes the Party resource/memory fixes and master CI disk fix.
 The indoor partial-slot blocker is repaired. The fresh NEW GAME → m49 route, ending autosave and independent CONTINUE passed (8,148.91 seconds) on frozen release `28b3c6e9…`, source `f482e587`.

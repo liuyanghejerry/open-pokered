@@ -1,5 +1,8 @@
 # Shared native audio admission
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The complete source ISR needs to refuse work before a native audio update, then
 advance its one existing sequencer once after admission. The legacy
 `update_frame_with_source_work` intentionally ticks even when accounting reports

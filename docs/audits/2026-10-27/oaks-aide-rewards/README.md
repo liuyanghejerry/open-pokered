@@ -1,5 +1,8 @@
 # 大木助手奖励确认与事件顺序
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 2 号道路 HM05、11 号道路探宝器、15 号道路 EXP.ALL 原先在领取前自动越过“Here you go!”，并在领取音效开始前就设置已领取标记。现在先等待确认，成功发放后播放领取文字和音效，音效返回后再设标记并继续说明，说明结束后等待最终确认。
 
 原作依据：pret/pokered `fbcf7d0e` 的 `engine/events/oaks_aide.asm`、`data/text/text_1.asm:124–133`，以及 `scripts/Route2Gate.asm:9–35`、`Route11Gate2F.asm:19–46`、`Route15Gate2F.asm:9–35`。HereYouGoText 以 prompt 结束，OaksAideScript 返回成功结果后，地图脚本才设对应领取事件并打印说明。双方 YES/NO 都保留问题文字，没有将此误报为背景缺失。

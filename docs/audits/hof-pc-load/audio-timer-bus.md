@@ -1,5 +1,8 @@
 # Source timer/effect APU stores
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 `timer_work::bus` attaches the supported Audio1/3 timer/effect APU store to the
 existing `EffectInstructionWork` and `TimerFrameWork` instruction cursors. It
 does not own an APU, advance a clock, update a second sequencer, or connect the

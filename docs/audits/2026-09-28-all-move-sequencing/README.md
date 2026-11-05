@@ -1,5 +1,8 @@
 # 全招式动画安排检查与修复
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 日期：2026-09-28。当前工作分支 `fix/gba-frame-pacing`，HEAD `403514b7ba0e1cba9e8c74af3787aaa3d9bd5389` 加工作区修改。
 
 ## 结果与范围
@@ -32,7 +35,7 @@
 
 ## 证据
 
-- [165 招式逐项结果](isolated/summary.json)、[连续逐帧指标](isolated/frame-traces.json.gz)。每条窗口从 `MoveAnimation` 入口到 `.animationFinished`，无时间重采样；repeat=2。
+- [165 招式逐项结果](isolated/summary.json)、连续逐帧指标（历史运行记录，已清理）。每条窗口从 `MoveAnimation` 入口到 `.animationFinished`，无时间重采样；repeat=2。
 - `feedback-1` 至 `feedback-6` 各有 `summary.json` 和 `frame-traces.json.gz`。用 Growl 命令流后强制指定反馈类型，校准共用反馈，**不是声称叫声实战会使用全部六种反馈**。
 - 原版正式 Red ROM SHA1 `ea9bcae617fdf159b045185467ae58b2e4a48b9a`，原版源码 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`。DEBUG Blue ROM 仅布置状态，比较帧来自正式 Red ROM。PyBoy 每次前进一个仿真帧，当前版每次一次 update/draw，160×144。
 - 校准双方均为 Rhydon Lv20；原版初始对话残留“FURY ATTACK”，两端保持相同底图。被钩子执行的动画 ID 是 45，见轨迹中的 resolved animation ID；不能用底图中的旧对话判断正在执行的动画。

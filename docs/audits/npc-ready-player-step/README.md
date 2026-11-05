@@ -1,5 +1,8 @@
 # 玩家迈步时的 NPC 待机分支
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 普通游走 NPC 原先可在玩家一格尚未走完时发起新的随机移动。现在待机 NPC 等待玩家的 `walk_counter` 归零；已经进行的 NPC 行走、延迟倒计时和脚本路径继续执行。实现复用现有暂停随机决策机制，保留可见性、占位和更新后的原始移动类型。
 
 原作 [UpdateNPCSprite](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/movement.asm) 先处理行走与延迟分支，待机分支随后读取 `wWalkCounter` 并在非零时返回。修复只补齐这一条件。
