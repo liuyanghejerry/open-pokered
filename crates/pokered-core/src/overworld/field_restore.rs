@@ -552,7 +552,7 @@ pub enum RestoreOperation {
     Return,
 }
 
-/// Exact finite call order of StartMenu_Pokemon.flash → .goBackToMap.
+/// Finite call order shared by StartMenu_Pokemon.exitMenu and .goBackToMap.
 /// A child is advanced through `operation`/`child_returned`; no operation is
 /// considered complete because of elapsed host frames or a known scene total.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -563,6 +563,17 @@ pub struct FieldRestoreWork {
 }
 impl FieldRestoreWork {
     pub fn new(input: RestoreInput) -> Self {
+        Self::for_destination(input, false)
+    }
+
+    /// Party cancellation restores buffer2 and keeps the font loaded for
+    /// RedisplayStartMenu. It does not execute CloseTextDisplay's second map
+    /// sprite reload, NPC-facing restoration or bare-map redraw.
+    pub fn party_return(input: RestoreInput) -> Self {
+        Self::for_destination(input, true)
+    }
+
+    fn for_destination(input: RestoreInput, start_menu: bool) -> Self {
         use RestoreOperation::*;
         let first = SpritePatternPlan::new(&input.pictures, false);
         let mut operations = vec![
@@ -605,6 +616,12 @@ impl FieldRestoreWork {
             }),
             DefaultPaletteCommand,
             WaitVBlanks(3),
+        ]);
+        if start_menu {
+            operations.extend([LoadMapPalettes, UpdateSprites, Return]);
+            return Self { input, operations, next: 0 };
+        }
+        operations.extend([
             SetWindowY(144),
             WaitVBlanks(1),
             LoadMapPalettes,
@@ -846,6 +863,30 @@ mod tests {
             font_flags: 1,
             player_source: PatternSource::WalkingPlayer,
             fly_warp: false,
+        }
+    }
+
+    #[test]
+    fn party_return_keeps_the_shared_reload_but_not_close_text_display() {
+        for outdoor in [None, Some(3)] {
+            let mut raw = input();
+            raw.outdoor_set = outdoor;
+            let field = FieldRestoreWork::new(raw.clone());
+            let menu = FieldRestoreWork::party_return(raw);
+            let prefix_end = field.operations.iter().position(|op| {
+                matches!(op, RestoreOperation::SetWindowY(144))
+            }).unwrap();
+            assert_eq!(&menu.operations[..prefix_end], &field.operations[..prefix_end]);
+            assert_eq!(&menu.operations[prefix_end..], &[
+                RestoreOperation::LoadMapPalettes,
+                RestoreOperation::UpdateSprites,
+                RestoreOperation::Return,
+            ]);
+            assert!(!menu.operations.iter().any(|op| matches!(op,
+                RestoreOperation::RestoreNpcFacing | RestoreOperation::LoadCurrentMapView
+                | RestoreOperation::SetAutoBg(false))));
+            assert_eq!(menu.operations.iter().filter(|op| matches!(op,
+                RestoreOperation::InstallSpriteSlots(_))).count(), 1);
         }
     }
 

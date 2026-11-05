@@ -232,7 +232,7 @@ impl PokemonGame {
                 } else {
                     format!("{first}\n{second}")
                 };
-                let arrow = !flow.text.returned()
+                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
                     && dialogue.waiting_for_input()
                     && (self.frame_count / 16) % 2 == 0;
                 let mut painter = pokered_ui::backends::FrameBufferPainter::new(&mut flow.party);

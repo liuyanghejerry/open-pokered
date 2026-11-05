@@ -1,4 +1,4 @@
-//! Shared FLASH caller, retaining the real party parent until PrintText returns.
+//! Shared party-to-field restoration; FLASH retains its PrintText caller.
 //! Native resource operations are explicit; no scene-total frame countdown.
 //! LCD-off children execute against the shared Game display time/device.
 //! VBlank upload/IRQ integration and original/native timing still need validation.
@@ -138,7 +138,8 @@ struct FieldWaitReceipt {
 }
 
 pub(crate) struct FieldFlash {
-    text: PartyFieldText,
+    text: Option<PartyFieldText>,
+    return_to_start_menu: bool,
     work: FieldRestoreWork,
     patterns: PatternMemory,
     waits: Vec<FieldWaitReceipt>,
@@ -165,6 +166,20 @@ pub(crate) struct FieldFlash {
 
 impl PokemonGame {
     pub(super) fn begin_field_flash(&mut self, message: &str) {
+        self.begin_party_restoration(Some(message));
+    }
+
+    pub(super) fn begin_party_menu_restore(&mut self, input: &InputState) {
+        // This frame's real party consumer has just read its cancel/select
+        // key. Keep that last foreground read through the resource waits.
+        let owner = self.overworld.begin_source_field();
+        owner.read_raw(input.raw_current());
+        owner.poll();
+        self.begin_party_restoration(None);
+    }
+
+    fn begin_party_restoration(&mut self, message: Option<&str>) {
+        let return_to_start_menu = message.is_none();
         // One live staging buffer serves both party text and the final map
         // redraw. Reusing it avoids a late contiguous allocation on GBA.
         let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
@@ -174,6 +189,10 @@ impl PokemonGame {
             &mut party,
             self.state.config.language,
         );
+        if return_to_start_menu {
+            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
+                &mut party, self.state.config.language);
+        }
         let mut map = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
         copy_flash_frame(&party, &mut map);
         party.clear(Rgba::WHITE);
@@ -186,16 +205,19 @@ impl PokemonGame {
         );
         // StartMenu_Pokemon entered through DisplayPartyMenu, which has the
         // font loaded. The source plan deliberately performs both reloads.
-        let work = FieldRestoreWork::new(self.overworld.field_restore_input(1));
+        let restore_input = self.overworld.field_restore_input(1);
+        let work = if return_to_start_menu { FieldRestoreWork::party_return(restore_input) }
+            else { FieldRestoreWork::new(restore_input) };
         let facing = self
             .overworld
             .npc_states
             .iter()
             .map(|npc| npc.facing)
             .collect();
-        let text = self.overworld.begin_party_field_text(message);
+        let text = message.map(|message| self.overworld.begin_party_field_text(message));
         self.field_flash = Some(Box::new(FieldFlash {
             text,
+            return_to_start_menu,
             work,
             patterns: PatternMemory::default(),
             waits: Vec::new(),
@@ -251,8 +273,8 @@ impl PokemonGame {
             return;
         }
         self.source_display.set_physical_buttons(raw);
-        let printing = !flow.text.returned();
-        let returned = if printing { self.overworld.tick_party_field_text(&mut flow.text, raw) } else { true };
+        let printing = flow.text.as_ref().is_some_and(|text| !text.returned());
+        let returned = flow.text.as_mut().is_none_or(|text| self.overworld.tick_party_field_text(text, raw));
         if printing && self.overworld.sfx_event == OverworldSfxEvent::TextAdvance {
             if let Some(audio) = &self.audio {
                 audio.play_sfx(SfxId::PressAB);
@@ -267,6 +289,14 @@ impl PokemonGame {
             return;
         }
         match self.service_field_flash(&mut flow) {
+            Ok(true) if flow.return_to_start_menu => {
+                let foreground = self.overworld.source_foreground().cloned();
+                self.handle_transition(GameScreen::StartMenu);
+                if let Some(foreground) = foreground {
+                    *self.overworld.begin_source_field() = foreground;
+                }
+                self.start_menu.begin_source_redisplay();
+            }
             Ok(true) => self.handle_transition(GameScreen::Overworld),
             Ok(false) => self.field_flash = Some(flow),
             Err(error) => {
@@ -635,10 +665,13 @@ impl PokemonGame {
                     flow.map_key = crate::render::session::FlashMapVisualKey::new();
                 }
                 RestoreOperation::LoadMapPalettes => {
-                    if self.overworld.dark_cave.is_dark() {
+                    let offset = self.overworld.dark_cave.map_pal_offset;
+                    if !flow.return_to_start_menu && offset != 0 {
                         return Err("lit FLASH palette requested with nonzero map darkness".into());
                     }
-                    flow.display_child = Some(DisplayChild::Palette(DisplayPaletteWork::lit_map()));
+                    let palette = DisplayPaletteWork::map_palette(offset)
+                        .map_err(|offset| format!("unsupported map palette offset {offset}"))?;
+                    flow.display_child = Some(DisplayChild::Palette(palette));
                     continue;
                 }
                 RestoreOperation::UpdateSprites => {
@@ -669,7 +702,19 @@ impl PokemonGame {
                 // the same resources (no physical OAM/VRAM slot indirection).
                 // Screen buffer2 is the actual retained `flow.map` image.
                 RestoreOperation::LoadScreenBuffer2 => {
-                    flow.irq.as_mut().ok_or("missing IRQ owner")?.background_is_map = true;
+                    let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
+                    if flow.return_to_start_menu {
+                        // Buffer2 is the saved START raster, including Safari
+                        // counters. Keep its native tile namespace distinct
+                        // from map/ROM tile IDs while AutoBG copies it.
+                        draw_flash_frame(&flow.map, &mut flow.party);
+                        irq.ui.tiles.clear();
+                        irq.ui.patterns.clear();
+                        irq.ui.sample(&flow.party).map_err(|e| format!("START buffer2: {e:?}"))?;
+                        flow.show_map = true;
+                    } else {
+                        irq.background_is_map = true;
+                    }
                 }
                 RestoreOperation::DefaultPaletteCommand => {},
                 RestoreOperation::SetAutoBg(enabled) => {
@@ -707,6 +752,7 @@ impl PokemonGame {
             "palette_store_receipts": self.source_display.palette_store_receipts(),
             "background_palette_raster": self.source_display.device().background_palette_raster(),
             "show_map": flow.show_map,
+            "return_to_start_menu": flow.return_to_start_menu,
             "irq": &flow.irq,
             "wait_clock": "common_IRQ_RETI",
             "waits": &flow.waits,
@@ -781,7 +827,7 @@ impl PokemonGame {
                 } else {
                     format!("{first}\n{second}")
                 };
-                let arrow = !flow.text.returned()
+                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
                     && dialogue.waiting_for_input()
                     && (self.frame_count / 16) % 2 == 0;
                 let mut painter = pokered_ui::backends::FrameBufferPainter::new(fb);
@@ -799,6 +845,10 @@ impl PokemonGame {
         }
     }
 }
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "party_return_tests.rs"]
+mod party_return_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 mod tests {
@@ -839,7 +889,7 @@ mod tests {
         game.update(&acknowledge);
         let flow = game.field_flash.as_ref().unwrap();
         assert!(flow.error.is_none(), "{:?}", flow.error);
-        assert!(flow.text.returned());
+        assert!(flow.text.as_ref().unwrap().returned());
         let irq = flow.irq.as_ref().unwrap();
         assert!(irq.attached);
         assert_eq!(irq.ui.revision, 1);

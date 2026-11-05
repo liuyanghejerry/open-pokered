@@ -1376,6 +1376,25 @@ def m38_secret_key(g):
     g.evidence("m38")
 
 
+def wait_for_party_return(g):
+    """Observe the real restoration and START input gate before sending B."""
+    from playthrough import NavError
+
+    for _ in range(240):
+        state = g.st()
+        menu = state.get("field_menu")
+        restore = state.get("field_flash")
+        if restore is not None:
+            assert state["screen"] == "party" and menu and menu["kind"] == "party", state
+            assert restore.get("return_to_start_menu") and not restore.get("error"), restore
+        else:
+            assert state["screen"] == "start-menu" and menu and menu["kind"] == "start", state
+            if menu["ready_for_input"]:
+                return
+        g.step(1)
+    raise NavError(f"party return never reached ready START: {g.st()}")
+
+
 def lead_with(g, species):
     party = g.st()["party"]
     target = next(i for i, mon in enumerate(party) if mon["species"] == species)
@@ -1402,6 +1421,7 @@ def lead_with(g, species):
             break
         g.tap("up", 8)
     g.tap("b", 8)
+    wait_for_party_return(g)
     g.tap("b", 8)
     assert g.cutscene()
     assert g.st()["party"][0]["species"] == species
