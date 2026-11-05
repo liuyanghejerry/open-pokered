@@ -201,5 +201,22 @@
       "before_png_sha256": "d533c811b636a11cd9e716e3f956deeb149b4eeae4e18b6460d4e4c6558e64b2",
       "after_png_sha256": "6fc6a25ef61e9edd63b6d05b7b28298a2835658852b417115a25fe64110ade17"
     }
-  ]
+  ],
+  "ci_integration_followup": {
+    "production_code_unchanged_from": "ff00099a08bb26dbf0d76d67653d510f6e0e7f9d",
+    "fixture_fix": "Retain muted PCM owner and initialize actual Pallet Town theme before synthetic START entry; keep every original input/stock/cursor assertion.",
+    "full_app_command": [
+      "cargo",
+      "test",
+      "-p",
+      "pokered-app",
+      "--locked",
+      "--offline"
+    ],
+    "passed_test_executions": 1060,
+    "existing_ignored": 88,
+    "debug_server_bag_tests_passed": 2,
+    "protected_frozen_binaries_unchanged": true,
+    "protected_original_worktree_unchanged": true
+  }
 }

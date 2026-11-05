@@ -55,3 +55,16 @@ are not counted as a fresh playthrough verdict.
 See `verification.json` and `docs/screenshots/party-return-1390/` for compact
 evidence. Before/after captures use identical inputs and capture indices;
 the compiled master baseline's full crate/Cargo contents match `303aaceb`.
+
+CI follow-up: the bag-memory integration fixture had removed the PCM owner
+and skipped map-music initialization while jumping directly from boot to
+START. It now retains the ordinary muted audio engine and starts the field
+theme. The eight original input schedules, cursor/window expectations and
+inventory assertions are unchanged. The production files still match
+`ff00099a08bb26dbf0d76d67653d510f6e0e7f9d`; the current fresh playthrough
+continues to use that exact frozen binary.
+
+The CI-equivalent `cargo test -p pokered-app --locked --offline` passes:
+1060 test executions, 88 existing ignored (library, binary and integration suites).
+The debug-server bag integration suite also passes both tests. Generated
+legacy screenshot files were discarded; none are part of this test fix.
