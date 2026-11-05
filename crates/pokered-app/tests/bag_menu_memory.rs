@@ -25,7 +25,12 @@ fn fixture() -> PokemonGame {
     #[cfg(not(feature = "debug-server"))]
     let mut g =
         PokemonGame::new_with_options(GameVersion::Red, None, None, None, false, None, false, true);
-    g.audio = None;
+    // This fixture jumps past the intro to START. Keep the muted PCM owner
+    // and start the field theme, as a real --no-audio field entry does.
+    g.audio
+        .as_ref()
+        .unwrap()
+        .play_music(pokered_audio::music_data::MusicId::PALLET_TOWN);
     g.set_seed(42);
     g.state.config.language = Lang::En;
     g.state.config.text_speed = TextSpeed::Slow;

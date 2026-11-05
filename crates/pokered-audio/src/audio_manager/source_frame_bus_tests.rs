@@ -533,6 +533,84 @@ fn live_manager_resumes_across_refusals_and_commits_one_logical_tick_per_frame()
 }
 
 #[test]
+fn party_swap_and_confirmation_overlap_finish_through_retained_audio_frames() {
+    let mut saw_confirmation_with_second_swap_pulse = false;
+    for music in [MusicId::PALLET_TOWN, MusicId::SILPH_CO, MusicId::DUNGEON3] {
+        let bank = SourceSong::from_music(music).unwrap().bank();
+        for delay in 0..=20 {
+            for confirmation in [false, true] {
+                let mut manager = powered(music);
+                let mut ordinary = powered(music);
+                for audio in [&mut manager, &mut ordinary] {
+                    audio.play_sfx(SfxId::Swap);
+                    for _ in 0..delay {
+                        audio.update_frame();
+                    }
+                    if confirmation {
+                        audio.play_sfx(SfxId::PressAB);
+                    }
+                }
+                saw_confirmation_with_second_swap_pulse |= confirmation
+                    && manager.sequencer.channels[5].active;
+                for frame in 0..40 {
+                    let frozen = native(&manager);
+                    let mut cursor = None;
+                    if frame == 0 {
+                        let mut accepted = 0;
+                        assert!(matches!(manager.service_source_audio_frame(&mut cursor, bank, 0,
+                            |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                                if accepted == 17 { return Err("yield"); }
+                                accepted += 1;
+                                Ok(execute(apu, op))
+                            }), Err(AudioAdmissionError::Admission(FrameStepError::Clock("yield")))));
+                        assert_eq!(native(&manager), frozen);
+                        cursor = serde_json::from_slice(&serde_json::to_vec(&cursor).unwrap()).unwrap();
+                    }
+                    let result = manager.service_source_audio_frame(&mut cursor, bank, 0,
+                        |apu: &mut crate::apu::Apu, op: ApuInstruction| Ok::<_, ()>(execute(apu, op)));
+                    assert!(result.is_ok(), "{music:?} delay{delay} confirm{confirmation} frame{frame}: {result:?}");
+                    ordinary.update_frame();
+                    assert_eq!(native(&manager), native(&ordinary));
+                    let after = native(&manager);
+                    assert_ne!(after, frozen);
+                    let apu_after = manager.apu.playback_state();
+                    let repeated = manager.service_source_audio_frame(&mut cursor, bank, 0,
+                        |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> { panic!("completed SWAP frame replayed") });
+                    assert_eq!(repeated, result);
+                    assert_eq!(native(&manager), after);
+                    assert_eq!(manager.apu.playback_state(), apu_after);
+                }
+                assert!(!manager.sequencer.channels[4].active);
+                assert!(!manager.sequencer.channels[5].active);
+            }
+        }
+    }
+    assert!(saw_confirmation_with_second_swap_pulse);
+}
+
+#[test]
+fn swap_admission_rejects_altered_programs_and_modifiers_on_the_remaining_pulse() {
+    use crate::source_clock::AudioClockError;
+    for channel in [4, 5] {
+        let mut manager = powered(MusicId::PALLET_TOWN);
+        manager.play_sfx(SfxId::Swap);
+        manager.sequencer.channels[channel].data[0] ^= 1;
+        assert!(matches!(manager.begin_source_audio_frame(2, 0), Err(AudioClockError::ActiveSfx(i)) if i == channel as u8));
+        assert!(matches!(manager.begin_source_audio_frame_with_bus(2, 0), Err(AudioClockError::ActiveSfx(i)) if i == channel as u8));
+    }
+    for (frequency, tempo) in [(1, 0), (0, 1)] {
+        let mut manager = powered(MusicId::PALLET_TOWN);
+        manager.play_sfx(SfxId::Swap);
+        manager.sequencer.channels[4].active = false;
+        manager.sequencer.frequency_modifier = frequency;
+        manager.sequencer.tempo_modifier = tempo;
+        let frozen = native(&manager);
+        assert!(matches!(manager.begin_source_audio_frame_with_bus(2, 0), Err(AudioClockError::UnsupportedEffect(5))));
+        assert_eq!(native(&manager), frozen);
+    }
+}
+
+#[test]
 fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit() {
     for data in [
         include_str!("../source_clock/frame_bus_golden.json"),

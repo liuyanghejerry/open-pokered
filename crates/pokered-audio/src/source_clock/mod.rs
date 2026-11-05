@@ -31,7 +31,7 @@ use audio_next_note_work::music_next_note_work_with_drum;
 use audio_note_dispatch_work::MusicCommandState;
 use audio_work::{audio_dispatch_work, channel_effect_work_cycles, ChannelEffectWorkInput};
 use pitch_slide_instructions::{PitchSlideResult, PitchSlideState};
-use press_ab_work::{noise_next_note, press_ab_next_note, PressAbWork, SOURCE_PRESS_AB_ID};
+use press_ab_work::{noise_next_note, press_ab_next_note, PressAbWork};
 use timer_work::EffectInstructionWork;
 
 fn canonical_noise_table(seq: &Sequencer) -> bool {
@@ -140,11 +140,8 @@ impl PreparedAudioFrame {
         for i in 4..8 {
             let ch = &seq.channels[i];
             let valid_program = match i {
-                4 => {
-                    ch.sound_id == crate::sfx_data::SfxId::PressAB as u8
-                        && ch.data == crate::sfx_data::SFX_PRESS_AB_CH5
-                        && seq.sfx_tempo == 0x100
-                }
+                4 | 5 => press_ab_work::source_pulse_id(i, ch.sound_id, &ch.data).is_some()
+                    && seq.sfx_tempo == 0x100,
                 7 => {
                     press_ab_instructions::PressAbInstructions::noise_data(ch.sound_id)
                         == Some(ch.data.as_slice())
@@ -162,7 +159,8 @@ impl PreparedAudioFrame {
             }
         }
         let mut source_sfx = if seq.channels[4].active {
-            SOURCE_PRESS_AB_ID
+            press_ab_work::source_pulse_id(4, seq.channels[4].sound_id, &seq.channels[4].data)
+                .expect("validated pulse program")
         } else {
             0
         };
@@ -199,13 +197,15 @@ impl PreparedAudioFrame {
                 song.raw_id()
             } else if i == 4 {
                 source_sfx
+            } else if i == 5 {
+                press_ab_work::SOURCE_SWAP_ID
             } else {
                 ch.sound_id
             };
             if ids[i] == 0 {
                 continue;
             }
-            if i == 4 || i == 7 {
+            if matches!(i, 4 | 5 | 7) {
                 if ch.delay_counter == 1
                     || (ch.delay_counter == 0
                         && ch.ptr == 0
@@ -216,7 +216,10 @@ impl PreparedAudioFrame {
                     // The ordinary native constructor's ready-zero maps to
                     // the original sound constructor's ready-one. This finite
                     // stream never loops back to offset zero.
-                    let w = if i == 4 {
+                    let w = if i <= 5 && ch.sound_id == crate::sfx_data::SfxId::Swap as u8 {
+                        press_ab_work::swap_next_note(song.bank(), i as u8, source_sfx,
+                            data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
+                    } else if i == 4 {
                         press_ab_next_note(data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
                     } else {
                         noise_next_note(ch.sound_id, data, ch.ptr, ch.delay_frac, source_sfx)
