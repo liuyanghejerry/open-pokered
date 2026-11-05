@@ -42,9 +42,11 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             a: true,
             ..MenuInput::none()
         };
-        while pc.phase() == PcPhase::Message {
-            pc.update_frame(a, &mut ctx);
+        for frame in 0..4000 {
+            if pc.phase() != PcPhase::Message { break; }
+            pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
         }
+        assert_eq!(pc.phase(), PcPhase::MainMenu);
         for _ in 0..2 {
             pc.update_frame(
                 MenuInput {
@@ -55,8 +57,9 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             );
         }
         pc.update_frame(a, &mut ctx);
-        while pc.phase() == PcPhase::Message {
-            pc.update_frame(a, &mut ctx);
+        for frame in 0..4000 {
+            if pc.phase() != PcPhase::Message { break; }
+            pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
         }
         assert_eq!(pc.phase(), PcPhase::OaksConfirm);
         pc.update_frame(
@@ -71,10 +74,6 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
             pc.update_frame(MenuInput::none(), &mut ctx);
         }
         assert_eq!(pc.phase(), PcPhase::Message);
-        let pages = pc.message_page_count();
-        for _ in 0..pages {
-            pc.update_frame(a, &mut ctx);
-        }
         let expected = pokered_data::ui_text::zh_pc_message(
             &dex_rating_text(owned as u32)
                 .lines()
@@ -82,6 +81,10 @@ fn all_sixteen_chinese_pc_ratings_use_complete_messages_and_readable_pages() {
                 .collect::<Vec<_>>(),
         )
         .concat();
+        for frame in 0..4000 {
+            if pc.message_lines().concat() == expected { break; }
+            pc.update_frame(if frame % 8 == 0 { a } else { MenuInput::none() }, &mut ctx);
+        }
         assert_eq!(pc.message_lines().concat(), expected);
         assert_eq!(pc.message_page_count(), 1, "rating {owned}");
         assert!(pc.message_lines().len() <= 3, "Hall of Fame rating {owned}");
