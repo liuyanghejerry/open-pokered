@@ -1,0 +1,865 @@
+{
+  "schema_version": 1,
+  "roi": {
+    "x": 0,
+    "y": 16,
+    "width": 48,
+    "height": 112
+  },
+  "reference": {
+    "label": "reference",
+    "directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1390-npc-grass-player-original-1",
+    "requested_range": {
+      "start": 0,
+      "end": 30
+    },
+    "present_frame_count": 31,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 8,
+      "net_dx": 0,
+      "net_dy": -16,
+      "path_l1": 16,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.125
+    },
+    "transitions": [
+      {
+        "from": 0,
+        "to": 1,
+        "raw_mad": 3.984375,
+        "changed_fraction": 0.026786,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 3.984375,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "raw_mad": 50.120908,
+        "changed_fraction": 0.481027,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.120908,
+          "accepted": true
+        }
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "raw_mad": 50.405506,
+        "changed_fraction": 0.484375,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.405506,
+          "accepted": true
+        }
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "raw_mad": 50.595238,
+        "changed_fraction": 0.486607,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.595238,
+          "accepted": true
+        }
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "raw_mad": 50.215774,
+        "changed_fraction": 0.482143,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.215774,
+          "accepted": true
+        }
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "raw_mad": 48.650484,
+        "changed_fraction": 0.47247,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 48.650484,
+          "accepted": true
+        }
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "raw_mad": 47.844122,
+        "changed_fraction": 0.47061,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 47.844122,
+          "accepted": true
+        }
+      },
+      {
+        "from": 16,
+        "to": 17,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "raw_mad": 47.085193,
+        "changed_fraction": 0.468564,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 47.085193,
+          "accepted": true
+        }
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "raw_mad": 46.057478,
+        "changed_fraction": 0.461868,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.057478,
+          "accepted": true
+        }
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 21,
+        "to": 22,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 22,
+        "to": 23,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 23,
+        "to": 24,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 24,
+        "to": 25,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 26,
+        "to": 27,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 27,
+        "to": 28,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 28,
+        "to": 29,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 29,
+        "to": 30,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "current": {
+    "label": "current",
+    "directory": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1390-npc-grass-candidate-native-a2/player-1",
+    "requested_range": {
+      "start": 0,
+      "end": 30
+    },
+    "present_frame_count": 31,
+    "missing_frames": [],
+    "background_motion": {
+      "translated_steps": 8,
+      "net_dx": 0,
+      "net_dy": -16,
+      "path_l1": 16,
+      "largest_step_l1": 2,
+      "largest_step_share": 0.125
+    },
+    "transitions": [
+      {
+        "from": 0,
+        "to": 1,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 3,
+        "to": 4,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 4,
+        "to": 5,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 5,
+        "to": 6,
+        "raw_mad": 50.120908,
+        "changed_fraction": 0.481027,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.120908,
+          "accepted": true
+        }
+      },
+      {
+        "from": 6,
+        "to": 7,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 7,
+        "to": 8,
+        "raw_mad": 50.405506,
+        "changed_fraction": 0.484375,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.405506,
+          "accepted": true
+        }
+      },
+      {
+        "from": 8,
+        "to": 9,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 9,
+        "to": 10,
+        "raw_mad": 50.595238,
+        "changed_fraction": 0.486607,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.595238,
+          "accepted": true
+        }
+      },
+      {
+        "from": 10,
+        "to": 11,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 11,
+        "to": 12,
+        "raw_mad": 50.215774,
+        "changed_fraction": 0.482143,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 50.215774,
+          "accepted": true
+        }
+      },
+      {
+        "from": 12,
+        "to": 13,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 13,
+        "to": 14,
+        "raw_mad": 48.555618,
+        "changed_fraction": 0.470238,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 3.767045,
+          "improvement": 44.788572,
+          "accepted": true
+        }
+      },
+      {
+        "from": 14,
+        "to": 15,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "raw_mad": 48.413318,
+        "changed_fraction": 0.472842,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 48.413318,
+          "accepted": true
+        }
+      },
+      {
+        "from": 16,
+        "to": 17,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 17,
+        "to": 18,
+        "raw_mad": 47.65439,
+        "changed_fraction": 0.470796,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 47.65439,
+          "accepted": true
+        }
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "raw_mad": 46.626674,
+        "changed_fraction": 0.4641,
+        "best_translation": {
+          "dx": 0,
+          "dy": -2,
+          "residual_mad": 0.0,
+          "improvement": 46.626674,
+          "accepted": true
+        }
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 21,
+        "to": 22,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 22,
+        "to": 23,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 23,
+        "to": 24,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 24,
+        "to": 25,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 25,
+        "to": 26,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 26,
+        "to": 27,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 27,
+        "to": 28,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 28,
+        "to": 29,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      },
+      {
+        "from": 29,
+        "to": 30,
+        "raw_mad": 0.0,
+        "changed_fraction": 0.0,
+        "best_translation": {
+          "dx": 0,
+          "dy": 0,
+          "residual_mad": 0.0,
+          "improvement": 0.0,
+          "accepted": false
+        }
+      }
+    ]
+  },
+  "comparison": {
+    "verdict": "PASS",
+    "duration_ratio": 1.0,
+    "checks": [
+      {
+        "name": "contiguous_frame_ids",
+        "status": "PASS",
+        "detail": "reference missing=[]; current missing=[]"
+      },
+      {
+        "name": "raw_duration",
+        "status": "PASS",
+        "detail": "reference=31 frames; current=31 frames; ratio=1.000"
+      },
+      {
+        "name": "background_path_length",
+        "status": "PASS",
+        "detail": "reference=16 px; current=16 px; delta=0 px"
+      },
+      {
+        "name": "largest_background_step",
+        "status": "PASS",
+        "detail": "reference=2 px; current=2 px; delta=0 px"
+      },
+      {
+        "name": "background_motion_distribution",
+        "status": "PASS",
+        "detail": "largest-step/path share: reference=0.125; current=0.125; delta=0.000"
+      },
+      {
+        "name": "ordered_background_cadence",
+        "status": "PASS",
+        "detail": "30 reference / 30 current transitions"
+      }
+    ]
+  }
+}
