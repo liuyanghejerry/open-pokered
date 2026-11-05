@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "native_all_cases_both_repeats": "exact frame/state/image sequences",
+  "original_all_cases_both_repeats": "exact full records",
+  "gba_bag_short": "exact full record",
+  "scripts": {
+    "replay-gba.py": "6f6494554689d67ecfd95aa9dffa04f1025dc15940452a9bfb6f7bced4ba41cf",
+    "replay-native.py": "1dc32c9c5b1b2690234fd7dfdfd04834ae7f51cc8e3023ccefd4cd27ea2ac0a0",
+    "replay-original.py": "cb8c73d8c5a381a98f139586424e792bc224f9717fe6641946265c2ed4bf3397"
+  }
+}

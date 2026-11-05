@@ -1,0 +1,1081 @@
+{
+  "status": "PASS for input lock/resource transfer and final menu; PARTIAL for original full visual restoration",
+  "production_commit": "9ba0d3cc",
+  "reference_rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+  "reference_fixture_sha256": "b12777818a990843546b623615caa67a05a811941dfcf4d078b46a564d6e09a4",
+  "native_fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+  "cases": [
+    {
+      "case": "bag-neutral",
+      "native": {
+        "before": {
+          "first_start": 0,
+          "first_ready": 0,
+          "final_cursor": 2,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "d533c811b636a11cd9e716e3f956deeb149b4eeae4e18b6460d4e4c6558e64b2",
+          "binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067"
+        },
+        "after": {
+          "first_start": 6,
+          "first_ready": 9,
+          "final_cursor": 2,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "d533c811b636a11cd9e716e3f956deeb149b4eeae4e18b6460d4e4c6558e64b2",
+          "binary_sha256": "ba8e469cf94c8da7fc374b2e0a830f629b95eef5d903fcc3281280863fdd254a"
+        }
+      },
+      "original": {
+        "first_redisplay": 5,
+        "first_post_return_poll": 9,
+        "all_80_frames_and_events_repeat_exact": true,
+        "final_cursor": 2
+      },
+      "gba": {
+        "rom_sha256": "c4a89cd8753d1714cb7c4f261dec072ff3064a3b22e668ba6fa15d2056691576",
+        "all_800_frames_and_png_hashes_repeat_exact": true,
+        "reopened_same_submenu": true,
+        "sram_unchanged": true
+      }
+    },
+    {
+      "case": "bag-short",
+      "native": {
+        "before": {
+          "first_start": 0,
+          "first_ready": 0,
+          "final_cursor": 3,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "d533c811b636a11cd9e716e3f956deeb149b4eeae4e18b6460d4e4c6558e64b2",
+          "binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067"
+        },
+        "after": {
+          "first_start": 6,
+          "first_ready": 9,
+          "final_cursor": 2,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "d533c811b636a11cd9e716e3f956deeb149b4eeae4e18b6460d4e4c6558e64b2",
+          "binary_sha256": "ba8e469cf94c8da7fc374b2e0a830f629b95eef5d903fcc3281280863fdd254a"
+        }
+      },
+      "original": {
+        "first_redisplay": 5,
+        "first_post_return_poll": 9,
+        "all_80_frames_and_events_repeat_exact": true,
+        "final_cursor": 2
+      },
+      "gba": {
+        "rom_sha256": "c4a89cd8753d1714cb7c4f261dec072ff3064a3b22e668ba6fa15d2056691576",
+        "all_800_frames_and_png_hashes_repeat_exact": true,
+        "reopened_same_submenu": true,
+        "sram_unchanged": true
+      }
+    },
+    {
+      "case": "option-neutral",
+      "native": {
+        "before": {
+          "first_start": 0,
+          "first_ready": 0,
+          "final_cursor": 5,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "9066cecaf940216b8b4ebc318a87ac24dccd04cb845167273ef291082638c64f",
+          "binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067"
+        },
+        "after": {
+          "first_start": 6,
+          "first_ready": 9,
+          "final_cursor": 5,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "9066cecaf940216b8b4ebc318a87ac24dccd04cb845167273ef291082638c64f",
+          "binary_sha256": "ba8e469cf94c8da7fc374b2e0a830f629b95eef5d903fcc3281280863fdd254a"
+        }
+      },
+      "original": {
+        "first_redisplay": 5,
+        "first_post_return_poll": 9,
+        "all_80_frames_and_events_repeat_exact": true,
+        "final_cursor": 5
+      },
+      "gba": {
+        "rom_sha256": "c4a89cd8753d1714cb7c4f261dec072ff3064a3b22e668ba6fa15d2056691576",
+        "all_800_frames_and_png_hashes_repeat_exact": true,
+        "reopened_same_submenu": true,
+        "sram_unchanged": true
+      }
+    },
+    {
+      "case": "option-short",
+      "native": {
+        "before": {
+          "first_start": 0,
+          "first_ready": 0,
+          "final_cursor": 6,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "9066cecaf940216b8b4ebc318a87ac24dccd04cb845167273ef291082638c64f",
+          "binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067"
+        },
+        "after": {
+          "first_start": 6,
+          "first_ready": 9,
+          "final_cursor": 5,
+          "all_80_frames_and_png_hashes_repeat_exact": true,
+          "initial_sha256": "9066cecaf940216b8b4ebc318a87ac24dccd04cb845167273ef291082638c64f",
+          "binary_sha256": "ba8e469cf94c8da7fc374b2e0a830f629b95eef5d903fcc3281280863fdd254a"
+        }
+      },
+      "original": {
+        "first_redisplay": 5,
+        "first_post_return_poll": 9,
+        "all_80_frames_and_events_repeat_exact": true,
+        "final_cursor": 5
+      },
+      "gba": {
+        "rom_sha256": "c4a89cd8753d1714cb7c4f261dec072ff3064a3b22e668ba6fa15d2056691576",
+        "all_800_frames_and_png_hashes_repeat_exact": true,
+        "reopened_same_submenu": true,
+        "sram_unchanged": true
+      }
+    }
+  ],
+  "local_build": [
+    {
+      "name": "submenu-tests",
+      "exit_code": 0,
+      "seconds": 21.498917378950864,
+      "summaries": [
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "seconds": 21.95334091701079,
+      "summaries": []
+    },
+    {
+      "name": "app-full",
+      "exit_code": 0,
+      "seconds": 158.3422760120593,
+      "summaries": [
+        [
+          "ok",
+          "480",
+          "0",
+          "40"
+        ],
+        [
+          "ok",
+          "479",
+          "0",
+          "40"
+        ],
+        [
+          "ok",
+          "10",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "8",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "7",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "8",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "14",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "11",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "7",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "2"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "core",
+      "exit_code": 0,
+      "seconds": 38.45359341206495,
+      "summaries": [
+        [
+          "ok",
+          "3477",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "11",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "7",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "7",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "22",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "16",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "8",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "7",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "18",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "8",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "15",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "17",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "15",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "14",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "20",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "11",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "21",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "26",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "50",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "6",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "9",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "20",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "14",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "18",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "17",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "2",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "4",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "5",
+          "0",
+          "0"
+        ],
+        [
+          "ok",
+          "0",
+          "0",
+          "1"
+        ]
+      ]
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "seconds": 13.064408295904286,
+      "summaries": []
+    }
+  ],
+  "fresh_m06": {
+    "status": "passed",
+    "seconds": 41.068672817898914,
+    "unchanged_source_and_binary": true,
+    "source_scope": "Frozen submenu sync a9 debug binary: Bag/Options cancellation and source textbox transfer, on the tested SAVE/START/Party stack including the empty-NPC lookup fast path. Fresh early-game smoke only; actual Bag/Options scenarios are validated independently. Current driver waits for observable Party/START restoration readiness; all existing milestone assertions retained. Transport NODELAY/QUICKACK only; no seeded state or resumed milestone."
+  },
+  "limitations": [
+    "Original/current submenu font/layout and fixture inventory/actors differ; no whole-image parity claim.",
+    "Original resumes Redisplay at t5, publishes BG at t6..8, then polls at t9. Native hands off at t6, ready at t9; BG portion order and retained actor publication still differ.",
+    "GBA evidence uses physical frames and verifies completion/input/storage; it does not claim original GB animation speed."
+  ],
+  "full_suite_source": "9ba0d3cc",
+  "base_commit": "55b93a584b5621c6f32caf130b7aa9b11a30718c",
+  "synced_source_commit": "83739c5895b6e00494a09133373ef567075d3e23",
+  "sync_validation": [
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "seconds": 21.559001600951888,
+      "summaries": []
+    },
+    {
+      "name": "submenu-tests",
+      "exit_code": 0,
+      "seconds": 21.404899977962486,
+      "summaries": [
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "save-tests",
+      "exit_code": 0,
+      "seconds": 21.09285102703143,
+      "summaries": [
+        [
+          "ok",
+          "3",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "shared-bag",
+      "exit_code": 0,
+      "seconds": 21.01319632108789,
+      "summaries": [
+        [
+          "ok",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "core-restore",
+      "exit_code": 0,
+      "seconds": 26.30953765299637,
+      "summaries": [
+        [
+          "ok",
+          "8",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "seconds": 13.245857981964946,
+      "summaries": []
+    }
+  ],
+  "performance": {
+    "suite": "autopilot-v1",
+    "emulator": "mGBA 0.10.5 core, full audio/video, no frameskip, skip BIOS",
+    "scenarios": {
+      "intro-title-v1": {
+        "scenario": "intro-title-v1",
+        "samples": 250,
+        "update_avg_ticks": 105,
+        "update_core_avg_ticks": 97,
+        "update_flush_avg_ticks": 1,
+        "renders": 115,
+        "draw_per_frame_ticks": 1218,
+        "draw_max_ticks": 9872,
+        "present_per_frame_ticks": 354,
+        "present_max_ticks": 782
+      },
+      "oak-dialogue-v1": {
+        "scenario": "oak-dialogue-v1",
+        "samples": 600,
+        "update_avg_ticks": 172,
+        "update_core_avg_ticks": 162,
+        "update_flush_avg_ticks": 1,
+        "renders": 307,
+        "draw_per_frame_ticks": 2910,
+        "draw_max_ticks": 9074,
+        "present_per_frame_ticks": 392,
+        "present_max_ticks": 782
+      },
+      "overworld-idle-v1": {
+        "scenario": "overworld-idle-v1",
+        "samples": 1400,
+        "update_avg_ticks": 380,
+        "update_core_avg_ticks": 370,
+        "update_flush_avg_ticks": 1,
+        "renders": 0,
+        "draw_per_frame_ticks": 0,
+        "draw_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "present_max_ticks": 0
+      },
+      "overworld-movement-v1": {
+        "scenario": "overworld-movement-v1",
+        "samples": 240,
+        "update_avg_ticks": 392,
+        "update_core_avg_ticks": 382,
+        "update_flush_avg_ticks": 1,
+        "renders": 24,
+        "draw_per_frame_ticks": 210,
+        "draw_max_ticks": 2909,
+        "present_per_frame_ticks": 70,
+        "present_max_ticks": 771
+      },
+      "battle-entry-v1": {
+        "scenario": "battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 208,
+        "update_core_avg_ticks": 198,
+        "update_flush_avg_ticks": 1,
+        "renders": 369,
+        "draw_per_frame_ticks": 2647,
+        "draw_max_ticks": 8889,
+        "present_per_frame_ticks": 567,
+        "present_max_ticks": 782
+      },
+      "trainer-battle-entry-v1": {
+        "scenario": "trainer-battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 225,
+        "update_core_avg_ticks": 214,
+        "update_flush_avg_ticks": 1,
+        "renders": 224,
+        "draw_per_frame_ticks": 2375,
+        "draw_max_ticks": 10208,
+        "present_per_frame_ticks": 344,
+        "present_max_ticks": 782
+      },
+      "pokedex-entry-v1": {
+        "scenario": "pokedex-entry-v1",
+        "samples": 400,
+        "update_avg_ticks": 113,
+        "update_core_avg_ticks": 102,
+        "update_flush_avg_ticks": 1,
+        "renders": 1,
+        "draw_per_frame_ticks": 41,
+        "draw_max_ticks": 16520,
+        "present_per_frame_ticks": 1,
+        "present_max_ticks": 767
+      }
+    },
+    "rom_sha256": "dcd2cb832d2ccf43745c88f93173a9174653412b8cf6130fa8f293193e5d4f8c",
+    "physical_frames": 9000,
+    "seconds": 2.398097651079297
+  }
+}
