@@ -348,6 +348,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         else { self.source_foreground.as_mut() }
     }
 
+    /// Actual native ignore mask, without substituting an original countdown.
+    pub fn native_joy_ignore_mask(&self) -> u8 { self.joy_ignore_mask }
+
     pub fn source_foreground(&self) -> Option<&crate::foreground_input::ForegroundJoypad> {
         if self.source_foreground_mode == crate::foreground_input::ForegroundMode::Observed { None }
         else { self.source_foreground.as_ref() }

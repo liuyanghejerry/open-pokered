@@ -32,6 +32,11 @@ pub struct MusicNoteResult {
     pub saved_frequency_low: u8,
     pub wave_return_frequency: Option<u16>,
     pub cycles: u32,
+    #[cfg_attr(
+        any(test, feature = "source-clock-serde"),
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    pub pitch_slide: Option<super::pitch_slide_instructions::InitPitchSlideResult>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -90,6 +95,12 @@ pub struct MusicNoteInstructions {
 }
 impl MusicNoteInstructions {
     pub fn new(input: MusicNoteInput) -> Option<Self> {
+        Self::with_drum_context(input, None)
+    }
+    pub(crate) fn with_drum_context(
+        input: MusicNoteInput,
+        noise_busy: Option<bool>,
+    ) -> Option<Self> {
         if !matches!(input.bank, 2 | 31)
             || (input.preparation.stream.channel == 0
                 && input.paired_sfx_active != (input.source_sfx_id != 0))
@@ -98,7 +109,10 @@ impl MusicNoteInstructions {
         }
         Some(Self {
             input,
-            stage: Stage::Preparation(NotePreparation::new(input.preparation)?),
+            stage: Stage::Preparation(NotePreparation::with_drum_context(
+                input.preparation,
+                noise_busy,
+            )?),
             cycles: 0,
         })
     }
@@ -162,17 +176,42 @@ impl MusicNoteInstructions {
                         Some(Stage::Return {
                             preparation,
                             pitch: NotePitchResult {
+                                pitch_slide: None,
                                 saved_frequency_low: self.input.previous_frequency_low,
                                 wave_return_frequency: None,
                             },
                         })
                     } else {
                         let note = preparation.stream.note;
-                        let pitch=NotePitchInstructions::new(NotePitchInput {bank:self.input.bank,channel:self.input.preparation.stream.channel,note,
-                            octave:preparation.stream.state.octave,flags1:preparation.stream.state.flags1,paired_sfx_active:self.input.paired_sfx_active,
-                            source_sfx_id:self.input.source_sfx_id,frequency_modifier:self.input.frequency_modifier,
-                            pitch_base:if note<0xc0 {crate::NOTE_FREQUENCIES.get((note>>4) as usize).copied()} else {None},
-                            previous_frequency_low:self.input.previous_frequency_low}).expect("supported stream preserves validated music mode and source pitch range");
+                        let pitch_input = NotePitchInput {
+                            bank: self.input.bank,
+                            channel: self.input.preparation.stream.channel,
+                            note,
+                            octave: preparation.stream.state.octave,
+                            flags1: preparation.stream.state.flags1,
+                            paired_sfx_active: self.input.paired_sfx_active,
+                            source_sfx_id: self.input.source_sfx_id,
+                            frequency_modifier: self.input.frequency_modifier,
+                            pitch_base: if note < 0xc0 {
+                                crate::NOTE_FREQUENCIES.get((note >> 4) as usize).copied()
+                            } else {
+                                None
+                            },
+                            previous_frequency_low: self.input.previous_frequency_low,
+                        };
+                        let pitch = if let Some(slide) = preparation.stream.pitch_slide {
+                            NotePitchInstructions::with_pitch_slide(
+                                pitch_input,
+                                preparation.delay,
+                                slide.length_modifier,
+                                slide.target_frequency,
+                            )
+                        } else {
+                            NotePitchInstructions::new(pitch_input)
+                        }
+                        .ok_or(StreamStepError::Input(
+                            StreamInputError::UnsupportedCommand(0xeb),
+                        ))?;
                         Some(Stage::Pitch {
                             preparation,
                             work: pitch,
@@ -216,7 +255,7 @@ impl MusicNoteInstructions {
                             note_delay: preparation.delay,
                             volume: preparation.stream.state.volume,
                             duty: preparation.stream.state.duty,
-                            panning,
+                            panning: preparation.stream.panning.unwrap_or(panning),
                             wave: patterns.get(usize::from(instrument)).copied(),
                         },
                         clock,
@@ -246,6 +285,7 @@ impl MusicNoteInstructions {
                     preparation: *preparation,
                     saved_frequency_low: pitch.saved_frequency_low,
                     wave_return_frequency: pitch.wave_return_frequency,
+                    pitch_slide: pitch.pitch_slide,
                     cycles: self.cycles + 16,
                 }))
             }

@@ -268,6 +268,59 @@ impl AudioOutput {
             .try_update_frame_with_source_work(admit)
     }
 
+    /// Inspect the live native sound owner before attaching a source IRQ.
+    pub fn source_irq_context(&self) -> Result<crate::source_clock::AudioIrqContext, crate::source_clock::AudioClockError> {
+        self.manager.lock().map_err(|_| crate::source_clock::AudioClockError::OutputUnavailable)?.source_irq_context()
+    }
+
+    /// Begin a source instruction cursor without advancing the native song.
+    pub fn begin_source_audio_frame_with_bus(&self, bank: u8, mute: u8) -> Result<
+        crate::source_clock::frame_instructions::SourceAudioFrame, crate::source_clock::AudioClockError,
+    > {
+        self.manager.lock().map_err(|_| crate::source_clock::AudioClockError::OutputUnavailable)?.begin_source_audio_frame_with_bus(bank, mute)
+    }
+
+    /// Resume only the retained cursor. A refused instruction leaves its
+    /// prefix intact; the callback must not reenter this output/manager.
+    pub fn resume_source_audio_frame_with_bus<E>(&self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        execute: impl FnMut(&mut crate::apu::Apu, crate::source_clock::apu_bus::ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<E>>,
+    > {
+        let result = self.manager.lock().map_err(|_| crate::source_clock::AudioAdmissionError::Preflight(crate::source_clock::AudioClockError::OutputUnavailable))?.resume_source_audio_frame_with_bus(work, execute);
+
+        result
+    }
+
+    /// Resume under an exclusive owner that supports exact instruction runs.
+    pub fn resume_source_audio_frame_with_runner<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        bus: B,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<B::Error>>,
+    > {
+        self.manager.lock().map_err(|_| crate::source_clock::AudioAdmissionError::Preflight(
+            crate::source_clock::AudioClockError::OutputUnavailable,
+        ))?.resume_source_audio_frame_with_runner(work, bus)
+    }
+
+    /// Start or resume one retained IRQ frame while holding the audio lock.
+    pub fn service_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &self,
+        cursor: &mut Option<alloc::boxed::Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<B::Error>>,
+    > {
+        self.manager.lock().map_err(|_| crate::source_clock::AudioAdmissionError::Preflight(
+            crate::source_clock::AudioClockError::OutputUnavailable,
+        ))?.service_source_audio_frame(cursor, bank, mute, bus)
+    }
+
     pub fn update_frame(&self) {
         if let Ok(mut mgr) = self.manager.lock() {
             mgr.update_frame();
@@ -307,7 +360,13 @@ mod source_work_output_tests {
 
     #[test]
     fn supported_and_unsupported_work_advance_one_real_output_and_preserve_pcm() {
-        for music in [MusicId::DUNGEON3, MusicId::SILPH_CO, MusicId::POKECENTER, MusicId::PALLET_TOWN] {
+        for music in [
+            MusicId::DUNGEON3,
+            MusicId::SILPH_CO,
+            MusicId::POKECENTER,
+            MusicId::PALLET_TOWN,
+            MusicId::WILD_BATTLE,
+        ] {
             let ordinary = AudioOutput::new_pcm();
             let clocked = AudioOutput::new_pcm();
             ordinary.play_music(music);
@@ -328,7 +387,7 @@ mod source_work_output_tests {
                         supported += 1;
                     }
                     Err(error) => {
-                        if music == MusicId::PALLET_TOWN {
+                        if music == MusicId::WILD_BATTLE {
                             assert_eq!(error, AudioClockError::UnsupportedSoundBank);
                         }
                         rejected += 1;
@@ -351,7 +410,7 @@ mod source_work_output_tests {
                     );
                 }
             }
-            if music == MusicId::PALLET_TOWN {
+            if music == MusicId::WILD_BATTLE {
                 assert_eq!((supported, rejected), (0, 1200));
             } else {
                 assert!(supported > 1000);

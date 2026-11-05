@@ -43,7 +43,7 @@ def main():
         press_bank, press = symbols['SFX_Press_AB_'+suffix]
         assert bank == press_bank and (press-table)//3 == 144 and (press-table)%3 == 0
         for ch, v in enumerate(start['voices']):
-            expected = raw_id if ch < 4 else 144
+            expected = raw_id if ch < 4 else (v['id'] if ch == 7 else 144)
             assert work['ids'][ch] == (expected if v['active'] else 0)
             if v['active'] and ch < 4: assert ch in channels
         memory = {0xff24: 0x77, 0xff25: 0}  # Explicit controlled ports, not a native APU snapshot.
@@ -52,6 +52,10 @@ def main():
         def word(name, index, value):
             put(name, index*2, value & 255); put(name, index*2+1, value >> 8)
         put('wMuteAudioAndPauseMusic', 0, 0)
+        put('wDisableChannelOutputWhenSfxEnds', 0, 0)
+        # PlaySound does not reset CHAN8's fractional carry. The native
+        # canonical drum trajectories retain zero, including inactive frames.
+        put('wChannelNoteDelayCountersFractionalPart', 7, start['voices'][7]['fraction'])
         put('wStereoPanning', 0, start['panning'])
         put('wMusicWaveInstrument', 0, start['voices'][2]['wave_instrument'] if args.apu else 0)
         put('wFrequencyModifier', 0, start['frequency_modifier'] & 255)
@@ -71,9 +75,18 @@ def main():
             put('wChannelVolumes', ch, (v['volume'] & 0x30) << 1 if ch == 2 else v['volume'])
             delay = v['delay']
             if delay == 0:
-                assert ch == 4 and v['ptr'] == 0 and v['duty'] == 0 and v['volume'] == 240 and v['fraction'] == 0
+                assert ch in (4, 7) and v['ptr'] == 0 and v['duty'] == 0 and v['volume'] == 240 and v['fraction'] == 0
                 delay = 1
             put('wChannelNoteDelayCounters', ch, delay)
+            if 'pitch_slide' in v:
+                slide=v['pitch_slide']
+                for key,name in [('length_modifier','LengthModifiers'),('step','FrequencySteps'),
+                                 ('step_fraction','FrequencyStepsFractionalPart'),('current_fraction','CurrentFrequencyFractionalPart')]:
+                    assert 0 <= slide[key] <= 255
+                    put('wChannelPitchSlide'+name,ch,slide[key])
+                for key,name in [('current','Current'),('target','Target')]:
+                    put('wChannelPitchSlide'+name+'FrequencyLowBytes',ch,slide[key]&255)
+                    put('wChannelPitchSlide'+name+'FrequencyHighBytes',ch,slide[key]>>8)
             if delay > 1:
                 continue  # Timer path must never read an unprovided stream or loop counter.
             assert base + len(data) < 0xe000
@@ -81,20 +94,23 @@ def main():
             targets = set(); visited = set()
             def scan(offset):
                 while offset not in visited:
+                    assert 0 <= offset < len(data), (work['song'], row['confirmation'], row['frame'], ch, offset, len(data))
                     visited.add(offset); cmd = data[offset]
-                    if ch == 4:
+                    if ch in (4, 7):
                         if cmd == 255: return
-                        offset += 2 if cmd == 236 else 4
+                        offset += 2 if cmd == 236 else (3 if ch == 7 else 4)
                         return  # A tone ends command processing for this update.
                     if cmd == 253:
                         targets.add(offset+1); scan(data[offset+1] | data[offset+2] << 8); offset += 3
                     elif cmd == 254:
-                        targets.add(offset+2); scan(data[offset+2] | data[offset+3] << 8); offset += 4
+                        targets.add(offset+2); scan(data[offset+2] | data[offset+3] << 8)
+                        if data[offset+1] == 0: return  # An unconditional loop has no fallthrough.
+                        offset += 4
                     elif cmd == 255: return
                     elif cmd & 240 == 208: offset += 1 if ch == 3 else 2
                     elif cmd == 232 or 224 <= cmd <= 231: offset += 1
                     elif cmd in (234, 237): offset += 3
-                    elif cmd in (236, 240): offset += 2
+                    elif cmd in (236, 238, 240): offset += 2
                     else: return
             scan(v['ptr'])
             if v['flags1'] & 2: scan(v['return_ptr'])
@@ -124,7 +140,7 @@ def main():
                     elif cmd & 240 == 208: ptr += 1 if ch == 3 else 2
                     elif cmd == 232 or 224 <= cmd <= 231: ptr += 1
                     elif cmd in (234, 237): ptr += 3
-                    elif cmd in (236, 240): ptr += 2
+                    elif cmd in (236, 238, 240): ptr += 2
                     else: break
             base += len(data) + 16
         entry = symbols[prefix+'_UpdateMusic'][1]
@@ -141,7 +157,7 @@ def main():
             if args.apu:
                 # Reusing the CPU fixture must be proved for every port/wave
                 # variant, not inferred from equal aggregate cycle counts.
-                key = (work['song'], row['confirmation'], row['frame'])
+                key = (work['song'], row['confirmation'], row['frame'], row.get('initial_noise_override'))
                 if key not in baseline_traces:
                     assert 'initial_wave_override' not in row
                     baseline_traces[key] = trace
@@ -149,6 +165,8 @@ def main():
                     assert trace == baseline_traces[key], (key, row.get('initial_wave_override'), nr50, nr51)
             case = dict(song=work['song'], confirmation=row['confirmation'], frame=row['frame'],
                         cycles=sum(t for _, t in trace))
+            if 'initial_noise_override' in row:
+                case['initial_noise_override'] = row['initial_noise_override']
             if args.apu:
                 accesses = sorted([(i, pc, trace[i][1]-4, 'read', a, v) for i, pc, a, v in reads]
                                 + [(i, pc, trace[i][1]-4, 'write', a, v) for i, pc, a, v in writes])

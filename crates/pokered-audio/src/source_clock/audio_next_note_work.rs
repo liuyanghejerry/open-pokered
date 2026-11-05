@@ -1,10 +1,13 @@
 //! Source instruction work for supported next notes; native playback remains
 //! owned by the sequencer. The ISR scheduler consumes this work separately.
 use super::audio_math_work::{calculate_frequency_work, music_note_length_work};
-use super::audio_note_dispatch_work::{music_dispatch_work, MusicCommandState};
+use super::audio_note_dispatch_work::{music_dispatch_with_context, MusicCommandState};
 use super::audio_output_work::{
     duty_and_length_work_cycles, enable_channel_work_cycles, register_pointer_work_cycles,
     wave_frequency_work,
+};
+use super::pitch_slide_instructions::{
+    InitPitchSlideInput, InitPitchSlideInstructions, InitPitchSlideResult,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -13,10 +16,12 @@ pub struct NextNoteWorkResult {
     pub delay: u8,
     pub frequency_low: u8,
     pub cycles: u32,
+    pub pitch_slide: Option<InitPitchSlideResult>,
 }
 
 /// Music channels without a paired SFX, using supported commands. Pitch table
 /// values are source data, not traced timing constants. Noise/SFX are separate.
+#[cfg(test)]
 pub fn music_next_note_work(
     channel: u8,
     commands: &[u8],
@@ -43,6 +48,7 @@ pub fn music_next_note_work(
     )
 }
 
+#[cfg(test)]
 pub fn music_next_note_work_with_sfx(
     channel: u8,
     commands: &[u8],
@@ -56,7 +62,39 @@ pub fn music_next_note_work_with_sfx(
     paired_sfx_active: bool,
     source_pulse_sfx_id: u8,
 ) -> Option<NextNoteWorkResult> {
-    let (state, note, _, dispatch) = music_dispatch_work(channel, commands, state, vibrato_reload)?;
+    music_next_note_work_with_drum(
+        channel,
+        commands,
+        state,
+        vibrato_reload,
+        flags2,
+        fraction,
+        tempo,
+        frequency_low,
+        pitch_base,
+        paired_sfx_active,
+        source_pulse_sfx_id,
+        None,
+    )
+}
+
+pub fn music_next_note_work_with_drum(
+    channel: u8,
+    commands: &[u8],
+    state: MusicCommandState,
+    vibrato_reload: u8,
+    flags2: u8,
+    fraction: u8,
+    tempo: u16,
+    frequency_low: u8,
+    pitch_base: Option<u16>,
+    paired_sfx_active: bool,
+    source_pulse_sfx_id: u8,
+    noise_busy: Option<bool>,
+) -> Option<NextNoteWorkResult> {
+    let (stream, dispatch) =
+        music_dispatch_with_context(channel, commands, state, vibrato_reload, noise_busy)?;
+    let (state, note) = (stream.state, stream.note);
     let (fraction, delay, length) = music_note_length_work(
         channel,
         note,
@@ -68,11 +106,13 @@ pub fn music_next_note_work_with_sfx(
     )?;
     let mut cycles = dispatch + length;
     let mut low = frequency_low;
+    let mut pitch_slide = None;
     if channel == 3 {
         if state.flags1 & 4 == 0 || flags2 & 1 != 0 {
             return None;
         }
         return Some(NextNoteWorkResult {
+            pitch_slide,
             fraction,
             delay,
             frequency_low,
@@ -84,6 +124,7 @@ pub fn music_next_note_work_with_sfx(
         if paired_sfx_active {
             cycles += 8 + 4 + 8 + 8 + 12 + 8 + 8 + 4 + 12 + 16 + 16;
             return Some(NextNoteWorkResult {
+                pitch_slide,
                 fraction,
                 delay,
                 frequency_low,
@@ -102,11 +143,32 @@ pub fn music_next_note_work_with_sfx(
             return None;
         }
         cycles += 12 + 8 + 8 + 12 + 8 + 8 + 24;
-        let (frequency, frequency_cycles) = calculate_frequency_work(pitch_base?, state.octave);
-        cycles += frequency_cycles + 8 + 12 + 8 + 12 + 12;
+        let (mut frequency, frequency_cycles) = calculate_frequency_work(pitch_base?, state.octave);
+        cycles += frequency_cycles + 8 + 12 + 8 + 12;
+        if let Some(slide) = stream.pitch_slide {
+            let mut work = InitPitchSlideInstructions::new(InitPitchSlideInput {
+                channel,
+                current_frequency: frequency,
+                target_frequency: slide.target_frequency,
+                note_delay: delay,
+                length_modifier: slide.length_modifier,
+                flags1: state.flags1,
+            })?;
+            while work.result().is_none() {
+                work.try_step(|_| Ok::<_, core::convert::Infallible>(()))
+                    .ok()?;
+            }
+            let result = work.result()?;
+            frequency = result.returned_frequency;
+            pitch_slide = Some(result);
+            cycles += 8 + 24 + work.cycles();
+        } else {
+            cycles += 12;
+        }
         if paired_sfx_active {
             cycles += 16 + 4 + 8 + 8 + 12 + 8 + 4 + 8 + 8 + 4 + 12 + 12 + 16 + 16;
             return Some(NextNoteWorkResult {
+                pitch_slide,
                 fraction,
                 delay,
                 frequency_low,
@@ -133,6 +195,7 @@ pub fn music_next_note_work_with_sfx(
             wave_frequency_work(channel, source_pulse_sfx_id, 0, modified_frequency)?.1 + 16 + 16;
     }
     Some(NextNoteWorkResult {
+        pitch_slide,
         fraction,
         delay,
         frequency_low: low,
@@ -183,6 +246,7 @@ mod tests {
             assert_eq!(
                 actual,
                 Some(NextNoteWorkResult {
+                    pitch_slide: None,
                     fraction: expected["fraction"].as_u64().unwrap() as u8,
                     delay: expected["delay"].as_u64().unwrap() as u8,
                     frequency_low: expected["frequency_low"].as_u64().unwrap() as u8,
