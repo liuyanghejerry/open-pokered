@@ -91,9 +91,11 @@ fn oak_pc_rating() -> PokemonGame {
         a: true,
         ..MenuInput::none()
     };
-    while pc.phase() == PcPhase::Message {
-        pc_step(pc, &mut game.save_data, a);
+    for frame in 0..4000 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc_step(pc, &mut game.save_data, if frame % 8 == 0 { a } else { MenuInput::none() });
     }
+    assert_eq!(pc.phase(), PcPhase::MainMenu);
     for _ in 0..2 {
         pc_step(
             pc,
@@ -105,8 +107,9 @@ fn oak_pc_rating() -> PokemonGame {
         );
     }
     pc_step(pc, &mut game.save_data, a);
-    while pc.phase() == PcPhase::Message {
-        pc_step(pc, &mut game.save_data, a);
+    for frame in 0..4000 {
+        if pc.phase() != PcPhase::Message { break; }
+        pc_step(pc, &mut game.save_data, if frame % 8 == 0 { a } else { MenuInput::none() });
     }
     assert_eq!(pc.phase(), PcPhase::OaksConfirm);
     pc_step(
@@ -122,10 +125,13 @@ fn oak_pc_rating() -> PokemonGame {
         pc_step(pc, &mut game.save_data, MenuInput::none());
     }
     assert_eq!(pc.phase(), PcPhase::Message);
-    let pages = pc.message_page_count();
-    for _ in 0..pages {
-        pc_step(pc, &mut game.save_data, a);
+    for frame in 0..4000 {
+        if pc.message_lines().concat().contains("学习装置")
+            && pc.rating_visible_chars() == Some(pc.message_lines().concat().chars().count()) { break; }
+        pc_step(pc, &mut game.save_data, if frame % 8 == 0 { a } else { MenuInput::none() });
     }
+    assert!(pc.message_lines().concat().contains("学习装置"));
+    assert_eq!(pc.rating_visible_chars(), Some(pc.message_lines().concat().chars().count()));
     game
 }
 

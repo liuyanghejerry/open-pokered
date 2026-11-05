@@ -1,0 +1,228 @@
+{
+  "code": {
+    "code_commit": "cf1c2d461aa8c258dabc1f195708c11da5862a04",
+    "compiled_files": 2380,
+    "all_compiled_files_match": true,
+    "binary_sha256": "3bda91fabaec9afa22073d1c6f0b4bf5feb7130430ffd56da0b0824d20b80cbe",
+    "source_fingerprint": "9068f442ebb8b05b88a05d251f0d0d0bc5e1174cfd89cc84f337740e6ae0be33"
+  },
+  "master": "303aaceb5f3f4fab13330c05432b9ef2234d6a7f",
+  "master_binary_sha256": "c3a5e4d8eff78f3ea737b5c5cdfe882bcb4a735f152c0b41b22ca2295e4fd0f6",
+  "checks": [
+    {
+      "name": "app-zh",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--test",
+        "visual_verify_zh_descriptions",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 3,
+      "existing_ignored": 2
+    },
+    {
+      "name": "core-zh",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--test",
+        "zh_descriptive_text",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 4,
+      "existing_ignored": 0
+    },
+    {
+      "name": "core-pc",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--lib",
+        "pc_screen",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 76,
+      "existing_ignored": 0
+    },
+    {
+      "name": "app-pc",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--lib",
+        "--features",
+        "debug-server",
+        "pc",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 46,
+      "existing_ignored": 9
+    },
+    {
+      "name": "app-full",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 1014,
+      "existing_ignored": 92
+    },
+    {
+      "name": "core",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 3811,
+      "existing_ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 0,
+      "existing_ignored": 0
+    },
+    {
+      "name": "native-build",
+      "command": [
+        "cargo",
+        "build",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 0,
+      "existing_ignored": 0
+    },
+    {
+      "name": "tui",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-tui",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "passed_executions": 6,
+      "existing_ignored": 6
+    }
+  ],
+  "original_warning": [
+    {
+      "case": "normal",
+      "repeats": 2,
+      "all_events_and_frame_hashes_repeat": true,
+      "yes_no_tick": 47,
+      "wait_ticks": [
+        6,
+        20
+      ]
+    },
+    {
+      "case": "early",
+      "repeats": 2,
+      "all_events_and_frame_hashes_repeat": true,
+      "yes_no_tick": null,
+      "wait_ticks": [
+        6
+      ]
+    }
+  ],
+  "native_warning": [
+    {
+      "case": "normal",
+      "repeats": 2,
+      "first_confirm": 47,
+      "last_phase": "ChangeBoxConfirm"
+    },
+    {
+      "case": "early",
+      "repeats": 2,
+      "first_confirm": null,
+      "last_phase": "Message"
+    }
+  ],
+  "transactions": [
+    {
+      "case": "change-box",
+      "repeats": 2,
+      "independent_continue": 2,
+      "repeat_images_and_stock_equal": true
+    },
+    {
+      "case": "release",
+      "repeats": 2,
+      "independent_continue": 2,
+      "repeat_images_and_stock_equal": true
+    },
+    {
+      "case": "toss",
+      "repeats": 2,
+      "independent_continue": 2,
+      "repeat_images_and_stock_equal": true
+    }
+  ],
+  "fresh_new_game": {
+    "through": "m06",
+    "status": "passed",
+    "seed": 42,
+    "unchanged_source_and_binary": true,
+    "scope": "Fresh shared-dispatch regression; PC uses separately recorded prepared SRAM and actual inputs. Not a full m49 first-clear claim."
+  },
+  "scope": "Original oracle is a prepared emulated ROM state. Native warning/transactions use ordinary cold CONTINUE; actual UI inputs and no recording-time state setters. Two repeats of each case; six independent transaction CONTINUE runs. Font/localization/layout differences are outside this fidelity work.",
+  "gba": {
+    "status": "passed",
+    "default_release_rom_sha256": "e11720451b483501140981153b745aa02b7b9e07d7f056f78fc69ceda8c8cba2",
+    "repeats": 2,
+    "physical_frames_per_run": 4718,
+    "warning_frames_compared": 448,
+    "all_input_commands_stage_images_and_warning_frame_hashes_repeat": true,
+    "sram_unchanged_after_warning_and_cancel": true,
+    "scope": "Ordinary SRAM at cold boot, real physical keys; opening, BILL access paragraphs, early warning pulse, two text acknowledgements, YES/NO cancel, log off and subsequent walking. Full default release, audio/render active, no game-state setters/autopilot/frame skip. Physical GBA time is not equated to native update indices."
+  }
+}
