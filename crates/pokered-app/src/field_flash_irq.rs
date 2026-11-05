@@ -453,18 +453,13 @@ impl PokemonGame {
                         .audio
                         .as_ref()
                         .ok_or("native audio owner unavailable")?;
-                    if irq.audio.is_none() {
-                        let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
-                        irq.audio = Some(Box::new(
-                            audio
-                                .begin_source_audio_frame_with_bus(bank, 0)
-                                .map_err(|e| format!("source audio entry: {e:?}"))?,
-                        ));
-                    }
+                    let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
                     // One exclusive display bus spans the audio continuation;
                     // each instruction still observes its own IO/budget edge.
-                    let result = audio.resume_source_audio_frame_with_runner(
-                        irq.audio.as_mut().unwrap(),
+                    let result = audio.service_source_audio_frame(
+                        &mut irq.audio,
+                        bank,
+                        0,
                         FieldAudioBus {
                             time: self.source_display.display_bus(),
                         },

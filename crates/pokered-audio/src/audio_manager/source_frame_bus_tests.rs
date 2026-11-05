@@ -533,6 +533,105 @@ fn live_manager_resumes_across_refusals_and_commits_one_logical_tick_per_frame()
 }
 
 #[test]
+fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit() {
+    for data in [
+        include_str!("../source_clock/frame_bus_golden.json"),
+        include_str!("../source_clock/percussion_frame_bus_golden.json"),
+        include_str!("../source_clock/slide_frame_bus_golden.json"),
+    ] {
+        let fixture: BusFixture = serde_json::from_str(data).unwrap();
+        for case in fixture.cases.iter().step_by(17) {
+            for allowance in [1, 17, usize::MAX] {
+                let mut manager = at_frame(case);
+                let mut reference = at_frame(case);
+                let mut cursor = None;
+                let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+                let mut iteration = 0;
+                loop {
+                    // Refuse the first instruction even on the new-frame path.
+                    let limit = if iteration == 0 { 0 } else { allowance };
+                    iteration += 1;
+                    let mut actual_ops = Vec::new();
+                    let mut expected_ops = Vec::new();
+                    let actual = manager.service_source_audio_frame(
+                        &mut cursor, case.song.bank(), 0,
+                        |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                            if actual_ops.len() == limit { return Err("yield"); }
+                            actual_ops.push(op);
+                            Ok(execute(apu, op))
+                        },
+                    );
+                    let expected_result = reference.resume_source_audio_frame_with_bus(
+                        &mut expected, |apu, op| {
+                            if expected_ops.len() == limit { return Err("yield"); }
+                            expected_ops.push(op);
+                            Ok(execute(apu, op))
+                        },
+                    );
+                    assert_eq!(actual, expected_result);
+                    assert_eq!(actual_ops, expected_ops);
+                    assert_eq!(cursor.as_deref(), Some(&expected));
+                    assert_eq!(native(&manager), native(&reference));
+                    assert_eq!(manager.apu.playback_state(), reference.apu.playback_state());
+                    if actual.is_ok() {
+                        let repeated = manager.service_source_audio_frame(
+                            &mut cursor, case.song.bank(), 0,
+                            |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, &str> {
+                                panic!("completed frame must not replay")
+                            },
+                        );
+                        assert_eq!(repeated, actual);
+                        assert_eq!(native(&manager), native(&reference));
+                        break;
+                    }
+                }
+            }
+            // Also exercise entry and completion within one exclusive borrow.
+            let mut manager = at_frame(case);
+            let mut reference = at_frame(case);
+            let mut cursor = None;
+            let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+            let mut actual_ops = Vec::new();
+            let mut expected_ops = Vec::new();
+            let actual = manager.service_source_audio_frame(&mut cursor, case.song.bank(), 0,
+                |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                    actual_ops.push(op); Ok::<_, ()>(execute(apu, op))
+                });
+            let expected_result = reference.resume_source_audio_frame_with_bus(&mut expected,
+                |apu, op| { expected_ops.push(op); Ok::<_, ()>(execute(apu, op)) });
+            assert_eq!(actual, expected_result);
+            assert!(actual.is_ok());
+            assert_eq!(actual_ops, expected_ops);
+            assert_eq!(native(&manager), native(&reference));
+            assert_eq!(manager.apu.playback_state(), reference.apu.playback_state());
+        }
+    }
+}
+
+#[test]
+fn exclusive_source_service_rejects_unsupported_entry_and_changed_retained_state() {
+    let mut manager = powered(MusicId::POKECENTER);
+    let mut cursor = None;
+    let before = native(&manager);
+    assert!(matches!(manager.service_source_audio_frame(&mut cursor, 31, 0,
+        |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> { panic!("invalid entry") }),
+        Err(AudioAdmissionError::Preflight(_))));
+    assert!(cursor.is_none());
+    assert_eq!(native(&manager), before);
+    let mut instructions = 0;
+    assert_eq!(manager.service_source_audio_frame(&mut cursor, 2, 0,
+        |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+            if instructions == 1 { return Err("yield"); }
+            instructions += 1; Ok(execute(apu, op))
+        }), Err(AudioAdmissionError::Admission(FrameStepError::Clock("yield"))));
+    manager.sequencer.channels[0].data[0] ^= 1;
+    assert!(matches!(manager.service_source_audio_frame(&mut cursor, 2, 0,
+        |_: &mut crate::apu::Apu, _: ApuInstruction| -> Result<Option<u8>, ()> { panic!("changed program") }),
+        Err(AudioAdmissionError::SourceFailed(_))));
+    assert!(cursor.as_ref().unwrap().cycles() > 0);
+}
+
+#[test]
 fn both_source_entry_modes_reject_pending_volume_and_native_pause() {
     use crate::source_clock::AudioClockError;
     for music in [MusicId::POKECENTER, MusicId::SILPH_CO, MusicId::DUNGEON3] {

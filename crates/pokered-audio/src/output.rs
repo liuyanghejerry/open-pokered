@@ -306,6 +306,21 @@ impl AudioOutput {
         ))?.resume_source_audio_frame_with_runner(work, bus)
     }
 
+    /// Start or resume one retained IRQ frame while holding the audio lock.
+    pub fn service_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &self,
+        cursor: &mut Option<alloc::boxed::Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<B::Error>>,
+    > {
+        self.manager.lock().map_err(|_| crate::source_clock::AudioAdmissionError::Preflight(
+            crate::source_clock::AudioClockError::OutputUnavailable,
+        ))?.service_source_audio_frame(cursor, bank, mute, bus)
+    }
+
     pub fn update_frame(&self) {
         if let Ok(mut mgr) = self.manager.lock() {
             mgr.update_frame();

@@ -302,9 +302,19 @@ impl PrepareOamWork {
         self.next == self.code.len()
     }
     /// Retain all observable instructions/effects and the exact cursor at a
-    /// refused instruction. Only the bus can opt into an effect-free prefix.
+    /// refused instruction. Only the bus can prove that an accepted prefix
+    /// has no observable intermediate effect (in particular, no live DMA).
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         while !self.finished() {
+            let count = bus.execute_shadow_oam_run(
+                self.code[self.next..].iter()
+                    .take_while(|i| i.after.is_none())
+                    .map(|i| i.bus),
+            )?;
+            if count != 0 {
+                self.next += count;
+                continue;
+            }
             let count = bus.execute_plain_run(
                 self.code[self.next..].iter()
                     .take_while(|i| i.after.is_none() && i.bus.access.is_none())

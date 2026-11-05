@@ -655,14 +655,14 @@ impl AudioManager {
     >(
         &mut self,
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
-        mut bus: B,
+        bus: B,
     ) -> Result<
         crate::source_clock::AudioFrameWork,
         crate::source_clock::AudioAdmissionError<
             crate::source_clock::frame_instructions::FrameStepError<B::Error>,
         >,
     > {
-        use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
+        use crate::source_clock::{AudioAdmissionError, AudioClockError};
         if !work.has_bus_output() {
             return Err(AudioAdmissionError::WrongMode);
         }
@@ -684,6 +684,54 @@ impl AudioManager {
         let prepared = self
             .prepare_source_frame()
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
+        self.run_prepared_source_audio_frame(work, prepared, bus)
+    }
+
+    /// Start and run an IRQ's audio frame under one exclusive manager borrow.
+    /// A new cursor and its completion checks come from the same native state,
+    /// so preparing and fingerprinting that state a second time is unnecessary.
+    /// Retained cursors still use every ordinary resume guard, including after
+    /// a refused first instruction. Completion stays in the cursor until its
+    /// caller explicitly releases it; retries never replay a native audio tick.
+    pub fn service_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &mut self,
+        cursor: &mut Option<Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<B::Error>,
+        >,
+    > {
+        use crate::source_clock::{frame_instructions::SourceAudioFrame, AudioAdmissionError, AudioClockError};
+        if let Some(work) = cursor.as_mut() {
+            if work.bank() != bank || work.mute() != mute {
+                return Err(Self::source_frame_resume_error(work, AudioClockError::UnsupportedSoundBank));
+            }
+            return self.resume_source_audio_frame_with_runner(work, bus);
+        }
+        let song = self.source_frame_song(bank, mute).map_err(AudioAdmissionError::Preflight)?;
+        let prepared = self.prepare_source_frame().map_err(AudioAdmissionError::Preflight)?;
+        let work = SourceAudioFrame::new_with_bus(&self.engine.sequencer, song, bank, mute)
+            .map_err(AudioAdmissionError::Preflight)?;
+        *cursor = Some(Box::new(work));
+        self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), prepared, bus)
+    }
+
+    fn run_prepared_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &mut self,
+        work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
+        prepared: crate::source_clock::PreparedAudioFrame,
+        mut bus: B,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<B::Error>,
+        >,
+    > {
+        use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
         work.run_with_bus(&self.engine.sequencer, &mut self.engine.apu, &mut bus)
             .map_err(AudioAdmissionError::Admission)?;
         if prepared.work()

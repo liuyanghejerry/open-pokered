@@ -25,23 +25,28 @@ use pokered_core::overworld::sprite_bank_call_work::SpriteBankCallWork;
 // Retained images need only four shades; two GBA linear copies exhaust the heap.
 type FlashFrame = dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>;
 
-#[cfg(test)]
-fn retain_flash_frame<const LINEAR: bool>(
-    frame: dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor, LINEAR>,
-) -> FlashFrame {
-    let mut retained = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
-    copy_flash_frame(&frame, &mut retained);
-    retained
+fn copy_flash_frame(frame: &FrameBuffer, retained: &mut FlashFrame) {
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    retained.copy_from(frame);
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    pack_flash_frame(frame, retained);
 }
 
-fn copy_flash_frame<const LINEAR: bool>(
-    frame: &dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor, LINEAR>,
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn pack_flash_frame(
+    frame: &dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
     retained: &mut FlashFrame,
 ) {
-    for y in 0..144 {
-        for x in 0..160 {
-            retained.set_pixel_index(x, y, frame.get_index(x, y).unwrap());
+    assert_eq!(frame.indices().len(), retained.packed().len() * 4);
+    for (pixels, planes) in frame.indices().chunks_exact(8).zip(retained.packed_mut().chunks_exact_mut(2)) {
+        let mut low = 0;
+        let mut high = 0;
+        for &pixel in pixels {
+            low = (low << 1) | (pixel & 1);
+            high = (high << 1) | ((pixel >> 1) & 1);
         }
+        planes[0] = low;
+        planes[1] = high;
     }
     retained.set_palette(*frame.display_palette());
 }
@@ -870,6 +875,10 @@ mod tests {
                 planes.copy_from_slice(&((base + i) as u16).to_le_bytes());
             }
             unpack_flash_frame(&packed, &mut linear);
+            let mut roundtrip = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            pack_flash_frame(&linear, &mut roundtrip);
+            assert_eq!(roundtrip.packed(), packed.packed());
+            assert_eq!(roundtrip.display_palette(), packed.display_palette());
             for (i, planes) in packed.packed().chunks_exact(2).enumerate() {
                 for bit in 0..8 {
                     let expected =
@@ -902,7 +911,8 @@ mod tests {
             .flat_map(|y| (0..160).map(move |x| (x, y)))
             .map(|(x, y)| linear.get_pixel(x, y).unwrap())
             .collect();
-        let packed = retain_flash_frame(linear);
+        let mut packed = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        pack_flash_frame(&linear, &mut packed);
         assert_eq!(packed.packed().len(), 5760);
         for (i, color) in expected.into_iter().enumerate() {
             assert_eq!(
