@@ -1,3 +1,8 @@
+Current source and regression follow-up: [Indigo indoor reload](indigo/README.md).
+The branch now includes the Party resource/memory fixes and master CI disk fix.
+The indoor partial-slot blocker is repaired and a new complete route is running.
+Earlier records below retain their original scope and timing qualifications.
+
 # START close: restore the map before returning control
 
 Closing START with B, START or EXIT previously switched straight to the field. The shared runtime now executes `CloseStartMenu` and its `CloseTextDisplay` resource work, retaining the menu/map rasters and the foreground input owner until completion. Textbox patterns, sprite reloads, map upload, OAM and IRQ work determine the duration; there is no scene-total countdown. This is one independently reviewable part of #144, built on #439.
