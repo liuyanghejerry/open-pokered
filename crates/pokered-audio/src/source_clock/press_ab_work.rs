@@ -8,6 +8,19 @@ use super::audio_output_work::{
 
 pub const SOURCE_PRESS_AB_ID: u8 = 144;
 pub const SOURCE_SWAP_ID: u8 = 174;
+pub const SOURCE_START_MENU_ID: u8 = 143;
+
+pub(crate) fn source_noise_id(native_id: u8, data: &[u8]) -> Option<u8> {
+    let source_id = if native_id == crate::sfx_data::SfxId::StartMenu as u8 {
+        SOURCE_START_MENU_ID
+    } else if (1..=19).contains(&native_id) {
+        native_id
+    } else {
+        return None;
+    };
+    (super::press_ab_instructions::PressAbInstructions::noise_data(source_id) == Some(data))
+        .then_some(source_id)
+}
 
 pub(crate) fn source_pulse_id(channel: usize, native_id: u8, data: &[u8]) -> Option<u8> {
     use crate::sfx_data::{self, SfxId};
