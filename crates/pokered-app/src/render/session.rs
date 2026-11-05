@@ -2061,7 +2061,7 @@ impl RenderSession {
             .zip(last_main_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
         let start_menu_screen = game.state.screen == GameScreen::StartMenu;
-        let start_menu = start_menu_screen
+        let start_menu = (start_menu_screen && !field_flash_active)
             .then(|| StartMenuVisualKey::new(game))
             .flatten();
         let start_menu_cursor_change = start_menu

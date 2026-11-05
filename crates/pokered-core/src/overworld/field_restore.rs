@@ -573,6 +573,20 @@ impl FieldRestoreWork {
         Self::for_destination(input, true)
     }
 
+    /// CloseStartMenu reloads textbox patterns, then enters CloseTextDisplay.
+    /// It does not white out the palettes or reload the entire party font.
+    pub fn close_start_menu(input: RestoreInput) -> Self {
+        let mut operations = vec![RestoreOperation::VideoPatternCopy(PatternCopy {
+            source: PatternSource::TextBox,
+            source_offset: 0,
+            destination: 0x9600,
+            tiles: 32,
+            format: CopyFormat::TwoBpp,
+        })];
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
     fn for_destination(input: RestoreInput, start_menu: bool) -> Self {
         use RestoreOperation::*;
         let first = SpritePatternPlan::new(&input.pictures, false);
@@ -621,6 +635,12 @@ impl FieldRestoreWork {
             operations.extend([LoadMapPalettes, UpdateSprites, Return]);
             return Self { input, operations, next: 0 };
         }
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
+    fn close_text_display(input: &RestoreInput, operations: &mut Vec<RestoreOperation>) {
+        use RestoreOperation::*;
         operations.extend([
             SetWindowY(144),
             WaitVBlanks(1),
@@ -638,7 +658,7 @@ impl FieldRestoreWork {
                 operations.push(SetSpriteSet(set));
             }
             operations.push(InstallSpriteSlots(second.slots));
-            Self::sprite_copies(&input, font_loaded, second.copies, &mut operations);
+            Self::sprite_copies(input, font_loaded, second.copies, operations);
         } else {
             // InitOutsideMapSprites.skipLoadingSpriteSet bypasses only the
             // transfers. Its storeVRAMSlotsLoop still remaps all live raw
@@ -649,14 +669,9 @@ impl FieldRestoreWork {
         }
         operations.push(SetFontFlags(input.font_flags & !1));
         if !input.fly_warp {
-            Self::player_copies(input.player_source, &mut operations);
+            Self::player_copies(input.player_source, operations);
         }
         operations.extend([LoadCurrentMapView, UpdateSprites, Return]);
-        Self {
-            input,
-            operations,
-            next: 0,
-        }
     }
     fn player_copies(source: PatternSource, operations: &mut Vec<RestoreOperation>) {
         for (source_offset, destination) in [(0, 0x8000), (192, 0x8800)] {
@@ -863,6 +878,34 @@ mod tests {
             font_flags: 1,
             player_source: PatternSource::WalkingPlayer,
             fly_warp: false,
+        }
+    }
+
+    #[test]
+    fn start_close_reloads_textbox_and_upper_sprites_without_a_party_whiteout() {
+        use RestoreOperation::*;
+        for outdoor in [None, Some(3)] {
+            let mut raw = input();
+            raw.outdoor_set = outdoor;
+            let work = FieldRestoreWork::close_start_menu(raw);
+            assert_eq!(work.operations[0], VideoPatternCopy(PatternCopy {
+                source: PatternSource::TextBox,
+                source_offset: 0,
+                destination: 0x9600,
+                tiles: 32,
+                format: CopyFormat::TwoBpp,
+            }));
+            assert!(!work.operations.iter().any(|op| matches!(op,
+                WhitePalettes | DisableLcd | ClearShadowOam | BulkPatternCopy(_)
+                | VideoPatternCopy(PatternCopy { source: PatternSource::Font, .. }))));
+            let sprite_copies: Vec<_> = work.operations.iter().filter_map(|op| match op {
+                VideoPatternCopy(copy) if matches!(copy.source, PatternSource::Sprite(_)) => Some(copy),
+                _ => None,
+            }).collect();
+            assert_eq!(sprite_copies.len(), 2, "duplicate raw IDs and still pictures need no upper copy");
+            assert!(sprite_copies.iter().all(|copy| copy.source_offset == 192 && copy.tiles == 12));
+            assert_eq!(&work.operations[work.operations.len() - 3..],
+                &[LoadCurrentMapView, UpdateSprites, Return]);
         }
     }
 

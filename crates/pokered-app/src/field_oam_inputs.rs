@@ -31,19 +31,61 @@ fn facing(facing: pokered_core::overworld::Direction) -> u8 {
 pub(super) fn field_oam_input(field: &OverworldScreen,
     time: &pokered_core::overworld::display_work_time::DisplayWorkTime,
     slots: &[SpriteSlot]) -> Result<pokered_core::overworld::prepare_oam_work::PrepareOamState, FieldOamInputError> {
+    field_oam_input_with_grass(field, time, slots, None)
+}
+
+pub(super) fn field_oam_input_with_grass(field: &OverworldScreen,
+    time: &pokered_core::overworld::display_work_time::DisplayWorkTime,
+    slots: &[SpriteSlot], grass: Option<&[Option<u8>; 16]>) -> Result<pokered_core::overworld::prepare_oam_work::PrepareOamState, FieldOamInputError> {
     let enabled = time.sprite_updates_enabled().ok_or(FieldOamInputError::UnknownSpriteControl)?;
     let movement_flags = u8::from(field.state.standing_on_door)
         | (u8::from(field.state.exiting_door) << 1)
         | (u8::from(field.state.standing_on_warp) << 2);
     Ok(pokered_core::overworld::prepare_oam_work::PrepareOamState {
-        enabled, movement_flags, sprites: field_oam_sprites(field,slots)?,
+        enabled, movement_flags, sprites: field_oam_sprites_with_grass(field, slots, grass)?,
     })
+}
+
+/// Freeze the native stationary renderer's grass inputs at START close.
+/// This samples the live map (including block edits), not an original WRAM
+/// register. Hidden images leave their unread priority explicitly unknown.
+pub(super) fn stationary_grass_inputs(field: &OverworldScreen,
+    tiles: &[u8]) -> Result<[Option<u8>; 16], FieldOamInputError> {
+    use FieldOamInputError::*;
+    let map = field.map_data.as_ref().ok_or(GrassPriorityNotTracked)?;
+    let grass = pokered_data::tileset_data::get_tileset_header(map.tileset).grass_tile;
+    let priority = |x: usize, y: usize| -> Result<u8, FieldOamInputError> {
+        if x >= 20 || y >= 18 || tiles.len() != 360 { return Err(GrassPriorityNotTracked); }
+        Ok(if grass == Some(tiles[y * 20 + x]) { 0x80 } else { 0 })
+    };
+    let mut values = [None; 16];
+    if field.player_presentation.current_oam_image(field.state.current_map)
+        .ok_or(MissingPlayerPublication)?.is_some() {
+        values[0] = Some(priority(8, 9)?);
+    }
+    for (i, npc) in field.npc_states.iter().enumerate() {
+        if i >= 15 { return Err(TooManySprites); }
+        let (image, pixels) = field.npc_presentation.current_oam_input(field.state.current_map, i)
+            .ok_or(MissingNpcPublication(i))?;
+        if npc.sprite_id != 0 && npc.visible && image.visible {
+            // CheckSpriteAvailability compares the top-right background
+            // cell after GetTileSpriteStandsOn's bottom-left address.
+            values[i + 1] = Some(priority(usize::from(pixels.x / 8) + 1,
+                usize::from((pixels.y.wrapping_add(4) & 0xf0) / 8))?);
+        }
+    }
+    Ok(values)
 }
 
 pub(super) fn field_oam_sprites(
     field: &OverworldScreen,
     slots: &[SpriteSlot],
 ) -> Result<Vec<OamSprite>, FieldOamInputError> {
+    field_oam_sprites_with_grass(field, slots, None)
+}
+
+fn field_oam_sprites_with_grass(field: &OverworldScreen, slots: &[SpriteSlot],
+    grass: Option<&[Option<u8>; 16]>) -> Result<Vec<OamSprite>, FieldOamInputError> {
     use FieldOamInputError::*;
     if field.npc_states.len() > 15 {
         return Err(TooManySprites);
@@ -68,7 +110,10 @@ pub(super) fn field_oam_sprites(
     // A genuinely suppressed image never reaches the OAM attribute branch.
     // Its unread grass byte remains opaque; do not invent a visible zero-
     // priority sprite. Visible actors still require a real native register.
-    if player.is_some() && grass_requires_register { return Err(GrassPriorityNotTracked); }
+    let priority = |slot| {
+        if !grass_requires_register { Ok(0) }
+        else { grass.and_then(|values| values[slot]).ok_or(GrassPriorityNotTracked) }
+    };
 
     let mut sprites = vec![
         OamSprite {
@@ -91,7 +136,7 @@ pub(super) fn field_oam_sprites(
         y: 60,
         adjusted_x: 64,
         adjusted_y: 64,
-        grass: 0,
+        grass: if player.is_some() { priority(0)? } else { 0 },
     };
     for (i, npc) in field.npc_states.iter().enumerate() {
         let (image, pixels) = field
@@ -101,7 +146,7 @@ pub(super) fn field_oam_sprites(
         let index = if npc.sprite_id == 0 || !image.visible || !npc.visible {
             0xff
         } else {
-            if grass_requires_register { return Err(GrassPriorityNotTracked); }
+            priority(i + 1)?;
             let slot = slots
                 .iter()
                 .find(|slot| slot.picture == npc.sprite_id)
@@ -132,7 +177,7 @@ pub(super) fn field_oam_sprites(
             y: pixels.y,
             adjusted_x: pixels.adjusted_x,
             adjusted_y: pixels.adjusted_y,
-            grass: 0,
+            grass: if index != 0xff { priority(i + 1)? } else { 0 },
         };
     }
     Ok(sprites)
@@ -142,6 +187,28 @@ pub(super) fn field_oam_sprites(
 mod tests {
     use super::*;
     use pokered_data::{impl_traits::PokemonRedData, maps::MapId};
+    #[test]
+    fn stationary_native_grass_reads_live_background_and_only_visible_slots() {
+        let mut field = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+        field.state.player.x = 20;
+        field.state.player.y = 30;
+        field.publish_npc_frame(false);
+        let mut tiles = crate::render::stationary_map_tile_snapshot(&field).unwrap().tiles;
+        let grass = pokered_data::tileset_data::get_tileset_header(field.map_data.as_ref().unwrap().tileset)
+            .grass_tile.unwrap();
+        tiles[9 * 20 + 8] = grass;
+        let inputs = stationary_grass_inputs(&field, &tiles).unwrap();
+        assert_eq!(inputs[0], Some(0x80));
+        let slots = pokered_core::overworld::field_restore::SpritePatternPlan::new(
+            &field.field_restore_input(1).pictures, false).slots;
+        assert_eq!(field_oam_sprites_with_grass(&field, &slots, Some(&inputs)).unwrap()[0].grass, 0x80);
+        tiles[9 * 20 + 8] = grass.wrapping_add(1);
+        assert_eq!(stationary_grass_inputs(&field, &tiles).unwrap()[0], Some(0));
+        field.player_presentation.suppress_current_image();
+        field.npc_presentation.suppress_current_images();
+        assert!(stationary_grass_inputs(&field, &tiles).unwrap().iter().all(Option::is_none));
+    }
+
     #[test]
     fn genuinely_suppressed_grass_images_skip_unread_priority_but_visible_images_still_refuse_unknown() {
         let mut field = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);

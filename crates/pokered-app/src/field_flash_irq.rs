@@ -82,6 +82,7 @@ pub(super) struct FieldIrq {
     pub map_tiles: crate::render::MapTileSnapshot,
     pub ui: super::super::field_video_inputs::NativeUiTiles,
     pub background_is_map: bool,
+    native_grass: Option<[Option<u8>; 16]>,
     pub portion: u8,
     pub shadows: VBlankVideoShadows,
     pub completed: u64,
@@ -91,6 +92,10 @@ impl FieldIrq {
     pub(super) fn new(game: &mut PokemonGame, flow: &mut FieldFlash) -> Result<Self, String> {
         let map_tiles = crate::render::stationary_map_tile_snapshot(&game.overworld)
             .map_err(|e| format!("native map input: {e:?}"))?;
+        let native_grass = if flow.origin == RestorationOrigin::StartMenu {
+            Some(super::super::field_oam_inputs::stationary_grass_inputs(&game.overworld, &map_tiles.tiles)
+                .map_err(|e| format!("native stationary grass: {e:?}"))?)
+        } else { None };
         let resources = game
             .resources
             .as_mut()
@@ -184,6 +189,7 @@ impl FieldIrq {
             map_tiles,
             ui,
             background_is_map: false,
+            native_grass,
             portion: 0,
             shadows: VBlankVideoShadows {
                 scx: 0,
@@ -328,10 +334,11 @@ impl PokemonGame {
                 } else {
                     &flow.slots
                 };
-                let input = super::super::field_oam_inputs::field_oam_input(
+                let input = super::super::field_oam_inputs::field_oam_input_with_grass(
                     &self.overworld,
                     &*self.source_display,
                     slots,
+                    irq.native_grass.as_ref(),
                 )
                 .map_err(|e| format!("native actor input: {e:?}"))?;
                 PrepareOamWork::new(input)

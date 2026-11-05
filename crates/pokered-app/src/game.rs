@@ -3577,7 +3577,8 @@ impl PokemonGame {
         }
         // Full-screen sequences own their OAM; only map-backed menus
         // continue publishing the frozen field sprites under the overlay.
-        if matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
+        if self.field_flash.is_none()
+            && matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
             self.overworld.publish_npc_frame(true);
         }
         self.sync_bag_list_memory();
@@ -3900,7 +3901,7 @@ impl PokemonGame {
             return;
         }
 
-        if self.state.screen == GameScreen::PartyScreen && self.field_flash.is_some() {
+        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu) && self.field_flash.is_some() {
             self.update_field_flash(input);
             return;
         }
@@ -5241,7 +5242,10 @@ impl PokemonGame {
                     self.start_menu.wait_for_menu_cursor();
                 }
                 match menu_action {
-                    StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
+                    StartMenuAction::Close => {
+                        self.begin_start_menu_restore(input);
+                        ScreenAction::Continue
+                    },
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
                     }
@@ -7225,7 +7229,8 @@ impl PokemonGame {
             "field_menu": match &self.state.screen {
                 GameScreen::StartMenu => Some(serde_json::json!({
                     "kind": "start", "cursor": self.start_menu.cursor(),
-                    "ready_for_input": self.start_menu.input_ready(),
+                    "ready_for_input": self.field_flash.is_none() && self.start_menu.input_ready(),
+                    "restoring_map": self.field_flash.is_some(),
                     "published_menu_rows": self.start_menu.entry_visual().1,
                     "items": self.start_menu.items().iter().map(|item| format!("{:?}", item)).collect::<Vec<_>>(),
                 })),
@@ -8486,6 +8491,10 @@ impl PokemonGame {
                 );
             }
             GameScreen::StartMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_overworld(
                     &mut self.overworld,
                     &mut self.resources,
