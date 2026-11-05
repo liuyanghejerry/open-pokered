@@ -17,6 +17,7 @@ pub enum PatternSource {
     Font,
     TextBox,
     Flower(u8),
+    Tileset(u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -551,6 +552,7 @@ pub enum RestoreOperation {
     EnterColdSpriteBank,
     LeaveColdSpriteBank,
     LoadCurrentMapView,
+    RebuildMenuMapView,
     Return,
 }
 
@@ -616,6 +618,45 @@ impl FieldRestoreWork {
             UpdateSprites,
             Return,
         ];
+        Self { input, operations, next: 0 }
+    }
+
+    /// ShowPokedexMenu and StartMenu_TrainerInfo have different callers of
+    /// ReloadMapData: only the card reloads the font, only the list delays
+    /// three frames before AND after the map reload. Neither closes START.
+    pub fn fullscreen_menu_return(input: RestoreInput, tileset: u8, trainer: bool) -> Self {
+        use RestoreOperation::*;
+        let mut operations = vec![WhitePalettes];
+        if trainer {
+            operations.extend([
+                VideoPatternCopy(PatternCopy {
+                    source: PatternSource::Font, source_offset: 0,
+                    destination: 0x8800, tiles: 128, format: CopyFormat::OneBppDouble,
+                }),
+                LoadScreenBuffer2,
+            ]);
+        } else {
+            operations.push(WaitVBlanks(3));
+        }
+        operations.extend([
+            DefaultPaletteCommand,
+            DisableLcd,
+            BulkPatternCopy(PatternCopy {
+                source: PatternSource::TextBox, source_offset: 0,
+                destination: 0x9600, tiles: 32, format: CopyFormat::TwoBpp,
+            }),
+            RebuildMenuMapView,
+            LoadCurrentMapView,
+            BulkPatternCopy(PatternCopy {
+                source: PatternSource::Tileset(tileset), source_offset: 0,
+                destination: 0x9000, tiles: 96, format: CopyFormat::TwoBpp,
+            }),
+            EnableLcd,
+        ]);
+        if !trainer { operations.extend([LoadScreenBuffer2, WaitVBlanks(3)]); }
+        operations.push(LoadMapPalettes);
+        if !trainer { operations.push(UpdateSprites); }
+        operations.push(Return);
         Self { input, operations, next: 0 }
     }
 

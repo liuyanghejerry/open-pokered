@@ -22,6 +22,14 @@ pub(crate) enum MapTileSnapshotError {
 pub(crate) fn stationary_map_tile_snapshot(
     screen: &OverworldScreen,
 ) -> Result<MapTileSnapshot, MapTileSnapshotError> {
+    map_tile_snapshot(screen, false)
+}
+
+pub(crate) fn surrounding_map_tile_snapshot(screen: &OverworldScreen) -> Result<MapTileSnapshot, MapTileSnapshotError> {
+    map_tile_snapshot(screen, true)
+}
+
+fn map_tile_snapshot(screen: &OverworldScreen, surrounding: bool) -> Result<MapTileSnapshot, MapTileSnapshotError> {
     use MapTileSnapshotError::*;
     let map = screen.state.current_map;
     let player = (screen.state.player.x, screen.state.player.y);
@@ -64,13 +72,15 @@ pub(crate) fn stationary_map_tile_snapshot(
         i32::from(player.0) * 2 - PLAYER_SCREEN_X / TILE_SIZE as i32,
         i32::from(player.1) * 2 - (PLAYER_SCREEN_Y - ACTOR_CELL_Y_OFFSET) / TILE_SIZE as i32,
     );
-    let mut tiles = Vec::with_capacity(20 * 18);
-    for y in 0..18 {
+    let (columns, rows) = if surrounding { (24, 20) } else { (20, 18) };
+    let sampled_origin = if surrounding { (origin.0.div_euclid(4) * 4, origin.1.div_euclid(4) * 4) } else { origin };
+    let mut tiles = Vec::with_capacity((columns * rows) as usize);
+    for y in 0..rows {
         let mut cache = None;
-        for x in 0..20 {
+        for x in 0..columns {
             tiles.push(
                 source
-                    .tile(origin.0 + x, origin.1 + y, &mut cache)
+                    .tile(sampled_origin.0 + x, sampled_origin.1 + y, &mut cache)
                     .ok_or(MissingBlockTile)?,
             );
         }

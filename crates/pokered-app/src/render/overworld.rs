@@ -3663,4 +3663,4 @@ mod fly_arrival_tests {
 mod silph_departure_tests;
 
 mod map_tile_snapshot;
-pub(crate) use map_tile_snapshot::{stationary_map_tile_snapshot, MapTileSnapshot, MapTileSnapshotError};
+pub(crate) use map_tile_snapshot::{stationary_map_tile_snapshot, surrounding_map_tile_snapshot, MapTileSnapshot, MapTileSnapshotError};

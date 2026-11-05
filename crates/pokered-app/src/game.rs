@@ -3902,7 +3902,7 @@ impl PokemonGame {
         }
 
         if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu
-            | GameScreen::Bag | GameScreen::OptionsMenu) && self.field_flash.is_some() {
+            | GameScreen::Bag | GameScreen::OptionsMenu | GameScreen::Pokedex | GameScreen::TrainerCard) && self.field_flash.is_some() {
             self.update_field_flash(input);
             return;
         }
@@ -5972,7 +5972,9 @@ impl PokemonGame {
                         } else if self.bag_viewer_return {
                             ScreenAction::Transition(GameScreen::Bag)
                         } else if self.pokedex_screen.from_list() {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_fullscreen_menu_restore(input, false);
+                            self.update_field_flash(input);
+                            ScreenAction::Continue
                         } else {
                             ScreenAction::Transition(GameScreen::Overworld)
                         }
@@ -5987,7 +5989,11 @@ impl PokemonGame {
                 };
                 match self.trainer_card_screen.update_frame(tc_input) {
                     // RedisplayStartMenu (start_sub_menus.asm:475).
-                    TrainerCardAction::Closed => ScreenAction::Transition(GameScreen::StartMenu),
+                    TrainerCardAction::Closed => {
+                        self.begin_fullscreen_menu_restore(input, true);
+                        self.update_field_flash(input);
+                        ScreenAction::Continue
+                    }
                     TrainerCardAction::Active => ScreenAction::Continue,
                 }
             }
@@ -8639,6 +8645,10 @@ impl PokemonGame {
                 draw_diploma(&self.player_name, &mut self.resources, frame_buffer, self.state.config.language);
             }
             GameScreen::Pokedex => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 let is_zh = matches!(
                     self.state.config.language,
                     pokered_core::game_state::Lang::Zh
@@ -8652,6 +8662,10 @@ impl PokemonGame {
                 );
             }
             GameScreen::TrainerCard => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_trainer_card(
                     &self.player_name,
                     self.save_data.game_data.player_money,

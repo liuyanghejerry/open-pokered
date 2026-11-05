@@ -96,6 +96,10 @@ impl PatternRomBinding {
             SurfingPlayer => (5, 0x76c0, 384, CopyFormat::TwoBpp),
             Font => (4, 0x5a80, 1024, CopyFormat::OneBppDouble),
             TextBox => (4, 0x6288, 512, CopyFormat::TwoBpp),
+            Tileset(raw) => {
+                let metadata = super::tileset_pattern_metadata::tileset_pattern_metadata(raw)?;
+                (metadata.bank, metadata.address, 1536, CopyFormat::TwoBpp)
+            }
             Flower(frame @ 1..=3) => (
                 0,
                 0x1f19 + u16::from(frame - 1) * 16,

@@ -359,11 +359,11 @@ impl PokemonGame {
                 &irq.ui.tiles
             };
             let (counter1, counter2) = self.overworld.tile_anim.counters();
-            let animations = match self.overworld.tile_anim.kind() {
+            let animations = if flow.origin == RestorationOrigin::TrainerCard { 0 } else { match self.overworld.tile_anim.kind() {
                 pokered_core::overworld::presentation::TileAnimKind::None => 0,
                 pokered_core::overworld::presentation::TileAnimKind::Water => 1,
                 pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
-            };
+            } };
             let video = VBlankVideoWork::select(
                 true,
                 self.source_display.device().pending_interrupts(),
