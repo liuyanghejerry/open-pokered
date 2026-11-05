@@ -1,0 +1,293 @@
+{
+  "scope": "Skip empty-NPC grass-priority setup without changing Save behavior or performance thresholds",
+  "base": "69984aed7ff64e457466a0ab890769acc2a5dc28",
+  "base_ci_failure": "https://github.com/liuyanghejerry/open-pokered/actions/runs/42028959386/job/127250179222",
+  "before": {
+    "suite": "autopilot-v1",
+    "emulator": "mGBA 0.10.5 core, full audio/video, no frameskip, skip BIOS",
+    "scenarios": {
+      "intro-title-v1": {
+        "scenario": "intro-title-v1",
+        "samples": 250,
+        "update_avg_ticks": 105,
+        "update_core_avg_ticks": 97,
+        "update_flush_avg_ticks": 1,
+        "renders": 115,
+        "draw_per_frame_ticks": 1217,
+        "draw_max_ticks": 9873,
+        "present_per_frame_ticks": 354,
+        "present_max_ticks": 782
+      },
+      "oak-dialogue-v1": {
+        "scenario": "oak-dialogue-v1",
+        "samples": 600,
+        "update_avg_ticks": 172,
+        "update_core_avg_ticks": 162,
+        "update_flush_avg_ticks": 1,
+        "renders": 307,
+        "draw_per_frame_ticks": 2910,
+        "draw_max_ticks": 9068,
+        "present_per_frame_ticks": 392,
+        "present_max_ticks": 782
+      },
+      "overworld-idle-v1": {
+        "scenario": "overworld-idle-v1",
+        "samples": 1400,
+        "update_avg_ticks": 383,
+        "update_core_avg_ticks": 373,
+        "update_flush_avg_ticks": 1,
+        "renders": 0,
+        "draw_per_frame_ticks": 0,
+        "draw_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "present_max_ticks": 0
+      },
+      "overworld-movement-v1": {
+        "scenario": "overworld-movement-v1",
+        "samples": 240,
+        "update_avg_ticks": 395,
+        "update_core_avg_ticks": 385,
+        "update_flush_avg_ticks": 1,
+        "renders": 24,
+        "draw_per_frame_ticks": 210,
+        "draw_max_ticks": 2910,
+        "present_per_frame_ticks": 70,
+        "present_max_ticks": 771
+      },
+      "battle-entry-v1": {
+        "scenario": "battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 208,
+        "update_core_avg_ticks": 198,
+        "update_flush_avg_ticks": 1,
+        "renders": 369,
+        "draw_per_frame_ticks": 2647,
+        "draw_max_ticks": 8888,
+        "present_per_frame_ticks": 567,
+        "present_max_ticks": 782
+      },
+      "trainer-battle-entry-v1": {
+        "scenario": "trainer-battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 225,
+        "update_core_avg_ticks": 214,
+        "update_flush_avg_ticks": 1,
+        "renders": 224,
+        "draw_per_frame_ticks": 2375,
+        "draw_max_ticks": 10208,
+        "present_per_frame_ticks": 344,
+        "present_max_ticks": 782
+      },
+      "pokedex-entry-v1": {
+        "scenario": "pokedex-entry-v1",
+        "samples": 400,
+        "update_avg_ticks": 112,
+        "update_core_avg_ticks": 101,
+        "update_flush_avg_ticks": 1,
+        "renders": 1,
+        "draw_per_frame_ticks": 41,
+        "draw_max_ticks": 16520,
+        "present_per_frame_ticks": 1,
+        "present_max_ticks": 767
+      }
+    },
+    "rom_sha256": "942a51f834165f0c38d874cbf753afa161b38f8a8d1b5a6cd3f460df4e3777fd",
+    "physical_frames": 9000,
+    "seconds": 2.423481362988241
+  },
+  "after": {
+    "suite": "autopilot-v1",
+    "emulator": "mGBA 0.10.5 core, full audio/video, no frameskip, skip BIOS",
+    "scenarios": {
+      "intro-title-v1": {
+        "scenario": "intro-title-v1",
+        "samples": 250,
+        "update_avg_ticks": 105,
+        "update_core_avg_ticks": 97,
+        "update_flush_avg_ticks": 1,
+        "renders": 115,
+        "draw_per_frame_ticks": 1217,
+        "draw_max_ticks": 9873,
+        "present_per_frame_ticks": 354,
+        "present_max_ticks": 782
+      },
+      "oak-dialogue-v1": {
+        "scenario": "oak-dialogue-v1",
+        "samples": 600,
+        "update_avg_ticks": 172,
+        "update_core_avg_ticks": 162,
+        "update_flush_avg_ticks": 1,
+        "renders": 307,
+        "draw_per_frame_ticks": 2910,
+        "draw_max_ticks": 9068,
+        "present_per_frame_ticks": 392,
+        "present_max_ticks": 782
+      },
+      "overworld-idle-v1": {
+        "scenario": "overworld-idle-v1",
+        "samples": 1400,
+        "update_avg_ticks": 379,
+        "update_core_avg_ticks": 370,
+        "update_flush_avg_ticks": 1,
+        "renders": 0,
+        "draw_per_frame_ticks": 0,
+        "draw_max_ticks": 0,
+        "present_per_frame_ticks": 0,
+        "present_max_ticks": 0
+      },
+      "overworld-movement-v1": {
+        "scenario": "overworld-movement-v1",
+        "samples": 240,
+        "update_avg_ticks": 392,
+        "update_core_avg_ticks": 382,
+        "update_flush_avg_ticks": 1,
+        "renders": 24,
+        "draw_per_frame_ticks": 210,
+        "draw_max_ticks": 2910,
+        "present_per_frame_ticks": 70,
+        "present_max_ticks": 771
+      },
+      "battle-entry-v1": {
+        "scenario": "battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 208,
+        "update_core_avg_ticks": 198,
+        "update_flush_avg_ticks": 1,
+        "renders": 369,
+        "draw_per_frame_ticks": 2647,
+        "draw_max_ticks": 8888,
+        "present_per_frame_ticks": 567,
+        "present_max_ticks": 782
+      },
+      "trainer-battle-entry-v1": {
+        "scenario": "trainer-battle-entry-v1",
+        "samples": 500,
+        "update_avg_ticks": 225,
+        "update_core_avg_ticks": 214,
+        "update_flush_avg_ticks": 1,
+        "renders": 224,
+        "draw_per_frame_ticks": 2375,
+        "draw_max_ticks": 10208,
+        "present_per_frame_ticks": 344,
+        "present_max_ticks": 782
+      },
+      "pokedex-entry-v1": {
+        "scenario": "pokedex-entry-v1",
+        "samples": 400,
+        "update_avg_ticks": 112,
+        "update_core_avg_ticks": 101,
+        "update_flush_avg_ticks": 1,
+        "renders": 1,
+        "draw_per_frame_ticks": 41,
+        "draw_max_ticks": 16520,
+        "present_per_frame_ticks": 1,
+        "present_max_ticks": 767
+      }
+    },
+    "rom_sha256": "37d26c1df0a9a5d3dbf35a660d63be3ac6a7a3c5e05fa3943b7a8ae270b89e7f",
+    "physical_frames": 9000,
+    "seconds": 2.4296492889989167
+  },
+  "candidate_patch_sha256": "63a9f97803a106ea2c582e8bc8a5deaaad0d780d1296bac2106a3249b3fbd77d",
+  "changed_source_sha256": "72a29e5ecd1f9e90739a00dee31c6eabb57a4c612a64a60eb4e2d7205c35e220",
+  "baseline_sha256": "c9ef15a97a6f43d994fe177d7e0212a6a6cbaf561be955a5995fef4da7faebba",
+  "comparison": {
+    "failures": []
+  },
+  "qualification": "Hardware timer ticks in unchanged deterministic scenario windows, not host timing or a frame-rate claim.",
+  "local_checks": [
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "app-full",
+      "exit_code": 0,
+      "passed": 1104,
+      "ignored": 92
+    },
+    {
+      "name": "core-full",
+      "exit_code": 0,
+      "passed": 3991,
+      "ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "fresh_m06": {
+    "status": "passed",
+    "seconds": 41.461969917989336,
+    "unchanged_source_and_binary": true
+  },
+  "native_binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067",
+  "default_gba_rom_sha256": "4fa7dd5a192bc2f4502819f09a39f407e41ae6d2b61250ad68a14bb4cbe7e302",
+  "native_scenarios": {
+    "status": "passed",
+    "binary_sha256": "bf3457a3ccbb98f478e28511799e89e28fb4931cec388f6500ad5a36bbf5f067",
+    "script_sha256": "3977b6b44abc87e948415ea70d304cc3ec1481944154add6df9d77c50989f831",
+    "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+    "cases": [
+      {
+        "case": "cancel",
+        "repeats": 2,
+        "first_overworld": 39,
+        "first_write": null,
+        "final_screen": "overworld",
+        "independent_continue": 2
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "first_overworld": 39,
+        "first_write": null,
+        "final_screen": "overworld",
+        "independent_continue": 2
+      },
+      {
+        "case": "no-held",
+        "repeats": 2,
+        "first_overworld": 103,
+        "first_write": null,
+        "final_screen": "overworld",
+        "independent_continue": 2
+      },
+      {
+        "case": "save-held",
+        "repeats": 2,
+        "first_overworld": 623,
+        "first_write": 189,
+        "final_screen": "overworld",
+        "independent_continue": 2
+      }
+    ],
+    "scope": "Cold CONTINUE and actual START/SAVE/NO/B/held A with PCM. No recording-time state setters. Complete repeated frame states and image hashes, persisted bytes and independent CONTINUE."
+  },
+  "native_matches_previous_exact_frame_states_and_images": true,
+  "gba_scenarios": [
+    {
+      "case": "cancel",
+      "repeats": 2,
+      "all_frames_match": true,
+      "frames_each": 800,
+      "sram_changes_only_for_yes": true,
+      "independent_continue_returns_same_pixels": true,
+      "evidence": "performance-cancel-gba.json.gz"
+    },
+    {
+      "case": "save-held",
+      "repeats": 2,
+      "all_frames_match": true,
+      "frames_each": 2800,
+      "sram_changes_only_for_yes": true,
+      "independent_continue_returns_same_pixels": true,
+      "evidence": "performance-save-held-gba.json.gz"
+    }
+  ]
+}

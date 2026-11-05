@@ -4,7 +4,7 @@ import struct,zlib
 
 a=argparse.ArgumentParser();a.add_argument('repeat',type=int,choices=[1,2]);a.add_argument('case',choices=['cancel','short','no-held','save-held']);a.add_argument('--rom',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--bridge',type=Path,required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--fixture',type=Path,default=Path(__file__).resolve().parent.parent/'party-return/indigo/fixture.sav');args=a.parse_args()
 out=args.output;out.mkdir();(out/'frames').mkdir()
-rom=args.rom;identity={'rom':str(rom),'rom_sha256':args.sha256,'production_commit':'32ace488f18840ca0ae32221456c0cde92a8836f'}
+rom=args.rom;identity={'rom':str(rom),'rom_sha256':args.sha256}
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert sha(rom)==identity['rom_sha256']
 fixture=args.fixture

@@ -45,3 +45,11 @@ python3 replay-gba.py 1 save-held --rom /absolute/path/to/default.gba \
 ```
 
 The script also accepts `cancel`, `short`, and `no-held`; repeat with argument `2`. Its fixture is the existing `../party-return/indigo/fixture.sav`. The helper includes the library's generated `mgba/flags.h` so the public `mCore` ABI matches the installed library. It observes SRAM with `savedataClone`, then cold boots that exported save; host file immutability is never substituted for actual cartridge persistence.
+
+## CI follow-up: empty-NPC maps
+
+After synchronizing START and NPC grass priority, the SAVE candidate's GBA gate reproduced two failures locally: idle 383 ticks (limit 382.9) and movement 395 (limit 394.4). Maps without NPCs were still resolving grass/blockset data for an empty sampling loop. The guard now skips that lookup only when there are no NPCs; nonempty maps execute the same sampling and movement code. No timer, input, rendering cadence, scenario window, or performance threshold changes.
+
+`performance-followup.json` records the same benchmark before/after, ROM/source hashes and the unchanged baseline. Idle is now 379 ticks and movement 392; all seven scenarios pass. These are hardware-timer measurements, not desktop FPS measurements.
+
+The follow-up passed 1,104 app / 3,991 core test executions and ARM/default GBA builds. Fresh m01–m06 passed in 41.46 seconds. All four SAVE cases × two native runs have byte-identical frame states and image hashes to the pre-optimization build, plus eight independent CONTINUE checks. Default GBA B and held-A/YES × two runs retain 7,200 physical frames; complete frame sequences repeat, only YES changes cartridge SRAM, and each cold CONTINUE renders exactly the saved field.
