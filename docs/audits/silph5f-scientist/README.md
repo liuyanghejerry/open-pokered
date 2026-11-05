@@ -1,5 +1,8 @@
 # 西尔佛公司 5F 科学家战后台词
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 科学家被击败后再次交谈，英文结尾应为原作的 `catch anything!`，此前为 `contain anything!`。仅恢复这一处英文措辞。
 
 原作依据：pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c` 的 `scripts/SilphCo5F.asm`，训练家头部 `SilphCo5TrainerHeader1` 把 `EVENT_BEAT_SILPH_CO_5F_TRAINER_1` 对应到 `SilphCo5FScientistAfterBattleText`；后者引用 `text/SilphCo5F.asm:_SilphCo5FScientistAfterBattleText`。原文结束语为 `catch anything!`。

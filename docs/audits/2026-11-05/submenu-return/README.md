@@ -1,5 +1,8 @@
 # Bag / Options return restoration
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 Cancelling Bag or in-game Options now waits for the original textbox-pattern transfer before returning to START. A short Down press during that work no longer selects the next START entry. The transfer runs through the existing source IRQ, with audio and the game timer active; the old submenu raster stays visible until the handoff. Options also plays the original exit confirmation sound. Title-screen Options still returns to the title menu.
 
 This is a focused extraction from #144, built on #443. Input locking and completion pass; complete original visual parity remains **PARTIAL**. In particular, the original BG portion order and retained actor publication at t+6..8 still differ. This change does not claim to finish #144.

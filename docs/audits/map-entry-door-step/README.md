@@ -1,5 +1,8 @@
 # Automatic steps out of doors
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 Leaving the Route 22 gate stopped the player in the doorway at `(8,5)`.
 After obtaining a starter, leaving the player's house or Oak's lab likewise
 stopped on the outdoor doorway. Cerulean's post-champion and Saffron's

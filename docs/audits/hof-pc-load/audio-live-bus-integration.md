@@ -1,5 +1,8 @@
 # Source audio access propagation and evidence
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The supported source audio frame now routes individual APU accesses through
 `SourceAudioFrame` to the `AudioManager` APU. After the original frame RET, the
 manager calls `advance_frame_without_output` on its existing sequencer once.

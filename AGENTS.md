@@ -73,6 +73,12 @@ See the [development guide](docs/development.md):
 
 ## Validation and evidence
 
+- **Generated audit output:** do not commit raw frame recordings, compressed logs,
+  run reports, or checksum inventories. Keep them in `.task-tmp/` or outside the
+  repository, then delete them after validation. Retain concise findings, replay
+  generators, necessary regression-test fixtures, and required before/after
+  screenshots. Do not use `git add -f` to bypass these artifact exclusions.
+
 - Select coverage using [playthrough-regression](.agents/skills/playthrough-regression/SKILL.md):
   crate tests, affected subsystem scenarios/BDD, and progression playthroughs.
   Report tested targets, features, commands, and limits. Host checks do not

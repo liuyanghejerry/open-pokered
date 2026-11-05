@@ -1,5 +1,8 @@
 # NPC gift receipt followup
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 Coin Case, TM18, HM02 and Master Ball receipts previously disappeared after the fanfare. They now remain until the player's final acknowledgement. Master Ball commits its reward flag after the real fanfare; the other three preserve their original early flags. Intro/repeat paragraphs and full-bag exits follow the original callers.
 
 This patch is based on master 95152068, which already contains the TM35/HM03 text API. Production changes are limited to four scene files; two test files cover the embedded callers.
