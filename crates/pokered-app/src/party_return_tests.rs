@@ -60,7 +60,10 @@ fn fixture(map: MapId) -> (PokemonGame, InputState) {
 #[test]
 fn party_cancel_discards_short_restore_pulses_and_keeps_map_actors_stationary() {
     run(|| {
-        for map in [MapId::PalletTown, MapId::RedsHouse2F, MapId::RockTunnel1F] {
+        // Indigo's nurse and receptionist have twelve-tile source sheets;
+        // their upper reload reads adjacent resources in the original ROM.
+        for map in [MapId::PalletTown, MapId::RedsHouse2F, MapId::RockTunnel1F,
+            MapId::IndigoPlateauLobby] {
             let (mut game, mut input) = fixture(map);
             let player = (game.overworld.state.player.x, game.overworld.state.player.y);
             let npcs: Vec<_> = game
