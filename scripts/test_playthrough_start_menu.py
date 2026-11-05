@@ -91,5 +91,49 @@ class StartMenuReadinessTests(unittest.TestCase):
         self.assertNotIn(('tap', 'a', 12), game.events)
 
 
+class PartyReturnGame:
+    def __init__(self, restore_frames=30, ready_frame=35, error=None):
+        self.frames = 0
+        self.restore_frames = restore_frames
+        self.ready_frame = ready_frame
+        self.error = error
+
+    def st(self):
+        if self.frames < self.restore_frames:
+            return {'screen': 'party', 'field_menu': {'kind': 'party'},
+                    'field_flash': {'return_to_start_menu': True, 'error': self.error}}
+        return {'screen': 'start-menu', 'field_flash': None,
+                'field_menu': {'kind': 'start', 'ready_for_input': self.frames >= self.ready_frame}}
+
+    def step(self, frames):
+        self.frames += frames
+
+
+class PartyReturnReadinessTests(unittest.TestCase):
+    def test_restore_completion_is_followed_by_start_publication(self):
+        game = PartyReturnGame()
+        late.wait_for_party_return(game)
+        self.assertEqual(game.frames, 35)
+
+    def test_already_ready_start_needs_no_extra_frames(self):
+        game = PartyReturnGame(restore_frames=0, ready_frame=0)
+        late.wait_for_party_return(game)
+        self.assertEqual(game.frames, 0)
+
+    def test_failed_restoration_is_not_treated_as_a_slow_menu(self):
+        game = PartyReturnGame(error='unsupported source audio')
+        with self.assertRaises(AssertionError):
+            late.wait_for_party_return(game)
+        self.assertEqual(game.frames, 0)
+
+    def test_stuck_restoration_keeps_the_existing_bounded_failure(self):
+        from playthrough import NavError
+
+        game = PartyReturnGame(restore_frames=1000)
+        with self.assertRaisesRegex(NavError, 'never reached ready START'):
+            late.wait_for_party_return(game)
+        self.assertEqual(game.frames, 240)
+
+
 if __name__ == '__main__':
     unittest.main()

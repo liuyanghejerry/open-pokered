@@ -5394,7 +5394,8 @@ impl PokemonGame {
                             // (rebuilt from the live inventory on entry).
                             ScreenAction::Transition(GameScreen::Bag)
                         } else {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_party_menu_restore(input);
+                            ScreenAction::Continue
                         }
                     }
                     PartyScreenAction::ShowStats(idx) => {

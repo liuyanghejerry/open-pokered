@@ -281,18 +281,17 @@ impl SourceAudioFrame {
             return Err(AudioClockError::UnsupportedEffect(3));
         }
         let start = NativeStart::read(seq);
-        for i in 5..7 {
-            if start.voices[i].active {
-                return Err(AudioClockError::ActiveSfx(i as u8));
-            }
+        if start.voices[6].active {
+            return Err(AudioClockError::ActiveSfx(6));
         }
         let mut ids = core::array::from_fn(|i| {
             if !start.voices[i].active {
                 0
             } else if i < 4 {
                 song.raw_id()
-            } else if i == 4 {
-                super::press_ab_work::SOURCE_PRESS_AB_ID
+            } else if i == 4 || i == 5 {
+                super::press_ab_work::source_pulse_id(i, start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
             } else {
                 start.voices[i].id
             }
@@ -308,11 +307,8 @@ impl SourceAudioFrame {
                 ids[i] = song.raw_id();
             } else {
                 let valid_program = match i {
-                    4 => {
-                        v.id == crate::sfx_data::SfxId::PressAB as u8
-                            && seq.channels[i].data == crate::sfx_data::SFX_PRESS_AB_CH5
-                            && seq.sfx_tempo == 0x100
-                    }
+                    4 | 5 => super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data).is_some()
+                        && seq.sfx_tempo == 0x100,
                     7 => {
                         PressAbInstructions::noise_data(v.id)
                             == Some(seq.channels[i].data.as_slice())
@@ -358,7 +354,7 @@ impl SourceAudioFrame {
         })
     }
     /// Retain the same instruction cursor with actual APU accesses enabled.
-    /// The source path admits the unmodified PressAB and canonical drum programs.
+    /// The source path admits unmodified PressAB, SWAP and canonical drum programs.
     pub fn new_with_bus(
         seq: &Sequencer,
         song: SourceSong,
@@ -366,8 +362,12 @@ impl SourceAudioFrame {
         mute: u8,
     ) -> Result<Self, AudioClockError> {
         let mut work = Self::new(seq, song, bank, mute)?;
-        if seq.channels[4].active && (seq.frequency_modifier != 0 || seq.tempo_modifier != 0) {
-            return Err(AudioClockError::UnsupportedEffect(4));
+        if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
+            for i in 4..=5 {
+                if seq.channels[i].active {
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
+                }
+            }
         }
         work.physical_output = true;
         Ok(work)
@@ -411,7 +411,7 @@ impl SourceAudioFrame {
     fn note(&self, seq: &Sequencer) -> Result<Stage, AudioClockError> {
         let i = self.channel as usize;
         let v = self.voice(i);
-        if i == 4 || i == 7 {
+        if matches!(i, 4 | 5 | 7) {
             let input = PressAbInput {
                 bank: self.bank,
                 source_sfx_id: self.ids[4],
@@ -424,7 +424,9 @@ impl SourceAudioFrame {
                 sfx_tempo: self.start.sfx_tempo,
                 vibrato_reload: v.vib_reload,
             };
-            let work = if i == 4 {
+            let work = if i <= 5 && v.id == crate::sfx_data::SfxId::Swap as u8 {
+                PressAbInstructions::new_swap(input, i as u8, self.data(seq, i))
+            } else if i == 4 {
                 PressAbInstructions::new(input, self.data(seq, i))
             } else {
                 PressAbInstructions::new_noise(

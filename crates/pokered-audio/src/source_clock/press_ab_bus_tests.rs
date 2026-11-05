@@ -110,6 +110,30 @@ fn actual_apu_accesses_match_both_original_banks_at_every_resumable_instruction(
 }
 
 #[test]
+fn swap_pulses_match_original_instructions_and_apu_accesses_with_press_ab_overlap() {
+    #[derive(serde::Deserialize)]
+    struct SwapCase {
+        common: Case,
+        channel: u8,
+    }
+    #[derive(serde::Deserialize)]
+    struct SwapFixture {
+        rom_sha256: String,
+        cases: Vec<SwapCase>,
+    }
+    let fixture: SwapFixture =
+        serde_json::from_str(include_str!("swap_sfx_bus_golden.json")).unwrap();
+    assert_eq!(fixture.rom_sha256,
+        "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b");
+    assert_eq!(fixture.cases.len(), 30);
+    let count = check_cases(fixture.cases.into_iter().map(|case| {
+        let work = PressAbInstructions::new_swap(case.common.input, case.channel, &case.common.data).unwrap();
+        (case.common, work)
+    }));
+    assert_eq!(count, 126);
+}
+
+#[test]
 fn noise_instruments_match_original_notes_endings_and_every_apu_access() {
     #[derive(serde::Deserialize)]
     struct NoiseCase {

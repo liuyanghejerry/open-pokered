@@ -16,6 +16,45 @@ pub fn sprite_sheet_metadata(raw: u8) -> Option<SpriteSheetMetadata> {
         bank,
     })
 }
+
+/// Resolve a byte in the original loader's lower/upper pattern range.
+/// Some moving-picture IDs contain only twelve tiles. The upper copy then
+/// reads the next adjacent sheet in ROM; it does not duplicate or pad the
+/// first sheet. This changes byte ownership only, never raw OAM slot IDs.
+pub fn sprite_pattern_segment(raw: u8, offset: u16) -> Option<(u8, u16)> {
+    let sheet = sprite_sheet_metadata(raw)?;
+    let length = u16::from(sheet.bytes) * if raw < 0x3d { 2 } else { 1 };
+    if offset >= length { return None; }
+    let (mut owner, mut local) = (raw, offset);
+    loop {
+        let (next, distance) = NEXT_SHEET[usize::from(owner - 1)];
+        if next == 0 || local < distance { return Some((owner, local)); }
+        owner = next;
+        local -= distance;
+    }
+}
+
+// Resolve adjacency once at compile time, rather than scanning 72 entries
+// for every transferred byte on GBA. A range crosses at most three seams.
+const NEXT_SHEET: [(u8, u16); 72] = next_sheet_spans();
+const fn next_sheet_spans() -> [(u8, u16); 72] {
+    let mut result = [(0, 0); 72];
+    let mut source = 0;
+    while source < SHEETS.len() {
+        let mut next_address = u16::MAX;
+        let mut next = 0;
+        while next < SHEETS.len() {
+            if SHEETS[next].2 == SHEETS[source].2 && SHEETS[next].0 > SHEETS[source].0
+                && SHEETS[next].0 < next_address {
+                result[source] = (next as u8 + 1, SHEETS[next].0 - SHEETS[source].0);
+                next_address = SHEETS[next].0;
+            }
+            next += 1;
+        }
+        source += 1;
+    }
+    result
+}
 const SHEETS: [(u16, u8, u8); 72] = [
     (0x4180, 192, 5), // raw1
     (0x4300, 192, 5), // raw2
@@ -90,3 +129,24 @@ const SHEETS: [(u16, u8, u8); 72] = [
     (0x5340, 64, 4),  // raw71
     (0x5340, 64, 4),  // raw72
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn short_sheet_upper_copy_reads_its_real_adjacent_resource() {
+        assert_eq!(sprite_pattern_segment(41, 191), Some((41, 191)));
+        assert_eq!(sprite_pattern_segment(41, 192), Some((42, 0)));
+        assert_eq!(sprite_pattern_segment(41, 383), Some((42, 191)));
+        assert_eq!(sprite_pattern_segment(21, 192), Some((22, 0)));
+        assert_eq!(sprite_pattern_segment(53, 192), Some((54, 0)));
+        assert_eq!(sprite_pattern_segment(49, 192), Some((61, 0)));
+        assert_eq!(sprite_pattern_segment(49, 256), Some((62, 0)));
+        assert_eq!(sprite_pattern_segment(50, 320), Some((63, 0)));
+        assert_eq!(sprite_pattern_segment(32, 383), Some((32, 383)), "raw alias identity stays intact");
+        assert_eq!(sprite_pattern_segment(41, 384), None);
+        assert_eq!(sprite_pattern_segment(61, 64), None);
+        assert_eq!(sprite_pattern_segment(0, 0), None);
+        assert_eq!(sprite_pattern_segment(73, 0), None);
+    }
+}
