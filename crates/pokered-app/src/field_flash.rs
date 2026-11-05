@@ -142,6 +142,13 @@ enum RestorationOrigin {
     Flash,
     Party,
     StartMenu,
+    Save { cancelled: bool },
+}
+
+impl RestorationOrigin {
+    fn returns_to_map_with_actors(self) -> bool {
+        matches!(self, Self::StartMenu | Self::Save { .. })
+    }
 }
 
 pub(crate) struct FieldFlash {
@@ -208,6 +215,13 @@ impl PokemonGame {
         self.begin_field_restoration(None, RestorationOrigin::StartMenu);
     }
 
+    pub(super) fn begin_save_menu_restore(&mut self, input: &InputState, cancelled: bool) {
+        let owner = self.overworld.begin_source_field();
+        owner.read_raw(input.raw_current());
+        owner.poll();
+        self.begin_field_restoration(None, RestorationOrigin::Save { cancelled });
+    }
+
     fn begin_field_restoration(&mut self, message: Option<&str>, origin: RestorationOrigin) {
         // One live staging buffer serves both party text and the final map
         // redraw. Reusing it avoids a late contiguous allocation on GBA.
@@ -218,7 +232,7 @@ impl PokemonGame {
             &mut party,
             self.state.config.language,
         );
-        if origin == RestorationOrigin::StartMenu {
+        if origin.returns_to_map_with_actors() {
             crate::render::draw_overworld(&mut self.overworld, &mut self.resources,
                 &mut party, self.state.config.language);
         }
@@ -231,6 +245,8 @@ impl PokemonGame {
         if origin == RestorationOrigin::StartMenu {
             crate::render::draw_start_menu(&self.start_menu, &self.player_name,
                 &mut party, self.state.config.language);
+        } else if matches!(origin, RestorationOrigin::Save { .. }) {
+            self.draw(&mut party);
         } else {
             party.clear(Rgba::WHITE);
             crate::render::draw_party_screen(
@@ -248,6 +264,7 @@ impl PokemonGame {
             RestorationOrigin::Flash => FieldRestoreWork::new(restore_input),
             RestorationOrigin::Party => FieldRestoreWork::party_return(restore_input),
             RestorationOrigin::StartMenu => FieldRestoreWork::close_start_menu(restore_input),
+            RestorationOrigin::Save { cancelled } => FieldRestoreWork::save_return(restore_input, cancelled),
         };
         let facing = self
             .overworld
@@ -314,6 +331,9 @@ impl PokemonGame {
             return;
         }
         self.source_display.set_physical_buttons(raw);
+        if matches!(flow.origin, RestorationOrigin::Save { .. }) {
+            self.overworld.begin_source_field().read_raw(raw);
+        }
         let printing = flow.text.as_ref().is_some_and(|text| !text.returned());
         let returned = flow.text.as_mut().is_none_or(|text| self.overworld.tick_party_field_text(text, raw));
         if printing && self.overworld.sfx_event == OverworldSfxEvent::TextAdvance {
@@ -341,7 +361,7 @@ impl PokemonGame {
             Ok(true) => {
                 let foreground = self.overworld.source_foreground().cloned();
                 self.handle_transition(GameScreen::Overworld);
-                if flow.origin == RestorationOrigin::StartMenu {
+                if flow.origin.returns_to_map_with_actors() {
                     if let Some(foreground) = foreground {
                         *self.overworld.begin_source_field() = foreground;
                     }
@@ -711,7 +731,7 @@ impl PokemonGame {
                         &mut flow.party,
                         self.state.config.language,
                     );
-                    if flow.origin == RestorationOrigin::StartMenu {
+                    if flow.origin.returns_to_map_with_actors() {
                         crate::render::draw_overworld(&mut self.overworld, &mut self.resources,
                             &mut flow.party, self.state.config.language);
                     }
@@ -757,17 +777,30 @@ impl PokemonGame {
                 // Screen buffer2 is the actual retained `flow.map` image.
                 RestoreOperation::LoadScreenBuffer2 => {
                     let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
-                    if flow.origin == RestorationOrigin::Party {
+                    if flow.origin == RestorationOrigin::Party || matches!(flow.origin, RestorationOrigin::Save { .. }) {
                         // Buffer2 is the saved START raster, including Safari
                         // counters. Keep its native tile namespace distinct
                         // from map/ROM tile IDs while AutoBG copies it.
                         draw_flash_frame(&flow.map, &mut flow.party);
+                        if matches!(flow.origin, RestorationOrigin::Save { .. }) {
+                            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
+                                &mut flow.party, self.state.config.language);
+                        }
                         irq.ui.tiles.clear();
                         irq.ui.patterns.clear();
                         irq.ui.sample(&flow.party).map_err(|e| format!("START buffer2: {e:?}"))?;
-                        flow.show_map = true;
+                        flow.show_map = flow.origin == RestorationOrigin::Party;
                     } else {
                         irq.background_is_map = true;
+                    }
+                }
+                RestoreOperation::WaitForARelease => {
+                    if self.overworld.begin_source_field().poll().held & pokered_core::foreground_input::A != 0 {
+                        // The native held-button gate is not a cycle-exact
+                        // Joypad spin loop. Keep the shared IRQ/audio owner
+                        // running while the real physical input stays held.
+                        self.source_display.idle_to_vblank_edge().map_err(|e| format!("SAVE held A: {e:?}"))?;
+                        continue;
                     }
                 }
                 RestoreOperation::DefaultPaletteCommand => {},
@@ -808,6 +841,7 @@ impl PokemonGame {
             "show_map": flow.show_map,
             "return_to_start_menu": flow.origin == RestorationOrigin::Party,
             "close_start_menu": flow.origin == RestorationOrigin::StartMenu,
+            "return_from_save": matches!(flow.origin, RestorationOrigin::Save { .. }),
             "irq": &flow.irq,
             "wait_clock": "common_IRQ_RETI",
             "waits": &flow.waits,
@@ -839,7 +873,7 @@ impl PokemonGame {
     }
 
     fn field_flash_frame_visible(&self) -> bool {
-        matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu)
+        matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu)
             && self.black_screen_frames == 0
             && self.post_capture_flow.is_none()
             && self.trade_anim.is_none()
@@ -908,6 +942,10 @@ mod party_return_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "start_menu_restore_tests.rs"]
 mod start_menu_restore_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "save_return_tests.rs"]
+mod save_return_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 mod tests {

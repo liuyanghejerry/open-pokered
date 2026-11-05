@@ -1,0 +1,334 @@
+{
+  "status": "passed for documented functional scope; timing PARTIAL",
+  "production_commit": "32ace488f18840ca0ae32221456c0cde92a8836f",
+  "local_checks": [
+    {
+      "name": "app-save-direction",
+      "exit_code": 0,
+      "passed": 1,
+      "ignored": 0
+    },
+    {
+      "name": "app-save",
+      "exit_code": 0,
+      "passed": 3,
+      "ignored": 0
+    },
+    {
+      "name": "core-restore",
+      "exit_code": 0,
+      "passed": 8,
+      "ignored": 0
+    },
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "app-full",
+      "exit_code": 0,
+      "passed": 1100,
+      "ignored": 92
+    },
+    {
+      "name": "core",
+      "exit_code": 0,
+      "passed": 3989,
+      "ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "native": {
+    "original": {
+      "status": "passed",
+      "cases": [
+        {
+          "case": "cancel",
+          "repeats": 2,
+          "initial": {
+            "map": 1,
+            "x": 20,
+            "y": 30,
+            "cursor": 0
+          },
+          "first_overworld": 39,
+          "save_calls": 0,
+          "first_hold": 15,
+          "first_close": 15
+        },
+        {
+          "case": "short",
+          "repeats": 2,
+          "initial": {
+            "map": 1,
+            "x": 20,
+            "y": 30,
+            "cursor": 0
+          },
+          "first_overworld": 39,
+          "save_calls": 0,
+          "first_hold": 15,
+          "first_close": 15
+        },
+        {
+          "case": "no-held",
+          "repeats": 2,
+          "initial": {
+            "map": 1,
+            "x": 20,
+            "y": 30,
+            "cursor": 1
+          },
+          "first_overworld": 104,
+          "save_calls": 0,
+          "first_hold": 15,
+          "first_close": 80
+        },
+        {
+          "case": "save-held",
+          "repeats": 2,
+          "initial": {
+            "map": 1,
+            "x": 20,
+            "y": 30,
+            "cursor": 0
+          },
+          "first_overworld": 624,
+          "save_calls": 1,
+          "first_hold": 246,
+          "first_close": 600
+        }
+      ],
+      "source_sha256": "f45424e98ae9f70732f096e2ec58174764b417a380298339a5d76735914766aa"
+    },
+    "native-before": {
+      "status": "passed",
+      "binary_sha256": "28b3c6e93a59b2d31684b4f1940995a89676abeb5f0fb140dc796a5eabf9d5ec",
+      "script_sha256": "3977b6b44abc87e948415ea70d304cc3ec1481944154add6df9d77c50989f831",
+      "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+      "cases": [
+        {
+          "case": "cancel",
+          "repeats": 2,
+          "first_overworld": null,
+          "first_write": null,
+          "final_screen": "start-menu",
+          "independent_continue": 2
+        },
+        {
+          "case": "short",
+          "repeats": 2,
+          "first_overworld": null,
+          "first_write": null,
+          "final_screen": "start-menu",
+          "independent_continue": 2
+        },
+        {
+          "case": "no-held",
+          "repeats": 2,
+          "first_overworld": null,
+          "first_write": null,
+          "final_screen": "start-menu",
+          "independent_continue": 2
+        },
+        {
+          "case": "save-held",
+          "repeats": 2,
+          "first_overworld": null,
+          "first_write": 189,
+          "final_screen": "start-menu",
+          "independent_continue": 2
+        }
+      ],
+      "scope": "Cold CONTINUE and actual START/SAVE/NO/B/held A with PCM. No recording-time state setters. Complete repeated frame states and image hashes, persisted bytes and independent CONTINUE."
+    },
+    "native-after": {
+      "status": "passed",
+      "binary_sha256": "ecb64f4d08fcdb39854be886fa4e2d6b77a71081c1108cf8571714cfe06d9722",
+      "script_sha256": "3977b6b44abc87e948415ea70d304cc3ec1481944154add6df9d77c50989f831",
+      "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+      "cases": [
+        {
+          "case": "cancel",
+          "repeats": 2,
+          "first_overworld": 39,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "short",
+          "repeats": 2,
+          "first_overworld": 39,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "no-held",
+          "repeats": 2,
+          "first_overworld": 103,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "save-held",
+          "repeats": 2,
+          "first_overworld": 623,
+          "first_write": 189,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        }
+      ],
+      "scope": "Cold CONTINUE and actual START/SAVE/NO/B/held A with PCM. No recording-time state setters. Complete repeated frame states and image hashes, persisted bytes and independent CONTINUE."
+    },
+    "release-native-after": {
+      "status": "passed",
+      "binary_sha256": "7910fd537dde83de4364b0fee0d32b12ef100404969a4561f55e8265a1b50ff8",
+      "script_sha256": "3977b6b44abc87e948415ea70d304cc3ec1481944154add6df9d77c50989f831",
+      "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+      "cases": [
+        {
+          "case": "cancel",
+          "repeats": 2,
+          "first_overworld": 39,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "short",
+          "repeats": 2,
+          "first_overworld": 39,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "no-held",
+          "repeats": 2,
+          "first_overworld": 103,
+          "first_write": null,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        },
+        {
+          "case": "save-held",
+          "repeats": 2,
+          "first_overworld": 623,
+          "first_write": 189,
+          "final_screen": "overworld",
+          "independent_continue": 2
+        }
+      ],
+      "scope": "Cold CONTINUE and actual START/SAVE/NO/B/held A with PCM. No recording-time state setters. Complete repeated frame states and image hashes, persisted bytes and independent CONTINUE."
+    }
+  },
+  "equalities": [
+    {
+      "case": "cancel",
+      "before_after_initial_states_and_images_equal": true,
+      "release_debug_all_frames_and_images_equal": true
+    },
+    {
+      "case": "short",
+      "before_after_initial_states_and_images_equal": true,
+      "release_debug_all_frames_and_images_equal": true
+    },
+    {
+      "case": "no-held",
+      "before_after_initial_states_and_images_equal": true,
+      "release_debug_all_frames_and_images_equal": true
+    },
+    {
+      "case": "save-held",
+      "before_after_initial_states_and_images_equal": true,
+      "release_debug_all_frames_and_images_equal": true
+    }
+  ],
+  "fresh_m06": {
+    "status": "passed",
+    "seconds": 41.105116038932465,
+    "unchanged_source_and_binary": true,
+    "binary": "/home/jerry/develop/open-pokered/.task-tmp/fidelity-1064-payday-target/release/pokered-app-fidelity-save-return-release-1390",
+    "source": {
+      "binary_sha256": "7910fd537dde83de4364b0fee0d32b12ef100404969a4561f55e8265a1b50ff8",
+      "driver_file_count": 1189,
+      "driver_manifest_sha256": "4e0d66529a04becb0f8989592419896156d87be24294ec82f926aabb320eb3b5",
+      "source_evidence_sha256": {
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1390-save-return-frozen-build.json": "87f78ae672f732dfd6d67e36d389522faa99c91cd144961279217e1d145244d2",
+        "/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1390-party-harness.json": "4e0d66529a04becb0f8989592419896156d87be24294ec82f926aabb320eb3b5"
+      }
+    },
+    "helper_sha256": "8a68f24284a2db90a141978f13285e39766e249610238255616158bc6c9fb0c7",
+    "source_scope": "Frozen 32ace488 release binary: SAVE return mode and held-A release, on the tested START/Party stack. Fresh early-game smoke only; actual SAVE/NO/B scenarios and separate-process CONTINUE are validated independently. Current driver waits for observable Party/START restoration readiness; all existing milestone assertions retained. Transport NODELAY/QUICKACK only; no seeded state or resumed milestone."
+  },
+  "retained_build_manifests": {
+    "audit-1390-save-return-a4-build-build-checks.json": "512b77988a5c4f2912cc0f5f8f66babc1523142a4c08ce4577c1bdf839ae9d5b",
+    "audit-1390-save-return-release-build-build-checks.json": "e4f6f6342484ca37123685aff10f4aceca6d5e4ffa74ed07732647e0a189db65",
+    "audit-1390-save-return-gba-identity.json": "9db0f71b17c3b3cc45c72231ff4467a9f24bd3442fe77dfd3981a54964154581"
+  },
+  "rom_sha256": "dd66fffbdb5a92d9b6bed29cd4632822dbf374e48a6c08e430f2577fe083ac4f",
+  "qualification": "Functional SAVE return; held A resumes one frame earlier than original; not complete animation parity. Existing write timing is unchanged. Old GBA disk-file check invalid due to temporary=true; use SRAM clone results.",
+  "gba": {
+    "rom_sha256": "dd66fffbdb5a92d9b6bed29cd4632822dbf374e48a6c08e430f2577fe083ac4f",
+    "bridge_sha256": "b416fd499275bd75c0769b8b3a305c754add0e8e7018eebb7b90f5e10f51b587",
+    "bridge_source_sha256": "b16c7943dfb962ec22e486c09d0603495d30292cf610606ad84ef1bc2a605c3e",
+    "cases": [
+      {
+        "case": "cancel",
+        "repeats": 2,
+        "contiguous_physical_frames_per_repeat": 800,
+        "stable_final_tick": 270,
+        "every_frame_and_stage_repeats": true,
+        "live_sram_changed_only_on_yes": true,
+        "independent_gba_cold_continue": 2,
+        "committed_sram_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa"
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "contiguous_physical_frames_per_repeat": 800,
+        "stable_final_tick": 270,
+        "every_frame_and_stage_repeats": true,
+        "live_sram_changed_only_on_yes": true,
+        "independent_gba_cold_continue": 2,
+        "committed_sram_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa"
+      },
+      {
+        "case": "no-held",
+        "repeats": 2,
+        "contiguous_physical_frames_per_repeat": 1400,
+        "stable_final_tick": 723,
+        "every_frame_and_stage_repeats": true,
+        "live_sram_changed_only_on_yes": true,
+        "independent_gba_cold_continue": 2,
+        "committed_sram_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa"
+      },
+      {
+        "case": "save-held",
+        "repeats": 2,
+        "contiguous_physical_frames_per_repeat": 2800,
+        "stable_final_tick": 2108,
+        "every_frame_and_stage_repeats": true,
+        "live_sram_changed_only_on_yes": true,
+        "independent_gba_cold_continue": 2,
+        "committed_sram_sha256": "9a13318e10baf5daac0a605c74a84762885f88c2c4312a1c473699042c5cd834"
+      }
+    ],
+    "short_and_cancel_all_frames_equal": true,
+    "observations": "SAVE prompt, held-A START buffer, returned field, START reopened and cold CONTINUE visually inspected; no panic or restoration errors. SRAM exported with read-only savedataClone."
+  },
+  "committed_scripts_sha256": {
+    "replay-native.py": "94bda66067e5b6337e8c2e26a3b009fc3d45a61c9381b289658d7c27d1f2ab36",
+    "replay-gba.py": "90e6dc90a2e49918eb76f09f67722e612e4053201c0a3ceb173c08000873d90f"
+  }
+}

@@ -3901,7 +3901,7 @@ impl PokemonGame {
             return;
         }
 
-        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu) && self.field_flash.is_some() {
+        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu) && self.field_flash.is_some() {
             self.update_field_flash(input);
             return;
         }
@@ -5346,9 +5346,14 @@ impl PokemonGame {
                 match result {
                     SaveMenuResult::Saved => {
                         self.save_to_file();
-                        ScreenAction::Transition(GameScreen::StartMenu)
+                        self.begin_save_menu_restore(input, false);
+                        ScreenAction::Continue
                     }
-                    SaveMenuResult::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
+                    SaveMenuResult::Cancelled => {
+                        if let Some(audio) = &self.audio { audio.play_sfx(SfxId::PressAB); }
+                        self.begin_save_menu_restore(input, true);
+                        ScreenAction::Continue
+                    }
                     SaveMenuResult::Active => ScreenAction::Continue,
                 }
             }
@@ -8519,6 +8524,10 @@ impl PokemonGame {
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::SaveMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 // save.gui clears and covers the complete 160x144 viewport;
                 // drawing the live map first only creates pixels immediately
                 // discarded by the save card.
@@ -10505,9 +10514,11 @@ mod link_stats_cry_fidelity_tests {
                 std::fs::create_dir_all(&dir).unwrap();
                 let path=dir.join("fixture.sav");
                 let mut g=fixture(Species::Pikachu,10,Direction::Down);
-                g.audio=None; g.external_saves=false; g.save_path=Some(path.clone());
+                // A muted frontend retains the PCM clock used by field restoration.
+                g.external_saves=false; g.save_path=Some(path.clone());
                 g.overworld=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
                 g.overworld.run_on_load(); g.overworld.state.player.x=10;g.overworld.state.player.y=10;
+                g.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::PALLET_TOWN);
                 let idle=InputState::new();
                 for _ in 0..20 {g.update(&button(key));}
                 for _ in 0..64 {g.update(&idle);}
@@ -10528,8 +10539,12 @@ mod link_stats_cry_fidelity_tests {
                 for t in 0..1000 {
                     if g.state.screen!=GameScreen::SaveMenu {break;}
                     let advance=button(GbButton::A); g.update(if t%20==0 {&advance} else {&idle});
+                    #[cfg(feature = "debug-server")]
+                    if let Some(flow) = g.debug_field_flash() {
+                        assert!(flow["error"].is_null(), "SAVE return failed: {}", flow["error"]);
+                    }
                 }
-                assert_eq!(g.state.screen,GameScreen::StartMenu);
+                assert_eq!(g.state.screen,GameScreen::Overworld);
                 let bytes=std::fs::read(&path).unwrap();
                 // Independent original symbols: bank1 sMainData=$a5a3,
                 // wMainDataStart=$d2f7; moving/last-stop/current=$d528/29/2a.

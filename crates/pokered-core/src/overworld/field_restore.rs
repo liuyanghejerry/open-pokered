@@ -531,6 +531,8 @@ pub enum RestoreOperation {
     VideoPatternCopy(PatternCopy),
     UpdateSprites,
     LoadScreenBuffer2,
+    /// HoldTextDisplayOpen waits for held A, rather than a fresh press edge.
+    WaitForARelease,
     DefaultPaletteCommand,
     SetWindowY(u8),
     LoadMapPalettes,
@@ -583,6 +585,17 @@ impl FieldRestoreWork {
             tiles: 32,
             format: CopyFormat::TwoBpp,
         })];
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
+    /// StartMenu_SaveReset restores buffer2 and closes the text display.
+    /// A cancelled TwoOptionMenu first completes its 15-frame choice delay.
+    pub fn save_return(input: RestoreInput, cancelled: bool) -> Self {
+        use RestoreOperation::*;
+        let mut operations = Vec::new();
+        if cancelled { operations.push(WaitVBlanks(15)); }
+        operations.extend([LoadScreenBuffer2, WaitForARelease]);
         Self::close_text_display(&input, &mut operations);
         Self { input, operations, next: 0 }
     }
@@ -878,6 +891,22 @@ mod tests {
             font_flags: 1,
             player_source: PatternSource::WalkingPlayer,
             fly_warp: false,
+        }
+    }
+
+    #[test]
+    fn save_return_closes_text_without_start_menu_textbox_reload() {
+        use RestoreOperation::*;
+        for cancelled in [false, true] {
+            let work = FieldRestoreWork::save_return(input(), cancelled);
+            let prefix = usize::from(cancelled);
+            if cancelled { assert_eq!(work.operations[0], WaitVBlanks(15)); }
+            assert_eq!(&work.operations[prefix..prefix + 2], &[LoadScreenBuffer2, WaitForARelease]);
+            assert!(matches!(work.operations[prefix + 2], SetWindowY(144)));
+            assert!(!work.operations.iter().any(|op| matches!(op,
+                WhitePalettes | DisableLcd | VideoPatternCopy(PatternCopy {
+                    source: PatternSource::TextBox | PatternSource::Font, .. }))));
+            assert_eq!(work.operations.last(), Some(&Return));
         }
     }
 
