@@ -125,6 +125,7 @@ enum DisplayChild {
     IndoorSpriteTransfer(IndoorSpriteTransferWork),
     IndoorSpriteClear(IndoorSpriteClearWork),
     ColdSpriteBank(SpriteBankCallWork),
+    MapView(pokered_core::overworld::map_view_work::MapViewWork),
 }
 
 /// Passive observations of real foreground waits and ClearSprites return.
@@ -144,11 +145,13 @@ enum RestorationOrigin {
     StartMenu,
     Save { cancelled: bool },
     Submenu,
+    Pokedex,
+    TrainerCard,
 }
 
 impl RestorationOrigin {
     fn returns_to_start_menu(self) -> bool {
-        matches!(self, Self::Party | Self::Submenu)
+        matches!(self, Self::Party | Self::Submenu | Self::Pokedex | Self::TrainerCard)
     }
 
     fn returns_to_map_with_actors(self) -> bool {
@@ -228,6 +231,18 @@ impl PokemonGame {
     }
 
     pub(super) fn begin_submenu_restore(&mut self, input: &InputState) {
+        self.begin_native_menu_restore(input, RestorationOrigin::Submenu);
+    }
+
+    pub(super) fn begin_fullscreen_menu_restore(&mut self, input: &InputState, trainer: bool) {
+        self.begin_native_menu_restore(input, if trainer {
+            RestorationOrigin::TrainerCard
+        } else {
+            RestorationOrigin::Pokedex
+        });
+    }
+
+    fn begin_native_menu_restore(&mut self, input: &InputState, origin: RestorationOrigin) {
         // Both native consumers draw a complete UI without field actors.
         // Carry that existing visibility into the shared display handoff;
         // this projection does not claim an extra source UpdateSprites call.
@@ -236,7 +251,7 @@ impl PokemonGame {
         let owner = self.overworld.begin_source_field();
         owner.read_raw(input.raw_current());
         owner.poll();
-        self.begin_field_restoration(None, RestorationOrigin::Submenu);
+        self.begin_field_restoration(None, origin);
     }
 
     fn begin_field_restoration(&mut self, message: Option<&str>, origin: RestorationOrigin) {
@@ -262,7 +277,8 @@ impl PokemonGame {
         if origin == RestorationOrigin::StartMenu {
             crate::render::draw_start_menu(&self.start_menu, &self.player_name,
                 &mut party, self.state.config.language);
-        } else if matches!(origin, RestorationOrigin::Save { .. } | RestorationOrigin::Submenu) {
+        } else if matches!(origin, RestorationOrigin::Save { .. } | RestorationOrigin::Submenu
+            | RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard) {
             self.draw(&mut party);
         } else {
             party.clear(Rgba::WHITE);
@@ -283,6 +299,11 @@ impl PokemonGame {
             RestorationOrigin::StartMenu => FieldRestoreWork::close_start_menu(restore_input),
             RestorationOrigin::Save { cancelled } => FieldRestoreWork::save_return(restore_input, cancelled),
             RestorationOrigin::Submenu => FieldRestoreWork::submenu_return(restore_input),
+            RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard => {
+                let tileset = self.overworld.map_data.as_ref().expect("loaded field map").tileset;
+                FieldRestoreWork::fullscreen_menu_return(restore_input,
+                    tileset.base().to_u8(), origin == RestorationOrigin::TrainerCard)
+            }
         };
         let facing = self
             .overworld
@@ -439,6 +460,7 @@ impl PokemonGame {
                     DisplayChild::IndoorSpriteTransfer(work) => work.step(&mut *self.source_display),
                     DisplayChild::IndoorSpriteClear(work) => work.step(&mut *self.source_display),
                     DisplayChild::ColdSpriteBank(work) => work.step(&mut *self.source_display),
+                    DisplayChild::MapView(work) => work.step(&mut *self.source_display),
                     DisplayChild::Copy(work) => {
                         let resources = self
                             .resources
@@ -455,6 +477,12 @@ impl PokemonGame {
                 match result {
                     Ok(true) => continue,
                     Ok(false) => {
+                        if let DisplayChild::MapView(work) = child {
+                            let tiles = work.visible_tiles().ok_or("map view returned before completion")?;
+                            let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
+                            if tiles != irq.map_tiles.tiles { return Err("rebuilt view differs from native map input".into()); }
+                            irq.map_tiles.tiles.copy_from_slice(tiles);
+                        }
                         if let DisplayChild::ColdSpriteBank(work) = child {
                             flow.cold_sprite_bank =
                                 if work.finished() { None } else { Some(*work) };
@@ -739,6 +767,18 @@ impl PokemonGame {
                         npc.facing = facing;
                     }
                 }
+                RestoreOperation::RebuildMenuMapView => {
+                    let snapshot = crate::render::surrounding_map_tile_snapshot(&self.overworld)
+                        .map_err(|e| format!("surrounding map input: {e:?}"))?;
+                    let map = self.overworld.map_data.as_ref().ok_or("missing live map")?;
+                    let metadata = pokered_core::overworld::tileset_pattern_metadata::tileset_pattern_metadata(map.tileset.base().to_u8())
+                        .ok_or("missing tileset bank")?;
+                    let work = pokered_core::overworld::map_view_work::MapViewWork::new(
+                        map.width, snapshot.world_tile_origin, metadata.bank, snapshot.tiles)
+                        .ok_or("invalid surrounding map input")?;
+                    flow.display_child = Some(DisplayChild::MapView(work));
+                    continue;
+                }
                 RestoreOperation::LoadCurrentMapView => {
                     // Party text has returned and the retained map is on
                     // screen. Its old staging buffer can now render the new
@@ -752,6 +792,16 @@ impl PokemonGame {
                     if flow.origin.returns_to_map_with_actors() {
                         crate::render::draw_overworld(&mut self.overworld, &mut self.resources,
                             &mut flow.party, self.state.config.language);
+                    }
+                    if matches!(flow.origin, RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard) {
+                        // ReloadMapData rebuilds the map tile buffer; its
+                        // caller's RedisplayStartMenu retains the same cursor.
+                        crate::render::draw_start_menu(&self.start_menu, &self.player_name,
+                            &mut flow.party, self.state.config.language);
+                        let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
+                        irq.ui.tiles.clear();
+                        irq.ui.patterns.clear();
+                        irq.ui.sample(&flow.party).map_err(|e| format!("map reload: {e:?}"))?;
                     }
                     copy_flash_frame(&flow.party, &mut flow.map);
                     flow.map_key = crate::render::session::FlashMapVisualKey::new();
@@ -867,6 +917,8 @@ impl PokemonGame {
             "show_map": flow.show_map,
             "return_to_start_menu": flow.origin.returns_to_start_menu(),
             "return_from_submenu": flow.origin == RestorationOrigin::Submenu,
+            "return_from_pokedex": flow.origin == RestorationOrigin::Pokedex,
+            "return_from_trainer_card": flow.origin == RestorationOrigin::TrainerCard,
             "close_start_menu": flow.origin == RestorationOrigin::StartMenu,
             "return_from_save": matches!(flow.origin, RestorationOrigin::Save { .. }),
             "irq": &flow.irq,
@@ -890,6 +942,7 @@ impl PokemonGame {
                 DisplayChild::IndoorSpriteTransfer(_) => "indoor_sprite_transfer",
                 DisplayChild::IndoorSpriteClear(_) => "indoor_sprite_clear",
                 DisplayChild::ColdSpriteBank(_) => "cold_sprite_bank",
+                DisplayChild::MapView(_) => "load_current_map_view",
             }),
             "error": &flow.error,
         }))
@@ -901,7 +954,7 @@ impl PokemonGame {
 
     fn field_flash_frame_visible(&self) -> bool {
         matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu
-            | GameScreen::Bag | GameScreen::OptionsMenu)
+            | GameScreen::Bag | GameScreen::OptionsMenu | GameScreen::Pokedex | GameScreen::TrainerCard)
             && self.black_screen_frames == 0
             && self.post_capture_flow.is_none()
             && self.trade_anim.is_none()
@@ -1647,3 +1700,7 @@ mod tests {
     }
 
 }
+
+#[cfg(test)]
+#[path = "fullscreen_menu_return_tests.rs"]
+mod fullscreen_menu_return_tests;

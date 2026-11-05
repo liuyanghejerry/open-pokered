@@ -40,10 +40,12 @@ impl FarPatternCopyCall {
         if copy.format != CopyFormat::TwoBpp {
             return None;
         }
-        let PatternSource::Sprite(raw) = copy.source else {
-            return None;
+        let bank = match copy.source {
+            PatternSource::Sprite(raw) => super::sprite_sheet_metadata::sprite_sheet_metadata(raw)?.bank,
+            PatternSource::TextBox | PatternSource::Tileset(_) =>
+                super::video_request_ports::PatternRomBinding::for_source(copy.source)?.bank,
+            _ => return None,
         };
-        let bank = super::sprite_sheet_metadata::sprite_sheet_metadata(raw)?.bank;
         Some(Self {
             step: Step::CallerCall,
             a: bank,
