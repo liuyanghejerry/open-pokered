@@ -10,6 +10,7 @@ parser.add_argument('--rom',type=Path,required=True)
 parser.add_argument('--sym',type=Path,required=True)
 parser.add_argument('--native-binary',type=Path,required=True,help='Sole game binary, guarded only; not executed')
 parser.add_argument('--out',type=Path,required=True)
+parser.add_argument('--controls',type=Path,required=True,help='External original PC input/expectation record; never read generated records from the repo')
 args=parser.parse_args()
 R=Path(__file__).resolve().parents[3];E=args.out.parent;E.mkdir(parents=True,exist_ok=True)
 rom=args.rom;binary=args.native_binary
@@ -22,7 +23,7 @@ paths=[rom,binary,*sorted((R/'crates/pokered-audio/src').rglob('*.rs')),Path(__f
 frozen={str(p):sha(p)for p in paths};head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=R,text=True).strip()
 assert sha(rom)=='5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b'
 fixture=R/'docs/audits/hof-pc-cry/original-fixture.sav';raw=fixture.read_bytes()
-c=json.loads(gzip.decompress((R/'docs/audits/hof-pc-cry/original-controls.json.gz').read_bytes()))
+c=json.loads(gzip.decompress(args.controls.read_bytes()))
 tape=[i for i in next(i for i in c['cases']if i['mode']=='short-a')['inputs']if i['frame']<2987]
 assert tape[-1]['frame']+tape[-1]['frames']==2987
 fields=['wChannelSoundIDs','wChannelFlags1','wChannelFlags2','wChannelDutyCycles','wChannelVibratoDelayCounters','wChannelVibratoExtents','wChannelVibratoRates','wChannelFrequencyLowBytes','wChannelVibratoDelayCounterReloadValues','wChannelNoteDelayCounters','wChannelLoopCounters','wChannelNoteSpeeds','wChannelNoteDelayCountersFractionalPart','wChannelOctaves','wChannelVolumes']

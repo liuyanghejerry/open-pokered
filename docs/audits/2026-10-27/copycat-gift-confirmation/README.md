@@ -1,5 +1,8 @@
 # 模仿少女 TM31 领取确认
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 基底：master `a34d447fe12cbd67b6d36c4b1b927b477e87cf6e`。原作对照：pret/pokered `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c` 的 `scripts/CopycatsHouse2F.asm` 与 `text/CopycatsHouse2F.asm`。
 
 玩家给出皮皮玩偶后，领取音效结束应保留 TM31 领取文字，按原作的 PARA 继续说明；确认最后一句后才扣除一个玩偶并设置领取标记。满包时仍先尝试 GiveItem，不扣玩偶。无玩偶、重复交谈以及内外层确认分别保留原作分支。

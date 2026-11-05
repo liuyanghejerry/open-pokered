@@ -1,5 +1,8 @@
 # Indigo Plateau Party return follow-up
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../../README.md)。
+
+
 The fresh route exposed two real failures at Indigo Plateau Lobby. The earlier
 Party candidate stopped on `MissingSource(Sprite(41), 0)` when B cancelled the
 menu. Fixing that source range revealed a second failure in the default GBA

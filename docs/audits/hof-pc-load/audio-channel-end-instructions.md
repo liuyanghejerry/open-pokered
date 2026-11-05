@@ -1,5 +1,8 @@
 # Retained channel endings and noise-music handoff
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The HoF PC picture-loading issue remains **confirmed unfixed / unwired**. This
 work adds CPU continuations, not physical APU timing, a native tick, complete
 frame/IRQ ownership, or a Game runtime fix.

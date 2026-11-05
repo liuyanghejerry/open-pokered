@@ -11,7 +11,9 @@ parser.add_argument('--rom',type=Path,required=True)
 parser.add_argument('--sym',type=Path,required=True)
 parser.add_argument('--native-binary',type=Path,required=True,help='Sole binary, read only, for the recording freeze guard')
 parser.add_argument('--phase-offset',type=int,choices=[0,1],default=0)
+parser.add_argument('--reference',type=Path,required=True,help='External full trace for this phase; all original comparison assertions remain enabled')
 parser.add_argument('--out',type=Path,required=True)
+parser.add_argument('--controls',type=Path,required=True,help='External original PC input/expectation record; never read generated records from the repo')
 parser.add_argument('--decompress-points',action='store_true',help='Also observe six sparse source entry sites for each mode/size representative')
 args=parser.parse_args()
 R=Path(__file__).resolve().parents[3];E=args.out.parent;E.mkdir(parents=True,exist_ok=True)
@@ -62,7 +64,7 @@ main=0x2000+symbols['sMainData'][1]-0xa000
 num=main+symbols['wNumHoFTeams'][1]-symbols['wMainDataStart'][1];raw[num]=26
 checksum=0x2000+symbols['sMainDataCheckSum'][1]-0xa000;raw[checksum]=(~sum(raw[0x2598:checksum]))&255
 raw=bytes(raw); fixture=E/f'original-151-phase-{args.phase_offset}-fixture.sav';fixture.write_bytes(raw)
-controls=json.loads(gzip.decompress((R/'docs/audits/hof-pc-cry/original-controls.json.gz').read_bytes()))
+controls=json.loads(gzip.decompress(args.controls.read_bytes()))
 case=next(c for c in controls['cases'] if c['mode']=='short-a')
 copy_cases=[]
 point_trials=[]
@@ -198,7 +200,7 @@ j={'scope':__doc__,'all_pass':True,'repeat_exact':True,'source_ref':'fbcf7d0e19a
 args.out.write_bytes(gzip.compress(json.dumps(j,indent=2).encode(),mtime=0))
 print('151 original pictures, two normal boots, exact repeat PASS',flush=True)
 
-expected=json.loads(gzip.decompress((R/f'docs/audits/hof-pc-load/original-phase-{args.phase_offset}.json.gz').read_bytes()))
+expected=json.loads(gzip.decompress(args.reference.read_bytes()))
 assert j['trial']==expected['trial'],'portable original replay differs from published events/records/interrupts/inputs'
 print('Portable replay matches all published original trial data exactly',flush=True)
 

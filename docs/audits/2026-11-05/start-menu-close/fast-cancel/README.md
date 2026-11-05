@@ -1,5 +1,8 @@
 # Earliest START cancellation: preserve the opening noise
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../../README.md)。
+
+
 The preceding #441 candidate could lock when B was pressed as soon as START
 accepted input. Its CHAN8 opening sound was still playing alongside CHAN5
 PressAB; the restoration audio preflight rejected that valid noise program

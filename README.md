@@ -203,4 +203,5 @@ The engine is consumed from `https://github.com/liuyanghejerry/dotzuki`, pinned 
 - The **jrpg engine** — separate repo, consumed via git dependency.
 - The game **gfx assets** — fetched from pret/pokered by `scripts/fetch-gfx.sh` (copyrighted; not redistributed).
 
-See `CLAUDE.md` for the full developer guide (build commands, debug CLI, skills).
+See [AGENTS.md](AGENTS.md) for contributor guidance and skills, and the
+[development guide](docs/development.md) for build commands, debugging, and tooling.

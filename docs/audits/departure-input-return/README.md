@@ -1,5 +1,8 @@
 # S.S. Anne departure input return
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 A short START press as the two-step departure walk finished was lost. The
 native continuation spent another update on `clearJoyIgnore`, then waited
 for another field iteration before reading input. Held RIGHT also resumed
@@ -21,7 +24,7 @@ remain separate: their source completion behavior differs.
 
 | Physical START interval from the first counter-7 sample | Original | Fixed native |
 | --- | --- | --- |
-| [30, 32), source-only control | No menu | Not newly compared |
+| 30, 32), source-only control | No menu | Not newly compared |
 | [32, 33) | No menu | No menu |
 | [33, 34) | CPU menu entry at offset 33 | START screen at post-update 34 |
 | [34, 36) | CPU menu entry at offset 35 | START screen at post-update 36 |
@@ -31,7 +34,7 @@ CPU hooks execute during a tick, while native observations are made after
 an update. These two offset conventions must not be equated. The native
 one-frame and next-poll cases assert the actual post-update frames.
 The held-RIGHT control starts its next stride at frame 38, matching the
-[existing original movement record](../simulated-walk-clock/original-runtime.json.gz).
+[existing original movement record（历史运行记录，已清理）.
 The baseline starts at 37. Other walking, bicycle, door and guard controls
 still pass.
 

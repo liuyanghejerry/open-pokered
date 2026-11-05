@@ -1,5 +1,8 @@
 # Retained command stream and note preparation
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The Hall of Fame PC picture-loading issue remains **confirmed unfixed / unwired**.
 These components are not complete notes, audio frames, IRQ returns, APU write
 scheduling, or Game runtime integration.

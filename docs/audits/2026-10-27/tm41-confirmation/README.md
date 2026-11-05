@@ -1,5 +1,8 @@
 # TM41 生蛋领取确认
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 从玉虹市池塘旁的老人领取 TM41 后，旧 master 在领取音效结束时自动关闭文字。现在保留领取文字，等待玩家确认后返回地图；介绍、背包满提示和重复交谈使用对应的段落与确认流程。中英文段落保持。
 
 原作依据：pret/pokered `fbcf7d0e` 的 `scripts/CeladonCity.asm:44–82` 和 `text/CeladonCity.asm:29–63`。介绍以 prompt 结束，成功领取文字播放 sound_get_item_1 后返回，再设置 EVENT_GOT_TM41，最终由外层 DisplayTextID 等待确认。原 master 的发放和事件顺序本来正确，修复保留。满包不消耗机会；重复交谈只说明 SOFTBOILED，不重复发放。

@@ -1,5 +1,8 @@
 # Hall of Fame PC: finish each cry before reading buttons
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The previous viewer accepted A/B while its current Pokémon's cry was playing.
 A could immediately replace that Pokémon and start the next cry; B could exit.
 The original waits for the cry before reading either button. The earlier claim
@@ -51,7 +54,7 @@ uv run --python 3.12 --with pyboy==2.8.1 python \
   docs/audits/hof-pc-cry/replay-original.py \
   --rom /path/to/reference.gbc --sym /path/to/pokered.sym \
   --fixture docs/audits/hof-pc-cry/original-fixture.sav \
-  --controls docs/audits/hof-pc-cry/original-controls.json.gz \
+  --controls /path/to/scratch/original-controls.json.gz \
   --out /path/to/new-original-result.json.gz
 ```
 

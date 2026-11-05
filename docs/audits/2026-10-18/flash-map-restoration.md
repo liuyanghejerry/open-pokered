@@ -1,10 +1,13 @@
 # FLASH map restoration
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 Current implementation: `dda4fafa`, composed with master `2106f360`. Status: **PARTIAL**. The PR remains a draft: two fresh seeded GBA runs take about 2.149/2.148 seconds; original physical timing and the common IRQ/audio/RETI path remain unproven. Historical measurements below belong to their named builds; the current result is `current_followup_1189` in `flash-gba-runtime.json`.
 
 Current-master verification: core library 3,228 tests passed; debug-server application library 408 passed with 40 existing ignores. Both the base and candidate were independently captured twice for 240 consecutive frames. Every observed record and PNG hash matches its repeat; both sides share the ordinary SAVE, seed 42, initial image, frame 775 and complete normalized command tape. The base executable was built at `9c0aed53`; all game crate and Cargo source bytes match master `2106f360` (no rebuilt-source relabeling). The candidate executable was built at `dda4fafa`; all 11 CLI subsystem scenarios passed on that same executable. The two fresh candidate captures also match all 240 observed records and PNG hashes from the preceding `b51b5b3f` captures.
 
-The new [verification bundle](flash-restoration-current-master/verification.json) includes a bootable prepared SAVE, normalized commands and compressed full observed frame records. Captures use the current menu `ready_for_input` observation before selecting Pokemon. The first attempted after capture referenced an obsolete diagnostic field and stopped; correcting only that script produced the two retained successful runs.
+The new verification bundle（历史运行记录，已清理） includes a bootable prepared SAVE, normalized commands and compressed full observed frame records. Captures use the current menu `ready_for_input` observation before selecting Pokemon. The first attempted after capture referenced an obsolete diagnostic field and stopped; correcting only that script produced the two retained successful runs.
 
 At index 159 both sides show the acknowledged FLASH text; at 174 the base has returned to the map while the candidate is white. At 194 the candidate shows the map while sprite work remains pending. **Index 200 is still a transfer phase, not completion.** The candidate returns at 204; the final comparison now uses index 220, with the player visible on both sides. These are matched native host-frame indexes, not proof of original physical-frame parity.
 

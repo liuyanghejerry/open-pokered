@@ -1,5 +1,8 @@
 # 道具战斗动画逐帧差分
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../../README.md)。
+
+
 - 原版：`pret/pokered@fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`
 - 正式 Red ROM SHA-1：`ea9bcae617fdf159b045185467ae58b2e4a48b9a`
 - 当前实现：`open-pokered@7ff55ddaf21fe61754aa7f0f7ca75d91d623bd5b`

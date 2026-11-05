@@ -25,6 +25,6 @@
 - 编辑器当前布局预览和 DSL 编译使用 `pokered-layout-preview`，直接复用 dotzuki；`pokered-ui-preview` 是仓库内另一套游戏 UI 预览桥接。试玩使用 `pokered-runner-web`，通过输入、逐帧 RGBA 和数据注入接口连接完整游戏。
 - 编辑器在本地 / Electron 模式经 API 编辑磁盘内容，静态模式使用浏览器 IndexedDB 覆盖数据。调试服务由 `pokered-app` 的可选 `debug-server` feature 启用，提供 TCP JSON-line 控制；回归脚本据此读取状态、注入输入并推进帧。
 
-核对入口：[工作区清单](../Cargo.toml)、[开发与架构说明](../CLAUDE.md)、[共享游戏编排](../crates/pokered-app/src/game.rs)、[TUI 编排](../crates/pokered-tui/src/game.rs)、[内容构建](../crates/pokered-data/build.rs)、[布局预览加载](../tools/pokered-editor/src/composables/useWasmPreview.ts)、[试玩桥接](../crates/pokered-runner-web/src/lib.rs)。
+核对入口：[工作区清单](../Cargo.toml)、[开发与架构说明](../AGENTS.md)、[共享游戏编排](../crates/pokered-app/src/game.rs)、[TUI 编排](../crates/pokered-tui/src/game.rs)、[内容构建](../crates/pokered-data/build.rs)、[布局预览加载](../tools/pokered-editor/src/composables/useWasmPreview.ts)、[试玩桥接](../crates/pokered-runner-web/src/lib.rs)。
 
 更新架构图时，以各 crate 的 `Cargo.toml` 和实际调用代码为准。SVG 是展示图的可编辑源文件，PNG 是其 2 倍分辨率导出；Mermaid 文件单独维护精确到 crate 的依赖关系。
