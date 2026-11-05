@@ -600,6 +600,25 @@ impl FieldRestoreWork {
         Self { input, operations, next: 0 }
     }
 
+    /// StartMenu_Item and StartMenu_Option restore buffer2 and the textbox
+    /// patterns before RedisplayStartMenu, without a palette or map reload.
+    pub fn submenu_return(input: RestoreInput) -> Self {
+        use RestoreOperation::*;
+        let operations = vec![
+            LoadScreenBuffer2,
+            VideoPatternCopy(PatternCopy {
+                source: PatternSource::TextBox,
+                source_offset: 0,
+                destination: 0x9600,
+                tiles: 32,
+                format: CopyFormat::TwoBpp,
+            }),
+            UpdateSprites,
+            Return,
+        ];
+        Self { input, operations, next: 0 }
+    }
+
     fn for_destination(input: RestoreInput, start_menu: bool) -> Self {
         use RestoreOperation::*;
         let first = SpritePatternPlan::new(&input.pictures, false);
