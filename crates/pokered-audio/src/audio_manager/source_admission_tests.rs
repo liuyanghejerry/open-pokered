@@ -76,7 +76,7 @@ fn unsupported_preflight_does_not_call_admission_or_advance_any_native_audio() {
         let mut guarded = powered();
         for m in [&mut ordinary, &mut guarded] {
             m.play_music(if case == 0 {
-                MusicId::PALLET_TOWN
+                MusicId::WILD_BATTLE
             } else {
                 MusicId::POKECENTER
             });

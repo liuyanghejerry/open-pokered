@@ -29,7 +29,29 @@ impl NativeUiTiles {
     /// Reuse handles across text reveal/blink frames. A failed sample rolls
     /// back newly interned patterns and leaves the prior complete map intact.
     pub fn sample(&mut self, frame: &FrameBuffer) -> Result<(), FieldBackgroundError> {
-        if frame.width() != 160 || frame.height() != 144 {
+        self.sample_pixels(frame.width(), frame.height(), |x, y| {
+            frame.get_index(x, y).unwrap() as u8
+        })
+    }
+
+    /// Sample a retained packed raster without replacing the displayed UI or
+    /// allocating another full linear framebuffer on GBA.
+    pub fn sample_retained(
+        &mut self,
+        frame: &dotzuki_renderer::RgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+    ) -> Result<(), FieldBackgroundError> {
+        self.sample_pixels(frame.width(), frame.height(), |x, y| {
+            frame.get_index(x, y).unwrap() as u8
+        })
+    }
+
+    fn sample_pixels(
+        &mut self,
+        width: u32,
+        height: u32,
+        pixel: impl Fn(u32, u32) -> u8,
+    ) -> Result<(), FieldBackgroundError> {
+        if width != 160 || height != 144 {
             return Err(FieldBackgroundError::WrongDimensions);
         }
         let old_len = self.patterns.len();
@@ -39,7 +61,7 @@ impl NativeUiTiles {
                 let mut pattern = [0; 16];
                 for row in 0..8 {
                     for column in 0..8 {
-                        let shade = frame.get_index(tx * 8 + column, ty * 8 + row).unwrap() as u8;
+                        let shade = pixel(tx * 8 + column, ty * 8 + row);
                         pattern[row as usize * 2] |= (shade & 1) << (7 - column);
                         pattern[row as usize * 2 + 1] |= ((shade >> 1) & 1) << (7 - column);
                     }

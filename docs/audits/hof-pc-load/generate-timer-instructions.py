@@ -112,15 +112,26 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
         elif op in (0x79,0x7a,0x7b,0x57,0x6f,0x50,0x5f,0x68,0x7d,0x5d,0x54,0x78,0x47,0x59):
             dst, src = {0x79:('A','C'),0x7a:('A','D'),0x7b:('A','E'),0x57:('D','A'),0x6f:('L','A'),0x50:('D','B'),0x5f:('E','A'),0x68:('L','B'),0x7d:('A','L'),0x5d:('E','L'),0x54:('D','H'),0x78:('A','B'),0x47:('B','A'),0x59:('E','C')}[op]
             r[dst] = r[src]; t = 4
+        elif op in (0x4f,0x60,0x62,0x6b,0x7c,0x67,0x51,0x4a,0x41):
+            dst,src={0x4f:('C','A'),0x60:('H','B'),0x62:('H','D'),0x6b:('L','E'),0x7c:('A','H'),0x67:('H','A'),0x51:('D','C'),0x4a:('C','D'),0x41:('B','C')}[op]
+            r[dst]=r[src];t=4
         elif op in (0x87,0x88):
             value=r['A']+(r['A'] if op==0x87 else r['B'])+(int(carry) if op==0x88 else 0)
             r['A']=value&255;carry=value>255;z=r['A']==0;t=4
+        elif op in (0x86,0x8a,0x8b,0x93,0x96,0x98):
+            value=read(hl()) if op in (0x86,0x96) else r[{0x8a:'D',0x8b:'E',0x93:'E',0x98:'B'}[op]]
+            add_carry=int(carry) if op in (0x8a,0x8b,0x98) else 0
+            result=r['A']-value-add_carry if op in (0x93,0x96,0x98) else r['A']+value+add_carry
+            carry=result<0 or result>255;r['A']=result&255;z=r['A']==0;t=8 if op in (0x86,0x96) else 4
         elif op in (0xb2,0xb3):
             r['A'] |= r['D' if op==0xb2 else 'E'];carry=False;z=r['A']==0;t=4
         elif op in (0xaf,0xee):
             r['A'] ^= r['A'] if op==0xaf else fetch();carry=False;z=r['A']==0;t=4 if op==0xaf else 8
-        elif op == 0xbb:
-            z,carry=r['A']==r['E'],r['A']<r['E'];t=4
+        elif op in (0xbb,0xb9,0xba,0xbe):
+            value=read(hl()) if op==0xbe else r[{0xbb:'E',0xb9:'C',0xba:'D'}[op]]
+            z,carry=r['A']==value,r['A']<value;t=8 if op==0xbe else 4
+        elif op == 0x07:
+            carry=bool(r['A']&128);r['A']=((r['A']<<1)|int(carry))&255;z=False;t=4
         elif op == 0x0f:
             carry=bool(r['A']&1);r['A']=(r['A']>>1)|(128 if carry else 0);z=False;t=4
         elif op in (0xa7,0xe6,0xb6):
@@ -130,8 +141,8 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
             z, carry = r['A'] == 0, False
         elif op == 0xfe:
             value = fetch(); z, carry = r['A'] == value, r['A'] < value; t = 8
-        elif op in (0x80,0x83,0x85,0x92,0x82):
-            v = r[{0x80:'B',0x83:'E',0x85:'L',0x92:'D',0x82:'D'}[op]]
+        elif op in (0x80,0x81,0x83,0x85,0x92,0x82):
+            v = r[{0x80:'B',0x81:'C',0x83:'E',0x85:'L',0x92:'D',0x82:'D'}[op]]
             n = r['A']-v if op == 0x92 else r['A']+v
             carry = n<0 or n>255; r['A'] = n&255; z = r['A']==0; t = 4
         elif op in (0x3d,0x35,0x0c,0x3c):
@@ -146,14 +157,14 @@ def run(rom, bank, context, channel=None, *, entry=None, registers=None, memory=
             take = {0x18:True,0x20:not z,0x28:z,0x30:not carry,0x38:carry}[op]
             if take: pc += off
             t = 12 if take else 8
-        elif op in (0xca,0xc2,0xc3):
-            target=word();take=op==0xc3 or (z if op==0xca else not z)
+        elif op in (0xca,0xc2,0xc3,0xda,0xd2):
+            target=word();take={0xc3:True,0xca:z,0xc2:not z,0xda:carry,0xd2:not carry}[op]
             if take:pc=target
             t=16 if take else 12
         elif op == 0xcd:
             target = word(); stack.append(pc); pc = target; t = 24
-        elif op in (0x05,0x14,0x1c):
-            key={0x05:'B',0x14:'D',0x1c:'E'}[op];r[key]=(r[key]+(-1 if op==0x05 else 1))&255;z=r[key]==0;t=4
+        elif op in (0x04,0x05,0x14,0x1c):
+            key={0x04:'B',0x05:'B',0x14:'D',0x1c:'E'}[op];r[key]=(r[key]+(-1 if op==0x05 else 1))&255;z=r[key]==0;t=4
         elif op == 0x2b:
             sethl((hl()-1)&65535);t=8
         elif op == 0x23:

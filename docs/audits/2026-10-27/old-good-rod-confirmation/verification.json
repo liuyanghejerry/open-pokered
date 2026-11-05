@@ -1,0 +1,219 @@
+{
+  "status": "local-prepared-and-full-fresh-passed",
+  "base": "877667400bc387456bf716feaace65972e6d2468",
+  "source_commit": "473351d669c837e762292688d6e92aaf9b7e86c7",
+  "source_tree_of_frozen_binary": "1f210723971e8083b099c0e37af84c3243208617",
+  "source_identity": "Frozen source tree and source_commit 473351d6 match all crates/Cargo. Subsequent changes are documentation plus cfg(test)-only core script assertions; runtime source and the recorded binary are unchanged.",
+  "baseline_binary_sha256": "859b986f4d0b626bb25fd16e56094341325248688d998735a2c79b65a8e49854",
+  "candidate_binary_sha256": "bf9b83dfb53e09be68449214ecd8de09ba7fde38446fc9c586a694fb88c5759b",
+  "baseline_identity": "Frozen build source d0c0a348 matches all compiled crates/Cargo on master87766740; current baseline screenshots replayed afresh twice in audit1377.",
+  "native_cases": [
+    {
+      "map": "VermilionOldRodHouse",
+      "variant": "early-pulse",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "VermilionOldRodHouse",
+      "variant": "held-a",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "VermilionOldRodHouse",
+      "variant": "held-b",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "VermilionOldRodHouse",
+      "variant": "full-bag",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "VermilionOldRodHouse",
+      "variant": "decline",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "variant": "early-pulse",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "variant": "held-a",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "variant": "held-b",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "variant": "full-bag",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    },
+    {
+      "map": "FuchsiaGoodRodHouse",
+      "variant": "decline",
+      "repeats_identical": true,
+      "separate_process_continue_runs": 2
+    }
+  ],
+  "separate_process_continue_total": 20,
+  "frames": {
+    "VermilionOldRodHouse": 1113,
+    "FuchsiaGoodRodHouse": 1128
+  },
+  "paired_repeats_each_side": 2,
+  "image_scope": "Same SRAM, initial screen and absolute frame. Each side follows its own dialogue confirmations; not an identical complete input sequence. Each side repeated twice.",
+  "images_visually_reviewed": true,
+  "prepared_scope": "Original SRAM fixtures; formal native controls use ordinary CONTINUE, button input and observations. Debug SAVE followed by a separate process CONTINUE is reported separately from the full NEW GAME chain.",
+  "checks": {
+    "app": 417,
+    "ignored": 40,
+    "data_boa": 479,
+    "data_ignored": 1,
+    "agent": 64,
+    "arm": "passed",
+    "core_unit": 3293,
+    "core_including_integration": 3807,
+    "core_doc_ignored": 1
+  },
+  "earlier_failure": "First helper incorrectly expected held B to retain GOOD ROD outer ACK. Actual original exits without release at tick80. Preserved partial failed recording; corrected expectation repeated twice separately.",
+  "first_fresh_attempt": "Stopped at m16 after three normal ship-rival defeats and is preserved as failed. The complete NEW GAME retry used merged PR428: ordinary training to levels30/32 after two defeats, third fight won; all later milestones passed.",
+  "files": [
+    {
+      "path": "docs/screenshots/old-good-rod-confirmation/VermilionOldRodHouse-before.png",
+      "sha256": "bdf1b0c6cc606ac78ec3c1be2b48a7c80c7b6382099e415b31d198c146023341"
+    },
+    {
+      "path": "docs/screenshots/old-good-rod-confirmation/VermilionOldRodHouse-after.png",
+      "sha256": "de2231f569958b2e8c7840e0a71349e564d5c0743036ed3c63dd93acd6a26700"
+    },
+    {
+      "path": "docs/audits/2026-10-27/old-good-rod-confirmation/VermilionOldRodHouse-success.sav.gz",
+      "sha256": "da9a9d66814fdeae695bdf07049adcaf5afa0b453cc93a86c9c38e2e560f452e",
+      "decompressed_sha256": "d69caf4fa42ba9af9b861f85df3ee53484f7d7d9e36fe2ddfdf7b3f56dba3453"
+    },
+    {
+      "path": "docs/audits/2026-10-27/old-good-rod-confirmation/VermilionOldRodHouse-full-bag.sav.gz",
+      "sha256": "6b2fd2661ba0915065abc718864d0fb4030c0d0a1f3cfc42a709fe40abd82ec3",
+      "decompressed_sha256": "d9782fbb1934340a704335da87a088af30b94b1dc5fb2c4a9127321e261051e1"
+    },
+    {
+      "path": "docs/screenshots/old-good-rod-confirmation/FuchsiaGoodRodHouse-before.png",
+      "sha256": "b65badde765641d3f457c2f3383e8f99d0c4050196128d494e09254866ad4d3e"
+    },
+    {
+      "path": "docs/screenshots/old-good-rod-confirmation/FuchsiaGoodRodHouse-after.png",
+      "sha256": "aecc6a1b4b7e86eed2ba0246be3fcded12318019976f53771db8f0dd8d3e8e82"
+    },
+    {
+      "path": "docs/audits/2026-10-27/old-good-rod-confirmation/FuchsiaGoodRodHouse-success.sav.gz",
+      "sha256": "6e66fd8c2d752d1a459868ecb445f4783c7b750d15019f8b2b325747d0d65a67",
+      "decompressed_sha256": "17c1fe4f9c5cdd1795ef2adfaf632cd0e4c3109b7fd7fb512ccfb6e4eedf1e97"
+    },
+    {
+      "path": "docs/audits/2026-10-27/old-good-rod-confirmation/FuchsiaGoodRodHouse-full-bag.sav.gz",
+      "sha256": "467b60461ae98bbdb9961ca9604976974c73e97a7ecd02b4ae322442c5e2cb87",
+      "decompressed_sha256": "a2cb80d453edb624ca9c35e9b0e4f8a57229b11d60f1560efe313fd1ecccbb0d"
+    }
+  ],
+  "fresh": {
+    "status": "passed",
+    "seed": 42,
+    "speed": 0,
+    "seconds": 8291.567050897997,
+    "milestones": 49,
+    "ending": "Champion, Hall of Fame, credits, ending SAVE and separate-process CONTINUE",
+    "continued_map": "PalletTown",
+    "badges": 255,
+    "hall_of_fame_count": 1,
+    "source_and_binary_unchanged": true,
+    "driver_head": "45b1e6225c2b7766ab5d5fc583599aa988aaef48",
+    "driver_already_in_master_via_pr": 428
+  },
+  "artifacts": [
+    {
+      "path": "FuchsiaGoodRodHouse-full-bag.sav.gz",
+      "bytes": 1091,
+      "sha256": "467b60461ae98bbdb9961ca9604976974c73e97a7ecd02b4ae322442c5e2cb87"
+    },
+    {
+      "path": "FuchsiaGoodRodHouse-success.sav.gz",
+      "bytes": 1063,
+      "sha256": "6e66fd8c2d752d1a459868ecb445f4783c7b750d15019f8b2b325747d0d65a67"
+    },
+    {
+      "path": "README.md",
+      "bytes": 896,
+      "sha256": "4bee98c21916e9dca4ecb44777752d2aa17cfc8a2ca6c0e29d48870b6bbc59ed"
+    },
+    {
+      "path": "VermilionOldRodHouse-full-bag.sav.gz",
+      "bytes": 1095,
+      "sha256": "6b2fd2661ba0915065abc718864d0fb4030c0d0a1f3cfc42a709fe40abd82ec3"
+    },
+    {
+      "path": "VermilionOldRodHouse-success.sav.gz",
+      "bytes": 1066,
+      "sha256": "da9a9d66814fdeae695bdf07049adcaf5afa0b453cc93a86c9c38e2e560f452e"
+    },
+    {
+      "path": "earlier-fresh-failure.json",
+      "bytes": 1334,
+      "sha256": "d4d61c7661b970c25c66e4e94d9eb75140c3b848e2a4b94442e79bea4f1009f1"
+    },
+    {
+      "path": "first-clear.sav.gz",
+      "bytes": 674,
+      "sha256": "dcf0bc399355c2f063683aa97a2fc546b73b1dd9746ef7a26c761ffb0c523900"
+    },
+    {
+      "path": "fresh-driver.log.gz",
+      "bytes": 3775,
+      "sha256": "0ce5da0e51f0c14119394fde9ebf1208d31aad656eea4ad30fa1fe14e39ceaba"
+    },
+    {
+      "path": "fresh-milestones.json.gz",
+      "bytes": 19986,
+      "sha256": "d6d500ea26ff37b2a96963ecc165926bbdf6244c28ae55cc29b375e4ea30eb0b"
+    },
+    {
+      "path": "fresh-run.json.gz",
+      "bytes": 54958,
+      "sha256": "2a393650e274027e797715864548303a5bd59bf66be75a7cd0f8c9f26835d73d"
+    },
+    {
+      "path": "local-checks.json",
+      "bytes": 2086,
+      "sha256": "e2e751a700ebfd07aa9e653d02e723310acbd219631a07a16feb8ce6566dc7ec"
+    },
+    {
+      "path": "paired-recordings.json.gz",
+      "bytes": 3854,
+      "sha256": "4d95adcfec44d77b5250c797aed6fdca400fcbc38548c5a7795aa3e3d98b9269"
+    },
+    {
+      "path": "prepared-recordings.json.gz",
+      "bytes": 91108,
+      "sha256": "feb4258c84a38587b72a55fa04d1bdaee411c64f1cb600a1fe964b545789ec4e"
+    },
+    {
+      "path": "ci-correction.json",
+      "bytes": 1488,
+      "sha256": "51b6657731ea7c1b175a069a000cc0690fd6a2dbe01f2a92085f129d892b5cc6"
+    }
+  ],
+  "ci_correction": "ci-correction.json"
+}

@@ -8,22 +8,27 @@ game_scene Route12Gate2F {
   @storyline("talkBrunetteGirl") {
     @trigger(map = "Route12Gate2F", npc = 1)
     @if (getFlag("EVENT_GOT_TM39")) {
-      @speaker("") {
-        @t("TM39 is a move called SWIFT.\n\nIt's very accurate, so use\nit during battles you can't\nafford to lose.", "TM39是招式叫做迅星。\n\n它非常精准，所以在不能输的战\n斗中一定要用它。")
-      }
+      printFieldTextParts([
+        @t("TM39 is a move called SWIFT.", "TM39是招式叫做迅星。"),
+        @t("It's very accurate, so use\nit during battles you can't\nafford to lose.", "它非常精准，所以在不能输的战\n斗中一定要用它。")
+      ], false)
     } @else {
-      @speaker("") {
-        @t("My POKeMON's ashes are\nstored in POKeMON TOWER.\n\nYou can have this TM. I\ndon't need it any more...", "我的宝可梦的骨灰存放在宝可梦\n塔里。\n\n这个TM给你吧。我已经不需要它\n了……")
-      }
+      printFieldTextParts([
+        @t("My POKeMON's ashes are\nstored in POKeMON TOWER.", "我的宝可梦的骨灰存放在宝可梦\n塔里。"),
+        @t("You can have this TM. I\ndon't need it any more...", "这个TM给你吧。我已经不需要它\n了……")
+      ], "prompt")
       // Original GiveItem carry: only mark TM39 received after acceptance.
       given = giveItem("TM39", 1)
       @if (given) {
+        printItemFieldText(@t("<PLAYER> received TM39!", "<PLAYER>得到了 TM39！"), "SFX_GET_ITEM_1")
         setFlag("EVENT_GOT_TM39")
-        showItemDialogue(@t("<PLAYER> received TM39!", "<PLAYER>得到了 TM39！"), "SFX_GET_ITEM_1")
       } @else {
-        @speaker("") { @t("You don't have room for\nthis.", "你没有地方放这个。") }
+        printFieldTextParts([
+          @t("You don't have room for\nthis.", "你没有地方放这个。")
+        ], false)
       }
     }
+    acknowledgeFieldText()
   }
 
   // ── Left binoculars (sign 1) — only prints when facing up ──────────────

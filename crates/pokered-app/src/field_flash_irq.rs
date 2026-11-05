@@ -37,19 +37,20 @@ impl pokered_audio::source_clock::apu_bus::SourceAudioFrameBus for FieldAudioBus
     ) -> Result<Option<u8>, Self::Error> {
         use pokered_audio::source_clock::apu_bus::ApuAccess;
         let offset = match instruction.access {
-            Some(ApuAccess::Read { at_tcycle, .. })
-            | Some(ApuAccess::Write { at_tcycle, .. }) => at_tcycle,
+            Some(ApuAccess::Read { at_tcycle, .. }) | Some(ApuAccess::Write { at_tcycle, .. }) => {
+                at_tcycle
+            }
             None => 0,
         };
-        self.time.execute_external_irq_access(instruction.tcycles, offset, || {
-            match instruction.access {
+        self.time
+            .execute_external_irq_access(instruction.tcycles, offset, || match instruction.access {
                 Some(ApuAccess::Read { address, .. }) => Some(apu.read_register(address)),
                 Some(ApuAccess::Write { address, value, .. }) => {
-                    apu.write_register(address, value); None
+                    apu.write_register(address, value);
+                    None
                 }
                 None => None,
-            }
-        })
+            })
     }
 
     fn execute_plain_run(
@@ -57,11 +58,14 @@ impl pokered_audio::source_clock::apu_bus::SourceAudioFrameBus for FieldAudioBus
         _apu: &mut pokered_audio::apu::Apu,
         tcycles: &[u8],
     ) -> Result<usize, Self::Error> {
-        use pokered_core::overworld::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
-        self.time.execute_plain_run(tcycles.iter().map(|&tcycles| DisplayInstruction {
-            tcycles,
-            access: None,
-        }))
+        use pokered_core::overworld::display_lcd_work::{
+            DisplayInstruction, DisplayInstructionBus,
+        };
+        self.time
+            .execute_plain_run(tcycles.iter().map(|&tcycles| DisplayInstruction {
+                tcycles,
+                access: None,
+            }))
     }
 }
 
@@ -78,6 +82,7 @@ pub(super) struct FieldIrq {
     pub map_tiles: crate::render::MapTileSnapshot,
     pub ui: super::super::field_video_inputs::NativeUiTiles,
     pub background_is_map: bool,
+    native_grass: Option<[Option<u8>; 16]>,
     pub portion: u8,
     pub shadows: VBlankVideoShadows,
     pub completed: u64,
@@ -87,6 +92,10 @@ impl FieldIrq {
     pub(super) fn new(game: &mut PokemonGame, flow: &mut FieldFlash) -> Result<Self, String> {
         let map_tiles = crate::render::stationary_map_tile_snapshot(&game.overworld)
             .map_err(|e| format!("native map input: {e:?}"))?;
+        let native_grass = if flow.origin.returns_to_map_with_actors() {
+            Some(super::super::field_oam_inputs::stationary_grass_inputs(&game.overworld, &map_tiles.tiles)
+                .map_err(|e| format!("native stationary grass: {e:?}"))?)
+        } else { None };
         let resources = game
             .resources
             .as_mut()
@@ -180,6 +189,7 @@ impl FieldIrq {
             map_tiles,
             ui,
             background_is_map: false,
+            native_grass,
             portion: 0,
             shadows: VBlankVideoShadows {
                 scx: 0,
@@ -202,7 +212,9 @@ impl PokemonGame {
                 self.source_display = Box::new(pokered_core::overworld::display_work_time::DisplayWorkTime::legacy_native_projection(self.frame_count).into());
             }
             #[cfg(any(test, feature = "debug-server"))]
-            { self.source_audio_work = None; }
+            {
+                self.source_audio_work = None;
+            }
         }
     }
     pub(in crate::game) fn field_irq_owns_clock(&self) -> bool {
@@ -212,7 +224,10 @@ impl PokemonGame {
             .is_some_and(|irq| irq.attached)
     }
     fn sample_field_irq_ui(&self, flow: &mut FieldFlash) -> Result<(), String> {
-        let irq = flow.irq.as_mut().ok_or("FLASH native IRQ inputs unavailable")?;
+        let irq = flow
+            .irq
+            .as_mut()
+            .ok_or("FLASH native IRQ inputs unavailable")?;
         if irq.attached || irq.background_is_map {
             return Ok(());
         }
@@ -223,7 +238,7 @@ impl PokemonGame {
                 } else {
                     format!("{first}\n{second}")
                 };
-                let arrow = !flow.text.returned()
+                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
                     && dialogue.waiting_for_input()
                     && (self.frame_count / 16) % 2 == 0;
                 let mut painter = pokered_ui::backends::FrameBufferPainter::new(&mut flow.party);
@@ -236,7 +251,9 @@ impl PokemonGame {
                 );
             }
         }
-        irq.ui.sample(&flow.party).map_err(|error| format!("native UI input: {error:?}"))
+        irq.ui
+            .sample(&flow.party)
+            .map_err(|error| format!("native UI input: {error:?}"))
     }
     pub(super) fn attach_field_irq(&mut self, flow: &mut FieldFlash) -> Result<(), String> {
         self.sample_field_irq_ui(flow)?;
@@ -248,7 +265,9 @@ impl PokemonGame {
             // The retained native party uses canonical shade indices. Bind
             // that existing image once; subsequent palette changes are actual
             // source stores, published only by completed display scanout.
-            self.source_display.device_mut().begin_native_background_scanout(0xe4);
+            self.source_display
+                .device_mut()
+                .begin_native_background_scanout(0xe4);
             irq.attached = true;
             self.source_display.set_vblank_dispatch_enabled(true);
         }
@@ -310,15 +329,20 @@ impl PokemonGame {
             let prepare = if enabled != 1 {
                 PrepareOamWork::control_only(enabled)
             } else {
-                let slots = if flow.slots.is_empty() {
-                    &irq.initial_slots
-                } else {
+                // Indoor reloads build an assignment prefix while VBlank can
+                // still see the previous published images. That prefix is
+                // not a complete binding table for the visible actors: keep
+                // their entry bindings until all assignments are available.
+                let slots = if flow.slots.len() == irq.initial_slots.len() {
                     &flow.slots
+                } else {
+                    &irq.initial_slots
                 };
-                let input = super::super::field_oam_inputs::field_oam_input(
+                let input = super::super::field_oam_inputs::field_oam_input_with_grass(
                     &self.overworld,
                     &*self.source_display,
                     slots,
+                    irq.native_grass.as_ref(),
                 )
                 .map_err(|e| format!("native actor input: {e:?}"))?;
                 PrepareOamWork::new(input)
@@ -432,32 +456,41 @@ impl PokemonGame {
                 &assets,
             ) {
                 Ok(IrqProgress::Instruction) => (),
-                Ok(IrqProgress::NeedsAudio3) => {
+                Ok(IrqProgress::NeedsAudio) => {
                     use pokered_audio::source_clock::{
-                        AudioAdmissionError,
-                        frame_instructions::FrameStepError,
+                        frame_instructions::FrameStepError, AudioAdmissionError,
                     };
-                    let audio = self.audio.as_ref().ok_or("native audio owner unavailable")?;
-                    if irq.audio.is_none() {
-                        let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
-                        irq.audio = Some(Box::new(audio.begin_source_audio_frame_with_bus(bank, 0)
-                            .map_err(|e| format!("source audio entry: {e:?}"))?));
-                    }
+                    let audio = self
+                        .audio
+                        .as_ref()
+                        .ok_or("native audio owner unavailable")?;
+                    let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
                     // One exclusive display bus spans the audio continuation;
                     // each instruction still observes its own IO/budget edge.
-                    let result = audio.resume_source_audio_frame_with_runner(
-                        irq.audio.as_mut().unwrap(),
-                        FieldAudioBus { time: self.source_display.display_bus() },
+                    let result = audio.service_source_audio_frame(
+                        &mut irq.audio,
+                        bank,
+                        0,
+                        FieldAudioBus {
+                            time: self.source_display.display_bus(),
+                        },
                     );
                     let work = match result {
                         Ok(work) => work,
-                        Err(AudioAdmissionError::Admission(FrameStepError::Clock(DisplayWorkError::Budget))) => return Ok(false),
+                        Err(AudioAdmissionError::Admission(FrameStepError::Clock(
+                            DisplayWorkError::Budget,
+                        ))) => return Ok(false),
                         Err(error) => return Err(format!("source audio continuation: {error:?}")),
                     };
                     #[cfg(any(test, feature = "debug-server"))]
-                    { self.source_audio_work = Some((self.frame_count, Ok(work))); }
+                    {
+                        self.source_audio_work = Some((self.frame_count, Ok(work)));
+                    }
                     irq.audio = None;
-                    irq.work.as_mut().unwrap().audio3_returned(work.cycles)
+                    irq.work
+                        .as_mut()
+                        .unwrap()
+                        .audio_returned(work.cycles)
                         .map_err(|e| format!("{e:?}"))?;
                 }
                 Ok(IrqProgress::Returned) => {

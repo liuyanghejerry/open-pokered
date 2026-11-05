@@ -4,12 +4,14 @@
 //! are owned by dotzuki's `core_host` catalog.
 
 pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
+    "acknowledgeFieldText",
     "animateHealingMachine",
     "askFieldYesNo",
     "badgeMenu",
     "bikeShopOffer",
     "billPokemonList",
     "choosePartyPokemon",
+    "continueFieldTextParts",
     "cyclingGateReturn",
     "depositDaycare",
     "elevatorMenu",
@@ -62,6 +64,9 @@ pub const POKERED_SCRIPT_FUNCTIONS: &[&str] = &[
     "pokedexRating",
     "pokemonMenu",
     "printFieldText",
+    "printFieldTextParts",
+    "printItemFieldText",
+    "printItemFieldTextParts",
     "printTextCry",
     "readingMenu",
     "replaceTileBlock",

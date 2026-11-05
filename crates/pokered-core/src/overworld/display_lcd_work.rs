@@ -34,6 +34,19 @@ pub trait DisplayInstructionBus {
     {
         Ok(0)
     }
+    /// Optional IRQ prefix containing only plain instructions and shadow-OAM
+    /// stores. The owner must exclude DMA and interrupt interleaving, so these
+    /// RAM stores cannot become visible until the accepted prefix returns.
+    /// Each accepted instruction still obeys the ordinary budget boundary.
+    fn execute_shadow_oam_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        _instructions: I,
+    ) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(0)
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum DisableStep {

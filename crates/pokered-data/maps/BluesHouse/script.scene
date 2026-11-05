@@ -2,10 +2,6 @@
 // text/BluesHouse.asm) to the real Game DSL API surface. This is the rival's
 // house in Pallet Town: Daisy (the rival's sister) hands the player the TOWN
 // MAP once they have the POKeDEX and an errand from Oak. Plain NPC-dialogue map.
-//
-// Stub note: the original GiveItem has a "bag full" failure branch
-// (BluesHouseDaisyBagFullText). The DSL giveItem() returns no result, so the
-// bag-full path is omitted — at this point in the game the bag is never full.
 
 game_scene BluesHouse {
   // ── On-enter: mark the house as entered (BluesHouseDefaultScript) ────────
@@ -19,33 +15,35 @@ game_scene BluesHouse {
     @trigger(map = "BluesHouse", npc = 1, toggle = "BLUESHOUSE_DAISY1")
     @if (getFlag("EVENT_GOT_TOWN_MAP")) {
       // Already have the map.
-      @speaker("") {
+      printFieldTextParts([
         @t("Use the TOWN MAP to find out\nwhere you are.", "用城镇地图就能知道你在哪里。")
-      }
+      ], false)
     } @else @if (getFlag("EVENT_GOT_POKEDEX")) {
       // Player has the POKeDEX (Oak's errand) — offer the TOWN MAP.
-      @speaker("") {
+      printFieldTextParts([
         @t("Grandpa asked you to run an\nerrand? Here, this will help\nyou!", "爷爷让你去跑腿办事？给你，这\n个会帮到你！")
-      }
+      ], "prompt")
       // Original: GiveItem; on bag-full print DaisyBagFullText — the table
       // map stays and EVENT_GOT_TOWN_MAP is not set (retry on re-talk).
       given = giveItem("TOWN_MAP", 1)
       @if (given) {
         // Hide the TOWN MAP object on the table (TOGGLE_TOWN_MAP = npc 3).
         hideObjectByName("BLUESHOUSE_TOWN_MAP")
-        showItemDialogue(@t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！"), "SFX_GET_KEY_ITEM")
+        printItemFieldText(@t("<PLAYER> got a TOWN MAP!", "<PLAYER>得到了城镇地图！"), "SFX_GET_KEY_ITEM")
         setFlag("EVENT_GOT_TOWN_MAP")
       } @else {
-        @speaker("") {
+        printFieldTextParts([
           @t("You have too much stuff\nwith you.", "你带的东西太多了。")
-        }
+        ], false)
       }
     } @else {
       // No POKeDEX yet — just chit-chat.
-      @speaker("") {
+      printFieldTextParts([
         @t("Hi <PLAYER>! <RIVAL> is out\nat Grandpa's lab.", "嗨，<PLAYER>！ <RIVAL>现在在\n大木研究所。")
-      }
+      ], false)
     }
+    // PrintText returns after the fanfare, then DisplayTextID owns the ACK.
+    acknowledgeFieldText()
   }
 
   // ── Daisy, walking (npc 2) — POKeMON-rest tip ───────────────────────────

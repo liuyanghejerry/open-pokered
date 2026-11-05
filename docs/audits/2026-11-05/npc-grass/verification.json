@@ -1,0 +1,262 @@
+{
+  "scope": "NPC lower-half grass priority; three fixed original-ROM windows, repeated twice. Not full random-NPC or GBA timing parity.",
+  "base": "6a6fcfae1be131f68eda34a9b6ce34949d35b351",
+  "production": "1d6cccd4af6959f08d379b19094733a3ecde8171",
+  "native_binary_sha256": "a481f3bbbf2238ed04c4c4bfef9c7ec2b189f0c856e603fee47322de0635f621",
+  "build_manifest_sha256": "33e65988668857ca82e540d0017501626ab2ccf5c4f3b2c0ff880bdd15fe6d9b",
+  "production_inputs": {
+    "crates/pokered-app/src/render/overworld.rs": "26afdeb79c65b6926e36309e02b21efdddc42035232b346d3841479220614b00",
+    "crates/pokered-app/src/render/session.rs": "1e83baecc7ab0d15059ac75df515969acbe8f943970768c430abb9d743502b52",
+    "crates/pokered-core/src/overworld/npc_presentation.rs": "182214df762cef19f0b9fd9dbc243554171e49a828f5099f68025373ed50da84",
+    "crates/pokered-core/src/overworld/update.rs": "fff74aea4699fec98f89c4196e9d9ddc56678f51245cf76352aa9dad92369543"
+  },
+  "original": {
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "variant": "normal Red",
+    "emulator": "PyBoy",
+    "reference_state_sha256": "4f0ba69a1cb103c6f2d1fb26164ce3c99883f21b5a69ab4dd57382776b8c78f7",
+    "symbols_sha256": "a817ad4bc4059e65c28d4181d39605689d366c58abe4c2f60893a5f0f5d7e933"
+  },
+  "windows": [
+    {
+      "case": "stand",
+      "t_start": -1,
+      "t_end": 19,
+      "frames": 21,
+      "roi": [
+        96,
+        60,
+        16,
+        16
+      ],
+      "before_different_frames": 21,
+      "before_max_wrong_pixels": 53,
+      "after_different_frames": 0,
+      "repeats": 2,
+      "counter_image_phase_grass_priority_player_coordinates_match": true
+    },
+    {
+      "case": "walk",
+      "t_start": -1,
+      "t_end": 31,
+      "frames": 33,
+      "roi": [
+        108,
+        28,
+        36,
+        48
+      ],
+      "before_different_frames": 8,
+      "before_max_wrong_pixels": 38,
+      "after_different_frames": 0,
+      "repeats": 2,
+      "counter_image_phase_grass_priority_player_coordinates_match": true
+    },
+    {
+      "case": "player",
+      "t_start": -1,
+      "t_end": 29,
+      "frames": 31,
+      "roi": [
+        108,
+        28,
+        36,
+        48
+      ],
+      "before_different_frames": 23,
+      "before_max_wrong_pixels": 38,
+      "after_different_frames": 0,
+      "repeats": 2,
+      "counter_image_phase_grass_priority_player_coordinates_match": true
+    }
+  ],
+  "native": {
+    "captured_frames_per_case_repeat": 121,
+    "cached_equals_full_every_frame": true,
+    "base_and_candidate_non_grass_state_identical_all_frames": true,
+    "repeat_state_and_pixels_identical": true,
+    "frame_counter_consecutive": true,
+    "background_player_walk": "PASS: all 30 ordered transitions match; total 16 pixels, eight 2-pixel steps"
+  },
+  "tests": [
+    {
+      "name": "core-grass",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--lib",
+        "grass_priority",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 25.91147952596657,
+      "passed": 3,
+      "ignored": 0
+    },
+    {
+      "name": "app-grass",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--test",
+        "npc_grass_priority",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 21.601932785008103,
+      "passed": 2,
+      "ignored": 0
+    },
+    {
+      "name": "native-build",
+      "command": [
+        "cargo",
+        "build",
+        "--bin",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 22.029293858096935,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "app-full",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-app",
+        "--features",
+        "debug-server",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 158.60222896793857,
+      "passed": 1080,
+      "ignored": 92
+    },
+    {
+      "name": "core",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "pokered-core",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 44.34909345896449,
+      "passed": 3985,
+      "ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "check",
+        "--release",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "seconds": 13.217163681052625,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "fresh_m06": {
+    "status": "passed",
+    "seed": 42,
+    "speed": 0,
+    "fresh_new_game": true,
+    "seconds": 41.1690781309735,
+    "unchanged_source_and_binary": true
+  },
+  "gba": {
+    "fixture": {
+      "input_sha256": "c845c39d2c36c10a891d13d220454759040acd2073af0240681e7b5dfd033007",
+      "output_sha256": "f5039440b4df629bdcd9b5ad9ad482303e486534e24598df08146f127115044c",
+      "offsets": [
+        9733,
+        9734,
+        13603
+      ],
+      "trainer_id_before": 0,
+      "trainer_id_after": 12345,
+      "scope": "Fixture preparation only; player ID 0 is rejected by the pre-existing GBA boot guard. No actor, terrain, movement, palette or runtime state is edited during recording."
+    },
+    "default_release": true,
+    "extra_features": [],
+    "physical_frames_per_repeat": 1000,
+    "repeat_per_version": 2,
+    "cartridge_sram_unchanged": true,
+    "each_version_repeat_pixels_identical": true,
+    "initial_roi_before_errors": 53,
+    "initial_roi_after_errors": 0,
+    "final_walk_and_menu_pixels_identical_base_candidate": true,
+    "invalid_initial_setup": "Unaccepted first attempts used trainer ID 0 and entered NEW GAME. Current SRAM differs only at ID/checksum; four valid cold CONTINUE runs verified visually.",
+    "before": {
+      "head": "6a6fcfae1be131f68eda34a9b6ce34949d35b351",
+      "rom_sha256": "ab85b50c2553265995c4e227c85f957543fd9504e9572a5a662f543432fce974",
+      "elf_sha256": "08f06ae0cea2bdf3e5a51e5bd8b1443a98b0f81a5bef9c2d59dbcafa0d787842",
+      "seconds": 58.3988538129488,
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--locked",
+        "--offline"
+      ]
+    },
+    "after": {
+      "head": "1d6cccd4af6959f08d379b19094733a3ecde8171",
+      "rom_sha256": "22120cd1e43006cf39b1978422e412ebca3ee3d89da385ca8bad2db353390a28",
+      "elf_sha256": "05bff52e77185dbe200fa245037380faf9b177500d1fedbdd661b6a13e8201da",
+      "seconds": 59.169102451065555,
+      "command": [
+        "cargo",
+        "+nightly-2025-12-07",
+        "build",
+        "--release",
+        "--locked",
+        "--offline"
+      ]
+    }
+  },
+  "limitations": [
+    "The original walk recording continues into another random stride after the first fixed stride and rest. RNG seeds are not aligned across implementations; later direction differs and is not claimed as matching.",
+    "The native oam_pixels structure is a retained scan/publication register, not the original post-update WRAM pixel register; actor comparison uses rendered pixels plus movement counters and image phases.",
+    "No claim of original GBA physical speed, map-connection preview actors, or all scripted NPC trajectories."
+  ],
+  "committed_production_inputs_match_build": true,
+  "portable_replay_verified": {
+    "original": "all six PNG/state series byte-identical",
+    "gba": "all 1000 physical frame records and inputs identical",
+    "compact_records": "check-evidence.py passed"
+  },
+  "replay_source_sha256": {
+    "capture.rs": "ad898eb7ec56fdb233468e5fd9994da7a2e91e8317322a26a42fb593d50f8b65",
+    "replay-original.py": "656aa974da0ff1356644840cefba5f5f1f6ae763bec78166b958dafdbfd27b4a",
+    "replay-gba.py": "30c7629d159525f952b6a5021644add7d952a6df98a5e6b0779dd5622eb1b65f",
+    "mgba-sram-bridge.c": "b16c7943dfb962ec22e486c09d0603495d30292cf610606ad84ef1bc2a605c3e",
+    "check-evidence.py": "d713f0b6b6c4abb0571875ddbf7aefb61e5b0196d5575e84f25ae7735e0cf621"
+  }
+}

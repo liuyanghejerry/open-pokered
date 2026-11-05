@@ -48,24 +48,31 @@ game_scene MrFujisHouse {
   @storyline("talkMrFuji") {
     @trigger(map = "MrFujisHouse", npc = 5, toggle = "MRFUJISHOUSE_MR_FUJI")
     @if (getFlag("EVENT_GOT_POKE_FLUTE")) {
-      @speaker("") {
+      printFieldTextParts([
         @t("MR.FUJI: Has my FLUTE helped\nyou?", "富士老人：我的宝可梦之笛帮到\n你了吗？")
-      }
+      ], false)
     } @else {
-      @speaker("") {
-        @t("MR.FUJI: <PLAYER>.\n\nYour POKeDEX quest may fail\nwithout love for your\nPOKeMON.\n\nI think this may help your\nquest.", "富士老人：<PLAYER>。\n\n你的图鉴之旅缺少了对宝可梦的\n爱可能会失败。\n\n我想这个也许能帮到你。")
-      }
+      // The original offer ends in PROMPT before GiveItem.
+      printFieldTextParts([
+        @t("MR.FUJI: <PLAYER>.", "富士老人：<PLAYER>。"),
+        @t("Your POKeDEX quest may fail\nwithout love for your\nPOKeMON.", "你的图鉴之旅缺少了对宝可梦的\n爱可能会失败。"),
+        @t("I think this may help your\nquest.", "我想这个也许能帮到你。")
+      ], "prompt")
       given = giveItem("POKE_FLUTE", 1)
       @if (given) {
+        printItemFieldText(@t("<PLAYER> received a POKe\nFLUTE!", "<PLAYER>获得了宝可梦之笛！"), "SFX_GET_KEY_ITEM")
+        // The explanation starts with PARA: retain the receipt until its
+        // acknowledgement, then commit the event after the last DONE.
+        continueFieldTextParts([
+          @t("Upon hearing POKe FLUTE,\nsleeping POKeMON will spring\nawake.", "听到宝可梦之笛，睡着的宝可梦\n会立刻苏醒。"),
+          @t("It works on all sleeping\nPOKeMON.", "它对所有睡着的宝可梦都有效。")
+        ], false)
         setFlag("EVENT_GOT_POKE_FLUTE")
-        showItemDialogue(@t("<PLAYER> received a POKe\nFLUTE!", "<PLAYER>获得了宝可梦之笛！"), "SFX_GET_KEY_ITEM")
-        @speaker("") {
-          @t("Upon hearing POKe FLUTE,\nsleeping POKeMON will spring\nawake.\n\nIt works on all sleeping\nPOKeMON.", "听到宝可梦之笛，睡着的宝可梦\n会立刻苏醒。\n\n它对所有睡着的宝可梦都有效。")
-        }
       } @else {
-        @speaker("") { @t("You must make room for this!", "你必须腾出空间来放它！") }
+        printFieldTextParts([@t("You must make room for this!", "你必须腾出空间来放它！")], false)
       }
     }
+    acknowledgeFieldText()
   }
 
   // ── Pokedex display (npc 6) ─────────────────────────────────────────────

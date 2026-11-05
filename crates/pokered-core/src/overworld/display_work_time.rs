@@ -735,7 +735,9 @@ impl DisplayBus<'_> {
         }
         self.reserve()?;
         let result = (|| {
-            self.time.elapse_reserved(at_tcycle)?;
+            if at_tcycle != 0 {
+                self.time.elapse_reserved(at_tcycle)?;
+            }
             let result = access();
             self.time.elapse_reserved(tcycles - at_tcycle)?;
             Ok(result)
@@ -766,8 +768,47 @@ impl DisplayBus<'_> {
 #[cfg(test)]
 #[path = "display_external_irq_bus_tests.rs"]
 mod external_irq_bus_tests;
+#[cfg(test)]
+#[path = "display_shadow_oam_run_tests.rs"]
+mod shadow_oam_run_tests;
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
+    fn execute_shadow_oam_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        instructions: I,
+    ) -> Result<usize, Self::Error> {
+        if !self.time.active_vblank || self.time.device.dma_active()
+            || self.time.shadow_oam.len() != 160
+        {
+            return Ok(0);
+        }
+        let eligible = |i: &DisplayInstruction| match i.access {
+            None => true,
+            Some(DisplayAccess::Write { port, at_tcycle, .. }) =>
+                (0xc300..0xc3a0).contains(&port) && at_tcycle <= i.tcycles,
+            _ => false,
+        };
+        let mut instructions = instructions.peekable();
+        if !instructions.peek().is_some_and(eligible) { return Ok(0); }
+        self.reserve()?;
+        let available = self.time.remaining();
+        let (mut cycles, mut count) = (0u64, 0usize);
+        for instruction in instructions {
+            if cycles >= available || !eligible(&instruction) { break; }
+            if let Some(DisplayAccess::Write { port, value, .. }) = instruction.access {
+                self.time.shadow_oam[usize::from(port - 0xc300)] = value;
+            }
+            cycles = cycles.checked_add(u64::from(instruction.tcycles))
+                .expect("shadow OAM instruction run overflow");
+            count += 1;
+        }
+        // No instruction above starts DMA, writes display IO or permits a
+        // nested IRQ. LCD work reads hardware OAM, not this RAM page. Advance
+        // its real edges once against unchanged hardware state, then expose
+        // exactly the RAM bytes/cursor of the last admitted instruction.
+        self.time.elapse(cycles)?;
+        Ok(count)
+    }
     fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
         &mut self,
         instructions: I,

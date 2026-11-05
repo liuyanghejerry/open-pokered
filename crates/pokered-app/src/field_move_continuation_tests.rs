@@ -35,7 +35,6 @@ fn fixture(move_id: MoveId, badges: u8, map: MapId) -> PokemonGame {
         #[cfg(feature = "debug-server")]
         None,
     );
-    game.audio = None;
     game.save_data = SaveData::new();
     let (species, moves) = match move_id {
         MoveId::Fly => (
@@ -94,7 +93,7 @@ fn fixture(move_id: MoveId, badges: u8, map: MapId) -> PokemonGame {
     game.state.screen = GameScreen::PartyScreen;
     game.party_screen = PartyScreenState::new(game.save_data.party.to_vec());
     game.party_screen.set_cursor(1);
-    if move_id == MoveId::Flash {
+    {
         // This component fixture replaces ordinary map/menu entry. Bind the
         // same real virtual sequencer and native actor publication as the
         // normal --no-audio path; it is not original-music timing evidence.
@@ -222,6 +221,13 @@ fn field_move_refusals_acknowledge_then_resume_the_same_party_member() {
             );
             tap(&mut game, GbButton::B);
             tap(&mut game, GbButton::B);
+            // All normal party exits now run the actual map resource caller.
+            // The previous fixed tap delay can expire before it returns.
+            for _ in 0..600 {
+                if game.field_flash.is_none() { break; }
+                idle(&mut game, 1);
+            }
+            assert!(game.field_flash.is_none());
             assert_eq!(game.state.screen, GameScreen::StartMenu);
         }
     });

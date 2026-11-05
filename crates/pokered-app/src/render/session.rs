@@ -644,6 +644,7 @@ impl OverworldVisualKey {
                     hash_byte(&mut npc_hash, pose.image.facing as u8);
                     hash_byte(&mut npc_hash, pose.image.phase);
                     hash_byte(&mut npc_hash, pose.image.scripted_frame.unwrap_or(u8::MAX));
+                    hash_byte(&mut npc_hash, pose.image.grass_priority as u8);
                 }
             } else {
                 hash_byte(&mut npc_hash, 0);
@@ -1352,10 +1353,22 @@ impl PcVisualKey {
         hash_byte(&mut visual_hash, game.pc_stats_return_frame.unwrap_or(8).min(8));
         match phase {
             PcPhase::Message => {
-                hash_u32(&mut visual_hash, pc.rating_visible_chars().map_or(u32::MAX, |n| n as u32));
+                hash_u32(&mut visual_hash, pc.message_visible_chars().map_or(u32::MAX, |n| n as u32));
                 hash_u32(&mut visual_hash, pc.message_page() as u32);
-                let start = pc.message_page() * 4;
-                for line in pc.message_lines().iter().skip(start).take(4) {
+                hash_byte(&mut visual_hash, pc.message_underlay().map_or(u8::MAX, |p| p as u8));
+                hash_u32(&mut visual_hash, pc.bills_menu().cursor() as u32);
+                hash_u32(&mut visual_hash, pc.mon_cursor() as u32);
+                hash_u32(&mut visual_hash, pc.item_list_cursor() as u32);
+                hash_u32(&mut visual_hash, pc.item_list_scroll() as u32);
+                match pc.message_underlay() {
+                    Some(PcPhase::BillsMenu) => hash_u32(&mut visual_hash, game.save_data.pc_storage.current_box_index() as u32),
+                    Some(PcPhase::MonList) => {
+                        for mon in game.save_data.pc_storage.current_box().iter() { hash_pc_mon(&mut visual_hash, mon); }
+                    }
+                    Some(PcPhase::ItemList) => hash_pc_inventory(&mut visual_hash, &game.save_data.game_data.pc_items),
+                    _ => {},
+                }
+                for line in pc.message_page_lines() {
                     for &byte in line.as_bytes() {
                         hash_byte(&mut visual_hash, byte);
                     }
@@ -2061,7 +2074,7 @@ impl RenderSession {
             .zip(last_main_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
         let start_menu_screen = game.state.screen == GameScreen::StartMenu;
-        let start_menu = start_menu_screen
+        let start_menu = (start_menu_screen && !field_flash_active)
             .then(|| StartMenuVisualKey::new(game))
             .flatten();
         let start_menu_cursor_change = start_menu

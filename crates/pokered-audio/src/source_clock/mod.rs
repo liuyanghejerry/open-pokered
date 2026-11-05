@@ -13,22 +13,34 @@ mod audio_stream_work;
 mod audio_work;
 pub mod channel_end_instructions;
 pub mod channel_output_instructions;
+pub mod drum_start_instructions;
 pub mod frame_instructions;
 pub mod music_note_instructions;
 pub mod note_math_instructions;
 pub mod note_pitch_instructions;
 pub mod note_preparation;
 pub mod note_stream_instructions;
+pub mod pitch_slide_instructions;
 pub mod press_ab_instructions;
 mod press_ab_work;
 pub mod timer_work;
 mod wave_patterns;
 
 use crate::{sequencer::Sequencer, NOTE_FREQUENCIES};
-use audio_next_note_work::music_next_note_work_with_sfx;
+use audio_next_note_work::music_next_note_work_with_drum;
 use audio_note_dispatch_work::MusicCommandState;
 use audio_work::{audio_dispatch_work, channel_effect_work_cycles, ChannelEffectWorkInput};
-use press_ab_work::{press_ab_next_note, PressAbWork, SOURCE_PRESS_AB_ID};
+use pitch_slide_instructions::{PitchSlideResult, PitchSlideState};
+use press_ab_work::{noise_next_note, press_ab_next_note, PressAbWork};
+use timer_work::EffectInstructionWork;
+
+fn canonical_noise_table(seq: &Sequencer) -> bool {
+    seq.noise_instruments.len() == 19
+        && seq.noise_instruments.iter().enumerate().all(|(i, data)| {
+            press_ab_instructions::PressAbInstructions::noise_data(i as u8 + 1)
+                == Some(data.as_slice())
+        })
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(
@@ -97,9 +109,11 @@ pub(crate) struct PreparedAudioFrame {
     work: AudioFrameWork,
     expected: [Option<ExpectedDelay>; 8],
     expected_tempo: u16,
-    expected_sfx: Option<PressAbWork>,
+    expected_panning: u8,
+    expected_sfx: [Option<PressAbWork>; 4],
     expected_saved_frequency: [Option<u8>; 4],
     paused_modulation: [Option<(u8, u8, u8)>; 4],
+    expected_slide: [Option<(PitchSlideResult, u16)>; 4],
 }
 
 impl PreparedAudioFrame {
@@ -107,48 +121,93 @@ impl PreparedAudioFrame {
         self.work
     }
 
-    /// This bounded port handles Silph, Rock Tunnel and Pokecenter music after the first
-    /// ordinary native tick. Noise rests/termination and finite loops are
+    /// This bounded port handles field music after the first ordinary native
+    /// tick. Noise rests/termination and finite loops are
     /// included, together with finite PressAB and its paired music branches.
     /// Audio1/3 update code is identical after symbol normalization at the
     /// pinned original revision. Only their PlaySound header selection differs;
     /// this method observes an existing sequencer and does not start sounds.
-    /// Other SFX/drums/pitch-slide/duty-rotation stop explicitly.
+    /// Canonical noise instruments include same-frame starts and busy drops.
+    /// Other SFX and duty-rotation still stop explicitly.
     /// No inactive voice is substituted for an active unsupported channel.
-    pub fn from_shared_music(seq: &Sequencer) -> Result<Self, AudioClockError> {
+    pub fn from_shared_music(
+        seq: &Sequencer,
+        song: frame_instructions::SourceSong,
+    ) -> Result<Self, AudioClockError> {
+        if seq.channels[3].active && !canonical_noise_table(seq) {
+            return Err(AudioClockError::UnsupportedEffect(3));
+        }
         for i in 4..8 {
             let ch = &seq.channels[i];
+            let valid_program = match i {
+                4 | 5 => press_ab_work::source_pulse_id(i, ch.sound_id, &ch.data).is_some()
+                    && seq.sfx_tempo == 0x100,
+                7 => {
+                    press_ab_work::source_noise_id(ch.sound_id, &ch.data).is_some()
+                        && ch.duty_cycle == 0
+                }
+                _ => false,
+            };
             if ch.active
-                && (i != 4
-                    || ch.sound_id != crate::sfx_data::SfxId::PressAB as u8
-                    || ch.data != crate::sfx_data::SFX_PRESS_AB_CH5
+                && (!valid_program
                     || ch.note_speed != 1
                     || ch.flags1.bits() != 4
-                    || ch.flags2.bits() != 0
-                    || seq.sfx_tempo != 0x100)
+                    || ch.flags2.bits() != 0)
             {
                 return Err(AudioClockError::ActiveSfx(i as u8));
             }
         }
-        let source_sfx = if seq.channels[4].active {
-            SOURCE_PRESS_AB_ID
+        let mut source_sfx = if seq.channels[4].active {
+            press_ab_work::source_pulse_id(4, seq.channels[4].sound_id, &seq.channels[4].data)
+                .expect("validated pulse program")
         } else {
             0
         };
-        let mut expected_sfx = None;
+        let mut expected_sfx = [None; 4];
         let mut expected_saved_frequency = [None; 4];
         let mut paused_modulation = [None; 4];
+        let mut expected_slide = [None; 4];
         let mut ids = [0; 8];
         let mut effects = [0; 8];
         let mut expected: [Option<ExpectedDelay>; 8] = [None; 8];
         let mut tempo = seq.music_tempo;
+        let mut panning = seq.stereo_panning;
         let mut fractions: [u8; 8] = core::array::from_fn(|i| seq.channels[i].delay_frac);
+        // Scalar constructor only: canonical data is borrowed below, not copied
+        // into a second sequencer or a speculative playback owner.
+        let mut started_noise: Option<crate::ChannelState> = None;
         for (i, ch) in seq.channels.iter().enumerate() {
-            ids[i] = if ch.active { ch.sound_id } else { 0 };
+            let ch = if i == 7 {
+                started_noise.as_ref().unwrap_or(ch)
+            } else {
+                ch
+            };
+            let data = if i == 7 && started_noise.is_some() {
+                press_ab_instructions::PressAbInstructions::noise_data(ch.sound_id)
+                    .expect("validated drum table")
+            } else {
+                &ch.data
+            };
+            // Native PALLET_TOWN is enum value zero. The source dispatch tests
+            // original header IDs, where Pallet Town is 186, not channel silence.
+            ids[i] = if !ch.active {
+                0
+            } else if i < 4 {
+                song.raw_id()
+            } else if i == 4 {
+                source_sfx
+            } else if i == 5 {
+                press_ab_work::SOURCE_SWAP_ID
+            } else if i == 7 {
+                press_ab_work::source_noise_id(ch.sound_id, data)
+                    .expect("validated noise program")
+            } else {
+                ch.sound_id
+            };
             if ids[i] == 0 {
                 continue;
             }
-            if i == 4 {
+            if matches!(i, 4 | 5 | 7) {
                 if ch.delay_counter == 1
                     || (ch.delay_counter == 0
                         && ch.ptr == 0
@@ -159,8 +218,15 @@ impl PreparedAudioFrame {
                     // The ordinary native constructor's ready-zero maps to
                     // the original sound constructor's ready-one. This finite
                     // stream never loops back to offset zero.
-                    let w = press_ab_next_note(&ch.data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
-                        .ok_or(AudioClockError::UnsupportedEffect(4))?;
+                    let w = if i <= 5 && ch.sound_id == crate::sfx_data::SfxId::Swap as u8 {
+                        press_ab_work::swap_next_note(song.bank(), i as u8, source_sfx,
+                            data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
+                    } else if i == 4 {
+                        press_ab_next_note(data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
+                    } else {
+                        noise_next_note(ids[i], data, ch.ptr, ch.delay_frac, source_sfx)
+                    }
+                    .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
                     effects[i] = 8 + 12 + 8 + 8 + 8 + 16 + w.cycles;
                     expected[i] = Some(ExpectedDelay {
                         delay: w.delay,
@@ -177,10 +243,13 @@ impl PreparedAudioFrame {
                             ))
                         },
                     });
-                    expected_sfx = Some(w);
+                    expected_sfx[i - 4] = Some(w);
+                    if i == 4 && w.ended {
+                        source_sfx = 0;
+                    }
                 } else if ch.delay_counter > 1 {
                     effects[i] = channel_effect_work_cycles(ChannelEffectWorkInput {
-                        channel: 4,
+                        channel: i as u8,
                         paired_sfx_active: false,
                         note_delay: ch.delay_counter,
                         flags1: ch.flags1.bits(),
@@ -190,7 +259,7 @@ impl PreparedAudioFrame {
                         vibrato_rate: ch.vibrato.rate,
                         frequency_low: ch.freq_lo_saved,
                     })
-                    .ok_or(AudioClockError::UnsupportedEffect(4))?;
+                    .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
                     expected[i] = Some(ExpectedDelay {
                         delay: ch.delay_counter - 1,
                         fraction: ch.delay_frac,
@@ -198,7 +267,7 @@ impl PreparedAudioFrame {
                         stream: None,
                     });
                 } else {
-                    return Err(AudioClockError::UnsupportedEffect(4));
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
                 }
                 continue;
             }
@@ -245,7 +314,7 @@ impl PreparedAudioFrame {
                     flags1: ch.flags1.bits(),
                     vibrato_delay: ch.vibrato.delay_counter,
                 };
-                let stream = audio_stream_work::music_stream_work(
+                let stream = audio_stream_work::music_stream_work_with_drum(
                     i as u8,
                     &ch.data,
                     ch.ptr,
@@ -253,6 +322,7 @@ impl PreparedAudioFrame {
                     ch.loop_counter,
                     state,
                     ch.vibrato.delay_reload,
+                    Some(seq.channels[7].active),
                 )
                 .ok_or(AudioClockError::UnsupportedCommand {
                     channel: i as u8,
@@ -269,7 +339,10 @@ impl PreparedAudioFrame {
                         }
                     }
                 }
-                let mut result = music_next_note_work_with_sfx(
+                if let Some(new_panning) = stream.panning {
+                    panning = new_panning;
+                }
+                let mut result = music_next_note_work_with_drum(
                     i as u8,
                     &stream.linear_commands,
                     stream.state,
@@ -281,12 +354,27 @@ impl PreparedAudioFrame {
                     NOTE_FREQUENCIES.get((stream.note >> 4) as usize).copied(),
                     seq.channels[i + 4].active,
                     source_sfx,
+                    Some(seq.channels[7].active),
                 )
                 .ok_or(AudioClockError::UnsupportedCommand {
                     channel: i as u8,
                     command: ch.data.get(ch.ptr).copied(),
                 })?;
                 expected_saved_frequency[i] = Some(result.frequency_low);
+                if let Some(slide) = result.pitch_slide {
+                    let mut frequency = slide.returned_frequency;
+                    if !seq.channels[i + 4].active && slide.flags1 & 1 != 0 {
+                        frequency =
+                            (frequency & 0xff00) | u16::from((frequency as u8).wrapping_add(1));
+                    }
+                    expected_slide[i] = Some((
+                        PitchSlideResult {
+                            state: slide.state,
+                            flags1: slide.flags1,
+                        },
+                        frequency,
+                    ));
+                }
                 result.cycles += stream.control_cycles;
                 effects[i] = 8 + 12 + 8 + 8 + 8 + 16 + result.cycles;
                 expected[i] = Some(ExpectedDelay {
@@ -300,6 +388,19 @@ impl PreparedAudioFrame {
                         stream.loop_counter,
                     )),
                 });
+                if let Some(drum) = stream.drum.filter(|drum| drum.started) {
+                    // Source PlaySound leaves the fractional carry untouched.
+                    // Canonical CHAN8 programs always keep it zero; refuse a
+                    // foreign carry instead of silently normalizing its work.
+                    if seq.channels[7].delay_frac != 0 {
+                        return Err(AudioClockError::UnsupportedEffect(7));
+                    }
+                    let noise = started_noise.insert(crate::ChannelState::new());
+                    noise.active = true;
+                    noise.sound_id = drum.instrument;
+                    noise.note_speed = 1;
+                    noise.flags1.insert(crate::ChannelFlags1::NOISE_OR_SFX);
+                }
             } else {
                 // The generic native engine treats zero as a ready entry;
                 // source zero wraps its countdown. Until those states have
@@ -311,8 +412,39 @@ impl PreparedAudioFrame {
                     paused_modulation[i] =
                         Some((ch.vibrato.delay_counter, ch.vibrato.rate, ch.flags1.bits()));
                 }
-                effects[i] = channel_effect_work_cycles(input)
-                    .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                if input.flags1 & 16 == 0 {
+                    effects[i] = channel_effect_work_cycles(input)
+                        .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                } else {
+                    let slide = PitchSlideState::from_native(&ch.pitch_slide);
+                    let mut effect = EffectInstructionWork::with_pitch_slide(input, Some(slide))
+                        .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                    effects[i] = effect.by_ref().map(u32::from).sum();
+                    if let Some(result) = effect.slide_result() {
+                        // Native arithmetic guards 16-bit wrap instead of writing
+                        // the wrapped value. Refuse those foreign states up front.
+                        if result.flags1 & 16 != 0
+                            && ((input.flags1 & 32 != 0 && result.state.current > slide.current)
+                                || (input.flags1 & 32 == 0 && result.state.current < slide.current))
+                        {
+                            return Err(AudioClockError::UnsupportedEffect(i as u8));
+                        }
+                        let frequency = if result.flags1 & 16 != 0 {
+                            result.state.current
+                        } else {
+                            ch.frequency
+                        };
+                        expected_slide[i] = Some((result, frequency));
+                    } else if input.flags1 & 16 != 0 && input.paired_sfx_active {
+                        expected_slide[i] = Some((
+                            PitchSlideResult {
+                                state: slide,
+                                flags1: input.flags1,
+                            },
+                            ch.frequency,
+                        ));
+                    }
+                }
                 expected[i] = Some(ExpectedDelay {
                     ended_ptr: None,
                     delay: ch.delay_counter - 1,
@@ -327,18 +459,30 @@ impl PreparedAudioFrame {
             },
             expected,
             expected_tempo: tempo,
+            expected_panning: panning,
             expected_sfx,
             expected_saved_frequency,
             paused_modulation,
+            expected_slide,
         })
     }
 
     pub fn finish(self, actual: &Sequencer) -> Result<AudioFrameWork, AudioClockError> {
-        if actual.music_tempo != self.expected_tempo {
+        if actual.music_tempo != self.expected_tempo
+            || actual.stereo_panning != self.expected_panning
+        {
             return Err(AudioClockError::NativeStateMismatch(0));
         }
         for i in 0..4 {
             let ch = &actual.channels[i];
+            if let Some((slide, frequency)) = self.expected_slide[i] {
+                if PitchSlideState::from_native(&ch.pitch_slide) != slide.state
+                    || ch.flags1.bits() != slide.flags1
+                    || ch.frequency != frequency
+                {
+                    return Err(AudioClockError::NativeStateMismatch(i as u8));
+                }
+            }
             if self.expected_saved_frequency[i].is_some_and(|low| low != ch.freq_lo_saved)
                 || self.paused_modulation[i].is_some_and(|v| {
                     v != (ch.vibrato.delay_counter, ch.vibrato.rate, ch.flags1.bits())
@@ -347,13 +491,15 @@ impl PreparedAudioFrame {
                 return Err(AudioClockError::NativeStateMismatch(i as u8));
             }
         }
-        if let Some(w) = self.expected_sfx.filter(|w| !w.ended) {
-            let ch = &actual.channels[4];
-            if ch.duty_cycle << 6 != w.duty
-                || ch.volume_envelope != w.envelope
-                || ch.frequency != w.frequency
-            {
-                return Err(AudioClockError::NativeStateMismatch(4));
+        for (index, work) in self.expected_sfx.into_iter().enumerate() {
+            if let Some(w) = work.filter(|w| !w.ended) {
+                let ch = &actual.channels[index + 4];
+                if ch.duty_cycle << 6 != w.duty
+                    || ch.volume_envelope != w.envelope
+                    || ch.frequency != w.frequency
+                {
+                    return Err(AudioClockError::NativeStateMismatch(index as u8 + 4));
+                }
             }
         }
         for (i, expected) in self.expected.iter().enumerate() {
@@ -397,7 +543,7 @@ mod native_owner_tests {
             let music = if unsupported_effect {
                 MusicId::POKECENTER
             } else {
-                MusicId::PALLET_TOWN
+                MusicId::WILD_BATTLE
             };
             for manager in [&mut ordinary, &mut clocked] {
                 manager.play_music(music);

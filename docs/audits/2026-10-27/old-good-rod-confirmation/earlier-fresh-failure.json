@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "seconds": 3161.080531902,
+  "error": "Traceback (most recent call last):\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-native-regression.py\", line 48, in <module>\n    pt.main()\n    ~~~~~~~^^\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-harness/scripts/playthrough.py\", line 2249, in main\n    fn(g)\n    ~~^^^\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-harness/scripts/playthrough_late.py\", line 425, in m16_ss_anne\n    return board_ss_anne(g)\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-harness/scripts/playthrough_late.py\", line 453, in board_ss_anne\n    require_flag(g, \"EVENT_BEAT_SS_ANNE_RIVAL\")\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/jerry/develop/open-pokered/.task-tmp/fidelity-39-plus/audit-1371-remaining-rods-harness/scripts/playthrough_late.py\", line 164, in require_flag\n    assert flags.get(name), f\"missing story flag {name}\"\n           ~~~~~~~~~^^^^^^\nAssertionError: missing story flag EVENT_BEAT_SS_ANNE_RIVAL\n",
+  "unchanged_source_and_binary": true,
+  "helper_sha256": "5453cf7f9c3f3058a8f6fa6688a7c4158d7a9f21750ebcd14249a4218968921b"
+}

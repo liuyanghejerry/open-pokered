@@ -5,6 +5,7 @@ use super::note_preparation::PreparationInput;
 use super::note_stream_instructions::{
     MusicCommandState, StreamInput, StreamInputError, StreamStepError,
 };
+use super::pitch_slide_instructions::PitchSlideState;
 use super::press_ab_instructions::{
     PressAbInput, PressAbInstructions, PressAbOutcome, PressAbStepError,
 };
@@ -52,46 +53,52 @@ fn fnv_multiply_arm32(value: u64) -> u64 {
 #[path = "frame_fingerprint_tests.rs"]
 mod fingerprint_tests;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg_attr(
-    any(test, feature = "source-clock-serde"),
-    derive(serde::Serialize, serde::Deserialize)
-)]
-pub enum SourceSong {
-    Pokecenter,
-    Dungeon3,
-    SilphCo,
+// Original MapSongBanks plus BikeRiding/Surfing, from the pinned source ROM.
+// Identifying a song does not waive the instruction interpreter's state checks.
+macro_rules! field_songs {
+    ($($song:ident => ($music:ident, $bank:literal, $id:literal)),+ $(,)?) => {
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[cfg_attr(any(test, feature = "source-clock-serde"), derive(serde::Serialize, serde::Deserialize))]
+        pub enum SourceSong { $($song),+ }
+        impl SourceSong {
+            pub const ALL: &'static [Self] = &[$(Self::$song),+];
+            pub fn bank(self) -> u8 { match self { $(Self::$song => $bank),+ } }
+            /// Original header offsets / 3; native enum zero is not silence.
+            pub fn raw_id(self) -> u8 { match self { $(Self::$song => $id),+ } }
+            pub(crate) fn music(self) -> MusicId { match self { $(Self::$song => MusicId::$music),+ } }
+            pub(crate) fn from_music(id: MusicId) -> Option<Self> {
+                Some(match id { $(MusicId::$music => Self::$song),+, _ => return None })
+            }
+        }
+    };
 }
-impl SourceSong {
-    pub fn bank(self) -> u8 {
-        match self {
-            Self::Pokecenter => 2,
-            Self::Dungeon3 | Self::SilphCo => 31,
-        }
-    }
-    /// Pinned readonly original header offsets / 3, not native enum identities.
-    pub fn raw_id(self) -> u8 {
-        match self {
-            Self::Pokecenter => 189,
-            Self::Dungeon3 => 232,
-            Self::SilphCo => 243,
-        }
-    }
-    pub(crate) fn music(self) -> MusicId {
-        match self {
-            Self::Pokecenter => MusicId::POKECENTER,
-            Self::Dungeon3 => MusicId::DUNGEON3,
-            Self::SilphCo => MusicId::SILPH_CO,
-        }
-    }
-    pub(crate) fn from_music(id: MusicId) -> Option<Self> {
-        Some(match id {
-            MusicId::POKECENTER => Self::Pokecenter,
-            MusicId::DUNGEON3 => Self::Dungeon3,
-            MusicId::SILPH_CO => Self::SilphCo,
-            _ => return None,
-        })
-    }
+field_songs! {
+    PalletTown => (PALLET_TOWN, 2, 186),
+    Pokecenter => (POKECENTER, 2, 189),
+    Gym => (GYM, 2, 192),
+    Cities1 => (CITIES1, 2, 195),
+    Cities2 => (CITIES2, 2, 199),
+    Celadon => (CELADON, 2, 202),
+    Cinnabar => (CINNABAR, 2, 205),
+    Vermilion => (VERMILION, 2, 208),
+    Lavender => (LAVENDER, 2, 212),
+    SSAnne => (SSANNE, 2, 216),
+    SafariZone => (SAFARI_ZONE, 2, 229),
+    Routes1 => (ROUTES1, 2, 235),
+    Routes2 => (ROUTES2, 2, 239),
+    Routes3 => (ROUTES3, 2, 243),
+    Routes4 => (ROUTES4, 2, 247),
+    IndigoPlateau => (INDIGO_PLATEAU, 2, 251),
+    OaksLab => (OAKS_LAB, 31, 205),
+    BikeRiding => (BIKE_RIDING, 31, 210),
+    Surfing => (SURFING, 31, 214),
+    GameCorner => (GAME_CORNER, 31, 217),
+    Dungeon1 => (DUNGEON1, 31, 224),
+    Dungeon2 => (DUNGEON2, 31, 228),
+    Dungeon3 => (DUNGEON3, 31, 232),
+    CinnabarMansion => (CINNABAR_MANSION, 31, 236),
+    PokemonTower => (POKEMON_TOWER, 31, 240),
+    SilphCo => (SILPH_CO, 31, 243),
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -119,7 +126,39 @@ struct Voice {
     vib_rate: u8,
     frequency: u16,
     saved_low: u8,
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    pitch_slide: PitchSlideState,
     data_fingerprint: u64,
+}
+impl Voice {
+    fn started_noise(instrument: u8) -> Self {
+        Self {
+            active: true,
+            id: instrument,
+            delay: 1,
+            fraction: 0,
+            ptr: 0,
+            return_ptr: 0,
+            loop_counter: 0,
+            speed: 1,
+            volume: 0xf0,
+            wave_instrument: 0,
+            duty: 0,
+            octave: 4,
+            flags1: 4,
+            flags2: 0,
+            vib_delay: 0,
+            vib_reload: 0,
+            vib_extent: 0,
+            vib_rate: 0,
+            frequency: 0,
+            saved_low: 0,
+            pitch_slide: PitchSlideState::default(),
+            data_fingerprint: program_fingerprint(
+                PressAbInstructions::noise_data(instrument).expect("canonical drum constructor"),
+            ),
+        }
+    }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -164,6 +203,7 @@ impl NativeStart {
                     vib_rate: c.vibrato.rate,
                     frequency: c.frequency,
                     saved_low: c.freq_lo_saved,
+                    pitch_slide: PitchSlideState::from_native(&c.pitch_slide),
                     data_fingerprint: program_fingerprint(&c.data),
                 }
             }),
@@ -214,10 +254,12 @@ pub struct SourceAudioFrame {
     song: SourceSong,
     bank: u8,
     mute: u8,
+    panning: Option<u8>,
     start: NativeStart,
     physical_output: bool,
     ids: [u8; 8],
     fractions: [u8; 8],
+    started_drum: Option<u8>,
     tempo: u16,
     channel: u8,
     stage: Stage,
@@ -235,19 +277,26 @@ impl SourceAudioFrame {
         if bank != song.bank() || mute != 0 {
             return Err(AudioClockError::UnsupportedSoundBank);
         }
+        if seq.channels[3].active && !super::canonical_noise_table(seq) {
+            return Err(AudioClockError::UnsupportedEffect(3));
+        }
         let start = NativeStart::read(seq);
-        for i in 5..8 {
-            if start.voices[i].active {
-                return Err(AudioClockError::ActiveSfx(i as u8));
-            }
+        if start.voices[6].active {
+            return Err(AudioClockError::ActiveSfx(6));
         }
         let mut ids = core::array::from_fn(|i| {
             if !start.voices[i].active {
                 0
             } else if i < 4 {
                 song.raw_id()
+            } else if i == 4 || i == 5 {
+                super::press_ab_work::source_pulse_id(i, start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
+            } else if i == 7 {
+                super::press_ab_work::source_noise_id(start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
             } else {
-                super::press_ab_work::SOURCE_PRESS_AB_ID
+                start.voices[i].id
             }
         });
         for (i, v) in start.voices.iter().enumerate() {
@@ -260,26 +309,30 @@ impl SourceAudioFrame {
                 }
                 ids[i] = song.raw_id();
             } else {
-                if i != 4
-                    || v.id != crate::sfx_data::SfxId::PressAB as u8
-                    || seq.channels[i].data != crate::sfx_data::SFX_PRESS_AB_CH5
-                    || v.flags1 != 4
-                    || v.flags2 != 0
-                    || v.speed != 1
-                    || seq.sfx_tempo != 0x100
-                {
+                let valid_program = match i {
+                    4 | 5 => super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data).is_some()
+                        && seq.sfx_tempo == 0x100,
+                    7 => {
+                        super::press_ab_work::source_noise_id(v.id, &seq.channels[i].data).is_some()
+                            && v.duty == 0
+                    }
+                    _ => false,
+                };
+                if !valid_program || v.flags1 != 4 || v.flags2 != 0 || v.speed != 1 {
                     return Err(AudioClockError::ActiveSfx(i as u8));
                 }
                 if v.delay == 0
                     && !(v.ptr == 0 && v.duty == 0 && v.volume == 0xf0 && v.fraction == 0)
                 {
-                    return Err(AudioClockError::UnsupportedEffect(4));
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
                 }
-                ids[i] = super::press_ab_work::SOURCE_PRESS_AB_ID;
             }
             if v.delay > 1 {
-                EffectInstructionWork::new(Self::effect_input(&start, &ids, i))
-                    .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                EffectInstructionWork::with_pitch_slide(
+                    Self::effect_input(&start, &ids, i),
+                    Some(v.pitch_slide),
+                )
+                .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
             }
         }
         let fractions = core::array::from_fn(|i| start.voices[i].fraction);
@@ -288,10 +341,12 @@ impl SourceAudioFrame {
             song,
             bank,
             mute,
+            panning: None,
             start,
             physical_output: false,
             ids,
             fractions,
+            started_drum: None,
             tempo,
             channel: 0,
             stage: Stage::Init,
@@ -301,7 +356,7 @@ impl SourceAudioFrame {
         })
     }
     /// Retain the same instruction cursor with actual APU accesses enabled.
-    /// The source path currently admits only the unmodified PressAB program.
+    /// The source path admits unmodified PressAB, SWAP and canonical drum programs.
     pub fn new_with_bus(
         seq: &Sequencer,
         song: SourceSong,
@@ -309,8 +364,12 @@ impl SourceAudioFrame {
         mute: u8,
     ) -> Result<Self, AudioClockError> {
         let mut work = Self::new(seq, song, bank, mute)?;
-        if seq.channels[4].active && (seq.frequency_modifier != 0 || seq.tempo_modifier != 0) {
-            return Err(AudioClockError::UnsupportedEffect(4));
+        if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
+            for i in 4..=5 {
+                if seq.channels[i].active {
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
+                }
+            }
         }
         work.physical_output = true;
         Ok(work)
@@ -320,6 +379,7 @@ impl SourceAudioFrame {
     }
     pub fn matches_native(&self, seq: &Sequencer) -> bool {
         self.start == NativeStart::read(seq)
+            && (!self.start.voices[3].active || super::canonical_noise_table(seq))
     }
     pub fn bank(&self) -> u8 {
         self.bank
@@ -352,25 +412,34 @@ impl SourceAudioFrame {
     }
     fn note(&self, seq: &Sequencer) -> Result<Stage, AudioClockError> {
         let i = self.channel as usize;
-        let v = self.start.voices[i];
-        if i == 4 {
-            return Ok(Stage::Press(
-                PressAbInstructions::new(
-                    PressAbInput {
-                        bank: self.bank,
-                        source_sfx_id: self.ids[4],
-                        ptr: v.ptr,
-                        fraction: self.fractions[4],
-                        duty: v.duty,
-                        flags1: v.flags1,
-                        flags2: v.flags2,
-                        note_speed: v.speed,
-                        sfx_tempo: self.start.sfx_tempo,
-                        vibrato_reload: v.vib_reload,
-                    },
-                    &seq.channels[4].data,
+        let v = self.voice(i);
+        if matches!(i, 4 | 5 | 7) {
+            let input = PressAbInput {
+                bank: self.bank,
+                source_sfx_id: self.ids[4],
+                ptr: v.ptr,
+                fraction: self.fractions[i],
+                duty: v.duty,
+                flags1: v.flags1,
+                flags2: v.flags2,
+                note_speed: v.speed,
+                sfx_tempo: self.start.sfx_tempo,
+                vibrato_reload: v.vib_reload,
+            };
+            let work = if i <= 5 && v.id == crate::sfx_data::SfxId::Swap as u8 {
+                PressAbInstructions::new_swap(input, i as u8, self.data(seq, i))
+            } else if i == 4 {
+                PressAbInstructions::new(input, self.data(seq, i))
+            } else {
+                PressAbInstructions::new_noise(
+                    input,
+                    self.ids[i],
+                    self.panning.unwrap_or(self.start.panning),
+                    self.data(seq, i),
                 )
-                .ok_or(AudioClockError::UnsupportedEffect(4))?,
+            };
+            return Ok(Stage::Press(
+                work.ok_or(AudioClockError::UnsupportedEffect(i as u8))?,
             ));
         }
         let state = MusicCommandState {
@@ -386,28 +455,47 @@ impl SourceAudioFrame {
             vibrato_delay: v.vib_delay,
         };
         Ok(Stage::Music(
-            MusicNoteInstructions::new(MusicNoteInput {
-                preparation: PreparationInput {
-                    stream: StreamInput {
-                        channel: self.channel,
-                        ptr: v.ptr,
-                        return_ptr: v.return_ptr,
-                        loop_counter: v.loop_counter,
-                        state,
-                        vibrato_reload: v.vib_reload,
+            MusicNoteInstructions::with_drum_context(
+                MusicNoteInput {
+                    preparation: PreparationInput {
+                        stream: StreamInput {
+                            channel: self.channel,
+                            ptr: v.ptr,
+                            return_ptr: v.return_ptr,
+                            loop_counter: v.loop_counter,
+                            state,
+                            vibrato_reload: v.vib_reload,
+                        },
+                        flags2: v.flags2,
+                        fraction: self.fractions[i],
+                        tempo: self.tempo,
                     },
-                    flags2: v.flags2,
-                    fraction: self.fractions[i],
-                    tempo: self.tempo,
+                    bank: self.bank,
+                    paired_sfx_active: self.ids[i + 4] != 0,
+                    source_sfx_id: self.ids[4],
+                    frequency_modifier: 0,
+                    previous_frequency_low: v.saved_low,
                 },
-                bank: self.bank,
-                paired_sfx_active: self.ids[i + 4] != 0,
-                source_sfx_id: self.ids[4],
-                frequency_modifier: 0,
-                previous_frequency_low: v.saved_low,
-            })
+                Some(self.ids[7] != 0),
+            )
             .ok_or(AudioClockError::UnsupportedEffect(self.channel))?,
         ))
+    }
+    fn voice(&self, i: usize) -> Voice {
+        if i == 7 {
+            if let Some(instrument) = self.started_drum {
+                return Voice::started_noise(instrument);
+            }
+        }
+        self.start.voices[i]
+    }
+    fn data<'a>(&self, seq: &'a Sequencer, i: usize) -> &'a [u8] {
+        if i == 7 {
+            if let Some(instrument) = self.started_drum {
+                return PressAbInstructions::noise_data(instrument).expect("canonical drum data");
+            }
+        }
+        &seq.channels[i].data
     }
     /// Caller must keep its starting native state/data fixed and IRQ ownership
     /// exclusive until completion. No native update or physical bus write occurs.
@@ -453,33 +541,80 @@ impl SourceAudioFrame {
                 loop {
                     let prefix = work.plain_prefix();
                     if prefix.len() > 1 {
-                        let count = bus.execute_plain_run(apu, prefix)
+                        let count = bus
+                            .execute_plain_run(apu, prefix)
                             .map_err(FrameStepError::Clock)?;
                         if count != 0 {
                             self.cycles += work.accept_plain_prefix(count);
-                            if work.finished() { break; }
+                            if work.finished() {
+                                break;
+                            }
                             continue;
                         }
                     }
                     let mut accepted = 0;
-                    let done = work.try_step_with_apu(|t, write| {
-                        let op = write.map_or_else(
-                            || ApuInstruction::plain(t),
-                            |w| ApuInstruction::write(t, w.address, w.value),
-                        );
-                        bus.execute(apu, op)?;
-                        accepted = t;
-                        Ok(())
-                    }).map_err(FrameStepError::Clock)?;
+                    let done = work
+                        .try_step_with_apu(|t, write| {
+                            let op = write.map_or_else(
+                                || ApuInstruction::plain(t),
+                                |w| ApuInstruction::write(t, w.address, w.value),
+                            );
+                            bus.execute(apu, op)?;
+                            accepted = t;
+                            Ok(())
+                        })
+                        .map_err(FrameStepError::Clock)?;
                     self.cycles += u32::from(accepted);
-                    if done { break; }
+                    if done {
+                        break;
+                    }
                 }
                 self.stage = Stage::Tail(0);
             } else {
+                let prefix = self.dispatch_plain_prefix();
+                if prefix.len() > 1 {
+                    let count = bus
+                        .execute_plain_run(apu, prefix)
+                        .map_err(FrameStepError::Clock)?;
+                    if count != 0 {
+                        self.accept_dispatch_plain_prefix(count);
+                        continue;
+                    }
+                }
                 self.step_inner(seq, |op| bus.execute(apu, op))?;
             }
         }
         Ok(())
+    }
+
+    // These source blocks only inspect the frame's immutable channel/mute
+    // input. Child construction and transfer stay on the checked step path.
+    fn dispatch_plain_prefix(&self) -> &'static [u8] {
+        use Stage::*;
+        let (code, index): (&[u8], u8) = match self.stage {
+            Channel(n) if self.ids[self.channel as usize] == 0 => (&[8, 12, 8, 8, 4, 12], n),
+            Channel(n) => (&[8, 12, 8, 8, 4, 8], n),
+            Kind(n) if self.channel >= 4 => (&[4, 8, 12], n),
+            Kind(n) => (&[4, 8, 8], n),
+            Mute(n) => (&[16, 4, 12], n),
+            ReadyEntry(n) if n < 5 => (&[8, 12, 8, 8, 8], n),
+            Tail(n) if self.channel == 7 => (&[4, 4, 8, 8], n),
+            Tail(n) => (&[4, 4, 8, 12], n),
+            _ => return &[],
+        };
+        &code[usize::from(index)..]
+    }
+
+    fn accept_dispatch_plain_prefix(&mut self, count: usize) {
+        use Stage::*;
+        let prefix = self.dispatch_plain_prefix();
+        assert!(count > 0 && count <= prefix.len());
+        self.cycles += prefix[..count].iter().map(|&t| u32::from(t)).sum::<u32>();
+        match &mut self.stage {
+            Channel(n) | Kind(n) | Mute(n) | ReadyEntry(n) | Tail(n) => *n += (count - 1) as u8,
+            _ => unreachable!("nonempty dispatch prefix"),
+        }
+        self.advance(None);
     }
     fn step_inner<E>(
         &mut self,
@@ -520,7 +655,7 @@ impl SourceAudioFrame {
                 let done = if self.physical_output {
                     work.try_step_with_bus(
                         &seq.channels[i].data,
-                        self.start.panning,
+                        self.panning.unwrap_or(self.start.panning),
                         self.start.voices[i].wave_instrument,
                         super::wave_patterns::for_bank(self.bank)
                             .expect("source frame validates its audio bank"),
@@ -537,14 +672,22 @@ impl SourceAudioFrame {
                 })?;
                 self.cycles += u32::from(accepted);
                 if done {
-                    let (tempo, fraction, ended) =
+                    let (tempo, fraction, panning, drum, ended) =
                         match work.result().expect("completed music body") {
                             MusicNoteOutcome::Note(n) => (
                                 n.preparation.stream.tempo,
                                 Some(n.preparation.fraction),
+                                n.preparation.stream.panning,
+                                n.preparation.stream.drum,
                                 false,
                             ),
-                            MusicNoteOutcome::End(n) => (n.stream.tempo, None, n.ending.ended),
+                            MusicNoteOutcome::End(n) => (
+                                n.stream.tempo,
+                                None,
+                                n.stream.panning,
+                                n.stream.drum,
+                                n.ending.ended,
+                            ),
                         };
                     if let Some(tempo) = tempo {
                         self.tempo = tempo;
@@ -553,14 +696,29 @@ impl SourceAudioFrame {
                     if let Some(fraction) = fraction {
                         self.fractions[i] = fraction;
                     }
+                    if let Some(panning) = panning {
+                        self.panning = Some(panning);
+                    }
                     if ended {
                         self.ids[i] = 0;
+                    }
+                    if let Some(drum) = drum.filter(|drum| drum.started) {
+                        self.started_drum = Some(drum.instrument);
+                        self.ids[7] = drum.instrument;
+                        self.fractions[7] = 0;
                     }
                     self.stage = Stage::Tail(0);
                 }
                 return Ok(false);
             }
             Stage::Press(work) => {
+                let data = if i == 7 {
+                    self.started_drum
+                        .and_then(PressAbInstructions::noise_data)
+                        .unwrap_or(&seq.channels[i].data)
+                } else {
+                    &seq.channels[i].data
+                };
                 let mut accepted = 0;
                 let clock = |op: ApuInstruction| {
                     let value = execute(op)?;
@@ -568,11 +726,9 @@ impl SourceAudioFrame {
                     Ok(value)
                 };
                 let done = if self.physical_output {
-                    work.try_step_with_bus(&seq.channels[4].data, clock)
+                    work.try_step_with_bus(data, clock)
                 } else {
-                    work.try_step(&seq.channels[4].data, |t| {
-                        clock(ApuInstruction::plain(t)).map(|_| ())
-                    })
+                    work.try_step(data, |t| clock(ApuInstruction::plain(t)).map(|_| ()))
                 }
                 .map_err(|e| match e {
                     PressAbStepError::Clock(e) => FrameStepError::Clock(e),
@@ -580,9 +736,9 @@ impl SourceAudioFrame {
                 })?;
                 self.cycles += u32::from(accepted);
                 if done {
-                    match work.result().expect("completed PressAB") {
-                        PressAbOutcome::Note { fraction, .. } => self.fractions[4] = fraction,
-                        PressAbOutcome::End { .. } => self.ids[4] = 0,
+                    match work.result().expect("completed SFX body") {
+                        PressAbOutcome::Note { fraction, .. } => self.fractions[i] = fraction,
+                        PressAbOutcome::End { .. } => self.ids[i] = 0,
                     };
                     self.stage = Stage::Tail(0);
                 }
@@ -645,70 +801,42 @@ impl SourceAudioFrame {
     }
     fn advance(&mut self, note: Option<Stage>) {
         use Stage::*;
-        self.stage = match self.stage {
-            Init => Channel(0),
-            Channel(n) => {
-                if n == 5 {
-                    if self.ids[self.channel as usize] == 0 {
-                        Tail(0)
-                    } else {
-                        Kind(0)
-                    }
-                } else {
-                    Channel(n + 1)
-                }
-            }
-            Kind(n) => {
-                if n == 2 {
-                    if self.channel >= 4 {
-                        Call
-                    } else {
-                        Mute(0)
-                    }
-                } else {
-                    Kind(n + 1)
-                }
-            }
-            Mute(n) => {
-                if n == 2 {
-                    Call
-                } else {
-                    Mute(n + 1)
-                }
-            }
+        // Assign each small dispatch variant in place. A shared match result
+        // would carry the much larger note child through every plain opcode.
+        match self.stage {
+            Init => self.stage = Channel(0),
+            Channel(n) if n < 5 => self.stage = Channel(n + 1),
+            Channel(_) if self.ids[self.channel as usize] == 0 => self.stage = Tail(0),
+            Channel(_) => self.stage = Kind(0),
+            Kind(n) if n < 2 => self.stage = Kind(n + 1),
+            Kind(_) if self.channel >= 4 => self.stage = Call,
+            Kind(_) => self.stage = Mute(0),
+            Mute(n) if n < 2 => self.stage = Mute(n + 1),
+            Mute(_) => self.stage = Call,
             Call => {
                 let i = self.channel as usize;
-                if self.start.voices[i].delay > 1 {
-                    Effect(
-                        EffectInstructionWork::new(Self::effect_input(&self.start, &self.ids, i))
-                            .expect("validated effect"),
-                    )
+                if self.voice(i).delay > 1 {
+                    self.stage = Effect(
+                        EffectInstructionWork::with_pitch_slide(
+                            Self::effect_input(&self.start, &self.ids, i),
+                            Some(self.voice(i).pitch_slide),
+                        )
+                        .expect("validated effect"),
+                    );
                 } else {
-                    ReadyEntry(0)
+                    self.stage = ReadyEntry(0);
                 }
             }
-            ReadyEntry(n) => {
-                if n == 5 {
-                    note.expect("preflighted note transfer")
-                } else {
-                    ReadyEntry(n + 1)
-                }
+            ReadyEntry(5) => self.stage = note.expect("preflighted note transfer"),
+            ReadyEntry(n) => self.stage = ReadyEntry(n + 1),
+            Tail(n) if n < 3 => self.stage = Tail(n + 1),
+            Tail(_) if self.channel == 7 => self.stage = Return,
+            Tail(_) => {
+                self.channel += 1;
+                self.stage = Channel(0);
             }
-            Tail(n) => {
-                if n == 3 {
-                    if self.channel == 7 {
-                        Return
-                    } else {
-                        self.channel += 1;
-                        Channel(0)
-                    }
-                } else {
-                    Tail(n + 1)
-                }
-            }
-            Return => Done,
-            Done => Done,
+            Return | Done => self.stage = Done,
             Effect(_) | Music(_) | Press(_) => unreachable!("child progress"),
-        };
+        }
     }
 }
