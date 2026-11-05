@@ -143,8 +143,7 @@ impl PreparedAudioFrame {
                 4 | 5 => press_ab_work::source_pulse_id(i, ch.sound_id, &ch.data).is_some()
                     && seq.sfx_tempo == 0x100,
                 7 => {
-                    press_ab_instructions::PressAbInstructions::noise_data(ch.sound_id)
-                        == Some(ch.data.as_slice())
+                    press_ab_work::source_noise_id(ch.sound_id, &ch.data).is_some()
                         && ch.duty_cycle == 0
                 }
                 _ => false,
@@ -199,6 +198,9 @@ impl PreparedAudioFrame {
                 source_sfx
             } else if i == 5 {
                 press_ab_work::SOURCE_SWAP_ID
+            } else if i == 7 {
+                press_ab_work::source_noise_id(ch.sound_id, data)
+                    .expect("validated noise program")
             } else {
                 ch.sound_id
             };
@@ -222,7 +224,7 @@ impl PreparedAudioFrame {
                     } else if i == 4 {
                         press_ab_next_note(data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
                     } else {
-                        noise_next_note(ch.sound_id, data, ch.ptr, ch.delay_frac, source_sfx)
+                        noise_next_note(ids[i], data, ch.ptr, ch.delay_frac, source_sfx)
                     }
                     .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
                     effects[i] = 8 + 12 + 8 + 8 + 8 + 16 + w.cycles;

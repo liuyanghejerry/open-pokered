@@ -1,0 +1,495 @@
+{
+  "implementation_commit": "c482de53f4464fe45329fb3a31cbd3a06274c990",
+  "before_master": "a718349657a5a75ec559dd29870b93d4397775d0",
+  "reference": {
+    "repository": "pret/pokered",
+    "commit": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "variant": "normal Red",
+    "emulator": "PyBoy",
+    "capture": "80 consecutive emulated frames; real buttons, no recording-time state writes; each case repeated twice"
+  },
+  "original": {
+    "status": "passed",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map": 1,
+          "x": 20,
+          "y": 30,
+          "cursor": 1
+        },
+        "last": {
+          "x": 20,
+          "y": 30
+        },
+        "events": [
+          {
+            "tick": 0,
+            "routine": "CloseStartMenu"
+          },
+          {
+            "tick": 5,
+            "routine": "CloseTextDisplay"
+          },
+          {
+            "tick": 24,
+            "routine": "LoadPlayerSpriteGraphics"
+          },
+          {
+            "tick": 28,
+            "routine": "LoadCurrentMapView"
+          },
+          {
+            "tick": 29,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 31,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 33,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 35,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 37,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 39,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 41,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 43,
+            "routine": "OverworldLoop"
+          }
+        ]
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map": 1,
+          "x": 20,
+          "y": 30,
+          "cursor": 1
+        },
+        "last": {
+          "x": 20,
+          "y": 30
+        },
+        "events": [
+          {
+            "tick": 0,
+            "routine": "CloseStartMenu"
+          },
+          {
+            "tick": 5,
+            "routine": "CloseTextDisplay"
+          },
+          {
+            "tick": 24,
+            "routine": "LoadPlayerSpriteGraphics"
+          },
+          {
+            "tick": 28,
+            "routine": "LoadCurrentMapView"
+          },
+          {
+            "tick": 29,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 31,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 33,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 35,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 37,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 39,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 41,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 43,
+            "routine": "OverworldLoop"
+          }
+        ]
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map": 1,
+          "x": 20,
+          "y": 30,
+          "cursor": 1
+        },
+        "last": {
+          "x": 21,
+          "y": 30
+        },
+        "events": [
+          {
+            "tick": 0,
+            "routine": "CloseStartMenu"
+          },
+          {
+            "tick": 5,
+            "routine": "CloseTextDisplay"
+          },
+          {
+            "tick": 24,
+            "routine": "LoadPlayerSpriteGraphics"
+          },
+          {
+            "tick": 28,
+            "routine": "LoadCurrentMapView"
+          },
+          {
+            "tick": 29,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 31,
+            "routine": "LoadCurrentMapView"
+          },
+          {
+            "tick": 32,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 34,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 36,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 38,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 40,
+            "routine": "OverworldLoop"
+          },
+          {
+            "tick": 42,
+            "routine": "OverworldLoop"
+          }
+        ]
+      }
+    ],
+    "source_sha256": "4c33822927586c20580f0d14a5a194fd24e4dd8404f1c35805ffff99854846ec"
+  },
+  "before": {
+    "status": "passed",
+    "binary_sha256": "6cf0dda7cbe6618f8af94b3ae2b605412ef0388d4623a972ec0ca19ce0590181",
+    "script_sha256": "77de0d8066a3a99a618abb465508b5f753c26e9de7b00381ac6e14d3feb206b9",
+    "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "first_overworld": 0,
+        "first_move": null
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "first_overworld": 0,
+        "first_move": null
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 23,
+          "player_y": 30
+        },
+        "first_overworld": 0,
+        "first_move": 21
+      }
+    ],
+    "scope": "Cold CONTINUE, actual START/B/direction, PCM active, no recording-time RAM edits. Both repetitions have identical state and image hashes."
+  },
+  "after": {
+    "status": "passed",
+    "binary_sha256": "3368bf58a6c24dd7a74184e9fbf30c41861b792c78703c0b4123832d0b0b0d7e",
+    "script_sha256": "77de0d8066a3a99a618abb465508b5f753c26e9de7b00381ac6e14d3feb206b9",
+    "fixture_sha256": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "first_overworld": 29,
+        "first_move": null
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "first_overworld": 29,
+        "first_move": null
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map_name": "ViridianCity",
+          "player_x": 20,
+          "player_y": 30
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 21,
+          "player_y": 30
+        },
+        "first_overworld": 29,
+        "first_move": 48
+      }
+    ],
+    "scope": "Cold CONTINUE, actual START/B/direction, PCM active, no recording-time RAM edits. Both repetitions have identical state and image hashes."
+  },
+  "multimap": {
+    "status": "passed",
+    "binary_sha256": "3368bf58a6c24dd7a74184e9fbf30c41861b792c78703c0b4123832d0b0b0d7e",
+    "script_sha256": "52d241b451a8216d0f02988486f2d7ea3bf6131c69ede4b50c9b50ecc2ddf5d0",
+    "cases": [
+      {
+        "place": "bedroom",
+        "case": "b-short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      },
+      {
+        "place": "bedroom",
+        "case": "start-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      },
+      {
+        "place": "bedroom",
+        "case": "exit-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      },
+      {
+        "place": "dark",
+        "case": "b-short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 17
+      },
+      {
+        "place": "dark",
+        "case": "start-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 17
+      },
+      {
+        "place": "dark",
+        "case": "exit-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 17
+      },
+      {
+        "place": "safari",
+        "case": "b-short",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      },
+      {
+        "place": "safari",
+        "case": "start-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      },
+      {
+        "place": "safari",
+        "case": "exit-held",
+        "repeats": 2,
+        "independent_continue": 2,
+        "first_overworld": 11
+      }
+    ],
+    "scope": "Prepared normal SRAM; cold CONTINUE and actual START/B/EXIT inputs. Three maps x three input cases x two repeats, with 18 independent CONTINUE processes. No recording-time state edits."
+  },
+  "gba": {
+    "status": "passed",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "physical_frames": 600,
+        "all_frame_hashes_repeat": true,
+        "origin": 1688,
+        "final_pixels_sha256": "86010afd99626bb52e92db76be3e7613a8a5e7e0589e39955debd69dee151b7e",
+        "rom_sha256": "9b8fa1e5db1d46cbf3cc0585032a5bb198d93807f8a4deb225a0acd4e0bfe91d"
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "physical_frames": 600,
+        "all_frame_hashes_repeat": true,
+        "origin": 1688,
+        "final_pixels_sha256": "86010afd99626bb52e92db76be3e7613a8a5e7e0589e39955debd69dee151b7e",
+        "rom_sha256": "9b8fa1e5db1d46cbf3cc0585032a5bb198d93807f8a4deb225a0acd4e0bfe91d"
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "physical_frames": 600,
+        "all_frame_hashes_repeat": true,
+        "origin": 1688,
+        "final_pixels_sha256": "152c193fa2581f2c90b200340d92578f5e354a36a18735f6da4b0c5348bd1497",
+        "rom_sha256": "9b8fa1e5db1d46cbf3cc0585032a5bb198d93807f8a4deb225a0acd4e0bfe91d"
+      }
+    ],
+    "neutral_short_all_images_equal": true,
+    "scope": "Six unmodified default release GBA physical-input cold-boot runs; native/original frame-duration parity is not asserted."
+  },
+  "local_checks": [
+    {
+      "name": "app-start",
+      "exit_code": 0,
+      "passed": 3,
+      "ignored": 0
+    },
+    {
+      "name": "core-restore",
+      "exit_code": 0,
+      "passed": 7,
+      "ignored": 0
+    },
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "app-full",
+      "exit_code": 0,
+      "passed": 1090,
+      "ignored": 92
+    },
+    {
+      "name": "core",
+      "exit_code": 0,
+      "passed": 3982,
+      "ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "fresh_m49": "running; not yet claimed as a pass",
+  "limitations": [
+    "Source CloseTextDisplay return is frame 29 in both the city reference and candidate; this is not full animation parity.",
+    "Original held-direction first logical coordinate update is frame 46, candidate frame 48, previous master frame 21.",
+    "No full per-frame actor/background trajectory equivalence is asserted; Fusion Pixel text and native UI layout intentionally differ.",
+    "GBA samples physical emulator frames; its elapsed time is not claimed equal to the original Game Boy.",
+    "Stationary grass attributes are explicit native live-map projections, not emulated original WRAM. General NPC grass masking remains a separate #144 item."
+  ],
+  "artifacts_sha256": {
+    "docs/audits/2026-11-05/start-menu-close/before-short.json": "97457569315c87cc47c66abad78cbcc40a8cb0c7bdc5fe4600626679c3aa5529",
+    "docs/audits/2026-11-05/start-menu-close/original-held-1.json.gz": "0df073a4cd08068cf8eacb1cfa5e5cb0cba93c58873ab409c824fa1e36f72c9d",
+    "docs/audits/2026-11-05/start-menu-close/original-short-2.json.gz": "e6dc72ea48db10aba240f6d7ba4b6ed6dfb5835f3aeb59520655abe9211876ea",
+    "docs/audits/2026-11-05/start-menu-close/replay-native.py": "fe8a75203d4efe521042d5f9357828d946896762bac38c7749158d1a9c752fae",
+    "docs/audits/2026-11-05/start-menu-close/after-neutral.json": "4d6370f1afd622b2fd40b1a4264545bd8737fb73fb9bf49ee303725d0c58934b",
+    "docs/audits/2026-11-05/start-menu-close/fixture.sav": "8e69cf22e2ed9c1a940512a135b0dae52bad662f43206978d13b85bfad777ced",
+    "docs/audits/2026-11-05/start-menu-close/before-neutral.json": "087090dea54cef07a041255c32ec7868fe1008893e8099a62bfbc4e666841a54",
+    "docs/audits/2026-11-05/start-menu-close/after-held.json": "df1149633ddf76d6d9b19886369985e84c2a3407c873f32d705ad5887c869611",
+    "docs/audits/2026-11-05/start-menu-close/after-short.json": "e7cc876717bf71811d47c33096ebcc30e4269f9086035ecf7d448381a2686e7d",
+    "docs/audits/2026-11-05/start-menu-close/original-neutral-2.json.gz": "cf0af0e56d882c491e00dcbc5ac17aca5615e2225b67e5803f1c3b59c688c9bc",
+    "docs/audits/2026-11-05/start-menu-close/original-neutral-1.json.gz": "cf0af0e56d882c491e00dcbc5ac17aca5615e2225b67e5803f1c3b59c688c9bc",
+    "docs/audits/2026-11-05/start-menu-close/original-held-2.json.gz": "0df073a4cd08068cf8eacb1cfa5e5cb0cba93c58873ab409c824fa1e36f72c9d",
+    "docs/audits/2026-11-05/start-menu-close/before-held.json": "4857fb02ac2f77ada48cd3c3749985758847800257b869ec2a5a0366498fd7d2",
+    "docs/audits/2026-11-05/start-menu-close/original-short-1.json.gz": "e6dc72ea48db10aba240f6d7ba4b6ed6dfb5835f3aeb59520655abe9211876ea",
+    "docs/screenshots/start-menu-close-1390/short-004-before.png": "07edaf9fd8e02d201ef2fb593d84b24ae5d0ad7b9ebd3ddeb08e96a567c6d987",
+    "docs/screenshots/start-menu-close-1390/held-079-after.png": "1a9097ec4abfef4e3b1f4c023c6709829a4730b6d0a766b57538bbcdde90cdb0",
+    "docs/screenshots/start-menu-close-1390/held-079-before.png": "67b15b58dac42d3b444860499149e779609f4c19b662605b50e62091a15d7d1c",
+    "docs/screenshots/start-menu-close-1390/short-004-after.png": "d6a51029f8f9ba6a60b4f61d913ac08919e3e55188e75aae6e4187419968e417"
+  }
+}

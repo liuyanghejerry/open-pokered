@@ -589,6 +589,69 @@ fn party_swap_and_confirmation_overlap_finish_through_retained_audio_frames() {
 }
 
 #[test]
+fn start_menu_noise_and_confirmation_overlap_survive_source_handoff() {
+    let mut saw_overlap = false;
+    for music in [MusicId::PALLET_TOWN, MusicId::SILPH_CO, MusicId::DUNGEON3] {
+        let bank = SourceSong::from_music(music).unwrap().bank();
+        for delay in 0..=12 {
+            for confirmation in [false, true] {
+                let mut manager = powered(music);
+                let mut ordinary = powered(music);
+                for audio in [&mut manager, &mut ordinary] {
+                    audio.play_sfx(SfxId::StartMenu);
+                    for _ in 0..delay { audio.update_frame(); }
+                    if confirmation { audio.play_sfx(SfxId::PressAB); }
+                }
+                saw_overlap |= confirmation && manager.sequencer.channels[7].active;
+                for frame in 0..32 {
+                    assert!(manager.begin_source_audio_frame(bank, 0).is_ok(),
+                        "aggregate admission {music:?} delay{delay} frame{frame}");
+                    let frozen = native(&manager);
+                    let mut cursor = None;
+                    if frame == 0 {
+                        let mut accepted = 0;
+                        assert!(matches!(manager.service_source_audio_frame(&mut cursor, bank, 0,
+                            |apu: &mut crate::apu::Apu, op: ApuInstruction| {
+                                if accepted == 17 { return Err("yield"); }
+                                accepted += 1;
+                                Ok(execute(apu, op))
+                            }), Err(AudioAdmissionError::Admission(FrameStepError::Clock("yield")))));
+                        assert_eq!(native(&manager), frozen);
+                        cursor = serde_json::from_slice(&serde_json::to_vec(&cursor).unwrap()).unwrap();
+                    }
+                    let result = manager.service_source_audio_frame(&mut cursor, bank, 0,
+                        |apu: &mut crate::apu::Apu, op: ApuInstruction| Ok::<_, ()>(execute(apu, op)));
+                    assert!(result.is_ok(), "{music:?} delay{delay} confirm{confirmation} frame{frame}: {result:?}");
+                    ordinary.update_frame();
+                    assert_eq!(native(&manager), native(&ordinary));
+                }
+                assert!(!manager.sequencer.channels[4].active);
+                // Music may already have restarted its own drum. It must no
+                // longer be the still-active START noise stream.
+                assert!(!manager.sequencer.channels[7].active
+                    || manager.sequencer.channels[7].sound_id != SfxId::StartMenu as u8);
+            }
+        }
+    }
+    assert!(saw_overlap);
+}
+
+#[test]
+fn start_noise_handoff_rejects_altered_programs_and_unrelated_ids() {
+    use crate::source_clock::AudioClockError;
+    for altered_id in [false, true] {
+        let mut manager = powered(MusicId::PALLET_TOWN);
+        manager.play_sfx(SfxId::StartMenu);
+        if altered_id { manager.sequencer.channels[7].sound_id = 143; }
+        else { manager.sequencer.channels[7].data[0] ^= 1; }
+        let frozen = native(&manager);
+        assert!(matches!(manager.begin_source_audio_frame(2, 0), Err(AudioClockError::ActiveSfx(7))));
+        assert!(matches!(manager.begin_source_audio_frame_with_bus(2, 0), Err(AudioClockError::ActiveSfx(7))));
+        assert_eq!(native(&manager), frozen);
+    }
+}
+
+#[test]
 fn swap_admission_rejects_altered_programs_and_modifiers_on_the_remaining_pulse() {
     use crate::source_clock::AudioClockError;
     for channel in [4, 5] {

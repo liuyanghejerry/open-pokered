@@ -1,0 +1,282 @@
+{
+  "source": "f482e58735e58277bc9a5d3e09a2b9f3e0ea1225",
+  "native_sha256": "66b6a2a8d7a4b9cd36e2641175e0fb1ab788094a3bf667b0cdc9800e71acac28",
+  "gba_sha256": "ee64790c810447692edfa764a834e5be8bab731666f61c901c69aaacd835a29a",
+  "fixture_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa",
+  "before": {
+    "status": "passed",
+    "binary_sha256": "5278049ebca9c92751f3b682e89bda4f065765873709400b0581eeff2a344f49",
+    "script_sha256": "62aad7b9083a0e3c6aa8a5a98c9634ec3b4ecbc3c62573db72ddf023a652de24",
+    "fixture_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "start-menu",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": null,
+        "first_move": null
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "start-menu",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": null,
+        "first_move": null
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "start-menu",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": null,
+        "first_move": null
+      }
+    ],
+    "scope": "Cold CONTINUE, actual START/B/direction, PCM active, no recording-time RAM edits. Both repetitions have identical state and image hashes.",
+    "expected_bug_reproduced": true
+  },
+  "after": {
+    "status": "passed",
+    "binary_sha256": "66b6a2a8d7a4b9cd36e2641175e0fb1ab788094a3bf667b0cdc9800e71acac28",
+    "script_sha256": "62aad7b9083a0e3c6aa8a5a98c9634ec3b4ecbc3c62573db72ddf023a652de24",
+    "fixture_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": null
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": null
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 3,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": 40
+      }
+    ],
+    "scope": "Cold CONTINUE, actual START/B/direction, PCM active, no recording-time RAM edits. Both repetitions have identical state and image hashes."
+  },
+  "same_initial_state_and_image": true,
+  "city_all_six_repeated_full_frame_and_image_records_unchanged": true,
+  "tests": [
+    {
+      "name": "app-start",
+      "exit_code": 0,
+      "passed": 3,
+      "ignored": 0
+    },
+    {
+      "name": "core-restore",
+      "exit_code": 0,
+      "passed": 7,
+      "ignored": 0
+    },
+    {
+      "name": "native-build",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    },
+    {
+      "name": "app-full",
+      "exit_code": 0,
+      "passed": 1094,
+      "ignored": 92
+    },
+    {
+      "name": "core",
+      "exit_code": 0,
+      "passed": 3988,
+      "ignored": 1
+    },
+    {
+      "name": "arm-check",
+      "exit_code": 0,
+      "passed": 0,
+      "ignored": 0
+    }
+  ],
+  "fresh_route": "Running: unseeded f482e587 release binary 28b3c6e93a59b2d31684b4f1940995a89676abeb5f0fb140dc796a5eabf9d5ec; older pre-slot-fix runs are not current verdicts.",
+  "gba_cases": [
+    {
+      "map": "RockTunnel1F",
+      "case": "neutral",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "RockTunnel1F",
+      "case": "short",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "RockTunnel1F",
+      "case": "held",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "IndigoPlateauLobby",
+      "case": "neutral",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "IndigoPlateauLobby",
+      "case": "short",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "IndigoPlateauLobby",
+      "case": "held",
+      "repeats": 2,
+      "all_600_frames_repeat": true,
+      "no_errors": true
+    }
+  ],
+  "gba_post_menu_controls": [
+    {
+      "map": "RockTunnel1F",
+      "repeats": 2,
+      "menu_reopened_before_walk": true,
+      "reclosed_and_walked": true,
+      "records_repeat": true,
+      "no_errors": true
+    },
+    {
+      "map": "IndigoPlateauLobby",
+      "repeats": 2,
+      "menu_reopened_before_walk": true,
+      "reclosed_and_walked": true,
+      "records_repeat": true,
+      "no_errors": true
+    }
+  ],
+  "release_native_result": {
+    "status": "passed",
+    "binary_sha256": "28b3c6e93a59b2d31684b4f1940995a89676abeb5f0fb140dc796a5eabf9d5ec",
+    "script_sha256": "ea4ae1f36b7f23375dff5dfbb22f8f2f7cce182bc68b9fcba774bac458f2c1c0",
+    "fixture_sha256": "becce9837f96157312392254d058afbecd0a13ec7f85915563e1093ece51f1fa",
+    "cases": [
+      {
+        "case": "neutral",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": null
+      },
+      {
+        "case": "short",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": null
+      },
+      {
+        "case": "held",
+        "repeats": 2,
+        "initial": {
+          "map_name": "IndigoPlateauLobby",
+          "player_x": 2,
+          "player_y": 5
+        },
+        "final": {
+          "screen": "overworld",
+          "player_x": 3,
+          "player_y": 5
+        },
+        "first_overworld": 21,
+        "first_move": 40
+      }
+    ],
+    "scope": "Cold CONTINUE, actual START/B/direction, PCM active, no recording-time RAM edits. Both repetitions have identical state and image hashes."
+  },
+  "debug_and_release_equal": true
+}

@@ -1,0 +1,825 @@
+{
+  "initial": {
+    "frame_count": 770,
+    "screen": "start-menu",
+    "map_name": "ViridianCity",
+    "player_x": 20,
+    "player_y": 30,
+    "player_facing": "Down"
+  },
+  "images": {
+    "initial": "d6a51029f8f9ba6a60b4f61d913ac08919e3e55188e75aae6e4187419968e417",
+    "0": "d1f08e14caabd5f741e7e8e341fb8c413fbcca41653ca943bd16db395d6eec4b",
+    "1": "d1f08e14caabd5f741e7e8e341fb8c413fbcca41653ca943bd16db395d6eec4b",
+    "3": "d1f08e14caabd5f741e7e8e341fb8c413fbcca41653ca943bd16db395d6eec4b",
+    "4": "07edaf9fd8e02d201ef2fb593d84b24ae5d0ad7b9ebd3ddeb08e96a567c6d987",
+    "8": "cb7f8b961c85b0258f835a825e67804587cd9e154af4b3dd18e3ba4d9e0af5e4",
+    "16": "a532638aaa10f3afa0ee172d277021d8284bca123b4ec3171b894c94bf1cfd30",
+    "28": "9d6a23141241442ce18d04f26507c8ae9039729665a9cc2d21e8993a1e09afe0",
+    "29": "faf15fbb1a05221f7192bf1f50604d7cdf9997d3db4473420f774f1cd0643c1a",
+    "40": "f22af3f403b5dc999f8a60e87df1725f9877c6759943d441e7d96dc6413a7e0e",
+    "79": "67b15b58dac42d3b444860499149e779609f4c19b662605b50e62091a15d7d1c"
+  },
+  "frames": [
+    {
+      "tick": 0,
+      "input": "b",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Down",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 1,
+      "input": "b",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Down",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 2,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Down",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 3,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Down",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 4,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 5,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 6,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 7,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 8,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 9,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 10,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 11,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 12,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 13,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 14,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 15,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 16,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 17,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 18,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 19,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 20,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 20,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 21,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 22,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 23,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 24,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 25,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 26,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 27,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 28,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 29,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 30,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 31,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 32,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 33,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 34,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 35,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 36,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 37,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 21,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 38,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 39,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 40,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 41,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 42,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 43,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 44,
+      "input": "right",
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 45,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 46,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 47,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 48,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 49,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 50,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 51,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 52,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 53,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 54,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 22,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Walking"
+    },
+    {
+      "tick": 55,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 56,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 57,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 58,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 59,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 60,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 61,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 62,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 63,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 64,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 65,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 66,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 67,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 68,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 69,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 70,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 71,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 72,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 73,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 74,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 75,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 76,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 77,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 78,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    },
+    {
+      "tick": 79,
+      "input": null,
+      "screen": "overworld",
+      "map_name": "ViridianCity",
+      "player_x": 23,
+      "player_y": 30,
+      "player_facing": "Right",
+      "player_movement_state": "Idle"
+    }
+  ]
+}
