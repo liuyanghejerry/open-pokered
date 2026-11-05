@@ -123,14 +123,29 @@ fn bag_field_item_use_returns_to_overworld_without_rebuild() {
 #[test]
 fn bag_cancel_returns_to_start_menu() {
     let mut game = game_at_overworld();
+    game.audio = Some(AudioOutput::new_pcm());
+    game.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::PALLET_TOWN);
+    game.overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+    game.overworld.state.player.x = 20;
+    game.overworld.state.player.y = 30;
+    game.overworld.publish_npc_frame(false);
     let _ = game
         .save_data
         .game_data
         .bag
         .add_item(pokered_data::items::ItemId::Bicycle, 1);
+    game.handle_transition(GameScreen::StartMenu);
     game.handle_transition(GameScreen::Bag);
     game.update(&press(GbButton::B));
+    assert!(game.field_flash.is_some());
+    for _ in 0..80 {
+        if game.state.screen == GameScreen::StartMenu { break; }
+        assert!(game.field_flash.as_ref().is_none_or(|flow| flow.error.is_none()),
+            "{:?}", game.field_flash.as_ref().and_then(|flow| flow.error.as_ref()));
+        game.update(&InputState::new());
+    }
     assert_eq!(game.state.screen, GameScreen::StartMenu);
+    assert_eq!((game.overworld.state.player.x, game.overworld.state.player.y), (20, 30));
 }
 
 #[test]

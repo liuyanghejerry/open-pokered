@@ -3901,7 +3901,8 @@ impl PokemonGame {
             return;
         }
 
-        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu) && self.field_flash.is_some() {
+        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu
+            | GameScreen::Bag | GameScreen::OptionsMenu) && self.field_flash.is_some() {
             self.update_field_flash(input);
             return;
         }
@@ -5281,6 +5282,7 @@ impl PokemonGame {
                 };
                 let action = match self.options_menu.tick(opt_input) {
                     OptionsMenuResult::Closed => {
+                        if let Some(audio) = &self.audio { audio.play_sfx(SfxId::PressAB); }
                         // Persist the selection into the save data so the next
                         // save keeps it (original: wOptions is part of SRAM).
                         self.save_data.game_data.options = self.options_menu.options;
@@ -5292,7 +5294,8 @@ impl PokemonGame {
                             self.main_menu.return_from_options();
                             ScreenAction::Transition(GameScreen::MainMenu)
                         } else {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_submenu_restore(input);
+                            ScreenAction::Continue
                         }
                     }
                     OptionsMenuResult::Active => ScreenAction::Continue,
@@ -5799,7 +5802,10 @@ impl PokemonGame {
                         }
                         ScreenAction::Continue
                     }
-                    BagScreenAction::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
+                    BagScreenAction::Cancelled => {
+                        self.begin_submenu_restore(input);
+                        ScreenAction::Continue
+                    },
                     BagScreenAction::TossItem {
                         item,
                         index,
@@ -8521,6 +8527,10 @@ impl PokemonGame {
                 );
             }
             GameScreen::OptionsMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::SaveMenu => {
@@ -8589,6 +8599,10 @@ impl PokemonGame {
                 }
             }
             GameScreen::Bag => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_bag(&self.bag_screen, frame_buffer, self.state.config.language);
             }
             GameScreen::TownMap => {
@@ -12824,7 +12838,7 @@ mod bag_list_owner_219 {
  fn run(capture:Option<&std::path::Path>) {
   use pokered_data::items::ItemId;
   for case in ["mark-b","mark-a","self-select","cancel-select","ab","a-select","up-down"] {
-   let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mut g=PokemonGame::new(GameVersion::Red);g.audio=Some(AudioOutput::new_pcm());g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
    let mut mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Bulbasaur,5,[0x99,0x88]).unwrap();mon.hp-=1;g.save_data.party.add(mon).unwrap();
    g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,4,4);let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
    assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),4,4));
@@ -12841,7 +12855,7 @@ mod bag_list_owner_219 {
      use pokered_core::bag_screen::BagPhase;
      if matches!(case,"ab"|"a-select") || case=="mark-a" && t>=90 {
       assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),BagPhase::ActionMenu{cursor:0},"{case} A selects before B/SELECT");
-     } else if case=="mark-b" && t>=90 {assert_eq!(g.state.screen,GameScreen::StartMenu,"B exits marked list");}
+     } else if case=="mark-b" && t>=90 {if g.field_flash.is_some() {assert_eq!(g.state.screen,GameScreen::Bag);assert!(t<120,"marked-list restoration must finish");}else{assert_eq!(g.state.screen,GameScreen::StartMenu,"B exits marked list after restoration");}}
      else {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),if case=="up-down" {BagPhase::Browsing}else{BagPhase::SwapFrom{row:0}},"{case} mark retained at{t}");let cursor=if case=="cancel-select" && t>=64 {2}else if case=="cancel-select" && t>=40 {1}else{0};assert_eq!(g.bag_screen.cursor(),cursor);}
      assert_eq!(g.save_data.game_data.bag.items(),&[(ItemId::Potion,3),(ItemId::Antidote,4)]);
     }
@@ -12861,7 +12875,7 @@ mod bag_swap_owner_221 {
  fn run(capture:Option<&std::path::Path>) {
   use pokered_data::items::ItemId;
   for case in ["swap","merge","overflow","early-b","early-a","early-down","early-select"] {
-   let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mut g=PokemonGame::new(GameVersion::Red);g.audio=Some(AudioOutput::new_pcm());g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
    let mut mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Bulbasaur,5,[0x99,0x88]).unwrap();mon.hp-=1;g.save_data.party.add(mon).unwrap();
    g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,4,4);let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
    assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),4,4));
@@ -12889,7 +12903,7 @@ mod bag_swap_owner_221 {
       let expected=if t<110 {old}else{after.clone()};
       assert_eq!(g.save_data.game_data.bag.items(),expected,"{case} inventory commit/reopen at{t}");
       if t<110 {assert_eq!(g.bag_screen.phase(),BagPhase::SwapFrom{row:0},"marked/waiting at{t}");}
-      if (120..138).contains(&t) {assert_eq!(g.state.screen,GameScreen::StartMenu);}else {assert_eq!(g.state.screen,GameScreen::Bag);}
+      if (120..138).contains(&t) {if g.field_flash.is_some() {assert_eq!(g.state.screen,GameScreen::Bag);assert!(t<130,"restore before next menu input");}else{assert_eq!(g.state.screen,GameScreen::StartMenu);}}else {assert_eq!(g.state.screen,GameScreen::Bag);}
       if t>=138 {assert_eq!(g.bag_screen.items(),after,"reopened item order");}
      } else {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),BagPhase::SwapFrom{row:0});assert_eq!(g.bag_screen.cursor(),0,"{case} protected input");assert_eq!(g.save_data.game_data.bag.items(),&[(ItemId::Potion,3),(ItemId::Antidote,4)]);}
     }
