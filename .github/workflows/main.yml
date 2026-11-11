@@ -244,9 +244,17 @@ jobs:
           # The preinstalled Microsoft apt repos (azure-cli, microsoft-prod)
           # intermittently 403 on apt-get update; we don't need anything from
           # them, so drop them before updating.
+          export http_proxy="${http_proxy:-${HTTP_PROXY:-}}"
+          export https_proxy="${https_proxy:-${HTTPS_PROXY:-}}"
+          export no_proxy="${no_proxy:-${NO_PROXY:-}}"
+          if [[ -n "$http_proxy$https_proxy" ]]; then
+            echo 'APT proxy configured'
+          else
+            echo 'APT proxy not configured'
+          fi
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update -o APT::Update::Error-Mode=any
-          sudo apt-get install -yq \
+          sudo --preserve-env=http_proxy,https_proxy,no_proxy apt-get update -o APT::Update::Error-Mode=any
+          sudo --preserve-env=http_proxy,https_proxy,no_proxy apt-get install -yq \
             build-essential \
             pkg-config \
             libxkbcommon-dev \
@@ -316,9 +324,17 @@ jobs:
       - name: Install system dependencies
         timeout-minutes: 5
         run: |
+          export http_proxy="${http_proxy:-${HTTP_PROXY:-}}"
+          export https_proxy="${https_proxy:-${HTTPS_PROXY:-}}"
+          export no_proxy="${no_proxy:-${NO_PROXY:-}}"
+          if [[ -n "$http_proxy$https_proxy" ]]; then
+            echo 'APT proxy configured'
+          else
+            echo 'APT proxy not configured'
+          fi
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update -o APT::Update::Error-Mode=any
-          sudo apt-get install -yq \
+          sudo --preserve-env=http_proxy,https_proxy,no_proxy apt-get update -o APT::Update::Error-Mode=any
+          sudo --preserve-env=http_proxy,https_proxy,no_proxy apt-get install -yq \
             build-essential \
             pkg-config \
             libxkbcommon-dev \
