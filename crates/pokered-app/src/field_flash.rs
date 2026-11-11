@@ -5,6 +5,9 @@
 use super::field_restore_assets::NativePatternAssets;
 #[path = "field_flash_irq.rs"]
 mod irq;
+#[path = "field_object_render.rs"]
+mod objects;
+use objects::draw_submenu_objects;
 use super::*;
 use pokered_core::overworld::display_clear_oam_work::ClearShadowOamWork;
 use pokered_core::overworld::display_lcd_work::{DisableLcdWork, EnableLcdWork};
@@ -89,6 +92,19 @@ fn unpack_flash_frame(
     frame: &FlashFrame,
     fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
 ) {
+    for (planes, out) in frame
+        .packed()
+        .chunks_exact(2)
+        .zip(fb.indices_mut().chunks_exact_mut(8))
+    {
+        unpack_flash_pixels(planes, out);
+    }
+    fb.set_palette(*frame.display_palette());
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline(always)]
+fn unpack_flash_pixels(planes: &[u8], out: &mut [u8]) {
     const NIBBLES: [u32; 16] = {
         let mut table = [0; 16];
         let mut n = 0;
@@ -101,17 +117,45 @@ fn unpack_flash_frame(
         }
         table
     };
-    for (planes, out) in frame
-        .packed()
-        .chunks_exact(2)
-        .zip(fb.indices_mut().chunks_exact_mut(8))
-    {
-        let first = NIBBLES[(planes[0] >> 4) as usize] | (NIBBLES[(planes[1] >> 4) as usize] << 1);
-        let second = NIBBLES[(planes[0] & 15) as usize] | (NIBBLES[(planes[1] & 15) as usize] << 1);
-        out[..4].copy_from_slice(&first.to_le_bytes());
-        out[4..].copy_from_slice(&second.to_le_bytes());
+    let first = NIBBLES[(planes[0] >> 4) as usize] | (NIBBLES[(planes[1] >> 4) as usize] << 1);
+    let second = NIBBLES[(planes[0] & 15) as usize] | (NIBBLES[(planes[1] & 15) as usize] << 1);
+    out[..4].copy_from_slice(&first.to_le_bytes());
+    out[4..].copy_from_slice(&second.to_le_bytes());
+}
+
+fn draw_flash_cells(frame: &FlashFrame, rows: &[u32], fb: &mut FrameBuffer) {
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    for ((source, target), &columns) in frame.packed().chunks_exact(40)
+        .zip(fb.packed_mut().chunks_exact_mut(40)).zip(rows) {
+        for column in 0..20 {
+            if columns & (1 << column) != 0 {
+                let start = column * 2;
+                target[start..start + 2].copy_from_slice(&source[start..start + 2]);
+            }
+        }
     }
-    fb.set_palette(*frame.display_palette());
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    unpack_flash_cells(frame, rows, fb);
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn unpack_flash_cells(
+    frame: &FlashFrame,
+    rows: &[u32],
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    // Each accepted destination bit covers eight pixels. Expand those two
+    // planes directly into the linear target; preserve every other pixel and
+    // the target's palette instead of doing eight coordinate lookups/stores.
+    for ((source, target), &columns) in frame.packed().chunks_exact(40)
+        .zip(fb.indices_mut().chunks_exact_mut(160)).zip(rows) {
+        for column in 0..20 {
+            if columns & (1 << column) != 0 {
+                unpack_flash_pixels(&source[column * 2..column * 2 + 2],
+                    &mut target[column * 8..column * 8 + 8]);
+            }
+        }
+    }
 }
 
 enum DisplayChild {
@@ -239,6 +283,11 @@ impl PokemonGame {
     }
 
     pub(super) fn begin_submenu_restore(&mut self, input: &InputState) {
+        // Bag/Options have already run update_native_clock before handling
+        // Cancel. Their timed caller now starts in that same update; the
+        // retained native VBlank must not tick audio/time a second time.
+        self.source_display.acknowledge_native_vblank()
+            .expect("submenu Cancel hands off from the native clock");
         self.begin_native_menu_restore(input, RestorationOrigin::Submenu);
     }
 
@@ -418,7 +467,12 @@ impl PokemonGame {
                 if let Some(foreground) = foreground {
                     *self.overworld.begin_source_field() = foreground;
                 }
-                self.start_menu.begin_source_redisplay();
+                if flow.origin == RestorationOrigin::Submenu {
+                    self.start_menu.complete_source_redisplay();
+                    self.source_display.device_mut().end_native_background_transfer();
+                } else {
+                    self.start_menu.begin_source_redisplay();
+                }
             }
             Ok(true) => {
                 let foreground = self.overworld.source_foreground().cloned();
@@ -496,6 +550,10 @@ impl PokemonGame {
                             if let Some(patterns) = patterns.take() { irq.ui.patterns = patterns; }
                             irq.ui.revision += 1;
                             irq.background_is_map = *map;
+                            if flow.origin == RestorationOrigin::Submenu {
+                                self.source_display.device_mut().begin_native_background_transfer(0x9800)
+                                    .map_err(|e| format!("native background publication: {e:?}"))?;
+                            }
                             *published = true;
                         }
                         result
@@ -870,7 +928,9 @@ impl PokemonGame {
                 RestoreOperation::UpdateSprites => {
                     // Updating ImageIndex prepares future OAM. It does not
                     // publish it or redraw actors into the retained BG image.
-                    if flow.font_flags & 1 != 0 {
+                    if flow.origin == RestorationOrigin::Submenu {
+                        self.restore_submenu_images(flow)?;
+                    } else if flow.font_flags & 1 != 0 {
                         self.overworld.player_presentation.suppress_current_image();
                         self.overworld.npc_presentation.suppress_current_images();
                     } else {
@@ -935,6 +995,7 @@ impl PokemonGame {
                         Ok(_) => {
                             self.source_display.set_vblank_dispatch_enabled(false);
                             self.source_display.device_mut().end_native_background_scanout();
+                            self.source_display.device_mut().end_native_object_scanout();
                             return Ok(true);
                         }
                         Err(DisplayWorkError::InterruptPending) => continue,
@@ -958,6 +1019,8 @@ impl PokemonGame {
             "operation": flow.work.operation(),
             "palette_store_receipts": self.source_display.palette_store_receipts(),
             "background_palette_raster": self.source_display.device().background_palette_raster(),
+            "background_transfer_raster": self.source_display.device().background_transfer_raster(),
+            "object_raster": self.source_display.device().native_object_raster(),
             "show_map": flow.show_map,
             "return_to_start_menu": flow.origin.returns_to_start_menu(),
             "return_from_submenu": flow.origin == RestorationOrigin::Submenu,
@@ -1014,10 +1077,22 @@ impl PokemonGame {
 
     pub(crate) fn field_flash_map_key(&self) -> Option<crate::render::session::FlashMapVisualKey> {
         if !self.field_flash_frame_visible() || self.field_flash_is_white() { return None; }
-        self.field_flash.as_ref().filter(|flow| flow.show_map).map(|flow| {
-            flow.map_key.clone().with_palette_revision(self.source_display.device()
-                .background_palette_raster().map_or(0, |raster| raster.revision()))
-        })
+        let flow = self.field_flash.as_ref()?;
+        let device = self.source_display.device();
+        let key = flow.map_key.clone().with_palette_revision(
+            device.background_palette_raster().map_or(0, |raster| raster.revision()));
+        if flow.show_map {
+            Some(key)
+        } else if flow.origin == RestorationOrigin::Submenu
+            && self.overworld.displayed_field_dialogue().is_none() {
+            // These two retained UI rasters and the stationary sprite bank
+            // stay fixed. Only completed BG/OAM/palette scans change pixels.
+            Some(key.with_submenu_revisions(
+                device.background_transfer_raster().map_or(0, |raster| raster.revision()),
+                device.native_object_raster().map_or(0, |raster| raster.revision())))
+        } else {
+            None
+        }
     }
 
     pub(super) fn field_flash_is_white(&self) -> bool {
@@ -1039,6 +1114,14 @@ impl PokemonGame {
             return;
         }
         fb.copy_from(&flow.party);
+        if flow.origin == RestorationOrigin::Submenu {
+            if let Some(raster) = self.source_display.device().background_transfer_raster() {
+                draw_flash_cells(&flow.map, raster.rows(), fb);
+            }
+            if let Some(raster) = self.source_display.device().native_object_raster() {
+                draw_submenu_objects(raster, &flow.patterns, fb);
+            }
+        }
         if let Some(dialogue) = self.overworld.displayed_field_dialogue() {
             if let Some((first, second)) = dialogue.get_display_text() {
                 let text = if second.is_empty() {
@@ -1171,6 +1254,45 @@ mod tests {
                         packed.get_pixel((pixel % 160) as u32, (pixel / 160) as u32)
                     );
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn masked_flash_cells_match_pixel_copy_on_packed_and_linear_targets() {
+        use dotzuki_renderer::palette::GbColor;
+        let mut source = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        for (index, byte) in source.packed_mut().iter_mut().enumerate() {
+            *byte = (index as u8).wrapping_mul(73).rotate_left((index % 8) as u32);
+        }
+        source.apply_bgp(0xff);
+        let rows: Vec<u32> = (0..144).map(|y| match y % 4 {
+            0 => 0,
+            1 => (1 << 20) - 1,
+            2 => 1 << (y % 20),
+            _ => 0x55555,
+        }).collect();
+        let gray = Rgba::rgb(0xaa, 0xaa, 0xaa);
+        let mut packed = FrameBuffer::new(RenderConfig::new(160, 144), gray);
+        let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+            RenderConfig::new(160, 144), gray);
+        let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), gray);
+        let palette = *packed.display_palette();
+        for y in 0..144u32 {
+            for x in 0..160u32 {
+                if rows[y as usize] & (1 << (x / 8)) != 0 {
+                    expected.set_pixel_index(x, y, source.get_index(x, y).unwrap());
+                }
+            }
+        }
+        draw_flash_cells(&source, &rows, &mut packed);
+        unpack_flash_cells(&source, &rows, &mut linear);
+        assert_eq!(packed.packed(), expected.packed());
+        assert_eq!(packed.display_palette(), &palette);
+        assert_eq!(linear.display_palette(), &palette);
+        for y in 0..144u32 {
+            for x in 0..160u32 {
+                assert_eq!(linear.get_index(x, y), expected.get_index(x, y));
             }
         }
     }

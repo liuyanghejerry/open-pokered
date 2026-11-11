@@ -20,6 +20,12 @@ use crate::alloc_prelude::*;
 #[path = "display_palette_raster.rs"]
 mod palette_raster;
 pub use palette_raster::{BackgroundPaletteRaster, PaletteSpan};
+#[path = "display_background_transfer.rs"]
+mod background_transfer;
+pub use background_transfer::BackgroundTransferRaster;
+#[path = "display_object_raster.rs"]
+mod object_raster;
+pub use object_raster::{ObjectRaster, ObjectRasterSpan};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DisplayDeviceError {
@@ -78,6 +84,10 @@ pub struct DisplayDevice {
     /// display caller. Ordinary native rendering does not allocate this.
     #[serde(default)]
     palette_raster: Option<Box<BackgroundPaletteRaster>>,
+    #[serde(default)]
+    background_transfer: Option<Box<BackgroundTransferRaster>>,
+    #[serde(default)]
+    object_raster: Option<Box<ObjectRaster>>,
 }
 // A constructor-checked interval keeps the one-period proof local and avoids
 // recomputing the same 64-bit subtraction in both the time owner and device.
@@ -103,15 +113,15 @@ impl DisplayDevice {
             (None, None) => None,
         }
     }
-    /// Passive distance to the next VBlank request for an unchanged, empty
-    /// raster. The owner still advances the real device through every event.
-    /// Dynamic OBJ/window/DMA and malformed states use ordinary event waits.
+    /// Passive distance to the next VBlank request. OBJ/window fetching
+    /// redistributes mode3 and HBlank within each 456-dot line; it does not
+    /// move that line's end. The owner still observes every scan/DMA event.
+    /// Active DMA and unsupported or malformed states use ordinary waits.
     pub fn tcycles_until_vblank(&self) -> Option<u32> {
         if self.validate().is_err()
-            || self.lcdc & 0xa2 != 0x80
+            || !self.lcd_enabled()
             || self.dma.is_some()
             || self.stat_irq_line
-            || self.mode3_length != 172 + u16::from(self.scx & 7)
         {
             return None;
         }
@@ -230,6 +240,8 @@ impl DisplayDevice {
             dma: None,
             oam: vec![0; 160],
             palette_raster: None,
+            background_transfer: None,
+            object_raster: None,
         }
     }
     pub fn mode(&self) -> u8 {
@@ -465,6 +477,12 @@ impl DisplayDevice {
                 self.phase_remaining = 76;
             }
             StartupMode0 | Mode2 => {
+                if let Some(raster) = self.object_raster.as_mut() {
+                    raster.scan_line(self.ly, &self.oam, self.lcdc, [self.obp0, self.obp1]);
+                }
+                if let Some(raster) = self.background_transfer.as_mut() {
+                    raster.scan_line(self.ly);
+                }
                 self.phase = Mode3;
                 self.mode3_length = self.mode3_dots();
                 self.phase_remaining = self.mode3_length;
@@ -481,7 +499,13 @@ impl DisplayDevice {
                 self.phase_remaining = prelude - self.mode3_length;
             }
             HBlank if self.ly == 143 => {
+                if let Some(raster) = self.object_raster.as_mut() {
+                    raster.complete_frame();
+                }
                 if let Some(raster) = self.palette_raster.as_mut() {
+                    raster.complete_frame();
+                }
+                if let Some(raster) = self.background_transfer.as_mut() {
                     raster.complete_frame();
                 }
                 self.ly = 144;
@@ -546,6 +570,8 @@ impl DisplayDevice {
             || self.oam.len() != 160
             || self.observed_tcycles != from
             || self.palette_raster.is_some()
+            || self.background_transfer.is_some()
+            || self.object_raster.is_some()
         {
             return false;
         }
@@ -686,6 +712,8 @@ impl DisplayDevice {
             // the ordinary event path below.
             if remaining >= 154 * 456
                 && self.palette_raster.is_none()
+                && self.background_transfer.is_none()
+                && self.object_raster.is_none()
                 && self.lcd_enabled()
                 && !self.first_frame
                 && self.dma.is_none()
@@ -707,23 +735,38 @@ impl DisplayDevice {
                 continue;
             }
             // An idle interval may span several complete visible scanlines.
-            // With OBJ/window/STAT/DMA disabled, each settled mode2 start
-            // returns after exactly 456 dots. Stop before the last visible
-            // line, preserving its distinct VBlank edge on the event path.
+            // Without interleaving stores, STAT or DMA, each settled mode2
+            // start returns after exactly 456 dots, including OBJ/window
+            // fetches. Retain the last line's mode3 length and every scanned
+            // publication; leave the distinct VBlank edge on the event path.
             if remaining >= 456
                 && self.phase == RasterPhase::Mode2
                 && self.phase_remaining == 80
                 && self.ly < 143
                 && !self.first_frame
-                && self.lcdc & 0xa2 == 0x80
+                && self.lcd_enabled()
                 && self.dma.is_none()
                 && self.stat_enable == 0
             {
                 let lines = (remaining / 456).min(u64::from(143 - self.ly)) as u8;
                 let previous_ly = self.ly;
-                self.ly += lines;
-                self.mode3_length = 172 + u16::from(self.scx & 7);
+                if let Some(raster) = self.object_raster.as_mut() {
+                    // The span remains unchanged across these lines; line0
+                    // still clears the drawing frame before appending it.
+                    raster.scan_line(previous_ly, &self.oam, self.lcdc, [self.obp0, self.obp1]);
+                }
+                if let Some(raster) = self.background_transfer.as_mut() {
+                    // No stores can interleave this idle span. Each skipped
+                    // line still scans the current accepted destination cells.
+                    for line in previous_ly..previous_ly + lines {
+                        raster.scan_line(line);
+                    }
+                }
+                self.ly += lines - 1;
                 self.window_y_reached |= previous_ly < self.wy && self.wy <= self.ly;
+                self.mode3_length = self.mode3_dots();
+                self.ly += 1;
+                self.window_y_reached |= self.ly == self.wy;
                 self.stat_irq_line = false;
                 remaining -= u64::from(lines) * 456;
                 continue;
@@ -948,29 +991,74 @@ mod tests {
     }
 
     #[test]
-    fn vblank_forecast_rejects_dynamic_off_and_invalid_rasters() {
+    fn vblank_forecast_rejects_dma_off_and_invalid_rasters() {
         let mut base = DisplayDevice::powered_off(0);
         assert_eq!(base.tcycles_until_vblank(), None);
         base.write_port(0xff40, 0x91, 0xc3).unwrap();
         base.observe_time(2 * 70224, &[0; 160]).unwrap();
-        for case in 0..8 {
+        for case in 0..6 {
             let mut state = base.clone();
             match case {
-                0 => state.lcdc |= 2,
-                1 => state.lcdc |= 0x20,
-                2 => state.stat_enable = 8,
-                3 => {
+                0 => state.stat_enable = 8,
+                1 => {
                     state.dma = Some(OamDma {
                         next: 0,
                         cycles_until_byte: 8,
                     })
                 }
-                4 => state.oam.clear(),
-                5 => state.ly = 154,
-                6 => state.phase_remaining = 0,
+                2 => state.oam.clear(),
+                3 => state.ly = 154,
+                4 => state.phase_remaining = 0,
                 _ => state.stat_irq_line = true,
             }
             assert_eq!(state.tcycles_until_vblank(), None, "case={case}");
+        }
+    }
+
+    #[test]
+    fn vblank_forecast_preserves_object_window_and_background_scanout() {
+        let mut oam = [0; 160];
+        for (index, object) in oam.chunks_exact_mut(4).enumerate() {
+            object.copy_from_slice(&[
+                16 + (index % 10) as u8 * 12,
+                [0, 7, 8, 63, 80, 80, 120, 167, 168, 200][index % 10],
+                index as u8,
+                0,
+            ]);
+        }
+        for lcdc in [0x93, 0xb3, 0xb7] {
+            let mut device = DisplayDevice::powered_off(0);
+            device.write_port(0xff40, lcdc, 0xc3).unwrap();
+            device.begin_native_object_scanout(&oam, [0xd0, 0xe0]).unwrap();
+            device.write_port(0xff40, lcdc, 0xc3).unwrap();
+            device.write_port(0xff43, 7, 0xc3).unwrap();
+            device.write_port(0xff4a, 64, 0xc3).unwrap();
+            device.write_port(0xff4b, 47, 0xc3).unwrap();
+            device.begin_native_background_transfer(0x9800).unwrap();
+            device.record_native_background_write(0x98c1);
+            device.begin_native_background_scanout(0xe4);
+            let mut samples = Vec::new();
+            let mut edges = Vec::new();
+            let mut epoch = 0;
+            for at in 0..3 * 70224u64 {
+                device.observe_time(at, &oam).unwrap();
+                if device.vblank_epoch() != epoch {
+                    edges.push((at, device.clone()));
+                    epoch = device.vblank_epoch();
+                }
+                if at < 2 * 70224 && (at % 199 == 0 || device.phase_remaining == 1) {
+                    let before = device.clone();
+                    let distance = device.tcycles_until_vblank().expect("OBJ/window retain a fixed line period");
+                    assert_eq!(device, before, "forecast must remain passive");
+                    samples.push((at, before, distance));
+                }
+            }
+            for (at, mut sample, distance) in samples {
+                let (edge, expected) = edges.iter().find(|(edge, _)| *edge > at).unwrap();
+                assert_eq!(u64::from(distance), edge - at, "LCDC={lcdc:02x}, at={at}");
+                sample.observe_time(at + u64::from(distance), &oam).unwrap();
+                assert_eq!(&sample, expected, "all scanned rows and objects must survive: LCDC={lcdc:02x}, at={at}");
+            }
         }
     }
 

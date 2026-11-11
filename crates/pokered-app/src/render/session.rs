@@ -39,11 +39,16 @@ use std::sync::Arc as FlashSnapshotIdentity;
 /// An owned identity for one immutable retained map image. Keeping the old
 /// token alive prevents allocator address reuse across replaced callers.
 #[derive(Clone, Debug)]
-pub(crate) struct FlashMapVisualKey(FlashSnapshotIdentity<()>, u64);
+pub(crate) struct FlashMapVisualKey(FlashSnapshotIdentity<()>, [u64; 3]);
 impl FlashMapVisualKey {
-    pub(crate) fn new() -> Self { Self(FlashSnapshotIdentity::new(()), 0) }
+    pub(crate) fn new() -> Self { Self(FlashSnapshotIdentity::new(()), [0; 3]) }
     pub(crate) fn with_palette_revision(mut self, revision: u64) -> Self {
-        self.1 = revision;
+        self.1[0] = revision;
+        self
+    }
+    pub(crate) fn with_submenu_revisions(mut self, background: u64, objects: u64) -> Self {
+        self.1[1] = background;
+        self.1[2] = objects;
         self
     }
 }
@@ -2019,8 +2024,9 @@ impl RenderSession {
             .map(|hof| super::hof_visual_key(hof, game.state.config.language));
         let credits = game.credits.as_ref().map(super::credits_visual_key);
         let field_flash_active = game.field_flash.is_some();
-        // Text still redraws. White and immutable map snapshots can reuse the
-        // current page; actual snapshot writes and other takeovers invalidate.
+        // Text still redraws. White, immutable map snapshots and unchanged
+        // submenu scanout can reuse the current page. Published changes and
+        // other takeovers invalidate the key.
         let flash_white = game.field_flash_white_frame();
         let flash_map = game.field_flash_map_key();
         let takeover_active = field_flash_active || black_screen

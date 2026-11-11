@@ -3567,6 +3567,14 @@ impl PokemonGame {
             return;
         }
         self.update_native_inner(input);
+        if self.field_flash.is_none() {
+            // The synchronous UI producer owns AutoBG while a menu or text
+            // covers the field. Free field movement uses row/column redraws.
+            let enabled = self.state.screen != GameScreen::Overworld
+                || self.overworld.pending_dialogue.is_some();
+            self.source_display.set_native_background_enabled(u8::from(enabled))
+                .expect("native video control changes only outside the source IRQ owner");
+        }
         self.source_display.finish_native_frame().expect("valid shared native display time");
     }
 
@@ -5295,6 +5303,7 @@ impl PokemonGame {
                             ScreenAction::Transition(GameScreen::MainMenu)
                         } else {
                             self.begin_submenu_restore(input);
+                            self.update_field_flash(input);
                             ScreenAction::Continue
                         }
                     }
@@ -5804,6 +5813,7 @@ impl PokemonGame {
                     }
                     BagScreenAction::Cancelled => {
                         self.begin_submenu_restore(input);
+                        self.update_field_flash(input);
                         ScreenAction::Continue
                     },
                     BagScreenAction::TossItem {
@@ -7377,6 +7387,8 @@ impl PokemonGame {
             "loaded_rom_bank": self.source_display.source_loaded_rom_bank(),
             "rom_bank_temp": self.source_display.source_rom_bank_temp(),
             "selected_rom_bank": self.source_display.selected_rom_bank(),
+            "auto_bg_enabled": self.source_display.video_requests().read(pokered_core::overworld::video_copy_caller_work::AUTO_BG_ENABLED),
+            "auto_bg_portion": self.source_display.background_portion(),
         });
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },

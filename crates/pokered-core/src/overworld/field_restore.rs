@@ -616,6 +616,9 @@ impl FieldRestoreWork {
                 format: CopyFormat::TwoBpp,
             }),
             UpdateSprites,
+            // RedisplayStartMenu -> HandleMenuInput -> Delay3. Keep the
+            // same IRQ owner alive while its restored tilemap reaches VRAM.
+            WaitVBlanks(3),
             Return,
         ];
         Self { input, operations, next: 0 }

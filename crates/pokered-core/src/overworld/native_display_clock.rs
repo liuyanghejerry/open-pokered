@@ -44,6 +44,18 @@ impl From<DisplayWorkTime> for NativeDisplayClock {
     }
 }
 impl NativeDisplayClock {
+    /// Ordinary UI frames usually retain the same control byte. Avoid
+    /// materializing deferred display periods until ownership actually changes.
+    #[inline]
+    pub fn set_native_background_enabled(&mut self, enabled: u8) -> Result<(), DisplayWorkError> {
+        use super::super::video_copy_caller_work::{AUTO_BG_ENABLED, AUTO_BG_PORTION};
+        if !self.time.vblank_dispatch_enabled && !self.time.active_vblank
+            && self.time.video_requests.read(AUTO_BG_ENABLED) == Some(enabled)
+            && self.time.video_requests.read(AUTO_BG_PORTION).is_some() {
+            return Ok(());
+        }
+        self.as_time_mut().set_native_background_enabled(enabled)
+    }
     fn idle_capacity(time: &DisplayWorkTime) -> u32 {
         if time.elapsed != time.deadline
             || time.active_vblank
@@ -260,6 +272,32 @@ mod tests {
     }
     fn pair() -> (NativeDisplayClock, DisplayWorkTime) {
         (NativeDisplayClock::default(), DisplayWorkTime::default())
+    }
+
+    #[test]
+    fn deferred_native_background_phase_matches_immediate_edges_without_forcing_each_frame() {
+        let (mut clock, mut oracle) = pair();
+        clock.set_native_background_enabled(1).unwrap();
+        oracle.set_native_background_enabled(1).unwrap();
+        for _ in 0..31 {
+            clock.set_native_background_enabled(1).unwrap();
+            advance(&mut clock, &mut oracle, 1);
+            assert_eq!(clock.background_portion(), oracle.background_portion());
+        }
+        assert!(clock.pending_periods > 20, "unchanged control must retain the idle fast path");
+        assert_eq!(clock.background_portion(), Some(1));
+        clock.set_native_background_enabled(0).unwrap();
+        oracle.set_native_background_enabled(0).unwrap();
+        advance(&mut clock, &mut oracle, 8);
+        assert_eq!(clock.background_portion(), Some(1));
+        same(&clock, &oracle);
+        clock.set_native_background_enabled(1).unwrap();
+        oracle.set_native_background_enabled(1).unwrap();
+        advance(&mut clock, &mut oracle, 2);
+        clock.set_vblank_dispatch_enabled(true);
+        oracle.set_vblank_dispatch_enabled(true);
+        assert_eq!(clock.background_portion(), Some(0));
+        same(&clock, &oracle);
     }
 
     #[test]
