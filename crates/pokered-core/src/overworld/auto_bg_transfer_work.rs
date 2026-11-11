@@ -1,7 +1,7 @@
 //! AutoBgMapTransfer and the unrolled six-row TransferBgRows child.
 //! Caller supplies the real logical tile buffer frozen while foreground is
 //! suspended. Writes use the shared pattern bus and its actual VRAM gating.
-use super::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
+use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus};
 use super::pattern_copy_work::{PatternAccess, PatternInstruction, PatternInstructionBus};
 use crate::alloc_prelude::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -56,6 +56,8 @@ pub struct AutoBgTransferWork {
     step: Step,
     enabled: u8,
     portion: u8,
+    #[serde(default)]
+    live_portion: bool,
     destination: u16,
     tiles: Vec<u8>,
     #[serde(default = "tile_map_base")]
@@ -90,6 +92,7 @@ impl AutoBgTransferWork {
             step: Step::Enabled,
             enabled,
             portion,
+            live_portion: false,
             destination,
             tiles,
             source_base: tile_map_base(),
@@ -105,6 +108,12 @@ impl AutoBgTransferWork {
             pair: 0,
             section: 0,
         })
+    }
+    /// Bind the phase to shared HRAM at the original LDH read/store points.
+    /// The scalar constructor remains useful for isolated instruction oracles.
+    pub fn with_live_portion(mut self) -> Self {
+        self.live_portion = true;
+        self
     }
     /// The same source TransferBgRows tail is also called by VBlankCopyBgMap.
     /// Zero rows deliberately wraps through256 rows. The native caller owns
@@ -125,6 +134,7 @@ impl AutoBgTransferWork {
             step: Step::Pop,
             enabled: 1,
             portion: 0,
+            live_portion: false,
             destination,
             tiles,
             source_base: source,
@@ -208,6 +218,7 @@ impl AutoBgTransferWork {
             Return => 16,
             _ => 4,
         };
+        let mut read = None;
         match self.step {
             WriteLow | WriteHigh => {
                 PatternInstructionBus::execute(
@@ -227,11 +238,18 @@ impl AutoBgTransferWork {
                 )?;
             }
             _ => {
-                DisplayInstructionBus::execute(
+                read = DisplayInstructionBus::execute(
                     bus,
                     DisplayInstruction {
                         tcycles: t,
-                        access: None,
+                        access: if self.live_portion {
+                            use super::video_copy_caller_work::AUTO_BG_PORTION;
+                            match self.step {
+                                Portion => Some(DisplayAccess::Read { port: AUTO_BG_PORTION, at_tcycle: 8 }),
+                                StorePortion => Some(DisplayAccess::Write { port: AUTO_BG_PORTION, value: self.a, at_tcycle: 8 }),
+                                _ => None,
+                            }
+                        } else { None },
                     },
                 )?;
             }
@@ -270,6 +288,7 @@ impl AutoBgTransferWork {
                 Portion
             }
             Portion => {
+                if self.live_portion { self.portion = read.expect("accepted phase LDH returns its byte"); }
                 self.a = self.portion;
                 TestPortion
             }
@@ -446,6 +465,37 @@ mod tests {
         fn read_pattern_byte(&self, _: PatternSource, _: u16) -> Option<u8> {
             None
         }
+    }
+    #[test]
+    fn live_background_portion_is_read_and_stored_on_the_shared_instruction_bus() {
+        let mut time = DisplayWorkTime::default();
+        time.set_native_background_enabled(1).unwrap();
+        for _ in 0..2 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        assert_eq!(time.background_portion(), Some(2));
+        time.acknowledge_native_vblank().unwrap();
+        time.set_vblank_dispatch_enabled(true);
+        time.begin_native_update();
+        while !time.pending_vblank_dispatch() { time.idle_to_device_event().unwrap(); }
+        time.enter_pending_vblank().unwrap();
+        let mut memory = PatternMemory::default();
+        let mut work = AutoBgTransferWork::new(1, 0, 0x9800, 0, vec![37; 360]).unwrap().with_live_portion();
+        let mut saw_store = false;
+        while !work.finished() {
+            let store = work.step == Step::StorePortion;
+            let before = time.elapsed();
+            work.step(&mut time.pattern_bus(&mut memory, &NoAssets)).unwrap();
+            if store {
+                saw_store = true;
+                assert_eq!(time.elapsed() - before, 12);
+                assert_eq!(time.background_portion(), Some(0));
+                assert_eq!(memory.read(0x9980), Some(0), "phase store precedes the first tile write");
+            }
+        }
+        assert!(saw_store);
+        assert_eq!(work.next_portion(), 0, "the live bottom phase overrides the constructor's top value");
+        assert_eq!(memory.read(0x9800), Some(0));
+        assert_eq!(memory.read(0x9980), Some(37));
+        assert_eq!(memory.read(0x9a33), Some(37));
     }
     #[derive(serde::Deserialize)]
     struct RomCase {

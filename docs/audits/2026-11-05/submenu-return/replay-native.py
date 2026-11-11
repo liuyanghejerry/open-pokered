@@ -1,13 +1,16 @@
 import argparse, hashlib, json, gzip, os, socket, subprocess, sys, time
 from pathlib import Path
 w=Path(__file__).resolve().parents[4]
-a=argparse.ArgumentParser();a.add_argument('--repo',type=Path,default=w);a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');a.add_argument('--case',choices=['bag-neutral','bag-short','option-neutral','option-short']);args=a.parse_args()
+a=argparse.ArgumentParser();a.add_argument('--repo',type=Path,default=w);a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');a.add_argument('--case',choices=['bag-neutral','bag-short','option-neutral','option-short']);a.add_argument('--extra-idle',type=int,default=0);args=a.parse_args()
+assert args.extra_idle >= 0, 'extra idle must be nonnegative'
 w=args.repo;binary=args.binary;out=args.output;out.mkdir(exist_ok=False)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert sha(binary)==args.sha256
 
 def writegz(path,data):
  path.write_bytes(gzip.compress((json.dumps(data,separators=(',',':'))+'\n').encode(),mtime=0))
+def play_ticks(value):
+ return ((value['hours']*60+value['minutes'])*60+value['seconds'])*60+value['frames']
 class Native:
     def __init__(self, folder, save, snapshot=None):
         self.folder = folder
@@ -67,7 +70,7 @@ for menu,button_name,expected in [('bag','Item','bag'),('option','Option','optio
   if args.case is not None and case != args.case: continue
   for repeat in [1,2]:
    save=out/f'{case}-{repeat}.sav';save.write_bytes(fixture.read_bytes());game=Native(out/f'{case}-{repeat}',save)
-   record={'case':case,'frames':[],'images':{}}
+   record={'case':case,'extra_idle':args.extra_idle,'frames':[],'images':{}}
    try:
     game.boot();game.drive([None]*64);game.drive(['start','start']+[None]*96)
     for _ in range(8):
@@ -76,13 +79,14 @@ for menu,button_name,expected in [('bag','Item','bag'),('option','Option','optio
      game.drive(['down','down']+[None]*24)
     st=game.state();assert st['field_menu']['items'][st['field_menu']['cursor']]==button_name,st
     record['selected_start']=st['field_menu']
-    game.drive(['a','a']+[None]*240)
+    game.drive(['a','a']+[None]*(240+args.extra_idle))
     assert game.state()['screen']==expected,game.state()
     record['initial']=game.state();record['images']['initial']=game.capture('initial')
+    record['initial_play_time']=game.cmd(cmd='export_fixture')['data']['game_data']['play_time']
     for tick in range(80):
      key='b' if tick<2 else 'down' if variant=='short' and tick in [2,3] else None
      game.drive([key]);st=game.state()
-     row={k:st.get(k) for k in ['frame_count','screen','map_name','player_x','player_y','player_facing','player_movement_state','field_menu','field_restore','field_flash','source_foreground']}
+     row={k:st.get(k) for k in ['frame_count','screen','map_name','player_x','player_y','player_facing','player_movement_state','field_menu','field_restore','field_flash','source_foreground','source_display']}
      row.update(tick=tick,input=key,save_sha256=sha(save));record['frames'].append(row)
      for name in ['field_restore','field_flash']:assert not (st.get(name) or {}).get('error'),st
      record['images'][str(tick)]=game.capture(f'frame-{tick:03}')
@@ -92,7 +96,10 @@ for menu,button_name,expected in [('bag','Item','bag'),('option','Option','optio
     assert all((x['player_x'],x['player_y'],x['player_facing'])==(record['initial']['player_x'],record['initial']['player_y'],record['initial']['player_facing']) for x in record['frames'])
     assert sha(save)==fixture_sha
     record['final']=final
+    record['final_play_time']=game.cmd(cmd='export_fixture')['data']['game_data']['play_time']
     if args.candidate:
+     if not record['initial_play_time']['maxed'] and not record['final_play_time']['maxed']:
+      assert play_ticks(record['final_play_time'])-play_ticks(record['initial_play_time'])==80, 'native/IRQ handoff must not count a frame twice'
      assert final['field_menu']['cursor']==record['selected_start']['cursor'],record['frames'][-1]
      game.drive(['a','a']+[None]*96);assert game.state()['screen']==expected,game.state()
      record['after_reopen']=game.state();record['images']['after-reopen']=game.capture('after-reopen')

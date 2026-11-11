@@ -264,6 +264,21 @@ impl NpcPresentation {
             };
         }
     }
+    /// UpdateNPCSprite with the font loaded: test the four logical background
+    /// cells, then NotYetMoving resets the image phase without moving the NPC.
+    /// Shadow and displayed OAM remain owned by PrepareOAMData and DMA.
+    pub fn restore_menu_images(&mut self, npcs: &[NpcRuntimeState], mut covered: impl FnMut(u8, u8) -> bool) {
+        for ((image, npc), pixels) in self.images.iter_mut().zip(npcs).zip(&self.oam_pixels) {
+            let x = pixels.x / 8;
+            let y = (pixels.y.wrapping_add(4) & 0xf0) / 8;
+            image.visible = npc.visible && Self::coordinate_available(npc, self.scan_player)
+                && !covered(x, y + 1) && !covered(x + 1, y + 1)
+                && !covered(x, y) && !covered(x + 1, y);
+            image.facing = npc.facing;
+            image.phase = 0;
+            image.scripted_frame = npc.scripted_frame;
+        }
+    }
     /// ClearSprites changes the shadow page, not the currently published pose.
     pub fn clear_shadow_oam(&mut self, map: MapId) {
         if self.map != Some(map) { *self = Self::default(); self.map = Some(map); }
@@ -299,6 +314,31 @@ impl NpcPresentation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn menu_images_reappear_only_when_all_four_logical_cells_are_uncovered() {
+        let map = MapId::ViridianCity;
+        let mut npc = human();
+        npc.x = 20;
+        npc.y = 30;
+        npc.walk_counter = 0;
+        let mut base = NpcPresentation::default();
+        base.publish(map, &[npc.clone()], (20, 30), (0, 0), false);
+        let published = base.pose(map, 0);
+        let registers = base.current_oam_input(map, 0).unwrap().1;
+        base.suppress_current_images();
+        npc.walk_counter = 4;
+        for hidden_cell in [None, Some((8, 8)), Some((9, 8)), Some((8, 9)), Some((9, 9))] {
+            let mut presentation = base.clone();
+            presentation.restore_menu_images(&[npc.clone()], |x, y| hidden_cell == Some((x, y)));
+            let (image, pixels) = presentation.current_oam_input(map, 0).unwrap();
+            assert_eq!(image.visible, hidden_cell.is_none());
+            assert_eq!(image.phase, 0);
+            assert_eq!(pixels, registers);
+            assert_eq!(presentation.pose(map, 0), published, "UpdateSprites must not publish OAM");
+        }
+        assert_eq!(npc.walk_counter, 4);
+    }
+
     #[test]
     fn grass_priority_samples_old_top_right_pixels_and_keeps_both_publication_latches() {
         let map = MapId::ViridianCity;
@@ -910,6 +950,13 @@ impl PlayerPresentation {
         self.displayed = None;
     }
     pub fn suppress_current_image(&mut self) { self.current = None; }
+    /// UpdatePlayerSprite's stationary font path changes the current image,
+    /// not either OAM publication latch.
+    pub fn restore_menu_image(&mut self, facing: Direction, covered: bool) {
+        self.intra = 0;
+        self.phase = 0;
+        self.current = (!covered).then_some(PlayerImage { facing, phase: 0 });
+    }
     pub fn image_suppressed(&self, map: MapId) -> bool {
         self.map == Some(map) && self.oam_cleared && self.displayed.is_none()
     }
