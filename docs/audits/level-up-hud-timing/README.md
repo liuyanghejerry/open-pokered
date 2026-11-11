@@ -1,5 +1,7 @@
 # Level-up HUD publication
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The turn resolves before its presentation. Reading the final party state into
 the HUD showed the new level and maximum HP while the enemy was still using
 Splash. Current HP then remained at its old value throughout the growth notice.

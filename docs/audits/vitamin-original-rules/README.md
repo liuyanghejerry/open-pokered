@@ -1,5 +1,7 @@
 # Vitamin item behavior
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Vitamins now follow the original field item rules: fainted Pokémon can gain
 StatExp, a use below 25,600 adds the full 2,560 even if the result passes that
 threshold, and recalculating stats preserves current HP. The correction is
@@ -26,7 +28,7 @@ Each case then performs ordinary SAVE/YES. Independent source-derived SRAM
 reads match the complete 44-byte party record, StatExp, HP, stats, PP, bag and
 cash. Main checksums validate at 241, 35 and 19 respectively. Existing move PP
 stays `[35,40,0,0]`, cash stays 3,000 and the healthy partner is byte-identical.
-[Compact verification](source-verification.json) includes state, SRAM,
+[Compact verification](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/vitamin-original-rules/source-verification.json) includes state, SRAM,
 script and screenshot hashes.
 
 The original code in `engine/items/item_effects.asm` selects `.useVitamin`
@@ -76,7 +78,7 @@ unrepresented catch-rate byte (native 0, constructed original 45) and is
 explicitly excluded from that source-byte comparison. This evidence does not
 claim whole-save parity or full rendered animation cadence parity.
 
-[Native capture and SAVE manifest](native-verification.json) includes binary,
+[Native capture and SAVE manifest](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/vitamin-original-rules/native-verification.json) includes binary,
 fixture, image and SRAM hashes plus the fixed action traces. Full private
 records and screenshots are at the directory named by
 `.task-tmp/fidelity-39-plus/audit-841-native-vitamins-path.txt`; the capture

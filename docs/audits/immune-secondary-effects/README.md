@@ -1,5 +1,7 @@
 # Secondary effects cannot affect an immune target
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Body Slam and Thunderbolt could paralyze an immune target despite reporting
 `It doesn't affect…`; Low Kick could make that target flinch and lose its turn.
 The damage remained zero, but the secondary chance gate still ran.

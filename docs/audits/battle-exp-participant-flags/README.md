@@ -1,5 +1,7 @@
 # Battle participant EXP masks — audit 867
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 首发参战宝可梦实际昏倒、换入健康成员击败同一敌人时，修复前仍把昏倒成员计入经验分母。常青森林第一个捕虫少年（Weedle 6、Caterpie 6）使健康 Bulbasaur 得到 33 + 67 = 100 EXP；原作及修复后是 66 + 67 = 133 EXP。成长值也恢复完整份额。
 
 本改动维护原作两组参加标记，而不是在经验分母里统一排除 HP0：
@@ -60,7 +62,7 @@ BEFORE `audit-865-stone-hints-before-debug` SHA256 `b50130e04db566195707c8c48fa5
 - `cargo test -p pokered-core --lib`：2867 passed，0 failed；内含9个参加标记边界测试，另保留 still-flagged HP0 的原作 DIV 回归。
 - `cargo build --bin pokered-app --features debug-server`：PASS，随后私有冻结 binary。
 - master e481 合入后，使用相同冻结7834 test executable 重跑9个专项：PASS；未再占用共享 Cargo target。
-- [verification.json](verification.json)：每次真实输入/run directory、源码/脚本/fixture/binary/SRAM/hash、checksum、各阶段原作 flags、最终 EXP/成长值/HP/PP/背包/金额、同帧与字节比较。
+- [verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/battle-exp-participant-flags/verification.json)：每次真实输入/run directory、源码/脚本/fixture/binary/SRAM/hash、checksum、各阶段原作 flags、最终 EXP/成长值/HP/PP/背包/金额、同帧与字节比较。
 - [fixture-no-revive.json](fixture-no-revive.json) 是完整现代 JSON 基础构造；[replay-native.py](replay-native.py) 在启动前派生 solo / revive / revive-next。运行参数为 `CASE REPEAT before|after FROZEN_BINARY EXACT_SOURCE_COMMIT`；需要 `scripts/debug_drive.py` 与 `LD_LIBRARY_PATH=/tmp/pokered-build-lib`。例：`python3 docs/audits/battle-exp-participant-flags/replay-native.py no-revive 1 after /path/to/frozen-app 7834bff8da0413f2756f1126736410adc8293eda`。
 - [prepare-original-map-audit.py](prepare-original-map-audit.py) 与 [replay-original-audit.py](replay-original-audit.py) 保留原作实测脚本原文（后者 SHA 与 revive-next 原始记录一致）。这些审计脚本使用记录中的本地零售 ROM、symbol、PyBoy bootstrap/base map state；源 ROM/state 不提交到仓库。原始所有 run artifacts 保留在 `.task-tmp/fidelity-39-plus/audit-863-*` / `audit-867-*`。
 

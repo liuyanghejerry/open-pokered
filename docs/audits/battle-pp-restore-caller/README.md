@@ -1,5 +1,7 @@
 # 当前实际发布身份
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 #269 head `5f4f3ac907463c9f917ddeba6bf6814c6c3deacb` 实际合入 `26bd605039be996a9cedbf02ed25e6114ac930ae` 后整合 master `26bd605039be996a9cedbf02ed25e6114ac930ae`。全部2175compiler／2693NUL mode/blob/literal symlink／702GFX与受测1011 `cb8e6b7da2abd7e8b4442ce545c827136f3f71d5`逐项相同。新远程CI未在此预先宣称全绿；其三个exacthead工作流仍须全部成功。无重建、无actual重录或历史身份改标。下方“本地准备”段和ZIP保留准备时身份，publication-1013.json新增实际集成字段。
 
 # 战斗中恢复 PP：发布准备与证据索引
@@ -12,7 +14,7 @@
 
 `016a` 的旧整合证据独立保留：1584个实际单帧公开状态及952／1584两图与原`af3f`相同，另400帧真实确认续接只扣一次，原Transform PP10、工作PP[10,0]；**没有新增SAVE**。旧2173 compiler／2692 regular non-doc范围未覆盖两项run-wasm和目录symlink，1001与979提供回溯2175／2693完整范围补证，不修改原manifest或重跑测试。970独立审查、旧四组host日志、合并强ACK冲突解决均在新ZIP。
 
-独立 [949 Mimic 实际验证](mimic-949-report.md) 完成原作／literal`a2fa`前／冻结`af3f`后各一次普通SAVE（共3次）：Ether恢复原Mimic至10，工作招式保持PoisonSting；第二次满PP Ether无效果；再使用复制招式、切换和保存后原Mimic为PP9。旧版本保存PP7。覆盖仅这一Ether路径，不扩为全部PP道具／MimicPPUp／link／嵌套变身或音频结论。[949原始验证](mimic-949-verification.json)、[独立归档](mimic-949-archive.json)与116路径／90blob的`mimic-949-evidence.zip`保持真实身份。
+独立 [949 Mimic 实际验证](mimic-949-report.md) 完成原作／literal`a2fa`前／冻结`af3f`后各一次普通SAVE（共3次）：Ether恢复原Mimic至10，工作招式保持PoisonSting；第二次满PP Ether无效果；再使用复制招式、切换和保存后原Mimic为PP9。旧版本保存PP7。覆盖仅这一Ether路径，不扩为全部PP道具／MimicPPUp／link／嵌套变身或音频结论。[949原始验证](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/battle-pp-restore-caller/mimic-949-verification.json)、[独立归档](mimic-949-archive.json)与116路径／90blob的`mimic-949-evidence.zip`保持真实身份。
 
 [当前发布准备](publication-1013.json)与`publication-1013-logs.zip`只收有限显式白名单：965／970／979的965投影／1001范围补证以及1011新七阶段日志与源码身份。无全audit目录glob、ROM、exe或模拟器state。旧1378路径主ZIP和69路径literal-master补充ZIP完全不变；历史42次SAVE与949新增3次分组计数，严格截图和965重播不重复计SAVE。
 
@@ -65,7 +67,7 @@ Ether／Max Ether 的招式选择现在显示原作的 “Restore PP of which te
 
 ## 证据
 
-[verification.json](verification.json) 汇总真实身份和终态；[archive.json](archive.json) 给出 ZIP 哈希。`evidence.zip` 仅收显式列出的 935 控制及上述已接受的 930 原作控制，1378 条原始路径按 346 个 SHA256 内容去重。打包时全部字节与本地原始记录逐项相等，保留输入、PNG、原始 SRAM、状态、原作只读 hook、冻结身份、测试／GBA 日志，以及早期测试期望／驱动错误和真实 GBA 失败。没有 ROM、可执行文件或模拟器 state。
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/battle-pp-restore-caller/verification.json) 汇总真实身份和终态；[archive.json](archive.json) 给出 ZIP 哈希。`evidence.zip` 仅收显式列出的 935 控制及上述已接受的 930 原作控制，1378 条原始路径按 346 个 SHA256 内容去重。打包时全部字节与本地原始记录逐项相等，保留输入、PNG、原始 SRAM、状态、原作只读 hook、冻结身份、测试／GBA 日志，以及早期测试期望／驱动错误和真实 GBA 失败。没有 ROM、可执行文件或模拟器 state。
 
 ```bash
 python3 docs/audits/battle-pp-restore-caller/extract_evidence.py --verify-only
@@ -80,7 +82,7 @@ fixture 与脚本保留原始路径和构造说明；运行原作仍需要合法
 
 实际 master 已合并到本修复的 `279a11b96c71871ffc18033b2d9260df5f961863`。唯一冲突是老人教学测试的 ShowingText 构造字段顺序，保留已测试的 `af3f` 顺序及完整教学／用药测试模块。全部 2170 个已编译源文件的路径集合与 SHA256 均与 `af3f` 完全相同，因此沿用上述完整 core、app、GBA 检查；合并未新增生产改动，也未重复构建。
 
-[literal-master-before-verification.json](literal-master-before-verification.json) 记录真实构建身份、四组单帧核验和源文件同一性；[literal-master-before-screenshots.json](literal-master-before-screenshots.json) 映射新主分支前图与原 AFTER。独立的 [literal-master-before-archive.json](literal-master-before-archive.json) 描述 `literal-master-before-evidence.zip`，仅收本次补录、对应的原 AFTER、构建／合并／校验记录。原 `evidence.zip` 的 SHA256 仍为 `00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966`，内容未覆盖。新 ZIP 也不含 ROM、可执行文件或模拟器 state。
+[literal-master-before-verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/battle-pp-restore-caller/literal-master-before-verification.json) 记录真实构建身份、四组单帧核验和源文件同一性；[literal-master-before-screenshots.json](literal-master-before-screenshots.json) 映射新主分支前图与原 AFTER。独立的 [literal-master-before-archive.json](literal-master-before-archive.json) 描述 `literal-master-before-evidence.zip`，仅收本次补录、对应的原 AFTER、构建／合并／校验记录。原 `evidence.zip` 的 SHA256 仍为 `00ea89aa328c1c556b55356b2626c3690916b19764e2dcdc7c9b07b67fe73966`，内容未覆盖。新 ZIP 也不含 ROM、可执行文件或模拟器 state。
 
 ```bash
 python3 docs/audits/battle-pp-restore-caller/extract_evidence.py --archive docs/audits/battle-pp-restore-caller/literal-master-before-evidence.zip --verify-only

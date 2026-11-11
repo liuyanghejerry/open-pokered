@@ -1,5 +1,7 @@
 # Boulder slide, dust, and control lockout
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Holding toward a Strength boulder currently lets the player begin walking while the original is still sliding the stone and showing smoke. This patch retains the stone at its origin for presentation, commits its logical destination before visible movement, slides one pixel per field sample, and locks player controls through smoke and graphics restoration. It separates retained LCD output from logical control resumption and snapshots in-flight push state.
 
 Dust follows original sprites 36–39, including raw coordinate clipping, OBP1 palette, OAM priority, and the original vertical clipping attribute bug. Victory Road 1F/2F switch flag/block replacement runs during the slide; visible block replacement adds its redraw pause. Seafoam holes and Victory Road 3F landing effects remain at completion.

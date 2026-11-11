@@ -1,5 +1,7 @@
 # Prize full-bag dialogue
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original `engine/events/prize_menu.asm` .bagFull prints `_OopsYouDontHaveEnoughRoomText`, defined in `data/text/text_2.asm`. All three TM choices incorrectly used another sentence. This corrects English dialogue only; Chinese translation and mechanics are unchanged.
 
 62 `fidelity_` core tests pass. The existing TM prize test now checks the source failure text for all three prizes and its absence after cancellation or success. Native debug-server build passes.

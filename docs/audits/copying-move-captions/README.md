@@ -1,5 +1,7 @@
 # Copying move result captions
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Conversion applied its types but omitted its result. Failed Conversion and
 Transform used the generic attack-missed caption. Restore ConvertedTypeText
 with the target's party name/nickname, and PrintButItFailedText for failures.

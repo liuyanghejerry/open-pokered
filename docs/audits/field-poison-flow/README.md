@@ -1,5 +1,7 @@
 # Field poison continuation (896)
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Walking poison now suspends at each newly fainted Pokémon's individual message. The next party slot remains untouched until that message returns. After all slots have been processed, any remaining Poison status causes four rendered frames with only background color 0 mapped to dark gray; the normal background returns before `SFX_POISONED`. If nobody remains alive, the separate player blackout message must return before healing, halving money and warping.
 
 The suspended caller owns only a slot cursor and presentation phase. `SaveData.party` remains the sole party owner. Runtime snapshots preserve the cursor and remaining flash frames; ordinary SRAM loading and soft reset clear the old continuation. Flash input and actor work are blocked without treating a palette effect as FontLoaded text. Debug `control_ready` also waits for the caller to return.

@@ -1,5 +1,7 @@
 # 原版差距 1、2、3、5、6 修复记录
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 对比基线：游戏提交 `403514b7ba0e1cba9e8c74af3787aaa3d9bd5389`。
 原版依据沿用[审计记录](../2026-09-28-original-gaps/report.md)中的 Red 反汇编及 ROM。
 
@@ -7,7 +9,7 @@
 
 | 项目 | 现在的行为 | 验证 |
 |---|---|---|
-| 1 狩猎门厅 | 返回门厅、回答 NO 后保留步数和球数；YES、离开设施、额度用尽才结束本局。狩猎球使用专用计数，不进入背包；额度耗尽返回门厅后告别并自动走向出口，不会误入再次付费。 | 单元测试覆盖消耗球、门厅不扣步、重新入场、退出及旗标同步；真实门口往返重复 2 次，498→496 步，费用保持 ¥2500；超时退出再取得 HM04 的流程重复 2 次通过，费用同样不变（[日志](safari-timeout.log)）。 |
+| 1 狩猎门厅 | 返回门厅、回答 NO 后保留步数和球数；YES、离开设施、额度用尽才结束本局。狩猎球使用专用计数，不进入背包；额度耗尽返回门厅后告别并自动走向出口，不会误入再次付费。 | 单元测试覆盖消耗球、门厅不扣步、重新入场、退出及旗标同步；真实门口往返重复 2 次，498→496 步，费用保持 ¥2500；超时退出再取得 HM04 的流程重复 2 次通过，费用同样不变（[日志](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/safari-timeout.log)）。 |
 | 2 选项标记 | 非活动行保留空心标记；移动游标及修改取值时正确擦除、恢复标记。 | 英中菜单测试、完整绘制与局部重绘像素比对、GBA 编译布局与动态布局一致性。初次打开的实心光标经像素复核原本就存在，已纠正原审计中的误判。 |
 | 3 联机交换 | 选择前交换双方队伍和训练家名字；左右切换队伍，A 查看对方能力及招式，B 返回；确认时显示双方名字。完成后直接继续选择，刷新进化后的队伍。 | 双端路由／驱动测试覆盖取消、断线、慢一方、连续交换和预览数据一致性；冻结地图上的选择及能力页重绘回归。 |
 | 5 进化时序 | 等旧叫声结束后开始变形音乐；成功时先等新叫声，再播完成音效，结束后停留 40 帧。静音／无设备时仍运行序列计时。 | 共享音频序列器的 3 组进化流程、151 种叫声结束测试、人工延长 busy 信号的状态机测试。 |
@@ -40,10 +42,10 @@
 - `cargo test -p pokered-audio`：96 项通过。
 - `cargo test -p pokered-ui --lib --test menus`：65 项通过。
 - `cargo check -p pokered-tui`：通过。
-- [11 个场景回归全部通过](scenarios.log)。运行时使用构建完成后的独立二进制副本，避免并行 Cargo 测试覆盖 debug-server 二进制。
+- [11 个场景回归全部通过](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/scenarios.log)。运行时使用构建完成后的独立二进制副本，避免并行 Cargo 测试覆盖 debug-server 二进制。
 - 引擎 `dotzuki-audio` 的 150 项单元测试通过。
-- 常规新游戏流程 **m01–m28 通过**：[日志](playthrough.log)、[m28 状态](playthrough-m28.json)。m29 暴露出超时离场仍按入场处理的问题，随后补齐原版 `EVENT_SAFARI_GAME_OVER` 告别／自动行走分支，并更新 m29 驱动。修复后的 **m29 专项重复 2 次通过**，见上方超时日志。
-- **未取得完整 m01–m49 通关通过结果**。追加的同步按键加速驱动在 m22 的 `EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2` 旗标断言处退出（[日志](playthrough-driven.log)）；常规驱动此前已通过该阶段。此加速尝试不作为完整通关证明。
+- 常规新游戏流程 **m01–m28 通过**：[日志](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/playthrough.log)、[m28 状态](playthrough-m28.json)。m29 暴露出超时离场仍按入场处理的问题，随后补齐原版 `EVENT_SAFARI_GAME_OVER` 告别／自动行走分支，并更新 m29 驱动。修复后的 **m29 专项重复 2 次通过**，见上方超时日志。
+- **未取得完整 m01–m49 通关通过结果**。追加的同步按键加速驱动在 m22 的 `EVENT_BEAT_ROCKET_HIDEOUT_4_TRAINER_2` 旗标断言处退出（[日志](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/playthrough-driven.log)）；常规驱动此前已通过该阶段。此加速尝试不作为完整通关证明。
 
 狩猎超时离场专项复现（仅初始队伍、金牙和定位使用调试准备；付费、耗步、离场、换取 HM04 均正常执行）：
 
@@ -60,8 +62,8 @@ GAP_SCREENSHOTS=/tmp/gap-shots cargo test -p pokered-app \
 
 GBA 最终验证：
 
-- **13/13 内存场景通过**：[日志](gba-memory.log)。覆盖 248 张地图、330 次双方招式动画、3 次进化、3 次交换、300 次 PC 操作、6 只队员／240 只仓库宝可梦／50 队名人堂的存档回读。最终剩余连续堆空间 28304 B，栈余量 15592 B。
-- [PCM 录制日志](gba-audio.log)：2656808 个双声道交错采样中 1838014 个非零，四声道状态累计为 `0xF`。附[第 20–24 秒的录音](gba-audio.wav)及[录制结束画面](../../screenshots/original-gap-fixes/gba-menu-after.png)。
+- **13/13 内存场景通过**：[日志](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/gba-memory.log)。覆盖 248 张地图、330 次双方招式动画、3 次进化、3 次交换、300 次 PC 操作、6 只队员／240 只仓库宝可梦／50 队名人堂的存档回读。最终剩余连续堆空间 28304 B，栈余量 15592 B。
+- [PCM 录制日志](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-original-gap-fixes/gba-audio.log)：2656808 个双声道交错采样中 1838014 个非零，四声道状态累计为 `0xF`。附[第 20–24 秒的录音](gba-audio.wav)及[录制结束画面](../../screenshots/original-gap-fixes/gba-menu-after.png)。
 
 ```sh
 cd crates/pokered-gba

@@ -1,5 +1,7 @@
 # Experience award attribution
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original `GainedText` in `engine/battle/experience.asm:342–365` chooses
 `with EXP.ALL,` for the second EXP.ALL pass, including traded recipients.
 The participant pass uses `a boosted` for traded recipients and otherwise
@@ -41,7 +43,7 @@ Native before is clean master `018bd130ff44045e993c1cd992285fffda70341e`;
 after is clean `98c98a880230f58641496b37b21df8909ab13a18`. Both are dev
 opt0/debug0 builds with `debug-server`. Exact binary and PNG hashes, native
 messages, source award flags and repeated-run checks are in
-[verification.json](verification.json). These are captured source identities,
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/experience-award-notices/verification.json). These are captured source identities,
 not a claim that a later documentation or merge commit was rebuilt.
 
 The two paired screenshots show the same native screen, input prefix and

@@ -1,5 +1,7 @@
 # Rare Candy completes move learning before evolution
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The field bag discarded `use_rare_candy`'s `move_result`. A free slot gained
 its new move without a learned notice; four occupied slots silently lost the
 chance to learn it. The bag returned after the level message, without the
