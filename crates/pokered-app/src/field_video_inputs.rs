@@ -19,8 +19,8 @@ pub(super) struct NativeUiTiles {
 impl Default for NativeUiTiles {
     fn default() -> Self {
         Self {
-            tiles: Vec::with_capacity(360),
-            patterns: Vec::with_capacity(256),
+            tiles: Vec::new(),
+            patterns: Vec::new(),
             revision: 0,
         }
     }
@@ -55,6 +55,12 @@ impl NativeUiTiles {
             return Err(FieldBackgroundError::WrongDimensions);
         }
         let old_len = self.patterns.len();
+        // Deduplicate in a bounded workspace before allocating. Reserving a
+        // worst-case heap pool then shrinking it needs both allocations on
+        // GBA, while current and saved UI namespaces already coexist.
+        let mut patterns = [[0; 16]; 256];
+        patterns[..old_len].copy_from_slice(&self.patterns);
+        let mut pattern_count = old_len;
         let mut tiles = Vec::with_capacity(360);
         for ty in 0..18 {
             for tx in 0..20 {
@@ -66,20 +72,22 @@ impl NativeUiTiles {
                         pattern[row as usize * 2 + 1] |= ((shade >> 1) & 1) << (7 - column);
                     }
                 }
-                let index = if let Some(index) = self.patterns.iter().position(|p| *p == pattern) {
+                let index = if let Some(index) = patterns[..pattern_count].iter().position(|p| *p == pattern) {
                     index
                 } else {
-                    if self.patterns.len() == 256 {
-                        self.patterns.truncate(old_len);
+                    if pattern_count == patterns.len() {
                         return Err(FieldBackgroundError::TooManyUiTiles);
                     }
-                    let index = self.patterns.len();
-                    self.patterns.push(pattern);
+                    let index = pattern_count;
+                    patterns[index] = pattern;
+                    pattern_count += 1;
                     index
                 };
                 tiles.push(index as u8);
             }
         }
+        self.patterns.reserve_exact(pattern_count - old_len);
+        self.patterns.extend_from_slice(&patterns[old_len..pattern_count]);
         if self.tiles != tiles {
             self.revision += 1;
             self.tiles = tiles;
@@ -117,6 +125,28 @@ mod tests {
         frame.clear(Rgba::WHITE);pool.sample(&frame).unwrap();assert_pixels(&pool,&frame);
         assert_eq!(pool.tiles,initial.tiles);assert_eq!(pool.patterns,changed.patterns);
     }
+    #[test]
+    fn full_tile_namespace_roundtrips_and_rejects_one_more_pattern_atomically() {
+        let mut frame = frame();
+        for tile in 0..360u32 {
+            for bit in 0..8 {
+                if tile % 256 & (1 << bit) != 0 {
+                    frame.set_pixel(tile % 20 * 8 + bit, tile / 20 * 8, Rgba::BLACK);
+                }
+            }
+        }
+        let mut pool = NativeUiTiles::default();
+        pool.sample(&frame).unwrap();
+        assert_eq!(pool.patterns.len(), 256);
+        assert_pixels(&pool, &frame);
+        let before = pool.clone();
+        frame.set_pixel(0, 1, Rgba::BLACK);
+        assert_eq!(pool.sample(&frame), Err(FieldBackgroundError::TooManyUiTiles));
+        assert_eq!(pool, before);
+        frame.set_pixel(0, 1, Rgba::WHITE);
+        assert_pixels(&pool, &frame);
+    }
+
     #[test]
     fn capacity_failure_is_atomic_and_never_aliases_unrepresentable_ui_tiles() {
         let mut pool=NativeUiTiles::default();pool.sample(&frame()).unwrap();let before=pool.clone();
