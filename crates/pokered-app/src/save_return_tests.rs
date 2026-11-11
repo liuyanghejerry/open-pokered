@@ -9,11 +9,43 @@ fn run(test: impl FnOnce() + Send + 'static) {
 
 fn frame(game: &mut PokemonGame, input: &mut InputState, keys: u8) {
     input.begin_frame();
-    for (bit, key) in [(A, GbButton::A), (B, GbButton::B), (RIGHT, GbButton::Right)] {
-        if keys & bit != 0 { input.press(key); } else { input.release(key); }
-    }
+    input.set_from_bitmask(keys);
     game.update(input);
     if let Some(flow) = &game.field_flash { assert!(flow.error.is_none(), "{:?}", flow.error); }
+}
+
+#[test]
+fn save_held_a_accepts_soft_reset_without_an_extra_save() {
+    run(|| {
+        for save in [false, true] {
+            let (mut game, mut input, path) = fixture();
+            if !save { game.save_menu.cursor = pokered_core::save_menu::YesNoChoice::No; }
+            frame(&mut game, &mut input, A);
+            for _ in 0..1000 {
+                frame(&mut game, &mut input, A);
+                if game.field_flash.as_ref().is_some_and(|flow|
+                    flow.work.operation() == Some(&RestoreOperation::WaitForARelease)) { break; }
+            }
+            assert_eq!(game.field_flash.as_ref().unwrap().work.operation(),
+                Some(&RestoreOperation::WaitForARelease));
+            let saved = std::fs::read(&path).ok();
+            assert_eq!(saved.is_some(), save);
+
+            // _Joypad compares the complete raw byte, before any masks.
+            // An extra direction must not enter TrySoftReset.
+            for _ in 0..64 { frame(&mut game, &mut input, 0x0f | RIGHT); }
+            assert_eq!(game.state.screen, GameScreen::SaveMenu);
+            for _ in 0..64 {
+                frame(&mut game, &mut input, 0x0f);
+                if game.state.screen == GameScreen::TitleScreen { break; }
+            }
+            assert_eq!(game.state.screen, GameScreen::TitleScreen,
+                "SAVE's held-A foreground must still execute TrySoftReset");
+            assert!(game.field_flash.is_none());
+            assert_eq!(std::fs::read(&path).ok(), saved, "reset must not save again");
+            if save { std::fs::remove_file(path).unwrap(); }
+        }
+    });
 }
 
 fn fixture() -> (PokemonGame, InputState, std::path::PathBuf) {
