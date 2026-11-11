@@ -20,6 +20,7 @@ use pokered_core::overworld::indoor_sprite_prefix_work::IndoorSpritePrefixWork;
 use pokered_core::overworld::indoor_sprite_slot_work::IndoorSpriteSlotWork;
 use pokered_core::overworld::indoor_sprite_transfer_work::IndoorSpriteTransferWork;
 use pokered_core::overworld::party_field_text::PartyFieldText;
+use pokered_core::overworld::screen_buffer_work::ScreenBufferWork;
 use pokered_core::overworld::sprite_bank_call_work::SpriteBankCallWork;
 
 // Retained images need only four shades; two GBA linear copies exhaust the heap.
@@ -126,6 +127,12 @@ enum DisplayChild {
     IndoorSpriteClear(IndoorSpriteClearWork),
     ColdSpriteBank(SpriteBankCallWork),
     MapView(pokered_core::overworld::map_view_work::MapViewWork),
+    Buffer2 {
+        work: ScreenBufferWork,
+        patterns: Option<Vec<[u8; 16]>>,
+        map: bool,
+        published: bool,
+    },
 }
 
 /// Passive observations of real foreground waits and ClearSprites return.
@@ -170,6 +177,7 @@ pub(crate) struct FieldFlash {
     #[cfg(feature = "debug-server")]
     traced_operation: Option<usize>,
     party: FrameBuffer,
+    save_buffer2: Option<super::field_video_inputs::NativeUiTiles>,
     map: FlashFrame,
     map_key: crate::render::session::FlashMapVisualKey,
     show_map: bool,
@@ -274,6 +282,20 @@ impl PokemonGame {
         }
         let mut map = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
         copy_flash_frame(&party, &mut map);
+        let mut save_buffer2 = None;
+        let mut error = None;
+        if matches!(origin, RestorationOrigin::Save { .. }) {
+            // Capture the saved START buffer while the existing staging image
+            // holds the map. Do not allocate a second linear frame on GBA or
+            // overwrite the visible SAVE raster when the copy later begins.
+            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
+                &mut party, self.state.config.language);
+            let mut ui = super::field_video_inputs::NativeUiTiles::default();
+            match ui.sample(&party) {
+                Ok(()) => save_buffer2 = Some(ui),
+                Err(e) => error = Some(format!("saved START buffer2: {e:?}")),
+            }
+        }
         if origin == RestorationOrigin::StartMenu {
             crate::render::draw_start_menu(&self.start_menu, &self.player_name,
                 &mut party, self.state.config.language);
@@ -323,6 +345,7 @@ impl PokemonGame {
             #[cfg(feature = "debug-server")]
             traced_operation: None,
             party,
+            save_buffer2,
             map,
             map_key: crate::render::session::FlashMapVisualKey::new(),
             show_map: false,
@@ -335,7 +358,7 @@ impl PokemonGame {
             indoor_transfer: None,
             cold_sprite_bank: None,
             facing,
-            error: None,
+            error,
             irq: None,
         }));
         let mut flow = self.field_flash.take().unwrap();
@@ -461,6 +484,22 @@ impl PokemonGame {
                     DisplayChild::IndoorSpriteClear(work) => work.step(&mut *self.source_display),
                     DisplayChild::ColdSpriteBank(work) => work.step(&mut *self.source_display),
                     DisplayChild::MapView(work) => work.step(&mut *self.source_display),
+                    DisplayChild::Buffer2 { work, patterns, map, published } => {
+                        let irq = flow.irq.as_mut().ok_or("missing buffer2 IRQ owner")?;
+                        let tiles = irq.ui.tiles.as_mut_slice().try_into()
+                            .map_err(|_| "invalid live buffer2 destination")?;
+                        let result = work.run(&mut self.source_display.display_bus(), tiles);
+                        if result.is_ok() && work.copied_bytes() == 360 && !*published {
+                            // The WRAM stores are complete and AutoBG is still
+                            // off. Bind their native namespace before the real
+                            // enable instruction can expose them to an IRQ.
+                            if let Some(patterns) = patterns.take() { irq.ui.patterns = patterns; }
+                            irq.ui.revision += 1;
+                            irq.background_is_map = *map;
+                            *published = true;
+                        }
+                        result
+                    }
                     DisplayChild::Copy(work) => {
                         let resources = self
                             .resources
@@ -477,6 +516,18 @@ impl PokemonGame {
                 match result {
                     Ok(true) => continue,
                     Ok(false) => {
+                        if matches!(child, DisplayChild::Buffer2 { .. })
+                            && flow.origin != RestorationOrigin::Submenu
+                            && (flow.origin.returns_to_start_menu()
+                                || matches!(flow.origin, RestorationOrigin::Save { .. }))
+                        {
+                            draw_flash_frame(&flow.map, &mut flow.party);
+                            if matches!(flow.origin, RestorationOrigin::Save { .. }) {
+                                crate::render::draw_start_menu(&self.start_menu, &self.player_name,
+                                    &mut flow.party, self.state.config.language);
+                            }
+                            flow.show_map = flow.origin.returns_to_start_menu();
+                        }
                         if let DisplayChild::MapView(work) = child {
                             let tiles = work.visible_tiles().ok_or("map view returned before completion")?;
                             let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
@@ -840,35 +891,28 @@ impl PokemonGame {
                         Some(DisplayChild::ClearOam(ClearShadowOamWork::default()));
                     continue;
                 }
-                // The native renderer resolves raw sprite IDs directly from
-                // the same resources (no physical OAM/VRAM slot indirection).
-                // Screen buffer2 is the actual retained `flow.map` image.
                 RestoreOperation::LoadScreenBuffer2 => {
                     let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
-                    if flow.origin == RestorationOrigin::Submenu {
-                        // Buffer2 updates the logical tile buffer. CopyVideoData
-                        // temporarily disables AutoBG, so this is not permission
-                        // to replace the currently displayed Bag/Options raster.
-                        irq.ui.tiles.clear();
-                        irq.ui.patterns.clear();
-                        irq.ui.sample_retained(&flow.map)
-                            .map_err(|e| format!("submenu buffer2: {e:?}"))?;
-                    } else if flow.origin.returns_to_start_menu() || matches!(flow.origin, RestorationOrigin::Save { .. }) {
-                        // Buffer2 is the saved START raster, including Safari
-                        // counters. Keep its native tile namespace distinct
-                        // from map/ROM tile IDs while AutoBG copies it.
-                        draw_flash_frame(&flow.map, &mut flow.party);
-                        if matches!(flow.origin, RestorationOrigin::Save { .. }) {
-                            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                                &mut flow.party, self.state.config.language);
-                        }
-                        irq.ui.tiles.clear();
-                        irq.ui.patterns.clear();
-                        irq.ui.sample(&flow.party).map_err(|e| format!("START buffer2: {e:?}"))?;
-                        flow.show_map = flow.origin.returns_to_start_menu();
+                    let map = !flow.origin.returns_to_start_menu()
+                        && !matches!(flow.origin, RestorationOrigin::Save { .. });
+                    let (tiles, patterns) = if map {
+                        (irq.map_tiles.tiles.clone(), None)
                     } else {
-                        irq.background_is_map = true;
-                    }
+                        let ui = if matches!(flow.origin, RestorationOrigin::Save { .. }) {
+                            flow.save_buffer2.take().ok_or("missing saved START buffer2")?
+                        } else {
+                            let mut ui = super::field_video_inputs::NativeUiTiles::default();
+                            ui.sample_retained(&flow.map)
+                                .map_err(|e| format!("native START buffer2: {e:?}"))?;
+                            ui
+                        };
+                        (ui.tiles, Some(ui.patterns))
+                    };
+                    let work = ScreenBufferWork::new(tiles).ok_or("invalid saved buffer2")?;
+                    flow.display_child = Some(DisplayChild::Buffer2 {
+                        work, patterns, map, published: false,
+                    });
+                    continue;
                 }
                 RestoreOperation::WaitForARelease => {
                     if self.overworld.begin_source_field().poll().held & pokered_core::foreground_input::A != 0 {
@@ -943,6 +987,11 @@ impl PokemonGame {
                 DisplayChild::IndoorSpriteClear(_) => "indoor_sprite_clear",
                 DisplayChild::ColdSpriteBank(_) => "cold_sprite_bank",
                 DisplayChild::MapView(_) => "load_current_map_view",
+                DisplayChild::Buffer2 { .. } => "screen_buffer2_copy",
+            }),
+            "buffer2_copied_bytes": flow.display_child.as_ref().and_then(|child| match child {
+                DisplayChild::Buffer2 { work, .. } => Some(work.copied_bytes()),
+                _ => None,
             }),
             "error": &flow.error,
         }))

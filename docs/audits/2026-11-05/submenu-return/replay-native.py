@@ -1,7 +1,7 @@
 import argparse, hashlib, json, gzip, os, socket, subprocess, sys, time
 from pathlib import Path
 w=Path(__file__).resolve().parents[4]
-a=argparse.ArgumentParser();a.add_argument('--repo',type=Path,default=w);a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');args=a.parse_args()
+a=argparse.ArgumentParser();a.add_argument('--repo',type=Path,default=w);a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');a.add_argument('--case',choices=['bag-neutral','bag-short','option-neutral','option-short']);args=a.parse_args()
 w=args.repo;binary=args.binary;out=args.output;out.mkdir(exist_ok=False)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert sha(binary)==args.sha256
@@ -64,6 +64,7 @@ results=[]
 for menu,button_name,expected in [('bag','Item','bag'),('option','Option','options')]:
  for variant in ['neutral','short']:
   case=menu+'-'+variant;records=[]
+  if args.case is not None and case != args.case: continue
   for repeat in [1,2]:
    save=out/f'{case}-{repeat}.sav';save.write_bytes(fixture.read_bytes());game=Native(out/f'{case}-{repeat}',save)
    record={'case':case,'frames':[],'images':{}}
