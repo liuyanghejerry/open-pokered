@@ -1,5 +1,7 @@
 # Rest sleep-text continuation
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The restored Rest captions still required an extra A/B press after the sleep
 animation and HP refill. The original sleep caption ends in DONE, so its
 PrintText returns to HealEffect and the regained-health result follows.

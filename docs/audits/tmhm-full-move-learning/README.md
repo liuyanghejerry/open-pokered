@@ -1,5 +1,7 @@
 # TM/HM full-move learning — audit 870
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 复刻满4招式时直接打开忘记招式列表，缺少原作的 Trying/Delete/Abandon 提示；拒绝删除 HM 后光标留在 HM 上；TM 在结果文字确认前已经消耗。现在复用 Rare Candy 的 field LearnMove 状态机：
 
 - 保留既有 BootedUpMachine、Teach YES/NO、party selection。
@@ -58,7 +60,7 @@ TM21/MegaDrain 用 Bulbasaur12、HP35、Tackle/Growl/LeechSeed/Cut、PP35/40/10/
 
 历史 a548 全debug-app结果 **258 passed / 1 failed / 38 ignored**；失败是已独立确认的既有 `gift_dialogue_debug_tests::skip_dialogue_stops_at_gift_question_without_selecting_yes`（GiftQuestion→nickname prompt）。原始失败日志保留，并没有将整套应用测试称为通过。父Gift边界独立审计中，本修复未修改gift逻辑。
 
-[verification.json](verification.json) 包含每次run目录、构建/脚本/fixture/SRAM哈希、checksum、原作关键执行事件、原作菜单帧、before/after对应菜单帧、只读数量检查点和最终字节结果。完整原始source事件/旗标读取在各run的record.json保留。少量重复旧870v1 scope文字/combined-forgot命名错误已由明确版本身份和真实learned-message的v2全10次重跑纠正；旧尝试不作为最终报告源。
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/tmhm-full-move-learning/verification.json) 包含每次run目录、构建/脚本/fixture/SRAM哈希、checksum、原作关键执行事件、原作菜单帧、before/after对应菜单帧、只读数量检查点和最终字节结果。完整原始source事件/旗标读取在各run的record.json保留。少量重复旧870v1 scope文字/combined-forgot命名错误已由明确版本身份和真实learned-message的v2全10次重跑纠正；旧尝试不作为最终报告源。
 
 [fixture-template.json](fixture-template.json)、[replay-native.py](replay-native.py) 可按启动前构造派生五种流程；参数 `before|after FROZEN_BINARY SOURCE_IDENTITY`。脚本仅使用普通按键、只读GetState/get_flags/get_agent_state/capture_frame，普通SAVE并读回；本机maps路径与构建运行库按 `scripts/debug_drive.py` 约定。[replay-original-audit.py](replay-original-audit.py) 原文复制原作审计脚本，需要记录中的本地零售ROM、symbols/PyBoy bootstrap/base state，ROM/state不提交。
 

@@ -1,5 +1,7 @@
 # Restore center music immediately after healing
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 DisplayPokemonCenterDialogue_ restores the audio bank and calls PlaySound
 for the map song immediately after AnimateHealingMachine returns. Actual
 original captures show the machine final hold ending and the map song

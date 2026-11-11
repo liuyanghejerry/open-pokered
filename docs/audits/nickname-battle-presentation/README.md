@@ -1,5 +1,7 @@
 # Battle presentation with nicknames and Transform
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Battle narration already uses a nickname or the original identity retained
 after Transform. Its animation/HP queue still matched messages using the current
 species name. The different strings lose the move or residual publication

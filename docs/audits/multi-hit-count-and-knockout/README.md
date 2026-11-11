@@ -1,5 +1,7 @@
 # Multi-hit count sampling and knockout termination
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The original samples the low two bits for variable-length attacks. Values 0/1
 select 2/3 hits immediately; values 2/3 consume another byte and select
 `(second & 3) + 2`. A single threshold-based draw has the same aggregate

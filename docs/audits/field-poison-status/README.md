@@ -1,5 +1,7 @@
 # Field poison fainting status
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 When a living poisoned Pokémon drops from 1 HP to 0 HP after an overworld step, the original clears its complete status byte before displaying the fainted message. The port retained `Poison` and wrote that stale status to the next ordinary SAVE. This change clears the status at that exact HP transition. Already-fainted entries and surviving poisoned entries keep their existing status.
 
 ## Actual input and persistence evidence

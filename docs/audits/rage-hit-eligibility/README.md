@@ -1,5 +1,7 @@
 # Rage hit eligibility and single-hit results
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 A raging defender no longer gains Attack after an immune/missed attack, a knockout, or a status/charge action. Successful single-hit and fixed-damage attacks now print both the Rage-building caption and the result. The existing multi-hit handling uses the same action receipt.
 
 Damage hooks record whether an actual strike landed and whether the target survived, including Substitute absorption. Enemy Psywave is the original exception: its successful zero-damage roll still builds Rage. Super Fang applies its HP loss before these reactions. Attack already at 999 preserves its stage and prints `Nothing happened!`; +6 returns without an attempt. Only successful increases reapply badge boosts and the attacker's burn/paralysis penalties.

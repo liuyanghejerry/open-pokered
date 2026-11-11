@@ -1,5 +1,7 @@
 # SaveBuilder Pokédex bit positions
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 `SaveBuilder.dex("Bulbasaur")` set bit 1, marking Ivysaur instead of Bulbasaur.
 Dex numbers are one-based; the engine and SRAM store species number minus one
 as the bit index. The helper now applies that conversion locally. Other uses
@@ -35,7 +37,7 @@ and party data is unchanged. The later parent `d0873d89` changes evolution
 stone use, not the engine Pokédex implementation. The frozen controls remain
 labeled `72912bc1`; they are not relabeled as a later binary or full playthrough.
 
-[verification.json](verification.json) records exact helper/engine/fixture/save
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/save-builder-dex-bits/verification.json) records exact helper/engine/fixture/save
 hashes and limits. `evidence.zip` retains the full capture script, original
 helper source, four snapshots, command timelines, save/readback files and logs.
 [The entry manifest](evidence-entry-manifest.json) hashes every archive member.

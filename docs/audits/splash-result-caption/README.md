@@ -1,5 +1,7 @@
 # Splash result caption
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original SplashEffect plays the move animation and jumps to PrintNoEffectText:
 **No effect!** follows the move announcement. See original revision
 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`,

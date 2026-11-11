@@ -1,5 +1,7 @@
 # Old Man catch tutorial (899)
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The coffee-NO demonstration now keeps the Old Man's back portrait and enemy HUD throughout, skips sending out the player's Pokémon, and preserves the successful catch caption through its return. The ball animation finishes before the caught jingle starts; the demonstration waits for the jingle instead of replacing its first channel with the last ball `Tink`. The player's low-HP alarm is disabled during this demonstration, including when the real party lead has 1 HP.
 
 The relevant original paths are [ViridianCity's tutorial caller](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/scripts/ViridianCity.asm), [ItemUseBallText05 and its caught sound](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/items/item_effects.asm), and [LoadPlayerBackPic / battle setup](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/battle/core.asm). Rendering reuses the existing `gfx/battle/oldmanb.png` and its existing scale/cache loader.

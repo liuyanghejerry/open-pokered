@@ -1,5 +1,7 @@
 # Damage variance rejection
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original RandomizeDamage retries until a rotated random byte is at least 217.
 The port stopped after 65 draws and clamped a rejected byte to 217. Actual
 link streams can need more draws, so that fallback changed the damage factor

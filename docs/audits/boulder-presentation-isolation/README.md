@@ -1,5 +1,7 @@
 # Isolate the boulder presentation regression from wild encounters
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The boulder presentation test occasionally entered a random Seafoam wild battle before the push started. The first direction sample after its idle setup takes the turn branch, which calls the ordinary wild-encounter check. The test used an entropy-seeded overworld and did not exclude encounters.
 
 The fixture now sets the existing one-step encounter cooldown before pressing Down. The ten-frame push-start budget and every slide, dust, graphics-restore and `control_ready` assertion remain unchanged. There is no production logic change, no longer wait and no weaker assertion.
