@@ -1,7 +1,7 @@
 import argparse, hashlib, json, gzip, os, socket, subprocess, sys, time
 from pathlib import Path
 w=Path(__file__).resolve().parents[4]
-a=argparse.ArgumentParser();a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');args=a.parse_args()
+a=argparse.ArgumentParser();a.add_argument('--binary',type=Path,required=True);a.add_argument('--sha256',required=True);a.add_argument('--output',type=Path,required=True);a.add_argument('--candidate',action='store_true');a.add_argument('--fixture',type=Path,default=w/'docs/audits/2026-11-05/start-menu-close/fixture.sav');a.add_argument('--record-all-frames',action='store_true');args=a.parse_args()
 binary=args.binary;out=args.output;out.mkdir(exist_ok=False)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 assert sha(binary)==args.sha256
@@ -84,7 +84,7 @@ for case in ['cancel','short','no-held','save-held']:
     row={k:st.get(k) for k in ['screen','map_name','player_x','player_y','player_facing','player_movement_state','field_menu','field_restore','field_flash','source_foreground']};row.update(tick=tick,input=key,save_sha256=sha(save));record['frames'].append(row)
     for name in ['field_restore','field_flash']:
      assert not (st.get(name) or {}).get('error'),st
-    if tick in [0,14,15,38,39,40,79,80,159,239,599,600,639,759]:record['images'][str(tick)]=game.capture(f'frame-{tick:03}')
+    if args.record_all_frames or tick in [0,14,15,38,39,40,79,80,159,239,599,600,639,759]:record['images'][str(tick)]=game.capture(f'frame-{tick:03}')
     if args.candidate and case in ['no-held','save-held'] and tick<(600 if case=='save-held' else 80):assert st['screen']=='save',st
    final=game.state();assert final['screen']==('overworld' if args.candidate else 'start-menu'),final
    assert all((x['player_x'],x['player_y'])==(record['initial']['player_x'],record['initial']['player_y']) for x in record['frames']),case

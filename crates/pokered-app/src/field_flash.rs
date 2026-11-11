@@ -447,9 +447,8 @@ impl PokemonGame {
             return;
         }
         self.source_display.set_physical_buttons(raw);
-        if matches!(flow.origin, RestorationOrigin::Save { .. }) {
-            self.overworld.begin_source_field().read_raw(raw);
-        }
+        // ReadJoypad in the live IRQ publishes the sampled input. Physical
+        // release alone must not unblock SAVE's HoldTextDisplayOpen gate.
         let printing = flow.text.as_ref().is_some_and(|text| !text.returned());
         let returned = flow.text.as_mut().is_none_or(|text| self.overworld.tick_party_field_text(text, raw));
         if printing && self.overworld.sfx_event == OverworldSfxEvent::TextAdvance {
