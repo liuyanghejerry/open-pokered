@@ -67,3 +67,32 @@ fn full_screen_returns_restore_map_resources_before_accepting_start_input() {
         }
     }).unwrap().join().unwrap();
 }
+
+#[test]
+fn full_screen_cancel_counts_the_native_update_only_once() {
+    std::thread::Builder::new().stack_size(16 * 1024 * 1024).spawn(|| {
+        let mut failures = Vec::new();
+        for screen in [GameScreen::Pokedex, GameScreen::TrainerCard] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.audio = Some(AudioOutput::new_pcm());
+            game.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::PALLET_TOWN);
+            game.overworld = OverworldScreen::new(MapId::ViridianCity, None, PokemonRedData);
+            game.overworld.state.player.x = 20;
+            game.overworld.state.player.y = 30;
+            game.overworld.publish_npc_frame(false);
+            game.handle_transition(GameScreen::StartMenu);
+            game.handle_transition(screen.clone());
+            let mut input = InputState::new();
+            for _ in 0..40 { frame(&mut game, &mut input, 0); }
+            let mut expected = game.save_data.game_data.play_time;
+            expected.tick();
+            frame(&mut game, &mut input, B);
+            assert!(game.field_flash.is_some(), "cancellation must enter the real restoration caller");
+            if game.save_data.game_data.play_time != expected {
+                failures.push(format!("{screen:?}: expected {expected:?}, observed {:?}",
+                    game.save_data.game_data.play_time));
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("; "));
+    }).unwrap().join().unwrap();
+}

@@ -292,6 +292,11 @@ impl PokemonGame {
     }
 
     pub(super) fn begin_fullscreen_menu_restore(&mut self, input: &InputState, trainer: bool) {
+        // Like Bag/Options cancellation, this runs after the native update
+        // has handled its timer and audio. The retained request belongs to
+        // that completed native work, not a second source VBlank service.
+        self.source_display.acknowledge_native_vblank()
+            .expect("fullscreen Cancel hands off from the native clock");
         self.begin_native_menu_restore(input, if trainer {
             RestorationOrigin::TrainerCard
         } else {

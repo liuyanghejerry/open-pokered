@@ -79,10 +79,12 @@ for menu,button_name,expected in [('dex','Pokedex','pokedex'),('trainer','Traine
     game.drive(['a','a']+[None]*240)
     assert game.state()['screen']==expected,game.state()
     record['initial']=game.state();record['images']['initial']=game.capture('initial')
+    record['initial_play_time']=game.cmd(cmd='export_fixture')['data']['game_data']['play_time']
     for tick in range(160):
      key='b' if tick<2 else 'down' if variant=='short' and tick in [2,3] else None
      game.drive([key]);st=game.state()
      row={k:st.get(k) for k in ['frame_count','screen','map_name','player_x','player_y','player_facing','player_movement_state','field_menu','field_restore','field_flash','source_foreground']}
+     row['play_time']=game.cmd(cmd='export_fixture')['data']['game_data']['play_time']
      row.update(tick=tick,input=key,save_sha256=sha(save));record['frames'].append(row)
      for name in ['field_restore','field_flash']:assert not (st.get(name) or {}).get('error'),st
      record['images'][str(tick)]=game.capture(f'frame-{tick:03}')
@@ -92,6 +94,7 @@ for menu,button_name,expected in [('dex','Pokedex','pokedex'),('trainer','Traine
     assert all((x['player_x'],x['player_y'],x['player_facing'])==(record['initial']['player_x'],record['initial']['player_y'],record['initial']['player_facing']) for x in record['frames'])
     assert sha(save)==fixture_sha
     record['final']=final
+    record['final_play_time']=game.cmd(cmd='export_fixture')['data']['game_data']['play_time']
     if args.candidate:
      assert final['field_menu']['cursor']==record['selected_start']['cursor'],record['frames'][-1]
      game.drive(['a','a']+[None]*96);assert game.state()['screen']==expected,game.state()
