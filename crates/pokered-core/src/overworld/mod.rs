@@ -22,6 +22,7 @@ pub mod display_work_time;
 pub mod far_pattern_copy_work;
 pub mod field_restore;
 pub mod map_view_work;
+pub mod screen_buffer_work;
 pub mod indoor_sprite_clear_work;
 pub mod indoor_sprite_prefix_work;
 pub mod indoor_sprite_slot_work;
