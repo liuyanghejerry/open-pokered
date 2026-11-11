@@ -158,7 +158,7 @@ jobs:
     needs: [detect-changes]
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       # The self-hosted runner is a single machine; running all matrix jobs at
@@ -238,13 +238,14 @@ jobs:
         run: ./scripts/fetch-gfx.sh
 
       - name: Install system dependencies
+        timeout-minutes: 5
         if: steps.changes-check.outputs.has-changes == 'true'
         run: |
           # The preinstalled Microsoft apt repos (azure-cli, microsoft-prod)
           # intermittently 403 on apt-get update; we don't need anything from
           # them, so drop them before updating.
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update
+          sudo apt-get update -o APT::Update::Error-Mode=any
           sudo apt-get install -yq \
             build-essential \
             pkg-config \
@@ -296,7 +297,7 @@ jobs:
     permissions:
       contents: read
     name: Coverage (cargo-llvm-cov)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # A fresh runner does not reuse incremental state. Keep line/function
       # debug information for coverage without full type-level DWARF; the
@@ -313,9 +314,10 @@ jobs:
         run: ./scripts/fetch-gfx.sh
 
       - name: Install system dependencies
+        timeout-minutes: 5
         run: |
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update
+          sudo apt-get update -o APT::Update::Error-Mode=any
           sudo apt-get install -yq \
             build-essential \
             pkg-config \
