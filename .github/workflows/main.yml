@@ -238,25 +238,32 @@ jobs:
         run: ./scripts/fetch-gfx.sh
 
       - name: Install system dependencies
+        timeout-minutes: 5
         if: steps.changes-check.outputs.has-changes == 'true'
         run: |
           # The preinstalled Microsoft apt repos (azure-cli, microsoft-prod)
           # intermittently 403 on apt-get update; we don't need anything from
           # them, so drop them before updating.
+          packages=(
+            build-essential pkg-config libxkbcommon-dev libwayland-dev
+            libx11-dev libxrandr-dev libxi-dev libxcursor-dev
+            libvulkan-dev libasound2-dev libudev-dev
+          )
+          missing=()
+          for package in "${packages[@]}"; do
+            if [[ "$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || true)" != installed ]]; then
+              missing+=("$package")
+            fi
+          done
+          if ((${#missing[@]} == 0)); then
+            echo 'All required system dependencies are already installed'
+            exit 0
+          fi
+          printf 'Missing system dependencies: %s\n' "${missing[*]}"
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update
-          sudo apt-get install -yq \
-            build-essential \
-            pkg-config \
-            libxkbcommon-dev \
-            libwayland-dev \
-            libx11-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libxcursor-dev \
-            libvulkan-dev \
-            libasound2-dev \
-            libudev-dev
+          apt_options=(-o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          sudo apt-get "${apt_options[@]}" update -o APT::Update::Error-Mode=any
+          sudo apt-get "${apt_options[@]}" install -yq "${packages[@]}"
 
       - name: Install Rust toolchain
         if: steps.changes-check.outputs.has-changes == 'true'
@@ -313,21 +320,28 @@ jobs:
         run: ./scripts/fetch-gfx.sh
 
       - name: Install system dependencies
+        timeout-minutes: 5
         run: |
+          packages=(
+            build-essential pkg-config libxkbcommon-dev libwayland-dev
+            libx11-dev libxrandr-dev libxi-dev libxcursor-dev
+            libvulkan-dev libasound2-dev libudev-dev
+          )
+          missing=()
+          for package in "${packages[@]}"; do
+            if [[ "$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || true)" != installed ]]; then
+              missing+=("$package")
+            fi
+          done
+          if ((${#missing[@]} == 0)); then
+            echo 'All required system dependencies are already installed'
+            exit 0
+          fi
+          printf 'Missing system dependencies: %s\n' "${missing[*]}"
           sudo rm -f /etc/apt/sources.list.d/azure-cli.* /etc/apt/sources.list.d/microsoft-prod.*
-          sudo apt-get update
-          sudo apt-get install -yq \
-            build-essential \
-            pkg-config \
-            libxkbcommon-dev \
-            libwayland-dev \
-            libx11-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libxcursor-dev \
-            libvulkan-dev \
-            libasound2-dev \
-            libudev-dev
+          apt_options=(-o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          sudo apt-get "${apt_options[@]}" update -o APT::Update::Error-Mode=any
+          sudo apt-get "${apt_options[@]}" install -yq "${packages[@]}"
 
       - name: Free disk space
         # The instrumented llvm-cov build needs well over the ~14 GB a stock
