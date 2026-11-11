@@ -78,6 +78,40 @@ fn save_no_waits_for_a_release_while_irq_and_music_keep_running() {
 }
 
 #[test]
+fn save_release_waits_for_the_irq_to_sample_physical_buttons() {
+    run(|| {
+        let (mut game, mut input, path) = fixture();
+        game.save_menu.cursor = pokered_core::save_menu::YesNoChoice::No;
+        frame(&mut game, &mut input, A);
+        for _ in 0..100 { frame(&mut game, &mut input, A); }
+        assert_eq!(game.field_flash.as_ref().unwrap().work.operation(),
+            Some(&RestoreOperation::WaitForARelease));
+        assert_eq!(game.source_display.source_joy_input(), A);
+        assert_eq!(game.overworld.source_foreground().unwrap().raw(), A);
+        assert_eq!(game.source_display.remaining(), 0);
+
+        // With the current grant exhausted, no ReadJoypad instruction can
+        // sample a newly released button. The held gate must retain the
+        // last IRQ sample until the shared clock grants more execution.
+        input.begin_frame();
+        input.release(GbButton::A);
+        game.update_field_flash(&input);
+        assert_eq!(game.source_display.source_joy_input(), A);
+        assert_eq!(game.overworld.source_foreground().unwrap().raw(), A);
+        assert_eq!(game.field_flash.as_ref().unwrap().work.operation(),
+            Some(&RestoreOperation::WaitForARelease));
+
+        for _ in 0..100 {
+            frame(&mut game, &mut input, 0);
+            if game.state.screen == GameScreen::Overworld { break; }
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        assert_eq!(game.source_display.source_joy_input(), 0);
+        assert!(!path.exists());
+    });
+}
+
+#[test]
 fn actual_save_writes_before_release_and_finishes_on_the_map() {
     run(|| {
         let (mut game, mut input, path) = fixture();
