@@ -1,5 +1,7 @@
 # Playthrough failure fixture capture
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Fresh run 866 reached m01–m15, then failed m16 after Route6 training:
 `heal_pokecenter` observed Ivysaur29 HP43/79 at VermilionPokecenter(3,3)
 without an open nurse dialogue/choice. This change improves its diagnostics;
@@ -43,7 +45,7 @@ Frozen build: clean `d2eface67ce5c632cbc18972891cda5ef6716728`,
 `debug-server`, dev opt0/debug0, SHA-256
 `ebd19ae8cd767403ee8901f5d4ea597a48141f2710a67e4b63ee24a4b2ad1adb`.
 The later documentation commit does not relabel the compiled source.
-[Build identity](build-identity.json), [verification](verification.json),
+[Build identity](build-identity.json), [verification](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/playthrough-failure-capture/verification.json),
 and [constructed fixture](fixture.json) retain the exact inputs and results.
 
 A reproduction can boot `fixture.json` with `run --headless --speed 0

@@ -139,6 +139,13 @@ crates/pokered-gba/target/
 /docs/audits/**/*.tar.gz
 /docs/audits/**/*.jsonl
 /docs/audits/**/*.log
-/docs/audits/**/verification*.json
+/docs/audits/**/*verification*.json
 /docs/audits/**/portable-replay-check.json
 /docs/audits/**/SHA256SUMS
+
+# Bundled recordings and one-run build/source receipts.
+/docs/audits/**/*.zip
+/docs/audits/**/*-integration.json
+/docs/audits/**/*-build-identity.json
+/docs/audits/**/build-checks.json
+/docs/audits/**/checksums.json

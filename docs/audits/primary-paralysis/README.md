@@ -1,5 +1,7 @@
 # Primary paralysis rules
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Thunder Wave incorrectly rejected Electric targets, while primary paralysis
 moves also incorrectly rejected Substitute and same-type targets. This repair
 extracts the gameplay correction from [PR #107](https://github.com/liuyanghejerry/open-pokered/pull/107)
@@ -31,7 +33,7 @@ Local verification:
   render/audio, fresh SRAM, and unchanged thresholds. Trainer battle entry is
   231 ticks against the original 232.3-tick limit.
 
-[verification.json](verification.json) records source hashes, the failing
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/primary-paralysis/verification.json) records source hashes, the failing
 assertion, commands, and all GBA metrics. The full-core test preceded only a
 related explanatory comment correction in `rules.ron`; the GBA build and
 performance run used the final source bytes recorded there.

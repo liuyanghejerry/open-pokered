@@ -1,5 +1,7 @@
 # 皮皮玩偶确认流程
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 野生战中使用皮皮玩偶，原实现立刻扣道具并显示 `Got away safely!`。
 原作 `engine/items/item_effects.asm` 的 `ItemUsePokeDoll` 调用
 `PrintItemUseTextAndRemoveItem`，先显示玩家使用道具的文字、播放

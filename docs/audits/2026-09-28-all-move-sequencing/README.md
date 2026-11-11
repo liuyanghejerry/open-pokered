@@ -1,5 +1,7 @@
 # 全招式动画安排检查与修复
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 > 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
 
 
@@ -52,7 +54,7 @@
 - `cargo test -p pokered-core --lib`：2592 passed。
 - `cargo test -p pokered-app --lib render::battle::tests`：24 passed；包括全部 330 个实战回合及上述定向回归。
 - Native release、GBA release 构建通过；ROM 及 SuperFW 配套补丁摘要见 [builds.json](builds.json)。
-- GBA 模拟器内存压力检查 13/13 通过，包括 330 招式、248 地图、满 PC / SRAM，见 [gba-memory.log](gba-memory.log)。先前 100,000 帧截断的试跑只完成 3/13，不计入通过；延长捕获窗口后完整通过。
+- GBA 模拟器内存压力检查 13/13 通过，包括 330 招式、248 地图、满 PC / SRAM，见 [gba-memory.log](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-all-move-sequencing/gba-memory.log)。先前 100,000 帧截断的试跑只完成 3/13，不计入通过；延长捕获窗口后完整通过。
 - Python 工具语法检查与 `git diff --check` 通过。
 
 ```sh

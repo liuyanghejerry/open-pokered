@@ -1,5 +1,7 @@
 # 场外招式与生蛋确认后回到队伍
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 缺少徽章、地点拒绝和生蛋结果确认后，恢复原作队伍调用方与使用者光标；由已有 Party notice 持有提示。取消、普通载入、快照恢复、重置清除放弃的生蛋选择。成功地图效果沿用已有调用。
 
 ## 当前集成身份
@@ -76,7 +78,7 @@
 
 ## 证据
 
-[简明验证摘要](verification.json)、[压缩证据清单](archive.json)、[完整证据 ZIP](evidence.zip) 包含原始脚本、普通输入、只读状态/hooks、截图、构造状态、普通 SRAM、读回、构建与测试日志，以及被排除的旧控制。相同内容按 SHA256 去重，未改变原始字节。
+[简明验证摘要](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/field-move-party-return/verification.json)、[压缩证据清单](archive.json)、[完整证据 ZIP](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/field-move-party-return/evidence.zip) 包含原始脚本、普通输入、只读状态/hooks、截图、构造状态、普通 SRAM、读回、构建与测试日志，以及被排除的旧控制。相同内容按 SHA256 去重，未改变原始字节。
 
 ```bash
 python3 docs/audits/field-move-party-return/extract_evidence.py \

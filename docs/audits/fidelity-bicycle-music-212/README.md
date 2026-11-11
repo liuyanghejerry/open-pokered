@@ -1,5 +1,7 @@
 # Bicycle music dispatch
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original source: pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c, engine/items/item_effects.asm:638–667. Both successful transport changes call PlayDefaultMusic before printing their result. Refused uses leave transport and music unchanged.
 
 The native Bag handler already invokes use_field_item and returns to the field. It neither restarts map music on Bag return nor queues it in the Bicycle branches. The existing PlayMapMusic audio consumer selects MUSIC_BIKE_RIDING (32) while biking and the current map theme while walking. This repair queues that existing request only after a successful transport change; the existing field-item preservation flag retains it through the first field frame.
