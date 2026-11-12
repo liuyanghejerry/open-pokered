@@ -9,6 +9,7 @@ mod irq;
 mod objects;
 use objects::draw_submenu_objects;
 use super::*;
+use super::reset_counter::{ResetProgress, TrySoftResetWork};
 use pokered_core::overworld::display_clear_oam_work::ClearShadowOamWork;
 use pokered_core::overworld::display_lcd_work::{DisableLcdWork, EnableLcdWork};
 use pokered_core::overworld::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
@@ -226,6 +227,8 @@ pub(crate) struct FieldFlash {
     map_key: crate::render::session::FlashMapVisualKey,
     show_map: bool,
     display_child: Option<DisplayChild>,
+    soft_reset_work: Option<TrySoftResetWork>,
+    soft_reset_requested: bool,
     font_flags: u8,
     sprite_set: u8,
     slots: Vec<SpriteSlot>,
@@ -404,6 +407,8 @@ impl PokemonGame {
             map_key: crate::render::session::FlashMapVisualKey::new(),
             show_map: false,
             display_child: None,
+            soft_reset_work: None,
+            soft_reset_requested: false,
             font_flags: 1,
             sprite_set: 0,
             slots: Vec::new(),
@@ -465,6 +470,12 @@ impl PokemonGame {
             return;
         }
         match self.service_field_flash(&mut flow) {
+            Ok(_) if flow.soft_reset_requested => {
+                // Host reset must also discard this attached display owner;
+                // the GBA path keeps its sticky request until BIOS restart.
+                self.field_flash = Some(flow);
+                self.soft_reset();
+            }
             Ok(true) if flow.origin.returns_to_start_menu() => {
                 let foreground = self.overworld.source_foreground().cloned();
                 self.handle_transition(GameScreen::StartMenu);
@@ -979,6 +990,30 @@ impl PokemonGame {
                     continue;
                 }
                 RestoreOperation::WaitForARelease => {
+                    if let Some(work) = flow.soft_reset_work.as_mut() {
+                        match work.step(&mut *self.source_display, &mut self.soft_reset_counter) {
+                            Ok(ResetProgress::Instruction) => (),
+                            Ok(ResetProgress::Sleeping) => {
+                                self.source_display.idle_to_vblank_edge()
+                                    .map_err(|e| format!("SAVE soft reset: {e:?}"))?;
+                            }
+                            Ok(ResetProgress::RetryJoypad) => flow.soft_reset_work = None,
+                            Ok(ResetProgress::Reset) => {
+                                flow.soft_reset_requested = true;
+                                return Ok(false);
+                            }
+                            Err(DisplayWorkError::Budget) => return Ok(false),
+                            Err(DisplayWorkError::InterruptPending) => (),
+                            Err(error) => return Err(format!("SAVE soft reset: {error:?}")),
+                        }
+                        continue;
+                    }
+                    // _Joypad checks the exact IRQ sample before updating
+                    // hJoyLast or applying ignored/disabled-input masks.
+                    if SoftResetCounter::is_combo(self.overworld.begin_source_field().raw()) {
+                        flow.soft_reset_work = Some(TrySoftResetWork::default());
+                        continue;
+                    }
                     if self.overworld.begin_source_field().poll().held & pokered_core::foreground_input::A != 0 {
                         // The native held-button gate is not a cycle-exact
                         // Joypad spin loop. Keep the shared IRQ/audio owner
