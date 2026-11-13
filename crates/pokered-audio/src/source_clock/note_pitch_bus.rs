@@ -42,7 +42,7 @@ impl NotePitchInstructions {
             }
             return Ok(false);
         }
-        if matches!(self.stage, Stage::Frequency(_)) {
+        if matches!(self.stage, Stage::Frequency(_) | Stage::Slide(_)) {
             return self
                 .try_step(|t| execute(ApuInstruction::plain(t)).map(|_| ()))
                 .map_err(BusStepError::Execute);

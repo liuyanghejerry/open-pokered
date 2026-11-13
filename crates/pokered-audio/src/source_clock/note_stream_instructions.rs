@@ -3,6 +3,18 @@
 //! is interpreted at runtime and no native channel or APU is updated here.
 use super::apu_bus::ApuInstruction;
 pub use super::audio_note_dispatch_work::MusicCommandState;
+use super::drum_start_instructions::{DrumStartInstructions, DrumStartResult};
+use super::note_math_instructions::FrequencyInstructions;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(
+    any(test, feature = "source-clock-serde"),
+    derive(serde::Serialize, serde::Deserialize)
+)]
+pub struct SlideCommand {
+    pub length_modifier: u8,
+    pub target_frequency: u16,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -34,6 +46,17 @@ pub struct StreamResult {
     pub vibrato_rate: Option<u8>,
     pub wave_instrument: Option<u8>,
     pub master_volume: Option<u8>,
+    pub panning: Option<u8>,
+    #[cfg_attr(
+        any(test, feature = "source-clock-serde"),
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    pub drum: Option<DrumStartResult>,
+    #[cfg_attr(
+        any(test, feature = "source-clock-serde"),
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    pub pitch_slide: Option<SlideCommand>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -74,6 +97,11 @@ enum Fetch {
     TempoHigh,
     TempoLow,
     Volume,
+    Panning,
+    DrumInstrument,
+    SlideModifier,
+    SlideTarget,
+    SlideNote,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(
@@ -108,6 +136,11 @@ enum Stage {
     VibratoDelay(u8),
     VibratoDepth(u8),
     PitchSlide(u8),
+    SlideModifier(u8),
+    SlideTarget(u8),
+    SlideFrequency(FrequencyInstructions),
+    SlideStore(u8),
+    SlideNote(u8),
     Duty(u8),
     SetDuty(u8),
     Tempo(u8),
@@ -116,6 +149,7 @@ enum Stage {
     StoreTempoLow(u8),
     OtherCompare(u8, u8),
     MasterVolume(u8),
+    StereoPanning(u8),
     Octave(u8),
     StoreOctave(u8),
     SfxNote(u8),
@@ -123,6 +157,10 @@ enum Stage {
     PitchSweep(u8),
     Note(u8),
     NoiseNote(u8),
+    DrumPrefix(u8),
+    DrumGate(u8),
+    DrumStart(DrumStartInstructions),
+    DrumReturn(u8),
     Jump,
     NoteLength,
     Unsupported(StreamInputError),
@@ -147,9 +185,16 @@ pub struct StreamInstructions {
     remaining: u8,
     commands: u8,
     cycles: u32,
+    noise_busy: Option<bool>,
 }
 impl StreamInstructions {
     pub fn new(input: StreamInput) -> Result<Self, StreamInputError> {
+        Self::with_drum_context(input, None)
+    }
+    pub(crate) fn with_drum_context(
+        input: StreamInput,
+        noise_busy: Option<bool>,
+    ) -> Result<Self, StreamInputError> {
         if input.channel >= 4 {
             return Err(StreamInputError::UnsupportedChannel(input.channel));
         }
@@ -168,6 +213,9 @@ impl StreamInstructions {
                 vibrato_rate: None,
                 wave_instrument: None,
                 master_volume: None,
+                panning: None,
+                drum: None,
+                pitch_slide: None,
             },
             command: 0,
             last: 0,
@@ -177,6 +225,7 @@ impl StreamInstructions {
             remaining: 0,
             commands: 0,
             cycles: 0,
+            noise_busy,
         })
     }
     pub fn finished(&self) -> bool {
@@ -379,6 +428,11 @@ impl StreamInstructions {
                 }
             }
             VibratoDelay(n) => [8, 12, 8, 8, 12, 8, 8][n as usize],
+            SlideModifier(n) => [8, 12, 8, 8][n as usize],
+            SlideTarget(n) => [4, 8, 8, 4, 4, 8, 24][n as usize],
+            SlideFrequency(work) => work.next_cycles().expect("pending slide target frequency"),
+            SlideStore(n) => [8, 12, 8, 8, 12, 8, 8, 8, 12, 8, 16][n as usize],
+            SlideNote(n) => [4, 16][n as usize],
             VibratoDepth(n) => [
                 4, 8, 8, 8, 12, 8, 8, 4, 4, 8, 4, 8, 4, 8, 4, 12, 8, 8, 4, 8, 16,
             ][n as usize],
@@ -396,6 +450,7 @@ impl StreamInstructions {
                 }
             }
             MasterVolume(n) => [12, 16][n as usize],
+            StereoPanning(n) => [16, 16][n as usize],
             Octave(n) => {
                 if n < 2 {
                     8
@@ -433,6 +488,10 @@ impl StreamInstructions {
                     8
                 }
             }
+            DrumPrefix(n) => [4, 8, 16, 16][n as usize],
+            DrumGate(n) => [4, 16, 4, 8, 4, 24][n as usize],
+            DrumStart(work) => work.peek().expect("unfinished drum start"),
+            DrumReturn(_) => 12,
             Jump => 16,
             NoteLength | Unsupported(_) => return None,
         })
@@ -482,6 +541,29 @@ impl StreamInstructions {
             }
             TempoLow => Stage::StoreTempoLow(0),
             Volume => Stage::MasterVolume(0),
+            Panning => Stage::StereoPanning(0),
+            DrumInstrument => {
+                if (1..=19).contains(&self.last) {
+                    Stage::DrumGate(0)
+                } else {
+                    Stage::Unsupported(StreamInputError::UnsupportedCommand(self.last))
+                }
+            }
+            SlideModifier => Stage::SlideModifier(0),
+            SlideTarget => {
+                if self.last >> 4 > 7 || self.last & 15 >= 12 {
+                    Stage::Unsupported(StreamInputError::UnsupportedCommand(self.last))
+                } else {
+                    Stage::SlideTarget(0)
+                }
+            }
+            SlideNote => {
+                if self.last >= 0xc0 {
+                    Stage::Unsupported(StreamInputError::UnsupportedCommand(self.last))
+                } else {
+                    Stage::SlideNote(0)
+                }
+            }
         }
     }
     fn restart(&self) -> Stage {
@@ -760,7 +842,11 @@ impl StreamInstructions {
             PitchSlide(n) => {
                 if n == 1 {
                     if self.command == 0xeb {
-                        Unsupported(StreamInputError::UnsupportedCommand(self.command))
+                        if self.channel < 3 {
+                            FetchCall(Fetch::SlideModifier)
+                        } else {
+                            Unsupported(StreamInputError::UnsupportedCommand(self.command))
+                        }
                     } else {
                         Duty(0)
                     }
@@ -768,6 +854,42 @@ impl StreamInstructions {
                     PitchSlide(1)
                 }
             }
+            SlideModifier(3) => {
+                self.output.pitch_slide = Some(SlideCommand {
+                    length_modifier: self.last,
+                    target_frequency: 0,
+                });
+                FetchCall(Fetch::SlideTarget)
+            }
+            SlideModifier(n) => SlideModifier(n + 1),
+            SlideTarget(6) => SlideFrequency(FrequencyInstructions::new(
+                crate::NOTE_FREQUENCIES[usize::from(self.last & 15)],
+                self.last >> 4,
+            )),
+            SlideTarget(n) => SlideTarget(n + 1),
+            SlideFrequency(mut work) => {
+                work.next();
+                if let Some(frequency) = work.result() {
+                    self.output
+                        .pitch_slide
+                        .as_mut()
+                        .expect("slide modifier fetched")
+                        .target_frequency = frequency;
+                    SlideStore(0)
+                } else {
+                    SlideFrequency(work)
+                }
+            }
+            SlideStore(10) => {
+                self.output.state.flags1 |= 16;
+                FetchCall(Fetch::SlideNote)
+            }
+            SlideStore(n) => SlideStore(n + 1),
+            SlideNote(0) => {
+                self.output.note = self.last;
+                SlideNote(1)
+            }
+            SlideNote(_) => NoteLength,
             Duty(n) => {
                 if n == 1 {
                     if self.command == 0xec {
@@ -823,6 +945,8 @@ impl StreamInstructions {
                     OtherCompare(which, 1)
                 } else if which == 3 && self.command == 0xf0 {
                     FetchCall(Fetch::Volume)
+                } else if which == 0 && self.command == 0xee {
+                    FetchCall(Fetch::Panning)
                 } else if [0xee, 0xef, 0xfc, 0xf0, 0xf8][which as usize] == self.command {
                     Unsupported(StreamInputError::UnsupportedCommand(self.command))
                 } else if which == 4 {
@@ -839,6 +963,14 @@ impl StreamInstructions {
                     self.restart()
                 } else {
                     MasterVolume(1)
+                }
+            }
+            StereoPanning(n) => {
+                if n == 0 {
+                    self.output.panning = Some(self.last);
+                    StereoPanning(1)
+                } else {
+                    self.restart()
                 }
             }
             Octave(n) => {
@@ -907,7 +1039,11 @@ impl StreamInstructions {
             }
             NoiseNote(n) => {
                 if n == 3 && self.command & 0xf0 == 0xb0 {
-                    Unsupported(StreamInputError::UnsupportedCommand(self.command))
+                    if self.noise_busy.is_some() {
+                        DrumPrefix(0)
+                    } else {
+                        Unsupported(StreamInputError::UnsupportedCommand(self.command))
+                    }
                 } else if n == 4 {
                     if self.command & 0xf0 >= 0xc0 {
                         self.output.note = self.command;
@@ -918,6 +1054,31 @@ impl StreamInstructions {
                 } else {
                     NoiseNote(n + 1)
                 }
+            }
+            DrumPrefix(3) => FetchCall(Fetch::DrumInstrument),
+            DrumPrefix(n) => DrumPrefix(n + 1),
+            DrumGate(5) => DrumStart(
+                DrumStartInstructions::new(
+                    self.last,
+                    self.noise_busy.expect("known CHAN8 ownership"),
+                )
+                .expect("validated drum instrument"),
+            ),
+            DrumGate(n) => DrumGate(n + 1),
+            DrumStart(mut work) => {
+                work.accept();
+                if let Some(result) = work.result() {
+                    self.output.drum = Some(result);
+                    DrumReturn(0)
+                } else {
+                    DrumStart(work)
+                }
+            }
+            DrumReturn(0) => DrumReturn(1),
+            DrumReturn(_) => {
+                // POP DE restores the low nibble saved by PUSH AF, not $Bx.
+                self.output.note = self.command & 15;
+                NoteLength
             }
             Jump => self.restart(),
             NoteLength => NoteLength,
@@ -945,9 +1106,15 @@ mod tests {
     }
     #[test]
     fn command_streams_match_each_original_instruction_and_all_temporary_results() {
-        let f: Fixture =
-            serde_json::from_str(include_str!("note_stream_instructions_golden.json")).unwrap();
-        assert_eq!(f.cases.len(), 478);
+        assert_original_cases(include_str!("note_stream_instructions_golden.json"), 478);
+    }
+    #[test]
+    fn stereo_commands_match_original_calls_stores_and_budget_boundaries() {
+        assert_original_cases(include_str!("stereo_stream_instructions_golden.json"), 32);
+    }
+    fn assert_original_cases(source: &str, expected: usize) {
+        let f: Fixture = serde_json::from_str(source).unwrap();
+        assert_eq!(f.cases.len(), expected);
         for (index, c) in f.cases.into_iter().enumerate() {
             assert!(matches!(c.bank, 2 | 31));
             let mut w = StreamInstructions::new(c.input).unwrap();
@@ -1004,9 +1171,17 @@ mod tests {
         for (data, expected) in [
             (&[0xec][..], StreamInputError::TruncatedStream(1)),
             (&[0xff][..], StreamInputError::ChannelEndUnsupported),
+            (&[0xf8][..], StreamInputError::UnsupportedCommand(0xf8)),
+            (&[0xeb][..], StreamInputError::TruncatedStream(1)),
+            (&[0xeb, 1][..], StreamInputError::TruncatedStream(2)),
+            (&[0xeb, 1, 2][..], StreamInputError::TruncatedStream(3)),
             (
-                &[0xeb, 1, 2, 3][..],
-                StreamInputError::UnsupportedCommand(0xeb),
+                &[0xeb, 1, 0x4c, 3][..],
+                StreamInputError::UnsupportedCommand(0x4c),
+            ),
+            (
+                &[0xeb, 1, 2, 0xd0][..],
+                StreamInputError::UnsupportedCommand(0xd0),
             ),
             (&[0xfe, 0, 0, 0][..], StreamInputError::CommandLimit),
         ] {
@@ -1034,5 +1209,18 @@ mod tests {
             assert_eq!(w, frozen);
             assert_eq!(w.result(), None);
         }
+        // This formerly unsupported slide is a valid direct following-note
+        // transfer. It must consume exactly the modifier, target and note.
+        let mut work = StreamInstructions::new(input).unwrap();
+        while !work.finished() {
+            work.try_step(&[0xeb, 1, 2, 3], |_| Ok::<_, ()>(()))
+                .unwrap();
+        }
+        let result = work.result().unwrap();
+        assert_eq!(
+            (result.note, result.next_ptr, result.state.flags1 & 16),
+            (3, 4, 16)
+        );
+        assert_eq!(result.pitch_slide.unwrap().length_modifier, 1);
     }
 }

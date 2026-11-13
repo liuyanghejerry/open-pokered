@@ -1,7 +1,8 @@
 //! Retained CPU instruction work for source timer/effect frames. Native channel
 //! updates commit once after the source RET. APU port-write timing is not owned
-//! here. Next-note/duty-rotation/pitch-slide paths remain explicit unsupported.
+//! here. Next-note/duty-rotation paths require separate owners.
 pub use super::audio_work::ChannelEffectWorkInput;
+use super::pitch_slide_instructions::{PitchSlideInstructions, PitchSlideResult, PitchSlideState};
 use super::{AudioClockError, AudioFrameWork};
 #[path = "timer_bus.rs"]
 pub mod bus;
@@ -18,6 +19,8 @@ enum EffectStage {
     Execute(u8),
     Noise(u8),
     Pitch(u8),
+    SlideJump,
+    Slide,
     Delay(u8),
     Extent(u8),
     Rate(u8),
@@ -40,24 +43,47 @@ enum EffectStage {
 pub struct EffectInstructionWork {
     input: ChannelEffectWorkInput,
     stage: EffectStage,
+    // Keep the large child outside the stage discriminant so ordinary timer
+    // instructions do not copy its state on every transition.
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    slide_work: Option<PitchSlideInstructions>,
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    slide: Option<PitchSlideState>,
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(default))]
+    slide_result: Option<PitchSlideResult>,
 }
 impl EffectInstructionWork {
     pub fn new(input: ChannelEffectWorkInput) -> Option<Self> {
+        Self::with_pitch_slide(input, None)
+    }
+    pub(crate) fn with_pitch_slide(
+        input: ChannelEffectWorkInput,
+        slide: Option<PitchSlideState>,
+    ) -> Option<Self> {
         if input.channel >= 8 || input.note_delay == 1 {
             return None;
         }
         let paired = input.channel < 4 && input.paired_sfx_active;
         let noise = input.flags2 & 1 == 0 && input.flags1 & 4 != 0;
-        if !paired && (input.flags1 & 64 != 0 || (!noise && input.flags1 & 16 != 0)) {
+        if !paired && input.flags1 & 64 != 0 {
             return None;
+        }
+        if !paired && !noise && input.flags1 & 16 != 0 {
+            PitchSlideInstructions::new(input.channel, slide?, input.flags1)?;
         }
         Some(Self {
             input,
             stage: EffectStage::Entry(0),
+            slide_work: None,
+            slide,
+            slide_result: None,
         })
     }
     pub fn finished(&self) -> bool {
         self.stage == EffectStage::Done
+    }
+    pub(crate) fn slide_result(&self) -> Option<PitchSlideResult> {
+        self.slide_result
     }
     /// Fixed instruction prefixes within the current source basic block. The
     /// data-dependent final branch and the actual APU store remain separate.
@@ -66,7 +92,9 @@ impl EffectInstructionWork {
         let (code, index): (&[u8], u8) = match self.stage {
             Entry(n) => (&[8, 12, 8, 8, 8, 12, 4, 8, 4, 8], n),
             Paired(n) if n < 4 => (&[12, 8, 8, 4], n),
-            Duty(n) | Pitch(n) => (&[12, 8, 12, 12], n),
+            Duty(n) => (&[12, 8, 12, 12], n),
+            Pitch(n) if self.input.flags1 & 16 == 0 => (&[12, 8, 12, 12], n),
+            Pitch(n) if n < 3 => (&[12, 8, 12], n),
             Execute(n) if n < 4 => (&[8, 12, 8, 12], n),
             Noise(n) if n < 3 => (&[12, 8, 12], n),
             Delay(n) | Extent(n) if n < 4 => (&[12, 8, 8, 4], n),
@@ -90,9 +118,9 @@ impl EffectInstructionWork {
         assert!(count > 0 && count <= prefix.len());
         let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
         match &mut self.stage {
-            Entry(n) | Paired(n) | Duty(n) | Execute(n) | Noise(n) | Pitch(n)
-            | Delay(n) | Extent(n) | Rate(n) | Apply(n) | Subtract(n) | Add(n)
-            | Output(n) | Register(n) | Decay(n) => *n += (count - 1) as u8,
+            Entry(n) | Paired(n) | Duty(n) | Execute(n) | Noise(n) | Pitch(n) | Delay(n)
+            | Extent(n) | Rate(n) | Apply(n) | Subtract(n) | Add(n) | Output(n) | Register(n)
+            | Decay(n) => *n += (count - 1) as u8,
             _ => unreachable!("nonempty plain prefix"),
         }
         self.advance();
@@ -138,7 +166,15 @@ impl EffectInstructionWork {
                     8
                 }
             }
+            Pitch(3) if i.flags1 & 16 != 0 => 8,
             Pitch(n) => [12, 8, 12, 12][n as usize],
+            SlideJump => 16,
+            Slide => self
+                .slide_work
+                .as_ref()
+                .expect("pending slide child")
+                .peek()
+                .expect("pending slide effect"),
             Delay(n) | Extent(n) => {
                 if n < 4 {
                     [12, 8, 8, 4][n as usize]
@@ -269,9 +305,35 @@ impl EffectInstructionWork {
             }
             Pitch(n) => {
                 if n == 3 {
-                    Delay(0)
+                    if i.flags1 & 16 != 0 {
+                        SlideJump
+                    } else {
+                        Delay(0)
+                    }
                 } else {
                     Pitch(n + 1)
+                }
+            }
+            SlideJump => {
+                self.slide_work = Some(
+                    PitchSlideInstructions::new(
+                        i.channel,
+                        self.slide.expect("validated slide input"),
+                        i.flags1,
+                    )
+                    .expect("validated slide context"),
+                );
+                Slide
+            }
+            Slide => {
+                let work = self.slide_work.as_mut().expect("pending slide child");
+                work.accept();
+                if let Some(result) = work.result() {
+                    self.slide_result = Some(result);
+                    self.slide_work = None;
+                    Done
+                } else {
+                    Slide
                 }
             }
             Delay(n) => {

@@ -2,7 +2,11 @@ use super::*;
 use crate::source_clock::{AudioAdmissionError, AudioClockError};
 #[test]
 fn hosted_admission_uses_one_existing_manager_and_preserves_pcm() {
-    for music in [MusicId::POKECENTER, MusicId::PALLET_TOWN] {
+    for music in [
+        MusicId::POKECENTER,
+        MusicId::PALLET_TOWN,
+        MusicId::WILD_BATTLE,
+    ] {
         let ordinary = AudioOutput::new_pcm();
         let guarded = AudioOutput::new_pcm();
         for output in [&ordinary, &guarded] {
@@ -18,7 +22,7 @@ fn hosted_admission_uses_one_existing_manager_and_preserves_pcm() {
                 assert!(work.cycles > 0);
                 Err::<(), _>(frame)
             });
-            if music == MusicId::POKECENTER {
+            if music != MusicId::WILD_BATTLE {
                 assert!(called);
                 assert_eq!(result, Err(AudioAdmissionError::Admission(frame)));
             } else {
@@ -33,7 +37,7 @@ fn hosted_admission_uses_one_existing_manager_and_preserves_pcm() {
             ordinary.render_pcm(&mut a);
             guarded.render_pcm(&mut b);
             assert_eq!(a, b);
-            if music == MusicId::POKECENTER {
+            if music != MusicId::WILD_BATTLE {
                 ordinary.update_frame();
                 guarded
                     .try_update_frame_with_source_work(|_| Ok::<(), ()>(()))

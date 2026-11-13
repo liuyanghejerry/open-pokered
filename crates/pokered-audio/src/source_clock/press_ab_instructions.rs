@@ -1,4 +1,4 @@
-//! Retained source pulse confirmation-tone body. Native sequencer/APU ownership
+//! Retained source confirmation-tone and noise-instrument bodies. Native ownership
 //! stays with the caller; this cursor accepts CPU instructions, not audio ticks.
 use super::apu_bus::{ApuInstruction, BusStepError, NoteBusInput};
 use super::channel_end_instructions::{ChannelEndInput, ChannelEndInstructions, ChannelEndResult};
@@ -133,6 +133,9 @@ enum Stage {
 )]
 pub struct PressAbInstructions {
     input: PressAbInput,
+    // None is the existing pulse confirmation program. Noise keeps its
+    // canonical instrument identity and the live global mask at note entry.
+    noise: Option<(u8, u8)>,
     stage: Stage,
     ptr: usize,
     last: u8,
@@ -160,8 +163,54 @@ impl PressAbInstructions {
         {
             return None;
         }
-        Some(Self {
+        Some(Self::initial(input, None))
+    }
+    /// A canonical CHAN8 drum stream. `source_sfx_id` remains CHAN5's raw ID,
+    /// which the common ending/frequency helpers inspect for a concurrent cry.
+    pub fn new_noise(
+        input: PressAbInput,
+        instrument: u8,
+        panning: u8,
+        data: &[u8],
+    ) -> Option<Self> {
+        if !matches!(input.bank, 2 | 31)
+            || !matches!(input.source_sfx_id, 0 | SOURCE_PRESS_AB_ID)
+            || input.flags1 != 4
+            || input.flags2 != 0
+            || input.note_speed != 1
+            || input.duty != 0
+            || input.ptr % 3 != 0
+            || input.ptr >= data.len()
+            || data != Self::noise_data(instrument)?
+        {
+            return None;
+        }
+        Some(Self::initial(input, Some((instrument, panning))))
+    }
+    pub(crate) fn noise_data(instrument: u8) -> Option<&'static [u8]> {
+        if !(1..=19).contains(&instrument) {
+            return None;
+        }
+        let id = crate::sfx_data::SfxId::from_u8(instrument - 1)?;
+        crate::sfx_data::get_sfx_track(id).channels[3]
+    }
+    fn channel(&self) -> u8 {
+        if self.noise.is_some() {
+            7
+        } else {
+            4
+        }
+    }
+    fn matches_data(&self, data: &[u8]) -> bool {
+        match self.noise {
+            Some((instrument, _)) => Self::noise_data(instrument) == Some(data),
+            None => data == crate::sfx_data::SFX_PRESS_AB_CH5,
+        }
+    }
+    fn initial(input: PressAbInput, noise: Option<(u8, u8)>) -> Self {
+        Self {
             input,
+            noise,
             stage: Stage::Entry(0),
             ptr: input.ptr,
             last: 0,
@@ -175,7 +224,7 @@ impl PressAbInstructions {
             length: 0,
             ended: None,
             cycles: 0,
-        })
+        }
     }
     pub fn result(&self) -> Option<PressAbOutcome> {
         if !matches!(self.stage, Stage::Done) {
@@ -217,7 +266,7 @@ impl PressAbInstructions {
         if self.result().is_some() {
             return Ok(true);
         }
-        if data != crate::sfx_data::SFX_PRESS_AB_CH5 {
+        if !self.matches_data(data) {
             return Err(PressAbStepError::ChangedProgram);
         }
         if let Stage::Output { work, after } = &mut self.stage {
@@ -225,9 +274,8 @@ impl PressAbInstructions {
                 note_delay: (self.computed >> 8) as u8,
                 volume: self.envelope,
                 duty: self.duty,
-                // Channel 4 skips the stereo-panning path. This unused scalar
-                // does not stand in for a logical byte or a hardware read.
-                panning: 0,
+                // Pulse SFX bypass the mask; noise uses the actual global byte.
+                panning: self.noise.map_or(0, |(_, panning)| panning),
                 wave: None,
             };
             let mut accepted = 0;
@@ -259,8 +307,14 @@ impl PressAbInstructions {
         let store = match self.stage {
             // Audio*_sfx_note does not mask the delay byte at this first store.
             // ApplyDutyCycleAndSoundLength performs its separate masked store.
-            Stage::DutyStore => Some((0xff11, self.duty | (self.computed >> 8) as u8)),
-            Stage::EnvelopeStore => Some((0xff12, self.envelope)),
+            Stage::DutyStore => Some((
+                if self.noise.is_some() { 0xff20 } else { 0xff11 },
+                self.duty | (self.computed >> 8) as u8,
+            )),
+            Stage::EnvelopeStore => Some((
+                if self.noise.is_some() { 0xff21 } else { 0xff12 },
+                self.envelope,
+            )),
             _ => None,
         };
         // All other child paths reuse the existing CPU progression, including
@@ -280,7 +334,7 @@ impl PressAbInstructions {
                 routine,
                 OutputInput {
                     bank: self.input.bank,
-                    channel: 4,
+                    channel: self.channel(),
                     paired_sfx_active: false,
                     source_sfx_id: self.input.source_sfx_id,
                     frequency_modifier: 0,
@@ -299,7 +353,7 @@ impl PressAbInstructions {
         if self.result().is_some() {
             return Ok(true);
         }
-        if data != crate::sfx_data::SFX_PRESS_AB_CH5 {
+        if !self.matches_data(data) {
             return Err(PressAbStepError::ChangedProgram);
         }
         match &mut self.stage {
@@ -418,7 +472,13 @@ impl PressAbInstructions {
             }
             SfxDispatch(n) => [8, 8, 12, 8, 8, 4, 8, 8, 8, 12, 8, 12, 8, 24][n as usize],
             LengthPrefix(n) => [4, 16, 8, 4, 8, 4, 4, 12, 8, 8, 4, 24][n as usize],
-            SelectTempo(n) => [4, 8, 12, 8, 8, 8, 8, 24][n as usize],
+            SelectTempo(n) => {
+                if self.noise.is_some() && n == 6 {
+                    12
+                } else {
+                    [4, 8, 12, 8, 8, 8, 8, 24][n as usize]
+                }
+            }
             SetTempoCall => 24,
             CryCheck(n) => [16, 8, 12, 8, 8, 8, 4, 4, 16][n as usize],
             SetTempo(n) => [12, 4, 16, 8, 16, 16][n as usize],
@@ -430,7 +490,13 @@ impl PressAbInstructions {
             DutyStore => 8,
             EnvelopeSetup(n) => [4, 8, 24][n as usize],
             EnvelopeStore => 8,
-            LowSetup(n) => [4, 4, 8, 8, 8, 16][n as usize],
+            LowSetup(n) => {
+                if self.noise.is_some() && n == 4 {
+                    12
+                } else {
+                    [4, 4, 8, 8, 8, 16][n as usize]
+                }
+            }
             HighSetup(n) => [12, 4, 16, 24][n as usize],
             EnableCall => 24,
             WaveCall(n) => [12, 24][n as usize],
@@ -497,7 +563,7 @@ impl PressAbInstructions {
                     Ending(
                         ChannelEndInstructions::new(ChannelEndInput {
                             bank: self.input.bank,
-                            channel: 4,
+                            channel: self.channel(),
                             source_sfx_id: self.input.source_sfx_id,
                             flags1: 4,
                             flags2: 0,
@@ -566,7 +632,9 @@ impl PressAbInstructions {
                 }
             }
             SelectTempo(n) => {
-                if n == 7 {
+                if self.noise.is_some() && n == 6 {
+                    SecondPrefix(0)
+                } else if n == 7 {
                     SetTempoCall
                 } else {
                     SelectTempo(n + 1)
@@ -636,7 +704,10 @@ impl PressAbInstructions {
             }
             EnvelopeStore => FetchCall(Fetch::Low),
             LowSetup(n) => {
-                if n == 5 {
+                if self.noise.is_some() && n == 4 {
+                    self.frequency = u16::from(self.low);
+                    HighSetup(1)
+                } else if n == 5 {
                     FetchCall(Fetch::High)
                 } else {
                     LowSetup(n + 1)

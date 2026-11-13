@@ -7,9 +7,15 @@ use super::{
 use crate::source_clock::channel_output_instructions::bus::ApuWrite;
 
 impl EffectInstructionWork {
-    /// The supported paths only store the vibrato frequency low byte. Duty
-    /// rotation and reachable pitch slides remain rejected by the CPU cursor.
+    /// Modulation stores belong to their retained source instructions.
     pub(crate) fn pending_apu_write(&self) -> Option<ApuWrite> {
+        if self.stage == EffectStage::Slide {
+            return self
+                .slide_work
+                .as_ref()
+                .expect("pending slide child")
+                .pending_apu_write();
+        }
         if self.stage != EffectStage::Tail(0) {
             return None;
         }

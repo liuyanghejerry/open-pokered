@@ -20,7 +20,7 @@ impl Default for NativeUiTiles {
     fn default() -> Self {
         Self {
             tiles: Vec::with_capacity(360),
-            patterns: Vec::with_capacity(256),
+            patterns: Vec::with_capacity(128),
             revision: 0,
         }
     }

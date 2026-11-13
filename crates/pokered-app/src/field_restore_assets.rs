@@ -27,6 +27,15 @@ impl<'a> NativePatternAssets<'a> {
 }
 impl PatternAssets for NativePatternAssets<'_> {
     fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8> {
+        let (source, offset) = if let PatternSource::Sprite(raw) = source {
+            let (owner, offset) =
+                pokered_core::overworld::sprite_sheet_metadata::sprite_pattern_segment(
+                    raw, offset,
+                )?;
+            (PatternSource::Sprite(owner), offset)
+        } else {
+            (source, offset)
+        };
         #[cfg(target_os = "none")]
         return self.rom_cache.read(source, offset, rom_pattern_source);
         #[cfg(not(target_os = "none"))]
@@ -40,11 +49,12 @@ impl PatternAssets for NativePatternAssets<'_> {
                         return None;
                     }
                     let id = SpriteId::from_u8(raw)?;
-                    (
-                        resources.load_sprite(id.sprite_name()).ok()?,
-                        if id.is_still() { 4 } else { 24 },
-                        false,
-                    )
+                    let cached = resources.load_sprite(id.sprite_name()).ok()?;
+                    let count = cached.tileset.len();
+                    if !valid_sprite_tile_count(id, count) {
+                        return None;
+                    }
+                    (cached, count, false)
                 }
                 PatternSource::WalkingPlayer => (resources.load_sprite("red").ok()?, 24, false),
                 PatternSource::BicyclePlayer => {
@@ -72,6 +82,14 @@ impl PatternAssets for NativePatternAssets<'_> {
             }
             pattern_byte(&cached.tileset, offset, one_bpp)
         }
+    }
+}
+
+fn valid_sprite_tile_count(id: SpriteId, tiles: usize) -> bool {
+    if id.is_still() {
+        tiles == 4
+    } else {
+        matches!(tiles, 12 | 24)
     }
 }
 
@@ -116,7 +134,7 @@ impl RomPatternCache {
 
 // GBA already has immutable original tile bytes in ROM. Reading a transfer
 // must not allocate a decoded sheet merely to reconstruct those same bytes.
-#[cfg(target_os = "none")]
+#[cfg(any(target_os = "none", all(test, feature = "gba-resource-tests")))]
 fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
     let (dir, name, tiles, stored_one_bpp, output_one_bpp) = match source {
         PatternSource::Sprite(raw) => {
@@ -124,13 +142,13 @@ fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
                 return None;
             }
             let id = SpriteId::from_u8(raw)?;
-            (
-                "sprites",
-                id.sprite_name(),
-                if id.is_still() { 4 } else { 24 },
-                false,
-                false,
-            )
+            let bytes =
+                pokered_renderer::gba_assets::get_preconverted_asset("sprites", id.sprite_name())?;
+            let tiles = bytes.len() / 16;
+            if bytes.len() % 16 != 0 || !valid_sprite_tile_count(id, tiles) {
+                return None;
+            }
+            ("sprites", id.sprite_name(), tiles, false, false)
         }
         PatternSource::WalkingPlayer => ("sprites", "red", 24, false, false),
         PatternSource::BicyclePlayer => ("sprites", "red_bike", 24, false, false),
@@ -285,6 +303,48 @@ mod tests {
         }
     }
     use super::*;
+    #[test]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+    fn all_raw_sprite_pattern_ranges_match_the_reference_rom() {
+        let reference: serde_json::Value =
+            serde_json::from_str(include_str!("field_sprite_patterns_1390.json")).unwrap();
+        let mut resources =
+            ResourceManager::new(pokered_renderer::resource::AssetRoot::auto_detect().unwrap());
+        let assets = NativePatternAssets::new(&mut resources);
+        #[cfg(feature = "gba-resource-tests")]
+        let rom_cache = RomPatternCache::default();
+        for case in reference["cases"].as_array().unwrap() {
+            let raw = case["raw"].as_u64().unwrap() as u8;
+            let length = case["bytes"].as_u64().unwrap() as u16;
+            let expected = u64::from_str_radix(case["fnv1a64"].as_str().unwrap(), 16).unwrap();
+            let mut actual = 0xcbf29ce484222325u64;
+            for offset in 0..length {
+                let value = assets
+                    .read_pattern_byte(PatternSource::Sprite(raw), offset)
+                    .unwrap_or_else(|| panic!("missing raw sprite {raw} byte {offset}"));
+                actual = (actual ^ u64::from(value)).wrapping_mul(0x100000001b3);
+                #[cfg(feature = "gba-resource-tests")]
+                {
+                    let (owner, local) =
+                        pokered_core::overworld::sprite_sheet_metadata::sprite_pattern_segment(
+                            raw, offset,
+                        )
+                        .unwrap();
+                    assert_eq!(
+                        rom_cache.read(PatternSource::Sprite(owner), local, rom_pattern_source),
+                        Some(value),
+                        "GBA raw sprite {raw} byte {offset}"
+                    );
+                }
+            }
+            assert_eq!(actual, expected, "original ROM raw sprite {raw}");
+            assert_eq!(
+                assets.read_pattern_byte(PatternSource::Sprite(raw), length),
+                None
+            );
+        }
+    }
+
     #[test]
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn cached_real_resources_still_require_each_original_transfer_wait() {

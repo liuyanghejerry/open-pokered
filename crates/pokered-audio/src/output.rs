@@ -345,7 +345,13 @@ mod source_work_output_tests {
 
     #[test]
     fn supported_and_unsupported_work_advance_one_real_output_and_preserve_pcm() {
-        for music in [MusicId::DUNGEON3, MusicId::SILPH_CO, MusicId::POKECENTER, MusicId::PALLET_TOWN] {
+        for music in [
+            MusicId::DUNGEON3,
+            MusicId::SILPH_CO,
+            MusicId::POKECENTER,
+            MusicId::PALLET_TOWN,
+            MusicId::WILD_BATTLE,
+        ] {
             let ordinary = AudioOutput::new_pcm();
             let clocked = AudioOutput::new_pcm();
             ordinary.play_music(music);
@@ -366,7 +372,7 @@ mod source_work_output_tests {
                         supported += 1;
                     }
                     Err(error) => {
-                        if music == MusicId::PALLET_TOWN {
+                        if music == MusicId::WILD_BATTLE {
                             assert_eq!(error, AudioClockError::UnsupportedSoundBank);
                         }
                         rejected += 1;
@@ -389,7 +395,7 @@ mod source_work_output_tests {
                     );
                 }
             }
-            if music == MusicId::PALLET_TOWN {
+            if music == MusicId::WILD_BATTLE {
                 assert_eq!((supported, rejected), (0, 1200));
             } else {
                 assert!(supported > 1000);

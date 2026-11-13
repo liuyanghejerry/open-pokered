@@ -133,6 +133,77 @@ fn zero_progress_native_mismatch_is_preflight_and_does_not_poison_the_frame() {
 }
 
 #[test]
+fn slide_operands_are_guarded_before_and_after_accepted_output() {
+    for field in 0..6 {
+        for progressed in [false, true] {
+            let mut manager = powered(MusicId::SAFARI_ZONE);
+            assert!(manager.sequencer.channels[0]
+                .flags1
+                .contains(crate::ChannelFlags1::PITCH_SLIDE_ON));
+            let mut work = manager.begin_source_audio_frame_with_bus(2, 0).unwrap();
+            if progressed {
+                let mut wrote = false;
+                assert!(matches!(
+                    manager.resume_source_audio_frame_with_bus(&mut work, |apu, op| {
+                        if wrote {
+                            return Err(());
+                        }
+                        let value = apply(apu, op);
+                        wrote = matches!(op.access, Some(ApuAccess::Write { .. }));
+                        Ok(value)
+                    }),
+                    Err(AudioAdmissionError::Admission(FrameStepError::Clock(())))
+                ));
+                assert!(wrote);
+            }
+            let old = manager.sequencer.channels[0].pitch_slide.clone();
+            let slide = &mut manager.sequencer.channels[0].pitch_slide;
+            match field {
+                0 => slide.length_modifier ^= 1,
+                1 => slide.freq_step ^= 0x100, // Preserve the native high byte in the guard.
+                2 => slide.step_frac ^= 1,
+                3 => slide.freq_frac ^= 1,
+                4 => slide.current_freq ^= 1,
+                5 => slide.target_freq ^= 1,
+                _ => unreachable!(),
+            }
+            let before = snapshot(&manager);
+            let mut frozen = work.clone();
+            let error = AudioClockError::NativeStateMismatch(0);
+            assert_eq!(
+                refuse_resume(&mut manager, &mut work, true),
+                Err(if progressed {
+                    AudioAdmissionError::SourceFailed(error)
+                } else {
+                    AudioAdmissionError::Preflight(error)
+                })
+            );
+            if progressed {
+                frozen.source_failed = Some(error);
+            }
+            assert_eq!(work, frozen);
+            assert_eq!(snapshot(&manager), before);
+            manager.sequencer.channels[0].pitch_slide = old;
+            work = restored(&work);
+            if progressed {
+                let before = snapshot(&manager);
+                assert_eq!(
+                    refuse_resume(&mut manager, &mut work, true),
+                    Err(AudioAdmissionError::SourceFailed(error))
+                );
+                assert_eq!(snapshot(&manager), before);
+            } else {
+                manager
+                    .resume_source_audio_frame_with_bus(&mut work, |apu, op| {
+                        Ok::<_, ()>(apply(apu, op))
+                    })
+                    .unwrap();
+            }
+        }
+    }
+}
+
+#[test]
 fn queued_native_volume_is_rejected_without_losing_the_ordinary_output() {
     let mut manager = powered(MusicId::POKECENTER);
     manager.sequencer.pending_nr50 = Some(0x53);
@@ -361,6 +432,72 @@ fn changed_wave_instrument_refuses_a_partly_executed_frame_without_clock_or_writ
     assert_eq!(
         manager.resume_source_audio_frame_with_bus(&mut work, |_, _| -> Result<_, ()> {
             panic!("restoring input cannot replay a terminal source failure")
+        }),
+        Err(AudioAdmissionError::SourceFailed(
+            AudioClockError::NativeStateMismatch(0)
+        ))
+    );
+    assert_eq!(work, frozen);
+    assert_eq!(snapshot(&manager), before);
+}
+
+#[test]
+fn drum_program_changes_refuse_before_begin_and_after_partial_bus_output() {
+    let mut manager = powered(MusicId::CITIES1);
+    for _ in 0..39 {
+        manager.update_frame();
+    }
+    assert_eq!(manager.sequencer.channels[3].delay_counter, 1);
+    assert!(!manager.sequencer.channels[7].active);
+    let original = manager.sequencer.noise_instruments[0][1];
+    manager.sequencer.noise_instruments[0][1] ^= 0x10;
+    let before = snapshot(&manager);
+    assert_eq!(
+        manager.begin_source_audio_frame_with_bus(2, 0),
+        Err(AudioClockError::UnsupportedEffect(3))
+    );
+    assert_eq!(snapshot(&manager), before);
+    manager.sequencer.noise_instruments[0][1] = original;
+
+    let mut work = manager.begin_source_audio_frame_with_bus(2, 0).unwrap();
+    let mut wrote = false;
+    assert_eq!(
+        manager.resume_source_audio_frame_with_bus(&mut work, |apu, instruction| {
+            if wrote {
+                return Err("after store");
+            }
+            let value = apply(apu, instruction);
+            wrote = matches!(instruction.access, Some(ApuAccess::Write { .. }));
+            Ok(value)
+        }),
+        Err(AudioAdmissionError::Admission(FrameStepError::Clock(
+            "after store"
+        )))
+    );
+    assert!(wrote && work.cycles() > 0);
+    // The live native sequencer has not acquired a second copy of the drum.
+    assert!(!manager.sequencer.channels[7].active);
+    manager.sequencer.noise_instruments[0][1] ^= 0x10;
+    let before = snapshot(&manager);
+    work = restored(&work);
+    let mut frozen = work.clone();
+    assert_eq!(
+        manager.resume_source_audio_frame_with_bus(&mut work, |_, _| -> Result<_, ()> {
+            panic!("changed drum data must refuse before any instruction or APU effect")
+        }),
+        Err(AudioAdmissionError::SourceFailed(
+            AudioClockError::NativeStateMismatch(0)
+        ))
+    );
+    frozen.source_failed = Some(AudioClockError::NativeStateMismatch(0));
+    assert_eq!(work, frozen);
+    assert_eq!(snapshot(&manager), before);
+    manager.sequencer.noise_instruments[0][1] = original;
+    let before = snapshot(&manager);
+    work = restored(&work);
+    assert_eq!(
+        manager.resume_source_audio_frame_with_bus(&mut work, |_, _| -> Result<_, ()> {
+            panic!("restoring a drum table cannot replay a terminal source failure")
         }),
         Err(AudioAdmissionError::SourceFailed(
             AudioClockError::NativeStateMismatch(0)

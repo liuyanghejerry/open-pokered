@@ -26,16 +26,66 @@ pub enum PrepareOamError {
     InvalidSpriteRecords,
     ShadowPageOverflow,
 }
+// Most entries are plain cycles. Decode bus accesses only at execution so the
+// retained instruction uses three bytes even on GBA.
 #[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
-enum Effect {
+enum Instruction {
+    Plain(u8),
+    WriteOam { offset: u8, value: u8 },
     Enabled(u8),
-    AdjustY(u8, u8),
-    AdjustX(u8, u8),
+    AdjustY { slot: u8, value: u8 },
+    AdjustX { slot: u8, value: u8 },
 }
-#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
-struct Instruction {
-    bus: DisplayInstruction,
-    after: Option<Effect>,
+impl Instruction {
+    fn bus(self) -> DisplayInstruction {
+        match self {
+            Self::Plain(tcycles) => DisplayInstruction {
+                tcycles,
+                access: None,
+            },
+            Self::WriteOam { offset, value } => DisplayInstruction {
+                tcycles: 8,
+                access: Some(DisplayAccess::Write {
+                    port: 0xc300 + u16::from(offset),
+                    value,
+                    at_tcycle: 4,
+                }),
+            },
+            Self::Enabled(value) => DisplayInstruction {
+                tcycles: 16,
+                access: Some(DisplayAccess::Write {
+                    port: super::sprite_update_control_work::SPRITE_UPDATES_PORT,
+                    value,
+                    at_tcycle: 12,
+                }),
+            },
+            Self::AdjustY { .. } | Self::AdjustX { .. } => DisplayInstruction {
+                tcycles: 8,
+                access: None,
+            },
+        }
+    }
+}
+
+trait InstructionSink {
+    fn push(&mut self, instruction: Instruction);
+    fn plain(&mut self, cycles: &[u8]);
+}
+impl InstructionSink for usize {
+    fn push(&mut self, _: Instruction) {
+        *self += 1;
+    }
+    fn plain(&mut self, cycles: &[u8]) {
+        *self += cycles.len();
+    }
+}
+impl InstructionSink for Vec<Instruction> {
+    fn push(&mut self, instruction: Instruction) {
+        Vec::push(self, instruction);
+    }
+    fn plain(&mut self, cycles: &[u8]) {
+        self.extend(cycles.iter().copied().map(Instruction::Plain));
+    }
 }
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PrepareOamWork {
@@ -44,51 +94,27 @@ pub struct PrepareOamWork {
     next: usize,
     return_carry: bool,
 }
-fn emit(p: &mut Vec<Instruction>, cycles: &[u8]) {
-    for &tcycles in cycles {
-        p.push(Instruction {
-            bus: DisplayInstruction {
-                tcycles,
-                access: None,
-            },
-            after: None,
-        });
-    }
+fn emit(p: &mut impl InstructionSink, cycles: &[u8]) {
+    p.plain(cycles);
 }
-fn effect(p: &mut Vec<Instruction>, tcycles: u8, after: Effect) {
-    p.push(Instruction {
-        bus: DisplayInstruction {
-            tcycles,
-            access: match after {
-                Effect::Enabled(value) => Some(DisplayAccess::Write {
-                    port: super::sprite_update_control_work::SPRITE_UPDATES_PORT,
-                    value,
-                    at_tcycle: 12,
-                }),
-                _ => None,
-            },
-        },
-        after: Some(after),
+fn write(p: &mut impl InstructionSink, offset: usize, value: u8) {
+    debug_assert!(offset < 160);
+    p.push(Instruction::WriteOam {
+        offset: offset as u8,
+        value,
     });
 }
-fn write(p: &mut Vec<Instruction>, offset: usize, value: u8) {
-    p.push(Instruction {
-        bus: DisplayInstruction {
-            tcycles: 8,
-            access: Some(DisplayAccess::Write {
-                port: 0xc300 + offset as u16,
-                value,
-                at_tcycle: 4,
-            }),
-        },
-        after: None,
-    });
-}
-fn screen_xy(p: &mut Vec<Instruction>, slot: u8, sprite: OamSprite) {
+fn screen_xy(p: &mut impl InstructionSink, slot: u8, sprite: OamSprite) {
     emit(p, &[4, 4, 8, 12, 4, 4, 8, 12, 8, 4, 4, 12, 8, 8]);
-    effect(p, 8, Effect::AdjustY(slot, sprite.y.wrapping_add(4) & 0xf0));
+    p.push(Instruction::AdjustY {
+        slot,
+        value: sprite.y.wrapping_add(4) & 0xf0,
+    });
     emit(p, &[4, 12, 8]);
-    effect(p, 8, Effect::AdjustX(slot, sprite.x & 0xf0));
+    p.push(Instruction::AdjustX {
+        slot,
+        value: sprite.x & 0xf0,
+    });
     emit(p, &[16]);
 }
 impl PrepareOamWork {
@@ -117,34 +143,41 @@ impl PrepareOamWork {
         // page, with carry clear. Other disabled entries return immediately
         // from (enabled-1) < $ff with carry set.
         let return_carry = state.enabled > 1;
-        let mut p = Vec::new();
+        let mut count = 0;
+        Self::expand(&state, &mut count)?;
+        let mut code = Vec::with_capacity(count);
+        Self::expand(&state, &mut code)?;
+        debug_assert_eq!(code.len(), count);
+        Ok(Self {
+            state,
+            code,
+            next: 0,
+            return_carry,
+        })
+    }
+    fn expand(
+        state: &PrepareOamState,
+        p: &mut impl InstructionSink,
+    ) -> Result<(), PrepareOamError> {
         if state.enabled != 1 {
-            emit(
-                &mut p,
-                &[16, 4, 8, 8, if state.enabled == 0 { 8 } else { 20 }],
-            );
+            emit(p, &[16, 4, 8, 8, if state.enabled == 0 { 8 } else { 20 }]);
             if state.enabled == 0 {
-                effect(&mut p, 16, Effect::Enabled(0xff));
-                emit(&mut p, &[16]); // JP HideSprites
-                emit(&mut p, &[8, 12, 12, 8]);
+                p.push(Instruction::Enabled(0xff));
+                emit(p, &[16]); // JP HideSprites
+                emit(p, &[8, 12, 12, 8]);
                 for slot in 0..40 {
-                    write(&mut p, slot * 4, 160);
-                    emit(&mut p, &[8, 4, if slot == 39 { 8 } else { 12 }]);
+                    write(p, slot * 4, 160);
+                    emit(p, &[8, 4, if slot == 39 { 8 } else { 12 }]);
                 }
-                emit(&mut p, &[16]);
+                emit(p, &[16]);
             }
-            return Ok(Self {
-                state,
-                code: p,
-                next: 0,
-                return_carry,
-            });
+            return Ok(());
         }
-        emit(&mut p, &[16, 4, 12, 4, 12]);
+        emit(p, &[16, 4, 12, 4, 12]);
         let mut used = 0usize;
         for (slot, &sprite) in state.sprites.iter().enumerate() {
             emit(
-                &mut p,
+                p,
                 &[
                     12,
                     8,
@@ -157,34 +190,34 @@ impl PrepareOamWork {
             );
             if sprite.picture != 0 {
                 emit(
-                    &mut p,
+                    p,
                     &[4, 4, 8, 16, 8, if sprite.image == 0xff { 8 } else { 12 }],
                 );
                 if sprite.image == 0xff {
-                    emit(&mut p, &[24]);
-                    screen_xy(&mut p, slot as u8, sprite);
-                    emit(&mut p, &[12]);
+                    emit(p, &[24]);
+                    screen_xy(p, slot as u8, sprite);
+                    emit(p, &[12]);
                 } else {
                     if used + 16 > 160 {
                         return Err(PrepareOamError::ShadowPageOverflow);
                     }
                     let still = sprite.image >= 0xa0;
-                    emit(&mut p, &[8, if still { 8 } else { 12 }]);
+                    emit(p, &[8, if still { 8 } else { 12 }]);
                     if still {
-                        emit(&mut p, &[8, 8, 12]);
+                        emit(p, &[8, 8, 12]);
                     } else {
-                        emit(&mut p, &[8]);
+                        emit(p, &[8]);
                     }
                     // .next through CALL GetSpriteScreenXY, including table reads.
                     emit(
-                        &mut p,
+                        p,
                         &[
                             4, 16, 4, 4, 8, 4, 8, 8, 12, 12, 8, 12, 8, 8, 8, 8, 4, 8, 4, 8, 8, 4,
                             24,
                         ],
                     );
-                    screen_xy(&mut p, slot as u8, sprite);
-                    emit(&mut p, &[12, 4, 8]);
+                    screen_xy(p, slot as u8, sprite);
+                    emit(p, &[12, 4, 8]);
                     let low = sprite.image & 15;
                     let flip = !still && (low >= 12 || (low < 8 && low & 3 == 3));
                     let pattern = if still {
@@ -208,12 +241,12 @@ impl PrepareOamWork {
                             .x
                             .wrapping_add(8)
                             .wrapping_add(if (tile & 1 != 0) ^ flip { 8 } else { 0 });
-                        emit(&mut p, &[12, 8, 8]);
-                        write(&mut p, used + tile * 4, y);
-                        emit(&mut p, &[8, 12, 8, 8, 4]);
-                        write(&mut p, used + tile * 4 + 1, x);
+                        emit(p, &[12, 8, 8]);
+                        write(p, used + tile * 4, y);
+                        emit(p, &[8, 12, 8, 8, 4]);
+                        write(p, used + tile * 4 + 1, x);
                         emit(
-                            &mut p,
+                            p,
                             &[
                                 4,
                                 8,
@@ -228,26 +261,26 @@ impl PrepareOamWork {
                             ],
                         );
                         if sprite.image >> 4 == 11 {
-                            emit(&mut p, &[8, 12]);
+                            emit(p, &[8, 12]);
                         } else {
-                            emit(&mut p, &[8, 8, 4, 8, 4]);
+                            emit(p, &[8, 8, 4, 8, 4]);
                         }
-                        emit(&mut p, &[4, 12]);
+                        emit(p, &[4, 12]);
                         let base = if sprite.image >> 4 == 11 {
                             124
                         } else {
                             (sprite.image >> 4) * 12
                         };
                         write(
-                            &mut p,
+                            p,
                             used + tile * 4 + 2,
                             base.wrapping_add(pattern).wrapping_add(tile as u8),
                         );
-                        emit(&mut p, &[8, 4, 8, 8, if tile >= 2 { 8 } else { 12 }]);
+                        emit(p, &[8, 4, 8, 8, if tile >= 2 { 8 } else { 12 }]);
                         if tile >= 2 {
-                            emit(&mut p, &[12, 8]);
+                            emit(p, &[12, 8]);
                         }
-                        emit(&mut p, &[8]);
+                        emit(p, &[8]);
                         let attrs = (if flip { 0x20 } else { 0 })
                             | (if tile >= 2 {
                                 2 | sprite.grass & 0x80
@@ -255,22 +288,22 @@ impl PrepareOamWork {
                                 0
                             })
                             | u8::from(tile == 3);
-                        write(&mut p, used + tile * 4 + 3, attrs);
-                        emit(&mut p, &[4, 8, if tile == 3 { 8 } else { 12 }]);
+                        write(p, used + tile * 4 + 3, attrs);
+                        emit(p, &[4, 8, if tile == 3 { 8 } else { 12 }]);
                     }
-                    emit(&mut p, &[4, 12]);
+                    emit(p, &[4, 12]);
                     used += 16;
                 }
             }
-            emit(&mut p, &[12, 8, 8, if slot == 15 { 12 } else { 16 }]);
+            emit(p, &[12, 8, 8, if slot == 15 { 12 } else { 16 }]);
         }
         let preserve = state.movement_flags & 0x40 != 0;
         emit(
-            &mut p,
+            p,
             &[12, 4, 8, 12, 8, 16, 8, 8, if preserve { 8 } else { 12 }],
         );
         if preserve {
-            emit(&mut p, &[8]);
+            emit(p, &[8]);
         }
         let end = if preserve { 144 } else { 160 };
         // Source can alias adjacent WRAM for overfull pages. This bounded
@@ -279,17 +312,12 @@ impl PrepareOamWork {
             return Err(PrepareOamError::ShadowPageOverflow);
         }
         for offset in (used..end).step_by(4) {
-            emit(&mut p, &[4, 8]);
-            write(&mut p, offset, 160);
-            emit(&mut p, &[8, 12]);
+            emit(p, &[4, 8]);
+            write(p, offset, 160);
+            emit(p, &[8, 12]);
         }
-        emit(&mut p, &[4, 20]);
-        Ok(Self {
-            state,
-            code: p,
-            next: 0,
-            return_carry,
-        })
+        emit(p, &[4, 20]);
+        Ok(())
     }
     /// The next Random call receives this flag only after the actual RET.
     pub fn return_carry(&self) -> Option<bool> {
@@ -306,9 +334,10 @@ impl PrepareOamWork {
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         while !self.finished() {
             let count = bus.execute_plain_run(
-                self.code[self.next..].iter()
-                    .take_while(|i| i.after.is_none() && i.bus.access.is_none())
-                    .map(|i| i.bus),
+                self.code[self.next..]
+                    .iter()
+                    .take_while(|i| matches!(i, Instruction::Plain(_)))
+                    .map(|i| i.bus()),
             )?;
             self.next += count;
             if count == 0 {
@@ -324,15 +353,20 @@ impl PrepareOamWork {
         let Some(i) = self.code.get(self.next).copied() else {
             return Ok(None);
         };
-        bus.execute(i.bus)?;
-        match i.after {
-            Some(Effect::Enabled(v)) => self.state.enabled = v,
-            Some(Effect::AdjustY(slot, v)) => self.state.sprites[usize::from(slot)].adjusted_y = v,
-            Some(Effect::AdjustX(slot, v)) => self.state.sprites[usize::from(slot)].adjusted_x = v,
-            None => (),
+        let instruction = i.bus();
+        bus.execute(instruction)?;
+        match i {
+            Instruction::Enabled(value) => self.state.enabled = value,
+            Instruction::AdjustY { slot, value } => {
+                self.state.sprites[usize::from(slot)].adjusted_y = value
+            }
+            Instruction::AdjustX { slot, value } => {
+                self.state.sprites[usize::from(slot)].adjusted_x = value
+            }
+            _ => (),
         }
         self.next += 1;
-        Ok(Some(i.bus))
+        Ok(Some(instruction))
     }
 }
 
@@ -340,6 +374,23 @@ impl PrepareOamWork {
 mod tests {
     use super::super::display_work_time::{DisplayWorkError, DisplayWorkTime};
     use super::*;
+    #[test]
+    fn instruction_storage_is_compact_and_preallocated() {
+        for data in [
+            include_str!("prepare_oam_cases_1113.json"),
+            include_str!("prepare_oam_constructed_1113.json"),
+            include_str!("prepare_oam_live_cases_1158.json"),
+        ] {
+            let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
+            for case in fixture["cases"].as_array().unwrap() {
+                let input = case.get("input").unwrap_or(&case["before"]);
+                let work =
+                    PrepareOamWork::new(serde_json::from_value(input.clone()).unwrap()).unwrap();
+                assert_eq!(work.code.capacity(), work.code.len());
+                assert!(core::mem::size_of::<Instruction>() <= 3);
+            }
+        }
+    }
     #[test]
     fn irq_runner_preserves_each_oam_effect_budget_cursor_and_snapshot_resume() {
         for data in [include_str!("prepare_oam_cases_1113.json"), include_str!("prepare_oam_constructed_1113.json")] {

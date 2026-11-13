@@ -1,6 +1,6 @@
 //! A single bounded VBlank continuation, from accepted video entry to RETI.
 //!
-//! Audio3 is supplied by the existing native sequencer owner at its actual
+//! Audio1/3 is supplied by the existing native sequencer owner at its actual
 //! call boundary. Its decoded instruction work advances this same device clock;
 //! no captured duration or second channel player lives here. Register-phase
 //! APU writes and unsupported fade/sound-bank children remain outside this port.
@@ -18,9 +18,9 @@ use super::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IrqProgress {
     Instruction,
-    /// The caller must tick its existing Audio3 owner once, then pass only the
+    /// The caller must tick its existing audio owner once, then pass only the
     /// successfully derived work back. Re-observing this boundary does not tick.
-    NeedsAudio3,
+    NeedsAudio,
     Returned,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -43,6 +43,7 @@ enum Phase {
     Dispatch,
     AwaitAudio,
     AudioWork,
+    AfterAudioDispatch,
     AfterMusic,
     Done,
 }
@@ -88,7 +89,7 @@ impl VBlankIrqWork {
     pub fn fade_state(&self) -> FadeAudioState {
         self.fade.state()
     }
-    pub fn provide_audio3_work(&mut self, cycles: u32) -> Result<(), IrqError> {
+    pub fn provide_audio_work(&mut self, cycles: u32) -> Result<(), IrqError> {
         if self.phase != Phase::AwaitAudio || cycles == 0 || cycles & 3 != 0 {
             return Err(IrqError::InvalidAudioReceipt);
         }
@@ -99,7 +100,7 @@ impl VBlankIrqWork {
     /// A retained external audio instruction cursor has already consumed this
     /// owner's time and committed its one native sequencer update after RET.
     /// Unlike aggregate diagnostic work, these instructions must not run twice.
-    pub fn audio3_returned(&mut self, cycles: u32) -> Result<(), IrqError> {
+    pub fn audio_returned(&mut self, cycles: u32) -> Result<(), IrqError> {
         if self.phase != Phase::AwaitAudio || cycles == 0 || cycles & 3 != 0 {
             return Err(IrqError::InvalidAudioReceipt);
         }
@@ -166,21 +167,33 @@ impl VBlankIrqWork {
                     if dispatch.step(time)? {
                         return Ok(IrqProgress::Instruction);
                     }
-                    if dispatch.bank() != 31
-                        || dispatch.engine() != Some(SourceAudioEngine::Three)
-                        || !dispatch.music_ready()
+                    if !matches!(
+                        (dispatch.bank(), dispatch.engine()),
+                        (2, Some(SourceAudioEngine::One)) | (31, Some(SourceAudioEngine::Three))
+                    ) || !dispatch.music_ready()
                     {
                         return Err(IrqError::UnsupportedAudioBank(dispatch.bank()));
                     }
                     self.phase = Phase::AwaitAudio;
                 }
-                Phase::AwaitAudio => return Ok(IrqProgress::NeedsAudio3),
+                Phase::AwaitAudio => return Ok(IrqProgress::NeedsAudio),
                 Phase::AudioWork => {
                     if self.remaining_audio_work != 0 {
                         time.consume_vblank_body_work(&mut self.remaining_audio_work)?;
                         return Ok(IrqProgress::Instruction);
                     }
                     assert!(self.dispatch.as_mut().unwrap().music_returned());
+                    self.phase = Phase::AfterAudioDispatch;
+                }
+                Phase::AfterAudioDispatch => {
+                    // Audio1 returns through JR .afterMusic; Audio3 falls through.
+                    // Preserve that instruction and any budget suspension before
+                    // starting the shared timer/input/RETI suffix.
+                    let dispatch = self.dispatch.as_mut().unwrap();
+                    if dispatch.step(time)? {
+                        return Ok(IrqProgress::Instruction);
+                    }
+                    assert!(dispatch.after_music_ready());
                     self.after_music = Some(VBlankAfterMusicWork::new(
                         self.timer_input,
                         self.video.saved_bank().expect("VBlank saved bank"),
@@ -244,7 +257,8 @@ mod tests {
                 let mut state = serde_json::to_value(&time).unwrap();
                 state["deadline"] = (time.elapsed() + budget).into();
                 let mut time: DisplayWorkTime = serde_json::from_value(state).unwrap();
-                let (mut reference, mut expected_memory, mut expected_work) = (time.clone(), memory.clone(), work.clone());
+                let (mut reference, mut expected_memory, mut expected_work) =
+                    (time.clone(), memory.clone(), work.clone());
                 let (mut memory, mut work) = (memory, work);
                 loop {
                     let actual = work.run_until_boundary(&mut time, &mut memory, &NoAssets);
@@ -255,24 +269,42 @@ mod tests {
                         }
                     };
                     assert_eq!(actual, expected);
-                    assert_eq!(serde_json::to_value((&time, &memory, &work)).unwrap(),
-                        serde_json::to_value((&reference, &expected_memory, &expected_work)).unwrap());
+                    assert_eq!(
+                        serde_json::to_value((&time, &memory, &work)).unwrap(),
+                        serde_json::to_value((&reference, &expected_memory, &expected_work))
+                            .unwrap()
+                    );
                     match actual {
-                        Ok(IrqProgress::NeedsAudio3) => {
-                            work.provide_audio3_work(70228).unwrap();
-                            expected_work.provide_audio3_work(70228).unwrap();
+                        Ok(IrqProgress::NeedsAudio) => {
+                            work.provide_audio_work(70228).unwrap();
+                            expected_work.provide_audio_work(70228).unwrap();
                         }
                         Err(IrqError::Display(DisplayWorkError::Budget)) => {
-                            (time, memory, work) = serde_json::from_value(serde_json::to_value((&time, &memory, &work)).unwrap()).unwrap();
-                            (reference, expected_memory, expected_work) = serde_json::from_value(serde_json::to_value((&reference, &expected_memory, &expected_work)).unwrap()).unwrap();
-                            time.begin_native_update(); reference.begin_native_update();
+                            (time, memory, work) = serde_json::from_value(
+                                serde_json::to_value((&time, &memory, &work)).unwrap(),
+                            )
+                            .unwrap();
+                            (reference, expected_memory, expected_work) = serde_json::from_value(
+                                serde_json::to_value((
+                                    &reference,
+                                    &expected_memory,
+                                    &expected_work,
+                                ))
+                                .unwrap(),
+                            )
+                            .unwrap();
+                            time.begin_native_update();
+                            reference.begin_native_update();
                         }
                         Ok(IrqProgress::Returned) => {
                             assert_eq!(time.interrupt_returns(), 1);
                             assert!(!time.active_vblank());
                             break;
                         }
-                        Err(IrqError::UnsupportedAudioBank(value)) => { assert_eq!(value, bank); break; }
+                        Err(IrqError::UnsupportedAudioBank(value)) => {
+                            assert_eq!(value, bank);
+                            break;
+                        }
                         other => panic!("unexpected runner boundary: {other:?}"),
                     }
                 }
@@ -282,65 +314,71 @@ mod tests {
     #[test]
     fn only_complete_video_random_audio_timer_input_and_reti_can_return_foreground() {
         let mut ends = Vec::new();
-        for cycles in [4, 70224 + 4] {
-            // Synthetic bridge durations, not original audio captures.
-            let (mut time, mut memory, mut work) = build(31);
-            let mut supplied = 0;
-            let mut snapshot_checked = false;
-            loop {
-                match work.step(&mut time, &mut memory, &NoAssets) {
-                    Ok(IrqProgress::NeedsAudio3) => {
-                        assert!(time.active_vblank());
-                        assert_eq!(time.interrupt_returns(), 0);
-                        assert_eq!(
-                            work.step(&mut time, &mut memory, &NoAssets),
-                            Ok(IrqProgress::NeedsAudio3)
-                        );
-                        assert_eq!(
-                            work.provide_audio3_work(0),
-                            Err(IrqError::InvalidAudioReceipt)
-                        );
-                        work.provide_audio3_work(cycles).unwrap();
-                        assert_eq!(
-                            work.provide_audio3_work(cycles),
-                            Err(IrqError::InvalidAudioReceipt)
-                        );
-                        supplied += 1;
+        for bank in [2, 31] {
+            for cycles in [4, 70224 + 4] {
+                // Synthetic bridge durations, not original audio captures.
+                let (mut time, mut memory, mut work) = build(bank);
+                let mut supplied = 0;
+                let mut snapshot_checked = false;
+                loop {
+                    match work.step(&mut time, &mut memory, &NoAssets) {
+                        Ok(IrqProgress::NeedsAudio) => {
+                            assert!(time.active_vblank());
+                            assert_eq!(time.interrupt_returns(), 0);
+                            assert_eq!(
+                                work.step(&mut time, &mut memory, &NoAssets),
+                                Ok(IrqProgress::NeedsAudio)
+                            );
+                            assert_eq!(
+                                work.provide_audio_work(0),
+                                Err(IrqError::InvalidAudioReceipt)
+                            );
+                            work.provide_audio_work(cycles).unwrap();
+                            assert_eq!(
+                                work.provide_audio_work(cycles),
+                                Err(IrqError::InvalidAudioReceipt)
+                            );
+                            supplied += 1;
+                        }
+                        Ok(IrqProgress::Returned) => break,
+                        Ok(IrqProgress::Instruction) => (),
+                        Err(IrqError::Display(DisplayWorkError::Budget)) => {
+                            assert!(time.active_vblank());
+                            assert_eq!(time.interrupt_returns(), 0);
+                            let json = serde_json::to_vec(&(&time, &memory, &work)).unwrap();
+                            (time, memory, work) = serde_json::from_slice(&json).unwrap();
+                            snapshot_checked = true;
+                            time.begin_native_update();
+                        }
+                        Err(error) => panic!("unexpected IRQ error {error:?}"),
                     }
-                    Ok(IrqProgress::Returned) => break,
-                    Ok(IrqProgress::Instruction) => (),
-                    Err(IrqError::Display(DisplayWorkError::Budget)) => {
-                        assert!(time.active_vblank());
-                        assert_eq!(time.interrupt_returns(), 0);
-                        let json = serde_json::to_vec(&(&time, &memory, &work)).unwrap();
-                        (time, memory, work) = serde_json::from_slice(&json).unwrap();
-                        snapshot_checked = true;
-                        time.begin_native_update();
-                    }
-                    Err(error) => panic!("unexpected IRQ error {error:?}"),
                 }
+                assert_eq!(supplied, 1);
+                assert!(work.finished());
+                assert!(!time.active_vblank());
+                assert_eq!(time.interrupt_returns(), 1);
+                assert_eq!(work.timer_state().time.frames, 1);
+                assert_eq!(
+                    time.source_loaded_rom_bank(),
+                    work.video().saved_bank().unwrap()
+                );
+                let end = time.elapsed();
+                assert_eq!(
+                    work.step(&mut time, &mut memory, &NoAssets),
+                    Ok(IrqProgress::Returned)
+                );
+                assert_eq!(time.elapsed(), end);
+                if cycles > 70224 {
+                    assert!(snapshot_checked);
+                }
+                ends.push(end);
             }
-            assert_eq!(supplied, 1);
-            assert!(work.finished());
-            assert!(!time.active_vblank());
-            assert_eq!(time.interrupt_returns(), 1);
-            assert_eq!(work.timer_state().time.frames, 1);
-            assert_eq!(
-                time.source_loaded_rom_bank(),
-                work.video().saved_bank().unwrap()
-            );
-            let end = time.elapsed();
-            assert_eq!(
-                work.step(&mut time, &mut memory, &NoAssets),
-                Ok(IrqProgress::Returned)
-            );
-            assert_eq!(time.elapsed(), end);
-            if cycles > 70224 {
-                assert!(snapshot_checked);
-            }
-            ends.push(end);
         }
         assert_eq!(ends[1] - ends[0], 70224);
+        assert_eq!(ends[3] - ends[2], 70224);
+        // Audio1 skips a comparison but executes the final JR: net 12 T fewer.
+        assert_eq!(ends[2] - ends[0], 12);
+        assert_eq!(ends[3] - ends[1], 12);
     }
     #[test]
     fn unsupported_bank_cannot_borrow_the_audio3_duration_or_return_the_irq() {
@@ -356,7 +394,7 @@ mod tests {
         assert!(time.active_vblank());
         assert_eq!(time.interrupt_returns(), 0);
         assert_eq!(
-            work.provide_audio3_work(2004),
+            work.provide_audio_work(2004),
             Err(IrqError::InvalidAudioReceipt)
         );
     }
