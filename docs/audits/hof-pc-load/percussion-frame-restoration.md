@@ -177,3 +177,26 @@ At this checkpoint the remaining work was integration with current master,
 which already contained the separate Party-to-START restoration work from PR
 #439. No earlier recording or performance figure is relabeled as the result of
 the later integrated build.
+
+## Master integration validation (2026-11-13)
+
+The candidate was merged with `origin/master` at `d17f9742`. One automatically
+duplicated `noise_next_note` body was removed. The final runtime sources match
+the integrated master; this follow-up retains the validation record rather than
+reapplying fixes that master already contains.
+
+Both audio feature modes pass **225 tests** each. Core passes **3,495 tests**;
+the application library passes **494 tests**, with 40 existing ignored tests.
+All 11 subsystem scenarios and all 27 GBA performance/memory/frame-timing
+tool tests pass. The default GBA ROM builds successfully at approximately
+5.8 MiB, and the production core/app Clippy correctness check passes.
+
+A separate fresh m01–m49 run reaches `PLAYTHROUGH REACHED REQUESTED MILESTONE`.
+It completes the Champion, Hall of Fame, credits and TheEnd with eight badges
+and one Hall of Fame record. The game writes a 32,768-byte save; an independent
+process continues it to PalletTown `(5,6)` with three party members and 33,044
+money. This run starts from power-on and uses button input plus observation,
+not a seeded save or resumed checkpoint.
+
+The pre-integration GBA timing and memory figures above remain scoped to that
+candidate. Original physical audio/display timing parity is still not claimed.
