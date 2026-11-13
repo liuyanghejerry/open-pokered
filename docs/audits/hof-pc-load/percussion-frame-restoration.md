@@ -2,11 +2,12 @@
 
 > 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
 
-
-This is an unfinished local FLASH candidate, not a merged game fix or an
+This documents an unfinished local FLASH candidate, not a merged game fix or an
 ordinary-input gameplay verification. The game branch is
-`fix/flash-restoration-current-master`, based on `cabaa9af`; game master remains
-`ea3b2624`. The overall field-music regression remains **failing**.
+`fix/flash-restoration-current-master`, based on `cabaa9af`; game master was
+`ea3b2624` at this initial checkpoint, and the overall field-music regression was
+still **failing**. The completed pitch-slide integration below now passes that
+regression, but broader gameplay and GBA validation remain open.
 
 The previous source-frame admission rejected an already active CHAN8 and the
 music channel's `drum_note` command. The candidate now retains the original
@@ -90,14 +91,14 @@ crossing suppresses writes, and a zero source divisor is explicitly rejected.
 The old full-frame CPU and bus fixtures remain byte-identical after the offline
 oracle's opcode extension.
 
-These children are **not yet connected to the stream command and complete frame
-owner**. They do not establish complete Safari playback, actual FLASH behavior,
-or physical timing. After updating the private engine pin, default audio tests report **214 passing
-and one failing**, with no ignored or filtered tests. The same SafariZone `$EB`
-command at update 5 remains the only failure. The full field-music test still
-has to pass without skips.
+At that checkpoint, these children were **not yet connected to the stream command
+and complete frame owner**. They did not establish complete Safari playback,
+actual FLASH behavior, or physical timing. After updating the private engine pin,
+default audio tests reported **214 passing and one failing**, with no ignored or
+filtered tests. The same SafariZone `$EB` command at update 5 was the only
+failure.
 
-Regenerate the slide evidence with:
+Regenerate the isolated slide evidence with:
 
 ```sh
 python3 docs/audits/hof-pc-load/generate-pitch-slide.py \
@@ -106,9 +107,96 @@ python3 docs/audits/hof-pc-load/generate-pitch-slide.py \
   --engine-cases path/to/pitch_slide_onsets.rs
 ```
 
-Remaining: pitch-slide stream decoding, frame-state/aggregate/timer wiring and
-whole-frame original comparisons; broader ordinary-input FLASH
-verification, current-combination GBA timing/performance/memory, fresh m49 and
-independent CONTINUE, then the separate Party-to-START restoration gap. The
-last native Game recording and GBA performance figure belong to earlier builds;
-this change does not relabel them as current evidence.
+## Pitch-slide frame integration (audit 1359)
+
+The `$EB` stream command is now connected through note preparation, slide
+initialization, aggregate work, timer continuation, and complete-frame native
+state checks. The full field-music regression passes every one of the 26 songs
+for 4,096 updates, both with and without PressAB every 37 updates. Default and
+`source-clock-serde` audio test runs each report **217 passing and no failures**,
+with no ignored or filtered tests.
+
+Independent whole-frame fixtures cover 128 ordinary Safari starting states and
+three independently traced port contexts per state: 384 bus cases and 744 APU
+accesses. They check original instruction order and cycle counts, APU values and
+phases, refusal and serialized continuation, and exactly one native commit.
+
+Regenerate the complete-frame slide evidence with:
+
+```sh
+cargo run -p pokered-audio --example export_source_slide_frames \
+  --features source-clock-serde -- path/to/native-slide-inputs.json
+python3 docs/audits/hof-pc-load/generate-audio-frame-instructions.py \
+  path/to/original.gbc path/to/pokered.sym path/to/native-slide-inputs.json \
+  crates/pokered-audio/src/source_clock/slide_frame_work_golden.json
+python3 docs/audits/hof-pc-load/generate-audio-frame-instructions.py \
+  path/to/original.gbc path/to/pokered.sym path/to/native-slide-inputs.json \
+  crates/pokered-audio/src/source_clock/slide_frame_bus_golden.json --apu
+```
+
+## Pre-integration target validation (2026-11-12–13)
+
+Native checks now pass 217 audio tests in both feature modes, 3,457 core tests,
+440 application tests, and all 11 subsystem scenarios. Two runs replay the same
+ordinary SAVE and retained 849-command tape through normal CONTINUE and real
+START/Pokemon/FLASH inputs. Each has 240 consecutive captures after the initial
+image; all state records and PNG hashes repeat exactly. The current build returns
+to RockTunnel1F at capture 206, executes source audio work on 45 captures, and
+finishes with the correct map and player position. It preserves 235 of the old
+candidate's 240 images, including the final image; transfer-phase differences
+are not treated as original physical-timing evidence.
+
+The default GBA ROM builds successfully. All seven performance scenarios pass
+the unchanged 15%-or-25-tick regression budget. All 72 sprite ranges (23,808
+bytes) match the original ROM through both native resources and embedded GBA
+assets. Two seeded diagnostic runs use real START/Pokemon/FLASH inputs twice and
+return after 46 logical updates each, with 1,495,685 and 1,572,527 hardware timer
+ticks. Both finish with a 50,296-byte largest free block and 9,368 bytes of
+painted stack margin; the running heap low is 7,008 bytes. These are constrained
+GBA fixture results, not NEW GAME or ordinary-SAVE playthrough evidence.
+Route22 completes all 40 encounters with a 26,784-byte minimum contiguous heap
+and 9,392-byte stack margin. The 13 broader graphics/map/animation/PC/SRAM
+scenarios also pass, with a 7,832-byte minimum contiguous heap and 8,632-byte
+stack margin. All 23 connection, encounter and field-move frame-timing scenarios
+pass as well, together with six slow-cartridge hardware scenarios and three
+unskipped opening scenarios.
+
+OAM instructions now use a compact three-byte representation and count before
+one exact allocation. The native UI sampler uses a bounded 256-entry scratch
+array and grows its retained pattern pool by the exact number of new entries.
+Short moving sprite sheets resolve their real adjacent ROM resources instead
+of rejecting the upper copy.
+
+A fresh m01–m49 run now reaches `PLAYTHROUGH REACHED REQUESTED MILESTONE`.
+It completes the Champion, Hall of Fame, credits and TheEnd, retains eight badges
+and one Hall of Fame record, and lets the game write its own 32,768-byte save.
+A separate process continues that save to PalletTown `(5,6)` with three party
+members and 30,330 money. No debug save is used for this verdict.
+
+At this checkpoint the remaining work was integration with current master,
+which already contained the separate Party-to-START restoration work from PR
+#439. No earlier recording or performance figure is relabeled as the result of
+the later integrated build.
+
+## Master integration validation (2026-11-13)
+
+The candidate was merged with `origin/master` at `d17f9742`. One automatically
+duplicated `noise_next_note` body was removed. The final runtime sources match
+the integrated master; this follow-up retains the validation record rather than
+reapplying fixes that master already contains.
+
+Both audio feature modes pass **225 tests** each. Core passes **3,495 tests**;
+the application library passes **494 tests**, with 40 existing ignored tests.
+All 11 subsystem scenarios and all 27 GBA performance/memory/frame-timing
+tool tests pass. The default GBA ROM builds successfully at approximately
+5.8 MiB, and the production core/app Clippy correctness check passes.
+
+A separate fresh m01–m49 run reaches `PLAYTHROUGH REACHED REQUESTED MILESTONE`.
+It completes the Champion, Hall of Fame, credits and TheEnd with eight badges
+and one Hall of Fame record. The game writes a 32,768-byte save; an independent
+process continues it to PalletTown `(5,6)` with three party members and 33,044
+money. This run starts from power-on and uses button input plus observation,
+not a seeded save or resumed checkpoint.
+
+The pre-integration GBA timing and memory figures above remain scoped to that
+candidate. Original physical audio/display timing parity is still not claimed.
