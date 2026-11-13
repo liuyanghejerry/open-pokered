@@ -134,7 +134,7 @@ python3 docs/audits/hof-pc-load/generate-audio-frame-instructions.py \
   crates/pokered-audio/src/source_clock/slide_frame_bus_golden.json --apu
 ```
 
-## Current target validation (2026-11-12–13)
+## Pre-integration target validation (2026-11-12–13)
 
 Native checks now pass 217 audio tests in both feature modes, 3,457 core tests,
 440 application tests, and all 11 subsystem scenarios. Two runs replay the same
@@ -162,9 +162,10 @@ pass as well, together with six slow-cartridge hardware scenarios and three
 unskipped opening scenarios.
 
 OAM instructions now use a compact three-byte representation and count before
-one exact allocation. The native UI pattern pool reserves 128 entries initially
-without changing its 256-entry limit. Short moving sprite sheets resolve their
-real adjacent ROM resources instead of rejecting the upper copy.
+one exact allocation. The native UI sampler uses a bounded 256-entry scratch
+array and grows its retained pattern pool by the exact number of new entries.
+Short moving sprite sheets resolve their real adjacent ROM resources instead
+of rejecting the upper copy.
 
 A fresh m01–m49 run now reaches `PLAYTHROUGH REACHED REQUESTED MILESTONE`.
 It completes the Champion, Hall of Fame, credits and TheEnd, retains eight badges
@@ -172,6 +173,7 @@ and one Hall of Fame record, and lets the game write its own 32,768-byte save.
 A separate process continues that save to PalletTown `(5,6)` with three party
 members and 30,330 money. No debug save is used for this verdict.
 
-Remaining only integration with current master, which already contains the
-separate Party-to-START restoration work from PR #439. No earlier recording or
-performance figure is relabeled as the result of this build.
+At this checkpoint the remaining work was integration with current master,
+which already contained the separate Party-to-START restoration work from PR
+#439. No earlier recording or performance figure is relabeled as the result of
+the later integrated build.

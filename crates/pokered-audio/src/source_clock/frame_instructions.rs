@@ -310,11 +310,8 @@ impl SourceAudioFrame {
                 ids[i] = song.raw_id();
             } else {
                 let valid_program = match i {
-                    4 | 5 => {
-                        super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data)
-                            .is_some()
-                            && seq.sfx_tempo == 0x100
-                    }
+                    4 | 5 => super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data).is_some()
+                        && seq.sfx_tempo == 0x100,
                     7 => {
                         super::press_ab_work::source_noise_id(v.id, &seq.channels[i].data).is_some()
                             && v.duty == 0

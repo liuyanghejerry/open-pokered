@@ -123,15 +123,11 @@ fn swap_pulses_match_original_instructions_and_apu_accesses_with_press_ab_overla
     }
     let fixture: SwapFixture =
         serde_json::from_str(include_str!("swap_sfx_bus_golden.json")).unwrap();
-    assert_eq!(
-        fixture.rom_sha256,
-        "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
-    );
+    assert_eq!(fixture.rom_sha256,
+        "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b");
     assert_eq!(fixture.cases.len(), 30);
     let count = check_cases(fixture.cases.into_iter().map(|case| {
-        let work =
-            PressAbInstructions::new_swap(case.common.input, case.channel, &case.common.data)
-                .unwrap();
+        let work = PressAbInstructions::new_swap(case.common.input, case.channel, &case.common.data).unwrap();
         (case.common, work)
     }));
     assert_eq!(count, 126);

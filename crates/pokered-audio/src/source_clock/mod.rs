@@ -140,10 +140,8 @@ impl PreparedAudioFrame {
         for i in 4..8 {
             let ch = &seq.channels[i];
             let valid_program = match i {
-                4 | 5 => {
-                    press_ab_work::source_pulse_id(i, ch.sound_id, &ch.data).is_some()
-                        && seq.sfx_tempo == 0x100
-                }
+                4 | 5 => press_ab_work::source_pulse_id(i, ch.sound_id, &ch.data).is_some()
+                    && seq.sfx_tempo == 0x100,
                 7 => {
                     press_ab_work::source_noise_id(ch.sound_id, &ch.data).is_some()
                         && ch.duty_cycle == 0
@@ -201,7 +199,8 @@ impl PreparedAudioFrame {
             } else if i == 5 {
                 press_ab_work::SOURCE_SWAP_ID
             } else if i == 7 {
-                press_ab_work::source_noise_id(ch.sound_id, data).expect("validated noise program")
+                press_ab_work::source_noise_id(ch.sound_id, data)
+                    .expect("validated noise program")
             } else {
                 ch.sound_id
             };
@@ -220,15 +219,8 @@ impl PreparedAudioFrame {
                     // the original sound constructor's ready-one. This finite
                     // stream never loops back to offset zero.
                     let w = if i <= 5 && ch.sound_id == crate::sfx_data::SfxId::Swap as u8 {
-                        press_ab_work::swap_next_note(
-                            song.bank(),
-                            i as u8,
-                            source_sfx,
-                            data,
-                            ch.ptr,
-                            ch.delay_frac,
-                            ch.duty_cycle << 6,
-                        )
+                        press_ab_work::swap_next_note(song.bank(), i as u8, source_sfx,
+                            data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
                     } else if i == 4 {
                         press_ab_next_note(data, ch.ptr, ch.delay_frac, ch.duty_cycle << 6)
                     } else {

@@ -94,16 +94,9 @@ impl FieldIrq {
             .map_err(|e| format!("native map input: {e:?}"))?;
         let sprite_plan = SpritePatternPlan::new(flow.work.raw_sprite_pictures(), false);
         let native_grass = if flow.origin.returns_to_map_with_actors() {
-            Some(
-                super::super::field_oam_inputs::stationary_grass_inputs(
-                    &game.overworld,
-                    &map_tiles.tiles,
-                )
-                .map_err(|e| format!("native stationary grass: {e:?}"))?,
-            )
-        } else {
-            None
-        };
+            Some(super::super::field_oam_inputs::stationary_grass_inputs(&game.overworld, &map_tiles.tiles)
+                .map_err(|e| format!("native stationary grass: {e:?}"))?)
+        } else { None };
         let resources = game
             .resources
             .as_mut()
@@ -146,25 +139,14 @@ impl FieldIrq {
             // their actual assets before timed ownership; this is not a new
             // reload or a completion of the later textbox request.
             let player = game.overworld.field_restore_input(1).player_source;
-            let player_copy = PatternCopy {
-                source: player,
-                source_offset: 0,
-                destination: 0x8000,
-                tiles: 12,
-                format: CopyFormat::TwoBpp,
-            };
-            for copy in core::iter::once(&player_copy).chain(
-                sprite_plan
-                    .copies
-                    .iter()
-                    .filter(|copy| copy.destination < 0x8800),
-            ) {
+            let player_copy = PatternCopy { source: player, source_offset: 0,
+                destination: 0x8000, tiles: 12, format: CopyFormat::TwoBpp };
+            for copy in core::iter::once(&player_copy).chain(sprite_plan.copies.iter()
+                .filter(|copy| copy.destination < 0x8800)) {
                 for offset in 0..u16::from(copy.tiles) * 16 {
-                    let byte = assets
-                        .read_pattern_byte(copy.source, copy.source_offset + offset)
+                    let byte = assets.read_pattern_byte(copy.source, copy.source_offset + offset)
                         .ok_or("native standing sprite pattern unavailable")?;
-                    flow.patterns
-                        .initialize_native_byte(copy.destination + offset, byte)
+                    flow.patterns.initialize_native_byte(copy.destination + offset, byte)
                         .map_err(|e| format!("{e:?}"))?;
                 }
             }
@@ -226,10 +208,7 @@ impl FieldIrq {
             ui,
             background_is_map: false,
             native_grass,
-            portion: game
-                .source_display
-                .background_portion()
-                .ok_or("unknown native BG portion")?,
+            portion: game.source_display.background_portion().ok_or("unknown native BG portion")?,
             shadows: VBlankVideoShadows {
                 scx: 0,
                 scy: 0,
@@ -244,29 +223,17 @@ impl FieldIrq {
 impl PokemonGame {
     pub(super) fn restore_submenu_images(&mut self, flow: &mut FieldFlash) -> Result<(), String> {
         let irq = flow.irq.as_mut().ok_or("missing menu IRQ owner")?;
-        let covered = pokered_ui::menus::start::sprite_occlusion_tiles(
-            &self.start_menu,
-            &self.player_name,
-            &pokered_data::ui_layout::schema::START_DEFAULT_LAYOUT,
-            self.state.config.language,
-        );
+        let covered = pokered_ui::menus::start::sprite_occlusion_tiles(&self.start_menu,
+            &self.player_name, &pokered_data::ui_layout::schema::START_DEFAULT_LAYOUT,
+            self.state.config.language);
         let hides = |x: u8, y: u8| {
             let at = usize::from(y) * 20 + usize::from(x);
             x >= 20 || y >= 18 || covered[at] || irq.map_tiles.tiles[at] >= 0x60
         };
-        self.overworld
-            .player_presentation
-            .restore_menu_image(self.overworld.state.player.facing, hides(8, 9));
-        self.overworld
-            .npc_presentation
-            .restore_menu_images(&self.overworld.npc_states, hides);
-        irq.native_grass = Some(
-            super::super::field_oam_inputs::stationary_grass_inputs(
-                &self.overworld,
-                &irq.map_tiles.tiles,
-            )
-            .map_err(|e| format!("menu grass input: {e:?}"))?,
-        );
+        self.overworld.player_presentation.restore_menu_image(self.overworld.state.player.facing, hides(8, 9));
+        self.overworld.npc_presentation.restore_menu_images(&self.overworld.npc_states, hides);
+        irq.native_grass = Some(super::super::field_oam_inputs::stationary_grass_inputs(
+            &self.overworld, &irq.map_tiles.tiles).map_err(|e| format!("menu grass input: {e:?}"))?);
         Ok(())
     }
 
@@ -332,12 +299,8 @@ impl PokemonGame {
             if flow.origin == RestorationOrigin::Submenu {
                 // Both native submenu consumers currently show no field
                 // objects. Bind that existing visibility at the handoff.
-                self.source_display
-                    .set_shadow_oam(&[0; 160])
-                    .map_err(|e| format!("{e:?}"))?;
-                self.source_display
-                    .device_mut()
-                    .begin_native_object_scanout(&[0; 160], [0xd0, 0xe0])
+                self.source_display.set_shadow_oam(&[0; 160]).map_err(|e| format!("{e:?}"))?;
+                self.source_display.device_mut().begin_native_object_scanout(&[0; 160], [0xd0, 0xe0])
                     .map_err(|e| format!("{e:?}"))?;
             }
             // The retained native party uses canonical shade indices. Bind
@@ -437,15 +400,11 @@ impl PokemonGame {
                 &irq.ui.tiles
             };
             let (counter1, counter2) = self.overworld.tile_anim.counters();
-            let animations = if flow.origin == RestorationOrigin::TrainerCard {
-                0
-            } else {
-                match self.overworld.tile_anim.kind() {
-                    pokered_core::overworld::presentation::TileAnimKind::None => 0,
-                    pokered_core::overworld::presentation::TileAnimKind::Water => 1,
-                    pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
-                }
-            };
+            let animations = if flow.origin == RestorationOrigin::TrainerCard { 0 } else { match self.overworld.tile_anim.kind() {
+                pokered_core::overworld::presentation::TileAnimKind::None => 0,
+                pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+                pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
+            } };
             let video = VBlankVideoWork::select(
                 true,
                 self.source_display.device().pending_interrupts(),
@@ -460,8 +419,7 @@ impl PokemonGame {
                         0,
                         bg.clone(),
                     )
-                    .ok_or("invalid native BG tiles")?
-                    .with_live_portion(),
+                    .ok_or("invalid native BG tiles")?.with_live_portion(),
                     queued: QueuedBgCopyWork::new(
                         BgCopyRequest {
                             source: 0,

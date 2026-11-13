@@ -451,17 +451,12 @@ mod tests {
     }
     #[test]
     fn irq_runner_preserves_each_oam_effect_budget_cursor_and_snapshot_resume() {
-        for data in [
-            include_str!("prepare_oam_cases_1113.json"),
-            include_str!("prepare_oam_constructed_1113.json"),
-        ] {
+        for data in [include_str!("prepare_oam_cases_1113.json"), include_str!("prepare_oam_constructed_1113.json")] {
             let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
             for case in fixture["cases"].as_array().unwrap() {
-                let state: PrepareOamState =
-                    serde_json::from_value(case["before"].clone()).unwrap();
+                let state: PrepareOamState = serde_json::from_value(case["before"].clone()).unwrap();
                 let template = PrepareOamWork::new(state).unwrap();
-                let shadow: Vec<u8> =
-                    serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
+                let shadow: Vec<u8> = serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
                 for budget in (0..4096u64).step_by(97).chain([4, 12, 20, 65535]) {
                     let mut time = DisplayWorkTime::default();
                     time.begin_native_update();
@@ -483,23 +478,12 @@ mod tests {
                             }
                         };
                         assert_eq!(actual, expected);
-                        assert_eq!(
-                            serde_json::to_value((&time, &work)).unwrap(),
-                            serde_json::to_value((&reference, &expected_work)).unwrap()
-                        );
-                        if actual.is_ok() {
-                            break;
-                        }
+                        assert_eq!(serde_json::to_value((&time, &work)).unwrap(), serde_json::to_value((&reference, &expected_work)).unwrap());
+                        if actual.is_ok() { break; }
                         assert_eq!(actual, Err(DisplayWorkError::Budget));
-                        (time, work) =
-                            serde_json::from_value(serde_json::to_value((&time, &work)).unwrap())
-                                .unwrap();
-                        (reference, expected_work) = serde_json::from_value(
-                            serde_json::to_value((&reference, &expected_work)).unwrap(),
-                        )
-                        .unwrap();
-                        time.begin_native_update();
-                        reference.begin_native_update();
+                        (time, work) = serde_json::from_value(serde_json::to_value((&time, &work)).unwrap()).unwrap();
+                        (reference, expected_work) = serde_json::from_value(serde_json::to_value((&reference, &expected_work)).unwrap()).unwrap();
+                        time.begin_native_update(); reference.begin_native_update();
                     }
                     assert!(work.finished());
                     assert!(time.active_vblank());

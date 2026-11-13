@@ -177,12 +177,8 @@ impl PressAbInstructions {
         };
         if !matches!(input.bank, 2 | 31)
             || !matches!(input.source_sfx_id, 0 | SOURCE_PRESS_AB_ID | SOURCE_SWAP_ID)
-            || input.flags1 != 4
-            || input.flags2 != 0
-            || input.note_speed != 1
-            || input.sfx_tempo != 0x100
-            || !pointers.contains(&input.ptr)
-            || data != expected
+            || input.flags1 != 4 || input.flags2 != 0 || input.note_speed != 1
+            || input.sfx_tempo != 0x100 || !pointers.contains(&input.ptr) || data != expected
         {
             return None;
         }
@@ -232,14 +228,12 @@ impl PressAbInstructions {
     fn matches_data(&self, data: &[u8]) -> bool {
         match self.noise {
             Some((instrument, _)) => Self::noise_data(instrument) == Some(data),
-            None => {
-                data == match self.swap_channel {
-                    Some(4) => crate::sfx_data::SFX_SWAP_CH5,
-                    Some(5) => crate::sfx_data::SFX_SWAP_CH6,
-                    None => crate::sfx_data::SFX_PRESS_AB_CH5,
-                    _ => return false,
-                }
-            }
+            None => data == match self.swap_channel {
+                Some(4) => crate::sfx_data::SFX_SWAP_CH5,
+                Some(5) => crate::sfx_data::SFX_SWAP_CH6,
+                None => crate::sfx_data::SFX_PRESS_AB_CH5,
+                _ => return false,
+            },
         }
     }
     fn initial(input: PressAbInput, noise: Option<(u8, u8)>) -> Self {
@@ -344,19 +338,11 @@ impl PressAbInstructions {
             // Audio*_sfx_note does not mask the delay byte at this first store.
             // ApplyDutyCycleAndSoundLength performs its separate masked store.
             Stage::DutyStore => Some((
-                if self.noise.is_some() {
-                    0xff20
-                } else {
-                    0xff11 + u16::from(self.channel() - 4) * 5
-                },
+                if self.noise.is_some() { 0xff20 } else { 0xff11 + u16::from(self.channel() - 4) * 5 },
                 self.duty | (self.computed >> 8) as u8,
             )),
             Stage::EnvelopeStore => Some((
-                if self.noise.is_some() {
-                    0xff21
-                } else {
-                    0xff12 + u16::from(self.channel() - 4) * 5
-                },
+                if self.noise.is_some() { 0xff21 } else { 0xff12 + u16::from(self.channel() - 4) * 5 },
                 self.envelope,
             )),
             _ => None,
