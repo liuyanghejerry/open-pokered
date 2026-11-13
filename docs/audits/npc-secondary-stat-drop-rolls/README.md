@@ -1,5 +1,7 @@
 # NPC damaging stat-drop prechecks
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Original `StatModifierDownEffect` applies the ordinary enemy's `25 percent + 1`
 miss check to damaging secondary effects as well as primary moves. This draws
 before the Substitute check and the `33 percent + 1` secondary chance. A broken

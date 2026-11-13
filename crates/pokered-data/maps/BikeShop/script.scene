@@ -8,22 +8,27 @@ game_scene BikeShop {
   @storyline("talkBikeShopClerk") {
     @trigger(map = "BikeShop", npc = 1)
     @if (getFlag("EVENT_GOT_BICYCLE")) {
-      @speaker("") {
-        @t("How do you like your new\nBICYCLE?\n\nYou can take it on CYCLING\nROAD and in caves!", "你觉得新买的自行车怎么样？\n\n你可以骑着它去自行车道和洞窟\n里！")
-      }
+      printFieldTextParts([
+        @t("How do you like your new\nBICYCLE?", "你觉得新买的自行车怎么样？"),
+        @t("You can take it on CYCLING\nROAD and in caves!", "你可以骑着它去自行车道和洞窟\n里！")
+      ], false)
+      acknowledgeFieldText()
     } @else {
       @if (hasItem("BIKE_VOUCHER")) {
-        @speaker("") {
-          @t("Oh, that's...\n\nA BIKE VOUCHER!\n\nOK! Here you go!", "哦，这是……\n\n自行车兑换券！\n\n好！给你！")
-        }
+        printFieldTextParts([
+          @t("Oh, that's...", "哦，这是……"),
+          @t("A BIKE VOUCHER!", "自行车兑换券！"),
+          @t("OK! Here you go!", "好！给你！")
+        ], "prompt")
         given = giveItem("BICYCLE", 1)
         @if (given) {
           takeItem("BIKE_VOUCHER", 1)
           setFlag("EVENT_GOT_BICYCLE")
-          showItemDialogue(@t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。"), "SFX_GET_KEY_ITEM")
+          printItemFieldText(@t("<PLAYER> exchanged the BIKE\nVOUCHER for a BICYCLE.", "<PLAYER>用自行车兑换券换到了\n一辆自行车。"), "SFX_GET_KEY_ITEM")
         } @else {
-          @speaker("") { @t("You better make room for\nthis!", "你最好腾出地方来！") }
+          printFieldTextParts([@t("You better make room for\nthis!", "你最好腾出地方来！")], false)
         }
+        acknowledgeFieldText()
       } @else {
         // The manual list's B and A-on-CANCEL have different bit6 writes.
         bikeShopOffer(

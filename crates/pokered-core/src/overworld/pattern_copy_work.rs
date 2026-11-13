@@ -99,16 +99,22 @@ impl PatternCopyDataWork {
     pub fn finished(&self) -> bool {
         self.step == CopyStep::Done
     }
+    fn read_access(&self) -> PatternAccess {
+        if let PatternSource::Tileset(raw) = self.source {
+            if let Some(super::tileset_pattern_metadata::TilesetPatternByte::Vram(address)) =
+                super::tileset_pattern_metadata::tileset_pattern_byte(raw, self.source_offset)
+            {
+                return PatternAccess::ReadVram { address, at_tcycle: 4 };
+            }
+        }
+        PatternAccess::Read { source: self.source, offset: self.source_offset, at_tcycle: 4 }
+    }
     pub fn instruction(&self) -> Option<PatternInstruction> {
         use CopyStep::*;
         let (tcycles, access) = match self.step {
             Read => (
                 8,
-                Some(PatternAccess::Read {
-                    source: self.source,
-                    offset: self.source_offset,
-                    at_tcycle: 4,
-                }),
+                Some(self.read_access()),
             ),
             Write => (
                 8,
@@ -134,11 +140,7 @@ impl PatternCopyDataWork {
             if self.step == Read {
                 let value = bus.execute(PatternInstruction {
                     tcycles: 8,
-                    access: Some(PatternAccess::Read {
-                        source: self.source,
-                        offset: self.source_offset,
-                        at_tcycle: 4,
-                    }),
+                    access: Some(self.read_access()),
                 })?;
                 self.a = value.expect("asset read receipt") as u8;
                 self.source_offset = self.source_offset.wrapping_add(1);
@@ -250,7 +252,8 @@ mod tests {
             }
             self.cycles += u32::from(i.tcycles);
             Ok(match i.access {
-                Some(PatternAccess::ReadVram { .. }) | Some(PatternAccess::Display(_)) => unreachable!("asset-copy test bus"),
+                Some(PatternAccess::ReadVram { address, .. }) => Some(u16::from(self.bytes[usize::from(address - 0x8000)])),
+                Some(PatternAccess::Display(_)) => unreachable!("asset-copy test bus"),
                 Some(PatternAccess::Read { offset, .. }) => {
                     Some(u16::from((offset as u8).wrapping_mul(3)))
                 }
@@ -322,6 +325,28 @@ mod tests {
         assert!(writes > 0);
         assert_eq!(a, b);
         assert_eq!(bus.cycles, other.cycles);
+    }
+    #[test]
+    fn underground_read_crosses_rom_into_live_vram_and_survives_a_yield() {
+        let mut bus = memory();
+        bus.bytes[0] = 0x37;
+        bus.bytes[1] = 0xa9;
+        let mut work = PatternCopyDataWork::new(PatternSource::Tileset(11), 671, 0x9000, 3);
+        for _ in 0..7 { work.step(&mut bus).unwrap(); }
+        assert_eq!(work.instruction().unwrap().access,
+            Some(PatternAccess::ReadVram { address: 0x8000, at_tcycle: 4 }));
+        let saved = work;
+        bus.blocked = true;
+        assert!(work.run(&mut bus).is_err());
+        assert_eq!(work, saved);
+        bus.blocked = false;
+        bus.bytes[0] = 0x5c; // Sample now, not when the parent or read was prepared.
+        let mut resumed: PatternCopyDataWork = serde_json::from_str(&serde_json::to_string(&work).unwrap()).unwrap();
+        resumed.run(&mut bus).unwrap();
+        assert!(resumed.finished());
+        assert_eq!(&bus.bytes[0x1000..0x1003], &[((671u16 as u8).wrapping_mul(3)), 0x5c, 0xa9]);
+        assert_eq!(bus.cycles, 52 * 3 + 12);
+        assert_eq!(bus.writes, 3);
     }
     #[test]
     fn zero_copydata_length_really_underflows_instead_of_silently_completing() {

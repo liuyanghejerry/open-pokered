@@ -166,6 +166,24 @@ impl StartMenuState {
         self.published_thirds = 0;
     }
     pub fn has_source_entry(&self) -> bool { self.source_entry }
+
+    /// RedisplayStartMenu follows restoration without DisplayTextID's entry
+    /// delay or START sound. HandleMenuInput still waits for its cursor's
+    /// three background-map portions before reading the preserved history.
+    pub fn begin_source_redisplay(&mut self) {
+        self.entry = None;
+        self.source_entry = true;
+        self.poll_wait = 3;
+        self.published_thirds = 0;
+    }
+    /// The display caller has already executed HandleMenuInput's Delay3
+    /// against its live IRQ owner. Do not add a second native-frame wait.
+    pub fn complete_source_redisplay(&mut self) {
+        self.entry = None;
+        self.source_entry = true;
+        self.poll_wait = 0;
+        self.published_thirds = 3;
+    }
     pub fn input_ready(&self) -> bool { self.entry.is_none() && self.poll_wait == 0 }
     /// Visible border and number of LCD rows published from DrawStartMenu.
     pub fn entry_visual(&self) -> (bool, u32) {

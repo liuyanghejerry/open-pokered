@@ -1,5 +1,7 @@
 # CUT clears the grass block
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Using CUT on natural Route 6 grass previously displayed the success text and
 grass particles but left the grass intact. The original sends grass through
 `ReplaceTreeTileBlock`, just as it sends trees through that routine. Its
@@ -16,7 +18,7 @@ The original reference archive is identified by revision
 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`; it has no Git metadata. The compiled
 symbol source and the archive have identical SHA-256 hashes for CUT, the
 swap table, the overworld blockset, Route 6 blocks and wild encounter code.
-The retail Red ROM's SHA-1 is recorded in [verification.json](verification.json).
+The retail Red ROM's SHA-1 is recorded in [verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/cut-grass-block-replacement/verification.json).
 
 Construction precedes the validation boundary. Source `EnterMap` initializes
 the natural Route 6 map at `(10,22)`; two legal Lv12 Bulbasaur then have DV
@@ -114,10 +116,10 @@ passes at exact source `0f40def21f7984c848f9d794b71a87d4a29f4dc7`. This
 common-base regression includes the participant EXP correction; it is not
 a new capture identity for the historical screenshot pair.
 
-[verification.json](verification.json) is the compact 4-source/8-native
+[verification.json](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/cut-grass-block-replacement/verification.json) is the compact 4-source/8-native
 summary with fixture, input, frame, binary, PNG and SRAM identities. Full
 metadata, actual traces, checkpoints, PNGs, ordinary SRAM and build/test logs
-are retained in [evidence.zip](evidence.zip), SHA-256
+are retained in [evidence.zip](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/cut-grass-block-replacement/evidence.zip), SHA-256
 `4810964e9f02cb894c4148dc71408e539426353cb7a6b35d534d0b2239bd0478`.
 All 198 archived entries are individually hashed in
 [evidence-entry-manifest.json](evidence-entry-manifest.json), and the archive

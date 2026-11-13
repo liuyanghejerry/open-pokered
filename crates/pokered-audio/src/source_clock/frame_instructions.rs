@@ -281,18 +281,20 @@ impl SourceAudioFrame {
             return Err(AudioClockError::UnsupportedEffect(3));
         }
         let start = NativeStart::read(seq);
-        for i in 5..7 {
-            if start.voices[i].active {
-                return Err(AudioClockError::ActiveSfx(i as u8));
-            }
+        if start.voices[6].active {
+            return Err(AudioClockError::ActiveSfx(6));
         }
         let mut ids = core::array::from_fn(|i| {
             if !start.voices[i].active {
                 0
             } else if i < 4 {
                 song.raw_id()
-            } else if i == 4 {
-                super::press_ab_work::SOURCE_PRESS_AB_ID
+            } else if i == 4 || i == 5 {
+                super::press_ab_work::source_pulse_id(i, start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
+            } else if i == 7 {
+                super::press_ab_work::source_noise_id(start.voices[i].id, &seq.channels[i].data)
+                    .unwrap_or(0)
             } else {
                 start.voices[i].id
             }
@@ -308,14 +310,13 @@ impl SourceAudioFrame {
                 ids[i] = song.raw_id();
             } else {
                 let valid_program = match i {
-                    4 => {
-                        v.id == crate::sfx_data::SfxId::PressAB as u8
-                            && seq.channels[i].data == crate::sfx_data::SFX_PRESS_AB_CH5
+                    4 | 5 => {
+                        super::press_ab_work::source_pulse_id(i, v.id, &seq.channels[i].data)
+                            .is_some()
                             && seq.sfx_tempo == 0x100
                     }
                     7 => {
-                        PressAbInstructions::noise_data(v.id)
-                            == Some(seq.channels[i].data.as_slice())
+                        super::press_ab_work::source_noise_id(v.id, &seq.channels[i].data).is_some()
                             && v.duty == 0
                     }
                     _ => false,
@@ -358,7 +359,7 @@ impl SourceAudioFrame {
         })
     }
     /// Retain the same instruction cursor with actual APU accesses enabled.
-    /// The source path admits the unmodified PressAB and canonical drum programs.
+    /// The source path admits unmodified PressAB, SWAP and canonical drum programs.
     pub fn new_with_bus(
         seq: &Sequencer,
         song: SourceSong,
@@ -366,8 +367,12 @@ impl SourceAudioFrame {
         mute: u8,
     ) -> Result<Self, AudioClockError> {
         let mut work = Self::new(seq, song, bank, mute)?;
-        if seq.channels[4].active && (seq.frequency_modifier != 0 || seq.tempo_modifier != 0) {
-            return Err(AudioClockError::UnsupportedEffect(4));
+        if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
+            for i in 4..=5 {
+                if seq.channels[i].active {
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
+                }
+            }
         }
         work.physical_output = true;
         Ok(work)
@@ -411,7 +416,7 @@ impl SourceAudioFrame {
     fn note(&self, seq: &Sequencer) -> Result<Stage, AudioClockError> {
         let i = self.channel as usize;
         let v = self.voice(i);
-        if i == 4 || i == 7 {
+        if matches!(i, 4 | 5 | 7) {
             let input = PressAbInput {
                 bank: self.bank,
                 source_sfx_id: self.ids[4],
@@ -424,7 +429,9 @@ impl SourceAudioFrame {
                 sfx_tempo: self.start.sfx_tempo,
                 vibrato_reload: v.vib_reload,
             };
-            let work = if i == 4 {
+            let work = if i <= 5 && v.id == crate::sfx_data::SfxId::Swap as u8 {
+                PressAbInstructions::new_swap(input, i as u8, self.data(seq, i))
+            } else if i == 4 {
                 PressAbInstructions::new(input, self.data(seq, i))
             } else {
                 PressAbInstructions::new_noise(
@@ -567,10 +574,50 @@ impl SourceAudioFrame {
                 }
                 self.stage = Stage::Tail(0);
             } else {
+                let prefix = self.dispatch_plain_prefix();
+                if prefix.len() > 1 {
+                    let count = bus
+                        .execute_plain_run(apu, prefix)
+                        .map_err(FrameStepError::Clock)?;
+                    if count != 0 {
+                        self.accept_dispatch_plain_prefix(count);
+                        continue;
+                    }
+                }
                 self.step_inner(seq, |op| bus.execute(apu, op))?;
             }
         }
         Ok(())
+    }
+
+    // These source blocks only inspect the frame's immutable channel/mute
+    // input. Child construction and transfer stay on the checked step path.
+    fn dispatch_plain_prefix(&self) -> &'static [u8] {
+        use Stage::*;
+        let (code, index): (&[u8], u8) = match self.stage {
+            Channel(n) if self.ids[self.channel as usize] == 0 => (&[8, 12, 8, 8, 4, 12], n),
+            Channel(n) => (&[8, 12, 8, 8, 4, 8], n),
+            Kind(n) if self.channel >= 4 => (&[4, 8, 12], n),
+            Kind(n) => (&[4, 8, 8], n),
+            Mute(n) => (&[16, 4, 12], n),
+            ReadyEntry(n) if n < 5 => (&[8, 12, 8, 8, 8], n),
+            Tail(n) if self.channel == 7 => (&[4, 4, 8, 8], n),
+            Tail(n) => (&[4, 4, 8, 12], n),
+            _ => return &[],
+        };
+        &code[usize::from(index)..]
+    }
+
+    fn accept_dispatch_plain_prefix(&mut self, count: usize) {
+        use Stage::*;
+        let prefix = self.dispatch_plain_prefix();
+        assert!(count > 0 && count <= prefix.len());
+        self.cycles += prefix[..count].iter().map(|&t| u32::from(t)).sum::<u32>();
+        match &mut self.stage {
+            Channel(n) | Kind(n) | Mute(n) | ReadyEntry(n) | Tail(n) => *n += (count - 1) as u8,
+            _ => unreachable!("nonempty dispatch prefix"),
+        }
+        self.advance(None);
     }
     fn step_inner<E>(
         &mut self,
@@ -757,73 +804,42 @@ impl SourceAudioFrame {
     }
     fn advance(&mut self, note: Option<Stage>) {
         use Stage::*;
-        self.stage = match self.stage {
-            Init => Channel(0),
-            Channel(n) => {
-                if n == 5 {
-                    if self.ids[self.channel as usize] == 0 {
-                        Tail(0)
-                    } else {
-                        Kind(0)
-                    }
-                } else {
-                    Channel(n + 1)
-                }
-            }
-            Kind(n) => {
-                if n == 2 {
-                    if self.channel >= 4 {
-                        Call
-                    } else {
-                        Mute(0)
-                    }
-                } else {
-                    Kind(n + 1)
-                }
-            }
-            Mute(n) => {
-                if n == 2 {
-                    Call
-                } else {
-                    Mute(n + 1)
-                }
-            }
+        // Assign each small dispatch variant in place. A shared match result
+        // would carry the much larger note child through every plain opcode.
+        match self.stage {
+            Init => self.stage = Channel(0),
+            Channel(n) if n < 5 => self.stage = Channel(n + 1),
+            Channel(_) if self.ids[self.channel as usize] == 0 => self.stage = Tail(0),
+            Channel(_) => self.stage = Kind(0),
+            Kind(n) if n < 2 => self.stage = Kind(n + 1),
+            Kind(_) if self.channel >= 4 => self.stage = Call,
+            Kind(_) => self.stage = Mute(0),
+            Mute(n) if n < 2 => self.stage = Mute(n + 1),
+            Mute(_) => self.stage = Call,
             Call => {
                 let i = self.channel as usize;
                 if self.voice(i).delay > 1 {
-                    Effect(
+                    self.stage = Effect(
                         EffectInstructionWork::with_pitch_slide(
                             Self::effect_input(&self.start, &self.ids, i),
                             Some(self.voice(i).pitch_slide),
                         )
                         .expect("validated effect"),
-                    )
+                    );
                 } else {
-                    ReadyEntry(0)
+                    self.stage = ReadyEntry(0);
                 }
             }
-            ReadyEntry(n) => {
-                if n == 5 {
-                    note.expect("preflighted note transfer")
-                } else {
-                    ReadyEntry(n + 1)
-                }
+            ReadyEntry(5) => self.stage = note.expect("preflighted note transfer"),
+            ReadyEntry(n) => self.stage = ReadyEntry(n + 1),
+            Tail(n) if n < 3 => self.stage = Tail(n + 1),
+            Tail(_) if self.channel == 7 => self.stage = Return,
+            Tail(_) => {
+                self.channel += 1;
+                self.stage = Channel(0);
             }
-            Tail(n) => {
-                if n == 3 {
-                    if self.channel == 7 {
-                        Return
-                    } else {
-                        self.channel += 1;
-                        Channel(0)
-                    }
-                } else {
-                    Tail(n + 1)
-                }
-            }
-            Return => Done,
-            Done => Done,
+            Return | Done => self.stage = Done,
             Effect(_) | Music(_) | Press(_) => unreachable!("child progress"),
-        };
+        }
     }
 }

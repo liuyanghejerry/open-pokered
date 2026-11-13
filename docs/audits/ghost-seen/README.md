@@ -1,5 +1,7 @@
 # Unidentified Tower encounters register as seen (904)
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Entering a Pokémon Tower battle now registers the underlying species as seen even when the enemy is displayed as an unidentified GHOST. The Silph Scope controls identification; it does not gate the original Pokédex write. This restores the saved and player-visible seen entry without granting ownership.
 
 Original [LoadEnemyMonData](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/battle/core.asm#L6129-L6137) converts `wEnemyMonSpecies2` through `IndexToPokedex`, then sets `wPokedexSeen`. Four actual source controls independently confirm that the unscoped Tower6F Marowak battle adds National105 before the normal SAVE endpoint. This is the original's behavior despite the unidentified GHOST presentation.

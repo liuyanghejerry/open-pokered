@@ -3567,6 +3567,14 @@ impl PokemonGame {
             return;
         }
         self.update_native_inner(input);
+        if self.field_flash.is_none() {
+            // The synchronous UI producer owns AutoBG while a menu or text
+            // covers the field. Free field movement uses row/column redraws.
+            let enabled = self.state.screen != GameScreen::Overworld
+                || self.overworld.pending_dialogue.is_some();
+            self.source_display.set_native_background_enabled(u8::from(enabled))
+                .expect("native video control changes only outside the source IRQ owner");
+        }
         self.source_display.finish_native_frame().expect("valid shared native display time");
     }
 
@@ -3577,7 +3585,8 @@ impl PokemonGame {
         }
         // Full-screen sequences own their OAM; only map-backed menus
         // continue publishing the frozen field sprites under the overlay.
-        if matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
+        if self.field_flash.is_none()
+            && matches!(self.state.screen, GameScreen::StartMenu | GameScreen::Shop(_) | GameScreen::Elevator) {
             self.overworld.publish_npc_frame(true);
         }
         self.sync_bag_list_memory();
@@ -3900,7 +3909,8 @@ impl PokemonGame {
             return;
         }
 
-        if self.state.screen == GameScreen::PartyScreen && self.field_flash.is_some() {
+        if matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu
+            | GameScreen::Bag | GameScreen::OptionsMenu | GameScreen::Pokedex | GameScreen::TrainerCard) && self.field_flash.is_some() {
             self.update_field_flash(input);
             return;
         }
@@ -4820,7 +4830,11 @@ impl PokemonGame {
                             hof_teams: hof_team_records(&self.save_data),
                         };
                         let mut pc = PcScreen::new_with_language(entry, &open, self.state.config.language);
-                        pc.set_quantity_text_delay_frames(self.state.config.text_speed.delay_frames());
+                        pc.configure_field_text(self.state.config.text_speed.delay_frames(),
+                            self.overworld.no_text_delay(), self.overworld.foreground_observation().cloned());
+                        if let Some(disabled) = pc.take_field_text_delay_change() {
+                            self.overworld.set_no_text_delay(disabled);
+                        }
                         self.pc_screen = Some(pc);
                         ScreenAction::Transition(GameScreen::PC)
                     } else if self.overworld.pending_hof_ceremony {
@@ -5241,7 +5255,10 @@ impl PokemonGame {
                     self.start_menu.wait_for_menu_cursor();
                 }
                 match menu_action {
-                    StartMenuAction::Close => ScreenAction::Transition(GameScreen::Overworld),
+                    StartMenuAction::Close => {
+                        self.begin_start_menu_restore(input);
+                        ScreenAction::Continue
+                    },
                     StartMenuAction::OpenOption => {
                         ScreenAction::Transition(GameScreen::OptionsMenu)
                     }
@@ -5273,6 +5290,7 @@ impl PokemonGame {
                 };
                 let action = match self.options_menu.tick(opt_input) {
                     OptionsMenuResult::Closed => {
+                        if let Some(audio) = &self.audio { audio.play_sfx(SfxId::PressAB); }
                         // Persist the selection into the save data so the next
                         // save keeps it (original: wOptions is part of SRAM).
                         self.save_data.game_data.options = self.options_menu.options;
@@ -5284,7 +5302,9 @@ impl PokemonGame {
                             self.main_menu.return_from_options();
                             ScreenAction::Transition(GameScreen::MainMenu)
                         } else {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_submenu_restore(input);
+                            self.update_field_flash(input);
+                            ScreenAction::Continue
                         }
                     }
                     OptionsMenuResult::Active => ScreenAction::Continue,
@@ -5338,9 +5358,14 @@ impl PokemonGame {
                 match result {
                     SaveMenuResult::Saved => {
                         self.save_to_file();
-                        ScreenAction::Transition(GameScreen::StartMenu)
+                        self.begin_save_menu_restore(input, false);
+                        ScreenAction::Continue
                     }
-                    SaveMenuResult::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
+                    SaveMenuResult::Cancelled => {
+                        if let Some(audio) = &self.audio { audio.play_sfx(SfxId::PressAB); }
+                        self.begin_save_menu_restore(input, true);
+                        ScreenAction::Continue
+                    }
                     SaveMenuResult::Active => ScreenAction::Continue,
                 }
             }
@@ -5390,7 +5415,8 @@ impl PokemonGame {
                             // (rebuilt from the live inventory on entry).
                             ScreenAction::Transition(GameScreen::Bag)
                         } else {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_party_menu_restore(input);
+                            ScreenAction::Continue
                         }
                     }
                     PartyScreenAction::ShowStats(idx) => {
@@ -5785,7 +5811,11 @@ impl PokemonGame {
                         }
                         ScreenAction::Continue
                     }
-                    BagScreenAction::Cancelled => ScreenAction::Transition(GameScreen::StartMenu),
+                    BagScreenAction::Cancelled => {
+                        self.begin_submenu_restore(input);
+                        self.update_field_flash(input);
+                        ScreenAction::Continue
+                    },
                     BagScreenAction::TossItem {
                         item,
                         index,
@@ -5952,7 +5982,9 @@ impl PokemonGame {
                         } else if self.bag_viewer_return {
                             ScreenAction::Transition(GameScreen::Bag)
                         } else if self.pokedex_screen.from_list() {
-                            ScreenAction::Transition(GameScreen::StartMenu)
+                            self.begin_fullscreen_menu_restore(input, false);
+                            self.update_field_flash(input);
+                            ScreenAction::Continue
                         } else {
                             ScreenAction::Transition(GameScreen::Overworld)
                         }
@@ -5967,7 +5999,11 @@ impl PokemonGame {
                 };
                 match self.trainer_card_screen.update_frame(tc_input) {
                     // RedisplayStartMenu (start_sub_menus.asm:475).
-                    TrainerCardAction::Closed => ScreenAction::Transition(GameScreen::StartMenu),
+                    TrainerCardAction::Closed => {
+                        self.begin_fullscreen_menu_restore(input, true);
+                        self.update_field_flash(input);
+                        ScreenAction::Continue
+                    }
                     TrainerCardAction::Active => ScreenAction::Continue,
                 }
             }
@@ -6223,6 +6259,9 @@ impl PokemonGame {
                     if used_input.a && key_sound_allowed {
                         if let Some(ref audio) = self.audio { audio.play_sfx(SfxId::PressAB); }
                     };
+                    if let Some(disabled) = pc.take_field_text_delay_change() {
+                        self.overworld.set_no_text_delay(disabled);
+                    }
 
                     // Every mutation must refresh the live bank-1 box, not only CHANGE BOX.
                     self.save_data.current_box = self.save_data.pc_storage.current_box().clone();
@@ -7224,7 +7263,8 @@ impl PokemonGame {
             "field_menu": match &self.state.screen {
                 GameScreen::StartMenu => Some(serde_json::json!({
                     "kind": "start", "cursor": self.start_menu.cursor(),
-                    "ready_for_input": self.start_menu.input_ready(),
+                    "ready_for_input": self.field_flash.is_none() && self.start_menu.input_ready(),
+                    "restoring_map": self.field_flash.is_some(),
                     "published_menu_rows": self.start_menu.entry_visual().1,
                     "items": self.start_menu.items().iter().map(|item| format!("{:?}", item)).collect::<Vec<_>>(),
                 })),
@@ -7347,6 +7387,8 @@ impl PokemonGame {
             "loaded_rom_bank": self.source_display.source_loaded_rom_bank(),
             "rom_bank_temp": self.source_display.source_rom_bank_temp(),
             "selected_rom_bank": self.source_display.selected_rom_bank(),
+            "auto_bg_enabled": self.source_display.video_requests().read(pokered_core::overworld::video_copy_caller_work::AUTO_BG_ENABLED),
+            "auto_bg_portion": self.source_display.background_portion(),
         });
         snapshot["evaluation"] = serde_json::json!({
             "party_source": if live.is_some() { "battle_live" } else { "save_data" },
@@ -8485,6 +8527,10 @@ impl PokemonGame {
                 );
             }
             GameScreen::StartMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_overworld(
                     &mut self.overworld,
                     &mut self.resources,
@@ -8499,9 +8545,17 @@ impl PokemonGame {
                 );
             }
             GameScreen::OptionsMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_options_menu(&self.options_menu, frame_buffer, self.state.config.language);
             }
             GameScreen::SaveMenu => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 // save.gui clears and covers the complete 160x144 viewport;
                 // drawing the live map first only creates pixels immediately
                 // discarded by the save card.
@@ -8563,6 +8617,10 @@ impl PokemonGame {
                 }
             }
             GameScreen::Bag => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_bag(&self.bag_screen, frame_buffer, self.state.config.language);
             }
             GameScreen::TownMap => {
@@ -8599,6 +8657,10 @@ impl PokemonGame {
                 draw_diploma(&self.player_name, &mut self.resources, frame_buffer, self.state.config.language);
             }
             GameScreen::Pokedex => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 let is_zh = matches!(
                     self.state.config.language,
                     pokered_core::game_state::Lang::Zh
@@ -8612,6 +8674,10 @@ impl PokemonGame {
                 );
             }
             GameScreen::TrainerCard => {
+                if self.field_flash.is_some() {
+                    self.draw_field_flash(frame_buffer);
+                    return;
+                }
                 draw_trainer_card(
                     &self.player_name,
                     self.save_data.game_data.player_money,
@@ -10488,9 +10554,11 @@ mod link_stats_cry_fidelity_tests {
                 std::fs::create_dir_all(&dir).unwrap();
                 let path=dir.join("fixture.sav");
                 let mut g=fixture(Species::Pikachu,10,Direction::Down);
-                g.audio=None; g.external_saves=false; g.save_path=Some(path.clone());
+                // A muted frontend retains the PCM clock used by field restoration.
+                g.external_saves=false; g.save_path=Some(path.clone());
                 g.overworld=OverworldScreen::new(MapId::PalletTown,None,PokemonRedData);
                 g.overworld.run_on_load(); g.overworld.state.player.x=10;g.overworld.state.player.y=10;
+                g.audio.as_ref().unwrap().play_music(pokered_audio::music_data::MusicId::PALLET_TOWN);
                 let idle=InputState::new();
                 for _ in 0..20 {g.update(&button(key));}
                 for _ in 0..64 {g.update(&idle);}
@@ -10511,8 +10579,12 @@ mod link_stats_cry_fidelity_tests {
                 for t in 0..1000 {
                     if g.state.screen!=GameScreen::SaveMenu {break;}
                     let advance=button(GbButton::A); g.update(if t%20==0 {&advance} else {&idle});
+                    #[cfg(feature = "debug-server")]
+                    if let Some(flow) = g.debug_field_flash() {
+                        assert!(flow["error"].is_null(), "SAVE return failed: {}", flow["error"]);
+                    }
                 }
-                assert_eq!(g.state.screen,GameScreen::StartMenu);
+                assert_eq!(g.state.screen,GameScreen::Overworld);
                 let bytes=std::fs::read(&path).unwrap();
                 // Independent original symbols: bank1 sMainData=$a5a3,
                 // wMainDataStart=$d2f7; moving/last-stop/current=$d528/29/2a.
@@ -12792,7 +12864,7 @@ mod bag_list_owner_219 {
  fn run(capture:Option<&std::path::Path>) {
   use pokered_data::items::ItemId;
   for case in ["mark-b","mark-a","self-select","cancel-select","ab","a-select","up-down"] {
-   let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mut g=PokemonGame::new(GameVersion::Red);g.audio=Some(AudioOutput::new_pcm());g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
    let mut mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Bulbasaur,5,[0x99,0x88]).unwrap();mon.hp-=1;g.save_data.party.add(mon).unwrap();
    g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,4,4);let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
    assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),4,4));
@@ -12809,7 +12881,7 @@ mod bag_list_owner_219 {
      use pokered_core::bag_screen::BagPhase;
      if matches!(case,"ab"|"a-select") || case=="mark-a" && t>=90 {
       assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),BagPhase::ActionMenu{cursor:0},"{case} A selects before B/SELECT");
-     } else if case=="mark-b" && t>=90 {assert_eq!(g.state.screen,GameScreen::StartMenu,"B exits marked list");}
+     } else if case=="mark-b" && t>=90 {if g.field_flash.is_some() {assert_eq!(g.state.screen,GameScreen::Bag);assert!(t<120,"marked-list restoration must finish");}else{assert_eq!(g.state.screen,GameScreen::StartMenu,"B exits marked list after restoration");}}
      else {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),if case=="up-down" {BagPhase::Browsing}else{BagPhase::SwapFrom{row:0}},"{case} mark retained at{t}");let cursor=if case=="cancel-select" && t>=64 {2}else if case=="cancel-select" && t>=40 {1}else{0};assert_eq!(g.bag_screen.cursor(),cursor);}
      assert_eq!(g.save_data.game_data.bag.items(),&[(ItemId::Potion,3),(ItemId::Antidote,4)]);
     }
@@ -12829,7 +12901,7 @@ mod bag_swap_owner_221 {
  fn run(capture:Option<&std::path::Path>) {
   use pokered_data::items::ItemId;
   for case in ["swap","merge","overflow","early-b","early-a","early-down","early-select"] {
-   let mut g=PokemonGame::new(GameVersion::Red);g.audio=None;g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
+   let mut g=PokemonGame::new(GameVersion::Red);g.audio=Some(AudioOutput::new_pcm());g.set_seed(42);g.state.config.language=pokered_core::game_state::Lang::En;g.state.config.text_speed=pokered_core::game_state::TextSpeed::Medium;
    let mut mon=pokered_core::pokemon::stats::create_pokemon(pokered_data::species::Species::Bulbasaur,5,[0x99,0x88]).unwrap();mon.hp-=1;g.save_data.party.add(mon).unwrap();
    g.state.screen=GameScreen::Overworld;g.overworld.warp_to_map(MapId::ViridianPokecenter,4,4);let mut input=InputState::new();for _ in 0..120 {g.update(&input);}
    assert!(pokered_core::overworld::update::is_script_walkable_tile(g.overworld.map_data.as_ref().unwrap(),4,4));
@@ -12857,7 +12929,7 @@ mod bag_swap_owner_221 {
       let expected=if t<110 {old}else{after.clone()};
       assert_eq!(g.save_data.game_data.bag.items(),expected,"{case} inventory commit/reopen at{t}");
       if t<110 {assert_eq!(g.bag_screen.phase(),BagPhase::SwapFrom{row:0},"marked/waiting at{t}");}
-      if (120..138).contains(&t) {assert_eq!(g.state.screen,GameScreen::StartMenu);}else {assert_eq!(g.state.screen,GameScreen::Bag);}
+      if (120..138).contains(&t) {if g.field_flash.is_some() {assert_eq!(g.state.screen,GameScreen::Bag);assert!(t<130,"restore before next menu input");}else{assert_eq!(g.state.screen,GameScreen::StartMenu);}}else {assert_eq!(g.state.screen,GameScreen::Bag);}
       if t>=138 {assert_eq!(g.bag_screen.items(),after,"reopened item order");}
      } else {assert_eq!(g.state.screen,GameScreen::Bag);assert_eq!(g.bag_screen.phase(),BagPhase::SwapFrom{row:0});assert_eq!(g.bag_screen.cursor(),0,"{case} protected input");assert_eq!(g.save_data.game_data.bag.items(),&[(ItemId::Potion,3),(ItemId::Antidote,4)]);}
     }
@@ -12981,7 +13053,11 @@ mod pc_quantity_owner_230 {
     for _ in 0..2 {tick(&mut g,&mut input,&mut held,vec![GbButton::A]);}
     let expected=match cursor {0=>(5,3),1=>(3,5),2=>(4,4),_=>unreachable!()};
     assert_eq!(g.save_data.game_data.bag.item_quantity(ItemId::Potion),expected.0);assert_eq!(g.save_data.game_data.pc_items.item_quantity(ItemId::Potion),expected.1);
-    if cursor==2 {assert_eq!(g.pc_screen.as_ref().unwrap().phase(),PcPhase::TossConfirm);}
+    if cursor==2 {
+     let pc=g.pc_screen.as_ref().unwrap();
+     assert_eq!(pc.phase(),PcPhase::Message);
+     assert_eq!(pc.message_underlay(),Some(PcPhase::ItemList));
+    }
     assert!(!save_path.exists());
    }
    if let Some(root)=capture{std::fs::write(root.join(&context).join("frames.json"),serde_json::to_vec_pretty(&rows).unwrap()).unwrap();}
@@ -13986,6 +14062,10 @@ use reset_counter::SoftResetCounter;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/bike_shop_no_delay_tests.rs"]
 mod bike_shop_no_delay_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/field_reward_text_tests.rs"]
+mod field_reward_text_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/pidgey_field_cry_audio_tests.rs"]

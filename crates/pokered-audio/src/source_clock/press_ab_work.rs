@@ -7,6 +7,230 @@ use super::audio_output_work::{
 };
 
 pub const SOURCE_PRESS_AB_ID: u8 = 144;
+pub const SOURCE_SWAP_ID: u8 = 174;
+pub const SOURCE_START_MENU_ID: u8 = 143;
+
+pub(crate) fn source_noise_id(native_id: u8, data: &[u8]) -> Option<u8> {
+    let source_id = if native_id == crate::sfx_data::SfxId::StartMenu as u8 {
+        SOURCE_START_MENU_ID
+    } else if (1..=19).contains(&native_id) {
+        native_id
+    } else {
+        return None;
+    };
+    (super::press_ab_instructions::PressAbInstructions::noise_data(source_id) == Some(data))
+        .then_some(source_id)
+}
+
+pub(crate) fn source_pulse_id(channel: usize, native_id: u8, data: &[u8]) -> Option<u8> {
+    use crate::sfx_data::{self, SfxId};
+    match (channel, native_id) {
+        (4, id) if id == SfxId::PressAB as u8 && data == sfx_data::SFX_PRESS_AB_CH5 => {
+            Some(SOURCE_PRESS_AB_ID)
+        }
+        (4, id) if id == SfxId::Swap as u8 && data == sfx_data::SFX_SWAP_CH5 => {
+            Some(SOURCE_SWAP_ID)
+        }
+        (5, id) if id == SfxId::Swap as u8 && data == sfx_data::SFX_SWAP_CH6 => {
+            Some(SOURCE_SWAP_ID)
+        }
+        _ => None,
+    }
+}
+
+pub(crate) fn swap_next_note(
+    bank: u8,
+    channel: u8,
+    source_sfx_id: u8,
+    data: &[u8],
+    ptr: usize,
+    fraction: u8,
+    duty: u8,
+) -> Option<PressAbWork> {
+    use super::press_ab_instructions::{PressAbInput, PressAbInstructions, PressAbOutcome};
+    let mut work = PressAbInstructions::new_swap(
+        PressAbInput {
+            bank,
+            source_sfx_id,
+            ptr,
+            fraction,
+            duty,
+            flags1: 4,
+            flags2: 0,
+            note_speed: 1,
+            sfx_tempo: 0x100,
+            vibrato_reload: 0,
+        },
+        channel,
+        data,
+    )?;
+    while !work.try_step(data, |_| Ok::<_, ()>(())).ok()? {}
+    Some(match work.result()? {
+        PressAbOutcome::Note {
+            next_ptr,
+            fraction,
+            delay,
+            duty,
+            envelope,
+            frequency,
+            ..
+        } => PressAbWork {
+            cycles: work.cycles(),
+            next_ptr,
+            delay,
+            fraction,
+            duty,
+            envelope,
+            frequency,
+            ended: false,
+        },
+        PressAbOutcome::End {
+            next_ptr,
+            fraction,
+            duty,
+            ..
+        } => PressAbWork {
+            cycles: work.cycles(),
+            next_ptr,
+            delay: 0,
+            fraction,
+            duty,
+            envelope: 0,
+            frequency: 0,
+            ended: true,
+        },
+    })
+}
+
+/// Canonical percussion SFX work. CHAN8 uses fixed tempo and one frequency
+/// byte; CHAN5's current ID still selects the common non-cry tail.
+pub fn noise_next_note(
+    instrument: u8,
+    data: &[u8],
+    ptr: usize,
+    fraction: u8,
+    source_sfx_id: u8,
+) -> Option<PressAbWork> {
+    if !matches!(source_sfx_id, 0 | SOURCE_PRESS_AB_ID | SOURCE_SWAP_ID)
+        || data != super::press_ab_instructions::PressAbInstructions::noise_data(instrument)?
+        || ptr % 3 != 0
+        || ptr >= data.len()
+    {
+        return None;
+    }
+    if data[ptr] == 0xff {
+        return Some(PressAbWork {
+            cycles: super::audio_work::noise_channel_end_work_with_sfx(source_sfx_id)?,
+            next_ptr: ptr + 1,
+            delay: 0,
+            fraction,
+            duty: 0,
+            envelope: 0,
+            frequency: 0,
+            ended: true,
+        });
+    }
+    let get = next_music_byte_work_cycles();
+    let (length, first) = multiply_add_work(1, u16::from((data[ptr] & 15) + 1), 0);
+    let (delay, second) = multiply_add_work(length as u8, 0x100, fraction);
+    let entry = 12 + 8 + 8 + 12 + 8 + 8 + 12 + 8 + 16 + 16 + 24;
+    let dispatch = 24
+        + get
+        + 4
+        + 8
+        + 16
+        + 8
+        + 16
+        + 8
+        + 16
+        + 8
+        + 8
+        + 16
+        + 4
+        + 8
+        + 12
+        + 8
+        + 12
+        + 8
+        + 12
+        + 7 * (8 + 12)
+        + 8
+        + 8
+        + 12
+        + 8
+        + 8
+        + 4
+        + 8
+        + 8
+        + 8
+        + 12
+        + 8
+        + 12
+        + 8
+        + 24;
+    let length_prefix = 4 + 16 + 8 + 4 + 8 + 4 + 4 + 12 + 8 + 8 + 4 + 24;
+    let noise_tempo = 4 + 8 + 12 + 8 + 8 + 8 + 12;
+    let second_prefix = 4 + 8 + 12 + 8 + 8 + 24;
+    let store = 4 + 4 + 12 + 8 + 8 + 4 + 12 + 8 + 8 + 12 + 8 + 12;
+    let return_sfx = 8 + 12 + 8 + 12 + 8 + 12 + 16;
+    let pointer = register_pointer_work_cycles();
+    let frequency = u16::from(data[ptr + 2]);
+    let output = 4
+        + 8
+        + 12
+        + 8
+        + 8
+        + 4
+        + 4
+        + 8
+        + 24
+        + pointer
+        + 8
+        + 24
+        + get
+        + 4
+        + 8
+        + 24
+        + pointer
+        + 8
+        + 24
+        + get
+        + 4
+        + 4
+        + 8
+        + 8
+        + 12
+        + 4
+        + 16
+        + 24
+        + duty_and_length_work_cycles(7)?
+        + 24
+        + enable_channel_work_cycles(7, false)?
+        + 12
+        + 24
+        + wave_frequency_work(7, source_sfx_id, 0, frequency)?.1
+        + 16
+        + 16;
+    Some(PressAbWork {
+        cycles: entry
+            + dispatch
+            + length_prefix
+            + first
+            + noise_tempo
+            + second_prefix
+            + second
+            + store
+            + return_sfx
+            + output,
+        next_ptr: ptr + 3,
+        delay: (delay >> 8) as u8,
+        fraction: delay as u8,
+        duty: 0,
+        envelope: data[ptr + 1],
+        frequency,
+        ended: false,
+    })
+}
 
 /// Canonical percussion SFX work. CHAN8 uses fixed tempo and one frequency
 /// byte; CHAN5's current ID still selects the common non-cry tail.

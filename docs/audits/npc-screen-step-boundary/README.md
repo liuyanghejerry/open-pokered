@@ -1,5 +1,8 @@
 # Ordinary NPC screen-edge step rejection
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 On Route 1, approach from (5,19) to (5,20) while the ordinary youngster is at (5,24). Before the fix, frame 1109 starts an outward Down stride (counter 0 → 16). The destination is then outside CheckSpriteAvailability, leaving the actor paused in that stride until the player approaches again.
 
 Original `InitializeSpriteScreenPosition` and `CanWalkOntoTile` reject this attempt before animation: YPixels=124; adding the alignment offset 4 and direction delta 1 produces 129, outside the `<128` limit. X uses `<144`. Calculations use byte wrapping and nibble swapping. Scripted movement bypasses this boundary.

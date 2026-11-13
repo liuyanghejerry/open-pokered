@@ -1,5 +1,8 @@
 # NPC 可更新范围与移动
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 玩家在远处停留时，游走 NPC 原先仍会移动、转向并推进计数；走近后，其位置已经偏离原作。现在移动与图像生产共用原作的坐标范围检查。范围外的普通 NPC 暂停更新，脚本路径保留越界移动能力，地图对象的显示开关和槽位顺序保持原值。
 
 原作 `UpdateNPCSprite` 先调用 `CheckSpriteAvailability`，不可用时直接返回，随后才处理延迟、行走和待机。判断使用含四格边缘的原始字节坐标；脚本移动跳过坐标矩形检查。对照来源为 [pret/pokered 固定版本的 movement.asm](https://github.com/pret/pokered/blob/fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c/engine/overworld/movement.asm)，源码 SHA-256 收录于 manifest。

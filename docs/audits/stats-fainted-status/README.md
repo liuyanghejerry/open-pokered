@@ -1,5 +1,7 @@
 # Fainted status on the Stats page
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The Stats page now checks current HP before choosing the stored ailment's
 label. A Pokémon at HP 0 displays `FNT`, including when its saved status is
 Poison. At positive HP, no ailment still displays `OK` and Poison displays
@@ -37,7 +39,7 @@ identical PNG bytes and action traces. The rendered status is independently
 read from the original tilemap, and the screenshots were inspected. All
 88 party bytes remain unchanged in RAM and ordinary SAVE SRAM, including
 the healthy second member. All main SRAM checksums validate.
-[Source manifest](source-verification.json) records construction, inputs,
+[Source manifest](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/stats-fainted-status/source-verification.json) records construction, inputs,
 ROM/state/image/SRAM hashes and results.
 
 ![Original HP0 without ailment](../../screenshots/stats-fainted-status/zero-none-source.png)
@@ -83,7 +85,7 @@ Both repeat PNGs are identical within each build/case. Alive control PNGs
 are identical across builds. For each fainted case the pixel differences
 are confined to the status-value rectangle. Original images are separate
 reference evidence and do not replace these matched native captures.
-[Native manifest](native-verification.json) records binary/fixture/image/
+[Native manifest](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/stats-fainted-status/native-verification.json) records binary/fixture/image/
 SRAM hashes, flags, repeat checks and the pixel-difference bounds.
 
 前 / 后, each pair at native frame 428:

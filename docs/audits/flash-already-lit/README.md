@@ -1,3 +1,5 @@
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 FLASH 的 `AlreadyLit` 分支没有排队白屏，导致室外及已照亮洞穴里只有提示文字。现在沿用现有白屏续接，文字确认后白屏；第一次照亮洞穴和缺徽章拒绝的分支不变。
 
 原作依据是 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c` 的 `engine/menus/start_sub_menus.asm`：通过 BOULDER BADGE 检查后，`.flash` 无条件清零 `wMapPalOffset`、显示提示并调用 `GBPalWhiteOutWithDelay3`。`home/palettes.asm` 中该函数执行 `GBPalWhiteOut` 和 `DelayFrames(3)`。是否本来就在暗洞穴中，不决定是否调用它。

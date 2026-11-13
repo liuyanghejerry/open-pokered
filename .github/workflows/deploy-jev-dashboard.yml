@@ -31,10 +31,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Checkout leaves LFS pointers: hash them before pull replaces them with videos.
+      # Share the key between deploy workflows; prefix restores reuse unchanged objects.
+      - name: Restore cached Jev LFS objects
+        id: jev-lfs-cache
+        if: hashFiles('docs/jev-retrospective-assets/**/*.mp4') != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: .git/lfs/objects
+          key: ${{ runner.os }}-jev-lfs-v1-${{ hashFiles('docs/jev-retrospective-assets/**/*.mp4') }}
+          restore-keys: |
+            ${{ runner.os }}-jev-lfs-v1-
+
       - name: Restore dashboard videos from Git LFS
         run: |
           git lfs install --local
           git lfs pull --include='docs/jev-retrospective-assets/*.mp4,docs/jev-retrospective-assets/full-run/*full.mp4,docs/jev-retrospective-assets/full-run/script-*failure.mp4,docs/jev-retrospective-assets/full-run/script-moon-navigation.mp4,docs/jev-retrospective-assets/full-run/script-original-machine-boot.mp4'
+      # Keep the pointer-based key and save even if a later publication step fails.
+      - name: Save Jev LFS objects before publication
+        if: steps.jev-lfs-cache.outputs.cache-primary-key != '' && steps.jev-lfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .git/lfs/objects
+          key: ${{ steps.jev-lfs-cache.outputs.cache-primary-key }}
+
       - name: Restore the existing game and editor
         env:
           GH_TOKEN: ${{ github.token }}

@@ -1,5 +1,7 @@
 # GBA map scroll instruction placement
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 Move the existing DMA cache scroll helper to the existing IWRAM block. This split PR was originally based on master `31b1eda` and is now rebased onto master `dcdc038` and changes only one linker selection rule. Function implementations, fonts, frame output, input handling and gameplay are unchanged. No new screenshot pair is required for instruction placement alone.
 
 The verification JSON and evidence archive below are retained historical measurements from the larger #144 branch. Their source/ELF hashes identify that context; they are **not** measurements of this new master-based split. In particular, the larger branch's gameplay gates do not apply to this isolated change. This split must pass its own exact-head GBA production build, unchanged performance budgets and other CI before merge.

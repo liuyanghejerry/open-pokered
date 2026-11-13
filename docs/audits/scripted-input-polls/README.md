@@ -1,5 +1,8 @@
 # Physical START during simulated walking
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 During S.S. Anne's two-step departure walk, holding START from the first
 stride through the second incorrectly opened the native START menu afterward.
 The original stays on the map: `JoypadOverworld` calls `Joypad` at each stride

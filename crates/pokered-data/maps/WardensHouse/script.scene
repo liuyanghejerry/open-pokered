@@ -11,39 +11,54 @@ game_scene WardensHouse {
     @trigger(map = "WardensHouse", npc = 1)
     @if (getFlag("EVENT_GOT_HM04")) {
       // Already received HM04 — explanation / hint dialogue.
-      @speaker("") {
-        @t("WARDEN: HM04 teaches\nSTRENGTH!\n\nIt lets POKeMON move\nboulders when you're out-\nside of battle.\n\nOh yes, did you find SECRET\nHOUSE in SAFARI ZONE?\n\nIf you do, you win an HM!\n\nI hear it's the rare SURF\nHM.", "园长：HM04 教授怪力！\n\n它能让宝可梦移动巨石，在战斗\n之外也能做到。\n\n对了，你找到狩猎地带里的秘密\n小屋了吗？\n\n如果找到了，就能得到HM！\n\n听说那是稀有的冲浪HM。")
-      }
+      printFieldTextParts([
+        @t("WARDEN: HM04 teaches\nSTRENGTH!", "园长：HM04 教授怪力！"),
+        @t("It lets POKeMON move\nboulders when you're out-\nside of battle.", "它能让宝可梦移动巨石，在战斗\n之外也能做到。"),
+        @t("Oh yes, did you find SECRET\nHOUSE in SAFARI ZONE?", "对了，你找到狩猎地带里的秘密\n小屋了吗？"),
+        @t("If you do, you win an HM!", "如果找到了，就能得到HM！"),
+        @t("I hear it's the rare SURF\nHM.", "听说那是稀有的冲浪HM。")
+      ], false)
+      acknowledgeFieldText()
     } @else {
       @if (hasItem("GOLD_TEETH")) {
         // Hand over the GOLD TEETH, then reward HM04.
-        showItemDialogue(t("<PLAYER> gave the GOLD TEETH\nto the WARDEN!", "<PLAYER>把金牙交给了园长！"))
-        @speaker("") { @t("The WARDEN popped\nin his teeth!", "园长装上了牙齿！") }
+        printItemFieldText(t("<PLAYER> gave the GOLD TEETH\nto the WARDEN!", "<PLAYER>把金牙交给了园长！"), "SFX_GET_ITEM_1")
+        continueFieldTextParts([
+          @t("The WARDEN popped\nin his teeth!", "园长装上了牙齿！")
+        ], "prompt")
         takeItem("GOLD_TEETH", 1)
         setFlag("EVENT_GAVE_GOLD_TEETH")
-        @speaker("") {
-          @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
-        }
+        printFieldTextParts([
+          @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.", "园长：谢谢，孩子！没人能听懂\n我说的话。"),
+          @t("I couldn't work that way.\nLet me give you something\nfor your trouble.", "那样我无法工作。让我给你一点\n东西作为答谢。")
+        ], "prompt")
         given = giveItem("HM04", 1)
         @if (given) {
+          printItemFieldText(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"), "SFX_GET_ITEM_1")
           setFlag("EVENT_GOT_HM04")
-          showItemDialogue(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"))
         } @else {
-          @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
+          printFieldTextParts([
+            @t("Your pack is stuffed full!", "你的背包塞满了！")
+          ], false)
         }
+        acknowledgeFieldText()
       } @else {
         @if (getFlag("EVENT_GAVE_GOLD_TEETH")) {
           // Already gave the teeth (e.g. bag was full last time) — give HM04 now.
-          @speaker("") {
-            @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.\n\nI couldn't work that way.\nLet me give you something\nfor your trouble.", "园长：谢谢，孩子！没人能听懂\n我说的话。\n\n那样我无法工作。让我给你一点\n东西作为答谢。")
-          }
+          printFieldTextParts([
+            @t("WARDEN: Thanks, kid! No one\ncould understand a word that\nI said.", "园长：谢谢，孩子！没人能听懂\n我说的话。"),
+            @t("I couldn't work that way.\nLet me give you something\nfor your trouble.", "那样我无法工作。让我给你一点\n东西作为答谢。")
+          ], "prompt")
           given = giveItem("HM04", 1)
           @if (given) {
+            printItemFieldText(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"), "SFX_GET_ITEM_1")
             setFlag("EVENT_GOT_HM04")
-            showItemDialogue(t("<PLAYER> received HM04!", "<PLAYER>得到了 HM04！"))
           } @else {
-            @speaker("") { @t("Your pack is stuffed full!", "你的背包塞满了！") }
+            printFieldTextParts([
+              @t("Your pack is stuffed full!", "你的背包塞满了！")
+            ], false)
           }
+          acknowledgeFieldText()
         } @else {
           // No teeth: the WARDEN can only mumble.
           @speaker("") {

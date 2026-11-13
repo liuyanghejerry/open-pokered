@@ -1,5 +1,8 @@
 # Next-note arithmetic instruction progress
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The Hall of Fame PC picture-loading issue remains **confirmed unfixed / unwired**.
 These arithmetic cursors are a component of the pending full audio body. They are
 not a complete next-note update, Game hookup, IRQ completion, or APU timing proof.

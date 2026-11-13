@@ -9,6 +9,7 @@ use super::far_pattern_copy_work::{LOADED_ROM_BANK, ROM_BANK_SELECT, ROM_BANK_TE
 use super::field_restore::CopyFormat;
 
 pub const AUTO_BG_ENABLED: u16 = 0xffba;
+pub const AUTO_BG_PORTION: u16 = 0xffbb;
 pub const COPY_SIZE: u16 = 0xffc6;
 pub const DOUBLE_SIZE: u16 = 0xffcb;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

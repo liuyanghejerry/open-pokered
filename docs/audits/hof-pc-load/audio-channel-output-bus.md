@@ -1,5 +1,8 @@
 # Channel-helper APU stores
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 HoF PC picture loading remains **confirmed unfixed / unwired**. These retained
 helper continuations now expose their actual APU stores alongside the owning CPU
 instruction. They do not yet schedule a complete audio frame or drive Game/APU.

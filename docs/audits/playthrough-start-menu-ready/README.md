@@ -1,5 +1,8 @@
 # Wait for START-menu input readiness in the playthrough driver
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 The latest master first-clear run stopped at m18 on Route9 (4,8): the driver
 expected a party menu but was still in START at the remembered Pokemon cursor.
 The run passed m01–m17; source and binary hashes remained unchanged. It is a

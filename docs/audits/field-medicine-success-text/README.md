@@ -1,5 +1,7 @@
 # 场外用药提示：当前发布身份
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 #261 head `a9321f2111a073b295b04df65fb3e8d2a84d1f76` 实际合入 `f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7` 后整合实时master `f9ef53e21e053c95537c4d73a0389ab1d4a5e9d7`。本轮受测源码为 `744ebbb9b891db442488f79f3d22f462e698956d`，2173完整compiler、2691项docs外NUL blob/模式/literal symlink、702GFX逐项等同发布源码。相对该master只有bag_use.rs与dialog_text.rs；261单帧地图指纹优化作为已合入依赖保留。
 
 1008七阶段实际全部通过：debug app330/39忽略、default app319/37忽略、determinism10及GBA build/fix/record/compare的31项不变门槛。core2934保留原a07a/v5运行，只经1901core/data/vendor/Cargo组件证明；不是新core运行、不是旧整份2173与744相等。见publication-1010.json与publication-1010-logs.zip。仍需新发布head的三个远程工作流全绿。

@@ -110,6 +110,34 @@ fn actual_apu_accesses_match_both_original_banks_at_every_resumable_instruction(
 }
 
 #[test]
+fn swap_pulses_match_original_instructions_and_apu_accesses_with_press_ab_overlap() {
+    #[derive(serde::Deserialize)]
+    struct SwapCase {
+        common: Case,
+        channel: u8,
+    }
+    #[derive(serde::Deserialize)]
+    struct SwapFixture {
+        rom_sha256: String,
+        cases: Vec<SwapCase>,
+    }
+    let fixture: SwapFixture =
+        serde_json::from_str(include_str!("swap_sfx_bus_golden.json")).unwrap();
+    assert_eq!(
+        fixture.rom_sha256,
+        "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b"
+    );
+    assert_eq!(fixture.cases.len(), 30);
+    let count = check_cases(fixture.cases.into_iter().map(|case| {
+        let work =
+            PressAbInstructions::new_swap(case.common.input, case.channel, &case.common.data)
+                .unwrap();
+        (case.common, work)
+    }));
+    assert_eq!(count, 126);
+}
+
+#[test]
 fn noise_instruments_match_original_notes_endings_and_every_apu_access() {
     #[derive(serde::Deserialize)]
     struct NoiseCase {
@@ -176,6 +204,75 @@ fn noise_instruments_match_original_notes_endings_and_every_apu_access() {
         (case.common, work)
     }));
     assert_eq!(count, 864);
+}
+
+#[test]
+fn start_menu_noise_matches_original_notes_endings_and_every_apu_access() {
+    #[derive(serde::Deserialize)]
+    struct NoiseCase {
+        common: Case,
+        instrument: u8,
+        panning: u8,
+    }
+    #[derive(serde::Deserialize)]
+    struct NoiseFixture {
+        cases: Vec<NoiseCase>,
+    }
+    let fixture: NoiseFixture =
+        serde_json::from_str(include_str!("start_menu_sfx_bus_golden.json")).unwrap();
+    assert_eq!(fixture.cases.len(), 12);
+    let count = check_cases(fixture.cases.into_iter().map(|case| {
+        let aggregate = crate::source_clock::press_ab_work::noise_next_note(
+            case.instrument,
+            &case.common.data,
+            case.common.input.ptr,
+            case.common.input.fraction,
+            case.common.input.source_sfx_id,
+        )
+        .unwrap();
+        assert_eq!(
+            aggregate.cycles,
+            case.common
+                .trace
+                .iter()
+                .map(|(_, t)| u32::from(*t))
+                .sum::<u32>()
+        );
+        match case.common.result {
+            PressAbOutcome::Note {
+                next_ptr,
+                fraction,
+                delay,
+                envelope,
+                frequency,
+                ..
+            } => {
+                assert_eq!(
+                    (
+                        aggregate.next_ptr,
+                        aggregate.fraction,
+                        aggregate.delay,
+                        aggregate.envelope,
+                        aggregate.frequency,
+                        aggregate.ended
+                    ),
+                    (next_ptr, fraction, delay, envelope, frequency, false)
+                );
+            }
+            PressAbOutcome::End { next_ptr, .. } => {
+                assert_eq!((aggregate.next_ptr, aggregate.ended), (next_ptr, true))
+            }
+        }
+        let work = PressAbInstructions::new_noise(
+            case.common.input,
+            case.instrument,
+            case.panning,
+            &case.common.data,
+        )
+        .unwrap();
+        (case.common, work)
+    }));
+    assert_eq!(count, 64);
 }
 
 fn check_cases(cases: impl Iterator<Item = (Case, PressAbInstructions)>) -> usize {

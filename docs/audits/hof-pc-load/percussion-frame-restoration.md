@@ -1,5 +1,7 @@
 # Field-restoration percussion work (2026-10-26)
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
 This documents an unfinished local FLASH candidate, not a merged game fix or an
 ordinary-input gameplay verification. The game branch is
 `fix/flash-restoration-current-master`, based on `cabaa9af`; game master was

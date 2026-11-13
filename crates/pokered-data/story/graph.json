@@ -4889,6 +4889,11 @@
       "kind": "triggered_at"
     },
     {
+      "from": "script:Museum1F:talkScientist1",
+      "to": "object:MUSEUM_1F_OBJ_5",
+      "kind": "hides"
+    },
+    {
       "from": "script:Museum1F:talkScientist2",
       "to": "map:Museum1F",
       "kind": "triggered_at"

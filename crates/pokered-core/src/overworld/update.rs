@@ -973,6 +973,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             self.active_script_effect=Some(script_bridge::ScriptEffect::StaticEncounter { state });
             Some(done)
         } else { None };
+        let reward_text_tick_done = if matches!(self.active_script_effect, Some(script_bridge::ScriptEffect::FieldRewardText { .. })) {
+            let Some(script_bridge::ScriptEffect::FieldRewardText { mut state }) = self.active_script_effect.take() else { unreachable!() };
+            let done = self.tick_field_reward_text(&mut state);
+            self.active_script_effect = Some(script_bridge::ScriptEffect::FieldRewardText { state });
+            Some(done)
+        } else { None };
         let field_cry_tick_done = if matches!(self.active_script_effect,
             Some(script_bridge::ScriptEffect::FieldCry { .. })) {
             let Some(script_bridge::ScriptEffect::FieldCry { mut state }) = self.active_script_effect.take() else { unreachable!() };
@@ -1035,6 +1041,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
             let owns_print_window = matches!(effect,
                 script_bridge::ScriptEffect::PrintFieldText { retain_window: true, .. }
                 | script_bridge::ScriptEffect::PokecenterNurseOffer { .. }
+                | script_bridge::ScriptEffect::FieldRewardText { .. }
                 | script_bridge::ScriptEffect::PokecenterFarewell { .. });
             if let script_bridge::ScriptEffect::GivePokemon { species, flow, .. } = effect {
                 if flow.is_none() {
@@ -1053,7 +1060,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 Vec::new()
             };
             let mut departure_apply_objects = false;
-            let done = if let Some(done) = bill_tick_done.or(nurse_tick_done).or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
+            let done = if let Some(done) = bill_tick_done.or(nurse_tick_done).or(static_tick_done).or(yes_no_tick_done).or(rating_tick_done).or(jigglypuff_tick_done).or(field_cry_tick_done).or(reward_text_tick_done).or(cry_continuation_tick_done).or(bike_tick_done).or(owned_text_done) { done }
 
             else if let script_bridge::ScriptEffect::SilphRocketDeparture { state } = effect {
                 use super::silph_departure::DepartureTick;
@@ -2950,6 +2957,20 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 .map(|(slot, npc)| (slot, npc.walk_counter)).collect();
             self.player_presentation.tick(self.state.player.facing, self.state.walk_counter != 0 || self.player_moving_direction != 0);
             self.npc_presentation.update_images_before_movement(&self.npc_states);
+            // An empty map has no sprite priority bytes to sample. Avoid
+            // resolving tileset/blockset data on every such field frame.
+            if !self.npc_states.is_empty() {
+                let blockset = pokered_data::blockset_data::blockset_for_tileset(map.tileset);
+                self.npc_presentation.sample_grass_priorities(&self.npc_states,
+                    tileset_data::get_grass_tile(map.tileset), |x, y| {
+                        if x < 0 || y < 0 || x >= i32::from(map.width) * 4
+                            || y >= i32::from(map.height) * 4 { return None; }
+                        let block = *map.blocks.get((y / 4) as usize * usize::from(map.width)
+                            + (x / 4) as usize)?;
+                        blockset.get(usize::from(block) * 16
+                            + (y % 4) as usize * 4 + (x % 4) as usize).copied()
+                    });
+            }
             if matches!(&self.active_script_effect, Some(script_bridge::ScriptEffect::FollowNpc {
                 phase: script_bridge::FollowNpcPhase::Following { .. }, ..
             })) {

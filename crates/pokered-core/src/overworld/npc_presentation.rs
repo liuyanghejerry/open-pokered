@@ -14,6 +14,9 @@ pub struct NpcImage {
     pub scripted_frame: Option<u8>,
     #[serde(default = "image_visible_default")]
     pub visible: bool,
+    /// Retained OAM priority for the lower two sprite tiles.
+    #[serde(default)]
+    pub grass_priority: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct NpcScreenPose {
@@ -60,6 +63,7 @@ impl NpcPresentation {
             phase: super::presentation::npc_walk_anim_phase(n.walk_counter),
             scripted_frame: n.scripted_frame,
             visible: n.visible,
+            grass_priority: false,
         }
     }
     pub fn publish(
@@ -190,7 +194,9 @@ impl NpcPresentation {
     }
     pub fn started_wander_image(&mut self, slot: usize, n: &NpcRuntimeState) {
         if let Some(image) = self.images.get_mut(slot) {
+            let grass_priority = image.grass_priority;
             *image = Self::image(n);
+            image.grass_priority = grass_priority;
         }
     }
     pub fn available(&self, n: &NpcRuntimeState) -> bool {
@@ -204,7 +210,30 @@ impl NpcPresentation {
             } else if !self.player_walking || (n.walk_counter == 0 && n.delay_counter != 0) {
                 // UpdateSpriteMovementDelay reaches NotYetMoving, which
                 // refreshes its standing image even during a player step.
+                let grass_priority = image.grass_priority;
                 *image = Self::image(n);
+                image.grass_priority = grass_priority;
+            }
+        }
+    }
+    /// CheckSpriteAvailability retains the top-right footprint tile after
+    /// testing all four cells. Sample the old pixel registers before moving
+    /// the NPC; a player step keeps the previous grass-priority byte.
+    pub(super) fn sample_grass_priorities(
+        &mut self,
+        npcs: &[NpcRuntimeState],
+        grass: Option<u8>,
+        mut tile_at: impl FnMut(i32, i32) -> Option<u8>,
+    ) {
+        if self.player_walking { return; }
+        let origin = (i32::from(self.scan_player.0) * 2 - 8,
+            i32::from(self.scan_player.1) * 2 - 8);
+        for ((image, npc), pixels) in self.images.iter_mut().zip(npcs).zip(&self.oam_pixels) {
+            if !npc.visible || !image.visible { continue; }
+            let x = origin.0 + i32::from(pixels.x / 8) + 1;
+            let y = origin.1 + i32::from((pixels.y.wrapping_add(4) & 0xf0) / 8);
+            if let Some(tile) = tile_at(x, y) {
+                image.grass_priority = Some(tile) == grass;
             }
         }
     }
@@ -219,7 +248,8 @@ impl NpcPresentation {
                 clock.1 = (clock.1 + 1) & 3;
             }
             *image = NpcImage { facing: n.facing, phase: clock.1,
-                scripted_frame: n.scripted_frame, visible: n.visible };
+                scripted_frame: n.scripted_frame, visible: n.visible,
+                grass_priority: image.grass_priority };
         }
     }
     pub fn refresh_font_images(&mut self, npcs: &[NpcRuntimeState]) {
@@ -230,7 +260,23 @@ impl NpcPresentation {
                 phase: 0,
                 scripted_frame: n.scripted_frame,
                 visible: image.visible && n.visible,
+                grass_priority: image.grass_priority,
             };
+        }
+    }
+    /// UpdateNPCSprite with the font loaded: test the four logical background
+    /// cells, then NotYetMoving resets the image phase without moving the NPC.
+    /// Shadow and displayed OAM remain owned by PrepareOAMData and DMA.
+    pub fn restore_menu_images(&mut self, npcs: &[NpcRuntimeState], mut covered: impl FnMut(u8, u8) -> bool) {
+        for ((image, npc), pixels) in self.images.iter_mut().zip(npcs).zip(&self.oam_pixels) {
+            let x = pixels.x / 8;
+            let y = (pixels.y.wrapping_add(4) & 0xf0) / 8;
+            image.visible = npc.visible && Self::coordinate_available(npc, self.scan_player)
+                && !covered(x, y + 1) && !covered(x + 1, y + 1)
+                && !covered(x, y) && !covered(x + 1, y);
+            image.facing = npc.facing;
+            image.phase = 0;
+            image.scripted_frame = npc.scripted_frame;
         }
     }
     /// ClearSprites changes the shadow page, not the currently published pose.
@@ -268,6 +314,96 @@ impl NpcPresentation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn menu_images_reappear_only_when_all_four_logical_cells_are_uncovered() {
+        let map = MapId::ViridianCity;
+        let mut npc = human();
+        npc.x = 20;
+        npc.y = 30;
+        npc.walk_counter = 0;
+        let mut base = NpcPresentation::default();
+        base.publish(map, &[npc.clone()], (20, 30), (0, 0), false);
+        let published = base.pose(map, 0);
+        let registers = base.current_oam_input(map, 0).unwrap().1;
+        base.suppress_current_images();
+        npc.walk_counter = 4;
+        for hidden_cell in [None, Some((8, 8)), Some((9, 8)), Some((8, 9)), Some((9, 9))] {
+            let mut presentation = base.clone();
+            presentation.restore_menu_images(&[npc.clone()], |x, y| hidden_cell == Some((x, y)));
+            let (image, pixels) = presentation.current_oam_input(map, 0).unwrap();
+            assert_eq!(image.visible, hidden_cell.is_none());
+            assert_eq!(image.phase, 0);
+            assert_eq!(pixels, registers);
+            assert_eq!(presentation.pose(map, 0), published, "UpdateSprites must not publish OAM");
+        }
+        assert_eq!(npc.walk_counter, 4);
+    }
+
+    #[test]
+    fn grass_priority_samples_old_top_right_pixels_and_keeps_both_publication_latches() {
+        let map = MapId::ViridianCity;
+        let mut npc = human();
+        npc.walk_counter = 0;
+        npc.delay_counter = 127;
+        npc.visible = true;
+        let mut p = NpcPresentation::default();
+        p.publish(map, &[npc.clone()], (20, 30), (0, 0), false);
+        // The old screen registers are (96,60): source GetTileSpriteStandsOn
+        // and the final CheckSpriteAvailability read select world (45,60).
+        npc.x += 1;
+        p.sample_grass_priorities(&[npc.clone()], Some(0x52), |x, y| {
+            assert_eq!((x, y), (45, 60));
+            Some(0x52)
+        });
+        assert!(p.images[0].grass_priority);
+        assert!(!p.pose(map, 0).unwrap().image.grass_priority);
+        p.publish(map, &[npc.clone()], (20, 30), (0, 0), false);
+        assert!(!p.pose(map, 0).unwrap().image.grass_priority);
+        p.publish(map, &[npc.clone()], (20, 30), (0, 0), true);
+        assert!(p.pose(map, 0).unwrap().image.grass_priority);
+        p.update_images_before_movement(&[npc.clone()]);
+        p.sample_grass_priorities(&[npc.clone()], None, |_, _| panic!("player step must retain priority"));
+        p.refresh_font_images(&[npc]);
+        assert!(p.images[0].grass_priority);
+        let decoded: NpcPresentation = serde_json::from_slice(&serde_json::to_vec(&p).unwrap()).unwrap();
+        assert_eq!(decoded, p);
+        let mut legacy = serde_json::to_value(&p).unwrap();
+        for image in legacy["images"].as_array_mut().unwrap() {
+            image.as_object_mut().unwrap().remove("grass_priority");
+        }
+        for name in ["poses", "shadow_poses"] {
+            for pose in legacy[name].as_array_mut().unwrap() {
+                pose["image"].as_object_mut().unwrap().remove("grass_priority");
+            }
+        }
+        let legacy: NpcPresentation = serde_json::from_value(legacy).unwrap();
+        assert!(!legacy.images[0].grass_priority);
+        assert!(!legacy.pose(map, 0).unwrap().image.grass_priority);
+    }
+
+    #[test]
+    fn grass_priority_uses_eight_pixel_x_and_sixteen_pixel_y_boundaries() {
+        for (direction, remaining, expected) in [
+            (Direction::Right, 9, (45, 60)), (Direction::Right, 8, (46, 60)),
+            (Direction::Down, 1, (45, 60)), (Direction::Up, 15, (45, 58)),
+        ] {
+            let mut npc = human();
+            npc.visible = true;
+            npc.facing = direction;
+            npc.step_direction = Some(direction);
+            npc.walk_counter = remaining;
+            let mut p = NpcPresentation::default();
+            p.publish(MapId::ViridianCity, &[npc.clone()], (20, 30), (0, 0), false);
+            let mut sampled = false;
+            p.sample_grass_priorities(&[npc], Some(0x52), |x, y| {
+                assert_eq!((x, y), expected, "{direction:?} remaining={remaining}");
+                sampled = true;
+                Some(0x52)
+            });
+            assert!(sampled && p.images[0].grass_priority);
+        }
+    }
+
     #[test]
     fn cleared_npc_hardware_waits_for_both_publication_stages_and_roundtrips() {
         let mut n = human();
@@ -814,6 +950,13 @@ impl PlayerPresentation {
         self.displayed = None;
     }
     pub fn suppress_current_image(&mut self) { self.current = None; }
+    /// UpdatePlayerSprite's stationary font path changes the current image,
+    /// not either OAM publication latch.
+    pub fn restore_menu_image(&mut self, facing: Direction, covered: bool) {
+        self.intra = 0;
+        self.phase = 0;
+        self.current = (!covered).then_some(PlayerImage { facing, phase: 0 });
+    }
     pub fn image_suppressed(&self, map: MapId) -> bool {
         self.map == Some(map) && self.oam_cleared && self.displayed.is_none()
     }

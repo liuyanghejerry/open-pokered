@@ -297,6 +297,13 @@ fn actual_start_menu_directions_and_start_do_not_play_press_ab() {
     session.wait_menu_input(&[]);
     let sound = session.step(&[GbButton::Start]);
     assert!(!sound.busy);
+    for _ in 0..120 {
+        if session.game.state.screen == GameScreen::Overworld { break; }
+        let sound = session.step(&[]);
+        // Map percussion legitimately occupies CHAN8 during this longer
+        // wait; it leaves the UI SFX ID zero and is not a confirmation cue.
+        assert_eq!(sound.id, 0, "map restoration must not start a UI sound: {sound:?}");
+    }
     assert_eq!(session.game.state.screen, GameScreen::Overworld);
     session.assert_fixture_unchanged();
 }

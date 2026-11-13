@@ -1,5 +1,10 @@
 # 全招式动画安排检查与修复
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 日期：2026-09-28。当前工作分支 `fix/gba-frame-pacing`，HEAD `403514b7ba0e1cba9e8c74af3787aaa3d9bd5389` 加工作区修改。
 
 ## 结果与范围
@@ -32,7 +37,7 @@
 
 ## 证据
 
-- [165 招式逐项结果](isolated/summary.json)、[连续逐帧指标](isolated/frame-traces.json.gz)。每条窗口从 `MoveAnimation` 入口到 `.animationFinished`，无时间重采样；repeat=2。
+- [165 招式逐项结果](isolated/summary.json)、连续逐帧指标（历史运行记录，已清理）。每条窗口从 `MoveAnimation` 入口到 `.animationFinished`，无时间重采样；repeat=2。
 - `feedback-1` 至 `feedback-6` 各有 `summary.json` 和 `frame-traces.json.gz`。用 Growl 命令流后强制指定反馈类型，校准共用反馈，**不是声称叫声实战会使用全部六种反馈**。
 - 原版正式 Red ROM SHA1 `ea9bcae617fdf159b045185467ae58b2e4a48b9a`，原版源码 `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c`。DEBUG Blue ROM 仅布置状态，比较帧来自正式 Red ROM。PyBoy 每次前进一个仿真帧，当前版每次一次 update/draw，160×144。
 - 校准双方均为 Rhydon Lv20；原版初始对话残留“FURY ATTACK”，两端保持相同底图。被钩子执行的动画 ID 是 45，见轨迹中的 resolved animation ID；不能用底图中的旧对话判断正在执行的动画。
@@ -49,7 +54,7 @@
 - `cargo test -p pokered-core --lib`：2592 passed。
 - `cargo test -p pokered-app --lib render::battle::tests`：24 passed；包括全部 330 个实战回合及上述定向回归。
 - Native release、GBA release 构建通过；ROM 及 SuperFW 配套补丁摘要见 [builds.json](builds.json)。
-- GBA 模拟器内存压力检查 13/13 通过，包括 330 招式、248 地图、满 PC / SRAM，见 [gba-memory.log](gba-memory.log)。先前 100,000 帧截断的试跑只完成 3/13，不计入通过；延长捕获窗口后完整通过。
+- GBA 模拟器内存压力检查 13/13 通过，包括 330 招式、248 地图、满 PC / SRAM，见 [gba-memory.log](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/2026-09-28-all-move-sequencing/gba-memory.log)。先前 100,000 帧截断的试跑只完成 3/13，不计入通过；延长捕获窗口后完整通过。
 - Python 工具语法检查与 `git diff --check` 通过。
 
 ```sh

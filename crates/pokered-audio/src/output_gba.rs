@@ -153,6 +153,21 @@ impl AudioOutput {
         result
     }
 
+    /// Start or resume one retained IRQ frame while holding the audio borrow.
+    pub fn service_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
+        &self,
+        cursor: &mut Option<alloc::boxed::Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<crate::source_clock::frame_instructions::FrameStepError<B::Error>>,
+    > {
+        let result = self.manager.borrow_mut().service_source_audio_frame(cursor, bank, mute, bus);
+        if result.is_ok() { self.last_frame.set(clock_now()); }
+        result
+    }
+
     pub fn update_frame(&self) {
         let now = clock_now();
         let elapsed = now.wrapping_sub(self.last_frame.replace(now));

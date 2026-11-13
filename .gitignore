@@ -131,3 +131,21 @@ crates/pokered-gba/target/
 # kimi-code local config (machine-specific absolute paths)
 .kimi-code/
 
+# Generated audit recordings and run receipts are temporary, not source fixtures.
+.task-tmp/
+/docs/audits/**/*.json.gz
+/docs/audits/**/*.jsonl.gz
+/docs/audits/**/*.log.gz
+/docs/audits/**/*.tar.gz
+/docs/audits/**/*.jsonl
+/docs/audits/**/*.log
+/docs/audits/**/*verification*.json
+/docs/audits/**/portable-replay-check.json
+/docs/audits/**/SHA256SUMS
+
+# Bundled recordings and one-run build/source receipts.
+/docs/audits/**/*.zip
+/docs/audits/**/*-integration.json
+/docs/audits/**/*-build-identity.json
+/docs/audits/**/build-checks.json
+/docs/audits/**/checksums.json

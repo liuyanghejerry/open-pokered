@@ -1,5 +1,7 @@
 # Battle medicine keeps the live party result
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 The complete PR also retains the full party view for no-effect medicine results and uses the original living-Revive caption. See [the negative-result audit](../battle-medicine-no-effect/README.md) for the current `f078` integration, literal-master before captures, full tests and root review. The positive-stage identities, captures and counts below remain historical evidence with their original labels.
 
 The battle medicine target picker and successful result now use the full party view. The selected member's updated HP/status remains visible, including a bench member. Result text names that member and uses the original Potion, status-cure or Revive message. The existing HP/status effect and one-item consumption still occur once, and the result waits for the source's literal `DelayFrames(50)` followed by A/B before `EnemyFreeTurnAfterItem`.

@@ -1,65 +1,112 @@
 # AGENTS.md
 
-Guidance for AI agents contributing to this repository. Complements `CLAUDE.md`
-(architecture, build/test commands, debug CLI) — read both.
+## Project
 
-## PR policy: visual changes require before/after screenshots
+A portable Rust reimplementation of Pokémon Red/Blue game logic. The generic
+JRPG engine (`dotzuki-*`) lives in a separate repository, consumed through pinned
+Cargo Git dependencies. Make generic engine changes there.
 
-Every PR that changes on-screen output must attach **before/after comparison
-screenshots** to the PR description. This applies to all contributors, human
-or agent. A change counts as visual if a player would see anything different
-in a frame.
+## Code navigation
 
-**In scope** — screenshots required:
+If `.codegraph/` exists, use `codegraph_explore` or
+`codegraph explore "<symbol names or question>"` before searching or reading code.
+If both are unavailable, state that and use `rg` and direct reads.
 
-- Menu, dialogue, textbox, and HUD layout (including `.gui` layout changes)
-- Fonts, glyphs, and text rendering; tile/GFX assets
-- Palettes, colors, fades, and flashes
-- Battle and overworld rendering, animations, transitions
-- Any renderer/frontend code whose behavior shows up on screen
+## Development workflows
 
-**Out of scope** — no screenshots needed: pure game logic (damage calc, AI,
-scripting, save format), tooling, docs, tests, audio.
+The repository root is the main Cargo workspace; `crates/pokered-gba` is a
+standalone workspace. Fetch graphics assets before building.
 
-**How to capture:**
+See the [development guide](docs/development.md):
 
-1. Check out the base branch (`master`), capture the "before" frame.
-2. Check out the PR branch, capture the **same screen and frame** as "after",
-   so the diff is attributable to the PR alone.
-3. Prefer the headless screenshot CLI (no window, deterministic):
-   ```bash
-   cargo run --release --bin pokered-app -- screenshot --screen battle -o before.png -f 10
-   cargo run --release --bin pokered-app -- screenshot-all -o shots/
-   ```
-   Screen targets: `copyright title main-menu oak overworld battle
-   start-menu options save`. For input-dependent states, drive with the debug
-   server (`run --headless --debug-port` + `press_sequence` / `step_frames`;
-   see `.agents/skills/pokered-debug`).
-4. Commit the captures under `docs/screenshots/` (existing convention) and
-   embed both images in the PR body, labeled `前` / `后` (before / after).
-   For regression fixes, the "before" shot doubles as the bug evidence.
-5. **Embed the images with absolute raw URLs — never relative paths.**
-   GitHub does **not** resolve relative image paths in a PR body against the
-   PR branch: while the PNG only exists on the PR (not yet on `master`),
-   `![前](docs/screenshots/x.png)` renders as a broken image in the PR
-   conversation. Reference the raw URL pinned to your branch instead:
+- [Workspace and assets](docs/development.md#workspace-location)
+- [Builds and tests: native, WASM, GBA](docs/development.md#common-commands)
+- [Debugging, snapshots, screenshots, TCP control](docs/development.md#debug-cli)
+- [Agent experiments and autonomous playthroughs](docs/development.md#agent-experiments)
+- [Editor, publishing, data verification](docs/development.md#tooling-outside-cargo)
 
-   ```markdown
-   ![前](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/<branch>/docs/screenshots/x-before.png)
-   ```
+## Architecture and data
 
-   When drafting the body with `gh pr create --body`, rewrite the paths
-   mechanically before submitting (and re-check after any `gh pr edit`):
+- **Text:** use Fusion Pixel fonts on every frontend and in diagnostic captures;
+  account for font metrics in layouts. Original font tiles, PK/MN ligatures,
+  and naming underscores must not render text. Non-text graphics are exempt.
+  See [font policy](crates/pokered-renderer/fonts/POKERED.md) and [font notices](crates/pokered-renderer/fonts/NOTICE.md).
+- **Shared runtime:** frontends, including TUI, share `pokered-app::PokemonGame`.
+  Keep game flow and rendering fixes there. `RenderSession` owns caches and
+  `Reuse` / `Full` / `Damage` decisions; hosts handle platform presentation.
+  Incremental rendering must match full rendering.
+- **Core:** keep `pokered-core` deterministic and free of I/O, GPU, and platform
+  calls. Rendering, audio output, and windowing belong outside core.
+- **Battles:** production uses `StackDriver`, adapted in
+  `pokered-core/src/battle/pokered_rules/runtime.rs`. Legacy battle code is a
+  test oracle; do not add behavior there.
+- **Layouts:** prefer v2 (`pokered_ui::v2`) for new screens. Static/GBA and
+  dynamic/editor rendering share `.gui` definitions in
+  `crates/pokered-data/ui_layouts/`, including cursor positions and glyphs.
+  Keep runtime bindings semantic, without duplicated layout coordinates.
+- **Scripts:** map `script.scene` files are authoritative. Use the native AST
+  interpreter by default; `script-boa` is a development/fallback feature.
+  `script.js.bak` files are historical backups.
+- **Generated data:** edit map JSON, `.scene`, and `.gui` sources, then regenerate
+  through `pokered-data/build.rs`; do not hand-edit generated tables, ASTs, or layouts.
+- **Translations:** use `@t("english", "中文")` and preserve English text
+  byte-for-byte. Check with `scripts/verify_scene_translations.py` against HEAD.
+- **Fidelity:** preserve deliberate Gen I bugs, including Focus Energy's reduced
+  crit rate and the 1/256 miss. Consult core tests before changing behavior.
+- **Saves:** initialize boot/CONTINUE from the loaded `SaveData` and
+  `SaveFileSummary`. Verify persistence in an independent process.
 
-   ```bash
-   BRANCH=$(git branch --show-current)
-   perl -pe "s{\]\(docs/screenshots/}{](https://raw.githubusercontent.com/liuyanghejerry/open-pokered/$BRANCH/docs/screenshots/}g" body.draft.md > body.md
-   gh pr create --body-file body.md
-   ```
+## Cross-platform constraints
 
-   Branch-pinned links are the review-time source of truth; the merged
-   copies under `docs/screenshots/` on `master` remain the long-term
-   archive even if the branch (and its pinned URLs) is later deleted.
+- Keep all `dotzuki-*` revisions synchronized across the main and GBA workspaces;
+  update both lockfiles. Manifests and lockfiles define the current revision.
+  Do not commit local path overrides.
+- Preserve shared crates' `no_std` support; gate hosted dependencies and I/O.
+  Use `pokered-platform` primitives. Bare-metal synchronization requires a
+  single-threaded executor, no interrupt access, and no recursive locking or
+  initialization. See [platform contracts](crates/pokered-platform/src/lib.rs).
+- Preserve GBA performance and memory budgets. Change the pinned toolchain or
+  reviewed baseline only with measurements and rationale, never to bypass a
+  failing gate. Diagnostic ROM features are not shipping defaults. Follow
+  [GBA CI](.github/workflows/gba-performance.yml) and
+  [performance guidance](docs/gba-performance.md).
 
-If a changed surface genuinely cannot be captured headless, say so explicitly
-in the PR description instead of skipping the rule silently.
+## Validation and evidence
+
+- **Generated audit output:** do not commit raw frame recordings, compressed logs,
+  run reports, or checksum inventories. Keep them in `.task-tmp/` or outside the
+  repository, then delete them after validation. Retain concise findings, replay
+  generators, necessary regression-test fixtures, and required before/after
+  screenshots. Do not use `git add -f` to bypass these artifact exclusions.
+
+- Select coverage using [playthrough-regression](.agents/skills/playthrough-regression/SKILL.md):
+  crate tests, affected subsystem scenarios/BDD, and progression playthroughs.
+  Report tested targets, features, commands, and limits. Host checks do not
+  validate WASM/GBA; per-crate passes do not resolve workspace feature failures.
+- A fresh full clear requires NEW GAME, Hall of Fame, credits, ending autosave,
+  and CONTINUE in a separate process. Label seeded, assisted, and resumed runs.
+- For timing/audio changes, retain original-source provenance and reproducible
+  trace/fixture generators. Unit traces or cycle totals alone do not prove
+  runtime, animation, or physical-audio equivalence. State remaining gaps;
+  see this [scoped evidence example](docs/audits/hof-pc-load/audio-live-bus-integration.md).
+
+## Project skills
+
+Use relevant skills in `.agents/skills/`; `.claude/skills` links to that directory.
+
+- [pokered-debug](.agents/skills/pokered-debug/SKILL.md) — CLI and TCP debugging.
+- [key-animation-differential](.agents/skills/key-animation-differential/SKILL.md) — original/current animation comparisons.
+- [typesafe-ai](.agents/skills/typesafe-ai/SKILL.md) — typed semantic judgments.
+- [pokered-save-editor](.agents/skills/pokered-save-editor/SKILL.md) — snapshots and save editing.
+- [visual-verify](.agents/skills/visual-verify/SKILL.md) — healing-machine rendering and OAM coordinates.
+- [playthrough-regression](.agents/skills/playthrough-regression/SKILL.md) — regression coverage and checkpoint semantics.
+
+## Visual PR evidence
+
+Every PR changing on-screen output requires matched **before/after screenshots**.
+This covers layouts, fonts/assets, palettes, rendering, animations, and transitions;
+changes without on-screen effects are exempt.
+
+Commit captures under `docs/screenshots/`, label them `前` / `后`, and embed
+absolute raw URLs pinned to the PR branch. Explain any surface that cannot be
+captured headless. Follow the [capture and embedding procedure](docs/development.md#visual-pr-evidence).

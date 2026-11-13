@@ -1,5 +1,7 @@
 # m01–m10 回归与主动发现 MVP
 
+> 归档说明（2026-11-11）：原始录制包、逐帧日志和运行报告已从当前源码树移除。下文保留历史结论与验证范围；旧附件可在清理前的 Git 历史中查阅。复测请使用保留的脚本，将生成文件写到临时目录。
+
 本轮只测试击败 Brock 之前可接触的内容，与其他 worktree 的 m11+ 主线扩展独立。
 两条路线都复用现有游戏和调试接口；本轮不修改游戏行为，也不把新发现直接更新成“正确基线”。
 
@@ -32,7 +34,7 @@
 
 两路均以固定 pret revision `fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c` 为参照；
 视觉端构建 ROM 的 SHA-1 精确匹配 Red USA/Europe。
-主线日志保存在 [m10-baseline.log](audits/regression-discovery-mvp/m10-baseline.log)。
+主线日志保存在 [m10-baseline.log](https://github.com/liuyanghejerry/open-pokered/blob/c58ee10cefa5e9d5d25aa4dec4276e52d73e4b1c/docs/audits/regression-discovery-mvp/m10-baseline.log)。
 此次新增的是 AI 选题、编写并调试的可复用探针，不是运行时持续自主探索的代理，
 也没有完成全流程逐帧同步；这两个更大目标应在 MVP 的确定性基础上继续扩展。
 

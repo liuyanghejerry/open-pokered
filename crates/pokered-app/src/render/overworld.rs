@@ -202,6 +202,26 @@ fn blit_priority_bg_tile_clipped(fb: &mut FrameBuffer, tile: &Tile, x: i32, y: i
     }
 }
 
+fn npc_draw_position(screen: &OverworldScreen, slot: usize, view_tx: i32, view_ty: i32,
+    sub_x: i32, sub_y: i32) -> Option<(i32, i32)> {
+    let npc = screen.npc_states.get(slot)?;
+    let push = screen.boulder_push.filter(|p| p.npc_index == slot);
+    if push.is_none() {
+        if let Some(pose) = screen.npc_presentation.pose(screen.state.current_map, slot) {
+            return Some((pose.x, pose.y));
+        }
+    }
+    let (x, y) = push.map_or((npc.x, npc.y), |p| p.origin);
+    let pixels = push.map_or_else(|| npc_walk_pixel_offset(npc.walk_counter),
+        |p| i32::from(p.visible_slide_pixels()));
+    let (dx, dy) = match push.map_or_else(|| npc.walking_direction(), |p| p.direction) {
+        Direction::Down => (0, pixels), Direction::Up => (0, -pixels),
+        Direction::Left => (-pixels, 0), Direction::Right => (pixels, 0),
+    };
+    Some((i32::from(x) * 16 - view_tx * 8 + dx - sub_x,
+        i32::from(y) * 16 - view_ty * 8 + ACTOR_CELL_Y_OFFSET + dy - sub_y))
+}
+
 /// Script-driven entry overlay (`showPokedexEntry`): resolve the scene species
 /// token and draw the real dex data (`pokered_data::pokedex`, ported from
 /// `data/pokemon/dex_entries.asm`) via the shared entry renderer. The host's
@@ -1378,6 +1398,33 @@ fn draw_overworld_impl(
             }
             fb.clear(Rgba::WHITE);
         }
+        // Retain map color indices before drawing any actors. Only opaque
+        // lower-half NPC pixels may yield to nonzero background pixels;
+        // transparent pixels must keep any other actor already drawn there.
+        let uses_grass = |slot| screen.npc_presentation.pose(screen.state.current_map, slot)
+            .is_some_and(|pose| pose.visible && pose.image.grass_priority);
+        let priority_count = if hide_actors { 0 } else {
+            (0..screen.npc_states.len()).filter(|&slot| uses_grass(slot)).count()
+        };
+        let mut grass_underlays = Vec::with_capacity(priority_count);
+        if priority_count != 0 {
+            for slot in 0..screen.npc_states.len() {
+                if !uses_grass(slot) { continue; }
+                let Some((x, y)) = npc_draw_position(screen, slot, view_origin_tx, view_origin_ty,
+                    view_sub_x, view_sub_y) else { continue; };
+                let mut pixels = [GbColor::White; 128];
+                for py in 0..8usize {
+                    for px in 0..16usize {
+                        let (sx, sy) = (x + px as i32, y + 8 + py as i32);
+                        if sx >= 0 && sy >= 0 {
+                            pixels[py * 16 + px] = fb.get_index(sx as u32, sy as u32)
+                                .unwrap_or(GbColor::White);
+                        }
+                    }
+                }
+                grass_underlays.push((slot, pixels));
+            }
+        }
         // Keep smoke candidates until actor opacity and raw X are known.
         // DMG priority is X first, OAM order only when X ties.
         let mut smoke_pixels: Option<Vec<(usize,u8,Rgba)>> = None;
@@ -1767,28 +1814,8 @@ fn draw_overworld_impl(
                 let base_tile = frame * 4;
                 let tpr = cached.source_size.0 / TILE_SIZE;
 
-                let push=screen.boulder_push.filter(|p|p.npc_index==npc_slot);
-                let (npc_x,npc_y)=push.map_or((npc.x,npc.y),|p|p.origin);
-                let npc_screen_tx = npc_x as i32 * 2 - view_origin_tx;
-                let npc_screen_ty = npc_y as i32 * 2 - view_origin_ty;
-
-                // Smooth pixel interpolation during movement. Classic GB
-                // walkers advance 1px/frame over their 16-frame step
-                // (16px/tile) — unlike the player's 2px/frame over 8.
-                let (walk_dx, walk_dy) = if push.is_some() || npc.walk_counter > 0 {
-                    let px=push.map_or_else(||npc_walk_pixel_offset(npc.walk_counter),|p|i32::from(p.visible_slide_pixels()));
-                    match push.map_or_else(||npc.walking_direction(),|p|p.direction) {
-                        Direction::Down => (0i32, px),
-                        Direction::Up => (0, -px),
-                        Direction::Left => (-px, 0),
-                        Direction::Right => (px, 0),
-                    }
-                } else {
-                    (0, 0)
-                };
-
-                let npc_px_x = pose.map_or(npc_screen_tx * TILE_SIZE as i32 + walk_dx - view_sub_x, |p| p.x);
-                let npc_px_y = pose.map_or(npc_screen_ty * TILE_SIZE as i32 + ACTOR_CELL_Y_OFFSET + walk_dy - view_sub_y, |p| p.y);
+                let Some((npc_px_x, npc_px_y)) = npc_draw_position(screen, npc_slot,
+                    view_origin_tx, view_origin_ty, view_sub_x, view_sub_y) else { continue; };
 
                 let sprite_size = (TILE_SIZE * 2) as i32;
                 if npc_px_x <= -sprite_size
@@ -1823,6 +1850,21 @@ fn draw_overworld_impl(
                         let ty = npc_px_y + (row * TILE_SIZE) as i32;
                         mask_smoke_with_actor(&mut smoke_pixels,fb,ts.get(tile_idx),tx,ty,&sprite_pal,flip_h);
                         blit_tile_clipped_flipped(fb, ts, tile_idx, tx, ty, &sprite_pal, flip_h);
+                        if row == 1 {
+                            if let Some((_, underlay)) = grass_underlays.iter().find(|(slot, _)| *slot == npc_slot) {
+                                let tile = ts.get(tile_idx);
+                                for py in 0..8usize {
+                                    for px in 0..8usize {
+                                        if tile.pixels[py][if flip_h { 7 - px } else { px }] == 0 { continue; }
+                                        let color = underlay[py * 16 + col as usize * 8 + px];
+                                        let (sx, sy) = (tx + px as i32, ty + py as i32);
+                                        if color != GbColor::White && sx >= 0 && sy >= 0 {
+                                            fb.set_pixel_index(sx as u32, sy as u32, color);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3621,4 +3663,4 @@ mod fly_arrival_tests {
 mod silph_departure_tests;
 
 mod map_tile_snapshot;
-pub(crate) use map_tile_snapshot::{stationary_map_tile_snapshot, MapTileSnapshot, MapTileSnapshotError};
+pub(crate) use map_tile_snapshot::{stationary_map_tile_snapshot, surrounding_map_tile_snapshot, MapTileSnapshot, MapTileSnapshotError};

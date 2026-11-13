@@ -17,6 +17,7 @@ pub enum PatternSource {
     Font,
     TextBox,
     Flower(u8),
+    Tileset(u8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -531,6 +532,8 @@ pub enum RestoreOperation {
     VideoPatternCopy(PatternCopy),
     UpdateSprites,
     LoadScreenBuffer2,
+    /// HoldTextDisplayOpen waits for held A, rather than a fresh press edge.
+    WaitForARelease,
     DefaultPaletteCommand,
     SetWindowY(u8),
     LoadMapPalettes,
@@ -549,10 +552,11 @@ pub enum RestoreOperation {
     EnterColdSpriteBank,
     LeaveColdSpriteBank,
     LoadCurrentMapView,
+    RebuildMenuMapView,
     Return,
 }
 
-/// Exact finite call order of StartMenu_Pokemon.flash → .goBackToMap.
+/// Finite call order shared by StartMenu_Pokemon.exitMenu and .goBackToMap.
 /// A child is advanced through `operation`/`child_returned`; no operation is
 /// considered complete because of elapsed host frames or a known scene total.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -563,6 +567,103 @@ pub struct FieldRestoreWork {
 }
 impl FieldRestoreWork {
     pub fn new(input: RestoreInput) -> Self {
+        Self::for_destination(input, false)
+    }
+
+    /// Party cancellation restores buffer2 and keeps the font loaded for
+    /// RedisplayStartMenu. It does not execute CloseTextDisplay's second map
+    /// sprite reload, NPC-facing restoration or bare-map redraw.
+    pub fn party_return(input: RestoreInput) -> Self {
+        Self::for_destination(input, true)
+    }
+
+    /// CloseStartMenu reloads textbox patterns, then enters CloseTextDisplay.
+    /// It does not white out the palettes or reload the entire party font.
+    pub fn close_start_menu(input: RestoreInput) -> Self {
+        let mut operations = vec![RestoreOperation::VideoPatternCopy(PatternCopy {
+            source: PatternSource::TextBox,
+            source_offset: 0,
+            destination: 0x9600,
+            tiles: 32,
+            format: CopyFormat::TwoBpp,
+        })];
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
+    /// StartMenu_SaveReset restores buffer2 and closes the text display.
+    /// A cancelled TwoOptionMenu first completes its 15-frame choice delay.
+    pub fn save_return(input: RestoreInput, cancelled: bool) -> Self {
+        use RestoreOperation::*;
+        let mut operations = Vec::new();
+        if cancelled { operations.push(WaitVBlanks(15)); }
+        operations.extend([LoadScreenBuffer2, WaitForARelease]);
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
+    /// StartMenu_Item and StartMenu_Option restore buffer2 and the textbox
+    /// patterns before RedisplayStartMenu, without a palette or map reload.
+    pub fn submenu_return(input: RestoreInput) -> Self {
+        use RestoreOperation::*;
+        let operations = vec![
+            LoadScreenBuffer2,
+            VideoPatternCopy(PatternCopy {
+                source: PatternSource::TextBox,
+                source_offset: 0,
+                destination: 0x9600,
+                tiles: 32,
+                format: CopyFormat::TwoBpp,
+            }),
+            UpdateSprites,
+            // RedisplayStartMenu -> HandleMenuInput -> Delay3. Keep the
+            // same IRQ owner alive while its restored tilemap reaches VRAM.
+            WaitVBlanks(3),
+            Return,
+        ];
+        Self { input, operations, next: 0 }
+    }
+
+    /// ShowPokedexMenu and StartMenu_TrainerInfo have different callers of
+    /// ReloadMapData: only the card reloads the font, only the list delays
+    /// three frames before AND after the map reload. Neither closes START.
+    pub fn fullscreen_menu_return(input: RestoreInput, tileset: u8, trainer: bool) -> Self {
+        use RestoreOperation::*;
+        let mut operations = vec![WhitePalettes];
+        if trainer {
+            operations.extend([
+                VideoPatternCopy(PatternCopy {
+                    source: PatternSource::Font, source_offset: 0,
+                    destination: 0x8800, tiles: 128, format: CopyFormat::OneBppDouble,
+                }),
+                LoadScreenBuffer2,
+            ]);
+        } else {
+            operations.push(WaitVBlanks(3));
+        }
+        operations.extend([
+            DefaultPaletteCommand,
+            DisableLcd,
+            BulkPatternCopy(PatternCopy {
+                source: PatternSource::TextBox, source_offset: 0,
+                destination: 0x9600, tiles: 32, format: CopyFormat::TwoBpp,
+            }),
+            RebuildMenuMapView,
+            LoadCurrentMapView,
+            BulkPatternCopy(PatternCopy {
+                source: PatternSource::Tileset(tileset), source_offset: 0,
+                destination: 0x9000, tiles: 96, format: CopyFormat::TwoBpp,
+            }),
+            EnableLcd,
+        ]);
+        if !trainer { operations.extend([LoadScreenBuffer2, WaitVBlanks(3)]); }
+        operations.push(LoadMapPalettes);
+        if !trainer { operations.push(UpdateSprites); }
+        operations.push(Return);
+        Self { input, operations, next: 0 }
+    }
+
+    fn for_destination(input: RestoreInput, start_menu: bool) -> Self {
         use RestoreOperation::*;
         let first = SpritePatternPlan::new(&input.pictures, false);
         let mut operations = vec![
@@ -605,6 +706,18 @@ impl FieldRestoreWork {
             }),
             DefaultPaletteCommand,
             WaitVBlanks(3),
+        ]);
+        if start_menu {
+            operations.extend([LoadMapPalettes, UpdateSprites, Return]);
+            return Self { input, operations, next: 0 };
+        }
+        Self::close_text_display(&input, &mut operations);
+        Self { input, operations, next: 0 }
+    }
+
+    fn close_text_display(input: &RestoreInput, operations: &mut Vec<RestoreOperation>) {
+        use RestoreOperation::*;
+        operations.extend([
             SetWindowY(144),
             WaitVBlanks(1),
             LoadMapPalettes,
@@ -621,7 +734,7 @@ impl FieldRestoreWork {
                 operations.push(SetSpriteSet(set));
             }
             operations.push(InstallSpriteSlots(second.slots));
-            Self::sprite_copies(&input, font_loaded, second.copies, &mut operations);
+            Self::sprite_copies(input, font_loaded, second.copies, operations);
         } else {
             // InitOutsideMapSprites.skipLoadingSpriteSet bypasses only the
             // transfers. Its storeVRAMSlotsLoop still remaps all live raw
@@ -632,14 +745,9 @@ impl FieldRestoreWork {
         }
         operations.push(SetFontFlags(input.font_flags & !1));
         if !input.fly_warp {
-            Self::player_copies(input.player_source, &mut operations);
+            Self::player_copies(input.player_source, operations);
         }
         operations.extend([LoadCurrentMapView, UpdateSprites, Return]);
-        Self {
-            input,
-            operations,
-            next: 0,
-        }
     }
     fn player_copies(source: PatternSource, operations: &mut Vec<RestoreOperation>) {
         for (source_offset, destination) in [(0, 0x8000), (192, 0x8800)] {
@@ -846,6 +954,74 @@ mod tests {
             font_flags: 1,
             player_source: PatternSource::WalkingPlayer,
             fly_warp: false,
+        }
+    }
+
+    #[test]
+    fn save_return_closes_text_without_start_menu_textbox_reload() {
+        use RestoreOperation::*;
+        for cancelled in [false, true] {
+            let work = FieldRestoreWork::save_return(input(), cancelled);
+            let prefix = usize::from(cancelled);
+            if cancelled { assert_eq!(work.operations[0], WaitVBlanks(15)); }
+            assert_eq!(&work.operations[prefix..prefix + 2], &[LoadScreenBuffer2, WaitForARelease]);
+            assert!(matches!(work.operations[prefix + 2], SetWindowY(144)));
+            assert!(!work.operations.iter().any(|op| matches!(op,
+                WhitePalettes | DisableLcd | VideoPatternCopy(PatternCopy {
+                    source: PatternSource::TextBox | PatternSource::Font, .. }))));
+            assert_eq!(work.operations.last(), Some(&Return));
+        }
+    }
+
+    #[test]
+    fn start_close_reloads_textbox_and_upper_sprites_without_a_party_whiteout() {
+        use RestoreOperation::*;
+        for outdoor in [None, Some(3)] {
+            let mut raw = input();
+            raw.outdoor_set = outdoor;
+            let work = FieldRestoreWork::close_start_menu(raw);
+            assert_eq!(work.operations[0], VideoPatternCopy(PatternCopy {
+                source: PatternSource::TextBox,
+                source_offset: 0,
+                destination: 0x9600,
+                tiles: 32,
+                format: CopyFormat::TwoBpp,
+            }));
+            assert!(!work.operations.iter().any(|op| matches!(op,
+                WhitePalettes | DisableLcd | ClearShadowOam | BulkPatternCopy(_)
+                | VideoPatternCopy(PatternCopy { source: PatternSource::Font, .. }))));
+            let sprite_copies: Vec<_> = work.operations.iter().filter_map(|op| match op {
+                VideoPatternCopy(copy) if matches!(copy.source, PatternSource::Sprite(_)) => Some(copy),
+                _ => None,
+            }).collect();
+            assert_eq!(sprite_copies.len(), 2, "duplicate raw IDs and still pictures need no upper copy");
+            assert!(sprite_copies.iter().all(|copy| copy.source_offset == 192 && copy.tiles == 12));
+            assert_eq!(&work.operations[work.operations.len() - 3..],
+                &[LoadCurrentMapView, UpdateSprites, Return]);
+        }
+    }
+
+    #[test]
+    fn party_return_keeps_the_shared_reload_but_not_close_text_display() {
+        for outdoor in [None, Some(3)] {
+            let mut raw = input();
+            raw.outdoor_set = outdoor;
+            let field = FieldRestoreWork::new(raw.clone());
+            let menu = FieldRestoreWork::party_return(raw);
+            let prefix_end = field.operations.iter().position(|op| {
+                matches!(op, RestoreOperation::SetWindowY(144))
+            }).unwrap();
+            assert_eq!(&menu.operations[..prefix_end], &field.operations[..prefix_end]);
+            assert_eq!(&menu.operations[prefix_end..], &[
+                RestoreOperation::LoadMapPalettes,
+                RestoreOperation::UpdateSprites,
+                RestoreOperation::Return,
+            ]);
+            assert!(!menu.operations.iter().any(|op| matches!(op,
+                RestoreOperation::RestoreNpcFacing | RestoreOperation::LoadCurrentMapView
+                | RestoreOperation::SetAutoBg(false))));
+            assert_eq!(menu.operations.iter().filter(|op| matches!(op,
+                RestoreOperation::InstallSpriteSlots(_))).count(), 1);
         }
     }
 

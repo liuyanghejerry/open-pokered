@@ -327,7 +327,7 @@ impl PitchSlideInstructions {
         } else {
             state.current_fraction.overflowing_add(state.step_fraction)
         };
-        let step = state.step + u16::from(carry);
+        let step = u16::from(state.step) + u16::from(carry);
         let next = if decreasing {
             state.current.wrapping_sub(step)
         } else {

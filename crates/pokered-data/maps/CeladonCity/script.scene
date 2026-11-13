@@ -46,21 +46,27 @@ game_scene CeladonCity {
   @storyline("talkGramps3") {
     @trigger(map = "CeladonCity", npc = 5)
     @if (getFlag("EVENT_GOT_TM41")) {
-      @speaker("") {
-        @t("TM41 teaches SOFTBOILED!\n\nOnly one POKeMON can use it!\n\nThat POKeMON is CHANSEY!", "招式机41 传授生蛋！\n\n只有一只宝可梦能用它！\n\n那只宝可梦就是吉利蛋！")
-      }
+      printFieldTextParts([
+        @t("TM41 teaches SOFTBOILED!", "招式机41 传授生蛋！"),
+        @t("Only one POKeMON can use it!", "只有一只宝可梦能用它！"),
+        @t("That POKeMON is CHANSEY!", "那只宝可梦就是吉利蛋！")
+      ], false)
     } @else {
-      @speaker("") {
-        @t("Hello, there!\n\nI've seen you, but I never\nhad a chance to talk!\n\nHere's a gift for dropping\nby!", "你好啊！\n\n我见过你，但一直没机会和你说\n话！\n\n这是给你的见面礼！")
-      }
+      printFieldTextParts([
+        @t("Hello, there!", "你好啊！"),
+        @t("I've seen you, but I never\nhad a chance to talk!", "我见过你，但一直没机会和你说\n话！"),
+        @t("Here's a gift for dropping\nby!", "这是给你的见面礼！")
+      ], "prompt")
       given = giveItem("TM41", 1)
       @if (given) {
-        showItemDialogue(@t("<PLAYER> received TM41!", "<PLAYER>获得了招式机41！"), "SFX_GET_ITEM_1")
+        printItemFieldText(@t("<PLAYER> received TM41!", "<PLAYER>获得了招式机41！"), "SFX_GET_ITEM_1")
         setFlag("EVENT_GOT_TM41")
       } @else {
-        @speaker("") { @t("Oh, your pack is full of\nitems!", "哎呀，你的背包已经满了！") }
+        printFieldTextParts([@t("Oh, your pack is full of\nitems!", "哎呀，你的背包已经满了！")], false)
       }
     }
+    // PrintText returns after the sound; DisplayTextID then waits for input.
+    acknowledgeFieldText()
   }
 
   // ── Fisher (npc 6) ─────────────────────────────────────────────────────

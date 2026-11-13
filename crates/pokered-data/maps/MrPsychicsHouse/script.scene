@@ -7,20 +7,24 @@ game_scene MrPsychicsHouse {
   @storyline("talkMrPsychic") {
     @trigger(map = "MrPsychicsHouse", npc = 1)
     @if (getFlag("EVENT_GOT_TM29")) {
-      @speaker("") {
-        @t("TM29 is PSYCHIC!\n\nIt can lower the target's\nSPECIAL abilities.", "TM29是精神强念！\n\n它能降低对手的特殊能力。")
-      }
+      printFieldTextParts([
+        @t("TM29 is PSYCHIC!", "TM29是精神强念！"),
+        @t("It can lower the target's\nSPECIAL abilities.", "它能降低对手的特殊能力。")
+      ], false)
     } @else {
-      @speaker("") {
-        @t("...Wait! Don't say a word!\n\nYou wanted this!", "……等等！别说话！\n\n你想要这个吧！")
-      }
+      printFieldTextParts([
+        @t("...Wait! Don't say a word!", "……等等！别说话！"),
+        @t("You wanted this!", "你想要这个吧！")
+      ], "prompt")
       given = giveItem("TM29", 1)
       @if (given) {
+        printItemFieldText(@t("<PLAYER> received TM29!", "<PLAYER>得到了 TM29！"), "SFX_GET_ITEM_1")
         setFlag("EVENT_GOT_TM29")
-        showItemDialogue(@t("<PLAYER> received TM29!", "<PLAYER>得到了 TM29！"), "SFX_GET_ITEM_1")
       } @else {
-        @speaker("") { @t("Where do you plan to put\nthis?", "你打算把它放在哪里？") }
+        printFieldTextParts([@t("Where do you plan to put\nthis?", "你打算把它放在哪里？")], false)
       }
     }
+    // The sound returns before the event is set and DisplayTextID waits.
+    acknowledgeFieldText()
   }
 }

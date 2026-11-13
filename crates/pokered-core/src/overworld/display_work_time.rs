@@ -65,6 +65,11 @@ pub struct DisplayWorkTime {
     shadow_oam: Vec<u8>,
     #[serde(default)]
     video_requests: super::video_request_ports::VideoRequestPorts,
+    /// LCD epoch at the last native transfer-control change or IRQ handoff.
+    /// Synchronous native UI publication advances AutoBG once per real edge;
+    /// keep idle runs lazy without resetting phase when a new caller attaches.
+    #[serde(default)]
+    native_bg_epoch: u64,
     /// Actual native caller/control effects. Missing old snapshot fields stay
     /// unknown until a caller writes them; default native boot projects1.
     #[serde(default)]
@@ -134,6 +139,7 @@ impl Default for DisplayWorkTime {
             check_each_display_interval: false,
             shadow_oam: vec![0; 160],
             video_requests: super::video_request_ports::VideoRequestPorts::default(),
+            native_bg_epoch: 0,
             sprite_updates_enabled: Some(1),
             legacy_party_sprite_owner: false,
             legacy_sprite_hide: None,
@@ -161,15 +167,61 @@ impl DisplayWorkTime {
     /// video request. Establish idle sizes/control only, never ROM addresses
     /// or a recovered original initialization/IRQ history.
     pub fn establish_native_video_idle(&mut self, enabled: u8) -> Result<(), DisplayWorkError> {
-        if self.active_vblank || self.vblank_dispatch_enabled { return Err(DisplayWorkError::InterruptBusy); }
-        use super::video_copy_caller_work::{AUTO_BG_ENABLED, COPY_SIZE, DOUBLE_SIZE};
-        for (port, value) in [(AUTO_BG_ENABLED, enabled), (COPY_SIZE, 0), (DOUBLE_SIZE, 0)] {
+        self.set_native_background_enabled(enabled)?;
+        use super::video_copy_caller_work::{COPY_SIZE, DOUBLE_SIZE};
+        for (port, value) in [(COPY_SIZE, 0), (DOUBLE_SIZE, 0)] {
             self.video_requests.write(port, value);
         }
         Ok(())
     }
+    /// Current native/source hAutoBGTransferPortion. Native publication uses
+    /// actual LCD edges, not grants, host draw calls or a menu-specific offset.
+    pub fn background_portion(&self) -> Option<u8> {
+        use super::video_copy_caller_work::{AUTO_BG_ENABLED, AUTO_BG_PORTION};
+        let portion = self.video_requests.read(AUTO_BG_PORTION)?;
+        if self.vblank_dispatch_enabled || self.video_requests.read(AUTO_BG_ENABLED)? == 0 {
+            return Some(portion);
+        }
+        let count = self.device.vblank_epoch().checked_sub(self.native_bg_epoch)?;
+        if count == 0 { return Some(portion); }
+        // AutoBgMapTransfer treats any value other than 0/1 as bottom.
+        let next = if portion < 2 { portion + 1 } else { 0 };
+        Some((next + ((count - 1) % 3) as u8) % 3)
+    }
+    fn materialize_native_background(&mut self) {
+        if let Some(portion) = self.background_portion() {
+            self.video_requests.write(super::video_copy_caller_work::AUTO_BG_PORTION, portion);
+        }
+        self.native_bg_epoch = self.device.vblank_epoch();
+    }
+    /// The synchronous renderer changes native UI ownership; source callers
+    /// instead write the same HRAM ports on their admitted instruction bus.
+    pub fn set_native_background_enabled(&mut self, enabled: u8) -> Result<(), DisplayWorkError> {
+        if self.active_vblank || self.vblank_dispatch_enabled { return Err(DisplayWorkError::InterruptBusy); }
+        use super::video_copy_caller_work::{AUTO_BG_ENABLED, AUTO_BG_PORTION};
+        self.materialize_native_background();
+        // Old snapshots did not retain this native projection. Seed it once
+        // at migration; subsequent callers must preserve the live value.
+        if self.video_requests.read(AUTO_BG_PORTION).is_none() {
+            self.video_requests.write(AUTO_BG_PORTION, 0);
+        }
+        self.video_requests.write(AUTO_BG_ENABLED, enabled);
+        Ok(())
+    }
     pub fn video_requests(&self) -> &super::video_request_ports::VideoRequestPorts {
         &self.video_requests
+    }
+
+    /// The synchronous native owner has already performed this update's
+    /// audio/timer work. A same-update handoff must not replay its retained
+    /// VBlank request. This acknowledges only that native-owned request: it
+    /// advances no time and records no source IRQ execution or RETI.
+    pub fn acknowledge_native_vblank(&mut self) -> Result<(), DisplayWorkError> {
+        if self.active_vblank || self.vblank_dispatch_enabled {
+            return Err(DisplayWorkError::InterruptBusy);
+        }
+        self.device.acknowledge_interrupt(1);
+        Ok(())
     }
 
     /// Actual write-point observations on this source instruction bus only.
@@ -213,6 +265,10 @@ impl DisplayWorkTime {
     /// Attach/detach the bounded IME-enabled, non-nested VBlank dispatcher.
     /// This neither accepts IF nor advances a suspended instruction.
     pub fn set_vblank_dispatch_enabled(&mut self, enabled: bool) {
+        if enabled != self.vblank_dispatch_enabled {
+            if enabled { self.materialize_native_background(); }
+            self.native_bg_epoch = self.device.vblank_epoch();
+        }
         self.vblank_dispatch_enabled = enabled;
     }
     pub fn pending_vblank_dispatch(&self) -> bool {
@@ -342,6 +398,9 @@ impl DisplayWorkTime {
 
     #[inline(always)]
     fn read_display_port(&self, port: u16) -> Result<u8, DisplayDeviceError> {
+        if port == super::video_copy_caller_work::AUTO_BG_PORTION {
+            return self.background_portion().ok_or(DisplayDeviceError::UnsupportedPort(port));
+        }
         if super::video_request_ports::VideoRequestPorts::contains(port) {
             return self.video_requests.read(port).ok_or(DisplayDeviceError::UnsupportedPort(port));
         }
@@ -631,6 +690,10 @@ impl DisplayWorkTime {
             }) => {
                 self.elapse_display_instruction(at_tcycle)?;
                 if super::video_request_ports::VideoRequestPorts::contains(port) {
+                    if !self.vblank_dispatch_enabled && matches!(port,
+                        super::video_copy_caller_work::AUTO_BG_ENABLED | super::video_copy_caller_work::AUTO_BG_PORTION) {
+                        self.materialize_native_background();
+                    }
                     self.video_requests.write(port, value);
                 } else if port == super::sprite_update_control_work::SPRITE_UPDATES_PORT {
                     self.sprite_updates_enabled = Some(value);
@@ -735,7 +798,9 @@ impl DisplayBus<'_> {
         }
         self.reserve()?;
         let result = (|| {
-            self.time.elapse_reserved(at_tcycle)?;
+            if at_tcycle != 0 {
+                self.time.elapse_reserved(at_tcycle)?;
+            }
             let result = access();
             self.time.elapse_reserved(tcycles - at_tcycle)?;
             Ok(result)
@@ -766,8 +831,47 @@ impl DisplayBus<'_> {
 #[cfg(test)]
 #[path = "display_external_irq_bus_tests.rs"]
 mod external_irq_bus_tests;
+#[cfg(test)]
+#[path = "display_shadow_oam_run_tests.rs"]
+mod shadow_oam_run_tests;
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
+    fn execute_shadow_oam_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        instructions: I,
+    ) -> Result<usize, Self::Error> {
+        if !self.time.active_vblank || self.time.device.dma_active()
+            || self.time.shadow_oam.len() != 160
+        {
+            return Ok(0);
+        }
+        let eligible = |i: &DisplayInstruction| match i.access {
+            None => true,
+            Some(DisplayAccess::Write { port, at_tcycle, .. }) =>
+                (0xc300..0xc3a0).contains(&port) && at_tcycle <= i.tcycles,
+            _ => false,
+        };
+        let mut instructions = instructions.peekable();
+        if !instructions.peek().is_some_and(eligible) { return Ok(0); }
+        self.reserve()?;
+        let available = self.time.remaining();
+        let (mut cycles, mut count) = (0u64, 0usize);
+        for instruction in instructions {
+            if cycles >= available || !eligible(&instruction) { break; }
+            if let Some(DisplayAccess::Write { port, value, .. }) = instruction.access {
+                self.time.shadow_oam[usize::from(port - 0xc300)] = value;
+            }
+            cycles = cycles.checked_add(u64::from(instruction.tcycles))
+                .expect("shadow OAM instruction run overflow");
+            count += 1;
+        }
+        // No instruction above starts DMA, writes display IO or permits a
+        // nested IRQ. LCD work reads hardware OAM, not this RAM page. Advance
+        // its real edges once against unchanged hardware state, then expose
+        // exactly the RAM bytes/cursor of the last admitted instruction.
+        self.time.elapse(cycles)?;
+        Ok(count)
+    }
     fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
         &mut self,
         instructions: I,
@@ -896,6 +1000,7 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
                 self.patterns
                     .write(destination, if low { de as u8 } else { (de >> 8) as u8 })
                     .expect("validated same-page VRAM destination");
+                self.time.device.record_native_background_write(destination);
             }
             destination = if last_pair && write + 1 == writes {
                 destination.wrapping_add(1)
@@ -1061,6 +1166,7 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                     self.patterns
                         .write(destination, value)
                         .map_err(DisplayWorkError::Resource)?;
+                    self.time.device.record_native_background_write(destination);
                 }
                 at_tcycle
             }
@@ -1080,6 +1186,50 @@ mod tests {
         pattern_copy_work::PatternCopyDataWork,
     };
     use super::*;
+    #[test]
+    fn native_background_phase_tracks_lcd_edges_and_survives_irq_and_snapshot_handoffs() {
+        use super::super::video_copy_caller_work::AUTO_BG_PORTION;
+        use super::super::vblank_return_work::VBlankReturnBus;
+        let mut time = DisplayWorkTime::default();
+        time.set_native_background_enabled(1).unwrap();
+        time.begin_native_update();
+        assert_eq!(time.background_portion(), Some(0), "grant is not a transfer");
+        time.idle_to_target().unwrap();
+        assert_eq!(time.background_portion(), Some(1));
+        time.set_native_background_enabled(0).unwrap();
+        for _ in 0..4 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        assert_eq!(time.background_portion(), Some(1), "disabled AutoBG must keep its phase");
+        time.set_native_background_enabled(1).unwrap();
+        time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
+        let epoch = time.device().vblank_epoch();
+        for _ in 0..3 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        assert_eq!(time.device().vblank_epoch(), epoch);
+        assert_eq!(time.background_portion(), Some(1), "LCD-off updates are not transfers");
+        time.device_mut().write_port(0xff40, 0x91, 0xc3).unwrap();
+        for _ in 0..4 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        let expected = (1 + (time.device().vblank_epoch() - epoch) % 3) as u8 % 3;
+        assert_eq!(time.background_portion(), Some(expected));
+        time.set_vblank_dispatch_enabled(true);
+        for _ in 0..2 { time.begin_native_update(); time.idle_to_target().unwrap(); }
+        assert_eq!(time.background_portion(), Some(expected), "source IRQ owns its own stores");
+        time.begin_native_update();
+        time.enter_pending_vblank().unwrap();
+        time.execute(DisplayInstruction { tcycles: 12, access: Some(DisplayAccess::Write {
+            port: AUTO_BG_PORTION, value: 2, at_tcycle: 8,
+        }) }).unwrap();
+        time.execute_reti().unwrap();
+        time.set_vblank_dispatch_enabled(false);
+        assert_eq!(time.background_portion(), Some(2));
+        time.idle_to_target().unwrap();
+        assert_eq!(time.background_portion(), Some(0), "native resumes from the actual source store");
+        let mut restored: DisplayWorkTime = serde_json::from_slice(&serde_json::to_vec(&time).unwrap()).unwrap();
+        for owner in [&mut time, &mut restored] {
+            assert_eq!(owner.background_portion(), Some(0));
+            owner.begin_native_update(); owner.idle_to_target().unwrap();
+            assert_eq!(owner.background_portion(), Some(1));
+        }
+    }
+
     struct Bytes;
     impl PatternAssets for Bytes {
         fn read_pattern_byte(&self, _: PatternSource, offset: u16) -> Option<u8> {
@@ -2421,3 +2571,30 @@ mod palette_store_receipt_tests {
 #[cfg(test)]
 #[path = "display_irq_dispatch_tests.rs"]
 mod irq_dispatch_tests;
+
+#[cfg(test)]
+mod native_vblank_handoff_tests {
+    use super::*;
+
+    #[test]
+    fn native_vblank_handoff_preserves_time_and_requires_native_ownership() {
+        let mut time = DisplayWorkTime::legacy_native_projection(3);
+        assert_eq!(time.device().pending_interrupts() & 1, 1);
+        let elapsed = time.elapsed();
+        let epoch = time.device().vblank_epoch();
+        time.acknowledge_native_vblank().unwrap();
+        assert_eq!(time.elapsed(), elapsed);
+        assert_eq!(time.device().vblank_epoch(), epoch);
+        assert_eq!(time.interrupt_returns, 0);
+        assert_eq!(time.device().pending_interrupts() & 1, 0);
+        time.set_vblank_dispatch_enabled(true);
+        time.begin_native_update();
+        time.idle_to_vblank_edge().unwrap();
+        assert!(time.pending_vblank_dispatch(), "a new edge still belongs to the source owner");
+        let before = serde_json::to_value(&time).unwrap();
+        assert_eq!(time.acknowledge_native_vblank(), Err(DisplayWorkError::InterruptBusy));
+        assert_eq!(serde_json::to_value(&time).unwrap(), before);
+        time.enter_pending_vblank().unwrap();
+        assert_eq!(time.acknowledge_native_vblank(), Err(DisplayWorkError::InterruptBusy));
+    }
+}

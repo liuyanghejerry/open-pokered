@@ -1,5 +1,8 @@
 # Live music-note APU propagation
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+
 `StreamInstructions`, `NotePreparation`, and `MusicNoteInstructions` offer one
 `ApuInstruction` at a time to the existing clock/APU owner. Their CPU-only APIs
 remain available and share the same retained command, length, and note state.

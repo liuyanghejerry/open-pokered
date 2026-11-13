@@ -10,23 +10,25 @@ game_scene Route1 {
   @storyline("talkYoungster1") {
     @trigger(map = "Route1", npc = 1)
     @if (getFlag("EVENT_GOT_POTION_SAMPLE")) {
-      @speaker("") {
-        @t("We also carry POKe BALLs for\ncatching POKeMON!", "我们也出售精灵球，用来捕捉宝\n可梦！")
-      }
+      printFieldTextParts([@t("We also carry POKe BALLs for\ncatching POKeMON!", "我们也出售精灵球，用来捕捉宝\n可梦！")], false)
     } @else {
       setFlag("EVENT_GOT_POTION_SAMPLE")
-      @speaker("") {
-        @t("Hi! I work at a POKeMON\nMART.\n\nIt's a convenient shop, so\nplease visit us in VIRIDIAN\nCITY.\n\nI know, I'll give you a\nsample! Here you go!", "嗨！我在一家友好商店工作。\n\n那里很方便，所以请务必到常青\n市来光顾我们！\n\n这样吧，我给你一点样品！给\n你！")
-      }
+      printFieldTextParts([
+        @t("Hi! I work at a POKeMON\nMART.", "嗨！我在一家友好商店工作。"),
+        @t("It's a convenient shop, so\nplease visit us in VIRIDIAN\nCITY.", "那里很方便，所以请务必到常青\n市来光顾我们！"),
+        @t("I know, I'll give you a\nsample! Here you go!", "这样吧，我给你一点样品！给\n你！")
+      ], "prompt")
       // Original: EVENT_GOT_POTION_SAMPLE is set unconditionally (CheckAndSetEvent)
       // before the GiveItem attempt, so this offer never re-arms even on a full bag.
       given = giveItem("POTION", 1)
       @if (given) {
-        showItemDialogue(@t("<PLAYER> got a POTION!", "<PLAYER>得到了一瓶伤药！"), "SFX_GET_ITEM_1")
+        printItemFieldText(@t("<PLAYER> got a POTION!", "<PLAYER>得到了一瓶伤药！"), "SFX_GET_ITEM_1")
       } @else {
-        @speaker("") { @t("You have too much stuff with\nyou!", "你带的东西太多了！") }
+        printFieldTextParts([@t("You have too much stuff with\nyou!", "你带的东西太多了！")], false)
       }
     }
+    // TextScriptEnd returns to DisplayTextID's outer A/B acknowledgement.
+    acknowledgeFieldText()
   }
 
   // ── Youngster 2 (npc 2) — ledge tip, dialogue only ─────────────────────

@@ -22,6 +22,22 @@ fn tap(game: &mut PokemonGame, button: GbButton) {
 fn quantity(game: &PokemonGame) -> u8 {
     game.save_data.game_data.bag.get(0).unwrap().1
 }
+
+fn wait_for_party_return(game: &mut PokemonGame) {
+    for _ in 0..600 {
+        if game.field_flash.is_none()
+            && (game.state.screen != GameScreen::StartMenu || game.start_menu.input_ready()) {
+            return;
+        }
+        game.update(&InputState::new());
+    }
+    #[cfg(feature = "debug-server")]
+    panic!("party resource restoration did not return: screen={:?}, error={:?}, music={:?}",
+        game.state.screen, game.debug_field_flash().map(|flow| flow["error"].clone()),
+        game.audio.as_ref().and_then(|audio| audio.last_music_id()));
+    #[cfg(not(feature = "debug-server"))]
+    panic!("party resource restoration did not return to a ready menu");
+}
 fn candy_game(species: Species, level: u8, full: bool) -> PokemonGame {
     candy_game_with_hp(species, level, full, None)
 }
@@ -431,6 +447,7 @@ fn rare_candy_restoring_overworld_slot_discards_pending_learning_before_party_re
     on_game_thread(|| {
         use pokered_core::start_menu::StartMenuItem;
         fn select_menu(game: &mut PokemonGame, item: StartMenuItem) {
+            wait_for_party_return(game);
             assert_eq!(game.state.screen, GameScreen::StartMenu);
             for _ in 0..game.start_menu.item_count() {
                 if game.start_menu.current_item() == item { break; }
@@ -442,6 +459,14 @@ fn rare_candy_restoring_overworld_slot_discards_pending_learning_before_party_re
 
         let mut game = candy_fixture(Species::Bulbasaur, 12, false, None);
         game.handle_transition(GameScreen::Overworld);
+        // This component fixture bypasses NEW GAME/CONTINUE, including their
+        // map-music startup. The snapshot receiver needs the ordinary live
+        // audio owner before a later party exit can service restoration IRQs.
+        let music = default_overworld_music(
+            game.overworld.state.current_map,
+            game.overworld.state.player.transport,
+        ).unwrap();
+        game.audio.as_ref().unwrap().play_music(music);
         let before = *game.save_data.party.get(0).unwrap();
         let partner = *game.save_data.party.get(1).unwrap();
         let saved_hash = game.agent_save_state_slot(0).unwrap();
@@ -490,6 +515,7 @@ fn rare_candy_desktop_soft_reset_discards_pending_learning_before_continue() {
     on_game_thread(|| {
         use pokered_core::start_menu::StartMenuItem;
         fn select_menu(game: &mut PokemonGame, item: StartMenuItem) {
+            wait_for_party_return(game);
             assert_eq!(game.state.screen, GameScreen::StartMenu);
             for _ in 0..game.start_menu.item_count() {
                 if game.start_menu.current_item() == item { break; }

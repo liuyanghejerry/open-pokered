@@ -3,10 +3,12 @@
 //! destination addresses. Resource identity comes from the native producer,
 //! because distinct raw sprites can alias the same ROM address.
 use super::field_restore::{CopyFormat, PatternCopy, PatternSource};
-use super::video_copy_caller_work::{AUTO_BG_ENABLED, COPY_SIZE, DOUBLE_SIZE};
+use super::video_copy_caller_work::{AUTO_BG_ENABLED, AUTO_BG_PORTION, COPY_SIZE, DOUBLE_SIZE};
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct VideoRequestPorts {
     auto_bg: Option<u8>,
+    #[serde(default)]
+    auto_bg_portion: Option<u8>,
     copy: [Option<u8>; 5],
     double: [Option<u8>; 5],
 }
@@ -18,11 +20,13 @@ pub struct VideoCopyRegisters {
 }
 impl VideoRequestPorts {
     pub fn contains(port: u16) -> bool {
-        port == AUTO_BG_ENABLED || (COPY_SIZE..DOUBLE_SIZE + 5).contains(&port)
+        matches!(port, AUTO_BG_ENABLED | AUTO_BG_PORTION) || (COPY_SIZE..DOUBLE_SIZE + 5).contains(&port)
     }
     pub fn read(&self, port: u16) -> Option<u8> {
         if port == AUTO_BG_ENABLED {
             self.auto_bg
+        } else if port == AUTO_BG_PORTION {
+            self.auto_bg_portion
         } else if (COPY_SIZE..DOUBLE_SIZE).contains(&port) {
             self.copy[usize::from(port - COPY_SIZE)]
         } else if (DOUBLE_SIZE..DOUBLE_SIZE + 5).contains(&port) {
@@ -35,6 +39,8 @@ impl VideoRequestPorts {
         assert!(Self::contains(port));
         if port == AUTO_BG_ENABLED {
             self.auto_bg = Some(value)
+        } else if port == AUTO_BG_PORTION {
+            self.auto_bg_portion = Some(value)
         } else if port < DOUBLE_SIZE {
             self.copy[usize::from(port - COPY_SIZE)] = Some(value)
         } else {
@@ -96,6 +102,10 @@ impl PatternRomBinding {
             SurfingPlayer => (5, 0x76c0, 384, CopyFormat::TwoBpp),
             Font => (4, 0x5a80, 1024, CopyFormat::OneBppDouble),
             TextBox => (4, 0x6288, 512, CopyFormat::TwoBpp),
+            Tileset(raw) => {
+                let metadata = super::tileset_pattern_metadata::tileset_pattern_metadata(raw)?;
+                (metadata.bank, metadata.address, 1536, CopyFormat::TwoBpp)
+            }
             Flower(frame @ 1..=3) => (
                 0,
                 0x1f19 + u16::from(frame - 1) * 16,

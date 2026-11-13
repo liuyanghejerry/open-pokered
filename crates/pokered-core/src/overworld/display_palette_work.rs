@@ -1,6 +1,6 @@
-//! Finite GBPalWhiteOut / lit LoadGBPal instructions on the shared display bus.
-//! Source: home/palettes.asm and home/fade.asm. FLASH has already cleared
-//! wMapPalOffset, so LoadGBPal takes the offset-zero, no-borrow table branch.
+//! Finite GBPalWhiteOut / LoadGBPal instructions on the shared display bus.
+//! Source: home/palettes.asm and home/fade.asm. Party return retains the current
+//! map offset; FLASH explicitly clears it before entering this routine.
 //! The returned child does not publish an entire native frame or supply a
 //! substitute IRQ return. The raster/presentation owner observes these stores.
 use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus};
@@ -8,7 +8,7 @@ use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstruct
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Routine {
     White,
-    LitMap,
+    Map { offset: u8 },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -25,20 +25,34 @@ impl DisplayPaletteWork {
         }
     }
 
-    /// LoadGBPal with wMapPalOffset=0 (after successful FLASH). Other map
-    /// darkness/fade branches are not silently mapped to this lit branch.
+    /// LoadGBPal with wMapPalOffset=0 after successful FLASH.
     pub fn lit_map() -> Self {
-        Self {
-            routine: Routine::LitMap,
+        Self::map_palette(0).unwrap()
+    }
+
+    /// FadePal4 minus the live wMapPalOffset. The map's 0/6 offsets and the
+    /// intervening original fade-table bytes all remain in the same ROM page.
+    pub fn map_palette(offset: u8) -> Result<Self, u8> {
+        if offset > 9 { return Err(offset); }
+        Ok(Self {
+            routine: Routine::Map { offset },
             next: 0,
-        }
+        })
+    }
+
+    fn map_byte(offset: u8, index: usize) -> u8 {
+        // FadePal1..FadePal4, home/fade.asm. Read actual adjacent bytes,
+        // including offsets that do not start on a three-byte boundary.
+        const FADE: [u8; 12] = [0xff, 0xff, 0xff, 0xfe, 0xfe, 0xf8,
+            0xf9, 0xe4, 0xe4, 0xe4, 0xd0, 0xe0];
+        FADE[9 - usize::from(offset) + index]
     }
 
     pub fn finished(&self) -> bool {
         self.next
             == match self.routine {
                 Routine::White => 5,
-                Routine::LitMap => 14,
+                Routine::Map { .. } => 14,
             }
     }
 
@@ -58,16 +72,16 @@ impl DisplayPaletteWork {
                 4 => (16, None), // RET
                 _ => unreachable!(),
             },
-            Routine::LitMap => match self.next {
-                0 => (16, None),         // LD A,[wMapPalOffset], already zero
+            Routine::Map { offset } => match self.next {
+                0 => (16, None),         // LD A,[wMapPalOffset]
                 1 => (4, None),          // LD B,A
                 2 => (12, None),         // LD HL,FadePal4 ($2116 in pinned Red)
                 3..=5 => (4, None),      // LD A,L / SUB B / LD L,A
-                6 => (12, None),         // JR NC,.ok, no borrow for offset zero
-                7 | 9 | 11 => (8, None), // LD A,[HLI], original FadePal4
-                8 => (12, Some((0xff47, 0xe4))),
-                10 => (12, Some((0xff48, 0xd0))),
-                12 => (12, Some((0xff49, 0xe0))),
+                6 => (12, None),         // JR NC,.ok; all valid offsets stay in-page
+                7 | 9 | 11 => (8, None), // LD A,[HLI]
+                8 => (12, Some((0xff47, Self::map_byte(offset, 0)))),
+                10 => (12, Some((0xff48, Self::map_byte(offset, 1)))),
+                12 => (12, Some((0xff49, Self::map_byte(offset, 2)))),
                 13 => (16, None), // RET
                 _ => unreachable!(),
             },
@@ -138,6 +152,22 @@ mod tests {
         for port in 0xff47..=0xff49 {
             assert_eq!(bus.time.device().read_port(port).unwrap(), 0);
         }
+    }
+
+    #[test]
+    fn dark_map_return_keeps_the_original_palette_and_instruction_duration() {
+        for (offset, palettes) in [(0, [0xe4, 0xd0, 0xe0]), (3, [0xf9, 0xe4, 0xe4]),
+            (6, [0xfe, 0xfe, 0xf8]), (9, [0xff, 0xff, 0xff])] {
+            let mut time = DisplayWorkTime::default();
+            time.begin_native_update();
+            let mut work = DisplayPaletteWork::map_palette(offset).unwrap();
+            while work.step(&mut time).unwrap().is_some() {}
+            assert_eq!(time.elapsed(), 132);
+            for (port, palette) in (0xff47..=0xff49).zip(palettes) {
+                assert_eq!(time.device().read_port(port).unwrap(), palette);
+            }
+        }
+        assert_eq!(DisplayPaletteWork::map_palette(10), Err(10));
     }
 
     #[test]

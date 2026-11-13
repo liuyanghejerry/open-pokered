@@ -82,6 +82,7 @@ pub(super) struct FieldIrq {
     pub map_tiles: crate::render::MapTileSnapshot,
     pub ui: super::super::field_video_inputs::NativeUiTiles,
     pub background_is_map: bool,
+    native_grass: Option<[Option<u8>; 16]>,
     pub portion: u8,
     pub shadows: VBlankVideoShadows,
     pub completed: u64,
@@ -91,6 +92,18 @@ impl FieldIrq {
     pub(super) fn new(game: &mut PokemonGame, flow: &mut FieldFlash) -> Result<Self, String> {
         let map_tiles = crate::render::stationary_map_tile_snapshot(&game.overworld)
             .map_err(|e| format!("native map input: {e:?}"))?;
+        let sprite_plan = SpritePatternPlan::new(flow.work.raw_sprite_pictures(), false);
+        let native_grass = if flow.origin.returns_to_map_with_actors() {
+            Some(
+                super::super::field_oam_inputs::stationary_grass_inputs(
+                    &game.overworld,
+                    &map_tiles.tiles,
+                )
+                .map_err(|e| format!("native stationary grass: {e:?}"))?,
+            )
+        } else {
+            None
+        };
         let resources = game
             .resources
             .as_mut()
@@ -128,6 +141,34 @@ impl FieldIrq {
                 .map_err(|e| format!("{e:?}"))?;
         }
         let assets = NativePatternAssets::new(resources);
+        if flow.origin == RestorationOrigin::Submenu {
+            // The native field already owns these stationary patterns. Bind
+            // their actual assets before timed ownership; this is not a new
+            // reload or a completion of the later textbox request.
+            let player = game.overworld.field_restore_input(1).player_source;
+            let player_copy = PatternCopy {
+                source: player,
+                source_offset: 0,
+                destination: 0x8000,
+                tiles: 12,
+                format: CopyFormat::TwoBpp,
+            };
+            for copy in core::iter::once(&player_copy).chain(
+                sprite_plan
+                    .copies
+                    .iter()
+                    .filter(|copy| copy.destination < 0x8800),
+            ) {
+                for offset in 0..u16::from(copy.tiles) * 16 {
+                    let byte = assets
+                        .read_pattern_byte(copy.source, copy.source_offset + offset)
+                        .ok_or("native standing sprite pattern unavailable")?;
+                    flow.patterns
+                        .initialize_native_byte(copy.destination + offset, byte)
+                        .map_err(|e| format!("{e:?}"))?;
+                }
+            }
+        }
         let mut flowers = [[0; 16]; 3];
         for (frame, bytes) in flowers.iter_mut().enumerate() {
             for (offset, byte) in bytes.iter_mut().enumerate() {
@@ -180,11 +221,15 @@ impl FieldIrq {
             delay: None,
             copy: None,
             binding: None,
-            initial_slots: SpritePatternPlan::new(flow.work.raw_sprite_pictures(), false).slots,
+            initial_slots: sprite_plan.slots,
             map_tiles,
             ui,
             background_is_map: false,
-            portion: 0,
+            native_grass,
+            portion: game
+                .source_display
+                .background_portion()
+                .ok_or("unknown native BG portion")?,
             shadows: VBlankVideoShadows {
                 scx: 0,
                 scy: 0,
@@ -197,6 +242,34 @@ impl FieldIrq {
     }
 }
 impl PokemonGame {
+    pub(super) fn restore_submenu_images(&mut self, flow: &mut FieldFlash) -> Result<(), String> {
+        let irq = flow.irq.as_mut().ok_or("missing menu IRQ owner")?;
+        let covered = pokered_ui::menus::start::sprite_occlusion_tiles(
+            &self.start_menu,
+            &self.player_name,
+            &pokered_data::ui_layout::schema::START_DEFAULT_LAYOUT,
+            self.state.config.language,
+        );
+        let hides = |x: u8, y: u8| {
+            let at = usize::from(y) * 20 + usize::from(x);
+            x >= 20 || y >= 18 || covered[at] || irq.map_tiles.tiles[at] >= 0x60
+        };
+        self.overworld
+            .player_presentation
+            .restore_menu_image(self.overworld.state.player.facing, hides(8, 9));
+        self.overworld
+            .npc_presentation
+            .restore_menu_images(&self.overworld.npc_states, hides);
+        irq.native_grass = Some(
+            super::super::field_oam_inputs::stationary_grass_inputs(
+                &self.overworld,
+                &irq.map_tiles.tiles,
+            )
+            .map_err(|e| format!("menu grass input: {e:?}"))?,
+        );
+        Ok(())
+    }
+
     /// Abandoning a caller starts a fresh native projection, never a fake
     /// completion of its interrupted source IRQ. Normal FLASH RET has already
     /// detached and taken its caller, so it does not enter this path.
@@ -232,7 +305,7 @@ impl PokemonGame {
                 } else {
                     format!("{first}\n{second}")
                 };
-                let arrow = !flow.text.returned()
+                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
                     && dialogue.waiting_for_input()
                     && (self.frame_count / 16) % 2 == 0;
                 let mut painter = pokered_ui::backends::FrameBufferPainter::new(&mut flow.party);
@@ -256,6 +329,17 @@ impl PokemonGame {
             .as_mut()
             .ok_or("FLASH native IRQ inputs unavailable")?;
         if !irq.attached {
+            if flow.origin == RestorationOrigin::Submenu {
+                // Both native submenu consumers currently show no field
+                // objects. Bind that existing visibility at the handoff.
+                self.source_display
+                    .set_shadow_oam(&[0; 160])
+                    .map_err(|e| format!("{e:?}"))?;
+                self.source_display
+                    .device_mut()
+                    .begin_native_object_scanout(&[0; 160], [0xd0, 0xe0])
+                    .map_err(|e| format!("{e:?}"))?;
+            }
             // The retained native party uses canonical shade indices. Bind
             // that existing image once; subsequent palette changes are actual
             // source stores, published only by completed display scanout.
@@ -323,15 +407,20 @@ impl PokemonGame {
             let prepare = if enabled != 1 {
                 PrepareOamWork::control_only(enabled)
             } else {
-                let slots = if flow.slots.is_empty() {
-                    &irq.initial_slots
-                } else {
+                // Indoor reloads build an assignment prefix while VBlank can
+                // still see the previous published images. That prefix is
+                // not a complete binding table for the visible actors: keep
+                // their entry bindings until all assignments are available.
+                let slots = if flow.slots.len() == irq.initial_slots.len() {
                     &flow.slots
+                } else {
+                    &irq.initial_slots
                 };
-                let input = super::super::field_oam_inputs::field_oam_input(
+                let input = super::super::field_oam_inputs::field_oam_input_with_grass(
                     &self.overworld,
                     &*self.source_display,
                     slots,
+                    irq.native_grass.as_ref(),
                 )
                 .map_err(|e| format!("native actor input: {e:?}"))?;
                 PrepareOamWork::new(input)
@@ -348,10 +437,14 @@ impl PokemonGame {
                 &irq.ui.tiles
             };
             let (counter1, counter2) = self.overworld.tile_anim.counters();
-            let animations = match self.overworld.tile_anim.kind() {
-                pokered_core::overworld::presentation::TileAnimKind::None => 0,
-                pokered_core::overworld::presentation::TileAnimKind::Water => 1,
-                pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
+            let animations = if flow.origin == RestorationOrigin::TrainerCard {
+                0
+            } else {
+                match self.overworld.tile_anim.kind() {
+                    pokered_core::overworld::presentation::TileAnimKind::None => 0,
+                    pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+                    pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
+                }
             };
             let video = VBlankVideoWork::select(
                 true,
@@ -367,7 +460,8 @@ impl PokemonGame {
                         0,
                         bg.clone(),
                     )
-                    .ok_or("invalid native BG tiles")?,
+                    .ok_or("invalid native BG tiles")?
+                    .with_live_portion(),
                     queued: QueuedBgCopyWork::new(
                         BgCopyRequest {
                             source: 0,
@@ -453,18 +547,13 @@ impl PokemonGame {
                         .audio
                         .as_ref()
                         .ok_or("native audio owner unavailable")?;
-                    if irq.audio.is_none() {
-                        let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
-                        irq.audio = Some(Box::new(
-                            audio
-                                .begin_source_audio_frame_with_bus(bank, 0)
-                                .map_err(|e| format!("source audio entry: {e:?}"))?,
-                        ));
-                    }
+                    let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
                     // One exclusive display bus spans the audio continuation;
                     // each instruction still observes its own IO/budget edge.
-                    let result = audio.resume_source_audio_frame_with_runner(
-                        irq.audio.as_mut().unwrap(),
+                    let result = audio.service_source_audio_frame(
+                        &mut irq.audio,
+                        bank,
+                        0,
                         FieldAudioBus {
                             time: self.source_display.display_bus(),
                         },

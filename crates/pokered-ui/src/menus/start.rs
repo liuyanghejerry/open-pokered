@@ -15,45 +15,19 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
         // Interior 7×3 plus its borders (player_state.asm:225): the labels
         // land at screen (1,1) and (1,3). The earlier 7×4 TOTAL box had only
         // two interior rows, pushing the ball row onto the bottom border.
-        ui.text_box(TileRect::new(0, 0, 9, 5), InkColor::Black, true, |frame| {
+        ui.text_box(safari_rect(), InkColor::Black, true, |frame| {
             frame.label(0, 0, &format!("{:03}/500", info.steps), InkColor::Black);
             frame.label(0, 2, &format!("BALL×{:02}", info.balls), InkColor::Black);
         });
     }
 
-    let labels = state.item_labels(player_name);
-    let num_items = labels.len() as u32;
-    if num_items == 0 {
-        return;
-    }
+    let localized = menu_labels(state, player_name, lang);
+    let num_items = localized.len() as u32;
+    if num_items == 0 { return; }
     let flex = &layout.menu;
-
-    let localized: Vec<String> = labels
-        .iter()
-        .map(|l| match l.as_str() {
-            s if s == player_name => s.to_string(),
-            s => ui_label(s, lang == Lang::Zh).to_string(),
-        })
-        .collect();
-    let content_w = localized.iter().map(|l| l.chars().count() as u32).max().unwrap_or(1);
-    let eff_w = match flex.width_mode {
-        SizeMode::Fixed => flex.rect.tw,
-        SizeMode::Auto => clamp(
-            content_w + flex.padding.left + flex.padding.right + 2,
-            flex.min_width,
-            flex.max_width,
-        ),
-    };
+    let rect = menu_rect(&localized, layout);
+    let eff_h = rect.th;
     let content_h = num_items + num_items.saturating_sub(1) * flex.gap;
-    let eff_h = match flex.height_mode {
-        SizeMode::Fixed => flex.rect.th,
-        SizeMode::Auto => clamp(
-            content_h + flex.padding.top + flex.padding.bottom + 2,
-            flex.min_height,
-            flex.max_height,
-        ),
-    };
-    let rect = TileRect::new(flex.rect.tx, flex.rect.ty, eff_w, eff_h);
 
     let start_y = match flex.justify {
         Justify::Start => flex.padding.top,
@@ -81,6 +55,59 @@ pub fn draw<P: Painter>(state: &StartMenuState, player_name: &str, layout: &Star
     if top < bottom {
         ui.painter().draw_pixel_rect((rect.tx + 1) * 8, top, rect.tw.saturating_sub(2) * 8, bottom - top, Rgba::INK_WHITE);
     }
+}
+
+fn safari_rect() -> TileRect { TileRect::new(0, 0, 9, 5) }
+
+fn menu_labels(state: &StartMenuState, player_name: &str, lang: Lang) -> Vec<String> {
+    state.item_labels(player_name).iter().map(|label| {
+        let label = label.as_str();
+        if label == player_name { label.to_string() }
+        else { ui_label(label, lang == Lang::Zh).to_string() }
+    }).collect()
+}
+
+fn menu_rect(localized: &[String], layout: &StartDefaultLayout) -> TileRect {
+    let flex = &layout.menu;
+    let num_items = localized.len() as u32;
+    let content_w = localized.iter().map(|l| l.chars().count() as u32).max().unwrap_or(1);
+    let eff_w = match flex.width_mode {
+        SizeMode::Fixed => flex.rect.tw,
+        SizeMode::Auto => clamp(
+            content_w + flex.padding.left + flex.padding.right + 2,
+            flex.min_width,
+            flex.max_width,
+        ),
+    };
+    let content_h = num_items + num_items.saturating_sub(1) * flex.gap;
+    let eff_h = match flex.height_mode {
+        SizeMode::Fixed => flex.rect.th,
+        SizeMode::Auto => clamp(
+            content_h + flex.padding.top + flex.padding.bottom + 2,
+            flex.min_height,
+            flex.max_height,
+        ),
+    };
+    TileRect::new(flex.rect.tx, flex.rect.ty, eff_w, eff_h)
+
+}
+
+/// Logical opaque UI cells used by UpdateSprites before any AutoBG publication.
+/// Reuse the same resolved menu geometry as drawing, including localization.
+pub fn sprite_occlusion_tiles(state: &StartMenuState, player_name: &str,
+    layout: &StartDefaultLayout, lang: Lang) -> [bool; 360] {
+    let mut covered = [false; 360];
+    let mut mark = |rect: TileRect| {
+        for y in rect.ty..(rect.ty + rect.th).min(18) {
+            for x in rect.tx..(rect.tx + rect.tw).min(20) {
+                covered[(y * 20 + x) as usize] = true;
+            }
+        }
+    };
+    let labels = menu_labels(state, player_name, lang);
+    if !labels.is_empty() { mark(menu_rect(&labels, layout)); }
+    if state.safari_info.is_some() { mark(safari_rect()); }
+    covered
 }
 
 /// Repaint only the changed cursor cells of an already-rendered START menu.

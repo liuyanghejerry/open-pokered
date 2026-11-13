@@ -227,8 +227,11 @@ fn cold_pc_ratings_play_all_seven_real_fanfares_then_silent_ack_and_closed_text(
                 let mut audible = false;
                 let mut starts = 0;
                 let mut previous = false;
-                for _ in 0..6000 {
-                    s.step(0);
+                for frame in 0..6000 {
+                    // Authored CONT still needs a fresh manual scroll before
+                    // the last rating line can reach its sound continuation.
+                    let acknowledge = !started && s.pc().rating_waiting_for_page() && frame % 8 == 0;
+                    s.step(if acknowledge { A } else { 0 });
                     let playing = s.sound() == (expected, true);
                     if playing && !previous {
                         starts += 1;

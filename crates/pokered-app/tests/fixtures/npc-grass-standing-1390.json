@@ -1,0 +1,12 @@
+{
+  "reference": "pret/pokered fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+  "source_fixture_commit": "5de6ba9a688444455f3076d73843d37cb01c6a57",
+  "scope": "Stationary NPC Route1 (14,22), player (12,22); all 21 original frames have identical 16x16 pixels. Moving cadence is validated separately.",
+  "region": [
+    96,
+    60,
+    16,
+    16
+  ],
+  "pixels": "000ff00004f55f40075555c00d5755700d5cd5790dfcff72b30000ceb10c304d86a8b6a82da561a459af59ac1693d69c0fd907f903eeffe2a396a4968899bb99"
+}

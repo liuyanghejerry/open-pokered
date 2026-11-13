@@ -33,6 +33,24 @@ impl PatternAssets for NativePatternAssets<'_> {
                     raw, offset,
                 )?;
             (PatternSource::Sprite(owner), offset)
+        } else if let PatternSource::Tileset(raw) = source {
+            use pokered_core::overworld::tileset_pattern_metadata::{
+                tileset_pattern_byte, TilesetPatternByte,
+            };
+            match tileset_pattern_byte(raw, offset)? {
+                TilesetPatternByte::Graphics { tileset, offset } => {
+                    (PatternSource::Tileset(tileset), offset)
+                }
+                TilesetPatternByte::Blockset { tileset, offset } => {
+                    let id = pokered_data::tilesets::TilesetId::from_u8(tileset)?;
+                    return pokered_data::blockset_data::blockset_for_tileset(id)
+                        .get(usize::from(offset))
+                        .copied();
+                }
+                // Mutable memory belongs to PatternAccess::ReadVram, never
+                // an immutable resource or a captured reference state.
+                TilesetPatternByte::Vram(_) => return None,
+            }
         } else {
             (source, offset)
         };
@@ -65,6 +83,12 @@ impl PatternAssets for NativePatternAssets<'_> {
                 // text renderer continues to use Fusion Pixel, not these glyphs.
                 PatternSource::Font => (resources.load_font("font").ok()?, 128, true),
                 PatternSource::TextBox => (resources.load_font("font_extra").ok()?, 32, false),
+                PatternSource::Tileset(raw) => {
+                    let id = pokered_data::tilesets::TilesetId::from_u8(raw)?;
+                    let cached = resources.load_tileset(id.tileset_name()).ok()?;
+                    let count = cached.tileset.len();
+                    (cached, count, false)
+                }
                 PatternSource::Flower(frame @ 1..=3) => (
                     resources
                         .load_asset(
@@ -155,6 +179,23 @@ fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
         PatternSource::SurfingPlayer => ("sprites", "seel", 24, false, false),
         PatternSource::Font => ("font", "font", 128, true, true),
         PatternSource::TextBox => ("font", "font_extra", 32, true, false),
+        PatternSource::Tileset(raw) => {
+            let id = pokered_data::tilesets::TilesetId::from_u8(raw)?;
+            let bytes = pokered_renderer::gba_assets::get_preconverted_asset(
+                "tilesets",
+                id.tileset_name(),
+            )?;
+            if bytes.len() % 16 != 0 {
+                return None;
+            }
+            (
+                "tilesets",
+                id.tileset_name(),
+                bytes.len() / 16,
+                false,
+                false,
+            )
+        }
         PatternSource::Flower(1) => ("tilesets/flower", "flower1", 1, false, false),
         PatternSource::Flower(2) => ("tilesets/flower", "flower2", 1, false, false),
         PatternSource::Flower(3) => ("tilesets/flower", "flower3", 1, false, false),
@@ -303,6 +344,75 @@ mod tests {
         }
     }
     use super::*;
+    #[test]
+    #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
+    fn all_tileset_rom_ranges_match_original_trimmed_assets_and_adjacent_bytes() {
+        let expected: [u64; 24] = [
+            0x8f953e66722f422c,
+            0x9a5d0cea2afea644,
+            0x55b4d378de270067,
+            0xba37d49c1c5542c9,
+            0x9a5d0cea2afea644,
+            0x2d1897e62246df70,
+            0x55b4d378de270067,
+            0x2d1897e62246df70,
+            0xb75e4237f3bd16fa,
+            0x22fac0051892a021,
+            0x22fac0051892a021,
+            0x61bd124ee8e7192b,
+            0x22fac0051892a021,
+            0x6f5f438906933360,
+            0x549d506d1a6da1b7,
+            0xb90393eedaf3308e,
+            0x69a95b4d3adc9b10,
+            0x61757835ce3faa56,
+            0x9dfa5413281a75a2,
+            0xedd0355f032c8e73,
+            0x65a351f50f3da600,
+            0x9754014141717e72,
+            0x2abd28270d25f14b,
+            0xa3b189c514a3c172,
+        ];
+        let mut resources =
+            ResourceManager::new(pokered_renderer::resource::AssetRoot::auto_detect().unwrap());
+        let assets = NativePatternAssets::new(&mut resources);
+        #[cfg(feature = "gba-resource-tests")]
+        let rom_cache = RomPatternCache::default();
+        for (raw, expected) in expected.into_iter().enumerate() {
+            let raw = raw as u8;
+            let length = if raw == 11 { 672 } else { 1536 };
+            let mut hash = 0xcbf29ce484222325u64;
+            for offset in 0..length {
+                let byte = assets
+                    .read_pattern_byte(PatternSource::Tileset(raw), offset)
+                    .unwrap();
+                hash = (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3);
+                #[cfg(feature = "gba-resource-tests")]
+                {
+                    use pokered_core::overworld::tileset_pattern_metadata::{
+                        tileset_pattern_byte, TilesetPatternByte,
+                    };
+                    if let Some(TilesetPatternByte::Graphics { tileset, offset }) =
+                        tileset_pattern_byte(raw, offset)
+                    {
+                        assert_eq!(
+                            rom_cache.read(
+                                PatternSource::Tileset(tileset),
+                                offset,
+                                rom_pattern_source
+                            ),
+                            Some(byte)
+                        );
+                    }
+                }
+            }
+            assert_eq!(hash, expected, "tileset {raw} ROM bytes");
+            assert_eq!(
+                assets.read_pattern_byte(PatternSource::Tileset(raw), length),
+                None
+            );
+        }
+    }
     #[test]
     #[cfg(all(not(target_arch = "wasm32"), not(target_os = "none")))]
     fn all_raw_sprite_pattern_ranges_match_the_reference_rom() {

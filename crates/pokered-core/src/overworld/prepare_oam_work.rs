@@ -26,8 +26,10 @@ pub enum PrepareOamError {
     InvalidSpriteRecords,
     ShadowPageOverflow,
 }
-// Most entries are plain cycles. Decode bus accesses only at execution so the
-// retained instruction uses three bytes even on GBA.
+// Store the finite instruction vocabulary, not a full bus access plus an
+// optional side effect for every instruction. Most entries are plain cycles.
+// This is three bytes per entry even on GBA; bus instructions are decoded only
+// at execution and retain their original access and publication boundaries.
 #[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 enum Instruction {
     Plain(u8),
@@ -64,6 +66,12 @@ impl Instruction {
                 access: None,
             },
         }
+    }
+    fn has_state_effect(self) -> bool {
+        matches!(
+            self,
+            Self::Enabled(_) | Self::AdjustY { .. } | Self::AdjustX { .. }
+        )
     }
 }
 
@@ -143,6 +151,8 @@ impl PrepareOamWork {
         // page, with carry clear. Other disabled entries return immediately
         // from (enabled-1) < $ff with carry set.
         let return_carry = state.enabled > 1;
+        // Count through the same expansion before allocating: growing a Vec
+        // temporarily retained both buffers and could exhaust GBA's heap.
         let mut count = 0;
         Self::expand(&state, &mut count)?;
         let mut code = Vec::with_capacity(count);
@@ -330,9 +340,20 @@ impl PrepareOamWork {
         self.next == self.code.len()
     }
     /// Retain all observable instructions/effects and the exact cursor at a
-    /// refused instruction. Only the bus can opt into an effect-free prefix.
+    /// refused instruction. Only the bus can prove that an accepted prefix
+    /// has no observable intermediate effect (in particular, no live DMA).
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         while !self.finished() {
+            let count = bus.execute_shadow_oam_run(
+                self.code[self.next..]
+                    .iter()
+                    .take_while(|i| !i.has_state_effect())
+                    .map(|i| i.bus()),
+            )?;
+            if count != 0 {
+                self.next += count;
+                continue;
+            }
             let count = bus.execute_plain_run(
                 self.code[self.next..]
                     .iter()
@@ -375,7 +396,8 @@ mod tests {
     use super::super::display_work_time::{DisplayWorkError, DisplayWorkTime};
     use super::*;
     #[test]
-    fn instruction_storage_is_compact_and_preallocated() {
+    fn instruction_trace_memory_regression_1390() {
+        let mut traces = Vec::new();
         for data in [
             include_str!("prepare_oam_cases_1113.json"),
             include_str!("prepare_oam_constructed_1113.json"),
@@ -384,21 +406,62 @@ mod tests {
             let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
             for case in fixture["cases"].as_array().unwrap() {
                 let input = case.get("input").unwrap_or(&case["before"]);
-                let work =
+                let mut work =
                     PrepareOamWork::new(serde_json::from_value(input.clone()).unwrap()).unwrap();
-                assert_eq!(work.code.capacity(), work.code.len());
+                assert_eq!(
+                    work.code.capacity(),
+                    work.code.len(),
+                    "no transient growth buffer"
+                );
                 assert!(core::mem::size_of::<Instruction>() <= 3);
+                let mut time = DisplayWorkTime::default();
+                time.begin_native_update();
+                let mut hash = 0xcbf29ce484222325u64;
+                let mut count = 0;
+                while let Some(i) = work.step(&mut time).unwrap() {
+                    let encoded = match i.access {
+                        None => [i.tcycles, 0, 0, 0, 0, 0],
+                        Some(DisplayAccess::Read { port, at_tcycle }) => {
+                            [i.tcycles, 1, port as u8, (port >> 8) as u8, 0, at_tcycle]
+                        }
+                        Some(DisplayAccess::Write {
+                            port,
+                            value,
+                            at_tcycle,
+                        }) => [
+                            i.tcycles,
+                            2,
+                            port as u8,
+                            (port >> 8) as u8,
+                            value,
+                            at_tcycle,
+                        ],
+                    };
+                    for byte in encoded {
+                        hash = (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3);
+                    }
+                    count += 1;
+                }
+                traces.push((count, format!("{hash:016x}")));
             }
         }
+        let baseline: serde_json::Value =
+            serde_json::from_str(include_str!("prepare_oam_trace_1390.json")).unwrap();
+        assert_eq!(serde_json::to_value(traces).unwrap(), baseline["cases"]);
     }
     #[test]
     fn irq_runner_preserves_each_oam_effect_budget_cursor_and_snapshot_resume() {
-        for data in [include_str!("prepare_oam_cases_1113.json"), include_str!("prepare_oam_constructed_1113.json")] {
+        for data in [
+            include_str!("prepare_oam_cases_1113.json"),
+            include_str!("prepare_oam_constructed_1113.json"),
+        ] {
             let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
             for case in fixture["cases"].as_array().unwrap() {
-                let state: PrepareOamState = serde_json::from_value(case["before"].clone()).unwrap();
+                let state: PrepareOamState =
+                    serde_json::from_value(case["before"].clone()).unwrap();
                 let template = PrepareOamWork::new(state).unwrap();
-                let shadow: Vec<u8> = serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
+                let shadow: Vec<u8> =
+                    serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
                 for budget in (0..4096u64).step_by(97).chain([4, 12, 20, 65535]) {
                     let mut time = DisplayWorkTime::default();
                     time.begin_native_update();
@@ -420,12 +483,23 @@ mod tests {
                             }
                         };
                         assert_eq!(actual, expected);
-                        assert_eq!(serde_json::to_value((&time, &work)).unwrap(), serde_json::to_value((&reference, &expected_work)).unwrap());
-                        if actual.is_ok() { break; }
+                        assert_eq!(
+                            serde_json::to_value((&time, &work)).unwrap(),
+                            serde_json::to_value((&reference, &expected_work)).unwrap()
+                        );
+                        if actual.is_ok() {
+                            break;
+                        }
                         assert_eq!(actual, Err(DisplayWorkError::Budget));
-                        (time, work) = serde_json::from_value(serde_json::to_value((&time, &work)).unwrap()).unwrap();
-                        (reference, expected_work) = serde_json::from_value(serde_json::to_value((&reference, &expected_work)).unwrap()).unwrap();
-                        time.begin_native_update(); reference.begin_native_update();
+                        (time, work) =
+                            serde_json::from_value(serde_json::to_value((&time, &work)).unwrap())
+                                .unwrap();
+                        (reference, expected_work) = serde_json::from_value(
+                            serde_json::to_value((&reference, &expected_work)).unwrap(),
+                        )
+                        .unwrap();
+                        time.begin_native_update();
+                        reference.begin_native_update();
                     }
                     assert!(work.finished());
                     assert!(time.active_vblank());

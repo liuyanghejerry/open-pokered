@@ -1,5 +1,10 @@
 # Hall of Fame picture-load work (in progress)
 
+> 存储说明：逐帧录制、压缩日志和配套运行报告已移出版本库。下文的录制文件名及哈希仅描述历史验证；复现输出请放在 `.task-tmp/` 或仓库之外，完成后清理。见[审计材料约定](../README.md)。
+
+复跑上述历史绝对周期基准须使用 PyBoy 2.8.1；其他版本的启动时钟可能不同，不能据此放宽完整记录的相等断言。
+
+
 The merged cry fix waits for sound, but the native viewer still replaces the
 next portrait immediately. The original whites out the background, loads the
 picture, restores its palette and then starts the cry. This player-facing gap
@@ -32,6 +37,8 @@ uv run --python 3.12 --with pyboy==2.8.1 python \
   docs/audits/hof-pc-load/replay-original.py \
   --rom /path/to/reference.gbc --sym /path/to/pokered.sym \
   --native-binary /path/to/sole/pokered-app \
+  --controls /path/to/scratch/original-controls.json.gz \
+  --reference /path/to/scratch/original-phase-0.json.gz \
   --phase-offset 0 --out /path/to/proof-phase-0.json.gz
 ```
 
@@ -96,7 +103,7 @@ header tables. Source hashes and the exact normalization are in
 
 Two independent original normal boots, CONTINUE and physical PC-menu approaches
 then idle for 10,000 updates each. Readonly entry/RET hooks observe channel inputs
-and update T-cycles. The [complete readonly trace](original-pokecenter-updates.json.gz) retains both
+and update T-cycles. The complete readonly trace（历史运行记录，已清理） retains both
 input tape and guarded source identities. Both repeats match exactly; all 10,000 records also match
 the native work calculation in an explicitly **controlled unit fixture**. That
 test constructs channels from the original inputs and is not evidence of native
@@ -117,6 +124,7 @@ uv run --offline --python 3.12 --with pyboy==2.8.1 python \
   docs/audits/hof-pc-load/replay-pokecenter-audio.py \
   --rom /path/to/reference.gbc --sym /path/to/pokered.sym \
   --native-binary /path/to/the/sole/pokered-app \
+  --controls /path/to/scratch/original-controls.json.gz \
   --out /path/to/scratch/pokecenter-original.json.gz
 ```
 
