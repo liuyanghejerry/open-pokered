@@ -37,6 +37,19 @@ const PLAYER_SCREEN_X: i32 = 0x40;
 const PLAYER_SCREEN_Y: i32 = 0x3c;
 const ACTOR_CELL_Y_OFFSET: i32 = -4;
 
+static POISON_BACKGROUND_PALETTE: Palette = {
+    let mut colors = [Rgba::BLACK; 16];
+    colors[0] = GRAYSCALE_PALETTE.colors[2];
+    colors[1] = GRAYSCALE_PALETTE.colors[1];
+    colors[2] = GRAYSCALE_PALETTE.colors[2];
+    colors[3] = GRAYSCALE_PALETTE.colors[3];
+    Palette {
+        colors,
+        count: 4,
+        _phantom: core::marker::PhantomData,
+    }
+};
+
 // CONT's first ScrollTextUpOneLine is an intermediate half-row image. The
 // existing Fusion dialogue renderer spaces rows by twelve pixels; its second
 // Scroll5 already supplies the retained lower row in the normal top slot.
@@ -433,9 +446,14 @@ struct BackgroundMapTiles<'a> {
     blockset: &'a [u8],
 }
 impl BackgroundMapTiles<'_> {
-    fn tile(&self, x: i32, y: i32, last: &mut Option<(i32, i32, u8)>) -> Option<u8> {
+    fn tile_row(
+        &self,
+        x: i32,
+        by: i32,
+        row: usize,
+        last: &mut Option<(i32, i32, u8)>,
+    ) -> Option<u8> {
         let bx = x.div_euclid(4);
-        let by = y.div_euclid(4);
         let block = match *last {
             Some((lx, ly, block)) if lx == bx && ly == by => block,
             _ => {
@@ -445,8 +463,11 @@ impl BackgroundMapTiles<'_> {
                 block
             }
         };
-        self.blockset.get(usize::from(block) * blockset_data::BLOCK_SIZE
-            + y.rem_euclid(4) as usize * 4 + x.rem_euclid(4) as usize).copied()
+        self.blockset
+            .get(
+                usize::from(block) * blockset_data::BLOCK_SIZE + row * 4 + x.rem_euclid(4) as usize,
+            )
+            .copied()
     }
 }
 
@@ -673,6 +694,18 @@ impl OverworldBackgroundCache {
         }
     }
 
+    pub(crate) fn background_only(width: u32, height: u32) -> Self {
+        Self {
+            width,
+            height,
+            key: None,
+            output_key: None,
+            foreground_patches: Vec::new(),
+            presentation_damage: Vec::new(),
+            partial_present: false,
+        }
+    }
+
     /// Regions whose pixels changed during the most recent cached draw.
     /// `None` means the frontend must submit the complete framebuffer.
     pub fn presentation_damage(&self) -> Option<&[FrameDamageRect]> {
@@ -888,10 +921,6 @@ fn draw_background_tiles(
     }
     // ChangeBGPalColor0_4Frames changes only BGP color 0; OBP palettes
     // remain untouched when the actor pass draws over these BG pixels.
-    let poison_palette = Palette::new(&[
-        GRAYSCALE_PALETTE.colors[2], GRAYSCALE_PALETTE.colors[1],
-        GRAYSCALE_PALETTE.colors[2], GRAYSCALE_PALETTE.colors[3],
-    ]);
     let width = fb.width() as i32;
     let height = fb.height() as i32;
     let tile_span = |start: i32, end: i32, camera: i32, count: i32| {
@@ -978,34 +1007,44 @@ fn draw_background_tiles(
         if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
             continue;
         }
+        if matches!(damage, BackgroundDamage::Animated)
+            && !anim_rows.has(screen_y / TILE_SIZE as i32)
+        {
+            continue;
+        }
+        // Elevator shake wraps source rows before tile lookup.
+        let world_ty = tile_start_ty + ty;
+        let world_ty = if shake_offset_y != 0 {
+            world_ty.rem_euclid(i32::from(map_h) * 4)
+        } else {
+            world_ty
+        };
+        let block_y = world_ty.div_euclid(4);
+        let block_row = world_ty.rem_euclid(4) as usize;
         let mut last_block: Option<(i32, i32, u8)> = None;
+        let mut next_screen_x = tile_x.start * TILE_SIZE as i32 - camera_x;
         for tx in tile_x.clone() {
-            let screen_x = tx * TILE_SIZE as i32 - camera_x;
+            let screen_x = next_screen_x;
+            next_screen_x += TILE_SIZE as i32;
             if screen_x + TILE_SIZE as i32 <= 0 || screen_x >= width {
                 continue;
             }
             let skip = match damage {
-                BackgroundDamage::Animated => !anim_rows.has(screen_y / TILE_SIZE as i32),
-                other => {
-                    filter_damage && !other.intersects_tile(screen_x, screen_y, width, height)
-                }
+                BackgroundDamage::Animated | BackgroundDamage::Full => false,
+                BackgroundDamage::None => true,
+                other => filter_damage && !other.intersects_tile(screen_x, screen_y, width, height),
             };
             if skip {
                 continue;
             }
             let mut world_tx = tile_start_tx + tx;
-            let world_ty = tile_start_ty + ty;
-
             if departure_active {
                 world_tx = world_tx.rem_euclid(map_w as i32 * 4);
             }
-
-            // Elevator shake wraps source rows before tile lookup.
-            let world_ty = if shake_offset_y != 0 {
-                world_ty.rem_euclid(i32::from(map_h) * 4)
-            } else { world_ty };
-            let tile_idx = tile_source.tile(world_tx, world_ty, &mut last_block)
-                .map(usize::from).unwrap_or(0);
+            let tile_idx = tile_source
+                .tile_row(world_tx, block_y, block_row, &mut last_block)
+                .map(usize::from)
+                .unwrap_or(0);
 
             let tile = if tile_idx == ANIM_FLOWER_TILE as usize {
                 flower_ts.map_or_else(|| ts.get(tile_idx), |fts| fts.get(0))
@@ -1017,7 +1056,15 @@ fn draw_background_tiles(
             if let Some(palette) = silph_bg_palette {
                 fb.blit_gb_tile(screen_x, screen_y, tile, palette, false, false, false);
             } else if poison_bg_flash {
-                fb.blit_gb_tile(screen_x, screen_y, tile, &poison_palette, false, false, false);
+                fb.blit_gb_tile(
+                    screen_x,
+                    screen_y,
+                    tile,
+                    &POISON_BACKGROUND_PALETTE,
+                    false,
+                    false,
+                    false,
+                );
             } else {
                 fb.blit_gb_tile_indices(screen_x, screen_y, tile, false, false, false);
             }
@@ -1037,11 +1084,16 @@ pub(super) fn background_map_hash(screen: &OverworldScreen) -> u32 {
     // Same presence/size/live-grid fingerprint as the whole-frame key. The
     // session may pass this value straight through during this one draw.
     hash = (hash ^ 1).wrapping_mul(0x0100_0193);
-    for byte in [map.width, map.height]
-        .into_iter()
-        .chain(map.blocks.iter().copied())
-    {
-        hash = (hash ^ byte as u32).wrapping_mul(0x0100_0193);
+    for byte in [map.width, map.height] {
+        hash = (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193);
+    }
+    let mut chunks = map.blocks.chunks_exact(4);
+    for chunk in &mut chunks {
+        let word = u32::from_le_bytes(chunk.try_into().unwrap());
+        hash = (hash ^ word).wrapping_mul(0x0100_0193);
+    }
+    for &byte in chunks.remainder() {
+        hash = (hash ^ u32::from(byte)).wrapping_mul(0x0100_0193);
     }
     hash
 }
@@ -1058,6 +1110,27 @@ pub fn draw_overworld(
 /// Retained map BG while the field-menu return still owns cleared OBJ state.
 pub(crate) fn draw_overworld_background(screen: &mut OverworldScreen, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer, language: pokered_core::game_state::Lang) {
     draw_overworld_impl(screen, res, fb, language, None, None, None, None, true);
+}
+
+pub(crate) fn draw_overworld_background_cached(
+    screen: &mut OverworldScreen,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+    cache: &mut OverworldBackgroundCache,
+) {
+    let map_hash = cache.key.map(|key| key.map_hash);
+    draw_overworld_impl(
+        screen,
+        res,
+        fb,
+        language,
+        Some(cache),
+        None,
+        Some(true),
+        map_hash,
+        true,
+    );
 }
 
 pub(crate) fn draw_overworld_cached(
@@ -1217,6 +1290,28 @@ fn draw_overworld_impl(
         // the LY-split SCX ramp).
         let departure_scroll = screen.ship_departure.as_ref().map_or(0, |d| d.scroll_px());
         let departure_active = screen.ship_departure.is_some();
+
+        if hide_actors && reuse_composited_hint == Some(true) {
+            let key = OverworldBackgroundKey {
+                map: current_map as u8,
+                camera_x: view_origin_tx * TILE_SIZE as i32 + view_sub_x,
+                camera_y: view_origin_ty * TILE_SIZE as i32 + view_sub_y,
+                tile_anim_kind: tile_anim_kind as u8,
+                water_shift: screen.tile_anim.water_shift(),
+                flower_frame: screen.tile_anim.flower_frame(),
+                poison_bg_flash,
+                map_hash: same_frame_map_hash.unwrap_or_else(|| background_map_hash(screen)),
+            };
+            if shake_offset_y == 0 && !departure_active && silph_palette.is_none() {
+                if let Some(cache) = background_cache.as_deref_mut() {
+                    if cache.key == Some(key) && cache.output_key == Some(key) {
+                        restore_foreground_regions(fb, cache);
+                        cache.begin_partial_present();
+                        return;
+                    }
+                }
+            }
+        }
 
         let (map_w, map_h) = current_map.dimensions();
         // Read the LIVE block grid: scripted tile swaps (CUT trees, gym gates,

@@ -105,6 +105,40 @@ impl NotePreparation {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        match &self.stage {
+            Stage::Stream(work) => work.plain_prefix(),
+            Stage::Length { work, .. } => work.plain_prefix(),
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        if let Stage::Stream(work) = &mut self.stage {
+            let cycles = work.accept_plain_prefix(count, prefix);
+            self.cycles += cycles;
+            return cycles;
+        }
+        let Stage::Length { stream, work } = &mut self.stage else {
+            unreachable!("nonempty length preparation prefix")
+        };
+        let cycles = work.accept_plain_prefix(count, prefix);
+        self.cycles += cycles;
+        if work.finished() {
+            let (fraction, delay) = work.result().expect("completed note length");
+            self.stage = Stage::Boundary(PreparationResult {
+                stream: *stream,
+                fraction,
+                delay,
+                boundary: if work.returned() {
+                    PreparationBoundary::NoiseReturned
+                } else {
+                    PreparationBoundary::NotePitch
+                },
+                cycles: self.cycles,
+            });
+        }
+        cycles
+    }
     pub fn try_step<E>(
         &mut self,
         data: &[u8],
@@ -199,6 +233,23 @@ mod tests {
     struct Fixture {
         cases: alloc::vec::Vec<Case>,
     }
+    #[test]
+    fn stream_entry_prefix_matches_each_accept_count() {
+        let fixture: Fixture =
+            serde_json::from_str(include_str!("note_preparation_golden.json")).unwrap();
+        let case = fixture.cases.first().unwrap();
+        for count in 1..=11 {
+            let mut expected = NotePreparation::new(case.input).unwrap();
+            for _ in 0..count {
+                expected.try_step(&case.data, |_| Ok::<(), ()>(())).unwrap();
+            }
+            let mut actual = NotePreparation::new(case.input).unwrap();
+            let prefix = actual.plain_prefix();
+            actual.accept_plain_prefix(count, prefix);
+            assert_eq!(actual, expected, "count={count}");
+        }
+    }
+
     #[test]
     fn composed_commands_and_length_match_whole_source_execution_without_extra_calls() {
         let fixture: Fixture =

@@ -10,6 +10,8 @@ pub struct ObjectRasterSpan {
     pub oam: Vec<u8>,
     pub lcdc: u8,
     pub palettes: [u8; 2],
+    #[serde(default)]
+    pub oam_revision: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -30,22 +32,37 @@ impl ObjectRaster {
         self.revision
     }
 
-    pub(super) fn scan_line(&mut self, line: u8, oam: &[u8], lcdc: u8, palettes: [u8; 2]) {
+    pub(super) fn scan_line(
+        &mut self,
+        line: u8,
+        oam: &[u8],
+        oam_revision: u64,
+        lcdc: u8,
+        palettes: [u8; 2],
+    ) {
         if line == 0 {
             self.drawing.clear();
         }
-        if self
-            .drawing
-            .last()
-            .is_none_or(|last| last.oam != oam || last.lcdc != lcdc || last.palettes != palettes)
-        {
+        if self.drawing.last().is_none_or(|last| {
+            (last.oam_revision != oam_revision && last.oam != oam)
+                || last.lcdc != lcdc
+                || last.palettes != palettes
+        }) {
             self.drawing.push(ObjectRasterSpan {
                 start_line: line,
                 oam: oam.to_vec(),
                 lcdc,
                 palettes,
+                oam_revision,
             });
         }
+    }
+
+    pub(super) fn restart_frame(&mut self) {
+        let mut span = self.drawing.last().expect("native object span").clone();
+        span.start_line = 0;
+        self.drawing.clear();
+        self.drawing.push(span);
     }
 
     pub(super) fn complete_frame(&mut self) {
@@ -68,7 +85,10 @@ impl DisplayDevice {
             return Err(DisplayDeviceError::InvalidOam);
         }
         let previous_control = (self.lcdc, self.obp0, self.obp1);
-        self.oam.copy_from_slice(oam);
+        if self.oam != oam {
+            self.oam_revision = self.oam_revision.wrapping_add(1);
+            self.oam.copy_from_slice(oam);
+        }
         self.lcdc = (self.lcdc | 2) & !4; // Native field objects use 8×8 tiles.
         [self.obp0, self.obp1] = palettes;
         let initial = ObjectRasterSpan {
@@ -76,6 +96,7 @@ impl DisplayDevice {
             oam: oam.to_vec(),
             lcdc: self.lcdc,
             palettes,
+            oam_revision: self.oam_revision,
         };
         self.object_raster = Some(Box::new(ObjectRaster {
             drawing: vec![initial.clone()],
@@ -150,5 +171,30 @@ mod tests {
         assert_eq!(restored, device);
         device.end_native_object_scanout();
         assert_eq!(device.read_port(0xff40).unwrap(), 0x91);
+    }
+
+    #[test]
+    fn revision_changes_still_compare_content_before_publishing_a_span() {
+        let oam = [0; 160];
+        let initial = ObjectRasterSpan {
+            start_line: 0,
+            oam: oam.to_vec(),
+            lcdc: 0x93,
+            palettes: [0xd0, 0xe0],
+            oam_revision: 0,
+        };
+        let mut raster = ObjectRaster {
+            drawing: vec![initial.clone()],
+            completed: vec![initial],
+            previous_control: (0, 0, 0),
+            revision: 0,
+        };
+        raster.scan_line(1, &oam, 2, 0x93, [0xd0, 0xe0]);
+        assert_eq!(raster.drawing.len(), 1);
+        let mut changed = oam;
+        changed[0] = 76;
+        raster.scan_line(2, &changed, 3, 0x93, [0xd0, 0xe0]);
+        assert_eq!(raster.drawing.len(), 2);
+        assert_eq!(raster.drawing[1].oam_revision, 3);
     }
 }

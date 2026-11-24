@@ -43,6 +43,7 @@ use pokered_renderer::input::GbButton;
 use pokered_renderer::input::InputState;
 use pokered_renderer::palette::GbColor;
 use pokered_renderer::{FrameBuffer, Rgba};
+use pokered_renderer::gba_dma::copy_words as dma3_copy_words;
 
 /// Route the game crates' `log` output to the mGBA debug console.
 struct GbaLogger;
@@ -107,18 +108,6 @@ fn set_display_control(mode: u16) {
 #[inline]
 fn is_vblank() -> bool {
     unsafe { core::ptr::read_volatile(VCOUNT) >= 160 }
-}
-
-/// Immediate DMA3 copy. GBA DMA is synchronous: the CPU resumes after all
-/// words have reached VRAM and the enable bit has cleared.
-#[inline]
-unsafe fn dma3_copy_words(source: *const u32, destination: *mut u32, words: usize) {
-    debug_assert!(words != 0 && words <= u16::MAX as usize);
-    unsafe {
-        core::ptr::write_volatile(DMA3_SOURCE, source as usize as u32);
-        core::ptr::write_volatile(DMA3_DESTINATION, destination as usize as u32);
-        core::ptr::write_volatile(DMA3_CONTROL, DMA_ENABLE | DMA_32BIT | words as u32);
-    }
 }
 
 /// Overlap-safe DMA3 memmove inside a byte slice. Returns false when the
@@ -407,15 +396,13 @@ impl Mode4Presenter {
     }
 
     /// When the image is static, use the otherwise idle frame budget to bring
-    /// the hidden page up to date without flipping it. This lets the next
-    /// isolated sprite-only redraw use its small damage set immediately.
+    /// the hidden page up to date without flipping it. A pending full page is
+    /// left for the next present: its full flag already forces a correct copy,
+    /// so repeating it here would duplicate the last full render.
     fn sync_hidden(&mut self, fb: &FrameBuffer) {
         let page = self.draw_page as usize;
         let pending = self.pending_damage[page];
-        if pending.full {
-            Self::copy_full_page(fb, self.draw_page);
-            self.pending_damage[page] = DirtyTiles::EMPTY;
-        } else if pending.any {
+        if pending.any && !pending.full {
             Self::copy_dirty_page(fb, self.draw_page, pending);
             self.pending_damage[page] = DirtyTiles::EMPTY;
         }

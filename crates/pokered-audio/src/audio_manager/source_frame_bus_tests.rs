@@ -2,7 +2,7 @@
 use super::*;
 use crate::source_clock::{
     apu_bus::{ApuAccess, ApuInstruction},
-    frame_instructions::{FrameStepError, SourceSong},
+    frame_instructions::{FrameStepError, SourceAudioFrame, SourceSong},
     AudioAdmissionError,
 };
 use alloc::{string::String, vec::Vec};
@@ -686,7 +686,17 @@ fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit
                 let mut manager = at_frame(case);
                 let mut reference = at_frame(case);
                 let mut cursor = None;
-                let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+                let prepared = reference
+                    .prepare_source_frame_for_cursor(case.song)
+                    .unwrap();
+                let mut expected = SourceAudioFrame::new_with_bus_prepared(
+                    &reference.engine.sequencer,
+                    case.song,
+                    case.song.bank(),
+                    0,
+                    &prepared,
+                )
+                .unwrap();
                 let mut iteration = 0;
                 loop {
                     // Refuse the first instruction even on the new-frame path.
@@ -711,7 +721,7 @@ fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit
                     );
                     assert_eq!(actual, expected_result);
                     assert_eq!(actual_ops, expected_ops);
-                    assert_eq!(cursor.as_deref(), Some(&expected));
+                    assert_eq!(cursor.as_deref(), Some(&*expected));
                     assert_eq!(native(&manager), native(&reference));
                     assert_eq!(manager.apu.playback_state(), reference.apu.playback_state());
                     if actual.is_ok() {
@@ -731,7 +741,17 @@ fn exclusive_source_service_preserves_instructions_refusals_and_once_only_commit
             let mut manager = at_frame(case);
             let mut reference = at_frame(case);
             let mut cursor = None;
-            let mut expected = reference.begin_source_audio_frame_with_bus(case.song.bank(), 0).unwrap();
+            let prepared = reference
+                .prepare_source_frame_for_cursor(case.song)
+                .unwrap();
+            let mut expected = SourceAudioFrame::new_with_bus_prepared(
+                &reference.engine.sequencer,
+                case.song,
+                case.song.bank(),
+                0,
+                &prepared,
+            )
+            .unwrap();
             let mut actual_ops = Vec::new();
             let mut expected_ops = Vec::new();
             let actual = manager.service_source_audio_frame(&mut cursor, case.song.bank(), 0,

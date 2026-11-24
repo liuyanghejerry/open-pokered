@@ -85,6 +85,14 @@ impl QueuedBgCopyWork {
     pub fn finished(&self) -> bool {
         self.step == Step::Done
     }
+    pub(crate) fn is_empty(&self) -> bool {
+        self.step == Step::Source && self.request.source as u8 == 0
+    }
+    pub(crate) fn finish_empty(&mut self) {
+        debug_assert!(self.is_empty());
+        self.a = 0;
+        self.step = Step::Done;
+    }
     pub fn step<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>
     where
         B: DisplayInstructionBus

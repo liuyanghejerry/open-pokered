@@ -13,6 +13,42 @@ impl ClearShadowOamWork {
         self.next == 7
     }
 
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if self.next == 0 && bus.execute_shadow_oam_clear(3876)? {
+            self.next = 7;
+            self.offset = 159;
+            return Ok(());
+        }
+        while !self.finished() {
+            let mut trial = *self;
+            let mut generated = 0usize;
+            let accepted = bus.execute_shadow_oam_run(core::iter::from_fn(|| {
+                let mut plain = super::display_lcd_work::PlainInstructionBus(0);
+                match trial.step(&mut plain) {
+                    Ok(Some(instruction)) => {
+                        generated += 1;
+                        Some(instruction)
+                    }
+                    Ok(None) => None,
+                    Err(error) => match error {},
+                }
+            }))?;
+            if accepted == 0 {
+                if self.step(bus)?.is_none() {
+                    return Ok(());
+                }
+            } else if accepted == generated && trial.finished() {
+                *self = trial;
+            } else {
+                let mut plain = super::display_lcd_work::PlainInstructionBus(0);
+                for _ in 0..accepted {
+                    let _ = self.step(&mut plain);
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn step<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,
@@ -71,13 +107,8 @@ mod tests {
         let mut clear = ClearShadowOamWork::default();
         let start = time.elapsed();
         loop {
-            let before = clear;
-            match clear.step(&mut time) {
-                Ok(Some(_)) => (),
-                Err(DisplayWorkError::Budget) => {
-                    assert_eq!(clear, before);
-                    break;
-                }
+            match clear.run(&mut time) {
+                Ok(()) | Err(DisplayWorkError::Budget) => break,
                 other => panic!("unexpected clear result {other:?}"),
             }
         }
@@ -89,8 +120,8 @@ mod tests {
             serde_json::from_str(&state).unwrap();
         time.begin_native_update();
         other_time.begin_native_update();
-        while clear.step(&mut time).unwrap().is_some() {}
-        while other_clear.step(&mut other_time).unwrap().is_some() {}
+        clear.run(&mut time).unwrap();
+        other_clear.run(&mut other_time).unwrap();
         assert_eq!(time.elapsed() - start, 3876);
         assert!(clear.finished());
         assert_eq!(clear, other_clear);
@@ -100,5 +131,26 @@ mod tests {
         let mut dma = DisplayDmaWork::default();
         while dma.step(&mut time).unwrap().is_some() {}
         assert!(time.device().oam().iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn foreground_clear_batch_matches_plain_instruction_execution() {
+        let mut batched = DisplayWorkTime::default();
+        batched.begin_native_update();
+        batched.set_vblank_dispatch_enabled(true);
+        batched.set_shadow_oam(&[0x5a; 160]).unwrap();
+        let mut stepped = batched.clone();
+        stepped.set_vblank_dispatch_enabled(false);
+        let start = batched.elapsed();
+        let mut batch_work = ClearShadowOamWork::default();
+        let mut step_work = ClearShadowOamWork::default();
+        batch_work.run(&mut batched).unwrap();
+        step_work.run(&mut stepped).unwrap();
+        assert_eq!(batch_work, step_work);
+        assert_eq!(batched.elapsed() - start, 3876);
+        assert_eq!(stepped.elapsed() - start, 3876);
+        assert_eq!(batched.shadow_oam(), stepped.shadow_oam());
+        assert_eq!(batched.device(), stepped.device());
+        assert!(!batched.active_vblank());
     }
 }

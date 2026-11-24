@@ -19,9 +19,30 @@ pub struct DisplayDmaWork {
     step: Step,
     a: u8,
 }
+pub(crate) const DMA_TAIL: [u8; 82] = {
+    let mut code = [0; 82];
+    code[0] = 8;
+    code[81] = 16;
+    let mut index = 0;
+    while index < 40 {
+        code[1 + index * 2] = 4;
+        code[2 + index * 2] = if index == 39 { 8 } else { 12 };
+        index += 1;
+    }
+    code
+};
+
 impl DisplayDmaWork {
     pub fn finished(&self) -> bool {
         self.step == Step::Done
+    }
+    pub(crate) fn at_start(&self) -> bool {
+        self.step == Step::LoadSource
+    }
+    pub(crate) fn finish(&mut self) {
+        debug_assert!(self.step == Step::LoadCount);
+        self.a = 0;
+        self.step = Step::Done;
     }
     pub fn step<B: DisplayInstructionBus>(
         &mut self,

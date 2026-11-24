@@ -39,32 +39,6 @@ pub fn music_dispatch_with_context(
     if channel >= 4 {
         return None;
     }
-    // This legacy linear API deliberately excludes controls: its caller accounts
-    // for those separately. The retained stream cursor itself handles controls.
-    let mut ptr = 0;
-    loop {
-        let command = *bytes.get(ptr)?;
-        ptr += 1;
-        match command {
-            0xd0..=0xdf => {
-                if channel != 3 {
-                    bytes.get(ptr)?;
-                    ptr += 1;
-                }
-            }
-            0xec => {
-                bytes.get(ptr)?;
-                ptr += 1;
-            }
-            0xe0..=0xe7 => (),
-            0xeb => {
-                bytes.get(ptr + 2)?;
-                break;
-            }
-            0x00..=0xcf => break,
-            _ => return None,
-        }
-    }
     let mut work = StreamInstructions::with_drum_context(
         StreamInput {
             channel,
@@ -78,6 +52,11 @@ pub fn music_dispatch_with_context(
     )
     .ok()?;
     while !work.finished() {
+        let prefix = work.plain_prefix();
+        if !prefix.is_empty() {
+            work.accept_plain_prefix(prefix.len(), prefix);
+            continue;
+        }
         work.try_step(bytes, |_| Ok::<(), core::convert::Infallible>(()))
             .ok()?;
     }

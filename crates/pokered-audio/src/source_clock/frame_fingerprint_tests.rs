@@ -90,21 +90,44 @@ fn restored_frame_keeps_full_program_guards_for_all_eight_channels() {
         for i in 0..8 {
             let original = manager.sequencer.channels[i].data.clone();
             assert_eq!(
-                restored.start.voices[i].data_fingerprint,
+                restored.start.voices[i].data_fingerprint.get(),
                 wide_fingerprint(&original)
             );
+            let fast = fast_program_fingerprint(&original);
+            let compact = compact_program_fingerprint(&original);
+            assert_eq!(restored.start.voices[i].fast_data_fingerprint.get(), fast);
             if !original.is_empty() {
                 for index in [0, original.len() / 2, original.len() - 1] {
                     manager.sequencer.channels[i].data[index] ^= 1;
+                    assert_ne!(
+                        fast,
+                        fast_program_fingerprint(&manager.sequencer.channels[i].data)
+                    );
+                    assert_ne!(
+                        compact,
+                        compact_program_fingerprint(&manager.sequencer.channels[i].data)
+                    );
                     assert!(!restored.matches_native(&manager.sequencer));
                     manager.sequencer.channels[i].data[index] ^= 1;
                     assert!(restored.matches_native(&manager.sequencer));
                 }
                 manager.sequencer.channels[i].data.pop();
+                assert_ne!(
+                    fast,
+                    fast_program_fingerprint(&manager.sequencer.channels[i].data)
+                );
+                assert_ne!(
+                    compact,
+                    compact_program_fingerprint(&manager.sequencer.channels[i].data)
+                );
                 assert!(!restored.matches_native(&manager.sequencer));
                 manager.sequencer.channels[i].data = original.clone();
             }
             manager.sequencer.channels[i].data.push(0);
+            assert_ne!(
+                fast,
+                fast_program_fingerprint(&manager.sequencer.channels[i].data)
+            );
             assert!(!restored.matches_native(&manager.sequencer));
             manager.sequencer.channels[i].data = original;
             assert!(restored.matches_native(&manager.sequencer));

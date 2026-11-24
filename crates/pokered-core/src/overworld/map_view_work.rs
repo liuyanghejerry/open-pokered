@@ -49,6 +49,33 @@ impl MapViewWork {
     pub fn finished(&self) -> bool { self.phase == Phase::Done }
     pub fn visible_tiles(&self) -> Option<&[u8]> { self.finished().then_some(&self.visible) }
 
+    fn step_plain(
+        &mut self,
+        bus: &mut super::display_lcd_work::PlainInstructionBus,
+    ) -> Result<bool, core::convert::Infallible> {
+        if matches!(self.phase, Phase::Return(_) | Phase::Done) {
+            return Ok(false);
+        }
+        self.step(bus)
+    }
+
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        while !self.finished() {
+            if matches!(self.phase, Phase::Setup(_) | Phase::Return(_)) {
+                self.step(bus)?;
+                continue;
+            }
+            super::display_lcd_work::run_plain_work(
+                self,
+                bus,
+                |work| matches!(work.phase, Phase::Return(_) | Phase::Done),
+                Self::step_plain,
+                Self::step,
+            )?;
+        }
+        Ok(())
+    }
+
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Phase::*;
         let tcycles = match self.phase {
@@ -190,14 +217,11 @@ mod tests {
             let bank = case["saved_bank"].as_u64().unwrap() as u8;
             let mut bus = Bus { cycles: 0, bank, selected: bank, grant };
             loop {
-                match work.step(&mut bus) {
-                    Ok(true) => (),
-                    Ok(false) => break,
+                match work.run(&mut bus) {
+                    Ok(()) => break,
                     Err(()) => {
-                        let before = work.clone();
-                        assert_eq!(work.step(&mut bus), Err(()));
-                        assert_eq!(work, before);
-                        work = serde_json::from_str(&serde_json::to_string(&work).unwrap()).unwrap();
+                        work =
+                            serde_json::from_str(&serde_json::to_string(&work).unwrap()).unwrap();
                         bus.grant = grant;
                     }
                 }

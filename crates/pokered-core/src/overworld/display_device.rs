@@ -54,7 +54,7 @@ struct OamDma {
     next: u8,
     cycles_until_byte: u8,
 }
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct DisplayDevice {
     observed_tcycles: u64,
     lcdc: u8,
@@ -80,6 +80,10 @@ pub struct DisplayDevice {
     ie: u8,
     dma: Option<OamDma>,
     oam: Vec<u8>,
+    #[serde(default)]
+    oam_revision: u64,
+    #[serde(skip)]
+    oam_visibility_cache: core::cell::Cell<Option<(u64, bool)>>,
     /// Optional scanout of the retained native background during a source
     /// display caller. Ordinary native rendering does not allocate this.
     #[serde(default)]
@@ -89,6 +93,38 @@ pub struct DisplayDevice {
     #[serde(default)]
     object_raster: Option<Box<ObjectRaster>>,
 }
+impl PartialEq for DisplayDevice {
+    fn eq(&self, other: &Self) -> bool {
+        self.observed_tcycles == other.observed_tcycles
+            && self.lcdc == other.lcdc
+            && self.ly == other.ly
+            && self.lyc == other.lyc
+            && self.stat_enable == other.stat_enable
+            && self.stat_irq_line == other.stat_irq_line
+            && self.scx == other.scx
+            && self.scy == other.scy
+            && self.wx == other.wx
+            && self.wy == other.wy
+            && self.bgp == other.bgp
+            && self.obp0 == other.obp0
+            && self.obp1 == other.obp1
+            && self.window_y_reached == other.window_y_reached
+            && self.phase == other.phase
+            && self.phase_remaining == other.phase_remaining
+            && self.mode3_length == other.mode3_length
+            && self.first_frame == other.first_frame
+            && self.vblank_epoch == other.vblank_epoch
+            && self.iflags == other.iflags
+            && self.ie == other.ie
+            && self.dma == other.dma
+            && self.oam == other.oam
+            && self.oam_revision == other.oam_revision
+            && self.palette_raster == other.palette_raster
+            && self.background_transfer == other.background_transfer
+            && self.object_raster == other.object_raster
+    }
+}
+impl Eq for DisplayDevice {}
 // A constructor-checked interval keeps the one-period proof local and avoids
 // recomputing the same 64-bit subtraction in both the time owner and device.
 pub(super) struct CheckedFramePeriod {
@@ -178,6 +214,26 @@ impl DisplayDevice {
             && (!self.lcd_enabled() || u16::from(tcycles) < self.phase_remaining)
     }
     #[inline(always)]
+    pub(super) fn has_no_event_within_long(&self, tcycles: u64) -> bool {
+        self.dma.is_none() && (!self.lcd_enabled() || tcycles < u64::from(self.phase_remaining))
+    }
+    pub(super) fn unobserved_vram_limit(&self) -> Option<u64> {
+        if self.dma.is_some() || self.background_transfer.is_some() {
+            return None;
+        }
+        if !self.lcd_enabled() {
+            return Some(u64::MAX);
+        }
+        if self.phase == RasterPhase::VBlank && (144..=153).contains(&self.ly) {
+            return Some(u64::from(self.phase_remaining) + u64::from(153 - self.ly) * 456);
+        }
+        Some(u64::from(self.phase_remaining))
+    }
+    pub(super) fn unobserved_vram_window(&self, tcycles: u64) -> bool {
+        self.unobserved_vram_limit()
+            .is_some_and(|limit| tcycles < limit)
+    }
+    #[inline(always)]
     pub fn validate(&self) -> Result<(), DisplayDeviceError> {
         if self.oam.len() != 160 {
             return Err(DisplayDeviceError::InvalidOam);
@@ -239,6 +295,8 @@ impl DisplayDevice {
             ie: 0,
             dma: None,
             oam: vec![0; 160],
+            oam_revision: 0,
+            oam_visibility_cache: core::cell::Cell::new(None),
             palette_raster: None,
             background_transfer: None,
             object_raster: None,
@@ -263,6 +321,9 @@ impl DisplayDevice {
     }
     pub fn oam(&self) -> &[u8] {
         &self.oam
+    }
+    pub fn oam_revision(&self) -> u64 {
+        self.oam_revision
     }
     pub fn vblank_epoch(&self) -> u64 {
         self.vblank_epoch
@@ -404,6 +465,10 @@ impl DisplayDevice {
         Ok(())
     }
     fn stat_edge(&mut self) {
+        if self.stat_enable == 0 {
+            self.stat_irq_line = false;
+            return;
+        }
         let line = self.lcd_enabled()
             && ((self.mode() == 0 && self.stat_enable & 8 != 0)
                 || (self.mode() == 1 && self.stat_enable & 16 != 0)
@@ -418,12 +483,26 @@ impl DisplayDevice {
     /// decoded sprite resource, visible-actor heuristic or scene duration.
     /// The selected ten objects count by OAM Y even if their X is offscreen.
     /// The fetch penalties follow Pan Docs Rendering / OBJ penalty algorithm.
+    pub fn oam_has_no_visible_objects(&self) -> bool {
+        if let Some((revision, empty)) = self.oam_visibility_cache.get() {
+            if revision == self.oam_revision {
+                return empty;
+            }
+        }
+        let empty = self
+            .oam
+            .chunks_exact(4)
+            .all(|object| object[0] == 0 || object[0] >= 160);
+        self.oam_visibility_cache
+            .set(Some((self.oam_revision, empty)));
+        empty
+    }
     fn mode3_dots(&self) -> u16 {
         let scroll = u16::from(self.scx & 7);
         let window = self.lcdc & 0x21 == 0x21 && self.window_y_reached && self.wx <= 166;
         let window_x = i16::from(self.wx) - 7;
         let mut result = 172 + scroll + if window { 6 } else { 0 };
-        if self.lcdc & 2 == 0 {
+        if self.lcdc & 2 == 0 || self.oam_has_no_visible_objects() {
             return result;
         }
         let height = if self.lcdc & 4 != 0 { 16 } else { 8 };
@@ -468,6 +547,7 @@ impl DisplayDevice {
         }
         result
     }
+    #[inline(always)]
     fn transition(&mut self) {
         use RasterPhase::*;
         match self.phase {
@@ -478,7 +558,13 @@ impl DisplayDevice {
             }
             StartupMode0 | Mode2 => {
                 if let Some(raster) = self.object_raster.as_mut() {
-                    raster.scan_line(self.ly, &self.oam, self.lcdc, [self.obp0, self.obp1]);
+                    raster.scan_line(
+                        self.ly,
+                        &self.oam,
+                        self.oam_revision,
+                        self.lcdc,
+                        [self.obp0, self.obp1],
+                    );
                 }
                 if let Some(raster) = self.background_transfer.as_mut() {
                     raster.scan_line(self.ly);
@@ -562,16 +648,14 @@ impl DisplayDevice {
     }
     #[inline(always)]
     pub(super) fn idle_period_eligible(&self, from: u64) -> bool {
-        if self.lcdc & 0xa2 != 0x80
+        if self.lcdc & 0xa0 != 0x80
+            || (self.lcdc & 2 != 0 && !self.oam_has_no_visible_objects())
             || (self.first_frame | self.stat_irq_line)
             || self.mode3_length != 172 + u16::from(self.scx & 7)
             || self.dma.is_some()
             || self.stat_enable != 0
             || self.oam.len() != 160
             || self.observed_tcycles != from
-            || self.palette_raster.is_some()
-            || self.background_transfer.is_some()
-            || self.object_raster.is_some()
         {
             return false;
         }
@@ -599,11 +683,49 @@ impl DisplayDevice {
         self.advance_eligible_period(period);
         true
     }
+    fn advance_idle_rasters(&mut self) {
+        let finishing_visible_frame = self.ly < 144;
+        if finishing_visible_frame {
+            if let Some(raster) = self.object_raster.as_mut() {
+                raster.complete_frame();
+            }
+            if let Some(raster) = self.background_transfer.as_mut() {
+                raster.complete_frame();
+            }
+            if let Some(raster) = self.palette_raster.as_mut() {
+                raster.complete_frame();
+            }
+        }
+        if let Some(raster) = self.object_raster.as_mut() {
+            raster.restart_frame();
+        }
+        if let Some(raster) = self.background_transfer.as_mut() {
+            for line in 0..144 {
+                raster.scan_line(line);
+            }
+        }
+        let palette = self.effective_background_palette();
+        if let Some(raster) = self.palette_raster.as_mut() {
+            raster.begin_frame(palette);
+        }
+        if let Some(raster) = self.object_raster.as_mut() {
+            raster.complete_frame();
+        }
+        if let Some(raster) = self.background_transfer.as_mut() {
+            raster.complete_frame();
+        }
+        if let Some(raster) = self.palette_raster.as_mut() {
+            raster.complete_frame();
+            raster.begin_frame(palette);
+        }
+    }
+
     // DisplayWorkTime retains eligibility only while its private device is
     // unchanged except for these exact periodic advances.
     #[inline(always)]
     pub(super) fn advance_eligible_period(&mut self, period: CheckedFramePeriod) {
         debug_assert!(self.idle_period_eligible(period.from));
+        self.advance_idle_rasters();
         self.observed_tcycles = period.target;
         self.vblank_epoch += 1;
         self.iflags |= 1;
@@ -614,7 +736,11 @@ impl DisplayDevice {
     pub(super) fn advance_eligible_periods(&mut self, periods: u32, target: u64) {
         debug_assert!(periods != 0);
         debug_assert!(self.idle_period_eligible(self.observed_tcycles));
-        debug_assert_eq!(target - self.observed_tcycles, u64::from(periods) * 154 * 456);
+        debug_assert_eq!(
+            target - self.observed_tcycles,
+            u64::from(periods) * 154 * 456
+        );
+        self.advance_idle_rasters();
         self.observed_tcycles = target;
         self.vblank_epoch += u64::from(periods);
         self.iflags |= 1;
@@ -653,22 +779,50 @@ impl DisplayDevice {
         instruction_tcycles: u8,
         shadow_oam: &[u8],
     ) -> Result<(), DisplayDeviceError> {
+        self.observe_reserved_interval(tcycles, u64::from(instruction_tcycles), shadow_oam)
+    }
+
+    #[inline(always)]
+    pub(super) fn observe_reserved_interval(
+        &mut self,
+        tcycles: u64,
+        interval_tcycles: u64,
+        shadow_oam: &[u8],
+    ) -> Result<(), DisplayDeviceError> {
+        self.observe_reserved_interval_inner(tcycles, interval_tcycles, shadow_oam, true)
+    }
+
+    #[inline(always)]
+    pub(super) fn observe_reserved_interval_trusted(
+        &mut self,
+        tcycles: u64,
+        interval_tcycles: u64,
+        shadow_oam: &[u8],
+    ) -> Result<(), DisplayDeviceError> {
+        self.observe_reserved_interval_inner(tcycles, interval_tcycles, shadow_oam, false)
+    }
+
+    #[inline(always)]
+    fn observe_reserved_interval_inner(
+        &mut self,
+        tcycles: u64,
+        interval_tcycles: u64,
+        shadow_oam: &[u8],
+        check_oam: bool,
+    ) -> Result<(), DisplayDeviceError> {
         debug_assert!(self.validate().is_ok());
-        // The exclusive bus reserved a synchronized instruction and checked
-        // elapsed + duration for overflow. Its duration is already known;
-        // do not recover it with another absolute 64-bit subtraction.
         debug_assert_eq!(
             tcycles.checked_sub(self.observed_tcycles),
-            Some(u64::from(instruction_tcycles))
+            Some(interval_tcycles)
         );
-        if shadow_oam.len() != 160 || self.oam.len() != 160 {
+        if check_oam && (shadow_oam.len() != 160 || self.oam.len() != 160) {
             return Err(DisplayDeviceError::InvalidOam);
         }
         if self.dma.is_none()
-            && (!self.lcd_enabled() || u16::from(instruction_tcycles) < self.phase_remaining)
+            && (!self.lcd_enabled() || interval_tcycles < u64::from(self.phase_remaining))
         {
             if self.lcd_enabled() {
-                self.phase_remaining -= u16::from(instruction_tcycles);
+                self.phase_remaining -= interval_tcycles as u16;
             }
             self.observed_tcycles = tcycles;
             return Ok(());
@@ -705,15 +859,57 @@ impl DisplayDevice {
     ) -> Result<(), DisplayDeviceError> {
         let mut remaining = tcycles - self.observed_tcycles;
         while remaining != 0 {
+            let part = remaining.min(u64::from(u32::MAX)) as u32;
+            let target = self.observed_tcycles + u64::from(part);
+            self.observe_time_events_chunk(target, part, shadow_oam);
+            remaining -= u64::from(part);
+        }
+        Ok(())
+    }
+
+    fn observe_time_events_chunk(&mut self, tcycles: u64, mut remaining: u32, shadow_oam: &[u8]) {
+        while remaining != 0 {
+            if remaining < 456 && self.dma.is_none() {
+                let lcd_active = self.lcd_enabled();
+                let part = if lcd_active {
+                    remaining.min(u32::from(self.phase_remaining))
+                } else {
+                    remaining
+                };
+                if lcd_active {
+                    self.phase_remaining -= part as u16;
+                }
+                remaining -= part;
+                if lcd_active && self.phase_remaining == 0 {
+                    self.transition();
+                }
+                continue;
+            }
+            if remaining < 912
+                && self.phase == RasterPhase::VBlank
+                && self.ly < 153
+                && self.dma.is_none()
+                && self.lcd_enabled()
+            {
+                let part = remaining.min(u32::from(self.phase_remaining));
+                self.phase_remaining -= part as u16;
+                remaining -= part;
+                if self.phase_remaining == 0 {
+                    self.ly += 1;
+                    self.phase_remaining = 456;
+                    if self.ly == 153 && self.first_frame {
+                        self.phase_remaining += 8;
+                    }
+                    self.stat_edge();
+                }
+                continue;
+            }
             // With unchanged empty OBJ state, no window/STAT/DMA and a
             // settled scan, whole periods return to precisely this phase.
             // Account their real VBlank edges without walking every line.
-            // Startup, changed scroll/window latches and live transfers keep
-            // the ordinary event path below.
+            // Startup, changed scroll/window latches and DMA keep the ordinary
+            // event path below. Native rasters settle to the same periodic state.
             if remaining >= 154 * 456
-                && self.palette_raster.is_none()
-                && self.background_transfer.is_none()
-                && self.object_raster.is_none()
                 && self.lcd_enabled()
                 && !self.first_frame
                 && self.dma.is_none()
@@ -726,10 +922,11 @@ impl DisplayDevice {
                     == (self.ly < 144
                         && (self.wy < self.ly
                             || (self.wy == self.ly && self.phase != RasterPhase::AdvanceLy)))
-                && (self.lcdc & 2 == 0 || self.oam.iter().all(|&byte| byte == 0))
+                && (self.lcdc & 2 == 0 || self.oam_has_no_visible_objects())
             {
                 let frames = remaining / (154 * 456);
-                self.vblank_epoch += frames;
+                self.advance_idle_rasters();
+                self.vblank_epoch += u64::from(frames);
                 self.iflags |= 1;
                 remaining %= 154 * 456;
                 continue;
@@ -748,12 +945,18 @@ impl DisplayDevice {
                 && self.dma.is_none()
                 && self.stat_enable == 0
             {
-                let lines = (remaining / 456).min(u64::from(143 - self.ly)) as u8;
+                let lines = (remaining / 456).min(u32::from(143 - self.ly)) as u8;
                 let previous_ly = self.ly;
                 if let Some(raster) = self.object_raster.as_mut() {
                     // The span remains unchanged across these lines; line0
                     // still clears the drawing frame before appending it.
-                    raster.scan_line(previous_ly, &self.oam, self.lcdc, [self.obp0, self.obp1]);
+                    raster.scan_line(
+                        previous_ly,
+                        &self.oam,
+                        self.oam_revision,
+                        self.lcdc,
+                        [self.obp0, self.obp1],
+                    );
                 }
                 if let Some(raster) = self.background_transfer.as_mut() {
                     // No stores can interleave this idle span. Each skipped
@@ -768,47 +971,241 @@ impl DisplayDevice {
                 self.ly += 1;
                 self.window_y_reached |= self.ly == self.wy;
                 self.stat_irq_line = false;
-                remaining -= u64::from(lines) * 456;
+                remaining -= u32::from(lines) * 456;
                 continue;
             }
-            let lcd_next = if self.lcd_enabled() {
-                u64::from(self.phase_remaining)
+            if remaining >= 456
+                && self.phase == RasterPhase::VBlank
+                && self.phase_remaining == 456
+                && self.ly < 153
+                && !self.first_frame
+                && self.lcd_enabled()
+                && self.dma.is_none()
+                && self.stat_enable == 0
+            {
+                let lines = (remaining / 456).min(u32::from(153 - self.ly));
+                self.ly += lines as u8;
+                remaining -= lines * 456;
+                continue;
+            }
+            if self.dma.is_none() {
+                let lcd_active = self.lcd_enabled();
+                let part = if lcd_active {
+                    remaining.min(u32::from(self.phase_remaining))
+                } else {
+                    remaining
+                };
+                if lcd_active {
+                    self.phase_remaining -= part as u16;
+                }
+                remaining -= part;
+                if lcd_active && self.phase_remaining == 0 {
+                    self.transition();
+                }
+                continue;
+            }
+            let lcd_active = self.lcd_enabled();
+            let lcd_next = if lcd_active {
+                u32::from(self.phase_remaining)
             } else {
-                u64::MAX
+                u32::MAX
             };
             let dma_next = self
                 .dma
-                .map_or(u64::MAX, |dma| u64::from(dma.cycles_until_byte));
-            let part = remaining.min(lcd_next).min(dma_next);
-            if self.lcd_enabled() {
+                .map_or(u32::MAX, |dma| u32::from(dma.cycles_until_byte));
+            let dma_count = self.dma.map_or(1, |dma| {
+                let boundary = remaining.min(lcd_next);
+                if boundary < dma_next {
+                    1
+                } else {
+                    (1 + (boundary - dma_next) / 4).min(u32::from(160 - dma.next)) as usize
+                }
+            });
+            let part = if dma_count > 1 {
+                dma_next + (dma_count as u32 - 1) * 4
+            } else {
+                remaining.min(lcd_next).min(dma_next)
+            };
+            if lcd_active {
                 self.phase_remaining -= part as u16;
             }
             if let Some(dma) = self.dma.as_mut() {
-                dma.cycles_until_byte -= part as u8;
+                dma.cycles_until_byte -= dma_next.min(part) as u8;
             }
             remaining -= part;
             if self.dma.is_some_and(|dma| dma.cycles_until_byte == 0) {
                 let dma = self.dma.as_mut().unwrap();
-                self.oam[usize::from(dma.next)] = shadow_oam[usize::from(dma.next)];
-                if dma.next == 159 {
+                let count = dma_count;
+                let start = usize::from(dma.next);
+                let end = start + count;
+                if count >= 4 {
+                    let aligned_start = (start + 3) & !3;
+                    let aligned_end = end & !3;
+                    for index in start..aligned_start {
+                        if self.oam[index] != shadow_oam[index] {
+                            self.oam[index] = shadow_oam[index];
+                            self.oam_revision = self.oam_revision.wrapping_add(1);
+                        }
+                    }
+                    let mut index = aligned_start;
+                    while index < aligned_end {
+                        let before =
+                            unsafe { self.oam.as_ptr().add(index).cast::<u32>().read_unaligned() };
+                        let after = unsafe {
+                            shadow_oam
+                                .as_ptr()
+                                .add(index)
+                                .cast::<u32>()
+                                .read_unaligned()
+                        };
+                        let changed = u32::from_le(before) ^ u32::from_le(after);
+                        if changed != 0 {
+                            unsafe {
+                                self.oam
+                                    .as_mut_ptr()
+                                    .add(index)
+                                    .cast::<u32>()
+                                    .write_unaligned(after.to_le())
+                            };
+                            let changes = u64::from(changed & 0x0000_00ff != 0)
+                                + u64::from(changed & 0x0000_ff00 != 0)
+                                + u64::from(changed & 0x00ff_0000 != 0)
+                                + u64::from(changed & 0xff00_0000 != 0);
+                            self.oam_revision = self.oam_revision.wrapping_add(changes);
+                        }
+                        index += 4;
+                    }
+                    for index in aligned_end..end {
+                        if self.oam[index] != shadow_oam[index] {
+                            self.oam[index] = shadow_oam[index];
+                            self.oam_revision = self.oam_revision.wrapping_add(1);
+                        }
+                    }
+                } else {
+                    for index in start..end {
+                        if self.oam[index] != shadow_oam[index] {
+                            self.oam[index] = shadow_oam[index];
+                            self.oam_revision = self.oam_revision.wrapping_add(1);
+                        }
+                    }
+                }
+                if dma.next + count as u8 == 160 {
                     self.dma = None;
                 } else {
-                    dma.next += 1;
+                    dma.next += count as u8;
                     dma.cycles_until_byte = 4;
                 }
             }
-            if self.lcd_enabled() && self.phase_remaining == 0 {
+            if lcd_active && self.phase_remaining == 0 {
                 self.transition();
             }
         }
         self.observed_tcycles = tcycles;
-        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn vblank_run_matches_every_four_cycle_slice() {
+        let shadow = [0; 160];
+        let base = 2 * 70224 + 144 * 456;
+        for offset in [0, 4, 80, 228, 452] {
+            let mut seed = DisplayDevice::powered_off(0);
+            seed.write_port(0xff40, 0x91, 0xc3).unwrap();
+            seed.begin_native_background_transfer(0x9800).unwrap();
+            seed.begin_native_background_scanout(0xe4);
+            seed.begin_native_object_scanout(&shadow, [0xd0, 0xe0])
+                .unwrap();
+            seed.observe_time(base + offset, &shadow).unwrap();
+            for duration in [456, 912, 2000, 4500, 4560] {
+                let target = base + offset + duration;
+                let mut fast = seed.clone();
+                fast.observe_reserved_interval_trusted(target, duration, &shadow)
+                    .unwrap();
+                let mut reference = seed.clone();
+                for elapsed in (0..=duration).step_by(4) {
+                    reference
+                        .observe_time(base + offset + elapsed, &shadow)
+                        .unwrap();
+                }
+                assert_eq!(fast, reference, "offset={offset} duration={duration}");
+            }
+        }
+    }
+
+    #[test]
+    fn raster_idle_period_matches_every_phase_in_four_cycle_slices() {
+        let shadow = [0; 160];
+        for start in (0..70224u64).step_by(997) {
+            let from = 2 * 70224 + start;
+            let target = from + 70224;
+            let mut seed = DisplayDevice::powered_off(0);
+            seed.write_port(0xff40, 0x91, 0xc3).unwrap();
+            seed.begin_native_background_transfer(0x9800).unwrap();
+            seed.record_native_background_write(0x98c1);
+            seed.begin_native_background_scanout(0xe4);
+            seed.begin_native_object_scanout(&shadow, [0xd0, 0xe0])
+                .unwrap();
+            seed.write_port(0xff40, 0x91, 0xc3).unwrap();
+            seed.observe_time(from, &shadow).unwrap();
+            let mut reference = seed.clone();
+            for at in (from + 4..=target).step_by(4) {
+                reference.observe_time(at, &shadow).unwrap();
+            }
+            let mut idle = seed.clone();
+            let period = CheckedFramePeriod::new(from, target).unwrap();
+            assert!(idle.try_idle_checked_period(period), "start={start}");
+            assert_eq!(idle, reference, "idle start={start}");
+            let mut events = seed;
+            events
+                .observe_reserved_interval_trusted(target, 70224, &shadow)
+                .unwrap();
+            assert_eq!(events, reference, "events start={start}");
+        }
+    }
+
+    #[test]
+    fn hidden_object_cache_matches_idle_periods_and_revision_changes() {
+        let shadow = core::array::from_fn::<_, 160, _>(|i| {
+            if i % 4 == 0 {
+                160
+            } else {
+                (i as u8).wrapping_mul(37)
+            }
+        });
+        for start in (0..70224u64).step_by(1997) {
+            let from = 2 * 70224 + start;
+            let target = from + 70224;
+            let mut seed = DisplayDevice::powered_off(0);
+            seed.write_port(0xff40, 0x93, 0xc3).unwrap();
+            seed.begin_native_background_scanout(0xe4);
+            seed.begin_native_object_scanout(&shadow, [0xd0, 0xe0])
+                .unwrap();
+            seed.oam.copy_from_slice(&shadow);
+            seed.oam_revision += 1;
+            seed.observe_time(from, &shadow).unwrap();
+            let mut reference = seed.clone();
+            for at in (from + 4..=target).step_by(4) {
+                reference.observe_time(at, &shadow).unwrap();
+            }
+            let mut idle = seed.clone();
+            let period = CheckedFramePeriod::new(from, target).unwrap();
+            assert!(idle.try_idle_checked_period(period), "start={start}");
+            assert_eq!(idle, reference, "idle start={start}");
+            let mut events = seed;
+            events
+                .observe_reserved_interval_trusted(target, 70224, &shadow)
+                .unwrap();
+            assert_eq!(events, reference, "events start={start}");
+            assert!(events.oam_has_no_visible_objects());
+            events.oam[0] = 32;
+            events.oam_revision += 1;
+            assert!(!events.oam_has_no_visible_objects());
+        }
+    }
 
     #[test]
     fn reserved_instruction_duration_matches_checked_time_in_all_phases() {
@@ -876,14 +1273,22 @@ mod tests {
                     70224,
                 ] {
                     let mut fast = state.clone();
+                    let mut reserved = state.clone();
                     let mut reference = state.clone();
                     fast.observe_time(sample + delta, &shadow).unwrap();
+                    reserved
+                        .observe_reserved_interval(sample + delta, delta, &shadow)
+                        .unwrap();
                     reference
                         .observe_time_events(sample + delta, &shadow)
                         .unwrap();
                     assert_eq!(
                         fast, reference,
                         "LCD={lcdc:02x}, sample={sample}, delta={delta}"
+                    );
+                    assert_eq!(
+                        reserved, reference,
+                        "reserved LCD={lcdc:02x}, sample={sample}, delta={delta}"
                     );
                 }
             }
@@ -1211,7 +1616,10 @@ mod tests {
         for case in 0..12 {
             let mut state = base.clone();
             match case {
-                0 => state.lcdc |= 2,
+                0 => {
+                    state.lcdc |= 2;
+                    state.oam[0] = 32;
+                }
                 1 => state.lcdc |= 0x20,
                 2 => state.first_frame = true,
                 3 => state.ly = 154,
@@ -1315,6 +1723,28 @@ mod tests {
         assert_eq!(device.oam()[159], 42);
     }
     #[test]
+    fn grouped_dma_bytes_match_single_cycle_execution_at_every_phase() {
+        let shadow = core::array::from_fn::<_, 160, _>(|index| (index as u8).wrapping_mul(37));
+        for lcdc in [0x11, 0x91, 0x93] {
+            for offset in [0, 3, 79, 80, 251, 65_660] {
+                let mut grouped = DisplayDevice::powered_off(0);
+                grouped.write_port(0xff40, lcdc, 0xc3).unwrap();
+                grouped.observe_time(offset, &shadow).unwrap();
+                grouped.write_port(0xff46, 0xc3, 0xc3).unwrap();
+                let mut reference = grouped.clone();
+                for delta in 1..=650 {
+                    grouped.observe_time(offset + delta, &shadow).unwrap();
+                    reference.observe_time(offset + delta, &shadow).unwrap();
+                    assert_eq!(
+                        grouped, reference,
+                        "lcdc={lcdc:02x} offset={offset} delta={delta}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn mode3_uses_raw_ten_object_selection_tile_groups_and_window_scroll() {
         let mut device = enabled();
         device.lcdc = 0x83;
@@ -1327,11 +1757,14 @@ mod tests {
         }
         device.oam[40] = 16;
         device.oam[41] = 16; // eleventh object must not be fetched
+        device.oam_revision += 1;
         assert_eq!(device.mode3_dots(), 172);
         device.oam[1] = 0; // X=0 has its hardware-specific eleven-dot cost
+        device.oam_revision += 1;
         assert_eq!(device.mode3_dots(), 183);
         device.oam[1] = 16;
         device.oam[5] = 16; // same background tile is considered only once
+        device.oam_revision += 1;
         assert_eq!(device.mode3_dots(), 189);
         device.lcdc &= !2;
         device.lcdc |= 0x20;

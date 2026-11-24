@@ -74,6 +74,22 @@ pub trait SourceAudioFrameBus {
     ) -> Result<usize, Self::Error> {
         Ok(0)
     }
+    fn execute_plain_run_total(
+        &mut self,
+        apu: &mut crate::apu::Apu,
+        tcycles: &[u8],
+        _total: u32,
+    ) -> Result<usize, Self::Error> {
+        self.execute_plain_run(apu, tcycles)
+    }
+
+    fn execute_plain_interval(
+        &mut self,
+        _apu: &mut crate::apu::Apu,
+        _total: u32,
+    ) -> Result<bool, Self::Error> {
+        Ok(false)
+    }
 }
 
 impl<E, F> SourceAudioFrameBus for F

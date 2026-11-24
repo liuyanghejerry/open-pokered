@@ -32,6 +32,97 @@ pub struct ReadJoypadWork {
     b: u8,
 }
 impl ReadJoypadWork {
+    #[inline(never)]
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        loop {
+            if self.step == Step::DirectionValue {
+                if let Some((a, b)) = bus.execute_joypad_frame()? {
+                    self.a = a;
+                    self.b = b;
+                    self.step = Step::Done;
+                    return Ok(());
+                }
+            }
+            let (base, total, select) = match self.step {
+                Step::SelectDirections => (0, 6, Some(self.a)),
+                Step::Directions(n) => (n, 6, None),
+                Step::SelectButtons => (0, 10, Some(self.a)),
+                Step::Buttons(n) => (n, 10, None),
+                _ => {
+                    let (cycles, total): (&[u8], u64) = match self.step {
+                        Step::DirectionValue => (&[8, 8], 16),
+                        Step::InvertDirections => (&[4, 8, 8, 4, 8], 32),
+                        Step::InvertButtons => (&[4, 8, 4], 16),
+                        Step::DeselectValue => (&[8], 8),
+                        Step::Return => (&[16], 16),
+                        _ => {
+                            if !self.step(bus)? {
+                                return Ok(());
+                            }
+                            continue;
+                        }
+                    };
+                    let count = bus.execute_plain_cycles_total(cycles, total)?;
+                    if count == 0 {
+                        self.step(bus)?;
+                        continue;
+                    }
+                    if count == cycles.len() {
+                        match self.step {
+                            Step::DirectionValue => {
+                                self.a = 0x20;
+                                self.step = Step::SelectDirections;
+                            }
+                            Step::InvertDirections => {
+                                self.b = (!self.a & 15).rotate_left(4);
+                                self.a = 0x10;
+                                self.step = Step::SelectButtons;
+                            }
+                            Step::InvertButtons => {
+                                self.a = (!self.a & 15) | self.b;
+                                self.step = Step::StoreInput;
+                            }
+                            Step::DeselectValue => {
+                                self.a = 0x30;
+                                self.step = Step::Deselect;
+                            }
+                            Step::Return => self.step = Step::Done,
+                            _ => unreachable!(),
+                        }
+                    } else {
+                        let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                        for _ in 0..count {
+                            assert!(self.step(&mut replay).unwrap());
+                        }
+                    }
+                    continue;
+                }
+            };
+            let count = total - base;
+            let Some((accepted, value)) = bus.execute_joypad_reads(select, count)? else {
+                if !self.step(bus)? {
+                    return Ok(());
+                }
+                continue;
+            };
+            if accepted == 0 && select.is_none() {
+                if !self.step(bus)? {
+                    return Ok(());
+                }
+                continue;
+            }
+            if accepted != 0 {
+                self.a = value;
+            }
+            self.step = match (total, base + accepted == total) {
+                (6, true) => Step::InvertDirections,
+                (6, false) => Step::Directions(base + accepted),
+                (10, true) => Step::InvertButtons,
+                (10, false) => Step::Buttons(base + accepted),
+                _ => unreachable!(),
+            };
+        }
+    }
     pub fn finished(&self) -> bool {
         self.step == Step::Done
     }
@@ -305,5 +396,61 @@ mod tests {
         assert_eq!(ledger.last(), last);
         assert_eq!(ledger.pressed(), pressed);
         assert_eq!(ledger.poll().pressed, Some(0x11));
+    }
+
+    #[test]
+    fn plain_segments_match_single_instruction_input_and_cycles() {
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.device_mut().request_interrupt(1);
+        time.enter_pending_vblank().unwrap();
+        time.set_physical_buttons(0x42);
+        let mut reference = time.clone();
+        let mut actual = ReadJoypadWork::default();
+        let mut expected = actual;
+        actual.run(&mut time.display_bus()).unwrap();
+        while expected.step(&mut reference).unwrap() {}
+        assert_eq!(actual, expected);
+        assert_eq!(time.elapsed(), reference.elapsed());
+        assert_eq!(time.device(), reference.device());
+        assert_eq!(time.source_joy_input(), reference.source_joy_input());
+    }
+
+    #[test]
+    fn complete_run_matches_every_budget_boundary() {
+        for buttons in [0, 0x42, 0xff] {
+            for budget in (0..=328).step_by(4) {
+                let mut time = DisplayWorkTime::default();
+                time.begin_native_update();
+                time.device_mut().request_interrupt(1);
+                time.enter_pending_vblank().unwrap();
+                time.set_physical_buttons(buttons);
+                while time.remaining() > budget {
+                    time.execute(DisplayInstruction {
+                        tcycles: 4,
+                        access: None,
+                    })
+                    .unwrap();
+                }
+                let mut reference = time.clone();
+                let mut actual = ReadJoypadWork::default();
+                let mut expected = actual;
+                let result = actual.run(&mut time.display_bus());
+                let expected_result = loop {
+                    match expected.step(&mut reference) {
+                        Ok(true) => (),
+                        Ok(false) => break Ok(()),
+                        Err(error) => break Err(error),
+                    }
+                };
+                assert_eq!(result, expected_result, "buttons={buttons} budget={budget}");
+                assert_eq!(actual, expected, "buttons={buttons} budget={budget}");
+                assert_eq!(
+                    serde_json::to_value(&time).unwrap(),
+                    serde_json::to_value(&reference).unwrap(),
+                    "buttons={buttons} budget={budget}"
+                );
+            }
+        }
     }
 }

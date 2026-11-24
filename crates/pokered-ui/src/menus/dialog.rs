@@ -14,6 +14,7 @@ fn draw_rows<P: Painter>(
     layout: &DialogDefaultLayout,
     ui: &mut Ui<P>,
     preserve_rows: bool,
+    source_row_y: bool,
 ) {
     let area = TileRect::new(
         layout.box_0.rect.tx,
@@ -24,12 +25,28 @@ fn draw_rows<P: Painter>(
     let interior_width = area.tw.saturating_sub(2);
     let interior_height = area.th.saturating_sub(2);
     let max_lines = (interior_height / 2).max(1) as usize;
-    let lines = if preserve_rows { text.split('\n').map(str::to_owned).collect() } else { wrap_hard_lines(text, interior_width as usize * 8) };
+    let lines: Vec<Cow<'_, str>> = if preserve_rows {
+        text.split('\n').map(Cow::Borrowed).collect()
+    } else {
+        wrap_hard_lines(text, interior_width as usize * 8)
+            .into_iter()
+            .map(Cow::Owned)
+            .collect()
+    };
     let proportional = ui.painter().supports_proportional();
     ui.text_box(layout.box_0.rect, layout.box_0.color, true, |frame| {
         for (i, line) in lines.iter().take(max_lines).enumerate() {
             if !proportional {
-                frame.label(0, if preserve_rows { i as u32 * 2 } else { 1 + i as u32 * 2 }, line, InkColor::Black);
+                frame.label(
+                    0,
+                    if source_row_y {
+                        i as u32 * 2
+                    } else {
+                        1 + i as u32 * 2
+                    },
+                    line,
+                    InkColor::Black,
+                );
             }
         }
         if !proportional && show_arrow && !text.is_empty() {
@@ -46,8 +63,12 @@ fn draw_rows<P: Painter>(
         for (i, line) in lines.iter().take(max_lines).enumerate() {
             // Ten-pixel glyphs need a two-pixel gap. The second row ends
             // above the original border instead of joining it at y=138.
-            painter.draw_text_px((area.tx + 1) * 8, (area.ty + if preserve_rows { 1 } else { 2 }) * 8 + i as u32 * 12,
-                line, InkColor::Black.into());
+            painter.draw_text_px(
+                (area.tx + 1) * 8,
+                (area.ty + if source_row_y { 1 } else { 2 }) * 8 + i as u32 * 12,
+                line,
+                InkColor::Black.into(),
+            );
         }
         if show_arrow && !text.is_empty() {
             painter.draw_glyph(TilePos::new(area.tx + interior_width,
@@ -57,11 +78,35 @@ fn draw_rows<P: Painter>(
 }
 
 /// Draw ordinary dialogue, wrapping complete text inside the box.
-pub fn draw<P: Painter>(text: &str, show_arrow: bool, layout: &DialogDefaultLayout, ui: &mut Ui<P>, _lang: Lang) {
-    draw_rows(text, show_arrow, layout, ui, false);
+pub fn draw<P: Painter>(
+    text: &str,
+    show_arrow: bool,
+    layout: &DialogDefaultLayout,
+    ui: &mut Ui<P>,
+    _lang: Lang,
+) {
+    draw_rows(text, show_arrow, layout, ui, false, false);
 }
 
 /// Render the Chinese page prepared before typewriter reveal without reflow.
-pub fn draw_paginated<P: Painter>(text: &str, show_arrow: bool, layout: &DialogDefaultLayout, ui: &mut Ui<P>, lang: Lang) {
-    draw_rows(text, show_arrow, layout, ui, lang == Lang::Zh);
+pub fn draw_paginated<P: Painter>(
+    text: &str,
+    show_arrow: bool,
+    layout: &DialogDefaultLayout,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
+    let preserve_rows = lang == Lang::Zh;
+    draw_rows(text, show_arrow, layout, ui, preserve_rows, preserve_rows);
+}
+
+/// Draw an already-paginated page without reflow in either language.
+pub fn draw_hard_rows<P: Painter>(
+    text: &str,
+    show_arrow: bool,
+    layout: &DialogDefaultLayout,
+    ui: &mut Ui<P>,
+    lang: Lang,
+) {
+    draw_rows(text, show_arrow, layout, ui, true, lang == Lang::Zh);
 }

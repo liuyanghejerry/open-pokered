@@ -76,11 +76,14 @@ fn map_tile_snapshot(screen: &OverworldScreen, surrounding: bool) -> Result<MapT
     let sampled_origin = if surrounding { (origin.0.div_euclid(4) * 4, origin.1.div_euclid(4) * 4) } else { origin };
     let mut tiles = Vec::with_capacity((columns * rows) as usize);
     for y in 0..rows {
+        let world_y = sampled_origin.1 + y;
+        let block_y = world_y.div_euclid(4);
+        let block_row = world_y.rem_euclid(4) as usize;
         let mut cache = None;
         for x in 0..columns {
             tiles.push(
                 source
-                    .tile(sampled_origin.0 + x, sampled_origin.1 + y, &mut cache)
+                    .tile_row(sampled_origin.0 + x, block_y, block_row, &mut cache)
                     .ok_or(MissingBlockTile)?,
             );
         }

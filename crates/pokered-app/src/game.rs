@@ -857,8 +857,8 @@ pub struct PokemonGame {
 
 /// POD snapshot of every input consumed by the script/day-care query seeding
 /// in the overworld frame loop. Variable-length inputs (bag, party, day-care
-/// mon) are folded into FNV-1a fingerprints annotated with the scalar inputs;
-/// comparing two snapshots is a fixed-size memcmp with no allocation.
+/// mon) are folded into 64-bit word-at-a-time fingerprints annotated with the
+/// scalar inputs; comparing two snapshots is a fixed-size memcmp with no allocation.
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 struct QuerySeedSnapshot {
     pokecenter_used: bool,
@@ -901,17 +901,31 @@ fn fnv_multiply_arm32(value: u64) -> u64 {
     (u64::from(result_hi) << 32) | u64::from(result_lo)
 }
 
-fn fnv_mix(h: &mut u64, bytes: &[u8]) {
-    for &b in bytes {
-        #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
-        {
-            *h = fnv_multiply_arm32(*h ^ u64::from(b));
-        }
-        #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
-        {
-            *h = (*h ^ b as u64).wrapping_mul(FNV_PRIME);
-        }
+#[inline]
+fn fnv_mix_word(h: &mut u64, value: u64) {
+    #[cfg(all(target_arch = "arm", target_pointer_width = "32", target_os = "none"))]
+    {
+        *h = fnv_multiply_arm32(*h ^ value);
     }
+    #[cfg(not(all(target_arch = "arm", target_pointer_width = "32", target_os = "none")))]
+    {
+        *h = (*h ^ value).wrapping_mul(FNV_PRIME);
+    }
+}
+
+fn fnv_mix(h: &mut u64, bytes: &[u8]) {
+    let mut chunks = bytes.chunks_exact(4);
+    for chunk in &mut chunks {
+        fnv_mix_word(h, u64::from(u32::from_le_bytes(chunk.try_into().unwrap())));
+    }
+    for &byte in chunks.remainder() {
+        fnv_mix_word(h, u64::from(byte));
+    }
+}
+
+fn fnv_mix_name(h: &mut u64, bytes: &[u8]) {
+    let end = bytes.iter().position(|&byte| byte == 0x50).unwrap_or(bytes.len());
+    fnv_mix(h, &bytes[..end]);
 }
 
 #[cfg(test)]
@@ -919,11 +933,11 @@ fn fnv_mix(h: &mut u64, bytes: &[u8]) {
 mod context_update_tests;
 impl QuerySeedSnapshot {
     fn hash_u8(h: &mut u64, v: u8) {
-        fnv_mix(h, &[v]);
+        fnv_mix_word(h, u64::from(v));
     }
 
     fn hash_u32(h: &mut u64, v: u32) {
-        fnv_mix(h, &v.to_le_bytes());
+        fnv_mix_word(h, u64::from(v));
     }
 }
 
@@ -968,18 +982,17 @@ impl PokemonGame {
         snap.bag_h = h;
 
         let mut h = FNV_OFFSET;
-        fnv_mix(&mut h, &gd.player_id.to_le_bytes());
+        QuerySeedSnapshot::hash_u32(&mut h, u32::from(gd.player_id));
         fnv_mix(&mut h, &self.save_data.player_name);
-        let mut name_buf = [0u8; pokered_core::battle::state::NAME_TEXT_BUF];
         for mon in self.save_data.party.iter() {
-            fnv_mix(&mut h, &mon.ot_id.to_le_bytes());
-            fnv_mix(&mut h, &mon.ot_name);
+            QuerySeedSnapshot::hash_u32(&mut h, u32::from(mon.ot_id));
+            fnv_mix_name(&mut h, &mon.ot_name);
             QuerySeedSnapshot::hash_u8(&mut h, mon.species as u8);
             QuerySeedSnapshot::hash_u8(&mut h, mon.level);
             for mv in &mon.moves {
                 QuerySeedSnapshot::hash_u8(&mut h, *mv as u8);
             }
-            fnv_mix(&mut h, mon.display_name(&mut name_buf).as_bytes());
+            fnv_mix_name(&mut h, &mon.nickname);
         }
         snap.party_h = h;
 
@@ -8411,16 +8424,18 @@ impl PokemonGame {
 
         // These renderers own their backgrounds and clear the full screen.
         // Avoid clearing the GBA's software framebuffer twice every frame.
-        if !matches!(
-            self.state.screen,
-            GameScreen::GameFreakSplash
-                | GameScreen::LanguageSelect
-                | GameScreen::IntroScene
-                | GameScreen::TitleScreen
-                | GameScreen::OakSpeech
-                | GameScreen::Overworld
-                | GameScreen::Battle
-        ) {
+        if self.field_flash.is_none()
+            && !matches!(
+                self.state.screen,
+                GameScreen::GameFreakSplash
+                    | GameScreen::LanguageSelect
+                    | GameScreen::IntroScene
+                    | GameScreen::TitleScreen
+                    | GameScreen::OakSpeech
+                    | GameScreen::Overworld
+                    | GameScreen::Battle
+            )
+        {
             frame_buffer.clear(Rgba::WHITE);
         }
 

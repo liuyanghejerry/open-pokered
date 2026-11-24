@@ -417,6 +417,8 @@ pub struct BedroomDialogue {
     source_letter_wait: SourceLetterWait,
     #[serde(default)]
     source_prompt_remaining: Option<u8>,
+    #[serde(skip)]
+    char_counts: core::cell::Cell<Option<(usize, u16, u16)>>,
 }
 
 impl BedroomDialogue {
@@ -464,6 +466,7 @@ impl BedroomDialogue {
             far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
+            char_counts: core::cell::Cell::new(None),
         }
     }
 
@@ -492,6 +495,7 @@ impl BedroomDialogue {
             far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
+            char_counts: core::cell::Cell::new(None),
         }
     }
 
@@ -552,6 +556,7 @@ impl BedroomDialogue {
             far_field_entry: false,
             source_letter_wait: SourceLetterWait::None,
             source_prompt_remaining: None,
+            char_counts: core::cell::Cell::new(None),
         }
     }
 
@@ -593,30 +598,52 @@ impl BedroomDialogue {
         self.holding_open = false;
     }
 
+    fn line_char_counts(&self, page: &DialoguePage) -> (u16, u16) {
+        if let Some((index, first, second)) = self.char_counts.get() {
+            if index == self.current_page {
+                return (first, second);
+            }
+        }
+        let counts = (
+            page.line1.chars().count() as u16,
+            page.line2.chars().count() as u16,
+        );
+        self.char_counts
+            .set(Some((self.current_page, counts.0, counts.1)));
+        counts
+    }
+
+    pub fn display_state(&self) -> (usize, u16) {
+        (self.current_page, self.char_index)
+    }
+
     pub fn get_display_text(&self) -> Option<(String, String)> {
         // WY moves on-screen after the three background transfers.
         let font_frames = Self::FIELD_FONT_AND_PRINT_FRAMES - if self.far_field_entry { 3 } else { 0 };
         if self.field_entry_frames > font_frames { return None; }
         let page = self.pages.get(self.current_page)?;
         let idx = self.char_index as usize;
-        let l1_chars: Vec<char> = page.line1.chars().collect();
-        let l2_chars: Vec<char> = page.line2.chars().collect();
-        if idx <= l1_chars.len() {
-            Some((l1_chars[..idx].iter().collect(), String::new()))
+        let byte_index = |text: &str, chars: usize| {
+            text.char_indices()
+                .nth(chars)
+                .map_or(text.len(), |(index, _)| index)
+        };
+        let line1_chars = usize::from(self.line_char_counts(page).0);
+        if idx <= line1_chars {
+            Some((
+                page.line1[..byte_index(&page.line1, idx)].to_string(),
+                String::new(),
+            ))
         } else {
-            let l2_idx = idx - l1_chars.len();
-            let d2: String = if l2_idx <= l2_chars.len() {
-                l2_chars[..l2_idx].iter().collect()
-            } else {
-                page.line2.to_string()
-            };
-            Some((page.line1.to_string(), d2))
+            let line2 = &page.line2[..byte_index(&page.line2, idx - line1_chars)];
+            Some((page.line1.to_string(), line2.to_string()))
         }
     }
 
     pub fn total_chars(&self) -> u16 {
-        self.pages.get(self.current_page).map_or(0, |p| {
-            (p.line1.chars().count() + p.line2.chars().count()) as u16
+        self.pages.get(self.current_page).map_or(0, |page| {
+            let (first, second) = self.line_char_counts(page);
+            first + second
         })
     }
 

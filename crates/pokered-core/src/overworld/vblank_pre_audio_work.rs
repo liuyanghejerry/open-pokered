@@ -2,7 +2,9 @@
 //! FadeOutAudio. AudioReady is still inside the interrupt, never RETI.
 use super::{
     display_delay_work::VBLANK_FLAG_PORT,
-    display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus},
+    display_lcd_work::{
+        DisplayAccess, DisplayInstruction, DisplayInstructionBus, PlainInstructionBus,
+    },
     sprite_bank_call_work::SpriteBankCallWork,
 };
 
@@ -50,6 +52,65 @@ impl IrqRandomWork {
     }
     pub fn finished(&self) -> bool {
         self.step == RandomStep::Done
+    }
+    fn run_fixed_plain<B: DisplayInstructionBus>(
+        &mut self,
+        bus: &mut B,
+        cycles: &[u8],
+        total: u64,
+    ) -> Result<bool, B::Error> {
+        let count = bus.execute_plain_cycles_total(cycles, total)?;
+        if count == cycles.len() {
+            self.step = match self.step {
+                RandomStep::Push(0) => RandomStep::EnterBank,
+                RandomStep::Tail(1) => RandomStep::Done,
+                _ => unreachable!(),
+            };
+            return Ok(true);
+        }
+        for _ in 0..count {
+            assert!(self.step(&mut PlainInstructionBus(0)).unwrap());
+        }
+        Ok(false)
+    }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        loop {
+            if matches!(self.step, RandomStep::Push(0) | RandomStep::Tail(1)) {
+                let (cycles, total) = if self.step == RandomStep::Push(0) {
+                    (&[16, 16, 16][..], 48)
+                } else {
+                    (&[12, 12, 12, 16][..], 52)
+                };
+                if self.run_fixed_plain(bus, cycles, total)? {
+                    continue;
+                }
+            }
+            if self.step == RandomStep::Leaf(0) {
+                if let Some((add, sub, carry, a, b)) = bus.execute_irq_random(self.state.carry)? {
+                    self.state.add = add;
+                    self.state.sub = sub;
+                    self.state.carry = carry;
+                    self.a = a;
+                    self.b = b;
+                    self.step = RandomStep::ReturnBank;
+                    continue;
+                }
+            }
+            match self.step {
+                RandomStep::Done => return Ok(()),
+                RandomStep::EnterBank => {
+                    self.bank.run_until_body(bus)?;
+                    self.step = RandomStep::Leaf(0);
+                }
+                RandomStep::ReturnBank => {
+                    self.bank.run(bus)?;
+                    self.step = RandomStep::Tail(0);
+                }
+                _ => {
+                    self.step(bus)?;
+                }
+            }
+        }
     }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use RandomStep::*;
@@ -184,6 +245,75 @@ impl VBlankPreAudioWork {
     }
     pub fn random_state(&self) -> IrqRandomState {
         self.random.state()
+    }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        loop {
+            if self.step == Step::CallRandom {
+                bus.execute(DisplayInstruction {
+                    tcycles: 24,
+                    access: None,
+                })?;
+                self.step = Step::Random;
+                continue;
+            }
+            if self.step == Step::Random {
+                self.random.run(bus)?;
+                self.step = Step::ReadFlag;
+            }
+            if self.step == Step::TestFlag {
+                let cycles = if self.a == 0 {
+                    &[4, 12][..]
+                } else {
+                    &[4, 8, 4][..]
+                };
+                let count = bus.execute_plain_cycles_total(cycles, 16)?;
+                if count != 0 {
+                    self.step = if count == 1 {
+                        Step::SkipZero
+                    } else if self.a == 0 {
+                        Step::ReadCounter
+                    } else if count == 2 {
+                        Step::Zero
+                    } else {
+                        self.a = 0;
+                        Step::ClearFlag
+                    };
+                    continue;
+                }
+            }
+            if self.step == Step::TestCounter {
+                let cycles = if self.a == 0 {
+                    &[4, 12][..]
+                } else {
+                    &[4, 8, 4][..]
+                };
+                let count = bus.execute_plain_cycles_total(cycles, 16)?;
+                if count != 0 {
+                    self.step = if count == 1 {
+                        Step::SkipCounter
+                    } else if self.a == 0 {
+                        Step::CallFade
+                    } else if count == 2 {
+                        Step::Decrement
+                    } else {
+                        self.a = self.a.wrapping_sub(1);
+                        Step::StoreCounter
+                    };
+                    continue;
+                }
+            }
+            if self.step == Step::CallFade {
+                bus.execute(DisplayInstruction {
+                    tcycles: 24,
+                    access: None,
+                })?;
+                self.step = Step::AudioReady;
+                return Ok(());
+            }
+            if !self.step(bus)? {
+                return Ok(());
+            }
+        }
     }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
@@ -406,6 +536,27 @@ mod tests {
             assert_eq!(read(&mut time, 0xffd5), c.counter_after);
             assert_eq!(read(&mut time, 0xffd3), c.output.add);
             assert_eq!(read(&mut time, 0xffd4), c.output.sub);
+            if c.preaudio {
+                let mut run_time = setup(&c);
+                let run_start = run_time.elapsed();
+                let mut run_bus = Trace {
+                    time: &mut run_time,
+                    start: run_start,
+                    steps: vec![],
+                    div: vec![],
+                    writes: vec![],
+                };
+                let mut run_work = VBlankPreAudioWork::new(c.input.carry);
+                run_work.run(&mut run_bus).unwrap();
+                assert!(run_work.audio_ready());
+                assert_eq!(run_work.random_state(), c.output);
+                assert_eq!(run_bus.steps, c.instructions);
+                assert_eq!(run_bus.div, c.div_reads);
+                assert_eq!(run_bus.writes, c.writes);
+                assert_eq!(run_bus.time.elapsed() - run_start, c.cycles);
+                assert_eq!(read(&mut run_time, VBLANK_FLAG_PORT), c.flag_after);
+                assert_eq!(read(&mut run_time, 0xffd5), c.counter_after);
+            }
         }
     }
     #[test]

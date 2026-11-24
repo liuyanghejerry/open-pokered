@@ -1,5 +1,7 @@
 use pokered_data::TILE_SIZE_PX;
-use pokered_renderer::embedded_font::{self, box_tiles, draw_box_tile, draw_text, fill_tile};
+use pokered_renderer::embedded_font::{
+    self, box_tiles, draw_box_tile, draw_text_indexed as draw_text, fill_tile,
+};
 use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_core::game_state::Lang;
 

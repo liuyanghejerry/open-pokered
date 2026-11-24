@@ -127,6 +127,15 @@ impl IndoorSpriteSlotWork {
         self.zero = self.a == other;
         self.carry = self.a < other;
     }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        super::display_lcd_work::run_plain_work(
+            self,
+            bus,
+            |work| matches!(work.step, Step::SearchDone | Step::TailDone),
+            Self::step,
+            Self::step,
+        )
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let tcycles = match self.step {

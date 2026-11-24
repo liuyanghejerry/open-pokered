@@ -77,6 +77,61 @@ impl VBlankAudioDispatchWork {
         };
         true
     }
+    #[inline(always)]
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if self.step == Step::ReadBank {
+            if let Some((engine, alarm)) = bus.execute_audio_bank_dispatch(self.bank)? {
+                self.zero = matches!(self.bank, 2 | 8);
+                self.engine = Some(match engine {
+                    1 => SourceAudioEngine::One,
+                    2 => SourceAudioEngine::Two,
+                    _ => SourceAudioEngine::Three,
+                });
+                self.step = if alarm {
+                    Step::AwaitAlarm
+                } else {
+                    Step::AwaitMusic
+                };
+                return Ok(());
+            }
+        }
+        loop {
+            let (cycles, total): (&[u8], u64) = match self.step {
+                Step::CompareFirst if self.bank == 2 => (&[8, 8, 24], 40),
+                Step::CompareFirst if self.bank == 8 => (&[8, 12, 8, 8, 24], 60),
+                Step::CompareFirst => (&[8, 12, 8, 12, 24], 64),
+                _ => {
+                    if !self.step(bus)? {
+                        return Ok(());
+                    }
+                    continue;
+                }
+            };
+            let count = bus.execute_plain_cycles_total(cycles, total)?;
+            if count == 0 {
+                self.step(bus)?;
+                continue;
+            }
+            if count == cycles.len() {
+                self.zero = matches!(self.bank, 2 | 8);
+                self.engine = Some(match self.bank {
+                    2 => SourceAudioEngine::One,
+                    8 => SourceAudioEngine::Two,
+                    _ => SourceAudioEngine::Three,
+                });
+                self.step = if self.bank == 8 {
+                    Step::AwaitAlarm
+                } else {
+                    Step::AwaitMusic
+                };
+            } else {
+                let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                for _ in 0..count {
+                    assert!(self.step(&mut replay).unwrap());
+                }
+            }
+        }
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let (tcycles, access) = match self.step {
@@ -230,6 +285,36 @@ mod tests {
             assert!(w.after_music_ready());
             assert!(!w.music_returned());
             assert_eq!(t.interrupt_returns(), 0);
+        }
+    }
+
+    #[test]
+    fn plain_dispatch_runs_match_each_bank_and_child_boundary() {
+        for bank in [2, 8, 31] {
+            let mut actual = VBlankAudioDispatchWork::new(bank);
+            let mut expected = actual;
+            let mut time = DisplayWorkTime::default();
+            time.begin_native_update();
+            time.device_mut().request_interrupt(1);
+            time.enter_pending_vblank().unwrap();
+            let mut reference = time.clone();
+            actual.run(&mut time.display_bus()).unwrap();
+            while expected.step(&mut reference).unwrap() {}
+            assert_eq!(actual, expected, "bank={bank} entry");
+            if bank == 8 {
+                assert!(actual.alarm_returned());
+                assert!(expected.alarm_returned());
+                actual.run(&mut time.display_bus()).unwrap();
+                while expected.step(&mut reference).unwrap() {}
+                assert_eq!(actual, expected, "bank={bank} alarm");
+            }
+            assert!(actual.music_returned());
+            assert!(expected.music_returned());
+            actual.run(&mut time.display_bus()).unwrap();
+            while expected.step(&mut reference).unwrap() {}
+            assert_eq!(actual, expected, "bank={bank} return");
+            assert_eq!(time.elapsed(), reference.elapsed());
+            assert_eq!(time.device(), reference.device());
         }
     }
 }

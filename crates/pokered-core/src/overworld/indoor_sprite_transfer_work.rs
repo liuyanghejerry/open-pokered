@@ -253,6 +253,9 @@ impl IndoorSpriteTransferWork {
     pub fn four_tile_count(&self) -> u8 {
         self.four_tile_count
     }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        super::display_lcd_work::run_plain_work(self, bus, Self::finished, Self::step, Self::step)
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let tcycles = match self.step {
@@ -776,6 +779,62 @@ mod tests {
                 assert_eq!(w.sp, 0);
                 assert_eq!(w.hl(), 0xc24e);
                 assert_eq!(w.bc(), u16::from_be_bytes([picture, 4]));
+            }
+        }
+    }
+    #[test]
+    fn plain_run_matches_each_step_at_copy_and_budget_boundaries() {
+        for budget in (0..=999u64).step_by(37) {
+            let mut actual = IndoorSpriteTransferWork::new(
+                3,
+                4,
+                SpriteSlot {
+                    picture: 14,
+                    vram_slot: 2,
+                },
+                0,
+                0,
+            )
+            .unwrap();
+            let mut expected = actual.clone();
+            let mut time = DisplayWorkTime::default();
+            time.begin_native_update();
+            time.set_vblank_dispatch_enabled(true);
+            let mut state = serde_json::to_value(&time).unwrap();
+            state["deadline"] = (time.elapsed() + budget).into();
+            time = serde_json::from_value(state).unwrap();
+            let mut reference = time.clone();
+            let mut actual_time =
+                crate::overworld::display_work_time::NativeDisplayClock::from(time);
+            while !actual.finished() {
+                let result = actual.run(&mut actual_time);
+                let reference_result = loop {
+                    match expected.step(&mut reference) {
+                        Ok(true) => (),
+                        Ok(false) => break Ok(()),
+                        Err(error) => break Err(error),
+                    }
+                };
+                assert_eq!(result, reference_result, "budget={budget}");
+                assert_eq!(actual, expected, "budget={budget}");
+                assert_eq!(
+                    serde_json::to_value(&*actual_time).unwrap(),
+                    serde_json::to_value(&reference).unwrap(),
+                    "budget={budget}"
+                );
+                if result == Err(DisplayWorkError::Budget) {
+                    actual_time.begin_native_update();
+                    reference.begin_native_update();
+                    continue;
+                }
+                result.unwrap();
+                if actual.copy().is_some() {
+                    assert_eq!(actual.copy(), expected.copy());
+                    assert!(actual.copy_returned());
+                    assert!(expected.copy_returned());
+                } else {
+                    assert!(actual.finished() && expected.finished());
+                }
             }
         }
     }

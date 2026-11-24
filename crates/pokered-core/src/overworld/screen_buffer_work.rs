@@ -65,7 +65,9 @@ impl ScreenBufferWork {
     /// Keep foreground instruction dispatch inside the child until a bus
     /// refusal or RET. Yield once after the final store, while AutoBG is off,
     /// so native callers can bind the completed buffer's pattern namespace.
-    /// Every instruction and WRAM store still executes separately.
+    /// The bus may coalesce only intervals whose buffered stores are not
+    /// observable by an IRQ or host publication; original stores and T-cycles
+    /// are preserved at every budget, VBlank and final-store boundary.
     pub fn run<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,
@@ -73,7 +75,82 @@ impl ScreenBufferWork {
     ) -> Result<bool, B::Error> {
         let copying = self.copied_bytes() < 360;
         loop {
-            if !self.step(bus, tiles)? {
+            if self.step == Step::Read {
+                let source = usize::from(self.source);
+                let destination = usize::from(self.destination);
+                let count = bus.execute_buffer_copy(
+                    &self.backup[source..],
+                    &mut tiles[destination..],
+                    copying,
+                )?;
+                if count != 0 {
+                    self.source += count as u16;
+                    self.destination += count as u16;
+                    if copying && self.copied_bytes() == 360 {
+                        self.remaining -= count as u16 - 1;
+                        self.a = self.backup[usize::from(self.source - 1)];
+                        self.step = Step::DecrementCount;
+                        return Ok(true);
+                    }
+                    self.remaining -= count as u16;
+                    self.a = self.remaining as u8 | (self.remaining >> 8) as u8;
+                    self.step = if self.remaining == 0 {
+                        Step::CopyReturn
+                    } else {
+                        Step::Read
+                    };
+                    continue;
+                }
+                bus.execute(DisplayInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                self.a = self.backup[usize::from(self.source)];
+                self.source += 1;
+                self.step = Step::Write;
+                bus.execute(DisplayInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                tiles[usize::from(self.destination)] = self.a;
+                self.step = Step::IncrementDestination;
+                bus.execute(DisplayInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                self.destination += 1;
+                self.step = Step::DecrementCount;
+                if copying && self.copied_bytes() == 360 {
+                    return Ok(true);
+                }
+                bus.execute(DisplayInstruction {
+                    tcycles: 8,
+                    access: None,
+                })?;
+                self.remaining -= 1;
+                self.step = Step::LoadCountLow;
+                bus.execute(DisplayInstruction {
+                    tcycles: 4,
+                    access: None,
+                })?;
+                self.a = self.remaining as u8;
+                self.step = Step::OrCountHigh;
+                bus.execute(DisplayInstruction {
+                    tcycles: 4,
+                    access: None,
+                })?;
+                self.a |= (self.remaining >> 8) as u8;
+                self.step = Step::Repeat;
+                bus.execute(DisplayInstruction {
+                    tcycles: if self.a == 0 { 8 } else { 12 },
+                    access: None,
+                })?;
+                self.step = if self.a == 0 {
+                    Step::CopyReturn
+                } else {
+                    Step::Read
+                };
+            } else if !self.step(bus, tiles)? {
                 return Ok(false);
             }
             if copying && self.copied_bytes() == 360 {

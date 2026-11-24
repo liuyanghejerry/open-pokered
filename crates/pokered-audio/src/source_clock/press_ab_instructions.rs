@@ -284,6 +284,214 @@ impl PressAbInstructions {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use Stage::*;
+        match self.stage {
+            Entry(n) => &[12, 8, 8, 12, 8, 8, 12, 8, 16, 16, 24][usize::from(n)..],
+            FetchCall(_) => &[24, 8, 4, 4, 4, 12, 8, 8, 4, 8, 4],
+            FetchByte(_, n) if n < 10 => &[8, 4, 4, 4, 12, 8, 8, 4, 8, 4][usize::from(n)..],
+            FetchByte(_, n) if n > 10 => &[8, 8, 8, 8, 16][usize::from(n - 11)..],
+            ReturnCompare(n) => {
+                let code: &[u8; 3] = if self.note == 0xff {
+                    &[4, 8, 12]
+                } else {
+                    &[4, 8, 16]
+                };
+                &code[usize::from(n)..]
+            }
+            ReturnFlags(n) => &[8, 12, 8, 12, 8][usize::from(n)..],
+            Dispatch(n) => &[8, 16, 8, 16, 8, 8, 16][usize::from(n)..],
+            CompareDuty(n) => {
+                let code: &[u8; 9] = if self.note == 0xec {
+                    &[4, 8, 12, 8, 12, 8, 12, 8, 8]
+                } else {
+                    &[4, 8, 12, 8, 12, 8, 12, 8, 12]
+                };
+                &code[usize::from(n)..]
+            }
+            SetDuty(n) => &[4, 4, 8, 8, 12, 8, 8, 16][usize::from(n)..],
+            OtherCommands(n) => &[8, 12, 8, 12, 8, 12, 8, 12, 8, 12, 8, 12][usize::from(n)..],
+            SfxDispatch(n) => &[8, 8, 12, 8, 8, 4, 8, 8, 8, 12, 8, 12, 8, 24][usize::from(n)..],
+            LengthPrefix(n) => &[4, 16, 8, 4, 8, 4, 4, 12, 8, 8, 4, 24][usize::from(n)..],
+            First(work) | Second(work) => work.plain_prefix(),
+            SelectTempo(n) if self.noise.is_some() && n < 6 => {
+                &[4, 8, 12, 8, 8, 8][usize::from(n)..]
+            }
+            SelectTempo(n) if self.noise.is_none() => &[4, 8, 12, 8, 8, 8, 8, 24][usize::from(n)..],
+            CryCheck(n) => {
+                if self.input.source_sfx_id == 0 {
+                    &[16, 8, 8, 12, 4, 4, 16][usize::from(n)..]
+                } else {
+                    &[16, 8, 12, 8, 8, 8, 4, 4, 16][usize::from(n)..]
+                }
+            }
+            SetTempo(n) => &[12, 4, 16, 8, 16, 16][usize::from(n)..],
+            ReadTempo(n) => &[16, 4, 16, 4][usize::from(n)..],
+            SecondPrefix(n) => &[4, 8, 12, 8, 8, 24][usize::from(n)..],
+            LengthStore(n) => &[4, 4, 12, 8, 8, 4, 12, 8, 8, 12, 8, 12][usize::from(n)..],
+            LengthReturn(n) => &[8, 12, 8, 12, 8, 12, 16][usize::from(n)..],
+            DutySetup(n) => &[4, 8, 12, 8, 8, 4, 4, 8, 24][usize::from(n)..],
+            EnvelopeSetup(n) => &[4, 8, 24][usize::from(n)..],
+            LowSetup(n) if self.noise.is_some() && n < 4 => &[4, 4, 8, 8][usize::from(n)..],
+            LowSetup(n) if self.noise.is_none() => &[4, 4, 8, 8, 8, 16][usize::from(n)..],
+            HighSetup(n) => &[12, 4, 16, 24][usize::from(n)..],
+            WaveCall(n) => &[12, 24][usize::from(n)..],
+            Output { ref work, .. } => work.plain_prefix(),
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        debug_assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        if count == prefix.len() {
+            let direct = match &self.stage {
+                Stage::Entry(_) => Some(Stage::FetchCall(Fetch::Command)),
+                Stage::FetchCall(kind) => Some(Stage::FetchByte(*kind, 10)),
+                Stage::FetchByte(kind, n) if *n < 10 => Some(Stage::FetchByte(*kind, 10)),
+                Stage::FetchByte(kind, n) => {
+                    if *n == 11 {
+                        self.ptr += 1;
+                    }
+                    Some(match kind {
+                        Fetch::Command => {
+                            self.note = self.last;
+                            Stage::ReturnCompare(0)
+                        }
+                        Fetch::Duty => Stage::SetDuty(0),
+                        Fetch::Envelope => {
+                            self.envelope = self.last;
+                            Stage::EnvelopeSetup(0)
+                        }
+                        Fetch::Low => {
+                            self.low = self.last;
+                            Stage::LowSetup(0)
+                        }
+                        Fetch::High => {
+                            self.frequency = u16::from(self.low) | u16::from(self.last) << 8;
+                            Stage::HighSetup(0)
+                        }
+                    })
+                }
+                Stage::ReturnCompare(_) => Some(if self.note == 0xff {
+                    Stage::ReturnFlags(0)
+                } else {
+                    Stage::Dispatch(0)
+                }),
+                Stage::ReturnFlags(_) => Some(Stage::Ending(
+                    ChannelEndInstructions::new(ChannelEndInput {
+                        bank: self.input.bank,
+                        channel: self.channel(),
+                        source_sfx_id: self.input.source_sfx_id,
+                        flags1: 4,
+                        flags2: 0,
+                        disable_output: None,
+                        saved_volume: None,
+                        panning: None,
+                        command_ptr: None,
+                    })
+                    .expect("non-cry pulse ending reads no optional state"),
+                )),
+                Stage::Dispatch(_) => Some(Stage::CompareDuty(0)),
+                Stage::CompareDuty(_) => Some(if self.note == 0xec {
+                    Stage::FetchCall(Fetch::Duty)
+                } else {
+                    Stage::OtherCommands(0)
+                }),
+                Stage::SetDuty(_) => {
+                    self.duty = (self.last & 3) << 6;
+                    Some(Stage::FetchCall(Fetch::Command))
+                }
+                Stage::OtherCommands(_) => Some(Stage::SfxDispatch(0)),
+                Stage::SfxDispatch(_) => Some(Stage::LengthPrefix(0)),
+                Stage::LengthPrefix(_) => Some(Stage::First(MultiplyAddInstructions::new(
+                    1,
+                    u16::from((self.note & 15) + 1),
+                    0,
+                ))),
+                Stage::SelectTempo(_) => Some(if self.noise.is_some() {
+                    Stage::SecondPrefix(0)
+                } else {
+                    Stage::SetTempoCall
+                }),
+                Stage::SetTempoCall => Some(Stage::CryCheck(0)),
+                Stage::CryCheck(_) => Some(Stage::SetTempo(0)),
+                Stage::SetTempo(_) => Some(Stage::ReadTempo(0)),
+                Stage::ReadTempo(_) => Some(Stage::SecondPrefix(0)),
+                Stage::SecondPrefix(_) => Some(Stage::Second(MultiplyAddInstructions::new(
+                    self.length,
+                    0x100,
+                    self.input.fraction,
+                ))),
+                Stage::LengthStore(_) => Some(Stage::LengthReturn(0)),
+                Stage::LengthReturn(_) => Some(Stage::DutySetup(0)),
+                Stage::DutySetup(_) => {
+                    Some(self.output(OutputRoutine::RegisterPointer, After::DutyStore))
+                }
+                Stage::DutyStore => Some(Stage::FetchCall(Fetch::Envelope)),
+                Stage::EnvelopeSetup(_) => {
+                    Some(self.output(OutputRoutine::RegisterPointer, After::EnvelopeStore))
+                }
+                Stage::EnvelopeStore => Some(Stage::FetchCall(Fetch::Low)),
+                Stage::LowSetup(_) => Some(if self.noise.is_some() {
+                    self.frequency = u16::from(self.low);
+                    Stage::HighSetup(1)
+                } else {
+                    Stage::FetchCall(Fetch::High)
+                }),
+                Stage::HighSetup(_) => {
+                    Some(self.output(OutputRoutine::DutyAndLength, After::Enable))
+                }
+                Stage::EnableCall => Some(self.output(OutputRoutine::EnableChannel, After::Wave)),
+                Stage::WaveCall(_) => {
+                    Some(self.output(OutputRoutine::WaveFrequency, After::Return))
+                }
+                _ => None,
+            };
+            if let Some(stage) = direct {
+                self.stage = stage;
+                self.cycles += cycles;
+                return cycles;
+            }
+        }
+        match &mut self.stage {
+            Stage::First(work) => {
+                work.accept_plain_prefix(count, prefix);
+                if let Some(value) = work.result() {
+                    self.length = value as u8;
+                    self.stage = Stage::SelectTempo(0);
+                }
+            }
+            Stage::Second(work) => {
+                work.accept_plain_prefix(count, prefix);
+                if let Some(value) = work.result() {
+                    self.computed = value;
+                    self.stage = Stage::LengthStore(0);
+                }
+            }
+            Stage::Output { work, after } => {
+                work.accept_plain_prefix(count, prefix);
+                if work.finished() {
+                    self.stage = match *after {
+                        After::DutyStore => Stage::DutyStore,
+                        After::EnvelopeStore => Stage::EnvelopeStore,
+                        After::Enable => Stage::EnableCall,
+                        After::Wave => Stage::WaveCall(0),
+                        After::Return => {
+                            self.wave_frequency = work.frequency().expect("wave return");
+                            Stage::InnerReturn
+                        }
+                    };
+                }
+            }
+            _ => {
+                for _ in 0..count {
+                    self.advance(None);
+                }
+            }
+        }
+        self.cycles += cycles;
+        cycles
+    }
     /// Execute the same retained CPU instruction with its actual APU access.
     /// The owner must reject before clocking/writing and return the live value
     /// for a successful read. This finite pulse SFX never reads wave or stereo
@@ -293,10 +501,25 @@ impl PressAbInstructions {
         data: &[u8],
         execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
     ) -> Result<bool, PressAbStepError<E>> {
+        self.step_with_bus(data, execute, true)
+    }
+    pub(crate) fn try_step_with_bus_fixed<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+    ) -> Result<bool, PressAbStepError<E>> {
+        self.step_with_bus(data, execute, false)
+    }
+    fn step_with_bus<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(ApuInstruction) -> Result<Option<u8>, E>,
+        check_data: bool,
+    ) -> Result<bool, PressAbStepError<E>> {
         if self.result().is_some() {
             return Ok(true);
         }
-        if !self.matches_data(data) {
+        if check_data && !self.matches_data(data) {
             return Err(PressAbStepError::ChangedProgram);
         }
         if let Stage::Output { work, after } = &mut self.stage {
@@ -349,14 +572,18 @@ impl PressAbInstructions {
         };
         // All other child paths reuse the existing CPU progression, including
         // the non-cry channel-4 ending, whose complete source tail has no APU I/O.
-        self.try_step(data, |cycles| {
-            let instruction = if let Some((address, value)) = store {
-                ApuInstruction::write(cycles, address, value)
-            } else {
-                ApuInstruction::plain(cycles)
-            };
-            execute(instruction).map(|_| ())
-        })
+        self.step(
+            data,
+            |cycles| {
+                let instruction = if let Some((address, value)) = store {
+                    ApuInstruction::write(cycles, address, value)
+                } else {
+                    ApuInstruction::plain(cycles)
+                };
+                execute(instruction).map(|_| ())
+            },
+            check_data,
+        )
     }
     fn output(&self, routine: OutputRoutine, after: After) -> Stage {
         Stage::Output {
@@ -380,10 +607,25 @@ impl PressAbInstructions {
         data: &[u8],
         execute: impl FnOnce(u8) -> Result<(), E>,
     ) -> Result<bool, PressAbStepError<E>> {
+        self.step(data, execute, true)
+    }
+    pub(crate) fn try_step_fixed<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(u8) -> Result<(), E>,
+    ) -> Result<bool, PressAbStepError<E>> {
+        self.step(data, execute, false)
+    }
+    fn step<E>(
+        &mut self,
+        data: &[u8],
+        execute: impl FnOnce(u8) -> Result<(), E>,
+        check_data: bool,
+    ) -> Result<bool, PressAbStepError<E>> {
         if self.result().is_some() {
             return Ok(true);
         }
-        if !self.matches_data(data) {
+        if check_data && !self.matches_data(data) {
             return Err(PressAbStepError::ChangedProgram);
         }
         match &mut self.stage {
@@ -929,6 +1171,31 @@ mod bank_tests {
             }
             assert_eq!(w.cycles(), c.cycles);
             assert_eq!(w.result(), Some(c.result), "case {index}");
+        }
+    }
+    #[test]
+    fn plain_prefixes_match_every_accept_count() {
+        let f: Fixture =
+            serde_json::from_str(include_str!("press_ab_instructions_golden.json")).unwrap();
+        for (case_index, c) in f.cases.into_iter().enumerate() {
+            let mut cursor = PressAbInstructions::new(c.input, &c.data).unwrap();
+            while cursor.result().is_none() {
+                let prefix = cursor.plain_prefix();
+                for count in 1..=prefix.len() {
+                    let mut expected = cursor.clone();
+                    for _ in 0..count {
+                        expected.try_step(&c.data, |_| Ok::<(), ()>(())).unwrap();
+                    }
+                    let mut actual = cursor.clone();
+                    actual.accept_plain_prefix(count, prefix);
+                    assert_eq!(
+                        actual, expected,
+                        "case={case_index} stage={:?} count={count}",
+                        cursor.stage
+                    );
+                }
+                cursor.try_step(&c.data, |_| Ok::<(), ()>(())).unwrap();
+            }
         }
     }
     #[test]

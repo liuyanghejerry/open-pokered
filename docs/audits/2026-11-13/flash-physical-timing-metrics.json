@@ -1,0 +1,668 @@
+{
+  "scenario": "RockTunnel1F ordinary SAVE -> START -> Pokemon -> FLASH",
+  "verdict": "FAIL",
+  "scope": "Physical display-phase and PSG register timing. Different renderer geometry is not pixel-compared.",
+  "reference": {
+    "variant": "normal retail Red",
+    "source": "fbcf7d0e19a3a2db505440d3ccd3d40ca996c15c",
+    "rom_sha256": "5ca7ba01642a3b27b0cc0b5349b52792795b62d3ed977e98a09390659af96b7b",
+    "resolution": [
+      160,
+      144
+    ]
+  },
+  "current": {
+    "head": "943385391b3a4167ff242b0b509dd0b365c9ffdc",
+    "rom_sha256": "95cf8a69fa0260e21f9d647564115eb0ccd9a0c574313a4db7309239a21743e0",
+    "resolution": [
+      240,
+      160
+    ]
+  },
+  "fixture_sha256": "6513e8fa9993de3478d535536f590e47b6ea2a74fdf0116615cc2a74ca463f1c",
+  "input": "A held t=0,1 and t=160,161; neutral otherwise; 600 consecutive frames per implementation",
+  "fps": 59.72750056960583,
+  "repeatability": {
+    "reference_two_runs_pixel_and_audio_equal": true,
+    "current_two_runs_pixel_and_audio_equal": true,
+    "all_png_hashes_verified": true
+  },
+  "display": {
+    "message_complete": {
+      "reference": 37,
+      "current": 77,
+      "delta_frames": 40,
+      "reference_seconds": 0.6194801330566406,
+      "current_seconds": 1.2891883850097656
+    },
+    "full_white_spans": {
+      "reference": [
+        {
+          "start": 161,
+          "end": 195,
+          "frames": 35
+        }
+      ],
+      "current": [
+        {
+          "start": 188,
+          "end": 380,
+          "frames": 193
+        }
+      ]
+    },
+    "first_map_after_white": {
+      "reference": 196,
+      "current": 381,
+      "delta_frames": 185
+    },
+    "first_stable_final": {
+      "reference": 208,
+      "current": 432,
+      "delta_frames": 224,
+      "reference_seconds": 3.48248291015625,
+      "current_seconds": 7.23284912109375,
+      "ratio": 2.076923076923077
+    },
+    "reference_pixel_runs": [
+      {
+        "start": 0,
+        "end": 0,
+        "frames": 1,
+        "value": "cb3d9731a11c1affe228ce5fc16b2f1bd73b56e99dcc499bced4cdcab1a484c6"
+      },
+      {
+        "start": 1,
+        "end": 2,
+        "frames": 2,
+        "value": "794c61d263356e52df9a7995f3dd60ac8a8abed4b3e34b8d6556e9349f3b48c0"
+      },
+      {
+        "start": 3,
+        "end": 3,
+        "frames": 1,
+        "value": "73eed6110653a982348e2decd5da4f923222b30733a79909235615580a86e509"
+      },
+      {
+        "start": 4,
+        "end": 6,
+        "frames": 3,
+        "value": "6490a29fd2c7ea801faf482195fe28f0a8366f3466d32c7b5c592c50251cfbaa"
+      },
+      {
+        "start": 7,
+        "end": 9,
+        "frames": 3,
+        "value": "1b97c6063e10472fa65413af2e565cbbbd4e5e957ac0ea582ec539fd4be74ed7"
+      },
+      {
+        "start": 10,
+        "end": 12,
+        "frames": 3,
+        "value": "740efa413533d05f0e72ee1f1285c5e68cb475cd928300d45b1d4b861cbe5857"
+      },
+      {
+        "start": 13,
+        "end": 15,
+        "frames": 3,
+        "value": "370d04f61ce705b38e8dc2ecc83f38bec10bfd7ce183093c6b1031214321202d"
+      },
+      {
+        "start": 16,
+        "end": 18,
+        "frames": 3,
+        "value": "e78b94f1a10e844d3f074f5bbd831b8bca0bdbf07cda25e5d7364757335af346"
+      },
+      {
+        "start": 19,
+        "end": 21,
+        "frames": 3,
+        "value": "86fee00324c063ca732a2a3fbe0e9e3c3317a7db1f1585538655cbc9bebc7cb5"
+      },
+      {
+        "start": 22,
+        "end": 24,
+        "frames": 3,
+        "value": "8efafa99b658cb05d6a74b0d092325419060361931a82f64f4208cf9f2a3b7b8"
+      },
+      {
+        "start": 25,
+        "end": 27,
+        "frames": 3,
+        "value": "1075b990a0dcb4b005dee1c8350fb3cebf2232ae9fadfd852c9e1b8303328a8d"
+      },
+      {
+        "start": 28,
+        "end": 30,
+        "frames": 3,
+        "value": "839dfedbe68ac8a88b34254e85ae89c17d648de1647c0bb3ef34c9aaa58d6452"
+      },
+      {
+        "start": 31,
+        "end": 33,
+        "frames": 3,
+        "value": "42ec0585d50688bda2d16243455af11510e7597020a44079a78453fd67f9390d"
+      },
+      {
+        "start": 34,
+        "end": 36,
+        "frames": 3,
+        "value": "945fb8005603974841f5f8f61ca0f58d8b131138baccc7072ba36711a2e6b376"
+      },
+      {
+        "start": 37,
+        "end": 72,
+        "frames": 36,
+        "value": "4b2d3983b0180d89f7c3964c82c38c8c54375189e41b1c23788176549b1413d4"
+      },
+      {
+        "start": 73,
+        "end": 108,
+        "frames": 36,
+        "value": "6e57ac56c89c66a250584a4f47941240825faf48628820e919559fae441f4a79"
+      },
+      {
+        "start": 109,
+        "end": 141,
+        "frames": 33,
+        "value": "4b2d3983b0180d89f7c3964c82c38c8c54375189e41b1c23788176549b1413d4"
+      },
+      {
+        "start": 142,
+        "end": 159,
+        "frames": 18,
+        "value": "6e57ac56c89c66a250584a4f47941240825faf48628820e919559fae441f4a79"
+      },
+      {
+        "start": 160,
+        "end": 160,
+        "frames": 1,
+        "value": "cdd95251f48ebe388d6a2f74974908d8fc0d2aa90369472af5eaf9e4f5361a19"
+      },
+      {
+        "start": 161,
+        "end": 195,
+        "frames": 35,
+        "value": "fc7bc70fa8de6eb76d3a6c47669324e70f084c326e0ea1166224c516b5c4e642"
+      },
+      {
+        "start": 196,
+        "end": 196,
+        "frames": 1,
+        "value": "ef3d880967545f5b1662d7d3396068694686fc975265f746fe934f1cdab36d8a"
+      },
+      {
+        "start": 197,
+        "end": 207,
+        "frames": 11,
+        "value": "c493788b696ed381d9a953bdc42f597e97bb9c4ee8938193b604fb390cb9fa92"
+      },
+      {
+        "start": 208,
+        "end": 599,
+        "frames": 392,
+        "value": "2b38851d6b5d181661427c725ccb846294cfd53080cb4682c5c430189521145c"
+      }
+    ],
+    "current_pixel_runs": [
+      {
+        "start": 0,
+        "end": 11,
+        "frames": 12,
+        "value": "8a0ad821115a46827c98e6713cd9e1d0b6ce5b2a4cab97176a79bbaaaa291ef8"
+      },
+      {
+        "start": 12,
+        "end": 16,
+        "frames": 5,
+        "value": "36ee46dac152dc80287b05d2ad8384c98cb3df744e34df1472241a5b3e570313"
+      },
+      {
+        "start": 17,
+        "end": 19,
+        "frames": 3,
+        "value": "dcc3a9a206f4d1d894d22785af78b64bc2da0df6626dc1d945d667a746b02186"
+      },
+      {
+        "start": 20,
+        "end": 20,
+        "frames": 1,
+        "value": "2bcb46fc6a4bb2276d9ecc85bd71055cb5b03b3ba4e743e387974b551450b1ce"
+      },
+      {
+        "start": 21,
+        "end": 22,
+        "frames": 2,
+        "value": "48293696740f801cd5476a378a4940ff7f1329c2194978c424eabd154a414211"
+      },
+      {
+        "start": 23,
+        "end": 23,
+        "frames": 1,
+        "value": "ba4c6f2bb10ffa535e2f16cb403f187bca22c3104cffff8b91dcd1da1e3dc8e4"
+      },
+      {
+        "start": 24,
+        "end": 25,
+        "frames": 2,
+        "value": "9696823cd50194f3a922a0abaddf18c6e9922bcca6f1c0718240870ea6bfa4d6"
+      },
+      {
+        "start": 26,
+        "end": 26,
+        "frames": 1,
+        "value": "8ace028d197ca86bf4e6b7725dda8bbb02e6092e0a752d314f27b7a8479782d3"
+      },
+      {
+        "start": 27,
+        "end": 28,
+        "frames": 2,
+        "value": "e6123b65ceda4e1311f923786cde8262ebf6c2d4f668fcdc0ff7c273b7ab7173"
+      },
+      {
+        "start": 29,
+        "end": 30,
+        "frames": 2,
+        "value": "8c13cf355d54f50cac85c4806c6e287915edb4fc846881e0081f74084978ddbb"
+      },
+      {
+        "start": 31,
+        "end": 34,
+        "frames": 4,
+        "value": "fde861d9e25877c023e20742df34ab4b76dbc36594429f1e701380d3f369d4be"
+      },
+      {
+        "start": 35,
+        "end": 36,
+        "frames": 2,
+        "value": "49ed86e7688e2028ad6e3c2511112528e9cec23ea76bede482c7daf7a1b5011a"
+      },
+      {
+        "start": 37,
+        "end": 38,
+        "frames": 2,
+        "value": "ac34a33def826e00b974da3b87bd1e9b843e8731021f28b2a5304727475f1ca4"
+      },
+      {
+        "start": 39,
+        "end": 40,
+        "frames": 2,
+        "value": "5e1e635f2b2b2474391bac945e51caa0af9400bd9217873c2cc874b7330ae8dc"
+      },
+      {
+        "start": 41,
+        "end": 42,
+        "frames": 2,
+        "value": "521e78d922ed26289a56e3d399b4ee881c22bcb62f9824af5c594f01b6d8ba3a"
+      },
+      {
+        "start": 43,
+        "end": 44,
+        "frames": 2,
+        "value": "e736518de4242d1d4f224a60aae24347e776bb4e1ffde247c0f38d177732f611"
+      },
+      {
+        "start": 45,
+        "end": 46,
+        "frames": 2,
+        "value": "23d164407fa15524a745e53950eafa256edb045561ef4c444fec67890726285a"
+      },
+      {
+        "start": 47,
+        "end": 48,
+        "frames": 2,
+        "value": "9a89e0d9e61d059ba675287bcf8675c6096a2ef4685b84b3fe33f82c7f80765b"
+      },
+      {
+        "start": 49,
+        "end": 50,
+        "frames": 2,
+        "value": "9176eabe96bd22a640ce99a1d883ad1d3a8358506cf723f7c6ec33c01c00a831"
+      },
+      {
+        "start": 51,
+        "end": 52,
+        "frames": 2,
+        "value": "913df6bdee1a2627eeedb4d1fcadcb422dc525aa6dff59a5745da676141d3de7"
+      },
+      {
+        "start": 53,
+        "end": 54,
+        "frames": 2,
+        "value": "b7db829f47e5a4054aa329023452566f46fe7905e64f9ea1f9a346e3370c9807"
+      },
+      {
+        "start": 55,
+        "end": 58,
+        "frames": 4,
+        "value": "c244852fbf0f59965a3f01ad6df6711793914db235b50baa43e0be320f7e3ed5"
+      },
+      {
+        "start": 59,
+        "end": 60,
+        "frames": 2,
+        "value": "1a17a6d90ed971a0bf7b62581e16e1ca2a32e21d3b2412267660d017d8f0a850"
+      },
+      {
+        "start": 61,
+        "end": 62,
+        "frames": 2,
+        "value": "dc93204174133745319643b5a219b7feef2a84aa9a129e93985eafaf052a3273"
+      },
+      {
+        "start": 63,
+        "end": 66,
+        "frames": 4,
+        "value": "050254ef63c2dad52bdd04786fe281f43337921f6fbbe3d8c00a855b2e067980"
+      },
+      {
+        "start": 67,
+        "end": 68,
+        "frames": 2,
+        "value": "2da4d728bc054bbc7e0a26ea26d74e119df7b808ebcfe446d6b0af4a12496877"
+      },
+      {
+        "start": 69,
+        "end": 70,
+        "frames": 2,
+        "value": "aef17fd592c19d81b29223acf6c4dd309953da712d5c3fd95494bde38e8615c9"
+      },
+      {
+        "start": 71,
+        "end": 72,
+        "frames": 2,
+        "value": "b532adf467393a7eefa00305715f14774d789c65395721a1d2cf564cf04c5696"
+      },
+      {
+        "start": 73,
+        "end": 74,
+        "frames": 2,
+        "value": "fe9857c22efcda3815c22b9750b2e27ee01e00707a690c00e7c5e4144196edbf"
+      },
+      {
+        "start": 75,
+        "end": 76,
+        "frames": 2,
+        "value": "76340b6183690ca4c90123aedb639615fc609716626892e27c158b605123d058"
+      },
+      {
+        "start": 77,
+        "end": 92,
+        "frames": 16,
+        "value": "0658f3cead2ce2e5e96732bb8537dbc4b58a721983942f4951597e9a30554419"
+      },
+      {
+        "start": 93,
+        "end": 124,
+        "frames": 32,
+        "value": "76340b6183690ca4c90123aedb639615fc609716626892e27c158b605123d058"
+      },
+      {
+        "start": 125,
+        "end": 156,
+        "frames": 32,
+        "value": "0658f3cead2ce2e5e96732bb8537dbc4b58a721983942f4951597e9a30554419"
+      },
+      {
+        "start": 157,
+        "end": 179,
+        "frames": 23,
+        "value": "76340b6183690ca4c90123aedb639615fc609716626892e27c158b605123d058"
+      },
+      {
+        "start": 180,
+        "end": 187,
+        "frames": 8,
+        "value": "54bbed7b589930b48e47546045ccbe0b283730b01a6293263a9b25444d99a9a1"
+      },
+      {
+        "start": 188,
+        "end": 380,
+        "frames": 193,
+        "value": "0f0b07e78d9707d61976d821a424299dd5184ee4699382533f7ece29cb4807e8"
+      },
+      {
+        "start": 381,
+        "end": 387,
+        "frames": 7,
+        "value": "25026def7a916a342446b246f694219692bf353081c181cb8d6fdf82aa2ac2da"
+      },
+      {
+        "start": 388,
+        "end": 431,
+        "frames": 44,
+        "value": "f5b2c0859e547bcb906695f5bb2d30bae17952c1245e87e348c6a0098f613fde"
+      },
+      {
+        "start": 432,
+        "end": 599,
+        "frames": 168,
+        "value": "e3b1ccc9d8bb856a6838907cbf0732424eaba6d03c04341776edec8ca7fd7c09"
+      }
+    ]
+  },
+  "audio": {
+    "pretrigger": {
+      "reference_nr50_nr51_nr52": [
+        119,
+        51,
+        243
+      ],
+      "current_nr50_nr51_nr52": [
+        119,
+        187,
+        143
+      ],
+      "note": "Pre-existing routing/channel-status mismatch; not attributed to FLASH."
+    },
+    "reference_nr12_runs": [
+      {
+        "start": 0,
+        "end": 0,
+        "frames": 1,
+        "value": 195
+      },
+      {
+        "start": 1,
+        "end": 1,
+        "frames": 1,
+        "value": 145
+      },
+      {
+        "start": 2,
+        "end": 2,
+        "frames": 1,
+        "value": 129
+      },
+      {
+        "start": 3,
+        "end": 3,
+        "frames": 1,
+        "value": 145
+      },
+      {
+        "start": 4,
+        "end": 23,
+        "frames": 20,
+        "value": 161
+      },
+      {
+        "start": 24,
+        "end": 160,
+        "frames": 137,
+        "value": 195
+      },
+      {
+        "start": 161,
+        "end": 161,
+        "frames": 1,
+        "value": 145
+      },
+      {
+        "start": 162,
+        "end": 162,
+        "frames": 1,
+        "value": 129
+      },
+      {
+        "start": 163,
+        "end": 163,
+        "frames": 1,
+        "value": 145
+      },
+      {
+        "start": 164,
+        "end": 190,
+        "frames": 27,
+        "value": 161
+      },
+      {
+        "start": 191,
+        "end": 599,
+        "frames": 409,
+        "value": 195
+      }
+    ],
+    "current_nr12_runs": [
+      {
+        "start": 0,
+        "end": 172,
+        "frames": 173,
+        "value": 195
+      },
+      {
+        "start": 173,
+        "end": 182,
+        "frames": 10,
+        "value": 145
+      },
+      {
+        "start": 183,
+        "end": 190,
+        "frames": 8,
+        "value": 129
+      },
+      {
+        "start": 191,
+        "end": 197,
+        "frames": 7,
+        "value": 145
+      },
+      {
+        "start": 198,
+        "end": 339,
+        "frames": 142,
+        "value": 161
+      },
+      {
+        "start": 340,
+        "end": 599,
+        "frames": 260,
+        "value": 195
+      }
+    ],
+    "current_nr22_runs": [
+      {
+        "start": 0,
+        "end": 11,
+        "frames": 12,
+        "value": 211
+      },
+      {
+        "start": 12,
+        "end": 22,
+        "frames": 11,
+        "value": 8
+      },
+      {
+        "start": 23,
+        "end": 599,
+        "frames": 577,
+        "value": 211
+      }
+    ],
+    "ack_sfx": {
+      "reference_onset": 161,
+      "current_onset": 173,
+      "onset_delta_frames": 12,
+      "reference_a1_span": [
+        164,
+        190,
+        27
+      ],
+      "current_a1_span": [
+        198,
+        339,
+        142
+      ],
+      "a1_ratio": 5.2592592592592595,
+      "reference_return_to_c3": 191,
+      "current_return_to_c3": 340,
+      "return_delta_frames": 149
+    },
+    "selection_sfx": {
+      "reference_ch1_first_change": 1,
+      "current_ch1_first_change": 173,
+      "current_ch2_changed_span": [
+        12,
+        22
+      ]
+    }
+  },
+  "reference_events": [
+    {
+      "name": "StartMenu_Pokemon.flash",
+      "t": 0,
+      "T_cycles": 90080684,
+      "ly": 58
+    },
+    {
+      "name": "PrintText",
+      "t": 0,
+      "T_cycles": 90080760,
+      "ly": 58
+    },
+    {
+      "name": "GBPalWhiteOutWithDelay3",
+      "t": 160,
+      "T_cycles": 101297324,
+      "ly": 16
+    },
+    {
+      "name": "RestoreScreenTilesAndReloadTilePatterns",
+      "t": 163,
+      "T_cycles": 101507268,
+      "ly": 14
+    },
+    {
+      "name": "DisableLCD",
+      "t": 163,
+      "T_cycles": 101511328,
+      "ly": 23
+    },
+    {
+      "name": "EnableLCD",
+      "t": 165,
+      "T_cycles": 101654848,
+      "ly": 0
+    },
+    {
+      "name": "CloseTextDisplay",
+      "t": 195,
+      "T_cycles": 103700392,
+      "ly": 19
+    },
+    {
+      "name": "OverworldLoop",
+      "t": 207,
+      "T_cycles": 104546872,
+      "ly": 28
+    }
+  ],
+  "limitations": [
+    "PSG registers are sampled once after each emulated frame, not at each write/cycle.",
+    "Reference 160x144 images are only padded to 240x160 for the contact sheet; no temporal or spatial resampling.",
+    "Language/layout and renderer geometry are confounders and are not judged.",
+    "No claim about audible waveform parity or original physical-cycle parity is made."
+  ]
+}

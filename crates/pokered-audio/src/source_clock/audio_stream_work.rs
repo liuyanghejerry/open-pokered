@@ -17,6 +17,8 @@ pub struct MusicStreamWork {
     pub vibrato_reload: u8,
     pub linear_commands: Vec<u8>,
     pub control_cycles: u32,
+    pub result: super::note_stream_instructions::StreamResult,
+    pub dispatch: u32,
     pub drum: Option<super::drum_start_instructions::DrumStartResult>,
 }
 
@@ -341,7 +343,7 @@ pub fn music_stream_work_with_drum(
                 } else if channel == 3 && command & 0xf0 == 0xb0 {
                     linear.push(byte(data, &mut ptr)?);
                 }
-                let (result, _) = music_dispatch_with_context(
+                let (result, dispatch) = music_dispatch_with_context(
                     channel,
                     &linear,
                     state,
@@ -359,6 +361,8 @@ pub fn music_stream_work_with_drum(
                     vibrato_reload,
                     linear_commands: linear,
                     control_cycles,
+                    result,
+                    dispatch,
                     drum: result.drum,
                 });
             }
@@ -370,7 +374,7 @@ pub fn music_stream_work_with_drum(
 
 #[cfg(test)]
 mod tests {
-    use super::super::audio_next_note_work::music_next_note_work;
+    use super::super::audio_next_note_work::music_next_note_work_with_drum_prepared;
     use super::*;
 
     #[test]
@@ -459,11 +463,9 @@ mod tests {
                 4,
             )
             .unwrap();
-            let result = music_next_note_work(
+            let result = music_next_note_work_with_drum_prepared(
                 channel,
-                &stream.linear_commands,
-                stream.state,
-                stream.vibrato_reload,
+                &stream,
                 0,
                 if stream.tempo.is_some() { 0 } else { 64 },
                 stream.tempo.unwrap_or(124),
@@ -471,6 +473,8 @@ mod tests {
                 crate::NOTE_FREQUENCIES
                     .get((stream.note >> 4) as usize)
                     .copied(),
+                false,
+                0,
             )
             .unwrap();
             let expected = &c["result"];

@@ -5,6 +5,18 @@ fn reference_multiply(value: u64) -> u64 {
     (u128::from(value) * 0x0000_0100_0000_01b3u128) as u64
 }
 
+fn reference_mix(mut hash: u64, bytes: &[u8]) -> u64 {
+    let mut chunks = bytes.chunks_exact(4);
+    for chunk in &mut chunks {
+        let word = u32::from_le_bytes(chunk.try_into().unwrap());
+        hash = reference_multiply(hash ^ u64::from(word));
+    }
+    for &byte in chunks.remainder() {
+        hash = reference_multiply(hash ^ u64::from(byte));
+    }
+    hash
+}
+
 #[test]
 fn arm32_fnv_product_matches_independent_wide_arithmetic() {
     for high in [
@@ -33,25 +45,24 @@ fn arm32_fnv_product_matches_independent_wide_arithmetic() {
 }
 
 #[test]
-fn complete_query_hash_streams_preserve_the_old_hash_and_chunk_boundaries() {
+fn complete_query_hash_streams_preserve_word_boundaries() {
     let bytes: Vec<u8> = (0..=255).cycle().take(4096).collect();
     for size in [0, 1, 2, 4, 11, 19, 38, 64, 255, 4096] {
         let data = &bytes[..size];
-        let expected = data.iter().fold(FNV_OFFSET, |hash, byte| {
-            reference_multiply(hash ^ u64::from(*byte))
-        });
-        let mut old = FNV_OFFSET;
-        fnv_mix(&mut old, data);
-        assert_eq!(old, expected);
-        for chunk_size in [1, 2, 4, 11, 19, 64] {
-            let mut arm32 = FNV_OFFSET;
-            for chunk in data.chunks(chunk_size) {
-                for &byte in chunk {
-                    arm32 = fnv_multiply_arm32(arm32 ^ u64::from(byte));
-                }
-            }
-            assert_eq!(arm32, expected);
+        let expected = reference_mix(FNV_OFFSET, data);
+        let mut actual = FNV_OFFSET;
+        fnv_mix(&mut actual, data);
+        assert_eq!(actual, expected);
+        let mut arm32 = FNV_OFFSET;
+        let mut chunks = data.chunks_exact(4);
+        for chunk in &mut chunks {
+            let word = u32::from_le_bytes(chunk.try_into().unwrap());
+            arm32 = fnv_multiply_arm32(arm32 ^ u64::from(word));
         }
+        for &byte in chunks.remainder() {
+            arm32 = fnv_multiply_arm32(arm32 ^ u64::from(byte));
+        }
+        assert_eq!(arm32, expected);
     }
 }
 
@@ -61,15 +72,10 @@ fn query_scalar_hashes_preserve_byte_order_and_full_width() {
     QuerySeedSnapshot::hash_u8(&mut actual, 0xff);
     QuerySeedSnapshot::hash_u32(&mut actual, 0x80ff_0100);
     QuerySeedSnapshot::hash_u8(&mut actual, 0);
-    let bytes = [0xffu8, 0x00, 0x01, 0xff, 0x80, 0x00];
-    let expected = bytes.iter().fold(FNV_OFFSET, |hash, byte| {
-        reference_multiply(hash ^ u64::from(*byte))
-    });
-    let arm32 = bytes.iter().fold(FNV_OFFSET, |hash, byte| {
-        fnv_multiply_arm32(hash ^ u64::from(*byte))
-    });
+    let expected = reference_mix(FNV_OFFSET, &[0xff]);
+    let expected = reference_mix(expected, &[0x00, 0x01, 0xff, 0x80]);
+    let expected = reference_mix(expected, &[0]);
     assert_eq!(actual, expected);
-    assert_eq!(arm32, expected);
 }
 
 fn game() -> super::PokemonGame {

@@ -56,6 +56,11 @@ impl DisplayPaletteWork {
             }
     }
 
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        while self.step(bus)?.is_some() {}
+        Ok(())
+    }
+
     pub fn step<B: DisplayInstructionBus>(
         &mut self,
         bus: &mut B,

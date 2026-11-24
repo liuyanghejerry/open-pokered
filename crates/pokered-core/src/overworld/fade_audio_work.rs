@@ -120,6 +120,27 @@ impl FadeAudioWork {
         true
     }
 
+    #[inline(always)]
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if self.step == Step::ReadControl && self.state.control == 0 && self.state.flags2 & 2 == 0 {
+            let cycles = [16, 4, 8, 16, 8, 8, 8, 12, 16];
+            let count = bus.execute_plain_cycles_total(&cycles, 96)?;
+            if count == cycles.len() {
+                self.a = 0x77;
+                self.zero = true;
+                self.state.nr50 = 0x77;
+                self.nr50_written = Some(0x77);
+                self.step = Step::Done;
+            } else {
+                let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                for _ in 0..count {
+                    assert!(self.step(&mut replay).unwrap());
+                }
+            }
+        }
+        while self.step(bus)? {}
+        Ok(())
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let tcycles = match self.step {
@@ -444,5 +465,27 @@ mod tests {
         assert!(w.finished());
         assert!(!w.start_sound_returned());
         assert_eq!(t.interrupt_returns(), 0);
+    }
+
+    #[test]
+    fn inactive_fade_run_matches_all_nine_single_instructions() {
+        let state = FadeAudioState {
+            control: 0,
+            flags2: 0,
+            ..initial()
+        };
+        let mut actual = FadeAudioWork::new(state);
+        let mut expected = actual.clone();
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.device_mut().request_interrupt(1);
+        time.enter_pending_vblank().unwrap();
+        let mut reference = time.clone();
+        actual.run(&mut time.display_bus()).unwrap();
+        while expected.step(&mut reference).unwrap() {}
+        assert_eq!(actual, expected);
+        assert_eq!(actual.nr50_write_effect(), Some(0x77));
+        assert_eq!(time.elapsed(), reference.elapsed());
+        assert_eq!(time.device(), reference.device());
     }
 }

@@ -116,6 +116,62 @@ impl MusicNoteInstructions {
             cycles: 0,
         })
     }
+    pub(crate) fn with_preparation(
+        input: MusicNoteInput,
+        preparation: PreparationResult,
+    ) -> Option<Self> {
+        if !matches!(input.bank, 2 | 31)
+            || (input.preparation.stream.channel == 0
+                && input.paired_sfx_active != (input.source_sfx_id != 0))
+        {
+            return None;
+        }
+        let stage = if preparation.boundary == PreparationBoundary::NoiseReturned {
+            Stage::Return {
+                preparation,
+                pitch: NotePitchResult {
+                    pitch_slide: None,
+                    saved_frequency_low: input.previous_frequency_low,
+                    wave_return_frequency: None,
+                },
+            }
+        } else {
+            let note = preparation.stream.note;
+            let pitch_input = NotePitchInput {
+                bank: input.bank,
+                channel: input.preparation.stream.channel,
+                note,
+                octave: preparation.stream.state.octave,
+                flags1: preparation.stream.state.flags1,
+                paired_sfx_active: input.paired_sfx_active,
+                source_sfx_id: input.source_sfx_id,
+                frequency_modifier: input.frequency_modifier,
+                pitch_base: if note < 0xc0 {
+                    crate::NOTE_FREQUENCIES.get((note >> 4) as usize).copied()
+                } else {
+                    None
+                },
+                previous_frequency_low: input.previous_frequency_low,
+            };
+            let work = if let Some(slide) = preparation.stream.pitch_slide {
+                NotePitchInstructions::with_pitch_slide(
+                    pitch_input,
+                    preparation.delay,
+                    slide.length_modifier,
+                    slide.target_frequency,
+                )
+            } else {
+                NotePitchInstructions::new(pitch_input)
+            }?;
+            Stage::Pitch { preparation, work }
+        };
+        Some(Self {
+            input,
+            stage,
+            cycles: preparation.cycles,
+        })
+    }
+
     pub fn result(&self) -> Option<MusicNoteOutcome> {
         if let Stage::Done(result) = self.stage {
             Some(MusicNoteOutcome::Note(result))
@@ -127,6 +183,22 @@ impl MusicNoteInstructions {
     }
     pub fn cycles(&self) -> u32 {
         self.cycles
+    }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        match &self.stage {
+            Stage::Preparation(work) => work.plain_prefix(),
+            Stage::Pitch { work, .. } => work.plain_prefix(),
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        let cycles = match &mut self.stage {
+            Stage::Preparation(work) => work.accept_plain_prefix(count, prefix),
+            Stage::Pitch { work, .. } => work.accept_plain_prefix(count, prefix),
+            _ => unreachable!("nonempty music note prefix"),
+        };
+        self.cycles += cycles;
+        cycles
     }
     pub fn try_step<E>(
         &mut self,
@@ -334,6 +406,30 @@ mod tests {
     struct Fixture {
         cases: alloc::vec::Vec<Case>,
     }
+    #[test]
+    fn prepared_shortcut_matches_every_remaining_instruction() {
+        let f: Fixture =
+            serde_json::from_str(include_str!("music_note_instructions_golden.json")).unwrap();
+        for (index, c) in f.cases.into_iter().enumerate() {
+            let mut preparation = NotePreparation::new(c.input.preparation).unwrap();
+            while !preparation.try_step(&c.data, |_| Ok::<(), ()>(())).unwrap() {}
+            let result = preparation.result().unwrap();
+            let mut actual = MusicNoteInstructions::with_preparation(c.input, result).unwrap();
+            let mut expected = MusicNoteInstructions::new(c.input).unwrap();
+            while !matches!(expected.stage, Stage::Pitch { .. } | Stage::Return { .. }) {
+                expected.try_step(&c.data, |_| Ok::<(), ()>(())).unwrap();
+            }
+            assert_eq!(actual, expected, "case {index} preparation");
+            while !expected.result().is_some() {
+                let a = actual.try_step(&c.data, |_| Ok::<(), ()>(()));
+                let e = expected.try_step(&c.data, |_| Ok::<(), ()>(()));
+                assert_eq!(a, e, "case {index} step");
+                assert_eq!(actual, expected, "case {index} cursor");
+            }
+            assert_eq!(actual.result(), expected.result(), "case {index} result");
+        }
+    }
+
     #[test]
     fn whole_note_calls_match_original_through_final_ret_without_a_second_native_owner() {
         let f: Fixture =

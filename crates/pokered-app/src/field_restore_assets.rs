@@ -15,6 +15,8 @@ pub struct NativePatternAssets<'a> {
     resources: RefCell<&'a mut ResourceManager>,
     #[cfg(target_os = "none")]
     rom_cache: RomPatternCache,
+    #[cfg(target_os = "none")]
+    rom_cache_sink: Option<&'a RomPatternCache>,
 }
 impl<'a> NativePatternAssets<'a> {
     pub fn new(resources: &'a mut ResourceManager) -> Self {
@@ -22,7 +24,29 @@ impl<'a> NativePatternAssets<'a> {
             resources: RefCell::new(resources),
             #[cfg(target_os = "none")]
             rom_cache: RomPatternCache::default(),
+            #[cfg(target_os = "none")]
+            rom_cache_sink: None,
         }
+    }
+
+    pub(super) fn with_shared_cache(
+        resources: &'a mut ResourceManager,
+        cache: &'a RomPatternCache,
+    ) -> Self {
+        let mut assets = Self::new(resources);
+        #[cfg(target_os = "none")]
+        {
+            assets.rom_cache_sink = Some(cache);
+        }
+        #[cfg(not(target_os = "none"))]
+        let _ = cache;
+        assets
+    }
+
+    #[cfg(target_os = "none")]
+    #[inline(always)]
+    fn cache(&self) -> &RomPatternCache {
+        self.rom_cache_sink.unwrap_or(&self.rom_cache)
     }
 }
 impl PatternAssets for NativePatternAssets<'_> {
@@ -44,7 +68,7 @@ impl PatternAssets for NativePatternAssets<'_> {
             }
         } else { (source, offset) };
         #[cfg(target_os = "none")]
-        return self.rom_cache.read(source, offset, rom_pattern_source);
+        return self.cache().read(source, offset, rom_pattern_source);
         #[cfg(not(target_os = "none"))]
         {
             let mut resources = self.resources.borrow_mut();
@@ -94,6 +118,65 @@ impl PatternAssets for NativePatternAssets<'_> {
             pattern_byte(&cached.tileset, offset, one_bpp)
         }
     }
+
+    #[cfg(any(target_os = "none", test))]
+    fn read_pattern_pair(&self, source: PatternSource, offset: u16) -> Result<u16, u16> {
+        if matches!(source, PatternSource::Tileset(_))
+            || (matches!(source, PatternSource::Sprite(_)) && offset == 191)
+        {
+            let low = self.read_pattern_byte(source, offset).ok_or(offset)?;
+            let high_offset = offset.wrapping_add(1);
+            let high = self
+                .read_pattern_byte(source, high_offset)
+                .ok_or(high_offset)?;
+            return Ok(u16::from_le_bytes([low, high]));
+        }
+        let mut bytes = [0; 2];
+        if self.read_pattern_run(source, offset, &mut bytes).is_some() {
+            return Ok(u16::from_le_bytes(bytes));
+        }
+        self.read_pattern_byte(source, offset).ok_or(offset)?;
+        Err(offset.wrapping_add(1))
+    }
+
+    #[cfg(target_os = "none")]
+    #[inline(always)]
+    fn read_pattern_run(
+        &self,
+        source: PatternSource,
+        offset: u16,
+        output: &mut [u8],
+    ) -> Option<()> {
+        let (source, offset) = if let PatternSource::Sprite(raw) = source {
+            let (owner, offset) =
+                pokered_core::overworld::sprite_sheet_metadata::sprite_pattern_segment(
+                    raw, offset,
+                )?;
+            (PatternSource::Sprite(owner), offset)
+        } else if let PatternSource::Tileset(raw) = source {
+            use pokered_core::overworld::tileset_pattern_metadata::{
+                tileset_pattern_byte, TilesetPatternByte,
+            };
+            match tileset_pattern_byte(raw, offset)? {
+                TilesetPatternByte::Graphics { tileset, offset } => {
+                    (PatternSource::Tileset(tileset), offset)
+                }
+                TilesetPatternByte::Blockset { tileset, offset } => {
+                    let id = pokered_data::tilesets::TilesetId::from_u8(tileset)?;
+                    let bytes = pokered_data::blockset_data::blockset_for_tileset(id);
+                    let source =
+                        bytes.get(usize::from(offset)..usize::from(offset) + output.len())?;
+                    output.copy_from_slice(source);
+                    return Some(());
+                }
+                TilesetPatternByte::Vram(_) => return None,
+            }
+        } else {
+            (source, offset)
+        };
+        self.cache()
+            .read_run(source, offset, output, rom_pattern_source)
+    }
 }
 
 fn valid_sprite_tile_count(id: SpriteId, tiles: usize) -> bool {
@@ -102,7 +185,6 @@ fn valid_sprite_tile_count(id: SpriteId, tiles: usize) -> bool {
 
 // Retain a borrowed ROM slice only. Mutable VRAM is still read through its
 // timed bus, and no cache hit completes or shortens an instruction/transfer.
-#[cfg(any(target_os = "none", test))]
 #[derive(Clone, Copy)]
 struct RomPatternData {
     bytes: &'static [u8],
@@ -110,9 +192,8 @@ struct RomPatternData {
     stored_one_bpp: bool,
     output_one_bpp: bool,
 }
-#[cfg(any(target_os = "none", test))]
 #[derive(Default)]
-struct RomPatternCache(core::cell::Cell<Option<(PatternSource, RomPatternData)>>);
+pub(super) struct RomPatternCache(core::cell::Cell<Option<(PatternSource, RomPatternData)>>);
 #[cfg(any(target_os = "none", test))]
 impl RomPatternCache {
     fn read(
@@ -136,6 +217,64 @@ impl RomPatternCache {
             data.stored_one_bpp,
             data.output_one_bpp,
         )
+    }
+
+    #[inline(always)]
+    fn read_run(
+        &self,
+        source: PatternSource,
+        offset: u16,
+        output: &mut [u8],
+        resolve: impl FnOnce(PatternSource) -> Option<RomPatternData>,
+    ) -> Option<()> {
+        let data = match self.0.get() {
+            Some((cached_source, data)) if cached_source == source => data,
+            _ => {
+                let data = resolve(source)?;
+                self.0.set(Some((source, data)));
+                data
+            }
+        };
+        if output.is_empty() {
+            return Some(());
+        }
+        if data.stored_one_bpp == data.output_one_bpp {
+            let start = usize::from(offset);
+            let source = data.bytes.get(start..start + output.len())?;
+            output.copy_from_slice(source);
+            return Some(());
+        }
+        if !data.stored_one_bpp {
+            return None;
+        }
+        if output.len() == 2 {
+            let value = stored_pattern_byte(
+                data.bytes,
+                offset,
+                data.tiles,
+                data.stored_one_bpp,
+                data.output_one_bpp,
+            )?;
+            output[0] = value;
+            output[1] = value;
+            return Some(());
+        }
+        let mut index = 0;
+        while index < output.len() {
+            let value = stored_pattern_byte(
+                data.bytes,
+                offset.wrapping_add(index as u16),
+                data.tiles,
+                data.stored_one_bpp,
+                data.output_one_bpp,
+            )?;
+            output[index] = value;
+            if index + 1 < output.len() {
+                output[index + 1] = value;
+            }
+            index += 2;
+        }
+        Some(())
     }
 }
 
@@ -186,6 +325,7 @@ fn rom_pattern_source(source: PatternSource) -> Option<RomPatternData> {
 }
 
 #[cfg(any(target_os = "none", test))]
+#[inline(always)]
 fn stored_pattern_byte(
     bytes: &[u8],
     offset: u16,
@@ -269,6 +409,14 @@ mod tests {
             }
             assert_eq!(cache.read(source, 16, &resolve), None);
         }
+        let mut run = [0; 16];
+        assert!(cache
+            .read_run(PatternSource::WalkingPlayer, 0, &mut run, &resolve)
+            .is_some());
+        assert_eq!(run, [0x96; 16]);
+        assert!(cache
+            .read_run(PatternSource::WalkingPlayer, 16, &mut run, &resolve)
+            .is_none());
         assert_eq!(resolutions.get(), 3);
         assert_eq!(cache.read(PatternSource::Sprite(0), 0, &resolve), None);
         assert_eq!(
@@ -276,6 +424,60 @@ mod tests {
             Some(0x96)
         );
         assert_eq!(resolutions.get(), 4);
+    }
+
+    #[test]
+    fn one_bpp_runs_keep_both_planes_and_output_boundaries() {
+        let cache = RomPatternCache::default();
+        let resolve = |_| {
+            Some(RomPatternData {
+                bytes: &[0xa5, 0x81, 0x42, 0x24, 0x18, 0x66, 0x99, 0xff],
+                tiles: 1,
+                stored_one_bpp: true,
+                output_one_bpp: false,
+            })
+        };
+        for (offset, expected) in [
+            (0, 0xa5),
+            (2, 0x81),
+            (4, 0x42),
+            (6, 0x24),
+            (8, 0x18),
+            (10, 0x66),
+            (12, 0x99),
+            (14, 0xff),
+        ] {
+            let mut output = [0; 2];
+            assert!(cache
+                .read_run(PatternSource::TextBox, offset, &mut output, resolve)
+                .is_some());
+            assert_eq!(output, [expected; 2]);
+        }
+        let boundary = |_| {
+            Some(RomPatternData {
+                bytes: &[0x5a; 256],
+                tiles: 32,
+                stored_one_bpp: true,
+                output_one_bpp: false,
+            })
+        };
+        let cache = RomPatternCache::default();
+        for offset in [510, 511] {
+            let mut output = [0; 2];
+            let count = if offset == 511 { 1 } else { 2 };
+            assert!(cache
+                .read_run(
+                    PatternSource::TextBox,
+                    offset,
+                    &mut output[..count],
+                    boundary
+                )
+                .is_some());
+            assert_eq!(output[..count], [0x5a; 2][..count]);
+        }
+        assert!(cache
+            .read_run(PatternSource::TextBox, 512, &mut [0; 1], boundary)
+            .is_none());
     }
 
     #[test]
@@ -370,6 +572,17 @@ mod tests {
                 let value = assets.read_pattern_byte(PatternSource::Sprite(raw), offset)
                     .unwrap_or_else(|| panic!("missing raw sprite {raw} byte {offset}"));
                 actual = (actual ^ u64::from(value)).wrapping_mul(0x100000001b3);
+                if offset != 0 {
+                    let low = assets
+                        .read_pattern_byte(PatternSource::Sprite(raw), offset - 1)
+                        .unwrap();
+                    assert_eq!(
+                        assets.read_pattern_pair(PatternSource::Sprite(raw), offset - 1),
+                        Ok(u16::from_le_bytes([low, value])),
+                        "raw sprite {raw} pair at {}",
+                        offset - 1,
+                    );
+                }
                 #[cfg(feature = "gba-resource-tests")]
                 {
                     let (owner, local) = pokered_core::overworld::sprite_sheet_metadata::sprite_pattern_segment(raw, offset).unwrap();

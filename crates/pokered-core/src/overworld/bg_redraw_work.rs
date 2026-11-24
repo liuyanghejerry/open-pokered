@@ -109,6 +109,14 @@ impl BgRedrawWork {
     pub fn finished(&self) -> bool {
         self.step == Step::Done
     }
+    pub(crate) fn is_empty(&self) -> bool {
+        self.step == Step::Mode && self.mode == 0
+    }
+    pub(crate) fn finish_empty(&mut self) {
+        debug_assert!(self.is_empty());
+        self.a = 0;
+        self.step = Step::Done;
+    }
     fn add_e(&mut self) {
         let sum = u16::from(self.a) + u16::from(self.e);
         self.a = sum as u8;

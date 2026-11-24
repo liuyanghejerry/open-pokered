@@ -27,6 +27,15 @@ impl IndoorSpriteClearWork {
     pub fn pictures(&self) -> Option<&[u8; 16]> {
         (self.step == 10).then_some(&self.pictures)
     }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        super::display_lcd_work::run_plain_work(
+            self,
+            bus,
+            |work| work.step == 10,
+            Self::step,
+            Self::step,
+        )
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         let t = match self.step {
             0 => 12,

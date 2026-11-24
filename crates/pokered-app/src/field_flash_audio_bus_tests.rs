@@ -54,11 +54,13 @@ fn field_audio_prefixes_match_single_instructions_across_device_edges_and_budget
                         let mut expected_time = time.clone();
                         loop {
                             let result = actual.resume_source_audio_frame_with_runner(
-                                &mut work, FieldAudioBus { time: time.display_bus() },
+                                &mut work,
+                                FieldAudioBus::new(time.display_bus()),
                             );
                             let reference_result = expected.resume_source_audio_frame_with_bus(
-                                &mut reference, |apu, op| {
-                                    FieldAudioBus { time: expected_time.display_bus() }.execute(apu, op)
+                                &mut reference,
+                                |apu, op| {
+                                    FieldAudioBus::new(expected_time.display_bus()).execute(apu, op)
                                 },
                             );
                             assert_eq!(result, reference_result);

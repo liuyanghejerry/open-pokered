@@ -109,6 +109,58 @@ impl AutoBgTransferWork {
             section: 0,
         })
     }
+    pub fn restart(
+        &mut self,
+        enabled: u8,
+        portion: u8,
+        destination: u16,
+        sp: u16,
+        tiles: &[u8],
+    ) -> bool {
+        self.restart_inner(enabled, portion, destination, sp, Some(tiles))
+    }
+    pub fn restart_unchanged(
+        &mut self,
+        enabled: u8,
+        portion: u8,
+        destination: u16,
+        sp: u16,
+    ) -> bool {
+        self.restart_inner(enabled, portion, destination, sp, None)
+    }
+    fn restart_inner(
+        &mut self,
+        enabled: u8,
+        portion: u8,
+        destination: u16,
+        sp: u16,
+        tiles: Option<&[u8]>,
+    ) -> bool {
+        if tiles.is_some_and(|tiles| tiles.len() != 360) || self.tiles.len() != 360 {
+            return false;
+        }
+        self.step = Step::Enabled;
+        self.enabled = enabled;
+        self.portion = portion;
+        self.live_portion = false;
+        self.destination = destination;
+        if let Some(tiles) = tiles {
+            self.tiles.copy_from_slice(tiles);
+        }
+        self.source_base = tile_map_base();
+        self.a = 0;
+        self.d = 0;
+        self.e = 0;
+        self.h = 0;
+        self.l = 0;
+        self.b = 0;
+        self.carry = false;
+        self.sp = sp;
+        self.saved_sp = 0;
+        self.pair = 0;
+        self.section = 0;
+        true
+    }
     /// Bind the phase to shared HRAM at the original LDH read/store points.
     /// The scalar constructor remains useful for isolated instruction oracles.
     pub fn with_live_portion(mut self) -> Self {
@@ -168,7 +220,285 @@ impl AutoBgTransferWork {
     pub fn finished(&self) -> bool {
         self.step == Step::Done
     }
+    pub(crate) fn disabled_early_return(&self) -> bool {
+        self.step == Step::Enabled && self.enabled == 0
+    }
+    pub(crate) fn finish_disabled_early_return(&mut self) {
+        debug_assert!(self.disabled_early_return());
+        self.a = 0;
+        self.step = Step::Done;
+    }
     pub fn step<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>
+    where
+        B: DisplayInstructionBus
+            + PatternInstructionBus<Error = <B as DisplayInstructionBus>::Error>,
+    {
+        self.step_inner::<B>(bus)
+    }
+    #[inline(never)]
+    pub fn run<B>(&mut self, bus: &mut B) -> Result<(), <B as DisplayInstructionBus>::Error>
+    where
+        B: DisplayInstructionBus
+            + PatternInstructionBus<Error = <B as DisplayInstructionBus>::Error>,
+    {
+        loop {
+            if self.step == Step::Pop && self.pair == 0 {
+                let at = usize::from(self.sp.wrapping_sub(self.source_base));
+                if let Some(source) = self.tiles.get(at..) {
+                    if let Some((accepted, sp, hl, de, carry)) =
+                        bus.try_vblank_pop_row_run(source, self.hl(), self.b)?
+                    {
+                        self.sp = self.sp.wrapping_add(sp);
+                        self.set_hl(hl);
+                        self.a = hl as u8;
+                        self.d = (de >> 8) as u8;
+                        self.e = de as u8;
+                        self.carry = carry;
+                        self.b -= accepted;
+                        self.pair = if self.b == 0 { 9 } else { 0 };
+                        self.step = if self.b == 0 {
+                            Step::RestoreHigh
+                        } else {
+                            Step::Pop
+                        };
+                        continue;
+                    }
+                }
+                if self.b == 0 {
+                    if let Some(source) = self.tiles.get(at..at + 20) {
+                        if let Some(destination) =
+                            bus.try_vblank_pop_row_writes(source, self.hl())?
+                        {
+                            self.d = source[19];
+                            self.e = source[18];
+                            self.sp = self.sp.wrapping_add(20);
+                            self.set_hl(destination);
+                            self.pair = 9;
+                            self.step = Step::RowStride;
+                            continue;
+                        }
+                    }
+                }
+            }
+            if self.step == Step::Pop && self.pair < 9 {
+                let at = usize::from(self.sp.wrapping_sub(self.source_base));
+                let de = u16::from_le_bytes([self.tiles[at], self.tiles[at + 1]]);
+                if let Some(destination) = bus.try_vblank_pop_pair_writes(self.hl(), de)? {
+                    self.d = (de >> 8) as u8;
+                    self.e = de as u8;
+                    self.sp = self.sp.wrapping_add(2);
+                    self.set_hl(destination);
+                    self.pair += 1;
+                    continue;
+                }
+            }
+            if self.step == Step::WriteLow && self.pair < 9 {
+                let de = u16::from_be_bytes([self.d, self.e]);
+                if let Some(destination) =
+                    bus.try_vblank_pair_writes::<false>(self.hl(), de, false)?
+                {
+                    self.set_hl(destination);
+                    self.pair += 1;
+                    self.step = Step::Pop;
+                    continue;
+                }
+            }
+            if self.step == Step::TestPortion {
+                let (cycles, total): (&[u8], u64) = match self.a {
+                    0 => (&[4, 12], 16),
+                    1 => (&[4, 8, 4, 12], 28),
+                    _ => (&[4, 8, 4, 8], 24),
+                };
+                let count = bus.execute_plain_cycles_total(cycles, total)?;
+                if count == cycles.len() {
+                    if self.a != 0 {
+                        self.a = self.a.wrapping_sub(1);
+                    }
+                    self.section = if self.a == 0 { 1 } else { 2 };
+                    if self.portion == 0 {
+                        self.section = 0;
+                    }
+                    self.step = Step::TileSource;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::Rows {
+                let count = bus.execute_plain_cycles_total(&[4], 4)?;
+                if count == 1 {
+                    self.b = 6;
+                    self.pair = 0;
+                    self.step = Step::Pop;
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::RowStride {
+                let repeat = self.b != 1;
+                let total: u8 = if repeat { 44 } else { 40 };
+                let count = bus.execute_plain_cycles_total(&[total], u64::from(total))?;
+                if count == 1 {
+                    let sum = 13 + u16::from(self.l);
+                    self.a = sum as u8;
+                    self.carry = sum > 255;
+                    self.l = self.a;
+                    if self.carry {
+                        self.h = self.h.wrapping_add(1);
+                    }
+                    self.b = self.b.wrapping_sub(1);
+                    if repeat {
+                        self.pair = 0;
+                        self.step = Step::Pop;
+                    } else {
+                        self.step = Step::RestoreHigh;
+                    }
+                    continue;
+                }
+            }
+            if self.step == Step::TileSource {
+                let (cycles, total): (&[u8], u64) = match self.section {
+                    0 => (&[12, 8, 4, 4, 4, 4, 8, 12], 56),
+                    1 => (&[12, 8, 4, 4, 4, 4, 12, 8, 8], 64),
+                    _ => (&[12, 8, 4, 4, 4, 4, 12, 8, 4, 12], 72),
+                };
+                let count = bus.execute_plain_cycles_total(cycles, total)?;
+                if count == cycles.len() {
+                    let section = u16::from(self.section);
+                    self.sp = 0xc3a0 + section * 120;
+                    let stride = section * 192;
+                    self.set_hl(self.destination.wrapping_add(stride));
+                    if self.section != 0 {
+                        [self.d, self.e] = stride.to_be_bytes();
+                    }
+                    self.a = if self.section == 2 {
+                        0
+                    } else {
+                        self.section + 1
+                    };
+                    self.step = Step::StorePortion;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::StrideDe {
+                let (cycles, total): (&[u8], u64) = if self.section == 1 {
+                    (&[12, 8, 8], 28)
+                } else {
+                    (&[12, 8, 4, 12], 36)
+                };
+                let count = bus.execute_plain_cycles_total(cycles, total)?;
+                if count == cycles.len() {
+                    let stride = u16::from(self.section) * 192;
+                    [self.d, self.e] = stride.to_be_bytes();
+                    self.set_hl(self.hl().wrapping_add(stride));
+                    self.a = if self.section == 2 {
+                        0
+                    } else {
+                        self.section + 1
+                    };
+                    self.step = Step::StorePortion;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::Enabled {
+                let (cycles, total): (&[u8], u64) = if self.enabled == 0 {
+                    (&[12, 4, 20], 36)
+                } else {
+                    (&[12, 4, 8], 24)
+                };
+                let count = bus.execute_plain_cycles_total(cycles, total)?;
+                if count == cycles.len() {
+                    self.a = self.enabled;
+                    self.step = if self.a == 0 {
+                        Step::Done
+                    } else {
+                        Step::SaveSp
+                    };
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::SaveSp {
+                let count = bus.execute_plain_cycles_total(&[12, 4, 4, 4, 4], 28)?;
+                if count == 5 {
+                    self.set_hl(self.sp);
+                    self.saved_sp = self.sp;
+                    self.a = self.sp as u8;
+                    self.step = Step::Portion;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::RestoreHigh {
+                let count = bus.execute_plain_cycles_total(&[12, 4, 12, 4, 8, 16], 56)?;
+                if count == 6 {
+                    self.set_hl(self.saved_sp);
+                    self.a = self.saved_sp as u8;
+                    self.sp = self.saved_sp;
+                    self.step = Step::Done;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if self.step == Step::RestoreSp {
+                let count = bus.execute_plain_cycles_total(&[8, 16], 24)?;
+                if count == 2 {
+                    self.sp = self.hl();
+                    self.step = Step::Done;
+                } else if count != 0 {
+                    let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+                    for _ in 0..count {
+                        assert!(self.step(&mut replay).unwrap());
+                    }
+                } else {
+                    self.step(bus)?;
+                }
+                continue;
+            }
+            if !self.step(bus)? {
+                return Ok(());
+            }
+        }
+    }
+    fn step_inner<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>
     where
         B: DisplayInstructionBus
             + PatternInstructionBus<Error = <B as DisplayInstructionBus>::Error>,
@@ -467,6 +797,30 @@ mod tests {
         }
     }
     #[test]
+    fn restart_matches_a_fresh_cursor_and_rejects_invalid_input_without_mutation() {
+        let tiles = vec![37; 360];
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        let mut memory = PatternMemory::default();
+        let mut work = AutoBgTransferWork::new(0, 0, 0x9800, 0, tiles.clone())
+            .unwrap()
+            .with_live_portion();
+        for _ in 0..5 {
+            work.step(&mut time.pattern_bus(&mut memory, &NoAssets))
+                .unwrap();
+        }
+        let fresh = AutoBgTransferWork::new(1, 2, 0x9c00, 0xdfed, tiles.clone()).unwrap();
+        assert_ne!(work, fresh);
+        assert!(work.restart(1, 2, 0x9c00, 0xdfed, &tiles));
+        assert_eq!(work, fresh);
+        let allocation = work.tiles.as_ptr();
+        assert!(work.restart_unchanged(1, 2, 0x9c00, 0xdfed));
+        assert_eq!(work, fresh);
+        assert_eq!(work.tiles.as_ptr(), allocation);
+        assert!(!work.restart(1, 2, 0x9c00, 0xdfed, &[0; 359]));
+        assert_eq!(work, fresh);
+    }
+    #[test]
     fn live_background_portion_is_read_and_stored_on_the_shared_instruction_bus() {
         let mut time = DisplayWorkTime::default();
         time.set_native_background_enabled(1).unwrap();
@@ -564,6 +918,43 @@ mod tests {
             v["restored_sp_before_logical_RET"].as_u64().unwrap()
         );
     }
+    #[test]
+    fn leased_rows_match_single_instruction_cycles_cursor_and_memory() {
+        let v: serde_json::Value =
+            serde_json::from_str(include_str!("auto_bg_real_case_1136.json")).unwrap();
+        let get = |k: &str| v["state"][k].as_u64().unwrap();
+        let tiles: Vec<u8> = serde_json::from_value(v["state"]["tiles"].clone()).unwrap();
+        let before: Vec<u8> = serde_json::from_value(v["bg_maps_before"].clone()).unwrap();
+        let mut bytes = vec![0; 0x2000];
+        bytes[0x1800..].copy_from_slice(&before);
+        let mut memory = PatternMemory::from_bytes(bytes).unwrap();
+        let mut expected_memory = memory.clone();
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.device_mut().write_port(0xff40, 0x11, 0xc3).unwrap();
+        time.device_mut().request_interrupt(1);
+        time.enter_pending_vblank().unwrap();
+        let mut expected_time = time.clone();
+        let mut work = AutoBgTransferWork::new(
+            get("enabled") as u8,
+            get("portion") as u8,
+            get("destination") as u16,
+            get("sp") as u16,
+            tiles,
+        )
+        .unwrap();
+        let mut expected_work = work.clone();
+        work.run(&mut time.pattern_bus(&mut memory, &NoAssets))
+            .unwrap();
+        while expected_work
+            .step(&mut expected_time.pattern_bus(&mut expected_memory, &NoAssets))
+            .unwrap()
+        {}
+        assert_eq!(time.elapsed(), expected_time.elapsed());
+        assert_eq!(work, expected_work);
+        assert_eq!(memory, expected_memory);
+    }
+
     #[test]
     fn pending_entry_prologue_and_bg_child_match_real_irq_prefix_without_returning_foreground() {
         use crate::overworld::display_delay_work::DelayFrameBus;

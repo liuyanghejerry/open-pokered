@@ -5,7 +5,7 @@ use super::{
     auto_bg_transfer_work::AutoBgTransferWork,
     bg_redraw_work::BgRedrawWork,
     display_delay_work::DelayFrameBus,
-    display_dma_work::DisplayDmaWork,
+    display_dma_work::{DisplayDmaWork, DMA_TAIL},
     display_interrupt_entry_work::VBlankEntryWork,
     display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus},
     display_work_time::{DisplayWorkError, DisplayWorkTime},
@@ -70,6 +70,27 @@ pub struct VBlankVideoInputs {
     pub moving: MovingBgWork,
     pub prepare: PrepareOamWork,
 }
+#[inline(always)]
+fn execute_whole_plain_total(
+    time: &mut DisplayWorkTime,
+    code: &[u8],
+    total: u64,
+) -> Result<bool, DisplayWorkError> {
+    if time.remaining() < total {
+        return Ok(false);
+    }
+    let count = time
+        .display_bus()
+        .execute_plain_cycles_total(code, total)?;
+    debug_assert_eq!(count, code.len());
+    Ok(true)
+}
+#[inline(always)]
+fn execute_whole_plain(time: &mut DisplayWorkTime, code: &[u8]) -> Result<bool, DisplayWorkError> {
+    let total = u64::from(code.iter().map(|&cycles| u32::from(cycles)).sum::<u32>());
+    execute_whole_plain_total(time, code, total)
+}
+
 impl VBlankVideoWork {
     pub fn select(ime: bool, pending: u8, input: VBlankVideoInputs) -> Option<Self> {
         if !input.pattern.unstarted() || !input.double.unstarted()
@@ -193,6 +214,17 @@ impl VBlankVideoWork {
     pub fn prepared_oam(&self) -> &super::prepare_oam_work::PrepareOamState {
         self.prepare.state()
     }
+    pub fn into_prepare(self) -> super::prepare_oam_work::PrepareOamWork {
+        self.prepare
+    }
+    pub fn into_background_and_prepare(
+        self,
+    ) -> (
+        super::auto_bg_transfer_work::AutoBgTransferWork,
+        super::prepare_oam_work::PrepareOamWork,
+    ) {
+        (self.auto_bg, self.prepare)
+    }
     /// Run the same children to their next real budget/error boundary while
     /// retaining each child's exclusive bus lease. No instruction, CALL, DMA
     /// or RET is replaced by an aggregate duration. BodyReady is not RETI.
@@ -205,47 +237,244 @@ impl VBlankVideoWork {
         use Phase::*;
         loop {
             self.phase = match self.phase {
+                Entry => {
+                    if self.entry_returns.is_none() {
+                        if self
+                            .foreground_copy
+                            .as_ref()
+                            .is_some_and(|(epoch, _)| *epoch != time.device().vblank_epoch())
+                        {
+                            return Err(DisplayWorkError::Resource(RestoreError::StaleVBlank));
+                        }
+                        self.entry_returns = Some(time.interrupt_returns());
+                    }
+                    if !self.entry.body_ready() {
+                        self.entry.step(time)?;
+                    }
+                    if !self.entry.body_ready() {
+                        self.entry.step(time)?;
+                    }
+                    Prologue
+                }
                 Prologue => {
+                    let remaining = time.remaining();
                     let mut bus = time.display_bus();
-                    while self.prologue.step(&mut bus)? {}
+                    self.prologue.run(&mut bus, remaining)?;
                     AutoBg
                 }
                 AutoBg => {
-                    let mut bus = time.pattern_bus(memory, assets);
-                    while self.auto_bg.step(&mut bus)? {}
-                    CallQueued
+                    if self.auto_bg.disabled_early_return()
+                        && self.queued.is_empty()
+                        && self.redraw.is_empty()
+                        && execute_whole_plain_total(time, &[12, 4, 20, 24, 12, 4, 20, 24, 12, 4, 20], 192)?
+                    {
+                        self.auto_bg.finish_disabled_early_return();
+                        self.queued.finish_empty();
+                        self.redraw.finish_empty();
+                        CallPattern
+                    } else {
+                        if self.auto_bg.disabled_early_return()
+                            && execute_whole_plain_total(time, &[12, 4, 20], 36)?
+                        {
+                            self.auto_bg.finish_disabled_early_return();
+                        } else {
+                            let mut bus = time.pattern_bus(memory, assets);
+                            self.auto_bg.run(&mut bus)?;
+                        }
+                        CallQueued
+                    }
+                }
+                CallQueued => {
+                    if self.queued.is_empty()
+                        && self.redraw.is_empty()
+                        && execute_whole_plain_total(time, &[24, 12, 4, 20, 24, 12, 4, 20], 120)?
+                    {
+                        self.queued.finish_empty();
+                        self.redraw.finish_empty();
+                        CallPattern
+                    } else if self.queued.is_empty() && execute_whole_plain_total(time, &[24, 12, 4, 20], 60)?
+                    {
+                        self.queued.finish_empty();
+                        CallRedraw
+                    } else {
+                        time.execute(DisplayInstruction {
+                            tcycles: 24,
+                            access: None,
+                        })?;
+                        Queued
+                    }
                 }
                 Queued => {
                     let mut bus = time.pattern_bus(memory, assets);
                     while self.queued.step(&mut bus)? {}
                     CallRedraw
                 }
+                CallRedraw => {
+                    if self.redraw.is_empty() && execute_whole_plain_total(time, &[24, 12, 4, 20], 60)? {
+                        self.redraw.finish_empty();
+                        CallPattern
+                    } else {
+                        time.execute(DisplayInstruction {
+                            tcycles: 24,
+                            access: None,
+                        })?;
+                        Redraw
+                    }
+                }
                 Redraw => {
                     let mut bus = time.pattern_bus(memory, assets);
                     while self.redraw.step(&mut bus)? {}
                     CallPattern
                 }
-                Pattern | Double if self.foreground_copy.as_ref().is_none_or(|(_, copy)| {
-                    copy.format() != if self.phase == Pattern { CopyFormat::TwoBpp } else { CopyFormat::OneBppDouble }
-                }) => {
-                    let child = if self.phase == Pattern { &mut self.pattern } else { &mut self.double };
+                CallPattern | CallDouble => {
+                    let next = if self.phase == CallPattern {
+                        CallDouble
+                    } else {
+                        CallMoving
+                    };
+                    let child = if self.phase == CallPattern {
+                        &mut self.pattern
+                    } else {
+                        &mut self.double
+                    };
+                    if child.idle_live_call() && time.remaining() >= 60 {
+                        assert!(execute_whole_plain_total(time, &[24], 24)?);
+                        child.step_idle_live(&mut time.pattern_bus(memory, assets))?;
+                        assert!(execute_whole_plain_total(time, &[4, 20], 24)?);
+                        child.finish_idle_live();
+                        next
+                    } else {
+                        time.execute(DisplayInstruction {
+                            tcycles: 24,
+                            access: None,
+                        })?;
+                        if self.phase == CallPattern { Pattern } else { Double }
+                    }
+                }
+                Pattern | Double
+                    if self.foreground_copy.as_ref().is_none_or(|(_, copy)| {
+                        copy.format()
+                            != if self.phase == Pattern {
+                                CopyFormat::TwoBpp
+                            } else {
+                                CopyFormat::OneBppDouble
+                            }
+                    }) =>
+                {
+                    let child = if self.phase == Pattern {
+                        &mut self.pattern
+                    } else {
+                        &mut self.double
+                    };
                     let mut bus = time.pattern_bus(memory, assets);
                     child.run(&mut bus)?;
                     if self.phase == Pattern { CallDouble } else { CallMoving }
+                }
+                CallMoving => {
+                    if let (Some(code), Some(total)) = (
+                        self.moving.early_return_cycles(),
+                        self.moving.early_return_total(),
+                    ) {
+                        if execute_whole_plain_total(time, code, total)? {
+                            self.moving.finish_early_return();
+                            CallDma
+                        } else {
+                            time.execute(DisplayInstruction {
+                                tcycles: 24,
+                                access: None,
+                            })?;
+                            Moving
+                        }
+                    } else {
+                        time.execute(DisplayInstruction {
+                            tcycles: 24,
+                            access: None,
+                        })?;
+                        Moving
+                    }
                 }
                 Moving => {
                     let mut bus = time.pattern_bus(memory, assets);
                     while self.moving.step(&mut bus)? {}
                     CallDma
                 }
+                CallDma if self.dma.at_start() && time.remaining() >= 704 => {
+                    assert!(execute_whole_plain_total(time, &[24], 24)?);
+                    assert!(self.dma.step(&mut time.display_bus())?.is_some());
+                    assert!(self.dma.step(&mut time.display_bus())?.is_some());
+                    assert!(execute_whole_plain(time, &DMA_TAIL)?);
+                    self.dma.finish();
+                    PrepareBank(0)
+                }
+                CallDma => {
+                    time.execute(DisplayInstruction {
+                        tcycles: 24,
+                        access: None,
+                    })?;
+                    Dma
+                }
                 Dma => {
                     let mut bus = time.display_bus();
                     while self.dma.step(&mut bus)?.is_some() {}
                     PrepareBank(0)
                 }
+                PrepareBank(0) => {
+                    time.execute(DisplayInstruction {
+                        tcycles: 8,
+                        access: None,
+                    })?;
+                    self.phase = PrepareBank(1);
+                    time.execute(DisplayInstruction {
+                        tcycles: 12,
+                        access: Some(DisplayAccess::Write {
+                            port: LOADED_ROM_BANK,
+                            value: 1,
+                            at_tcycle: 8,
+                        }),
+                    })?;
+                    self.phase = PrepareBank(2);
+                    time.execute(DisplayInstruction {
+                        tcycles: 16,
+                        access: Some(DisplayAccess::Write {
+                            port: ROM_BANK_SELECT,
+                            value: 1,
+                            at_tcycle: 12,
+                        }),
+                    })?;
+                    self.phase = PrepareBank(3);
+                    time.execute(DisplayInstruction {
+                        tcycles: 24,
+                        access: None,
+                    })?;
+                    Prepare
+                }
+                PrepareBank(n) => {
+                    let (tcycles, access) = match n {
+                        1 => (
+                            12,
+                            Some(DisplayAccess::Write {
+                                port: LOADED_ROM_BANK,
+                                value: 1,
+                                at_tcycle: 8,
+                            }),
+                        ),
+                        2 => (
+                            16,
+                            Some(DisplayAccess::Write {
+                                port: ROM_BANK_SELECT,
+                                value: 1,
+                                at_tcycle: 12,
+                            }),
+                        ),
+                        3 => (24, None),
+                        _ => unreachable!(),
+                    };
+                    time.execute(DisplayInstruction { tcycles, access })?;
+                    if n == 3 { Prepare } else { PrepareBank(n + 1) }
+                }
                 Prepare => {
                     let mut bus = time.display_bus();
-                    self.prepare.run(&mut bus)?;
+                    self.prepare.run_native(&mut bus)?;
                     BodyReady
                 }
                 BodyReady => return Ok(()),
@@ -540,16 +769,30 @@ pub(crate) mod tests {
         }
         for tiles in [0, 1, 8] {
             for budget in (0..=12_000u64).step_by(113).chain([4, 12, 20, 24, 65535]) {
-                let (time, memory, mut work, _, _) = build();
-                for (format, destination) in [(CopyFormat::TwoBpp, 0x8200), (CopyFormat::OneBppDouble, 0x8800)] {
-                    let copy = VBlankPatternWork::new(PatternCopy {
-                        source: PatternSource::WalkingPlayer,
-                        source_offset: 3,
-                        destination,
-                        tiles,
-                        format,
-                    });
-                    if format == CopyFormat::TwoBpp { work.pattern = copy; } else { work.double = copy; }
+                let (mut time, memory, mut work, _, _) = build();
+                if tiles == 0 {
+                    time.establish_native_video_idle(1).unwrap();
+                }
+                for (format, destination) in [
+                    (CopyFormat::TwoBpp, 0x8200),
+                    (CopyFormat::OneBppDouble, 0x8800),
+                ] {
+                    let copy = if tiles == 0 {
+                        VBlankPatternWork::idle_from_live(&time, format).unwrap()
+                    } else {
+                        VBlankPatternWork::new(PatternCopy {
+                            source: PatternSource::WalkingPlayer,
+                            source_offset: 3,
+                            destination,
+                            tiles,
+                            format,
+                        })
+                    };
+                    if format == CopyFormat::TwoBpp {
+                        work.pattern = copy;
+                    } else {
+                        work.double = copy;
+                    }
                 }
                 let mut state = serde_json::to_value(&time).unwrap();
                 state["deadline"] = (time.elapsed() + budget).into();
