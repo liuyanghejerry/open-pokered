@@ -82,6 +82,14 @@ pub fn draw<P: Painter>(
         }
         if !proportional {
             if let Some(list_cursor) = &layout.list_default.cursor {
+                if let Some(armed) = visible_swap_marker(state) {
+                    frame.cursor_glyph_at(
+                        list_cursor.tx,
+                        list_cursor.base_ty + armed as u32 * list_cursor.row_step,
+                        '▷',
+                        list_cursor.color,
+                    );
+                }
                 let cursor_row = list_cursor.base_ty + cursor as u32 * list_cursor.row_step;
                 frame.cursor_glyph_at(
                     list_cursor.tx,
@@ -103,6 +111,9 @@ pub fn draw<P: Painter>(
                 .collect();
             ui.painter()
                 .draw_text_px(x, y + i as u32 * 8, &name, Rgba::INK_BLACK);
+        }
+        if let Some(armed) = visible_swap_marker(state) {
+            draw_en_cursor_glyph(armed, '▷', layout, ui.painter());
         }
         draw_en_cursor(cursor, layout, ui.painter());
     }
@@ -130,6 +141,16 @@ pub fn redraw_selection<P: Painter>(
         let old_y = 95 + previous_cursor as u32 * 10;
         ui.painter()
             .draw_pixel_rect(8, old_y, 8, 9, Rgba::INK_WHITE);
+        if state
+            .swap_armed_slot()
+            .is_some_and(|slot| usize::from(slot - 1) == state.cursor())
+        {
+            ui.painter()
+                .draw_pixel_rect(8, 95 + state.cursor() as u32 * 10, 8, 9, Rgba::INK_WHITE);
+        }
+        if let Some(armed) = visible_swap_marker(state) {
+            draw_zh_swap_marker(armed, ui.painter());
+        }
         draw_zh_cursor(state.cursor(), ui.painter());
         redraw_zh_selected_info(state, ui.painter(), render_data);
         return;
@@ -147,6 +168,22 @@ pub fn redraw_selection<P: Painter>(
         };
         ui.painter()
             .draw_pixel_rect(old.tx * 8, old.ty * 8 - inset, 8, 10, Rgba::INK_WHITE);
+        if state
+            .swap_armed_slot()
+            .is_some_and(|slot| usize::from(slot - 1) == state.cursor())
+        {
+            let current = TilePos::new(
+                old.tx,
+                layout.box_0.rect.ty + 1 + cursor.base_ty + state.cursor() as u32 * cursor.row_step,
+            );
+            ui.painter()
+                .draw_pixel_rect(current.tx * 8, current.ty * 8 - inset, 8, 9, Rgba::INK_WHITE);
+        }
+    }
+    // Rows are eight pixels apart in English while the clear/icon spans 9-10 px;
+    // repainting any visible armed marker after clearing preserves its pixels.
+    if let Some(armed) = visible_swap_marker(state) {
+        draw_en_cursor_glyph(armed, '▷', layout, ui.painter());
     }
     draw_en_cursor(state.cursor(), layout, ui.painter());
     redraw_en_selected_info(state, layout, ui.painter(), render_data);
@@ -158,19 +195,18 @@ pub fn selection_damage(
     current: usize,
     lang: pokered_core::game_state::Lang,
 ) -> [crate::DamageRect; 3] {
-    let (cursor_x, cursor_y, cursor_step, info_y, info_height) =
+    let _ = (previous, current);
+    let (cursor_x, cursor_y, cursor_col_height, info_y, info_height) =
         if lang == pokered_core::game_state::Lang::Zh {
-            (8, 95, 10, 72, 16)
+            (8, 94, 40, 72, 16)
         } else {
-            (5 * 8, 13 * 8 - 2, 8, 72, 26)
+            (5 * 8, 13 * 8 - 2, 34, 72, 26)
         };
-    let cursor = |selected: usize| {
-        crate::DamageRect::new(cursor_x, cursor_y + selected as u32 * cursor_step, 8, 9)
-    };
+    let cursor_col = crate::DamageRect::new(cursor_x, cursor_y, 8, cursor_col_height);
     [
         crate::DamageRect::new(8, info_y, 72, info_height),
-        cursor(previous),
-        cursor(current),
+        cursor_col,
+        cursor_col,
     ]
 }
 
@@ -281,7 +317,27 @@ fn draw_connectors<P: Painter>(layout: &BattleMoveDefaultLayout, ui: &mut Ui<P>)
     );
 }
 
+fn visible_swap_marker(state: &MoveMenuState) -> Option<usize> {
+    state
+        .swap_armed_slot()
+        .and_then(|slot| slot.checked_sub(1))
+        .map(usize::from)
+        .filter(|&row| row < state.moves().len() && row != state.cursor())
+}
+
 fn draw_en_cursor<P: Painter>(selected: usize, layout: &BattleMoveDefaultLayout, painter: &mut P) {
+    let Some(cursor) = &layout.list_default.cursor else {
+        return;
+    };
+    draw_en_cursor_glyph(selected, cursor.glyph, layout, painter);
+}
+
+fn draw_en_cursor_glyph<P: Painter>(
+    selected: usize,
+    glyph: char,
+    layout: &BattleMoveDefaultLayout,
+    painter: &mut P,
+) {
     let Some(cursor) = &layout.list_default.cursor else {
         return;
     };
@@ -290,15 +346,34 @@ fn draw_en_cursor<P: Painter>(selected: usize, layout: &BattleMoveDefaultLayout,
         layout.box_0.rect.ty + 1 + cursor.base_ty + selected as u32 * cursor.row_step,
     );
     if painter.supports_proportional() {
+        if glyph == '▷' {
+            draw_swap_marker_pixels(position.tx * 8, position.ty * 8 - 2, cursor.color.into(), painter);
+            return;
+        }
         let mut buf = [0u8; 4];
         painter.draw_text_px(
             position.tx * 8,
             position.ty * 8 - 2,
-            cursor.glyph.encode_utf8(&mut buf),
+            glyph.encode_utf8(&mut buf),
             cursor.color.into(),
         );
     } else {
-        painter.draw_glyph(position, cursor.glyph, cursor.color.into());
+        painter.draw_glyph(position, glyph, cursor.color.into());
+    }
+}
+
+/// Option-marker hollow triangle confined to its 8x9 cursor cell so wide font
+/// glyphs never overlap move names.
+fn draw_swap_marker_pixels<P: Painter>(x: u32, y: u32, color: Rgba, painter: &mut P) {
+    for (row, bits) in [0u8, 0, 0x40, 0x60, 0x50, 0x48, 0x50, 0x60, 0x40]
+        .into_iter()
+        .enumerate()
+    {
+        for column in 0..8 {
+            if bits & (0x80 >> column) != 0 {
+                painter.draw_pixel_rect(x + column, y + row as u32, 1, 1, color);
+            }
+        }
     }
 }
 
@@ -386,14 +461,22 @@ fn draw_zh<P: Painter>(
             ),
             InkColor::Black.into(),
         );
-        if i == state.cursor() {
-            draw_zh_cursor(i, painter);
-        }
+    }
+    if let Some(armed) = visible_swap_marker(state) {
+        draw_zh_swap_marker(armed, painter);
+    }
+    if state.cursor() < state.moves().len() {
+        draw_zh_cursor(state.cursor(), painter);
     }
 }
 
 fn draw_zh_cursor<P: Painter>(selected: usize, painter: &mut P) {
     painter.draw_text_px(8, 95 + selected as u32 * 10, "▶", InkColor::Black.into());
+}
+
+fn draw_zh_swap_marker<P: Painter>(selected: usize, painter: &mut P) {
+    // Pixel rectangles do not apply FrameBufferPainter's Chinese text y-1.
+    draw_swap_marker_pixels(8, 94 + selected as u32 * 10, InkColor::Black.into(), painter);
 }
 
 fn draw_zh_info<P: Painter>(

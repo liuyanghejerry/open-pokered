@@ -103,6 +103,35 @@ pub fn moves_at_level(species: Species, level: u8) -> Vec<MoveId> {
         .collect()
 }
 
+/// Exact `LearnMoveFromLevelUp` scan (`engine/pokemon/evos_moves.asm:341-379`):
+/// inspects ONLY the first learnset entry matching `level`. If that move is
+/// already known (or `MoveId::None`), `.checkCurrentMovesLoop` jumps straight
+/// to `.done` without checking any subsequent entry at the same level.
+pub fn first_learnset_move_at_level(
+    learnset: &[pokered_data::evos_moves::LevelUpMove],
+    level: u8,
+    known: &[MoveId; NUM_MOVES],
+) -> Option<MoveId> {
+    let move_id = learnset.iter().find(|lm| lm.level == level)?.move_id;
+    if move_id == MoveId::None || known.contains(&move_id) {
+        None
+    } else {
+        Some(move_id)
+    }
+}
+
+/// Species-table wrapper for [`first_learnset_move_at_level`], shared by
+/// post-battle level-up, Rare Candy (`item_effects.asm:1408`), and confirmed
+/// evolution (`evos_moves.asm:65`).
+pub fn first_move_at_level_for(
+    species: Species,
+    level: u8,
+    known: &[MoveId; NUM_MOVES],
+) -> Option<MoveId> {
+    let entry = pokered_data::evos_moves::get_evos_moves(species)?;
+    first_learnset_move_at_level(&entry.learnset, level, known)
+}
+
 /// Fill `moves` (and `pp` when `with_pp`) with the moves a mon has at `level`,
 /// Gen-1 `WriteMonMoves` semantics (evos_moves.asm:383-470): start from the
 /// L1 initial moves, then apply every learnset entry whose level is <= the

@@ -90,7 +90,10 @@ pub fn engine_from_pokemon(p: &Pokemon) -> EngineBattler<PokeredRules> {
     stats.set(StatIndex::Defense, p.defense);
     stats.set(StatIndex::Speed, p.speed);
     stats.set(StatIndex::Special, p.special);
-    let moves: Vec<MoveId> = p.moves.iter().copied().filter(|m| *m != MoveId::None).collect();
+    // Move IDs, PP resources and selected/disabled slots share physical indices.
+    // SELECT after Transform can leave leading/interior empty slots in the
+    // persistent party; compacting those would attach PP and effects to another move.
+    let moves = p.moves.to_vec();
     EngineBattler::new(p.species, p.hp, p.max_hp, stats, moves).with_level(p.level)
 }
 
@@ -267,6 +270,25 @@ fn blocked_reason(state: &EngineState<PokeredRules>, effects: &[EffectState<Poke
         Some(LegacyStatus::Freeze) => "is frozen solid!",
         Some(LegacyStatus::Paralysis) => "is fully paralyzed!",
         _ => "can't move!",
+    }
+}
+
+fn blocked_messages(
+    state: &EngineState<PokeredRules>,
+    effects: &[EffectState<PokeredRules>],
+    who: BattlerRef,
+    names: Option<&BattleNameContext>,
+) -> Vec<String> {
+    let name = display_name_named(state, who, names);
+    match blocked_action_reason(effects, who) {
+        Some(crate::battle::CannotMoveReason::IgnoredOrders) => {
+            vec![format!("{name}\nignored orders!")]
+        }
+        Some(crate::battle::CannotMoveReason::WontObeySelfHit) => vec![
+            format!("{name} won't\nobey!"),
+            "It hurt itself in\nits confusion!".to_string(),
+        ],
+        _ => vec![format!("{name} {}", blocked_reason(state, effects, who))],
     }
 }
 
@@ -498,7 +520,7 @@ pub(crate) fn translate_turn_named_with_faints(
                 current_actor = None;
                 current_block = Some(*actor);
                 if !blocked_action_is_silent(effects, *actor) {
-                    msgs.push(format!("{} {}", display_name_named(state, *actor, names), blocked_reason(state, effects, *actor)));
+                    msgs.extend(blocked_messages(state, effects, *actor, names));
                 }
             }
             TurnEvent::Fainted { who } => {
@@ -517,10 +539,18 @@ pub(crate) fn translate_turn_named_with_faints(
                     && super::rest_had_status(target.side == 0).is_some() {
                     continue; // Rest already published its distinct sleep result.
                 }
-                // The engine also reports Sleep(n) -> Sleep(n-1). That is the
-                // blocked action's countdown, not a fresh sleep inflicted by a move.
+                // The engine also reports Sleep(n) -> Sleep(n-1) and disobedience
+                // Nap's None -> Sleep(n). Those belong to the blocked action itself,
+                // not a fresh sleep inflicted by an opponent's move.
                 if matches!(status, LegacyStatus::Sleep(_)) && current_block == Some(*target)
-                    && matches!(blocked_action_reason(effects, *target), Some(crate::battle::CannotMoveReason::Asleep)) {
+                    && matches!(
+                        blocked_action_reason(effects, *target),
+                        Some(
+                            crate::battle::CannotMoveReason::Asleep
+                                | crate::battle::CannotMoveReason::BeganToNap
+                        )
+                    )
+                {
                     continue;
                 }
                 let name = display_name_named(state, *target, names);
@@ -600,7 +630,15 @@ pub(crate) fn presentation_hp_message(event: &TurnEvent<PokeredRules>, state: &E
 pub(crate) fn presentation_hp_message_named(event: &TurnEvent<PokeredRules>, state: &EngineState<PokeredRules>, effects: &[EffectState<PokeredRules>], names: Option<&BattleNameContext>) -> Option<String> {
     match event {
         TurnEvent::Blocked { actor } if blocked_action_is_silent(effects, *actor) => None,
-        TurnEvent::Blocked { actor } => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,effects,*actor))),
+        TurnEvent::Blocked { actor } => match blocked_action_reason(effects, *actor) {
+            Some(crate::battle::CannotMoveReason::WontObeySelfHit) => {
+                Some("It hurt itself in\nits confusion!".to_string())
+            }
+            Some(crate::battle::CannotMoveReason::IgnoredOrders) => {
+                Some(format!("{}\nignored orders!", display_name_named(state, *actor, names)))
+            }
+            _ => Some(format!("{} {}",display_name_named(state,*actor,names),blocked_reason(state,effects,*actor))),
+        },
         TurnEvent::Damaged { target, cause: Some(cause), .. } => {
             let name=display_name_named(state,*target,names);
             match cause {
@@ -884,6 +922,10 @@ fn write_party(party: &mut LegacyParty, b: &EngineBattler<PokeredRules>, effects
     for e in effects.iter().filter(|e| e.host == host) {
         match e.kind {
             PokeVolatile::UsedMove { move_ } => party.last_move_used = move_,
+            PokeVolatile::DisobeyedMove { resolved, slot } => {
+                party.selected_move = resolved;
+                party.selected_move_index = slot;
+            }
             PokeVolatile::CalledMove { resolved, .. } => party.selected_move = resolved,
             PokeVolatile::FocusEnergy => party.set_status2(status2::GETTING_PUMPED),
             PokeVolatile::XAccuracy => party.set_status2(status2::USING_X_ACCURACY),
@@ -1244,4 +1286,206 @@ pub(crate) fn faint_caption(
         let who = if side == FaintSide::Player { BattlerRef::PLAYER } else { BattlerRef::OPPONENT };
         format!("{} fainted!", display_name_named(state, who, names))
     }).unwrap_or_default()
+}
+
+#[cfg(test)]
+mod physical_slot_tests {
+    use super::*;
+    use crate::battle::state::{new_battle_state, BattleType};
+    use dotzuki_engine::battle::rng::ScriptedRng;
+    use dotzuki_engine::battle::stack::StackDriver;
+    use dotzuki_engine::battle::{BattleAction, BattleProvider};
+    use pokered_data::species::Species;
+
+    fn mon(species: Species, moves: [MoveId; 4]) -> Pokemon {
+        crate::pokemon::stats::create_pokemon_with_moves(species, 40, [0x9a, 0x78], moves)
+            .unwrap()
+    }
+
+    fn resolve(
+        legacy: &mut LegacyBattleState,
+        player_move: MoveId,
+        enemy_move: MoveId,
+        bytes: Vec<u8>,
+    ) -> (EngineState<PokeredRules>, Vec<EffectState<PokeredRules>>, usize) {
+        super::super::install_canonical();
+        super::super::clear_current_moves();
+        super::super::clear_last_move_live();
+        super::super::set_current_move(BattlerRef::PLAYER, *MoveData::get(player_move).unwrap());
+        super::super::set_current_move(BattlerRef::OPPONENT, *MoveData::get(enemy_move).unwrap());
+        let (mut engine, mut effects) = engine_state_from_legacy(legacy);
+        let mut rng = ScriptedRng::new(bytes);
+        StackDriver::execute_turn_logged(
+            &PokeredRules,
+            &mut engine,
+            &mut effects,
+            [
+                BattleAction::Fight { move_: player_move },
+                BattleAction::Fight { move_: enemy_move },
+            ],
+            &mut rng,
+        );
+        apply_engine_to_legacy(legacy, &engine, &effects);
+        (engine, effects, rng.consumed())
+    }
+
+    #[test]
+    fn physical_slot_adapter_preserves_four_entries_and_packed_pp() {
+        use MoveId::*;
+        for moves in [
+            [Growl, None, None, None],
+            [Growl, Tackle, None, None],
+            [Growl, Tackle, Splash, Mimic],
+            [None, None, None, Transform],
+            [Growl, None, Mimic, None],
+            [None; 4],
+        ] {
+            let mut player = mon(Species::Pikachu, moves);
+            player.pp = core::array::from_fn(|i| if moves[i] == None { 0 } else { 7 + i as u8 });
+            player.pp_ups = core::array::from_fn(|i| if moves[i] == None { 0 } else { i as u8 });
+            let mut legacy = new_battle_state(
+                BattleType::Wild,
+                vec![player.clone()],
+                vec![mon(Species::Magikarp, [Splash, None, None, None])],
+            );
+            legacy.player.selected_move_index = 3;
+            let (engine, effects) = engine_state_from_legacy(&legacy);
+            let active = &engine.player_battlers[0];
+            assert_eq!(active.moves.as_slice(), &moves, "physical layout {moves:?}");
+            assert_eq!(active.resources.current(super::super::RES_SELECTED_SLOT), Some(3));
+            for i in 0..4 {
+                let expected = ((player.pp[i] & 0x3f) | ((player.pp_ups[i] & 3) << 6)) as u16;
+                assert_eq!(
+                    active.resources.current(super::super::RES_PP_BASE + i as u16),
+                    Some(expected),
+                    "slot {i} packed working PP",
+                );
+            }
+            apply_engine_to_legacy(&mut legacy, &engine, &effects);
+            let roundtrip = legacy.player.active_mon();
+            assert_eq!(roundtrip.moves, player.moves);
+            assert_eq!(roundtrip.pp, player.pp);
+            assert_eq!(roundtrip.pp_ups, player.pp_ups);
+            assert_eq!(roundtrip.dv_bytes, player.dv_bytes);
+        }
+    }
+
+    #[test]
+    fn physical_slot_generic_fallback_selects_first_known_or_tackle() {
+        use MoveId::*;
+        for (moves, expected) in [
+            ([Growl, None, None, None], Growl),
+            ([None, None, None, Transform], Transform),
+            ([None, Growl, None, Tackle], Growl),
+            ([None; 4], Tackle),
+        ] {
+            let player = engine_from_pokemon(&mon(Species::Pikachu, moves));
+            let state = EngineState::new(vec![], vec![]);
+            assert_eq!(PokeredRules.select_move(&player, &state), expected);
+        }
+    }
+
+    #[test]
+    fn physical_slot_disable_rejects_blank_draws_and_keeps_fourth_slot() {
+        use MoveId::*;
+        let mut player = mon(Species::Pikachu, [None, None, None, Growl]);
+        player.pp = [0, 0, 0, 7];
+        player.pp_ups = [0, 0, 0, 3];
+        let original = player.clone();
+        let mut legacy = new_battle_state(
+            BattleType::Wild,
+            vec![player],
+            vec![mon(Species::Slowpoke, [Disable, None, None, None])],
+        );
+        legacy.player.selected_move_index = 3;
+        let (_, effects, draws) = resolve(&mut legacy, Growl, Disable, vec![0, 0, 0, 3, 5]);
+        assert!(effects.iter().any(|e| e.host == BattlerRef::PLAYER
+            && matches!(e.kind, PokeVolatile::Disable { slot: 4, turns: 6 })));
+        assert_eq!(draws, 5, "blank rejection draws cannot be compacted away");
+        assert_eq!(legacy.player.disabled_move, 4);
+        assert_eq!(legacy.player.active_mon().moves, original.moves);
+        assert_eq!(legacy.player.active_mon().pp, original.pp);
+        assert_eq!(legacy.player.active_mon().pp_ups, original.pp_ups);
+    }
+
+    #[test]
+    fn physical_slot_mimic_uses_selected_duplicate_slot_and_preserves_identity() {
+        use MoveId::*;
+        let mut player = mon(Species::Pikachu, [Mimic, None, Mimic, None]);
+        player.pp = [7, 0, 9, 0];
+        player.pp_ups = [1, 0, 2, 0];
+        let original = player.clone();
+        let mut legacy = new_battle_state(
+            BattleType::Wild,
+            vec![player],
+            vec![mon(Species::MrMime, [Tackle, Growl, Splash, DefenseCurl])],
+        );
+        legacy.player.selected_move_index = 2;
+        super::super::set_mimic_choice(Some(3), true);
+        let (_, effects, _) = resolve(&mut legacy, Mimic, Splash, vec![0; 32]);
+        super::super::set_mimic_choice(core::option::Option::None, false);
+        assert!(effects.iter().any(|e| e.host == BattlerRef::PLAYER
+            && matches!(e.kind, PokeVolatile::Mimicked)));
+        assert_eq!(legacy.player.active_mon().moves, [Mimic, None, DefenseCurl, None]);
+        assert_eq!(legacy.player.active_mon().pp, original.pp);
+        assert_eq!(legacy.player.active_mon().pp_ups, original.pp_ups);
+        assert_eq!(legacy.player.party_mon(0), &original);
+        legacy.player.restore_original_identity();
+        assert_eq!(legacy.player.active_mon(), &original);
+    }
+
+    #[test]
+    fn physical_slot_transform_keeps_holes_and_initializes_only_known_prefix_pp() {
+        use MoveId::*;
+        for moves in [
+            [Growl, None, None, None],
+            [Growl, Splash, None, None],
+            [Growl, Tackle, Splash, DefenseCurl],
+            [Growl, None, Splash, None],
+            [None, Growl, None, Tackle],
+        ] {
+            let original = mon(Species::Ditto, [Transform, None, None, None]);
+            let target = mon(Species::Pikachu, moves);
+            let mut legacy = new_battle_state(BattleType::Wild, vec![original.clone()], vec![target]);
+            resolve(&mut legacy, Transform, Growl, vec![0; 32]);
+            assert_eq!(legacy.player.active_mon().moves, moves, "never slide a later move forward");
+            let prefix = moves.iter().take_while(|m| **m != None).count();
+            let expected = core::array::from_fn(|i| if i < prefix { 5 } else { 0 });
+            assert_eq!(legacy.player.active_mon().pp, expected, "transform.asm stops PP at first None");
+            assert_eq!(legacy.player.active_mon().pp_ups, [0; 4]);
+            assert_eq!(legacy.player.party_mon(0), &original);
+            let (engine, effects) = engine_state_from_legacy(&legacy);
+            assert_eq!(engine.player_battlers[0].moves.as_slice(), &moves);
+            apply_engine_to_legacy(&mut legacy, &engine, &effects);
+            assert_eq!(legacy.player.active_mon().pp, expected, "later adapter passes do not refill PP");
+            legacy.player.restore_original_identity();
+            assert_eq!(legacy.player.active_mon(), &original);
+        }
+    }
+
+    #[test]
+    fn physical_slot_real_turn_spends_selected_duplicate_pp_only() {
+        use crate::battle::{BattlePhase, BattleScreen};
+        use MoveId::*;
+        let mut player = mon(Species::Pikachu, [Growl, None, Growl, None]);
+        player.pp = [7, 0, 9, 0];
+        player.pp_ups = [2, 0, 1, 0];
+        let original = player.clone();
+        let mut screen = BattleScreen::new(true);
+        screen.battle_state = Some(new_battle_state(
+            BattleType::Wild,
+            vec![player],
+            vec![mon(Species::Magikarp, [Splash, None, None, None])],
+        ));
+        screen.phase = BattlePhase::PlayerMenu;
+        screen.rng = StdBattleRng::from_seed(42);
+        screen.sync_display_from_state();
+        screen.execute_turn_with_move(2);
+        let state = screen.battle_state.as_ref().unwrap();
+        assert_eq!(state.player.selected_move_index, 2);
+        assert_eq!(state.player.active_mon().moves, original.moves);
+        assert_eq!(state.player.active_mon().pp, [7, 0, 8, 0]);
+        assert_eq!(state.player.active_mon().pp_ups, original.pp_ups);
+        assert_eq!(state.player.active_mon().dv_bytes, original.dv_bytes);
+    }
 }

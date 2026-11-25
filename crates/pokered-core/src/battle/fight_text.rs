@@ -416,6 +416,7 @@ impl BattleScreen {
                     let input = BattleInput {
                         a: pressed & 1 != 0,
                         b: pressed & 2 != 0,
+                        select: pressed & 4 != 0,
                         right: pressed & 16 != 0,
                         left: pressed & 32 != 0,
                         up: pressed & 64 != 0,

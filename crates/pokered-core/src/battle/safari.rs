@@ -10,7 +10,9 @@
 //! rock (double, restored to base when the anger wears off), plus an "eating" (bait) and
 //! "angry" (rock) counter that bias the per-turn flee roll.
 
-use crate::battle::capture::{try_capture_with_rolls, CaptureContext, CaptureResult};
+use crate::battle::capture::{
+    try_capture_with_rng, try_capture_with_rolls, CaptureContext, CaptureResult,
+};
 use crate::battle::state::StatusCondition;
 use pokered_data::items::ItemId;
 
@@ -70,8 +72,6 @@ impl SafariState {
     }
 
     /// Throw a **SAFARI BALL**: consume one ball and attempt the capture with the current
-    /// (bait/rock-modified) catch rate.
-    /// Throw a **SAFARI BALL**: consume one ball and attempt the capture with the current
     /// (bait/rock-modified) catch rate. Rand1 redraws via the rejection loop
     /// (item_effects.asm:182-209) — the caller only supplies Rand2.
     pub fn throw_ball<R: FnMut() -> u8>(
@@ -91,6 +91,27 @@ impl SafariState {
             wild_status,
         };
         try_capture_with_rolls(&ctx, roll1, rand2)
+    }
+
+    /// Live ItemUseBall ordering: rejection-sample Rand1 before drawing Rand2,
+    /// and skip Rand2 when the status, catch-rate or W guard already decides it.
+    /// The injected-byte entry above keeps its existing caller contract.
+    pub(crate) fn throw_ball_with_rng(
+        &mut self,
+        wild_max_hp: u16,
+        wild_current_hp: u16,
+        wild_status: StatusCondition,
+        next: &mut impl FnMut() -> u8,
+    ) -> CaptureResult {
+        self.balls = self.balls.saturating_sub(1);
+        let ctx = CaptureContext {
+            ball: ItemId::SafariBall,
+            wild_max_hp,
+            wild_current_hp,
+            wild_catch_rate: self.catch_rate,
+            wild_status,
+        };
+        try_capture_with_rng(&ctx, next)
     }
 
     /// Per-turn upkeep (`PrintSafariZoneBattleText`): decrement the active counter (bait
@@ -120,6 +141,12 @@ impl SafariState {
     /// by 4 (less likely); anger (`escape_factor != 0`) doubles it (capped 255, more
     /// likely). The mon flees if `random_byte < b`.
     pub fn flee_roll(&self, enemy_speed: u16, random_byte: u8) -> bool {
+        self.flee_roll_with_rng(enemy_speed, || random_byte)
+    }
+
+    /// `core.asm` jumps to EnemyRan on the speed-doubling carry before Random.
+    /// A zero threshold still reaches Random and consumes one byte.
+    pub(crate) fn flee_roll_with_rng(&self, enemy_speed: u16, next: impl FnOnce() -> u8) -> bool {
         let speed_low = (enemy_speed & 0xFF) as u8;
         if speed_low > 127 {
             return true; // `add a` carries → EnemyRan
@@ -131,7 +158,7 @@ impl SafariState {
         if self.escape_factor != 0 {
             b = (b << 1).min(255);
         }
-        (random_byte as u16) < b
+        (next() as u16) < b
     }
 }
 

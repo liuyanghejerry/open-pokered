@@ -149,6 +149,32 @@ pub fn check_disobedience(
     has_disabled_move: bool,
     rng: &mut dyn FnMut() -> u8,
 ) -> DisobedienceOutcome {
+    let selected_move = moves.get(selected_slot).copied().unwrap_or(MoveId::Struggle);
+    check_disobedience_with_move(
+        level,
+        badges,
+        selected_slot,
+        selected_move,
+        moves,
+        pp,
+        has_disabled_move,
+        rng,
+    )
+}
+
+/// Variant of [`check_disobedience`] that accepts the live `wPlayerSelectedMove`
+/// explicitly (needed when `AnyMoveToSelect` forced `MoveId::Struggle` with an
+/// out-of-range `selected_slot` of 4, per `core.asm:3940-3942`).
+pub fn check_disobedience_with_move(
+    level: u8,
+    badges: u8,
+    selected_slot: usize,
+    selected_move: MoveId,
+    moves: &[MoveId; 4],
+    pp: &[u8; 4],
+    has_disabled_move: bool,
+    rng: &mut dyn FnMut() -> u8,
+) -> DisobedienceOutcome {
     let c = obedience_threshold(badges) as u16;
     let d = level as u16;
     // b = threshold + level, capped at $ff.
@@ -179,7 +205,14 @@ pub fn check_disobedience(
         }
     }
     if r2 < c {
-        return use_random_move(selected_slot, moves, pp, has_disabled_move, rng);
+        return use_random_move(
+            selected_slot,
+            selected_move,
+            moves,
+            pp,
+            has_disabled_move,
+            rng,
+        );
     }
 
     // .monNaps / .monDoesNothing / won't-obey split on diff = level − threshold.
@@ -207,24 +240,27 @@ pub fn check_disobedience(
 /// Safety cap for the asm's unbounded rejection-sampling loops (see above).
 const MAX_REROLL: u32 = 4096;
 
-/// `.useRandomMove` (core.asm:3941-4000): pick another known move with PP.
+/// `.useRandomMove` (core.asm:3934-4000): pick another known move with PP.
 /// Guards fall back to `.monDoesNothing`.
 fn use_random_move(
     selected_slot: usize,
+    selected_move: MoveId,
     moves: &[MoveId; 4],
     pp: &[u8; 4],
     has_disabled_move: bool,
     rng: &mut dyn FnMut() -> u8,
 ) -> DisobedienceOutcome {
-    let known: Vec<usize> = (0..4).filter(|&i| moves[i] != MoveId::None).collect();
-    // "is the second move slot empty?" — a one-move mon never swaps.
-    if known.len() < 2 {
+    // core.asm:3934-3936: `ld a, [wBattleMonMoves + 1] / and a / jr z, .monDoesNothing`
+    if moves[1] == MoveId::None {
         return does_nothing(rng);
     }
     if has_disabled_move {
         return does_nothing(rng);
     }
-    if moves[selected_slot] == MoveId::Struggle {
+    if selected_move == MoveId::Struggle
+        || selected_slot >= 4
+        || moves[selected_slot] == MoveId::Struggle
+    {
         return does_nothing(rng);
     }
     // "mon will not use move if only one move has remaining PP": total PP over
@@ -235,14 +271,22 @@ fn use_random_move(
         return does_nothing(rng);
     }
     // .chooseMove: wMaxMenuItem = wNumMovesMinusOne + 2 (the fight-menu init,
-    // core.asm:2550-2552), so the count check admits every known slot.
-    let max_menu_item = known.len() + 1;
+    // core.asm:2550-2552). FormatMovesString counts the non-empty prefix, while
+    // a leading hole retains the prior bound admitting the selected slot.
+    let prefix_len = moves.iter().take_while(|&&m| m != MoveId::None).count();
+    let max_menu_item = if prefix_len > 0 {
+        prefix_len + 1
+    } else {
+        (0..4)
+            .rfind(|&i| moves[i] != MoveId::None)
+            .map_or(1, |last| last + 2)
+    };
     for _ in 0..MAX_REROLL {
         let slot = (rng() & 3) as usize;
         if slot >= max_menu_item || slot == selected_slot {
             continue;
         }
-        if slot >= 4 || pp[slot] & 0x3F == 0 {
+        if slot >= 4 || moves[slot] == MoveId::None || pp[slot] & 0x3F == 0 {
             continue;
         }
         return DisobedienceOutcome::UseRandomMove(slot);

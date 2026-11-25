@@ -17,6 +17,12 @@ pub enum CannotMoveReason {
     ConfusedSelfHit,
     MoveDisabled,
     FullyParalyzed,
+    BeganToNap,
+    LoafingAround,
+    WontObey,
+    TurnedAway,
+    IgnoredOrders,
+    WontObeySelfHit,
 }
 
 /// Check all status conditions in Gen 1 order before a move executes.

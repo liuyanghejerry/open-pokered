@@ -336,6 +336,7 @@ pub struct PcScreen {
     item_swap_reload_wait: u8,
     item_swap_last_buttons: u8,
     item_swap_repeat_frames: u8,
+    item_list_poll_wait: u8,
     item_qty: u8,
     item_text_no_delay: bool,
     item_question_no_delay: bool,
@@ -415,6 +416,7 @@ impl PcScreen {
             item_swap_reload_wait: 0,
             item_swap_last_buttons: 0,
             item_swap_repeat_frames: 0,
+            item_list_poll_wait: 0,
             item_qty: 1,
             item_text_no_delay: true,
             item_question_no_delay: true,
@@ -694,7 +696,12 @@ impl PcScreen {
     }
 
     fn begin_item_question(&mut self, list: bool, draw_list: bool) {
-        if list { self.clear_item_swap(); }
+        if list {
+            self.clear_item_swap();
+            // DisplayListMenuID's Delay10, list redraw Delay3, and
+            // HandleMenuInput's initial Delay3 follow the question text.
+            self.item_list_poll_wait = 16;
+        }
         self.item_question_is_list = list;
         self.item_question_draw_list = draw_list;
         self.item_question_no_delay = self.item_text_no_delay;
@@ -814,37 +821,38 @@ impl PcScreen {
             return (self.update_league_hof(used), used);
         }
         if before == PcPhase::ItemList {
-            // HandleItemListSwapping does not sample Joypad during Delay20
-            // or the subsequent list redraw/HandleMenuInput Delay3 pair.
-            let blocked = self.item_swap_wait_frames > 0 || self.item_swap_reload_wait > 1;
-            let resumed = self.item_swap_reload_wait == 1;
+            // Do not sample releases or new presses while the original
+            // routines are printing, redrawing, or holding a SELECT swap.
+            self.item_list_poll_wait = self.item_list_poll_wait.saturating_sub(1);
+            let blocked = self.item_swap_wait_frames > 0
+                || self.item_swap_reload_wait > 1
+                || self.item_list_poll_wait > 0;
             let pressed = buttons & !self.item_swap_last_buttons;
-            // The watched SELECT key uses hJoy7=1/hJoy6=0: a new press
-            // starts 30 frames, then held keys repeat every 5. Repeated
-            // same-slot SELECT redraws still protect input for six frames.
-            let mut repeat = false;
+            // JoypadLowSensitivity with hJoy7=1/hJoy6=0 returns all held
+            // keys on ANY new press. Directions/SELECT repeat after 30
+            // frames, then every 5; A/B never repeat on their own.
+            let mut sampled = false;
             if !blocked {
-                if pressed != 0 { self.item_swap_repeat_frames = 30; }
-                else if self.item_swap_repeat_frames == 0 {
+                if pressed != 0 {
+                    self.item_swap_repeat_frames = 30;
+                    sampled = true;
+                } else if self.item_swap_repeat_frames == 0 {
                     self.item_swap_repeat_frames = 5;
-                    repeat = !held.a && !held.b;
+                    sampled = !held.a && !held.b;
                 }
+                self.item_swap_last_buttons = buttons;
             }
-            let select = !blocked && held.select && (pressed != 0 || repeat);
-            let used = if blocked || (resumed && pressed == 0 && !select) {
-                MenuInput { up:false, down:false, a:false, b:false }
-            } else if resumed || select || (!blocked && pressed != 0 && (held.a || held.b)) {
-                // Mode 1 returns all held keys on ANY fresh press, including
-                // an A held while a newly pressed direction chooses a slot.
-                MenuInput { a:held.a, b:held.b, up:held.up, down:held.down }
-            } else { input };
-            if !blocked { self.item_swap_last_buttons = buttons; }
+            let select = sampled && held.select;
+            let used = if sampled {
+                MenuInput { a: held.a, b: held.b, up: held.up, down: held.down }
+            } else {
+                MenuInput { up: false, down: false, a: false, b: false }
+            };
             if used.a || used.b { self.write_field_text_delay(false); }
             let action = self.update_item_list_with_select(used, select, ctx);
             if self.phase == PcPhase::ItemList && (used.a || used.b) { self.write_field_text_delay(true); }
             return (action, used);
         }
-        self.item_swap_last_buttons = buttons;
         let used = if ordinary {
             if self.ordinary_menu_poll_wait > 0 {
                 self.ordinary_menu_poll_wait -= 1;
@@ -866,6 +874,11 @@ impl PcScreen {
             self.ordinary_menu_poll_wait = 0;
             input
         };
+        // Question printing does not call Joypad. Preserve the last sampled
+        // buttons until the list's first poll, including an A held to open it.
+        if before != PcPhase::ItemQuestion {
+            self.item_swap_last_buttons = buttons;
+        }
         let held_ab = held.a || held.b;
         let action = if let Some(playing) = sound_playing {
             self.update_frame_sampled(used, ctx, playing, held_ab)
@@ -1601,17 +1614,26 @@ impl PcScreen {
             if self.item_swap_reload_wait > 0 { return PcScreenAction::Continue; }
         }
         let rows = self.item_row_count(ctx);
-        if select || input.a || input.b {
-            // Watched A/B/SELECT return after the inner visible-row move;
-            // the caller handles watched keys before its scrolling directions.
-            let row = self.item_list_cursor - self.item_list_scroll;
-            let max_row = rows.saturating_sub(self.item_list_scroll + 1).min(PC_LIST_CURSOR_ROWS - 1);
-            if input.up { if row > 0 { self.item_list_cursor -= 1; } }
-            else if input.down && row < max_row { self.item_list_cursor += 1; }
-        } else if input.up && self.item_list_cursor > 0 {
-            self.item_list_cursor -= 1;
-        } else if input.down && self.item_list_cursor < rows - 1 {
+        // HandleMenuInput moves within the visible rows before returning
+        // a watched A/B/SELECT. Only an unwatched direction reaches the
+        // caller's scrolling code; A+DOWN at the bottom selects that slot.
+        let watched = input.a || input.b || select;
+        let row = self.item_list_cursor - self.item_list_scroll;
+        let max_row = rows
+            .saturating_sub(self.item_list_scroll + 1)
+            .min(PC_LIST_CURSOR_ROWS - 1);
+        let inner_move = (input.up && row > 0) || (!input.up && input.down && row < max_row);
+        if input.up {
+            if row > 0 || (!watched && self.item_list_cursor > 0) {
+                self.item_list_cursor -= 1;
+            }
+        } else if input.down && (row < max_row || (!watched && self.item_list_cursor < rows - 1)) {
             self.item_list_cursor += 1;
+        }
+        if !watched && (input.up || input.down) {
+            // Inner row moves only redraw the cursor. Boundary attempts
+            // return to PrintListMenuEntries, even when scrolling is clamped.
+            self.item_list_poll_wait = if inner_move { 3 } else { 6 };
         }
         self.clamp_item_scroll(ctx);
 
@@ -2226,6 +2248,72 @@ mod tests {
         assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
         assert_eq!(s.item_source(&w.ctx())[s.item_list_cursor()].0,ItemId::PokeBall);assert_eq!(s.item_list_cursor(),2);
         assert_eq!(w.pc_items.items(),slots);
+    }
+
+    #[test]
+    fn item_list_unwatched_direction_repeats_at_original_poll_frames() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for mode in [ItemListMode::Withdraw,ItemListMode::Deposit,ItemListMode::Toss] {
+            let (mut s,mut w)=select_fixture(mode,&slots);
+            for t in 0..191 {
+                let held=PcHeldInput { down:(70..150).contains(&t),..Default::default() };
+                s.update_frame_with_held_input(NONE,held,&mut w.ctx(),None);
+                let expected=if t<70 {0} else if t<100 {1} else if t<105 {2} else {3};
+                assert_eq!(s.item_list_cursor(),expected,"{mode:?} frame{t}");
+                assert_eq!(s.item_list_scroll(),usize::from(t>=105));
+                assert_eq!(w.bag.items(),slots);assert_eq!(w.pc_items.items(),slots);
+                assert!(!s.take_save_request());
+            }
+        }
+    }
+
+    #[test]
+    fn item_list_first_poll_follows_question_and_list_setup() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for press_at in [17,18,19,20] {
+            let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+            s.item_text_no_delay=true;
+            s.item_swap_last_buttons=1; // A was sampled to open the list.
+            s.begin_item_question(true,false);
+            for t in 1..51 {
+                s.update_frame_with_held_input(NONE,PcHeldInput {down:t==press_at,..Default::default()},&mut w.ctx(),None);
+                let expected=usize::from(press_at>=19 && t>=press_at);
+                assert_eq!(s.item_list_cursor(),expected,"press{press_at} frame{t}");
+                assert_eq!(w.pc_items.items(),slots);
+            }
+        }
+    }
+
+    #[test]
+    fn item_list_redraws_protect_short_presses_and_sample_releases() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for (boundary,second,expected) in [(false,72,1),(false,74,2),(true,152,3),(true,156,2)] {
+            let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+            for t in 0..191 {
+                let held=PcHeldInput { down:t==70 || (boundary && (t==110 || t==150)) || (!boundary && t==second),up:boundary && t==second,..Default::default() };
+                s.update_frame_with_held_input(NONE,held,&mut w.ctx(),None);
+            }
+            assert_eq!(s.item_list_cursor(),expected,"boundary{boundary} second{second}");
+            assert_eq!(w.pc_items.items(),slots);assert!(!s.take_save_request());
+        }
+    }
+
+    #[test]
+    fn item_list_new_direction_returns_held_a_without_scrolling_past_visible_slot() {
+        let slots=[(ItemId::Potion,4),(ItemId::Antidote,3),(ItemId::PokeBall,2)];
+        for boundary in [false,true] {
+            let (mut s,mut w)=select_fixture(ItemListMode::Withdraw,&slots);
+            if boundary {s.item_list_cursor=2;} else {s.item_swap_last_buttons=1;}
+            for t in 1..=40 {
+                let held=PcHeldInput {a:!boundary || t==40,down:t==40,..Default::default()};
+                s.update_frame_with_held_input(NONE,held,&mut w.ctx(),None);
+                if t<40 {assert_eq!(s.phase(),PcPhase::ItemList);}
+            }
+            assert_eq!(s.phase(),PcPhase::ItemQuantityPrompt);
+            assert_eq!(s.item_list_cursor(),if boundary {2} else {1});
+            assert_eq!(s.item_list_scroll(),0);
+            assert_eq!(w.pc_items.items(),slots);assert!(!s.take_save_request());
+        }
     }
 
     #[test]

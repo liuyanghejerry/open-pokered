@@ -380,6 +380,7 @@ impl GameLoop for DirectBattleGame {
             right: input.is_just_pressed(GbButton::Right),
             a: input.is_just_pressed(GbButton::A),
             b: input.is_just_pressed(GbButton::B),
+            select: input.is_just_pressed(GbButton::Select),
         };
         self.battle.set_presentation_enabled(true);
         let faint_audio_finished = {

@@ -184,7 +184,11 @@ enum ReusableBattlePhase {
     Intro(IntroPhase),
     PlayerMenu { row: usize, col: usize },
     SafariMenu { row: usize, col: usize },
-    MoveSelect { cursor: usize },
+    MoveSelect {
+        cursor: usize,
+        swap_armed: Option<u8>,
+        moves_hash: u32,
+    },
     BagSelect { cursor: usize },
     ShowingText { current: usize },
     PartySelect { cursor: usize },
@@ -261,9 +265,21 @@ impl BattleVisualKey {
                 row: battle.battle_menu.row(),
                 col: battle.battle_menu.col(),
             },
-            BattlePhase::MoveSelect => ReusableBattlePhase::MoveSelect {
-                cursor: battle.move_menu.as_ref()?.cursor(),
-            },
+            BattlePhase::MoveSelect => {
+                let menu = battle.move_menu.as_ref()?;
+                let mut moves_hash = 0x811c_9dc5;
+                for slot in menu.moves() {
+                    hash_byte(&mut moves_hash, slot.move_id as u8);
+                    hash_byte(&mut moves_hash, slot.current_pp);
+                    hash_byte(&mut moves_hash, slot.max_pp);
+                    hash_byte(&mut moves_hash, slot.is_disabled as u8);
+                }
+                ReusableBattlePhase::MoveSelect {
+                    cursor: menu.cursor(),
+                    swap_armed: menu.swap_armed_slot(),
+                    moves_hash,
+                }
+            }
             // The PP chooser retains the full party, not the FIGHT HUD.
             BattlePhase::ItemMoveSelect { .. } => return None,
             BattlePhase::BagSelect => ReusableBattlePhase::BagSelect {
@@ -426,14 +442,24 @@ impl BattleVisualKey {
     fn move_menu_cursor_change_from(&self, previous: &Self) -> Option<(usize, usize)> {
         let (cursor, previous_cursor, normalized_phase) = match (self.phase, previous.phase) {
             (
-                ReusableBattlePhase::MoveSelect { cursor },
+                ReusableBattlePhase::MoveSelect {
+                    cursor,
+                    swap_armed,
+                    moves_hash,
+                },
                 ReusableBattlePhase::MoveSelect {
                     cursor: previous_cursor,
+                    swap_armed: previous_swap,
+                    moves_hash: previous_moves_hash,
                 },
-            ) => (
+            ) if swap_armed == previous_swap && moves_hash == previous_moves_hash => (
                 cursor,
                 previous_cursor,
-                ReusableBattlePhase::MoveSelect { cursor: 0 },
+                ReusableBattlePhase::MoveSelect {
+                    cursor: 0,
+                    swap_armed,
+                    moves_hash,
+                },
             ),
             (
                 ReusableBattlePhase::LearnMoveChoose { cursor },
@@ -2834,6 +2860,77 @@ mod session_tests {
                 assert_eq!(retained.display_palette(),full.display_palette());
             }
             assert!(seen_notice && seen_rebuilt && seen_cursor_damage);
+        }
+    }
+
+    #[test]
+    fn move_select_swap_arm_and_swap_retained_frames_match_full_render() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::battle::BattleScreen;
+        use pokered_core::pokemon::stats::create_pokemon_with_moves;
+        use pokered_data::{moves::MoveId, species::Species};
+
+        let make = |species, moves| {
+            create_pokemon_with_moves(species, 50, [0x9a, 0x78], moves).unwrap()
+        };
+        for language in [Lang::En, Lang::Zh] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.audio = None;
+            game.state.screen = GameScreen::Battle;
+            game.state.config.language = language;
+            game.battle = BattleScreen::from_parties(
+                true,
+                &[make(
+                    Species::Snorlax,
+                    [
+                        MoveId::Headbutt,
+                        MoveId::Amnesia,
+                        MoveId::Rest,
+                        MoveId::BodySlam,
+                    ],
+                )],
+                &[make(
+                    Species::Magikarp,
+                    [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None],
+                )],
+                None,
+            );
+            game.battle.phase = BattlePhase::PlayerMenu;
+
+            let config = RenderConfig::new(160, 144);
+            let mut retained = FrameBuffer::new(config, Rgba::WHITE);
+            let mut session = RenderSession::new();
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+            let mut armed_damage_seen = false;
+            let mut swap_full_seen = false;
+
+            for frame in 0..10 {
+                let mut input = InputState::new();
+                match frame {
+                    0 => input.press(GbButton::A),
+                    2 | 8 => input.press(GbButton::Select),
+                    4 | 6 => input.press(GbButton::Down),
+                    _ => {}
+                }
+                game.update(&input);
+                let update = session.render(&mut game, &mut retained, &mut scroll);
+                if frame == 4 || frame == 6 {
+                    armed_damage_seen |= matches!(update, FrameUpdate::Damage(_));
+                }
+                if frame == 8 {
+                    swap_full_seen = matches!(update, FrameUpdate::Full);
+                }
+                let mut full = FrameBuffer::new(config, Rgba::WHITE);
+                game.draw(&mut full);
+                assert_eq!(
+                    retained.packed(),
+                    full.packed(),
+                    "frame={frame}, language={language:?}"
+                );
+                assert_eq!(retained.display_palette(), full.display_palette());
+            }
+            assert!(armed_damage_seen, "armed cursor movement must use incremental damage");
+            assert!(swap_full_seen, "completing SELECT swap must trigger full redraw");
         }
     }
 
