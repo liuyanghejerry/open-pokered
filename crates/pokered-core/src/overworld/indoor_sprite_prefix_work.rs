@@ -84,6 +84,15 @@ impl IndoorSpritePrefixWork {
     pub fn initialized_pictures(&self) -> Option<&[u8]> {
         (self.step == Step::Done).then(|| &self.images[1..usize::from(self.c) + 1])
     }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        super::display_lcd_work::run_plain_work(
+            self,
+            bus,
+            |work| work.step == Step::Done,
+            Self::step,
+            Self::step,
+        )
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let tcycles = match self.step {

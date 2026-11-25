@@ -229,7 +229,7 @@ impl StreamInstructions {
         })
     }
     pub fn finished(&self) -> bool {
-        self.stage == Stage::NoteLength
+        matches!(self.stage, Stage::NoteLength)
     }
     pub fn result(&self) -> Option<StreamResult> {
         self.finished().then_some(self.output)
@@ -237,7 +237,10 @@ impl StreamInstructions {
     /// Exact handoff after sound_ret's failed SOUND_CALL branch. This is an
     /// ending opcode, not a completed musical note or a fabricated return.
     pub fn channel_end_context(&self) -> Option<(u8, StreamResult)> {
-        if self.stage == Stage::Unsupported(StreamInputError::ChannelEndUnsupported) {
+        if matches!(
+            self.stage,
+            Stage::Unsupported(StreamInputError::ChannelEndUnsupported)
+        ) {
             let mut stream = self.output;
             stream.note = self.command;
             Some((self.channel, stream))
@@ -247,6 +250,122 @@ impl StreamInstructions {
     }
     pub fn cycles(&self) -> u32 {
         self.cycles
+    }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        const ENTRY: [u8; 11] = [12, 8, 8, 12, 8, 8, 12, 8, 16, 16, 24];
+        const FETCH_CALL: [u8; 11] = [24, 8, 4, 4, 4, 12, 8, 8, 4, 8, 4];
+        const FETCH_BYTE: [u8; 16] = [8, 4, 4, 4, 12, 8, 8, 4, 8, 4, 8, 8, 8, 8, 8, 16];
+        const NOTE: [u8; 42] = [
+            4, 8, 16, 8, 16, 8, 16, 8, 8, 16, 4, 8, 12, 8, 12, 8, 12, 8, 12, 8, 12, 8, 12, 8, 12,
+            8, 12, 8, 12, 8, 12, 8, 8, 12, 8, 12, 4, 8, 12, 4, 8, 12,
+        ];
+        const PARAMETER: [u8; 11] = [4, 4, 8, 8, 8, 12, 8, 12, 8, 8, 16];
+        const WAVE_PARAMETER: [u8; 17] = [4, 4, 8, 12, 12, 4, 8, 8, 4, 8, 8, 4, 8, 12, 8, 8, 16];
+        let ordinary_note = self.channel != 3 && self.command < 0xd0 && self.command & 0xf0 != 0x20;
+        match self.stage {
+            Stage::Entry(n) => &ENTRY[usize::from(n)..],
+            Stage::FetchCall(_) => &FETCH_CALL,
+            Stage::FetchByte(_, n) if n < 10 => &FETCH_BYTE[usize::from(n)..10],
+            Stage::FetchByte(_, n) if n > 10 => &FETCH_BYTE[usize::from(n)..],
+            Stage::CompareReturn(n) if ordinary_note => &NOTE[usize::from(n)..],
+            Stage::CompareCall(n) if ordinary_note => &NOTE[3 + usize::from(n)..],
+            Stage::CompareLoop(n) if ordinary_note => &NOTE[5 + usize::from(n)..],
+            Stage::NoteType(n) if ordinary_note => &NOTE[7 + usize::from(n)..],
+            Stage::PerfectPitch(n) if ordinary_note => &NOTE[10 + usize::from(n)..],
+            Stage::Vibrato(n) if ordinary_note => &NOTE[13 + usize::from(n)..],
+            Stage::PitchSlide(n) if ordinary_note => &NOTE[15 + usize::from(n)..],
+            Stage::Duty(n) if ordinary_note => &NOTE[17 + usize::from(n)..],
+            Stage::Tempo(n) if ordinary_note => &NOTE[19 + usize::from(n)..],
+            Stage::OtherCompare(which, n) if ordinary_note => {
+                &NOTE[21 + 2 * usize::from(which) + usize::from(n)..]
+            }
+            Stage::Octave(n) if ordinary_note => &NOTE[31 + usize::from(n)..],
+            Stage::SfxNote(n) if ordinary_note => &NOTE[34 + usize::from(n)..],
+            Stage::PitchSweep(n) if ordinary_note => &NOTE[36 + usize::from(n)..],
+            Stage::Note(n) if ordinary_note => &NOTE[39 + usize::from(n)..],
+            Stage::ParameterKind(n) if self.channel == 2 => &WAVE_PARAMETER[usize::from(n)..],
+            Stage::WaveVolume(n) => &WAVE_PARAMETER[4 + usize::from(n)..],
+            Stage::StoreVolume(n) if self.channel == 2 => &WAVE_PARAMETER[12 + usize::from(n)..],
+            Stage::ParameterKind(n) => &PARAMETER[usize::from(n)..],
+            Stage::StoreVolume(n) => &PARAMETER[6 + usize::from(n)..],
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        if count == prefix.len() {
+            match self.stage {
+                Stage::Entry(_) => {
+                    self.output.state.vibrato_delay = self.output.vibrato_reload;
+                    self.output.state.flags1 &= !48;
+                    self.stage = self.restart();
+                    self.cycles += cycles;
+                    return cycles;
+                }
+                Stage::FetchCall(kind) => {
+                    self.stage = Stage::FetchByte(kind, 10);
+                    self.cycles += cycles;
+                    return cycles;
+                }
+                Stage::FetchByte(kind, n) if n < 10 => {
+                    self.stage = Stage::FetchByte(kind, 10);
+                    self.cycles += cycles;
+                    return cycles;
+                }
+                Stage::FetchByte(kind, n) => {
+                    if n == 11 {
+                        self.output.next_ptr += 1;
+                    }
+                    self.stage = self.fetch_finished(kind);
+                    self.cycles += cycles;
+                    return cycles;
+                }
+                Stage::ParameterKind(_) | Stage::WaveVolume(_) | Stage::StoreVolume(_) => {
+                    if self.channel == 2 {
+                        self.output.wave_instrument = Some(self.last & 15);
+                        self.output.state.volume = (self.last & 0x30) << 1;
+                    } else {
+                        self.output.state.volume = self.last;
+                    }
+                    self.stage = self.restart();
+                    self.cycles += cycles;
+                    return cycles;
+                }
+                _ => (),
+            }
+        }
+        if count == prefix.len()
+            && matches!(
+                self.stage,
+                Stage::CompareReturn(_)
+                    | Stage::CompareCall(_)
+                    | Stage::CompareLoop(_)
+                    | Stage::NoteType(_)
+                    | Stage::PerfectPitch(_)
+                    | Stage::Vibrato(_)
+                    | Stage::PitchSlide(_)
+                    | Stage::Duty(_)
+                    | Stage::Tempo(_)
+                    | Stage::OtherCompare(_, _)
+                    | Stage::Octave(_)
+                    | Stage::SfxNote(_)
+                    | Stage::PitchSweep(_)
+                    | Stage::Note(_)
+            )
+            && self.channel != 3
+            && self.command < 0xd0
+            && self.command & 0xf0 != 0x20
+        {
+            self.output.note = self.command;
+            self.stage = Stage::NoteLength;
+        } else {
+            for _ in 0..count {
+                self.advance(None);
+            }
+        }
+        self.cycles += cycles;
+        cycles
     }
     pub fn try_step<E>(
         &mut self,
@@ -283,7 +402,7 @@ impl StreamInstructions {
             None
         };
         let cycles = self.next_cycles().expect("live command instruction");
-        let instruction = if self.stage == Stage::MasterVolume(0) {
+        let instruction = if matches!(self.stage, Stage::MasterVolume(0)) {
             ApuInstruction::write(cycles, 0xff24, self.last)
         } else {
             ApuInstruction::plain(cycles)
@@ -293,6 +412,7 @@ impl StreamInstructions {
         self.cycles += u32::from(cycles);
         Ok(self.finished())
     }
+    #[inline(always)]
     fn next_cycles(&self) -> Option<u8> {
         use Stage::*;
         let c = self.command;
@@ -573,6 +693,7 @@ impl StreamInstructions {
             Stage::FetchCall(Fetch::Command)
         }
     }
+    #[inline(always)]
     fn advance(&mut self, byte: Option<u8>) {
         use Stage::*;
         self.stage = match self.stage {
@@ -1222,5 +1343,163 @@ mod tests {
             (3, 4, 16)
         );
         assert_eq!(result.pitch_slide.unwrap().length_modifier, 1);
+    }
+
+    #[test]
+    fn entry_prefix_matches_every_accept_count() {
+        let input = StreamInput {
+            channel: 0,
+            ptr: 0,
+            return_ptr: 0,
+            loop_counter: 0,
+            state: MusicCommandState {
+                speed: 1,
+                volume: 0,
+                duty: 0,
+                octave: 4,
+                flags1: 4,
+                vibrato_delay: 0,
+            },
+            vibrato_reload: 0,
+        };
+        for count in 1..=11 {
+            let mut expected = StreamInstructions::new(input).unwrap();
+            for _ in 0..count {
+                expected.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+            }
+            let mut actual = StreamInstructions::new(input).unwrap();
+            let prefix = actual.plain_prefix();
+            actual.accept_plain_prefix(count, prefix);
+            assert_eq!(actual, expected, "count={count}");
+        }
+    }
+
+    #[test]
+    fn fetch_prefixes_match_every_accept_count() {
+        let input = StreamInput {
+            channel: 0,
+            ptr: 0,
+            return_ptr: 0,
+            loop_counter: 0,
+            state: MusicCommandState {
+                speed: 1,
+                volume: 0,
+                duty: 0,
+                octave: 4,
+                flags1: 4,
+                vibrato_delay: 0,
+            },
+            vibrato_reload: 0,
+        };
+        let mut initial = StreamInstructions::new(input).unwrap();
+        let entry = initial.plain_prefix();
+        initial.accept_plain_prefix(entry.len(), entry);
+        for advanced in 0..=16 {
+            let mut start = initial.clone();
+            for _ in 0..advanced {
+                start.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+            }
+            let prefix = start.plain_prefix();
+            if advanced == 11 {
+                assert!(prefix.is_empty());
+                continue;
+            }
+            assert!(!prefix.is_empty(), "advanced={advanced}");
+            for count in 1..=prefix.len() {
+                let mut expected = start.clone();
+                for _ in 0..count {
+                    expected.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+                }
+                let mut actual = start.clone();
+                actual.accept_plain_prefix(count, prefix);
+                assert_eq!(actual, expected, "advanced={advanced} count={count}");
+            }
+        }
+    }
+
+    #[test]
+    fn ordinary_note_prefixes_match_every_accept_count() {
+        let input = StreamInput {
+            channel: 0,
+            ptr: 0,
+            return_ptr: 0,
+            loop_counter: 0,
+            state: MusicCommandState {
+                speed: 1,
+                volume: 0,
+                duty: 0,
+                octave: 4,
+                flags1: 4,
+                vibrato_delay: 0,
+            },
+            vibrato_reload: 0,
+        };
+        let mut initial = StreamInstructions::new(input).unwrap();
+        for _ in 0..28 {
+            initial.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+        }
+        for advanced in 0..42 {
+            let mut start = initial.clone();
+            for _ in 0..advanced {
+                start.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+            }
+            let prefix = start.plain_prefix();
+            assert_eq!(prefix.len(), 42 - advanced);
+            for count in 1..=prefix.len() {
+                let mut expected = start.clone();
+                for _ in 0..count {
+                    expected.try_step(&[0], |_| Ok::<(), ()>(())).unwrap();
+                }
+                let mut actual = start.clone();
+                actual.accept_plain_prefix(count, prefix);
+                assert_eq!(actual, expected, "advanced={advanced} count={count}");
+            }
+        }
+    }
+
+    #[test]
+    fn note_parameter_prefixes_match_every_accept_count() {
+        for channel in [0, 2] {
+            let input = StreamInput {
+                channel,
+                ptr: 0,
+                return_ptr: 0,
+                loop_counter: 0,
+                state: MusicCommandState {
+                    speed: 1,
+                    volume: 0,
+                    duty: 0,
+                    octave: 4,
+                    flags1: 4,
+                    vibrato_delay: 0,
+                },
+                vibrato_reload: 0,
+            };
+            let mut initial = StreamInstructions::new(input).unwrap();
+            for _ in 0..64 {
+                initial.try_step(&[0xd0, 0], |_| Ok::<(), ()>(())).unwrap();
+            }
+            let length = if channel == 2 { 17 } else { 11 };
+            for advanced in 0..length {
+                let mut start = initial.clone();
+                for _ in 0..advanced {
+                    start.try_step(&[0xd0, 0], |_| Ok::<(), ()>(())).unwrap();
+                }
+                let prefix = start.plain_prefix();
+                assert_eq!(prefix.len(), length - advanced);
+                for count in 1..=prefix.len() {
+                    let mut expected = start.clone();
+                    for _ in 0..count {
+                        expected.try_step(&[0xd0, 0], |_| Ok::<(), ()>(())).unwrap();
+                    }
+                    let mut actual = start.clone();
+                    actual.accept_plain_prefix(count, prefix);
+                    assert_eq!(
+                        actual, expected,
+                        "channel={channel} advanced={advanced} count={count}"
+                    );
+                }
+            }
+        }
     }
 }

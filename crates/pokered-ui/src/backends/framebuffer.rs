@@ -1,5 +1,7 @@
 use pokered_data::TILE_SIZE_PX;
-use pokered_renderer::embedded_font::{self, box_tiles, draw_box_tile, draw_text, fill_tile};
+use pokered_renderer::embedded_font::{
+    self, box_tiles, draw_box_tile, draw_text_indexed as draw_text, fill_tile,
+};
 use pokered_renderer::{FrameBuffer, Rgba};
 use pokered_core::game_state::Lang;
 
@@ -23,6 +25,17 @@ impl<'fb> FrameBufferPainter<'fb> {
 
 impl<'fb> Painter for FrameBufferPainter<'fb> {
     fn clear(&mut self, color: EngineRgba) {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if color == Rgba::WHITE
+            && self
+                .fb
+                .display_palette()
+                .color(pokered_renderer::palette::GbColor::White)
+                == Rgba::WHITE
+        {
+            pokered_renderer::gba_dma::clear_frame(self.fb);
+            return;
+        }
         self.fb.clear(color);
     }
 
@@ -95,7 +108,7 @@ impl<'fb> Painter for FrameBufferPainter<'fb> {
     }
 
     fn measure_text_px(&self, text: &str) -> u32 {
-        embedded_font::measure_text(text)
+        embedded_font::measure_text_indexed(text)
     }
 
     fn draw_glyph(&mut self, pos: TilePos, glyph: char, color: EngineRgba) {

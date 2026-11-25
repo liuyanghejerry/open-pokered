@@ -15,7 +15,7 @@ use pokered_data::mon_party_icons::{icon_for_species, IconKind};
 use pokered_data::ui_layout::schema::{BAG_DEFAULT_LAYOUT, MAIN_DEFAULT_LAYOUT, MART_CONFIRM_LAYOUT, MART_MAIN_MENU_LAYOUT, MART_QUANTITY_LAYOUT, MART_RESULT_DIALOG_LAYOUT, OPTIONS_DEFAULT_LAYOUT, PARTY_DEFAULT_LAYOUT, PARTY_ENTRY_LAYOUT, SAVE_ASK_PROMPT_LAYOUT, SAVE_DEFAULT_LAYOUT, START_DEFAULT_LAYOUT, STATS_PAGE1_LAYOUT, STATS_PAGE2_LAYOUT, };
 use pokered_renderer::mon_icon::{draw_mon_icon, icon_y_offset, load_mon_icon_tiles, party_icon_frame, IconFrame};
 use pokered_renderer::palette::GRAYSCALE_SPRITE_PALETTE;
-use pokered_renderer::party_hp_bar::draw_party_hp_bar;
+use pokered_renderer::party_hp_bar::draw_party_hp_bar_indexed;
 use pokered_renderer::resource::ResourceManager;
 use pokered_renderer::{FrameBuffer, TILE_SIZE};
 use pokered_ui::backends::FrameBufferPainter;
@@ -188,7 +188,7 @@ pub(crate) fn draw_party_screen_base(
                 continue;
             }
             let hp_bar_y = (i as u32) * row_height + hp_bar.ty * TILE_SIZE + 4;
-            if let Err(e) = draw_party_hp_bar(
+            if let Err(e) = draw_party_hp_bar_indexed(
                 fb,
                 rm,
                 hp_bar.tx * TILE_SIZE,

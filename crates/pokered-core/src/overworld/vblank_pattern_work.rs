@@ -117,6 +117,9 @@ impl VBlankPatternWork {
     pub fn unstarted(&self) -> bool {
         self.step == Step::Header(0)
     }
+    pub(crate) fn header_finished(&self) -> bool {
+        !matches!(self.step, Step::Header(_))
+    }
     pub fn uses_live_ports(&self) -> bool {
         self.live_idle || self.request_base.is_some()
     }
@@ -125,6 +128,37 @@ impl VBlankPatternWork {
     }
     pub fn finished(&self) -> bool {
         self.step == Step::Done
+    }
+    pub(crate) fn idle_live_call(&self) -> bool {
+        self.copy.is_none() && self.live_idle && self.tiles == 0 && self.step == Step::Header(0)
+    }
+    pub(crate) fn step_idle_live<B: PatternInstructionBus>(
+        &mut self,
+        bus: &mut B,
+    ) -> Result<(), B::Error> {
+        debug_assert!(self.idle_live_call());
+        let value = bus.execute(PatternInstruction {
+            tcycles: 12,
+            access: Some(PatternAccess::Display(
+                super::display_lcd_work::DisplayAccess::Read {
+                    port: self.request_size_port(),
+                    at_tcycle: 8,
+                },
+            )),
+        })?;
+        assert_eq!(value, Some(0), "idle request changed while foreground must be suspended");
+        self.step = Step::Header(1);
+        Ok(())
+    }
+
+    pub(crate) fn finish_idle_live(&mut self) {
+        debug_assert!(
+            self.copy.is_none()
+                && self.live_idle
+                && self.tiles == 0
+                && self.step == Step::Header(1)
+        );
+        self.step = Step::Done;
     }
     /// The ISR clears size before copying, not when its RET has completed.
     pub fn size_port(&self) -> u8 {
@@ -267,6 +301,101 @@ impl VBlankPatternWork {
         let writes = if DOUBLE { 4 } else { 2 };
         let pairs = if DOUBLE { 4 } else { 8 };
         loop {
+            if self.step == Step::Header(0) && self.tiles != 0 {
+                if let Some(base) = self.request_base {
+                    let source = base.wrapping_add(self.source.expect("live source"));
+                    let destination = self.destination.expect("live destination");
+                    if bus.try_vblank_live_header(self.format(), self.tiles, source, destination)? {
+                        self.size_port = 0;
+                        self.request_low = destination as u8;
+                        self.step = Step::Pop;
+                        continue;
+                    }
+                }
+            }
+            if self.step == Step::Footer(0) {
+                if let Some(base) = self.request_base {
+                    let copy = self.copy.expect("live copy");
+                    if bus.try_vblank_live_footer(
+                        self.format(),
+                        copy.tiles,
+                        base.wrapping_add(copy.source_offset),
+                        copy.destination,
+                        base.wrapping_add(self.source.expect("final source")),
+                        self.destination.expect("final destination"),
+                    )? {
+                        self.step = Step::Done;
+                        continue;
+                    }
+                }
+            }
+            let plain = match self.step {
+                Step::Header(n) if self.request_base.is_some() && self.tiles != 0 => {
+                    let end = match n {
+                        0 => 0,
+                        1..=7 => 8,
+                        8 => 8,
+                        9 => 10,
+                        10 => 10,
+                        11 | 12 => 13,
+                        13 => 13,
+                        14 => 15,
+                        15 => 15,
+                        16 => 17,
+                        17 => 17,
+                        18 | 19 => 20,
+                        20 => 20,
+                        _ => unreachable!(),
+                    };
+                    &HEADER[usize::from(n)..end]
+                }
+                Step::Footer(n) if self.request_base.is_some() => {
+                    let end = match n {
+                        0 => 1,
+                        1 => 1,
+                        2 => 3,
+                        3 => 3,
+                        4 | 5 => 6,
+                        6 => 6,
+                        7 => 8,
+                        8 => 8,
+                        9..=14 => 15,
+                        _ => unreachable!(),
+                    };
+                    &FOOTER[usize::from(n)..end]
+                }
+                _ => &[],
+            };
+            if !plain.is_empty() {
+                let count = bus.execute_plain_cycles(plain)?;
+                if count != 0 {
+                    self.step = match self.step {
+                        Step::Header(n) => Step::Header(n + count as u8),
+                        Step::Footer(n) if n as usize + count == 15 => Step::Done,
+                        Step::Footer(n) => Step::Footer(n + count as u8),
+                        _ => unreachable!(),
+                    };
+                    continue;
+                }
+            }
+            if self.step == Step::Decrement {
+                let remaining = self.tiles.wrapping_sub(1);
+                let branch = if remaining == 0 { 8 } else { 12 };
+                let count = bus.execute_plain_cycles(&[4, branch])?;
+                if count != 0 {
+                    self.tiles = remaining;
+                    self.step = Step::Repeat;
+                    if count == 2 {
+                        self.step = if remaining == 0 {
+                            Step::Footer(0)
+                        } else {
+                            self.pair = 0;
+                            Step::Pop
+                        };
+                    }
+                    continue;
+                }
+            }
             if self.step != Step::Pop {
                 if self.step(bus)?.is_none() {
                     return Ok(());
@@ -274,6 +403,42 @@ impl VBlankPatternWork {
                 continue;
             }
             let source = self.source.expect("active source offset");
+            if self.pair == 0 {
+                if let Some((accepted, next_source, destination, de)) = bus
+                    .try_vblank_tile_run::<DOUBLE>(
+                        self.copy.expect("active pattern identity").source,
+                        source,
+                        self.destination.expect("active destination"),
+                        self.tiles,
+                    )?
+                {
+                    self.tiles -= accepted;
+                    self.source = Some(next_source);
+                    self.destination = Some(destination);
+                    self.de = de;
+                    self.write = writes;
+                    self.pair = if self.tiles == 0 { pairs } else { 0 };
+                    self.step = if self.tiles == 0 {
+                        Step::Footer(0)
+                    } else {
+                        Step::Pop
+                    };
+                    continue;
+                }
+                if let Some((next_source, destination, de)) = bus.try_vblank_tile_writes::<DOUBLE>(
+                    self.copy.expect("active pattern identity").source,
+                    source,
+                    self.destination.expect("active destination"),
+                )? {
+                    self.source = Some(next_source);
+                    self.destination = Some(destination);
+                    self.de = de;
+                    self.write = writes;
+                    self.pair = pairs;
+                    self.step = Step::Decrement;
+                    continue;
+                }
+            }
             let value = bus.execute(PatternInstruction {
                 tcycles: 12,
                 access: Some(PatternAccess::ReadPair {
@@ -509,6 +674,68 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn live_port_runner_completes_with_the_same_cursor_memory_and_ports() {
+        let binding = super::super::video_request_ports::PatternRomBinding::for_source(
+            PatternSource::WalkingPlayer,
+        )
+        .unwrap();
+        let mut time = DisplayWorkTime::default();
+        time.establish_native_video_idle(1).unwrap();
+        time.begin_native_update();
+        use super::super::{
+            display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus},
+            far_pattern_copy_work::LOADED_ROM_BANK,
+            video_copy_caller_work::COPY_SIZE,
+        };
+        let source = binding.address + 17;
+        for (port, value) in [
+            (LOADED_ROM_BANK, binding.bank),
+            (COPY_SIZE, 1),
+            (COPY_SIZE + 1, source as u8),
+            (COPY_SIZE + 2, (source >> 8) as u8),
+            (COPY_SIZE + 3, 0),
+            (COPY_SIZE + 4, 0x88),
+        ] {
+            DisplayInstructionBus::execute(
+                &mut time,
+                DisplayInstruction {
+                    tcycles: 12,
+                    access: Some(DisplayAccess::Write {
+                        port,
+                        value,
+                        at_tcycle: 8,
+                    }),
+                },
+            )
+            .unwrap();
+        }
+        let mut work = VBlankPatternWork::from_live_request(&time, binding).unwrap();
+        let mut reference = work;
+        let mut reference_time = time.clone();
+        time.device_mut().request_interrupt(1);
+        reference_time.device_mut().request_interrupt(1);
+        time.enter_pending_vblank().unwrap();
+        reference_time.enter_pending_vblank().unwrap();
+        let mut memory = PatternMemory::default();
+        let mut reference_memory = memory.clone();
+        work.run(&mut time.pattern_bus(&mut memory, &Bytes))
+            .unwrap();
+        loop {
+            match reference.step(&mut reference_time.pattern_bus(&mut reference_memory, &Bytes)) {
+                Ok(Some(_)) => (),
+                Ok(None) => break,
+                Err(error) => panic!("reference failed: {error:?}"),
+            }
+        }
+        assert_eq!(work, reference);
+        assert_eq!(memory, reference_memory);
+        assert_eq!(
+            serde_json::to_value(&time).unwrap(),
+            serde_json::to_value(&reference_time).unwrap()
+        );
+    }
+
     #[test]
     fn actual_original_traced_leaf_costs_and_all_bytes_match() {
         // Independent normal-retail traces: audit1108, 2 identical replays.

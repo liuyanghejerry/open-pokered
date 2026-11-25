@@ -314,6 +314,20 @@ impl AudioManager {
         }
     }
 
+    fn prepare_source_frame_for_cursor(
+        &self,
+        song: crate::source_clock::frame_instructions::SourceSong,
+    ) -> Result<crate::source_clock::PreparedAudioFrame, crate::source_clock::AudioClockError> {
+        if !self.engine.is_fading() && !self.low_health_alarm_enabled && self.music_paused == 0 {
+            crate::source_clock::PreparedAudioFrame::from_shared_music_for_cursor(
+                &self.engine.sequencer,
+                song,
+            )
+        } else {
+            Err(crate::source_clock::AudioClockError::UnsupportedSoundBank)
+        }
+    }
+
     /// Advance the existing sequencer exactly once and report supported
     /// source work. Unsupported music/effects still receive that same tick;
     /// they never acquire an invented IRQ duration or a second update.
@@ -476,6 +490,17 @@ impl AudioManager {
             .last_music_id()
             .and_then(SourceSong::from_music)
             .ok_or(AudioClockError::UnsupportedSoundBank)?;
+        self.validate_source_frame_song(song, bank, mute)?;
+        Ok(song)
+    }
+
+    #[inline(always)]
+    fn validate_source_frame_song(
+        &self,
+        song: crate::source_clock::frame_instructions::SourceSong,
+        bank: u8,
+        mute: u8,
+    ) -> Result<(), crate::source_clock::AudioClockError> {
         if bank != song.bank()
             || mute != 0
             || self.engine.is_fading()
@@ -485,9 +510,9 @@ impl AudioManager {
             || self.engine.sequencer.pending_nr50.is_some()
             || self.music_paused != 0
         {
-            return Err(AudioClockError::UnsupportedSoundBank);
+            return Err(crate::source_clock::AudioClockError::UnsupportedSoundBank);
         }
-        Ok(song)
+        Ok(())
     }
 
     /// Read the existing native song/volume under the same source-frame guard.
@@ -498,13 +523,13 @@ impl AudioManager {
         use crate::source_clock::{
             frame_instructions::SourceSong, AudioClockError, AudioIrqContext,
         };
-        let bank = self
+        let song = self
             .engine
             .last_music_id()
             .and_then(SourceSong::from_music)
-            .ok_or(AudioClockError::UnsupportedSoundBank)?
-            .bank();
-        self.source_frame_song(bank, 0)?;
+            .ok_or(AudioClockError::UnsupportedSoundBank)?;
+        let bank = song.bank();
+        self.validate_source_frame_song(song, bank, 0)?;
         Ok(AudioIrqContext {
             bank,
             nr50: self.nr50(),
@@ -574,18 +599,20 @@ impl AudioManager {
         if let Some(result) = work.committed {
             return result.map_err(AudioAdmissionError::Advanced);
         }
-        let song = self
-            .source_frame_song(work.bank(), work.mute())
+        let song = work.song();
+        self.validate_source_frame_song(song, work.bank(), work.mute())
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
-        if song != work.song() || !work.matches_native(&self.engine.sequencer) {
+        if !work.matches_native(&self.engine.sequencer) {
             return Err(Self::source_frame_resume_error(
                 work,
                 AudioClockError::NativeStateMismatch(0),
             ));
         }
-        let prepared = self
-            .prepare_source_frame()
-            .map_err(|error| Self::source_frame_resume_error(work, error))?;
+        let prepared = crate::source_clock::PreparedAudioFrame::from_shared_music(
+            &self.engine.sequencer,
+            song,
+        )
+        .map_err(|error| Self::source_frame_resume_error(work, error))?;
         while !work.finished() {
             work.try_step(&self.engine.sequencer, &mut execute)
                 .map_err(AudioAdmissionError::Admission)?;
@@ -672,19 +699,21 @@ impl AudioManager {
         if let Some(result) = work.committed {
             return result.map_err(AudioAdmissionError::Advanced);
         }
-        let song = self
-            .source_frame_song(work.bank(), work.mute())
+        let song = work.song();
+        self.validate_source_frame_song(song, work.bank(), work.mute())
             .map_err(|error| Self::source_frame_resume_error(work, error))?;
-        if song != work.song() || !work.matches_native(&self.engine.sequencer) {
+        if !work.matches_native(&self.engine.sequencer) {
             return Err(Self::source_frame_resume_error(
                 work,
                 AudioClockError::NativeStateMismatch(0),
             ));
         }
-        let prepared = self
-            .prepare_source_frame()
-            .map_err(|error| Self::source_frame_resume_error(work, error))?;
-        self.run_prepared_source_audio_frame(work, prepared, bus)
+        let prepared = crate::source_clock::PreparedAudioFrame::from_shared_music(
+            &self.engine.sequencer,
+            song,
+        )
+        .map_err(|error| Self::source_frame_resume_error(work, error))?;
+        self.run_prepared_source_audio_frame(work, &prepared, bus, true)
     }
 
     /// Start and run an IRQ's audio frame under one exclusive manager borrow.
@@ -712,19 +741,87 @@ impl AudioManager {
             }
             return self.resume_source_audio_frame_with_runner(work, bus);
         }
-        let song = self.source_frame_song(bank, mute).map_err(AudioAdmissionError::Preflight)?;
-        let prepared = self.prepare_source_frame().map_err(AudioAdmissionError::Preflight)?;
-        let work = SourceAudioFrame::new_with_bus(&self.engine.sequencer, song, bank, mute)
+        let song = self
+            .source_frame_song(bank, mute)
             .map_err(AudioAdmissionError::Preflight)?;
-        *cursor = Some(Box::new(work));
-        self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), prepared, bus)
+        let prepared = self
+            .prepare_source_frame_for_cursor(song)
+            .map_err(AudioAdmissionError::Preflight)?;
+        let work = SourceAudioFrame::new_with_bus_prepared(
+            &self.engine.sequencer,
+            song,
+            bank,
+            mute,
+            &prepared,
+        )
+        .map_err(AudioAdmissionError::Preflight)?;
+        *cursor = Some(work);
+        self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), &prepared, bus, false)
+    }
+
+    /// Same contract as [`Self::service_source_audio_frame`], reusing a
+    /// previously completed heap allocation when starting a fresh frame.
+    pub fn service_source_audio_frame_reusing<
+        B: crate::source_clock::apu_bus::SourceAudioFrameBus,
+    >(
+        &mut self,
+        cursor: &mut Option<Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        cache: &mut Option<Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<B::Error>,
+        >,
+    > {
+        use crate::source_clock::{
+            frame_instructions::SourceAudioFrame, AudioAdmissionError, AudioClockError,
+        };
+        if let Some(work) = cursor.as_mut() {
+            if work.bank() != bank || work.mute() != mute {
+                return Err(Self::source_frame_resume_error(
+                    work,
+                    AudioClockError::UnsupportedSoundBank,
+                ));
+            }
+            return self.resume_source_audio_frame_with_runner(work, bus);
+        }
+        let song = self
+            .source_frame_song(bank, mute)
+            .map_err(AudioAdmissionError::Preflight)?;
+        let prepared = self
+            .prepare_source_frame_for_cursor(song)
+            .map_err(AudioAdmissionError::Preflight)?;
+        let work = if let Some(mut reused) = cache.take() {
+            if let Err(error) =
+                reused.reset_with_bus_prepared(&self.engine.sequencer, song, bank, mute, &prepared)
+            {
+                *cache = Some(reused);
+                return Err(AudioAdmissionError::Preflight(error));
+            }
+            reused
+        } else {
+            SourceAudioFrame::new_with_bus_prepared(
+                &self.engine.sequencer,
+                song,
+                bank,
+                mute,
+                &prepared,
+            )
+            .map_err(AudioAdmissionError::Preflight)?
+        };
+        *cursor = Some(work);
+        self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), &prepared, bus, false)
     }
 
     fn run_prepared_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
         &mut self,
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,
-        prepared: crate::source_clock::PreparedAudioFrame,
+        prepared: &crate::source_clock::PreparedAudioFrame,
         mut bus: B,
+        verify_cycles: bool,
     ) -> Result<
         crate::source_clock::AudioFrameWork,
         crate::source_clock::AudioAdmissionError<
@@ -732,12 +829,16 @@ impl AudioManager {
         >,
     > {
         use crate::source_clock::{AudioAdmissionError, AudioClockError, AudioFrameWork};
-        work.run_with_bus(&self.engine.sequencer, &mut self.engine.apu, &mut bus)
-            .map_err(AudioAdmissionError::Admission)?;
-        if prepared.work()
-            != (AudioFrameWork {
-                cycles: work.cycles(),
-            })
+        let result = work.run_with_bus(&self.engine.sequencer, &mut self.engine.apu, &mut bus);
+        if result.is_err() {
+            work.ensure_fingerprints(&self.engine.sequencer);
+        }
+        result.map_err(AudioAdmissionError::Admission)?;
+        if verify_cycles
+            && prepared.work()
+                != (AudioFrameWork {
+                    cycles: work.cycles(),
+                })
         {
             let error = AudioClockError::NativeStateMismatch(0);
             work.source_failed = Some(error);
@@ -745,6 +846,13 @@ impl AudioManager {
         }
         let _already_applied_nr50 = self.engine.sequencer.advance_frame_without_output();
         let result = prepared.finish(&self.engine.sequencer);
+        let result = if verify_cycles {
+            result
+        } else {
+            result.map(|_| AudioFrameWork {
+                cycles: work.cycles(),
+            })
+        };
         work.committed = Some(result);
         result.map_err(AudioAdmissionError::Advanced)
     }

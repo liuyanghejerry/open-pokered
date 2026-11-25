@@ -162,6 +162,113 @@ impl NotePitchInstructions {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use Stage::*;
+        match self.stage {
+            Classify(n) => {
+                let code: &[u8; 4] = if self.input.note & 0xf0 == 0xc0 {
+                    &[12, 8, 8, 8]
+                } else {
+                    &[12, 8, 8, 12]
+                };
+                &code[usize::from(n)..]
+            }
+            RestGate(n) => {
+                let code: &[u8; 8] = if self.input.paired_sfx_active {
+                    &[4, 8, 8, 12, 8, 8, 4, 12]
+                } else {
+                    &[4, 8, 8, 12, 8, 8, 4, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            RestChannel(n) => {
+                let code: &[u8; 3] = if self.input.channel == 2 {
+                    &[4, 8, 12]
+                } else {
+                    &[4, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            RestSfx(n) => &[8, 12][usize::from(n)..],
+            RestCall(n) => &[8, 24][usize::from(n)..],
+            Frequency(work) => work.plain_prefix(),
+            FrequencyCall(n) => &[8, 8, 12, 8, 8, 24][usize::from(n)..],
+            PitchCheck(n) => {
+                let code: &[u8; 5] = if self.slide_input.is_some() {
+                    &[8, 12, 8, 12, 8]
+                } else {
+                    &[8, 12, 8, 12, 12]
+                };
+                &code[usize::from(n)..]
+            }
+            PairGate(n) => {
+                let code: &[u8; 11] = if self.input.paired_sfx_active {
+                    &[16, 4, 8, 8, 12, 8, 4, 8, 8, 4, 12]
+                } else {
+                    &[16, 4, 8, 8, 12, 8, 4, 8, 8, 4, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            EnvelopeCall(n) => &[8, 12, 8, 8, 8, 24][usize::from(n)..],
+            RestorePerfect(n) => {
+                let code: &[u8; 6] = if self.input.flags1 & 1 == 0 {
+                    &[12, 8, 12, 8, 12, 12]
+                } else {
+                    &[12, 8, 12, 8, 12, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            SaveFrequency(n) => &[12, 8, 8, 24][usize::from(n)..],
+            Output { ref work, .. } => work.plain_prefix(),
+            _ => &[],
+        }
+    }
+    pub(crate) fn complete_plain_child(&self) -> Option<(u32, FrequencyInstructions)> {
+        if let Stage::Frequency(work) = &self.stage {
+            let (done, cycles) = work.complete_from_start()?;
+            return Some((cycles, done));
+        }
+        None
+    }
+    pub(crate) fn finish_plain_child(&mut self, done: FrequencyInstructions, cycles: u32) {
+        self.frequency = done.result().expect("completed frequency");
+        self.stage = Stage::PitchCheck(0);
+        self.cycles += cycles;
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        assert!(count > 0 && count <= prefix.len());
+        let mut cycles = 0u32;
+        for &t in &prefix[..count] {
+            cycles += u32::from(t);
+        }
+        if let Stage::Frequency(work) = &mut self.stage {
+            work.accept_plain_prefix(count, prefix);
+            if let Some(frequency) = work.result() {
+                self.frequency = frequency;
+                self.stage = Stage::PitchCheck(0);
+            }
+        } else if let Stage::Output { work, after } = &mut self.stage {
+            work.accept_plain_prefix(count, prefix);
+            if work.finished() {
+                self.stage = match *after {
+                    After::RestRestart => Stage::RestRestart(0),
+                    After::Envelope => Stage::EnvelopeStore(0),
+                    After::Duty => Stage::EnableCall,
+                    After::Enable => Stage::RestorePerfect(0),
+                    After::Wave => {
+                        self.result.wave_return_frequency = work.frequency();
+                        Stage::Return
+                    }
+                };
+            }
+        } else {
+            for _ in 0..count {
+                self.advance();
+            }
+        }
+        self.cycles += cycles;
+        cycles
+    }
     fn output(&self, routine: OutputRoutine, after: After) -> Stage {
         Stage::Output {
             work: ChannelOutputInstructions::new(
@@ -508,6 +615,55 @@ mod tests {
                 })
                 .unwrap());
         }
+    }
+    #[test]
+    fn plain_prefixes_match_single_steps_at_every_accept_count() {
+        let f: Fixture =
+            serde_json::from_str(include_str!("note_pitch_instructions_golden.json")).unwrap();
+        let ordinary = f
+            .cases
+            .iter()
+            .map(|case| case.input)
+            .find(|input| {
+                input.channel == 0
+                    && input.note < 0xc0
+                    && input.flags1 & 16 == 0
+                    && !input.paired_sfx_active
+            })
+            .expect("ordinary pitch fixture");
+        let rest = |channel| {
+            f.cases
+                .iter()
+                .map(|case| case.input)
+                .find(|input| {
+                    input.channel == channel
+                        && input.note & 0xf0 == 0xc0
+                        && input.flags1 & 16 == 0
+                        && !input.paired_sfx_active
+                })
+                .expect("rest pitch fixture")
+        };
+        let mut prefixes = 0;
+        for input in [ordinary, rest(0), rest(2)] {
+            let mut cursor = NotePitchInstructions::new(input).unwrap();
+            while !cursor.finished() {
+                let prefix = cursor.plain_prefix();
+                if !prefix.is_empty() {
+                    prefixes += 1;
+                    for count in 1..=prefix.len() {
+                        let mut expected = cursor.clone();
+                        for _ in 0..count {
+                            expected.try_step(|_| Ok::<(), ()>(())).unwrap();
+                        }
+                        let mut actual = cursor.clone();
+                        actual.accept_plain_prefix(count, prefix);
+                        assert_eq!(actual, expected, "stage={:?} count={count}", cursor.stage);
+                    }
+                }
+                cursor.try_step(|_| Ok::<(), ()>(())).unwrap();
+            }
+        }
+        assert!(prefixes >= 14);
     }
     #[test]
     fn unknown_pitch_slide_missing_pitch_and_inconsistent_sfx_do_not_receive_a_fake_return() {

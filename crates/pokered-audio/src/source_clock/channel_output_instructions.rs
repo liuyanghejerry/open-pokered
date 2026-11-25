@@ -127,6 +127,199 @@ impl ChannelOutputInstructions {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    #[inline(always)]
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use Stage::*;
+        match self.stage {
+            Register(_, n) => &[4, 12, 4, 12, 4, 8, 4, 4, 8, 16][usize::from(n)..],
+            DutyPrefix(n) => {
+                let code: &[u8; 7] = if self.input.channel == 2 {
+                    &[8, 12, 8, 8, 4, 8, 12]
+                } else {
+                    &[8, 12, 8, 8, 4, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            DutySfx(n) => {
+                let code: &[u8; 2] = if self.input.channel == 6 {
+                    &[8, 12]
+                } else {
+                    &[8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            DutyInclude(n) => &[4, 8, 4, 12, 8, 8, 4, 4][usize::from(n)..],
+            DutyCall(n) => &[8, 24][usize::from(n)..],
+            EnablePrefix(n) if n < 3 => &[8, 12, 8][usize::from(n)..],
+            EnableSfx(n) => {
+                let code: &[u8; 2] = if self.input.channel >= 4 {
+                    &[8, 12]
+                } else {
+                    &[8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            EnablePair(n) => {
+                let code: &[u8; 5] = if self.input.paired_sfx_active {
+                    &[12, 8, 8, 4, 12]
+                } else {
+                    &[12, 8, 8, 4, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            Panning(n) if n < 5 => &[16, 12, 8, 8, 4][usize::from(n)..],
+            Panning(n) if n > 5 => &[12, 8, 8, 4, 4][usize::from(n - 6)..],
+            WaveKind(n) => {
+                let code: &[u8; 3] = if self.input.channel == 2 {
+                    &[4, 8, 12]
+                } else {
+                    &[4, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            WaveSfx(n) => {
+                let code: &[u8; 2] = if self.input.channel == 6 {
+                    &[8, 8]
+                } else {
+                    &[8, 12]
+                };
+                &code[usize::from(n)..]
+            }
+            WaveSetup(n) => {
+                let code: &[u8; 4] = if self.input.channel == 2 {
+                    &[16, 12, 8, 12]
+                } else {
+                    &[16, 12, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            WaveData(n) if n < 12 => &[8, 4, 8, 4, 12, 8, 8, 8, 8, 12, 8, 8][usize::from(n)..],
+            FrequencyHeader(n) => &[4, 8, 8, 4, 8, 24][usize::from(n)..],
+            CryPrefix(n) => {
+                let code: &[u8; 3] = if self.input.source_sfx_id >= 20 {
+                    &[16, 8, 12]
+                } else {
+                    &[16, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            CryEnd(n) if self.input.source_sfx_id == 134 && n < 1 => &[8, 12][usize::from(n)..],
+            CryEnd(n) if self.input.source_sfx_id != 134 && n < 2 => {
+                let code: &[u8; 3] = if self.input.source_sfx_id < 134 {
+                    &[8, 8, 12]
+                } else {
+                    &[8, 8, 8]
+                };
+                &code[usize::from(n)..]
+            }
+            CryNo(n) => &[4, 4, 16][usize::from(n)..],
+            Modifier(n) => {
+                let carry = if n < 2 {
+                    u16::from(self.input.frequency_modifier) + u16::from(self.frequency as u8) > 255
+                } else {
+                    self.carry
+                };
+                let code: &[u8; 3] = if carry { &[16, 4, 8] } else { &[16, 4, 12] };
+                &code[usize::from(n)..]
+            }
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        assert!(count > 0 && count <= prefix.len());
+        let mut cycles = 0u32;
+        for &t in &prefix[..count] {
+            cycles += u32::from(t);
+        }
+        if count == prefix.len() {
+            let direct = match &self.stage {
+                Stage::Register(ret, _) => Some(match ret {
+                    RegisterReturn::Finish => Stage::Done,
+                    RegisterReturn::DutyStore => Stage::DutyStore(0),
+                    RegisterReturn::WaveStore => Stage::WaveStore(0),
+                }),
+                Stage::DutyPrefix(_) => Some(if self.input.channel == 2 {
+                    Stage::DutyCall(0)
+                } else {
+                    Stage::DutySfx(0)
+                }),
+                Stage::DutySfx(_) => Some(if self.input.channel == 6 {
+                    Stage::DutyCall(0)
+                } else {
+                    Stage::DutyInclude(0)
+                }),
+                Stage::DutyInclude(_) => Some(Stage::DutyCall(0)),
+                Stage::DutyCall(_) => Some(Stage::Register(RegisterReturn::DutyStore, 0)),
+                Stage::EnablePrefix(_) => Some(Stage::EnablePrefix(3)),
+                Stage::EnableSfx(_) => Some(if self.input.channel >= 4 {
+                    Stage::EnableStore(0)
+                } else {
+                    Stage::EnablePair(0)
+                }),
+                Stage::EnablePair(_) => Some(if self.input.paired_sfx_active {
+                    Stage::EnableStore(0)
+                } else {
+                    Stage::Panning(0)
+                }),
+                Stage::Panning(n) if *n < 5 => Some(Stage::Panning(5)),
+                Stage::Panning(_) => Some(Stage::EnableStore(0)),
+                Stage::WaveKind(_) => Some(if self.input.channel == 2 {
+                    Stage::WaveSetup(0)
+                } else {
+                    Stage::WaveSfx(0)
+                }),
+                Stage::WaveSfx(_) => Some(if self.input.channel == 6 {
+                    Stage::WaveSetup(0)
+                } else {
+                    Stage::FrequencyHeader(0)
+                }),
+                Stage::WaveSetup(_) => Some(if self.input.channel == 2 {
+                    Stage::WaveData(0)
+                } else {
+                    Stage::SfxInstrument
+                }),
+                Stage::WaveData(_) => Some(Stage::WaveData(12)),
+                Stage::FrequencyHeader(_) => {
+                    self.frequency = (self.frequency & 255)
+                        | u16::from(((self.frequency >> 8) as u8 | 0x80) & 0xc7) << 8;
+                    Some(Stage::Register(RegisterReturn::WaveStore, 0))
+                }
+                Stage::CryPrefix(_) => Some(if self.input.source_sfx_id >= 20 {
+                    Stage::CryEnd(0)
+                } else {
+                    Stage::CryEnd(3)
+                }),
+                Stage::CryEnd(_) => Some(if self.input.source_sfx_id < 134 {
+                    Stage::CryYes
+                } else {
+                    Stage::CryNo(0)
+                }),
+                Stage::CryNo(_) => Some(Stage::ModifierBranch),
+                Stage::Modifier(_) => {
+                    let sum =
+                        u16::from(self.input.frequency_modifier) + u16::from(self.frequency as u8);
+                    self.low = sum as u8;
+                    self.carry = sum > 255;
+                    Some(if self.carry {
+                        Stage::ModifierCarry
+                    } else {
+                        Stage::ModifierStore(0)
+                    })
+                }
+                _ => None,
+            };
+            if let Some(stage) = direct {
+                self.stage = stage;
+                self.cycles += cycles;
+                return cycles;
+            }
+        }
+        for _ in 0..count {
+            self.advance();
+        }
+        self.cycles += cycles;
+        cycles
+    }
     pub fn try_step<E>(&mut self, execute: impl FnOnce(u8) -> Result<(), E>) -> Result<bool, E> {
         let Some(cycles) = self.next_cycles() else {
             return Ok(true);
@@ -136,6 +329,7 @@ impl ChannelOutputInstructions {
         self.cycles += u32::from(cycles);
         Ok(self.finished())
     }
+    #[inline(always)]
     fn next_cycles(&self) -> Option<u8> {
         use Stage::*;
         let ch = self.input.channel;
@@ -290,6 +484,7 @@ impl ChannelOutputInstructions {
             Done => return None,
         })
     }
+    #[inline(always)]
     fn advance(&mut self) {
         use Stage::*;
         let ch = self.input.channel;
@@ -595,6 +790,31 @@ mod tests {
             assert!(w
                 .try_step(|_| -> Result<(), ()> { panic!("finished child repeats no instruction") })
                 .unwrap());
+        }
+    }
+    #[test]
+    fn plain_prefixes_match_every_accept_count() {
+        let f: Fixture =
+            serde_json::from_str(include_str!("channel_output_instructions_golden.json")).unwrap();
+        for (case_index, c) in f.cases.into_iter().enumerate() {
+            let mut cursor = ChannelOutputInstructions::new(c.routine, c.input).unwrap();
+            while !cursor.finished() {
+                let prefix = cursor.plain_prefix();
+                for count in 1..=prefix.len() {
+                    let mut expected = cursor.clone();
+                    for _ in 0..count {
+                        expected.try_step(|_| Ok::<(), ()>(())).unwrap();
+                    }
+                    let mut actual = cursor.clone();
+                    actual.accept_plain_prefix(count, prefix);
+                    assert_eq!(
+                        actual, expected,
+                        "case={case_index} stage={:?} count={count}",
+                        cursor.stage
+                    );
+                }
+                cursor.try_step(|_| Ok::<(), ()>(())).unwrap();
+            }
         }
     }
     #[test]

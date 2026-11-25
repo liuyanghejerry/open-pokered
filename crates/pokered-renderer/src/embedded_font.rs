@@ -3,14 +3,109 @@
 //! Ordinary English, Chinese and mixed text keeps the engine's original
 //! glyphs and metrics. The opaque tile helpers below serve only box borders.
 
-use crate::FbSurface;
+use crate::{FbSurface, FrameBuffer};
 use dotzuki_engine::render::Rgba;
 use dotzuki_renderer::embedded_font as fusion;
+use dotzuki_renderer::palette::GbColor;
 
 pub use fusion::{
     char_advance, draw_box_tile, draw_char, draw_char_scaled, draw_text, draw_text_scaled,
     fill_tile, is_cjk, measure_text, measure_text_scaled, GLYPH_SIZE,
 };
+
+type LocalGlyph = (u32, u32, u32, i32, i32, u32, &'static [u16]);
+const LOCAL_GLYPHS: &[LocalGlyph] = include!(concat!(env!("OUT_DIR"), "/cjk_glyphs.rs"));
+
+fn text_ink(fb: &mut FrameBuffer, color: Rgba) -> GbColor {
+    let display = *fb.display_palette();
+    fb.reset_palette();
+    let ink = dotzuki_renderer::indexed_framebuffer::quantize(fb.display_palette(), color);
+    fb.set_palette(display);
+    ink
+}
+
+fn draw_indexed_glyph(ch: char, x: u32, y: u32, ink: GbColor, fb: &mut FrameBuffer) -> Option<u32> {
+    if ch == '▶' || ch == '▼' {
+        return None;
+    }
+    let ascii = (ch as u32)
+        .checked_sub(u32::from(' '))
+        .map(|index| index as usize);
+    let index = match ascii {
+        Some(index) if index < 95 && LOCAL_GLYPHS[index].0 == ch as u32 => index,
+        _ => LOCAL_GLYPHS
+            .binary_search_by_key(&(ch as u32), |glyph| glyph.0)
+            .ok()?,
+    };
+    let (_, width, height, x_off, y_off, advance, rows) = LOCAL_GLYPHS[index];
+    let (fb_width, fb_height) = (fb.width(), fb.height());
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    let indices = fb.indices_mut();
+    let start_y = y as i32 + 2 + y_off;
+    let glyph_x = x + x_off as u32;
+    for ri in 0..height as usize {
+        let row = rows[ri];
+        let py = start_y + ri as i32;
+        if py < 0 || py >= fb_height as i32 {
+            continue;
+        }
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let row_start = py as usize * fb_width as usize;
+        let mut bits = row;
+        while bits != 0 {
+            let bit = 15 - bits.leading_zeros();
+            let ci = width - 1 - bit;
+            bits ^= 1 << bit;
+            let px = glyph_x + ci;
+            if px < fb_width {
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                fb.set_pixel_index(px, py as u32, ink);
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                {
+                    indices[row_start + px as usize] = ink as u8;
+                }
+            }
+        }
+    }
+    Some(advance)
+}
+
+pub fn draw_char_indexed(ch: char, x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) -> u32 {
+    let ink = text_ink(fb, color);
+    draw_indexed_glyph(ch, x, y, ink, fb).unwrap_or_else(|| fusion::draw_char(ch, x, y, color, fb))
+}
+
+pub fn draw_text_indexed(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut FrameBuffer) {
+    let ink = text_ink(fb, color);
+    for ch in text.chars() {
+        if x >= fb.width() {
+            break;
+        }
+        x += draw_indexed_glyph(ch, x, y, ink, fb)
+            .unwrap_or_else(|| fusion::draw_char(ch, x, y, color, fb));
+    }
+}
+
+#[inline]
+pub fn char_advance_indexed(ch: char) -> u32 {
+    if ch == '▶' || ch == '▼' {
+        return fusion::char_advance(ch);
+    }
+    let ascii = (ch as u32)
+        .checked_sub(u32::from(' '))
+        .map(|index| index as usize);
+    let index = match ascii {
+        Some(index) if index < 95 && LOCAL_GLYPHS[index].0 == ch as u32 => Some(index),
+        _ => LOCAL_GLYPHS
+            .binary_search_by_key(&(ch as u32), |glyph| glyph.0)
+            .ok(),
+    };
+    index.map_or_else(|| fusion::char_advance(ch), |i| LOCAL_GLYPHS[i].5)
+}
+
+pub fn measure_text_indexed(text: &str) -> u32 {
+    text.chars().map(char_advance_indexed).sum()
+}
 
 const BOX_TILES: &[u8; 48] = include_bytes!("../fonts/pokered-box-tiles.bin");
 /// Draw an opaque UI tile. Fill its paper once to avoid per-pixel color
@@ -115,10 +210,67 @@ mod tests {
                 draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut actual);
                 fusion::draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut expected);
                 assert_eq!(measure_text(text), fusion::measure_text(text));
+                assert_eq!(measure_text_indexed(text), fusion::measure_text(text));
                 for y in 0..32 {
                     for x in 0..96 {
                         assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y), "{text}, scale {scale}, pixel({x},{y})");
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn indexed_text_matches_fusion_and_restores_the_display_palette() {
+        let bases = [
+            crate::palette::GRAYSCALE_PALETTE,
+            crate::palette::Palette::<GbColor>::new(&[
+                Rgba::BLACK,
+                Rgba::WHITE,
+                Rgba::INK_DARK_GRAY,
+                Rgba::INK_LIGHT_GRAY,
+            ]),
+        ];
+        for base in bases {
+            for text in ["POKéMON 123!?", "中文皮卡丘", "Pikachu等级10", "№ $×…▷▶▼"]
+            {
+                let mut actual =
+                    FrameBuffer::with_palette(RenderConfig::new(96, 32), Rgba::WHITE, base);
+                actual.set_palette(crate::palette::GRAYSCALE_PALETTE);
+                let mut expected = actual.clone();
+                draw_text_indexed(text, 3, 2, Rgba::BLACK, &mut actual);
+                fusion::draw_text(text, 3, 2, Rgba::BLACK, &mut expected);
+                assert_eq!(actual.display_palette(), expected.display_palette());
+                for y in 0..32 {
+                    for x in 0..96 {
+                        assert_eq!(
+                            actual.get_pixel(x, y),
+                            expected.get_pixel(x, y),
+                            "{text}, pixel({x},{y})"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn every_local_ascii_glyph_matches_fusion() {
+        for ch in ' '..='~' {
+            let mut actual = FrameBuffer::new(RenderConfig::new(16, 16), Rgba::WHITE);
+            let mut expected = actual.clone();
+            assert_eq!(
+                draw_char_indexed(ch, 3, 2, Rgba::BLACK, &mut actual),
+                fusion::draw_char(ch, 3, 2, Rgba::BLACK, &mut expected),
+                "{ch} advance",
+            );
+            for y in 0..16 {
+                for x in 0..16 {
+                    assert_eq!(
+                        actual.get_pixel(x, y),
+                        expected.get_pixel(x, y),
+                        "{ch}, pixel({x},{y})"
+                    );
                 }
             }
         }

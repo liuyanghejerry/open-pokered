@@ -5,11 +5,11 @@ use super::*;
 use pokered_core::overworld::{
     auto_bg_transfer_work::AutoBgTransferWork,
     bg_redraw_work::BgRedrawWork,
-    display_delay_work::{DelayFramesWork, DelayProgress},
+    display_delay_work::{DelayFrameBus, DelayFramesWork, DelayProgress},
     fade_audio_work::FadeAudioState,
     field_restore::{CopyFormat, PatternAssets, PatternCopy, SpritePatternPlan},
     moving_bg_work::{MovingBgState, MovingBgWork},
-    prepare_oam_work::PrepareOamWork,
+    prepare_oam_work::{PrepareOamState, PrepareOamWork},
     queued_bg_copy_work::{BgCopyRequest, QueuedBgCopyWork},
     track_play_time_work::TrackTimeState,
     vblank_irq_work::{IrqError, IrqProgress, VBlankIrqWork},
@@ -20,8 +20,58 @@ use pokered_core::overworld::{
     video_request_ports::PatternRomBinding,
 };
 
+struct AttachedDelayBus<'a>(pokered_core::overworld::display_work_time::DisplayBus<'a>);
+
+impl DisplayInstructionBus for AttachedDelayBus<'_> {
+    type Error = DisplayWorkError;
+
+    #[inline(always)]
+    fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
+        self.0.execute(instruction)
+    }
+}
+
+impl pokered_core::overworld::display_delay_work::DelayFrameBus for AttachedDelayBus<'_> {
+    #[inline(always)]
+    fn interrupt_returns(&self) -> u64 {
+        self.0.interrupt_returns()
+    }
+}
+
 struct FieldAudioBus<'a> {
     time: pokered_core::overworld::display_work_time::DisplayBus<'a>,
+    deferred: u32,
+}
+
+impl<'a> FieldAudioBus<'a> {
+    fn new(time: pokered_core::overworld::display_work_time::DisplayBus<'a>) -> Self {
+        Self { time, deferred: 0 }
+    }
+
+    #[inline(always)]
+    fn defer(&mut self, cycles: u32) -> Result<(), DisplayWorkError> {
+        if u64::from(self.deferred) >= self.time.remaining() {
+            return Err(DisplayWorkError::Budget);
+        }
+        self.deferred = self
+            .deferred
+            .checked_add(cycles)
+            .expect("deferred audio time overflow");
+        Ok(())
+    }
+
+    fn flush(&mut self) -> Result<(), DisplayWorkError> {
+        let cycles = core::mem::take(&mut self.deferred);
+        self.time.elapse_accepted_interval(u64::from(cycles))
+    }
+}
+
+impl Drop for FieldAudioBus<'_> {
+    fn drop(&mut self) {
+        if self.deferred != 0 {
+            self.flush().expect("accepted audio tail must settle");
+        }
+    }
 }
 
 #[cfg(test)]
@@ -30,58 +80,170 @@ mod audio_bus_tests;
 impl pokered_audio::source_clock::apu_bus::SourceAudioFrameBus for FieldAudioBus<'_> {
     type Error = DisplayWorkError;
 
+    #[inline(always)]
     fn execute(
         &mut self,
         apu: &mut pokered_audio::apu::Apu,
         instruction: pokered_audio::source_clock::apu_bus::ApuInstruction,
     ) -> Result<Option<u8>, Self::Error> {
         use pokered_audio::source_clock::apu_bus::ApuAccess;
+        if instruction.access.is_none() {
+            return self.defer(u32::from(instruction.tcycles)).map(|()| None);
+        }
         let offset = match instruction.access {
             Some(ApuAccess::Read { at_tcycle, .. }) | Some(ApuAccess::Write { at_tcycle, .. }) => {
                 at_tcycle
             }
-            None => 0,
+            None => unreachable!(),
         };
         self.time
-            .execute_external_irq_access(instruction.tcycles, offset, || match instruction.access {
-                Some(ApuAccess::Read { address, .. }) => Some(apu.read_register(address)),
-                Some(ApuAccess::Write { address, value, .. }) => {
-                    apu.write_register(address, value);
-                    None
-                }
-                None => None,
-            })
+            .reserve_external_irq_access(instruction.tcycles, offset)?;
+        self.defer(u32::from(offset))?;
+        let value = match instruction.access {
+            Some(ApuAccess::Read { address, .. }) => Some(apu.read_register(address)),
+            Some(ApuAccess::Write { address, value, .. }) => {
+                apu.write_register(address, value);
+                None
+            }
+            None => unreachable!(),
+        };
+        self.deferred = self
+            .deferred
+            .checked_add(u32::from(instruction.tcycles - offset))
+            .expect("deferred APU access overflow");
+        Ok(value)
     }
 
+    #[inline(always)]
     fn execute_plain_run(
         &mut self,
         _apu: &mut pokered_audio::apu::Apu,
         tcycles: &[u8],
     ) -> Result<usize, Self::Error> {
-        use pokered_core::overworld::display_lcd_work::{
-            DisplayInstruction, DisplayInstructionBus,
+        if !self.time.active_vblank() || tcycles.is_empty() {
+            return Ok(0);
+        }
+        let remaining = self.time.remaining();
+        let cap = u32::MAX - u32::from(u8::MAX);
+        let available = if remaining <= u64::from(u32::MAX) {
+            (remaining as u32).saturating_sub(self.deferred).min(cap)
+        } else {
+            remaining
+                .saturating_sub(u64::from(self.deferred))
+                .min(u64::from(cap)) as u32
         };
-        self.time
-            .execute_plain_run(tcycles.iter().map(|&tcycles| DisplayInstruction {
-                tcycles,
-                access: None,
-            }))
+        let mut total = 0u32;
+        for &cycles in tcycles {
+            total += u32::from(cycles);
+        }
+        if total <= available {
+            self.time.elapse_accepted_interval(0)?;
+            self.deferred = self
+                .deferred
+                .checked_add(total)
+                .expect("deferred audio run overflow");
+            return Ok(tcycles.len());
+        }
+        self.time.elapse_accepted_interval(0)?;
+        let (mut cycles, mut count) = (0u32, 0usize);
+        for &instruction in tcycles {
+            if cycles >= available {
+                break;
+            }
+            cycles += u32::from(instruction);
+            count += 1;
+        }
+        self.deferred = self
+            .deferred
+            .checked_add(cycles)
+            .expect("deferred audio run overflow");
+        Ok(count)
+    }
+
+    fn execute_plain_run_total(
+        &mut self,
+        apu: &mut pokered_audio::apu::Apu,
+        tcycles: &[u8],
+        total: u32,
+    ) -> Result<usize, Self::Error> {
+        if self.time.active_vblank() && !tcycles.is_empty() {
+            let remaining = self.time.remaining();
+            let available = if remaining <= u64::from(u32::MAX) {
+                u64::from((remaining as u32).saturating_sub(self.deferred))
+            } else {
+                remaining.saturating_sub(u64::from(self.deferred))
+            };
+            if u64::from(total) <= available {
+                self.time.elapse_accepted_interval(0)?;
+                self.deferred = self
+                    .deferred
+                    .checked_add(total)
+                    .expect("deferred audio run overflow");
+                return Ok(tcycles.len());
+            }
+        }
+        self.execute_plain_run(apu, tcycles)
+    }
+
+    fn execute_plain_interval(
+        &mut self,
+        _apu: &mut pokered_audio::apu::Apu,
+        total: u32,
+    ) -> Result<bool, Self::Error> {
+        if !self.time.active_vblank() {
+            return Ok(false);
+        }
+        let remaining = self.time.remaining();
+        let available = if remaining <= u64::from(u32::MAX) {
+            u64::from((remaining as u32).saturating_sub(self.deferred))
+        } else {
+            remaining.saturating_sub(u64::from(self.deferred))
+        };
+        if u64::from(total) > available {
+            return Ok(false);
+        }
+        self.time.elapse_accepted_interval(0)?;
+        self.deferred = self
+            .deferred
+            .checked_add(total)
+            .expect("deferred audio interval overflow");
+        Ok(true)
     }
 }
 
 #[derive(serde::Serialize)]
 pub(super) struct FieldIrq {
     pub attached: bool,
-    pub work: Option<VBlankIrqWork>,
+    pub work: Option<Box<VBlankIrqWork>>,
+    #[serde(skip)]
+    work_cache: Option<Box<VBlankIrqWork>>,
+    #[serde(skip)]
+    prepare_cache: Option<(PrepareOamState, PrepareOamWork)>,
+    #[serde(skip)]
+    auto_bg_cache: Option<AutoBgTransferWork>,
+    #[serde(skip)]
+    auto_bg_revision: u64,
+    #[serde(skip)]
+    prepare_input: Option<PrepareOamState>,
+    #[serde(skip)]
+    prepare_cache_key: Option<(u8, u64, usize, usize)>,
     #[serde(skip)]
     audio: Option<Box<pokered_audio::source_clock::frame_instructions::SourceAudioFrame>>,
+    #[serde(skip)]
+    audio_cache: Option<Box<pokered_audio::source_clock::frame_instructions::SourceAudioFrame>>,
+    #[serde(skip)]
+    pub last_audio_no_note: bool,
     pub delay: Option<DelayFramesWork>,
     pub copy: Option<VideoCopyCallerWork>,
     pub binding: Option<PatternRomBinding>,
     pub initial_slots: Vec<SpriteSlot>,
     pub map_tiles: crate::render::MapTileSnapshot,
     pub ui: super::super::field_video_inputs::NativeUiTiles,
+    pub ui_next_row: u8,
+    pub ui_text_sampled: bool,
+    pub ui_sampled_arrow: bool,
     pub background_is_map: bool,
+    animations: u8,
     native_grass: Option<[Option<u8>; 16]>,
     pub portion: u8,
     pub shadows: VBlankVideoShadows,
@@ -103,22 +265,38 @@ impl FieldIrq {
             .ok_or("graphics resources unavailable")?;
         let tileset = pokered_data::tilesets::TilesetId::from_name(&map_tiles.tileset)
             .ok_or("unknown native tileset")?;
-        let tiles = resources
-            .load_tileset(tileset.tileset_name())
-            .map_err(|e| format!("tileset input: {e:?}"))?;
-        if tiles.tileset.len() > 128 {
-            return Err("native tileset exceeds its BG pattern bank".into());
-        }
-        for byte in 0..tiles.tileset.len() * 16 {
-            let value = super::super::field_restore_assets::pattern_byte(
-                &tiles.tileset,
-                byte as u16,
-                false,
+        #[cfg(target_os = "none")]
+        {
+            let raw = pokered_renderer::resource::ResourceManager::raw_tileset_2bpp(
+                tileset.tileset_name(),
             )
             .ok_or("native map pattern unavailable")?;
+            if raw.len() > 128 * 16 || raw.len() % 16 != 0 {
+                return Err("native tileset exceeds its BG pattern bank".into());
+            }
             flow.patterns
-                .initialize_native_byte(0x9000 + byte as u16, value)
+                .initialize_native_run(0x9000, raw)
                 .map_err(|e| format!("{e:?}"))?;
+        }
+        #[cfg(not(target_os = "none"))]
+        {
+            let tiles = resources
+                .load_tileset(tileset.tileset_name())
+                .map_err(|e| format!("tileset input: {e:?}"))?;
+            if tiles.tileset.len() > 128 {
+                return Err("native tileset exceeds its BG pattern bank".into());
+            }
+            for byte in 0..tiles.tileset.len() * 16 {
+                let value = super::super::field_restore_assets::pattern_byte(
+                    &tiles.tileset,
+                    byte as u16,
+                    false,
+                )
+                .ok_or("native map pattern unavailable")?;
+                flow.patterns
+                    .initialize_native_byte(0x9000 + byte as u16, value)
+                    .map_err(|e| format!("{e:?}"))?;
+            }
         }
         // The native background's real retained rotation is part of the input.
         let shift = i32::from(game.overworld.tile_anim.water_shift()).rem_euclid(8) as u32;
@@ -133,7 +311,7 @@ impl FieldIrq {
                 .initialize_native_byte(a, value)
                 .map_err(|e| format!("{e:?}"))?;
         }
-        let assets = NativePatternAssets::new(resources);
+        let assets = NativePatternAssets::with_shared_cache(resources, &flow.rom_cache);
         if flow.origin == RestorationOrigin::Submenu {
             // The native field already owns these stationary patterns. Bind
             // their actual assets before timed ownership; this is not a new
@@ -141,57 +319,66 @@ impl FieldIrq {
             let player = game.overworld.field_restore_input(1).player_source;
             let player_copy = PatternCopy { source: player, source_offset: 0,
                 destination: 0x8000, tiles: 12, format: CopyFormat::TwoBpp };
+            let mut chunk = [0u8; 64];
             for copy in core::iter::once(&player_copy).chain(sprite_plan.copies.iter()
                 .filter(|copy| copy.destination < 0x8800)) {
-                for offset in 0..u16::from(copy.tiles) * 16 {
-                    let byte = assets.read_pattern_byte(copy.source, copy.source_offset + offset)
+                let total = usize::from(copy.tiles) * 16;
+                let mut offset = 0usize;
+                while offset < total {
+                    let len = (total - offset).min(chunk.len());
+                    assets
+                        .read_pattern_run(
+                            copy.source,
+                            copy.source_offset + offset as u16,
+                            &mut chunk[..len],
+                        )
                         .ok_or("native standing sprite pattern unavailable")?;
-                    flow.patterns.initialize_native_byte(copy.destination + offset, byte)
+                    flow.patterns
+                        .initialize_native_run(copy.destination + offset as u16, &chunk[..len])
                         .map_err(|e| format!("{e:?}"))?;
+                    offset += len;
                 }
             }
         }
         let mut flowers = [[0; 16]; 3];
         for (frame, bytes) in flowers.iter_mut().enumerate() {
-            for (offset, byte) in bytes.iter_mut().enumerate() {
-                *byte = assets
-                    .read_pattern_byte(
-                        pokered_core::overworld::field_restore::PatternSource::Flower(
-                            frame as u8 + 1,
-                        ),
-                        offset as u16,
-                    )
-                    .ok_or("flower resource unavailable")?;
-            }
+            assets
+                .read_pattern_run(
+                    pokered_core::overworld::field_restore::PatternSource::Flower(frame as u8 + 1),
+                    0,
+                    bytes,
+                )
+                .ok_or("flower resource unavailable")?;
         }
         if let Some(frame) = game.overworld.tile_anim.flower_frame() {
-            for byte in 0..16 {
-                flow.patterns
-                    .initialize_native_byte(
-                        0x9030 + byte as u16,
-                        flowers[usize::from(frame - 1)][byte],
-                    )
-                    .map_err(|e| format!("{e:?}"))?;
-            }
+            flow.patterns
+                .initialize_native_run(0x9030, &flowers[usize::from(frame - 1)])
+                .map_err(|e| format!("{e:?}"))?;
         }
         // Font bytes remain transfer data only. The visible UI and its tile
         // namespace below come exclusively from the Fusion Pixel framebuffer.
-        for byte in 0..1024u16 {
-            let value = assets
-                .read_pattern_byte(
+        let mut font_1bpp = [0u8; 64];
+        let mut font_2bpp = [0u8; 128];
+        for block in 0..16u16 {
+            assets
+                .read_pattern_run(
                     pokered_core::overworld::field_restore::PatternSource::Font,
-                    byte,
+                    block * 64,
+                    &mut font_1bpp,
                 )
                 .ok_or("party font transfer data unavailable")?;
-            for plane in 0..2 {
-                flow.patterns
-                    .initialize_native_byte(0x8800 + byte * 2 + plane, value)
-                    .map_err(|e| format!("{e:?}"))?;
+            for (pair, out) in font_1bpp.chunks_exact(2).zip(font_2bpp.chunks_exact_mut(4)) {
+                out[0] = pair[0];
+                out[1] = pair[0];
+                out[2] = pair[1];
+                out[3] = pair[1];
             }
+            flow.patterns
+                .initialize_native_run(0x8800 + block * 128, &font_2bpp)
+                .map_err(|e| format!("{e:?}"))?;
         }
         // The native text caller still owns presentation until it returns.
-        // Its final raster is sampled once at the IRQ handoff, not on every
-        // text-reveal frame (which is particularly expensive on GBA).
+        // Its completed text is sampled once, not on every text-reveal frame.
         let ui = super::super::field_video_inputs::NativeUiTiles::default();
         game.source_display
             .establish_native_video_idle(1)
@@ -199,14 +386,34 @@ impl FieldIrq {
         Ok(Self {
             attached: false,
             work: None,
+            work_cache: None,
+            prepare_cache: None,
+            auto_bg_cache: None,
+            auto_bg_revision: u64::MAX,
+            prepare_input: None,
+            prepare_cache_key: None,
             audio: None,
+            audio_cache: None,
+            last_audio_no_note: false,
             delay: None,
             copy: None,
             binding: None,
             initial_slots: sprite_plan.slots,
             map_tiles,
             ui,
+            ui_next_row: 0,
+            ui_text_sampled: false,
+            ui_sampled_arrow: false,
             background_is_map: false,
+            animations: if flow.origin == RestorationOrigin::TrainerCard {
+                0
+            } else {
+                match game.overworld.tile_anim.kind() {
+                    pokered_core::overworld::presentation::TileAnimKind::None => 0,
+                    pokered_core::overworld::presentation::TileAnimKind::Water => 1,
+                    pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
+                }
+            },
             native_grass,
             portion: game.source_display.background_portion().ok_or("unknown native BG portion")?,
             shadows: VBlankVideoShadows {
@@ -265,29 +472,21 @@ impl PokemonGame {
         if irq.attached || irq.background_is_map {
             return Ok(());
         }
-        if let Some(dialogue) = self.overworld.displayed_field_dialogue() {
-            if let Some((first, second)) = dialogue.get_display_text() {
-                let text = if second.is_empty() {
-                    first
-                } else {
-                    format!("{first}\n{second}")
-                };
-                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
-                    && dialogue.waiting_for_input()
-                    && (self.frame_count / 16) % 2 == 0;
-                let mut painter = pokered_ui::backends::FrameBufferPainter::new(&mut flow.party);
-                pokered_ui::menus::dialog::draw_paginated(
-                    &text,
-                    arrow,
-                    &pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT,
-                    &mut pokered_ui::Ui::new(&mut painter),
-                    self.state.config.language,
-                );
+        if irq.ui_next_row == 18 {
+            if irq.ui_text_sampled {
+                if !irq.ui_sampled_arrow {
+                    return Ok(());
+                }
+                irq.ui.sample_rows(&flow.party, 16, 17)
+            } else {
+                // The initial pass already sampled the unchanged dialogue borders.
+                let first = if self.state.config.language == Lang::Zh { 13 } else { 14 };
+                irq.ui.sample_rows(&flow.party, first, 17)
             }
+        } else {
+            irq.ui.sample(&flow.party)
         }
-        irq.ui
-            .sample(&flow.party)
-            .map_err(|error| format!("native UI input: {error:?}"))
+        .map_err(|error| format!("native UI input: {error:?}"))
     }
     pub(super) fn attach_field_irq(&mut self, flow: &mut FieldFlash) -> Result<(), String> {
         self.sample_field_irq_ui(flow)?;
@@ -345,50 +544,51 @@ impl PokemonGame {
     pub(super) fn service_field_irq(&mut self, flow: &mut FieldFlash) -> Result<bool, String> {
         let irq = flow.irq.as_mut().ok_or("FLASH IRQ inputs unavailable")?;
         if irq.work.is_none() {
-            if !self.source_display.pending_vblank_dispatch() {
+            if !self
+                .source_display
+                .attached_time()
+                .attached_pending_vblank_dispatch()
+            {
                 return Ok(true);
             }
             let bind = |format| -> Result<VBlankPatternWork, String> {
-                match self.source_display.video_requests().snapshot(format).size {
-                    Some(0) => VBlankPatternWork::idle_from_live(&*self.source_display, format)
-                        .map_err(|e| format!("{e:?}")),
+                match self
+                    .source_display
+                    .attached_time()
+                    .video_requests()
+                    .snapshot(format)
+                    .size
+                {
+                    Some(0) => VBlankPatternWork::idle_from_live(
+                        self.source_display.attached_time(),
+                        format,
+                    )
+                    .map_err(|e| format!("{e:?}")),
                     Some(_) => {
                         let binding = irq
                             .binding
                             .filter(|b| b.format == format)
                             .ok_or("active video source identity unavailable")?;
-                        VBlankPatternWork::from_live_request(&*self.source_display, binding)
-                            .map_err(|e| format!("{e:?}"))
+                        VBlankPatternWork::from_live_request(
+                            self.source_display.attached_time(),
+                            binding,
+                        )
+                        .map_err(|e| format!("{e:?}"))
                     }
                     None => Err("unknown native video request size".into()),
                 }
             };
             let enabled = self
                 .source_display
+                .attached_time()
                 .sprite_updates_enabled()
                 .ok_or("unknown sprite control")?;
-            let prepare = if enabled != 1 {
-                PrepareOamWork::control_only(enabled)
-            } else {
-                // Indoor reloads build an assignment prefix while VBlank can
-                // still see the previous published images. That prefix is
-                // not a complete binding table for the visible actors: keep
-                // their entry bindings until all assignments are available.
-                let slots = if flow.slots.len() == irq.initial_slots.len() {
-                    &flow.slots
-                } else {
-                    &irq.initial_slots
-                };
-                let input = super::super::field_oam_inputs::field_oam_input_with_grass(
-                    &self.overworld,
-                    &*self.source_display,
-                    slots,
-                    irq.native_grass.as_ref(),
-                )
-                .map_err(|e| format!("native actor input: {e:?}"))?;
-                PrepareOamWork::new(input)
-            }
-            .map_err(|e| format!("{e:?}"))?;
+            let prepare_key = (
+                enabled,
+                self.source_display.attached_time().device().oam_revision(),
+                flow.work.operation_index(),
+                flow.slots.len(),
+            );
             let bg_enabled = self
                 .source_display
                 .video_requests()
@@ -400,52 +600,7 @@ impl PokemonGame {
                 &irq.ui.tiles
             };
             let (counter1, counter2) = self.overworld.tile_anim.counters();
-            let animations = if flow.origin == RestorationOrigin::TrainerCard { 0 } else { match self.overworld.tile_anim.kind() {
-                pokered_core::overworld::presentation::TileAnimKind::None => 0,
-                pokered_core::overworld::presentation::TileAnimKind::Water => 1,
-                pokered_core::overworld::presentation::TileAnimKind::WaterFlower => 3,
-            } };
-            let video = VBlankVideoWork::select(
-                true,
-                self.source_display.device().pending_interrupts(),
-                VBlankVideoInputs {
-                    shadows: irq.shadows,
-                    // Native logical buffers have no Game Boy CPU stack. Zero is
-                    // its symbolic native stack token, not an original SP claim.
-                    auto_bg: AutoBgTransferWork::new(
-                        bg_enabled,
-                        irq.portion,
-                        0x9800,
-                        0,
-                        bg.clone(),
-                    )
-                    .ok_or("invalid native BG tiles")?.with_live_portion(),
-                    queued: QueuedBgCopyWork::new(
-                        BgCopyRequest {
-                            source: 0,
-                            destination: 0,
-                            rows: 0,
-                        },
-                        0,
-                        Vec::new(),
-                    )
-                    .ok_or("invalid idle BG producer")?,
-                    redraw: BgRedrawWork::new(0, 0, Vec::new())
-                        .ok_or("invalid idle row producer")?,
-                    pattern: bind(CopyFormat::TwoBpp)?,
-                    double: bind(CopyFormat::OneBppDouble)?,
-                    moving: MovingBgWork::new(
-                        MovingBgState {
-                            animations,
-                            counter1,
-                            counter2,
-                        },
-                        irq.flowers,
-                    ),
-                    prepare,
-                },
-            )
-            .ok_or("VBlank selection refused")?;
+            let version = u64::from(irq.background_is_map) << 63 | irq.ui.revision;
             let context = self
                 .audio
                 .as_ref()
@@ -466,20 +621,173 @@ impl PokemonGame {
                 joy_held: 0,
                 time: self.save_data.game_data.play_time,
             };
-            irq.work = Some(VBlankIrqWork::new(
-                video,
-                FadeAudioState {
-                    control: 0,
-                    counter: 0,
-                    reload: 0,
-                    flags2: 0,
-                    nr50: context.nr50,
-                    audio_bank: context.bank,
-                    saved_bank: context.bank,
-                    new_sound: 0,
-                },
-                timer,
-            ));
+            let fade = FadeAudioState {
+                control: 0,
+                counter: 0,
+                reload: 0,
+                flags2: 0,
+                nr50: context.nr50,
+                audio_bank: context.bank,
+                saved_bank: context.bank,
+                new_sound: 0,
+            };
+            let pending = self
+                .source_display
+                .attached_time()
+                .device()
+                .pending_interrupts();
+            let pattern = bind(CopyFormat::TwoBpp)?;
+            let double = bind(CopyFormat::OneBppDouble)?;
+            if let Some(mut cached_work) = irq.work_cache.take() {
+                {
+                    let (auto_bg, prepare) = cached_work.video_mut().auto_bg_and_prepare_mut();
+                    if enabled == 1 && irq.prepare_cache_key == Some(prepare_key) {
+                        prepare.restart_same();
+                    } else if enabled == 1 {
+                        let slots = if flow.slots.len() == irq.initial_slots.len() {
+                            &flow.slots
+                        } else {
+                            &irq.initial_slots
+                        };
+                        super::super::field_oam_inputs::field_oam_input_with_grass_into(
+                            &self.overworld,
+                            self.source_display.attached_time(),
+                            slots,
+                            irq.native_grass.as_ref(),
+                            prepare.state_mut(),
+                        )
+                        .map_err(|e| format!("native actor input: {e:?}"))?;
+                        if irq.prepare_input.as_ref() == Some(prepare.state()) {
+                            prepare.restart_same();
+                        } else {
+                            let input = prepare.state().clone();
+                            irq.prepare_input = Some(input.clone());
+                            prepare.recompile(input).map_err(|e| format!("{e:?}"))?;
+                        }
+                    } else if irq.prepare_input.as_ref().is_some_and(|prev| {
+                        prev.enabled == enabled && prev.movement_flags == 0 && prev.sprites.is_empty()
+                    }) {
+                        prepare.restart_same();
+                    } else {
+                        let input = PrepareOamState {
+                            enabled,
+                            movement_flags: 0,
+                            sprites: Vec::new(),
+                        };
+                        irq.prepare_input = Some(input.clone());
+                        prepare.recompile(input).map_err(|e| format!("{e:?}"))?;
+                    }
+                    let restarted = if irq.auto_bg_revision == version {
+                        auto_bg.restart_unchanged(bg_enabled, irq.portion, 0x9800, 0)
+                    } else {
+                        auto_bg.restart(bg_enabled, irq.portion, 0x9800, 0, bg)
+                    };
+                    if !restarted {
+                        return Err("invalid native BG tiles".into());
+                    }
+                    auto_bg.enable_live_portion();
+                }
+                irq.prepare_cache_key = Some(prepare_key);
+                irq.auto_bg_revision = version;
+                if !cached_work.video_mut().reset_in_place(
+                    true,
+                    pending,
+                    irq.shadows,
+                    pattern,
+                    double,
+                    MovingBgState {
+                        animations: irq.animations,
+                        counter1,
+                        counter2,
+                    },
+                ) {
+                    return Err("VBlank selection refused".into());
+                }
+                cached_work.reset_after_video(fade, timer);
+                irq.work = Some(cached_work);
+            } else {
+                let prepare = {
+                    let input = if enabled != 1 {
+                        PrepareOamState {
+                            enabled,
+                            movement_flags: 0,
+                            sprites: Vec::new(),
+                        }
+                    } else {
+                        let slots = if flow.slots.len() == irq.initial_slots.len() {
+                            &flow.slots
+                        } else {
+                            &irq.initial_slots
+                        };
+                        super::super::field_oam_inputs::field_oam_input_with_grass(
+                            &self.overworld,
+                            self.source_display.attached_time(),
+                            slots,
+                            irq.native_grass.as_ref(),
+                        )
+                        .map_err(|e| format!("native actor input: {e:?}"))?
+                    };
+                    irq.prepare_input = Some(input.clone());
+                    if let Some((_, mut cached)) = irq.prepare_cache.take() {
+                        cached.recompile(input).map_err(|e| format!("{e:?}"))?;
+                        cached
+                    } else if enabled == 1 {
+                        PrepareOamWork::new(input).map_err(|e| format!("{e:?}"))?
+                    } else {
+                        PrepareOamWork::control_only(enabled).map_err(|e| format!("{e:?}"))?
+                    }
+                };
+                irq.prepare_cache_key = Some(prepare_key);
+                let auto_bg = if let Some(mut cached) = irq.auto_bg_cache.take() {
+                    let restarted = if irq.auto_bg_revision == version {
+                        cached.restart_unchanged(bg_enabled, irq.portion, 0x9800, 0)
+                    } else {
+                        cached.restart(bg_enabled, irq.portion, 0x9800, 0, bg)
+                    };
+                    if !restarted {
+                        return Err("invalid native BG tiles".into());
+                    }
+                    cached.with_live_portion()
+                } else {
+                    AutoBgTransferWork::new(bg_enabled, irq.portion, 0x9800, 0, bg.clone())
+                        .ok_or("invalid native BG tiles")?
+                        .with_live_portion()
+                };
+                irq.auto_bg_revision = version;
+                let video = VBlankVideoWork::select(
+                    true,
+                    pending,
+                    VBlankVideoInputs {
+                        shadows: irq.shadows,
+                        auto_bg,
+                        queued: QueuedBgCopyWork::new(
+                            BgCopyRequest {
+                                source: 0,
+                                destination: 0,
+                                rows: 0,
+                            },
+                            0,
+                            Vec::new(),
+                        )
+                        .ok_or("invalid idle BG producer")?,
+                        redraw: BgRedrawWork::new(0, 0, Vec::new())
+                            .ok_or("invalid idle row producer")?,
+                        pattern,
+                        double,
+                        moving: MovingBgWork::new(
+                            MovingBgState {
+                                animations: irq.animations,
+                                counter1,
+                                counter2,
+                            },
+                            irq.flowers,
+                        ),
+                        prepare,
+                    },
+                )
+                .ok_or("VBlank selection refused")?;
+                irq.work = Some(Box::new(VBlankIrqWork::new(video, fade, timer)));
+            }
         }
         // Keep the read-through adapter for the whole IRQ service grant.
         // Recreating it per source instruction discards its immutable-ROM
@@ -489,7 +797,7 @@ impl PokemonGame {
             .resources
             .as_mut()
             .ok_or("graphics resources unavailable")?;
-        let assets = NativePatternAssets::new(resources);
+        let assets = NativePatternAssets::with_shared_cache(resources, &flow.rom_cache);
         loop {
             match irq.work.as_mut().unwrap().run_until_boundary(
                 &mut *self.source_display,
@@ -508,13 +816,12 @@ impl PokemonGame {
                     let bank = irq.work.as_ref().unwrap().fade_state().audio_bank;
                     // One exclusive display bus spans the audio continuation;
                     // each instruction still observes its own IO/budget edge.
-                    let result = audio.service_source_audio_frame(
+                    let result = audio.service_source_audio_frame_reusing(
                         &mut irq.audio,
+                        &mut irq.audio_cache,
                         bank,
                         0,
-                        FieldAudioBus {
-                            time: self.source_display.display_bus(),
-                        },
+                        FieldAudioBus::new(self.source_display.display_bus()),
                     );
                     let work = match result {
                         Ok(work) => work,
@@ -527,7 +834,11 @@ impl PokemonGame {
                     {
                         self.source_audio_work = Some((self.frame_count, Ok(work)));
                     }
-                    irq.audio = None;
+                    irq.last_audio_no_note = irq
+                        .audio
+                        .as_ref()
+                        .is_some_and(|audio| audio.has_no_note_fast_path());
+                    irq.audio_cache = irq.audio.take();
                     irq.work
                         .as_mut()
                         .unwrap()
@@ -553,18 +864,18 @@ impl PokemonGame {
                     // current images remain independent for the next prepare.
                     if self
                         .source_display
+                        .attached_time()
                         .device()
-                        .oam()
-                        .chunks_exact(4)
-                        .all(|object| object[0] == 0 || object[0] >= 160)
+                        .oam_has_no_visible_objects()
                     {
                         let map = self.overworld.state.current_map;
                         self.overworld.player_presentation.publish_cleared_oam(map);
                         self.overworld.npc_presentation.publish_cleared_oam(map);
                     }
                     self.save_data.game_data.play_time = work.timer_state().time;
+                    irq.work_cache = Some(work);
                     if let Some(owner) = self.overworld.source_foreground_mut() {
-                        owner.read_raw(self.source_display.source_joy_input());
+                        owner.read_raw(self.source_display.attached_time().source_joy_input());
                     }
                     irq.completed += 1;
                     return Ok(true);
@@ -576,12 +887,19 @@ impl PokemonGame {
     }
     pub(super) fn step_field_wait(&mut self, flow: &mut FieldFlash) -> Result<bool, String> {
         let irq = flow.irq.as_mut().ok_or("FLASH IRQ input missing")?;
-        let result = if let Some(delay) = irq.delay.as_mut() {
-            delay.step(&mut *self.source_display)
-        } else if let Some(copy) = irq.copy.as_mut() {
-            copy.step(&mut *self.source_display)
-        } else {
-            return Ok(true);
+        let mut bus = AttachedDelayBus(self.source_display.display_bus());
+        let result = loop {
+            let result = if let Some(delay) = irq.delay.as_mut() {
+                delay.step(&mut bus)
+            } else if let Some(copy) = irq.copy.as_mut() {
+                copy.step(&mut bus)
+            } else {
+                return Ok(true);
+            };
+            match result {
+                Ok(DelayProgress::Instruction) => continue,
+                result => break result,
+            }
         };
         match result {
             Ok(DelayProgress::Instruction) => Ok(false),
@@ -597,8 +915,9 @@ impl PokemonGame {
                         .waits
                         .last_mut()
                         .ok_or("missing foreground wait observation")?;
-                    receipt.completed_returns = Some(pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*self.source_display));
-                    receipt.completed_tcycles = Some(self.source_display.elapsed());
+                    receipt.completed_returns =
+                        Some(self.source_display.attached_time().interrupt_returns());
+                    receipt.completed_tcycles = Some(self.source_display.attached_time().elapsed());
                 } else {
                     irq.copy = None;
                     irq.binding = None;

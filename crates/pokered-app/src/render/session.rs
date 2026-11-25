@@ -46,10 +46,34 @@ impl FlashMapVisualKey {
         self.1[0] = revision;
         self
     }
+    pub(crate) fn with_map_view(mut self) -> Self {
+        self.1[1] = 1;
+        self.1[2] = 0;
+        self
+    }
     pub(crate) fn with_submenu_revisions(mut self, background: u64, objects: u64) -> Self {
-        self.1[1] = background;
+        self.1[1] = 2 | (background << 3);
         self.1[2] = objects;
         self
+    }
+    pub(crate) fn with_party_dialogue(
+        mut self,
+        dialogue: Option<(usize, u16)>,
+        arrow: bool,
+    ) -> Self {
+        if let Some((page, chars)) = dialogue {
+            self.1[1] = 3 | (u64::from(arrow) << 3) | (u64::from(chars) << 4);
+            self.1[2] = page as u64;
+        } else {
+            self.1[1] = 4;
+            self.1[2] = 0;
+        }
+        self
+    }
+    fn palette_change_only(&self, previous: &Self) -> bool {
+        FlashSnapshotIdentity::ptr_eq(&self.0, &previous.0)
+            && self.1[0] != previous.1[0]
+            && self.1[1..] == previous.1[1..]
     }
 }
 impl PartialEq for FlashMapVisualKey {
@@ -1979,37 +2003,40 @@ impl RenderSession {
         fb: &mut FrameBuffer,
         scroll_background: &mut dyn FnMut(&mut [u8], usize, usize, i32, i32, u8),
     ) -> FrameUpdate<'_> {
-        if game.state.screen != GameScreen::IntroScene { self.intro_cache = None; }
+        if !matches!(game.state.screen, GameScreen::IntroScene) {
+            self.intro_cache = None;
+        }
         let last_black_screen = self.last_black_screen;
-        let last_trade = self.last_trade.take();
-        let last_evolution = self.last_evolution.take();
-        let last_hof = self.last_hof.take();
-        let last_credits = self.last_credits.take();
+        let last_trade = self.last_trade;
+        let last_evolution = self.last_evolution;
+        let last_hof = self.last_hof;
+        let last_credits = self.last_credits;
         let last_takeover_active = self.last_takeover_active;
         let last_flash_white = self.last_flash_white;
         let last_flash_map = self.last_flash_map.take();
-        let last_static_splash = self.last_static_splash.take();
-        let last_language_select = self.last_language_select.take();
-        let last_title = self.last_title.take();
-        let last_main_menu = self.last_main_menu.take();
-        let last_start_menu = self.last_start_menu.take();
-        let last_options = self.last_options.take();
-        let last_save = self.last_save.take();
-        let last_bag = self.last_bag.take();
-        let last_party = self.last_party.take();
-        let last_stats = self.last_stats.take();
-        let last_pokedex = self.last_pokedex.take();
-        let last_pc = self.last_pc.take();
-        let last_slots = self.last_slots.take();
-        let last_auxiliary_menu = self.last_auxiliary_menu.take();
-        let last_diploma = self.last_diploma.take();
-        let last_shop = self.last_shop.take();
-        let last_trainer_card = self.last_trainer_card.take();
-        let last_town_map = self.last_town_map.take();
+        let last_static_splash = self.last_static_splash;
+        let last_language_select = self.last_language_select;
+        let last_title = self.last_title;
+        let last_main_menu = self.last_main_menu;
+        let last_start_menu = self.last_start_menu;
+        let last_options = self.last_options;
+        let last_save = self.last_save;
+        let last_bag = self.last_bag;
+        let last_party = self.last_party;
+        let last_stats = self.last_stats;
+        let last_pokedex = self.last_pokedex;
+        let last_pc = self.last_pc;
+        let last_slots = self.last_slots;
+        let last_auxiliary_menu = self.last_auxiliary_menu;
+        let last_diploma = self.last_diploma;
+        let last_shop = self.last_shop;
+        let last_trainer_card = self.last_trainer_card;
+        let last_town_map = self.last_town_map;
         let last_oak = self.last_oak.take();
-        let last_overworld = self.last_overworld.take();
-        let last_battle = self.last_battle.take();
+        let last_overworld = self.last_overworld;
+        let last_battle = self.last_battle;
         let overworld_background_cache = &mut self.background_cache;
+        let restored_overworld_bg = game.restored_overworld_bg.take();
         self.pending_damage.clear();
         let mut partial = false;
         let black_screen = game.black_screen_frames > 0;
@@ -2027,8 +2054,12 @@ impl RenderSession {
         // Text still redraws. White, immutable map snapshots and unchanged
         // submenu scanout can reuse the current page. Published changes and
         // other takeovers invalidate the key.
-        let flash_white = game.field_flash_white_frame();
-        let flash_map = game.field_flash_map_key();
+        let flash_white = field_flash_active && game.field_flash_white_frame();
+        let flash_map = if flash_white || !field_flash_active {
+            None
+        } else {
+            game.field_flash_map_key()
+        };
         let takeover_active = field_flash_active || black_screen
             || trade.is_some()
             || evolution.is_some()
@@ -2036,7 +2067,7 @@ impl RenderSession {
             || credits.is_some();
         // The copyright, setup, and post-delay splash phases are completely
         // static. Keep the already-presented page while only advancing logic.
-        let static_splash = if game.state.screen == GameScreen::GameFreakSplash
+        let static_splash = if matches!(game.state.screen, GameScreen::GameFreakSplash)
             && matches!(
                 game.gamefreak_splash.phase,
                 SplashPhase::BlackDelay | SplashPhase::Setup | SplashPhase::PostDelay
@@ -2045,9 +2076,9 @@ impl RenderSession {
         } else {
             None
         };
-        let language_select =
-            (game.state.screen == GameScreen::LanguageSelect).then_some(game.state.config.language);
-        let title = (game.state.screen == GameScreen::TitleScreen)
+        let language_select = matches!(game.state.screen, GameScreen::LanguageSelect)
+            .then_some(game.state.config.language);
+        let title = matches!(game.state.screen, GameScreen::TitleScreen)
             .then(|| TitleVisualKey::new(&game.title_screen));
         let title_logo_only = !takeover_active && !last_takeover_active
             && game.resources.is_some()
@@ -2074,12 +2105,12 @@ impl RenderSession {
                 normalized == *previous
             });
         let main_menu =
-            (game.state.screen == GameScreen::MainMenu).then(|| MainMenuVisualKey::new(game));
+            matches!(game.state.screen, GameScreen::MainMenu).then(|| MainMenuVisualKey::new(game));
         let main_menu_cursor_change = main_menu
             .as_ref()
             .zip(last_main_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let start_menu_screen = game.state.screen == GameScreen::StartMenu;
+        let start_menu_screen = matches!(game.state.screen, GameScreen::StartMenu);
         let start_menu = (start_menu_screen && !field_flash_active)
             .then(|| StartMenuVisualKey::new(game))
             .flatten();
@@ -2087,18 +2118,19 @@ impl RenderSession {
             .as_ref()
             .zip(last_start_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let options =
-            (game.state.screen == GameScreen::OptionsMenu).then(|| OptionsVisualKey::new(game));
+        let options = matches!(game.state.screen, GameScreen::OptionsMenu)
+            .then(|| OptionsVisualKey::new(game));
         let options_cursor_change = options
             .as_ref()
             .zip(last_options.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let save = (game.state.screen == GameScreen::SaveMenu).then(|| SaveVisualKey::new(game));
+        let save =
+            matches!(game.state.screen, GameScreen::SaveMenu).then(|| SaveVisualKey::new(game));
         let save_cursor_change = save
             .as_ref()
             .zip(last_save.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let bag = (game.state.screen == GameScreen::Bag).then(|| BagVisualKey::new(game));
+        let bag = matches!(game.state.screen, GameScreen::Bag).then(|| BagVisualKey::new(game));
         let bag_list_cursor_change = bag
             .as_ref()
             .zip(last_bag.as_ref())
@@ -2113,7 +2145,7 @@ impl RenderSession {
             .and_then(|(current, previous)| current.quantity_change_from(previous));
         // FLASH retains the party caller while its text/map takeover changes
         // pixels independently of the ordinary party cursor/icon key.
-        let party = (game.state.screen == GameScreen::PartyScreen && !field_flash_active)
+        let party = (matches!(game.state.screen, GameScreen::PartyScreen) && !field_flash_active)
             .then(|| PartyVisualKey::new(game));
         let party_selection_change = party
             .as_ref()
@@ -2131,19 +2163,19 @@ impl RenderSession {
             .then(|| StatsVisualKey::new(game))
             .flatten();
         let pokedex =
-            (game.state.screen == GameScreen::Pokedex).then(|| PokedexVisualKey::new(game));
+            matches!(game.state.screen, GameScreen::Pokedex).then(|| PokedexVisualKey::new(game));
         let pokedex_cursor_change = pokedex
             .as_ref()
             .zip(last_pokedex.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let pc = (game.state.screen == GameScreen::PC)
+        let pc = matches!(game.state.screen, GameScreen::PC)
             .then(|| PcVisualKey::new(game))
             .flatten();
         let pc_cursor_change = pc
             .as_ref()
             .zip(last_pc.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let slots = (game.state.screen == GameScreen::Slots)
+        let slots = matches!(game.state.screen, GameScreen::Slots)
             .then(|| SlotsVisualKey::new(game))
             .flatten();
         let slots_cursor_change = slots
@@ -2162,16 +2194,16 @@ impl RenderSession {
             .zip(last_auxiliary_menu.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
         let diploma =
-            (game.state.screen == GameScreen::Diploma).then(|| DiplomaVisualKey::new(game));
+            matches!(game.state.screen, GameScreen::Diploma).then(|| DiplomaVisualKey::new(game));
         let shop = ShopVisualKey::new(game);
         let shop_cursor_change = shop
             .as_ref()
             .zip(last_shop.as_ref())
             .and_then(|(current, previous)| current.cursor_change_from(previous));
-        let trainer_card =
-            (game.state.screen == GameScreen::TrainerCard).then(|| TrainerCardVisualKey::new(game));
+        let trainer_card = matches!(game.state.screen, GameScreen::TrainerCard)
+            .then(|| TrainerCardVisualKey::new(game));
         let town_map =
-            (game.state.screen == GameScreen::TownMap).then(|| TownMapVisualKey::new(game));
+            matches!(game.state.screen, GameScreen::TownMap).then(|| TownMapVisualKey::new(game));
         let town_map_cursor_change = town_map
             .as_ref()
             .zip(last_town_map.as_ref())
@@ -2180,13 +2212,13 @@ impl RenderSession {
             .as_ref()
             .zip(last_town_map.as_ref())
             .is_some_and(|(current, previous)| current.marker_animation_change_from(previous));
-        let oak_screen = game.state.screen == GameScreen::OakSpeech;
+        let oak_screen = matches!(game.state.screen, GameScreen::OakSpeech);
         let oak = oak_screen.then(|| OakVisualKey::new(game)).flatten();
-        let overworld_screen = game.state.screen == GameScreen::Overworld;
-        let overworld = overworld_screen
+        let overworld_screen = matches!(game.state.screen, GameScreen::Overworld);
+        let overworld = (overworld_screen && !field_flash_active)
             .then(|| OverworldVisualKey::new(game))
             .flatten();
-        let battle_screen = game.state.screen == GameScreen::Battle;
+        let battle_screen = matches!(game.state.screen, GameScreen::Battle);
         let battle = battle_screen.then(|| BattleVisualKey::new(game)).flatten();
         let battle_menu_cursor_change = battle
             .as_ref()
@@ -2212,6 +2244,12 @@ impl RenderSession {
             .as_ref()
             .zip(last_battle.as_ref())
             .and_then(|(current, previous)| current.yes_no_cursor_change_from(previous));
+        let flash_palette_update = field_flash_active
+            && flash_map.as_ref().is_some_and(|current| {
+                last_flash_map
+                    .as_ref()
+                    .is_some_and(|previous| current.palette_change_only(previous))
+            });
         let redraw = if black_screen {
             !last_black_screen
         } else if trade.is_some() {
@@ -2279,9 +2317,23 @@ impl RenderSession {
         } else {
             true
         };
+        if !takeover_active && last_takeover_active && overworld_screen {
+            if let Some((expected_key, cache)) = restored_overworld_bg {
+                if last_flash_map.as_ref() == Some(&expected_key) {
+                    *overworld_background_cache = Some(cache);
+                }
+            }
+        }
         if redraw {
-            if game.state.screen == GameScreen::IntroScene && !takeover_active {
-                super::intro::draw_cached(&game.intro_scene, &mut game.resources, fb, self.intro_cache.get_or_insert_with(Default::default));
+            if flash_palette_update {
+                game.draw_field_flash_palette(fb);
+            } else if matches!(game.state.screen, GameScreen::IntroScene) && !takeover_active {
+                super::intro::draw_cached(
+                    &game.intro_scene,
+                    &mut game.resources,
+                    fb,
+                    self.intro_cache.get_or_insert_with(Default::default),
+                );
             } else if title_logo_only {
                 super::title::redraw_logo(&game.title_screen, &mut game.resources, fb);
             } else if title_version_only {

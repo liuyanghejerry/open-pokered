@@ -104,6 +104,33 @@ impl TrackPlayTimeWork {
             _ => unreachable!(),
         }
     }
+    #[inline(always)]
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if self.step == Step::CallIgnore
+            && self.state.ignore_counter == 0
+            && self.state.flags6 & 1 != 0
+            && !self.state.time.maxed
+            && self.state.time.frames != 59
+        {
+            let cycles = [
+                24, 16, 4, 8, 8, 12, 16, 4, 20, 16, 8, 8, 16, 4, 8, 16, 4, 16, 8, 20,
+            ];
+            let count = bus.execute_plain_cycles_total(&cycles, 236)?;
+            if count == cycles.len() {
+                self.state.ignore_counter = 255;
+                self.state.time.frames = self.state.time.frames.wrapping_add(1);
+                self.a = self.state.time.frames;
+                self.zero = false;
+                self.step = Step::Done;
+                return Ok(());
+            }
+            let mut replay = super::display_lcd_work::PlainInstructionBus(0);
+            for _ in 0..count {
+                assert!(self.step(&mut replay).unwrap());
+            }
+        }
+        super::display_lcd_work::run_plain_work(self, bus, Self::finished, Self::step, Self::step)
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
         let tcycles = match self.step {
@@ -141,6 +168,7 @@ impl TrackPlayTimeWork {
             tcycles,
             access: None,
         })?;
+        use Step::*;
         self.step = match self.step {
             CallIgnore => IgnoreRead,
             IgnoreRead => {
@@ -440,5 +468,37 @@ mod tests {
         assert_eq!(w.joypad_clear_effects(), (true, true));
         assert_eq!(w.state().time, input.time);
         assert_eq!(t.interrupt_returns(), 0);
+    }
+
+    #[test]
+    fn run_matches_timer_rollover_ignore_and_clear_paths() {
+        let inputs = [
+            actual_state(),
+            TrackTimeState {
+                ignore_counter: 0,
+                flags5: 255,
+                flags6: 0,
+                ..actual_state()
+            },
+            TrackTimeState {
+                ignore_counter: 0,
+                flags6: 1,
+                ..actual_state()
+            },
+        ];
+        for input in inputs {
+            let mut actual = TrackPlayTimeWork::new(input);
+            let mut expected = actual.clone();
+            let mut time = DisplayWorkTime::default();
+            time.begin_native_update();
+            time.device_mut().request_interrupt(1);
+            time.enter_pending_vblank().unwrap();
+            let mut reference = time.clone();
+            actual.run(&mut time.display_bus()).unwrap();
+            while expected.step(&mut reference).unwrap() {}
+            assert_eq!(actual, expected);
+            assert_eq!(time.elapsed(), reference.elapsed());
+            assert_eq!(time.device(), reference.device());
+        }
     }
 }

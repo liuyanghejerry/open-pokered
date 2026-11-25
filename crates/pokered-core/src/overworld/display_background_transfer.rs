@@ -87,9 +87,23 @@ impl DisplayDevice {
     }
 
     /// Called only by the shared bus after a VRAM write was accepted.
+    #[inline(always)]
     pub(in crate::overworld) fn record_native_background_write(&mut self, destination: u16) {
         if let Some(raster) = self.background_transfer.as_mut() {
             raster.write(destination);
+        }
+    }
+
+    #[inline(always)]
+    pub(in crate::overworld) fn record_native_background_run(
+        &mut self,
+        destination: u16,
+        len: u16,
+    ) {
+        if let Some(raster) = self.background_transfer.as_mut() {
+            for offset in 0..len {
+                raster.write(destination.wrapping_add(offset));
+            }
         }
     }
 }

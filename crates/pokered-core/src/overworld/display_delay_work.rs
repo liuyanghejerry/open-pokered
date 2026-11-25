@@ -40,6 +40,7 @@ impl DelayFrameWork {
     pub fn sleeping(&self) -> bool {
         self.step == Step::Sleeping
     }
+    #[inline(always)]
     pub fn step<B: DelayFrameBus>(&mut self, bus: &mut B) -> Result<DelayProgress, B::Error> {
         use Step::*;
         if self.step == Done {
@@ -140,6 +141,7 @@ impl DelayFramesWork {
     pub fn sleeping(&self) -> bool {
         self.step == FramesStep::Child && self.child.sleeping()
     }
+    #[inline(always)]
     pub fn step<B: DelayFrameBus>(&mut self, bus: &mut B) -> Result<DelayProgress, B::Error> {
         use FramesStep::*;
         if self.step == Done {

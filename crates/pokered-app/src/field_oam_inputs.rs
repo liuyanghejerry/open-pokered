@@ -28,7 +28,9 @@ fn facing(facing: pokered_core::overworld::Direction) -> u8 {
 
 /// Full stationary field input, retaining the actual native door/warp bits.
 /// The existing actor producer still rejects unsupported movement/grass.
-pub(super) fn field_oam_input(field: &OverworldScreen,
+#[cfg(test)]
+pub(super) fn field_oam_input(
+    field: &OverworldScreen,
     time: &pokered_core::overworld::display_work_time::DisplayWorkTime,
     slots: &[SpriteSlot]) -> Result<pokered_core::overworld::prepare_oam_work::PrepareOamState, FieldOamInputError> {
     field_oam_input_with_grass(field, time, slots, None)
@@ -36,14 +38,32 @@ pub(super) fn field_oam_input(field: &OverworldScreen,
 
 pub(super) fn field_oam_input_with_grass(field: &OverworldScreen,
     time: &pokered_core::overworld::display_work_time::DisplayWorkTime,
-    slots: &[SpriteSlot], grass: Option<&[Option<u8>; 16]>) -> Result<pokered_core::overworld::prepare_oam_work::PrepareOamState, FieldOamInputError> {
-    let enabled = time.sprite_updates_enabled().ok_or(FieldOamInputError::UnknownSpriteControl)?;
-    let movement_flags = u8::from(field.state.standing_on_door)
+    slots: &[SpriteSlot],
+    grass: Option<&[Option<u8>; 16]>,
+) -> Result<pokered_core::overworld::prepare_oam_work::PrepareOamState, FieldOamInputError> {
+    let mut input = pokered_core::overworld::prepare_oam_work::PrepareOamState {
+        enabled: 0,
+        movement_flags: 0,
+        sprites: Vec::new(),
+    };
+    field_oam_input_with_grass_into(field, time, slots, grass, &mut input)?;
+    Ok(input)
+}
+
+pub(super) fn field_oam_input_with_grass_into(
+    field: &OverworldScreen,
+    time: &pokered_core::overworld::display_work_time::DisplayWorkTime,
+    slots: &[SpriteSlot],
+    grass: Option<&[Option<u8>; 16]>,
+    input: &mut pokered_core::overworld::prepare_oam_work::PrepareOamState,
+) -> Result<(), FieldOamInputError> {
+    input.enabled = time
+        .sprite_updates_enabled()
+        .ok_or(FieldOamInputError::UnknownSpriteControl)?;
+    input.movement_flags = u8::from(field.state.standing_on_door)
         | (u8::from(field.state.exiting_door) << 1)
         | (u8::from(field.state.standing_on_warp) << 2);
-    Ok(pokered_core::overworld::prepare_oam_work::PrepareOamState {
-        enabled, movement_flags, sprites: field_oam_sprites_with_grass(field, slots, grass)?,
-    })
+    field_oam_sprites_with_grass_into(field, slots, grass, &mut input.sprites)
 }
 
 /// Freeze the native stationary renderer's grass inputs at START close.
@@ -77,6 +97,7 @@ pub(super) fn stationary_grass_inputs(field: &OverworldScreen,
     Ok(values)
 }
 
+#[cfg(test)]
 pub(super) fn field_oam_sprites(
     field: &OverworldScreen,
     slots: &[SpriteSlot],
@@ -84,8 +105,23 @@ pub(super) fn field_oam_sprites(
     field_oam_sprites_with_grass(field, slots, None)
 }
 
-fn field_oam_sprites_with_grass(field: &OverworldScreen, slots: &[SpriteSlot],
-    grass: Option<&[Option<u8>; 16]>) -> Result<Vec<OamSprite>, FieldOamInputError> {
+#[cfg(test)]
+fn field_oam_sprites_with_grass(
+    field: &OverworldScreen,
+    slots: &[SpriteSlot],
+    grass: Option<&[Option<u8>; 16]>,
+) -> Result<Vec<OamSprite>, FieldOamInputError> {
+    let mut sprites = Vec::new();
+    field_oam_sprites_with_grass_into(field, slots, grass, &mut sprites)?;
+    Ok(sprites)
+}
+
+fn field_oam_sprites_with_grass_into(
+    field: &OverworldScreen,
+    slots: &[SpriteSlot],
+    grass: Option<&[Option<u8>; 16]>,
+    sprites: &mut Vec<OamSprite>,
+) -> Result<(), FieldOamInputError> {
     use FieldOamInputError::*;
     if field.npc_states.len() > 15 {
         return Err(TooManySprites);
@@ -115,7 +151,9 @@ fn field_oam_sprites_with_grass(field: &OverworldScreen, slots: &[SpriteSlot],
         else { grass.and_then(|values| values[slot]).ok_or(GrassPriorityNotTracked) }
     };
 
-    let mut sprites = vec![
+    sprites.clear();
+    sprites.resize(
+        16,
         OamSprite {
             picture: 0,
             image: 0xff,
@@ -123,10 +161,9 @@ fn field_oam_sprites_with_grass(field: &OverworldScreen, slots: &[SpriteSlot],
             y: 0,
             adjusted_x: 0,
             adjusted_y: 0,
-            grass: 0
-        };
-        16
-    ];
+            grass: 0,
+        },
+    );
     // ResetPlayerSpriteData and native player rendering share the same fixed
     // standing origin. Active movement/ledge/fishing owners were rejected.
     sprites[0] = OamSprite {
@@ -180,7 +217,7 @@ fn field_oam_sprites_with_grass(field: &OverworldScreen, slots: &[SpriteSlot],
             grass: if index != 0xff { priority(i + 1)? } else { 0 },
         };
     }
-    Ok(sprites)
+    Ok(())
 }
 
 #[cfg(test)]

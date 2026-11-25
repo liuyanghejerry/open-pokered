@@ -86,14 +86,74 @@ pub struct ChannelEffectWorkInput {
     pub frequency_low: u8,
 }
 
+fn vibrato_effect_cycles(input: ChannelEffectWorkInput) -> Option<u32> {
+    if input.flags1 & 16 != 0 || input.vibrato_extent == 0 {
+        return None;
+    }
+    if input.channel < 4 && input.paired_sfx_active {
+        return Some(80 + 8 + 32 + 8 + 16);
+    }
+    let mut cycles = 80 + 40 + 44;
+    cycles += if input.channel < 4 {
+        8 + 32 + 12 + 44
+    } else {
+        12 + 44
+    };
+    cycles += if input.flags2 & 1 == 0 {
+        8 + 32 + 8
+    } else {
+        12
+    };
+    cycles += 32 + if input.vibrato_delay == 0 { 12 } else { 8 };
+    if input.vibrato_delay != 0 {
+        return Some(cycles + 28);
+    }
+    cycles += 32 + 12;
+    cycles += 44 + if input.vibrato_rate & 15 == 0 { 12 } else { 8 };
+    if input.vibrato_rate & 15 != 0 {
+        return Some(cycles + 28);
+    }
+    cycles += 100;
+    cycles += if input.flags1 & 8 == 0 { 12 } else { 8 };
+    if input.flags1 & 8 != 0 {
+        cycles += 40;
+        cycles += if input.frequency_low >= input.vibrato_extent & 15 {
+            12 + 12
+        } else {
+            8 + 8 + 12
+        };
+    } else {
+        cycles += 40;
+        cycles += if u16::from(input.frequency_low) + u16::from(input.vibrato_extent >> 4) <= 255 {
+            12
+        } else {
+            8 + 8
+        };
+    }
+    Some(cycles + 36 + 76 + 24)
+}
+
 /// Source timer/vibrato work. Next-note parsing, rotating duty and pitch slide
 /// are intentionally unsupported until their instruction work is composed.
 pub fn channel_effect_work_cycles(input: ChannelEffectWorkInput) -> Option<u32> {
-    Some(
-        super::timer_work::EffectInstructionWork::new(input)?
-            .map(u32::from)
-            .sum(),
-    )
+    let work = super::timer_work::EffectInstructionWork::new(input)?;
+    if let Some(cycles) = work.no_apu_write_program() {
+        return Some(cycles);
+    }
+    if let Some(cycles) = vibrato_effect_cycles(input) {
+        return Some(cycles);
+    }
+    let mut work = work;
+    let mut cycles = 0;
+    while !work.finished() {
+        let prefix = work.plain_prefix();
+        if prefix.len() > 1 {
+            cycles += work.accept_plain_prefix(prefix.len(), prefix);
+        } else {
+            cycles += u32::from(work.next()?);
+        }
+    }
+    Some(cycles)
 }
 
 #[cfg(test)]
@@ -136,6 +196,22 @@ mod effect_tests {
             }
         }
         assert_eq!((supported, unknown), (43, 5));
+    }
+
+    #[test]
+    fn paired_vibrato_returns_before_modulation() {
+        let input = ChannelEffectWorkInput {
+            channel: 0,
+            paired_sfx_active: true,
+            note_delay: 7,
+            flags1: 1,
+            flags2: 0,
+            vibrato_delay: 3,
+            vibrato_extent: 17,
+            vibrato_rate: 32,
+            frequency_low: 137,
+        };
+        assert_eq!(channel_effect_work_cycles(input), Some(144));
     }
 }
 

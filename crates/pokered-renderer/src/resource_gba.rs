@@ -37,6 +37,11 @@ impl core::fmt::Display for ResourceError {
 
 pub type Result<T> = core::result::Result<T, ResourceError>;
 
+#[inline(always)]
+fn asset_name_eq(left: &str, right: &str) -> bool {
+    left.as_ptr() == right.as_ptr() || left == right
+}
+
 // ---------------------------------------------------------------------------
 // AssetRoot — no filesystem on bare metal; the registry IS the root
 // ---------------------------------------------------------------------------
@@ -94,6 +99,11 @@ mod cache_tests {
                 Some(bytes),
                 "{dir}/{name}"
             );
+            let (registry_dir, registry_name, registry_bytes) =
+                ResourceManager::registry_key(dir, name).expect("registry entry");
+            assert_eq!(registry_dir, dir);
+            assert_eq!(registry_name, name);
+            assert_eq!(registry_bytes, bytes, "{dir}/{name}");
         }
         assert!(get_preconverted_asset("battle", "missing").is_none());
         assert!(get_preconverted_asset("missing", "font").is_none());
@@ -231,7 +241,7 @@ mod cache_tests {
 
 struct CachedAsset {
     category: AssetCategory,
-    name: String,
+    name: Cow<'static, str>,
     value: CachedTileSet,
 }
 
@@ -248,6 +258,11 @@ impl ResourceManager {
         &self.root
     }
 
+    /// Borrow the build-time preconverted 2bpp tileset slice directly from ROM.
+    pub fn raw_tileset_2bpp(name: &str) -> Option<&'static [u8]> {
+        Self::registry_key("tilesets", name).map(|(_, _, bytes)| bytes)
+    }
+
     /// Drop decoded assets at a screen-lifecycle boundary. The GBA cannot
     /// retain every boot/title/Oak tileset alongside the overworld script
     /// registry in its 256 KiB EWRAM.
@@ -262,36 +277,51 @@ impl ResourceManager {
     }
 
     /// Resolve `name` (with or without `.png`, possibly nested like
-    /// `flower/flower0.png`) inside `subdir` to the registry's
-    /// `(&'static dir, &'static stem)` pair.
-    fn registry_key(subdir: &str, name: &str) -> Option<(&'static str, &'static str)> {
+    /// `flower/flower0.png`) inside `subdir` to the registry entry.
+    fn registry_key(subdir: &str, name: &str) -> Option<(&'static str, &'static str, &'static [u8])> {
         let name = name.strip_suffix(".png").unwrap_or(name);
         let nested = name.rsplit_once('/');
-        crate::gba_assets::PRECONVERTED_ASSETS
-            .iter()
-            .find(|(s, n, _)| {
-                if let Some((relative_dir, stem)) = nested {
+        if nested.is_some() {
+            return crate::gba_assets::PRECONVERTED_ASSETS
+                .iter()
+                .find(|(s, n, _)| {
                     // Nested asset (e.g. tilesets/flower/flower0): compare
                     // the registry directory in two borrowed pieces instead
                     // of formatting a temporary full path for every entry.
                     s.strip_prefix(subdir)
                         .and_then(|rest| rest.strip_prefix('/'))
-                        == Some(relative_dir)
-                        && *n == stem
+                        == nested.map(|(relative_dir, _)| relative_dir)
+                        && *n == nested.map(|(_, stem)| stem).unwrap()
+                })
+                .map(|(s, n, bytes)| (*s, *n, *bytes));
+        }
+        let index = crate::gba_assets::PRECONVERTED_ASSETS
+            .binary_search_by(|(s, n, _)| {
+                if asset_name_eq(s, subdir) && asset_name_eq(n, name) {
+                    core::cmp::Ordering::Equal
                 } else {
-                    *s == subdir && *n == name
+                    (*s, *n).cmp(&(subdir, name))
                 }
             })
-            .map(|(s, n, _)| (*s, *n))
+            .ok()?;
+        let (s, n, bytes) = crate::gba_assets::PRECONVERTED_ASSETS[index];
+        Some((s, n, bytes))
     }
 
     fn load_and_cache(&mut self, category: AssetCategory, name: &str) -> Result<&CachedTileSet> {
         let normalized_name = name.strip_suffix(".png").unwrap_or(name);
+        if self.cache.last().is_some_and(|entry| {
+            entry.category == category && asset_name_eq(&entry.name, normalized_name)
+        }) {
+            return Ok(&self.cache.last().expect("most recent cache hit").value);
+        }
         if let Some(index) = self
             .cache
             .iter()
-            .position(|entry| entry.category == category && entry.name == normalized_name)
+            .rev()
+            .position(|entry| entry.category == category && asset_name_eq(&entry.name, normalized_name))
         {
+            let index = self.cache.len() - 1 - index;
             self.cache[index..].rotate_left(1);
             return Ok(&self.cache.last().expect("cache hit").value);
         }
@@ -306,7 +336,7 @@ impl ResourceManager {
             });
         }
 
-        let Some((reg_dir, reg_stem)) = Self::registry_key(subdir, normalized_name) else {
+        let Some((reg_dir, reg_stem, bytes)) = Self::registry_key(subdir, normalized_name) else {
             let cache_key = format!("{}/{}", subdir, normalized_name);
             log::warn!("gba-asset miss: {}", cache_key);
             if self.missing.len() == MISSING_ENTRIES {
@@ -315,13 +345,6 @@ impl ResourceManager {
             self.missing.push((category, normalized_name.to_string()));
             return Err(ResourceError { key: cache_key });
         };
-        let bytes =
-            crate::gba_assets::get_preconverted_asset(reg_dir, reg_stem).ok_or_else(|| {
-                log::warn!("gba-asset registry miss: {}/{}", reg_dir, reg_stem);
-                ResourceError {
-                    key: format!("{}/{}", subdir, normalized_name),
-                }
-            })?;
         let decoded_bytes = bytes.len() / if reg_dir == "font" { 8 } else { 16 }
             * core::mem::size_of::<dotzuki_renderer::tile::Tile>();
         let mut retained_bytes: usize = self
@@ -347,13 +370,17 @@ impl ResourceManager {
         let tileset = if reg_dir == "font" {
             TileSet::from_1bpp(bytes)
         } else {
-            TileSet::from_2bpp(bytes)
+            crate::gba_tile_decode::from_2bpp(bytes)
         };
         let source_size = tile_dims(reg_dir, reg_stem).unwrap_or(((tileset.len() as u32) * 8, 8));
         let tile_count = tileset.len();
         self.cache.push(CachedAsset {
             category,
-            name: normalized_name.to_string(),
+            name: if normalized_name == reg_stem {
+                Cow::Borrowed(reg_stem)
+            } else {
+                Cow::Owned(normalized_name.to_string())
+            },
             value: CachedTileSet {
                 tileset,
                 source_size,

@@ -190,6 +190,7 @@ impl PatternMemory {
     pub fn bytes(&self) -> &[u8] {
         &self.bytes
     }
+    #[inline(always)]
     pub fn read(&self, address: u16) -> Option<u8> {
         self.bytes
             .get(usize::from(address.checked_sub(0x8000)?))
@@ -201,6 +202,14 @@ impl PatternMemory {
     pub fn initialize_native_byte(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
         self.write(address, value)
     }
+    pub fn initialize_native_run(
+        &mut self,
+        address: u16,
+        values: &[u8],
+    ) -> Result<(), RestoreError> {
+        self.write_run(address, values)
+    }
+    #[inline(always)]
     pub(super) fn write(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
         let offset = address
             .checked_sub(0x8000)
@@ -212,12 +221,50 @@ impl PatternMemory {
         *byte = value;
         Ok(())
     }
+    #[inline(always)]
+    pub(super) fn write_run(&mut self, address: u16, values: &[u8]) -> Result<(), RestoreError> {
+        let start = usize::from(
+            address
+                .checked_sub(0x8000)
+                .ok_or(RestoreError::InvalidDestination(address))?,
+        );
+        let end = start
+            .checked_add(values.len())
+            .ok_or(RestoreError::InvalidDestination(address))?;
+        let destination = self
+            .bytes
+            .get_mut(start..end)
+            .ok_or(RestoreError::InvalidDestination(address))?;
+        destination.copy_from_slice(values);
+        Ok(())
+    }
 }
 
 pub trait PatternAssets {
     /// No fallback to a different raw picture or a fabricated zero-filled
     /// source. Unsupported raw IDs must suspend/fail before claiming success.
     fn read_pattern_byte(&self, source: PatternSource, offset: u16) -> Option<u8>;
+
+    fn read_pattern_pair(&self, source: PatternSource, offset: u16) -> Result<u16, u16> {
+        let low = self.read_pattern_byte(source, offset).ok_or(offset)?;
+        let high_offset = offset.wrapping_add(1);
+        let high = self
+            .read_pattern_byte(source, high_offset)
+            .ok_or(high_offset)?;
+        Ok(u16::from_le_bytes([low, high]))
+    }
+
+    fn read_pattern_run(
+        &self,
+        source: PatternSource,
+        offset: u16,
+        output: &mut [u8],
+    ) -> Option<()> {
+        for (index, byte) in output.iter_mut().enumerate() {
+            *byte = self.read_pattern_byte(source, offset.wrapping_add(index as u16))?;
+        }
+        Some(())
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum RestoreError {
@@ -373,7 +420,11 @@ impl VideoCopyWork {
             return Err(VideoServiceError::Protocol(RestoreError::StaleVBlank));
         }
         loop {
-            child.step(bus).map_err(VideoServiceError::Bus)?;
+            if RUN && child.header_finished() {
+                child.run(bus).map_err(VideoServiceError::Bus)?;
+            } else {
+                child.step(bus).map_err(VideoServiceError::Bus)?;
+            }
             self.request.as_mut().unwrap().size = child.size_port();
             if child.finished() {
                 self.source_offset = child.source_offset().ok_or(VideoServiceError::Protocol(RestoreError::NoRequest))?;

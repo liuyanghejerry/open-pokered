@@ -4,7 +4,7 @@
 //! This is a native projection, not a recovered original startup/IRQ phase.
 use super::display_device::{CheckedFramePeriod, DisplayDevice, DisplayDeviceError};
 use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus};
-use super::field_restore::{PatternAssets, PatternMemory, RestoreError};
+use super::field_restore::{CopyFormat, PatternAssets, PatternMemory, PatternSource, RestoreError};
 use super::pattern_copy_work::{PatternAccess, PatternInstruction, PatternInstructionBus};
 use crate::alloc_prelude::*;
 #[path = "native_display_clock.rs"]
@@ -57,6 +57,8 @@ pub struct DisplayWorkTime {
     // mutation is exposed only through an invalidating mutable accessor.
     #[serde(skip)]
     idle_period_cached: bool,
+    #[serde(skip)]
+    device_validated: bool,
     // Test oracle: retain the original fully checked interval observer while
     // comparing the reserved instruction path at every access boundary.
     #[cfg(test)]
@@ -135,6 +137,7 @@ impl Default for DisplayWorkTime {
             #[cfg(not(target_os = "none"))]
             palette_stores: [None; 3],
             idle_period_cached: false,
+            device_validated: false,
             #[cfg(test)]
             check_each_display_interval: false,
             shadow_oam: vec![0; 160],
@@ -232,12 +235,18 @@ impl DisplayWorkTime {
     }
 
     #[inline(always)]
+    pub(super) fn idle_period_cached(&self) -> bool {
+        self.idle_period_cached
+    }
+
+    #[inline(always)]
     pub fn device(&self) -> &DisplayDevice {
         &self.device
     }
     #[inline(always)]
     pub fn device_mut(&mut self) -> &mut DisplayDevice {
         self.idle_period_cached = false;
+        self.device_validated = false;
         &mut self.device
     }
 
@@ -274,6 +283,11 @@ impl DisplayWorkTime {
     pub fn pending_vblank_dispatch(&self) -> bool {
         self.vblank_dispatch_enabled && !self.active_vblank
             && self.device.pending_interrupts() & 1 != 0
+    }
+    #[inline(always)]
+    pub fn attached_pending_vblank_dispatch(&self) -> bool {
+        debug_assert!(self.vblank_dispatch_enabled);
+        !self.active_vblank && self.device.pending_interrupts() & 1 != 0
     }
     #[inline(always)]
     fn check_interrupt_dispatch(&self) -> Result<(), DisplayWorkError> {
@@ -484,13 +498,23 @@ impl DisplayWorkTime {
             .expect("display deadline overflow");
     }
     #[inline(always)]
-    fn reserve(&self) -> Result<(), DisplayWorkError> {
+    fn reserve(&mut self) -> Result<(), DisplayWorkError> {
         self.reserve_time()?;
-        self.check_interrupt_dispatch()
+        if self.active_vblank {
+            Ok(())
+        } else {
+            self.check_interrupt_dispatch()
+        }
     }
     #[inline(always)]
-    fn reserve_time(&self) -> Result<(), DisplayWorkError> {
-        self.device.validate().map_err(DisplayWorkError::Device)?;
+    fn reserve_time(&mut self) -> Result<(), DisplayWorkError> {
+        if !self.device_validated {
+            self.device.validate().map_err(DisplayWorkError::Device)?;
+            if self.shadow_oam.len() != 160 {
+                return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidOam));
+            }
+            self.device_validated = true;
+        }
         if self.device.observed_tcycles() != self.elapsed {
             return Err(DisplayWorkError::Device(
                 DisplayDeviceError::TimeNotSynchronized,
@@ -525,9 +549,24 @@ impl DisplayWorkTime {
             .checked_add(u64::from(cycles))
             .expect("display time overflow");
         self.device
-            .observe_reserved_time(next, cycles, &self.shadow_oam)
+            .observe_reserved_interval_trusted(next, u64::from(cycles), &self.shadow_oam)
             .map_err(DisplayWorkError::Device)?;
         self.divider_counter = self.divider_counter.wrapping_add(u16::from(cycles));
+        self.elapsed = next;
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn elapse_reserved_interval(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        self.idle_period_cached = false;
+        let next = self
+            .elapsed
+            .checked_add(cycles)
+            .expect("display time overflow");
+        self.device
+            .observe_reserved_interval_trusted(next, cycles, &self.shadow_oam)
+            .map_err(DisplayWorkError::Device)?;
+        self.divider_counter = self.divider_counter.wrapping_add(cycles as u16);
         self.elapsed = next;
         Ok(())
     }
@@ -637,8 +676,24 @@ impl DisplayWorkTime {
         if let Some(access) = instruction.access {
             match access {
                 DisplayAccess::Read { port, .. } => {
-                    self.read_display_port(port)
-                        .map_err(DisplayWorkError::Device)?;
+                    if !matches!(port, 0xff0f | 0xffff | 0xff40..=0xff45 | 0xff47..=0xff4b)
+                        && ![
+                            0xff00,
+                            0xfff8,
+                            0xfff9,
+                            0xff04,
+                            0xffd3,
+                            0xffd4,
+                            0xffd5,
+                            super::display_delay_work::VBLANK_FLAG_PORT,
+                            super::far_pattern_copy_work::ROM_BANK_TEMP,
+                            super::far_pattern_copy_work::LOADED_ROM_BANK,
+                        ]
+                        .contains(&port)
+                    {
+                        self.read_display_port(port)
+                            .map_err(DisplayWorkError::Device)?;
+                    }
                 }
                 DisplayAccess::Write { port, .. } if super::video_request_ports::VideoRequestPorts::contains(port) => (),
                 DisplayAccess::Write { port, .. }
@@ -757,6 +812,12 @@ impl super::display_delay_work::DelayFrameBus for DisplayWorkTime {
     }
 }
 
+impl super::display_delay_work::DelayFrameBus for DisplayBus<'_> {
+    fn interrupt_returns(&self) -> u64 {
+        self.time.interrupt_returns
+    }
+}
+
 impl super::vblank_return_work::VBlankReturnBus for DisplayWorkTime {
     fn check_active_vblank(&self) -> Result<(), DisplayWorkError> {
         if self.active_vblank {
@@ -790,13 +851,7 @@ impl DisplayBus<'_> {
         at_tcycle: u8,
         access: impl FnOnce() -> T,
     ) -> Result<T, DisplayWorkError> {
-        if !self.time.active_vblank {
-            return Err(DisplayWorkError::NoActiveVBlank);
-        }
-        if tcycles == 0 || tcycles & 3 != 0 || at_tcycle > tcycles || at_tcycle & 3 != 0 {
-            return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidPhase));
-        }
-        self.reserve()?;
+        self.reserve_external_irq_access(tcycles, at_tcycle)?;
         let result = (|| {
             if at_tcycle != 0 {
                 self.time.elapse_reserved(at_tcycle)?;
@@ -812,6 +867,21 @@ impl DisplayBus<'_> {
     }
 
     #[inline(always)]
+    pub fn reserve_external_irq_access(
+        &mut self,
+        tcycles: u8,
+        at_tcycle: u8,
+    ) -> Result<(), DisplayWorkError> {
+        if !self.time.active_vblank {
+            return Err(DisplayWorkError::NoActiveVBlank);
+        }
+        if tcycles == 0 || tcycles & 3 != 0 || at_tcycle > tcycles || at_tcycle & 3 != 0 {
+            return Err(DisplayWorkError::Device(DisplayDeviceError::InvalidPhase));
+        }
+        self.reserve()
+    }
+
+    #[inline(always)]
     fn reserve(&mut self) -> Result<(), DisplayWorkError> {
         if !self.validated {
             self.time.reserve()?;
@@ -822,9 +892,107 @@ impl DisplayBus<'_> {
             if self.time.elapsed >= self.time.deadline {
                 return Err(DisplayWorkError::Budget);
             }
-            self.time.check_interrupt_dispatch()?;
+            if !self.time.active_vblank {
+                self.time.check_interrupt_dispatch()?;
+            }
         }
         Ok(())
+    }
+
+    #[inline(always)]
+    pub fn execute_plain(&mut self, tcycles: u8) -> Result<(), DisplayWorkError> {
+        self.reserve()?;
+        self.time.elapse_reserved(tcycles)
+    }
+
+    #[inline(always)]
+    pub fn remaining(&self) -> u64 {
+        self.time.remaining()
+    }
+
+    #[inline(always)]
+    pub fn active_vblank(&self) -> bool {
+        self.time.active_vblank
+    }
+
+    /// Settle instructions already admitted by an external audio bus. Their
+    /// deferred total may cross the grant boundary, just like the final
+    /// ordinary instruction; a later instruction still needs its own reserve.
+    #[inline(always)]
+    pub fn elapse_accepted_interval(&mut self, cycles: u64) -> Result<(), DisplayWorkError> {
+        if !self.time.active_vblank {
+            return Err(DisplayWorkError::NoActiveVBlank);
+        }
+        if !self.validated {
+            self.time.reserve()?;
+            self.validated = true;
+        }
+        if cycles != 0 {
+            self.time.elapse_reserved_interval(cycles)?;
+        }
+        Ok(())
+    }
+
+    #[inline(always)]
+    pub fn execute_plain_cycles(&mut self, instructions: &[u8]) -> Result<usize, DisplayWorkError> {
+        if !self.time.active_vblank || instructions.is_empty() {
+            return Ok(0);
+        }
+        self.reserve()?;
+        let available = self
+            .time
+            .remaining()
+            .min(u64::from(u32::MAX - u32::from(u8::MAX))) as u32;
+        let (mut cycles, mut count) = (0u32, 0usize);
+        for &instruction in instructions {
+            if cycles >= available {
+                break;
+            }
+            cycles += u32::from(instruction);
+            count += 1;
+        }
+        self.time.elapse_reserved_interval(u64::from(cycles))?;
+        Ok(count)
+    }
+
+    pub fn execute_buffer_copy(
+        &mut self,
+        source: &[u8],
+        destination: &mut [u8],
+        finish_at_final_store: bool,
+    ) -> Result<usize, DisplayWorkError> {
+        if source.is_empty()
+            || source.len() != destination.len()
+            || self.time.pending_vblank_dispatch()
+        {
+            return Ok(0);
+        }
+        self.reserve()?;
+        let available = if self.time.active_vblank || !self.time.vblank_dispatch_enabled {
+            self.time.remaining()
+        } else {
+            let distance = if self.time.device.dma_active() {
+                self.time.device.tcycles_until_event().map(u32::from)
+            } else {
+                self.time.device.tcycles_until_vblank()
+            };
+            distance.map_or(self.time.remaining(), |distance| {
+                self.time.remaining().min(u64::from(distance))
+            })
+        };
+        let count = (available / 52).min(source.len() as u64) as usize;
+        if count == 0 {
+            return Ok(0);
+        }
+        destination[..count].copy_from_slice(&source[..count]);
+        let tail = if finish_at_final_store && count == source.len() {
+            28
+        } else {
+            0
+        };
+        self.time
+            .elapse_reserved_interval(count as u64 * 52 - tail)?;
+        Ok(count)
     }
 }
 
@@ -836,6 +1004,54 @@ mod external_irq_bus_tests;
 mod shadow_oam_run_tests;
 impl DisplayInstructionBus for DisplayBus<'_> {
     type Error = DisplayWorkError;
+    fn execute_ly145_run(&mut self) -> Result<Option<u8>, Self::Error> {
+        if self.time.device.read_port(0xffff).unwrap() & 1 != 0
+            || self.time.active_vblank
+            || self.time.remaining() < 32
+        {
+            return Ok(None);
+        }
+        self.reserve()?;
+        let Some(vblank) = self.time.device.tcycles_until_vblank().map(u64::from) else {
+            return Ok(None);
+        };
+        // The next LY145 starts 456 dots after the next LY144 edge. Poll reads
+        // are eight dots into each 32-dot read/compare/not-taken-branch loop.
+        let ly145 = vblank + 456;
+        let poll = ly145.saturating_sub(8).div_ceil(32);
+        let read_at = 8 + 32 * poll;
+        if read_at >= vblank + 912 {
+            // A poll can miss a partially elapsed LY145 line. Execute that poll
+            // normally; the next call can target the following frame's line.
+            return Ok(None);
+        }
+        if self.time.remaining() >= read_at + 20 {
+            self.time.elapse_reserved_interval(read_at)?;
+            let ly = self
+                .time
+                .read_display_port(0xff44)
+                .map_err(DisplayWorkError::Device)?;
+            debug_assert_eq!(ly, 145);
+            self.time.elapse_reserved(20)?;
+            return Ok(Some(ly));
+        }
+        // Preserve the start-before-deadline rule near a grant boundary. Only
+        // whole unsuccessful loops are coalesced; an overhanging final read is
+        // left to the ordinary instruction path on the next call.
+        let count = (self.time.remaining() / 32).min(poll);
+        if count == 0 {
+            return Ok(None);
+        }
+        self.time.elapse_reserved_interval(32 * (count - 1) + 8)?;
+        let ly = self
+            .time
+            .read_display_port(0xff44)
+            .map_err(DisplayWorkError::Device)?;
+        debug_assert_ne!(ly, 145);
+        self.time.elapse_reserved(24)?;
+        Ok(Some(ly))
+    }
+
     fn execute_shadow_oam_run<I: Iterator<Item = DisplayInstruction>>(
         &mut self,
         instructions: I,
@@ -854,31 +1070,93 @@ impl DisplayInstructionBus for DisplayBus<'_> {
         let mut instructions = instructions.peekable();
         if !instructions.peek().is_some_and(eligible) { return Ok(0); }
         self.reserve()?;
-        let available = self.time.remaining();
-        let (mut cycles, mut count) = (0u64, 0usize);
+        let available = self
+            .time
+            .remaining()
+            .min(u64::from(u32::MAX - u32::from(u8::MAX))) as u32;
+        let (mut cycles, mut count) = (0u32, 0usize);
         for instruction in instructions {
             if cycles >= available || !eligible(&instruction) { break; }
             if let Some(DisplayAccess::Write { port, value, .. }) = instruction.access {
                 self.time.shadow_oam[usize::from(port - 0xc300)] = value;
             }
-            cycles = cycles.checked_add(u64::from(instruction.tcycles))
-                .expect("shadow OAM instruction run overflow");
+            cycles += u32::from(instruction.tcycles);
             count += 1;
         }
         // No instruction above starts DMA, writes display IO or permits a
         // nested IRQ. LCD work reads hardware OAM, not this RAM page. Advance
         // its real edges once against unchanged hardware state, then expose
         // exactly the RAM bytes/cursor of the last admitted instruction.
-        self.time.elapse(cycles)?;
+        self.time.elapse_reserved_interval(u64::from(cycles))?;
         Ok(count)
     }
+    fn execute_shadow_oam_total<I: Iterator<Item = (u8, u8)>>(
+        &mut self,
+        stores: I,
+        cycles: u32,
+    ) -> Result<bool, Self::Error> {
+        let foreground_limited = !self.time.active_vblank
+            && (!self.time.vblank_dispatch_enabled || self.time.pending_vblank_dispatch());
+        if foreground_limited
+            || self.time.device.dma_active()
+            || self.time.shadow_oam.len() != 160
+            || cycles == 0
+            || self.time.remaining() < u64::from(cycles)
+            || (!self.time.active_vblank
+                && self.time.device.tcycles_until_vblank().map_or(0, u64::from) < u64::from(cycles))
+        {
+            return Ok(false);
+        }
+        let mut stores = stores;
+        let Some((first_offset, first_value)) = stores.next() else {
+            return Ok(false);
+        };
+        self.reserve()?;
+        let first_index = usize::from(first_offset);
+        assert!(first_index < 160);
+        unsafe {
+            self.time
+                .shadow_oam
+                .as_mut_ptr()
+                .add(first_index)
+                .write(first_value)
+        };
+        for (offset, value) in stores {
+            let index = usize::from(offset);
+            assert!(index < 160);
+            unsafe { self.time.shadow_oam.as_mut_ptr().add(index).write(value) };
+        }
+        self.time.elapse_reserved_interval(u64::from(cycles))?;
+        Ok(true)
+    }
+
+    fn execute_shadow_oam_clear(&mut self, cycles: u32) -> Result<bool, Self::Error> {
+        let foreground_limited = !self.time.active_vblank
+            && (!self.time.vblank_dispatch_enabled || self.time.pending_vblank_dispatch());
+        if foreground_limited
+            || self.time.device.dma_active()
+            || self.time.shadow_oam.len() != 160
+            || cycles == 0
+            || self.time.remaining() < u64::from(cycles)
+            || (!self.time.active_vblank
+                && self.time.device.tcycles_until_vblank().map_or(0, u64::from) < u64::from(cycles))
+        {
+            return Ok(false);
+        }
+        self.reserve()?;
+        self.time.shadow_oam.fill(0);
+        self.time.elapse_reserved_interval(u64::from(cycles))?;
+        Ok(true)
+    }
+
     fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
         &mut self,
         instructions: I,
     ) -> Result<usize, Self::Error> {
-        // The bounded IRQ is non-nested. Foreground execution must keep its
-        // instruction-by-instruction pending-interrupt dispatch checks.
-        if !self.time.active_vblank {
+        let interrupt_limited = !self.time.active_vblank && self.time.vblank_dispatch_enabled;
+        if !self.time.active_vblank
+            && (!self.time.vblank_dispatch_enabled || self.time.pending_vblank_dispatch())
+        {
             return Ok(0);
         }
         let mut instructions = instructions.peekable();
@@ -886,21 +1164,172 @@ impl DisplayInstructionBus for DisplayBus<'_> {
             return Ok(0);
         }
         self.reserve()?;
-        let available = self.time.remaining();
-        let (mut cycles, mut count) = (0u64, 0usize);
+        // A foreground instruction that starts before VBlank still finishes
+        // before interrupt dispatch. Its successor observes the pending edge.
+        let available = self
+            .time
+            .remaining()
+            .min(if interrupt_limited {
+                self.time
+                    .device
+                    .tcycles_until_vblank()
+                    .map(u64::from)
+                    .unwrap_or(u64::MAX)
+            } else {
+                u64::MAX
+            })
+            .min(u64::from(u32::MAX - u32::from(u8::MAX))) as u32;
+        let (mut cycles, mut count) = (0u32, 0usize);
         for instruction in instructions {
             if instruction.access.is_some() || cycles >= available {
                 break;
             }
-            cycles = cycles.checked_add(u64::from(instruction.tcycles))
-                .expect("plain instruction run overflow");
+            cycles += u32::from(instruction.tcycles);
             count += 1;
         }
         // No source writes/effects occur inside this interval. The real
         // device still processes every LCD/DMA edge against unchanged shadow
         // OAM; divider wrap and final-instruction budget overrun are exact.
-        self.time.elapse(cycles)?;
+        self.time.elapse_reserved_interval(u64::from(cycles))?;
         Ok(count)
+    }
+    #[inline(always)]
+    fn execute_plain_cycles(&mut self, cycles: &[u8]) -> Result<usize, Self::Error> {
+        DisplayBus::execute_plain_cycles(self, cycles)
+    }
+    #[inline(always)]
+    fn execute_plain_cycles_total(
+        &mut self,
+        cycles: &[u8],
+        total: u64,
+    ) -> Result<usize, Self::Error> {
+        if self.time.active_vblank && !cycles.is_empty() && total <= self.time.remaining() {
+            self.reserve()?;
+            self.time.elapse_reserved_interval(total)?;
+            return Ok(cycles.len());
+        }
+        self.execute_plain_cycles(cycles)
+    }
+    #[inline]
+    fn execute_plain_total(&mut self, total: u32) -> Result<bool, Self::Error> {
+        let interrupt_limited = !self.time.active_vblank && self.time.vblank_dispatch_enabled;
+        if total == 0
+            || (!self.time.active_vblank
+                && (!self.time.vblank_dispatch_enabled || self.time.pending_vblank_dispatch()))
+        {
+            return Ok(false);
+        }
+        let limit = self.time.remaining().min(if interrupt_limited {
+            self.time
+                .device
+                .tcycles_until_vblank()
+                .map_or(u64::MAX, u64::from)
+        } else {
+            u64::MAX
+        });
+        if u64::from(total) > limit {
+            return Ok(false);
+        }
+        self.reserve()?;
+        self.time.elapse_reserved_interval(u64::from(total))?;
+        Ok(true)
+    }
+    fn execute_joypad_reads(
+        &mut self,
+        select: Option<u8>,
+        count: u8,
+    ) -> Result<Option<(u8, u8)>, Self::Error> {
+        if !self.time.active_vblank || count == 0 {
+            return Ok(None);
+        }
+        self.reserve()?;
+        let prefix = u64::from(select.is_some()) * 12;
+        let accepted =
+            ((self.time.remaining().saturating_sub(prefix) / 12).min(u64::from(count))) as u8;
+        if let Some(select) = select {
+            self.time.joypad_select = select & 0x30;
+        }
+        self.time
+            .elapse_reserved_interval(prefix + u64::from(accepted) * 12)?;
+        let value = self
+            .time
+            .read_display_port(0xff00)
+            .map_err(DisplayWorkError::Device)?;
+        Ok(Some((accepted, value)))
+    }
+    fn execute_irq_random(
+        &mut self,
+        carry: bool,
+    ) -> Result<Option<(u8, u8, bool, u8, u8)>, Self::Error> {
+        if !self.time.active_vblank || self.time.remaining() < 104 {
+            return Ok(None);
+        }
+        self.reserve()?;
+        let first_div = (self.time.divider_counter.wrapping_add(8) >> 8) as u8;
+        let second_div = (self.time.divider_counter.wrapping_add(52) >> 8) as u8;
+        let add = self.time.random_add;
+        let sub = self.time.random_sub;
+        let sum = u16::from(add) + u16::from(first_div) + u16::from(carry);
+        let new_add = sum as u8;
+        let rhs = u16::from(second_div) + u16::from(sum > 255);
+        let new_carry = u16::from(sub) < rhs;
+        let new_sub = sub.wrapping_sub(rhs as u8);
+        self.time.elapse_reserved_interval(104)?;
+        self.time.random_add = new_add;
+        self.time.random_sub = new_sub;
+        Ok(Some((new_add, new_sub, new_carry, new_sub, second_div)))
+    }
+    fn execute_sprite_bank_call(
+        &mut self,
+        target_bank: u8,
+        restore_bank: Option<u8>,
+    ) -> Result<Option<u8>, Self::Error> {
+        let cycles = if restore_bank.is_some() { 60 } else { 136 };
+        if !self.time.active_vblank || self.time.remaining() < cycles {
+            return Ok(None);
+        }
+        self.reserve()?;
+        let bank = restore_bank.unwrap_or(self.time.loaded_rom_bank);
+        self.time.elapse_reserved_interval(cycles)?;
+        self.time.loaded_rom_bank = bank;
+        self.time.selected_rom_bank = bank;
+        Ok(Some(bank))
+    }
+    fn execute_audio_bank_dispatch(&mut self, bank: u8) -> Result<Option<(u8, bool)>, Self::Error> {
+        let (cycles, engine, alarm) = match bank {
+            2 => (84, 1, false),
+            8 => (104, 2, true),
+            _ => (108, 3, false),
+        };
+        if !self.time.active_vblank || self.time.remaining() < cycles {
+            return Ok(None);
+        }
+        self.reserve()?;
+        self.time.elapse_reserved_interval(cycles)?;
+        self.time.loaded_rom_bank = bank;
+        self.time.selected_rom_bank = bank;
+        Ok(Some((engine, alarm)))
+    }
+    fn execute_joypad_frame(&mut self) -> Result<Option<(u8, u8)>, Self::Error> {
+        const CYCLES: u64 = 328;
+        if !self.time.active_vblank || self.time.remaining() <= CYCLES - 16 {
+            return Ok(None);
+        }
+        self.reserve()?;
+        let directions = self.time.physical_buttons & 0xf0;
+        let input = directions | (self.time.physical_buttons & 15);
+        self.time.elapse_reserved_interval(CYCLES)?;
+        self.time.joy_input = input;
+        self.time.joypad_select = 0x30;
+        Ok(Some((0x30, directions)))
+    }
+    fn execute_buffer_copy(
+        &mut self,
+        source: &[u8],
+        destination: &mut [u8],
+        finish_at_final_store: bool,
+    ) -> Result<usize, Self::Error> {
+        DisplayBus::execute_buffer_copy(self, source, destination, finish_at_final_store)
     }
     #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
@@ -924,11 +1353,108 @@ impl DisplayInstructionBus for DisplayBus<'_> {
                 self.time.elapse_reserved(instruction.tcycles - at_tcycle)?;
                 Ok(Some(value))
             }
+            Some(DisplayAccess::Write {
+                port,
+                value,
+                at_tcycle,
+            }) if super::video_request_ports::VideoRequestPorts::contains(port) => {
+                self.reserve()?;
+                self.time.elapse_reserved(at_tcycle)?;
+                if !self.time.vblank_dispatch_enabled
+                    && matches!(
+                        port,
+                        super::video_copy_caller_work::AUTO_BG_ENABLED
+                            | super::video_copy_caller_work::AUTO_BG_PORTION
+                    )
+                {
+                    self.time.materialize_native_background();
+                    self.validated = false;
+                }
+                self.time.video_requests.write(port, value);
+                self.time.elapse_reserved(instruction.tcycles - at_tcycle)?;
+                Ok(None)
+            }
+            Some(DisplayAccess::Write {
+                port,
+                value,
+                at_tcycle,
+            }) if matches!(port, 0xff0f | 0xffff | 0xff40..=0xff46 | 0xff4a | 0xff4b) => {
+                self.time
+                    .device
+                    .validate_write_port(port, value, 0xc3)
+                    .map_err(DisplayWorkError::Device)?;
+                self.reserve()?;
+                self.time.elapse_reserved(at_tcycle)?;
+                self.time
+                    .device
+                    .write_port(port, value, 0xc3)
+                    .map_err(DisplayWorkError::Device)?;
+                self.validated = false;
+                self.time.elapse_reserved(instruction.tcycles - at_tcycle)?;
+                Ok(None)
+            }
+            Some(DisplayAccess::Write {
+                port,
+                value,
+                at_tcycle,
+            }) if matches!(
+                port,
+                super::far_pattern_copy_work::LOADED_ROM_BANK
+                    | super::far_pattern_copy_work::ROM_BANK_SELECT
+                    | super::far_pattern_copy_work::ROM_BANK_TEMP
+                    | super::display_delay_work::VBLANK_FLAG_PORT
+                    | super::sprite_update_control_work::SPRITE_UPDATES_PORT
+                    | 0xff00
+                    | 0xff04
+                    | 0xfff8
+                    | 0xfff9
+                    | 0xffd3
+                    | 0xffd4
+                    | 0xffd5
+            ) || (0xc300..0xc3a0).contains(&port) =>
+            {
+                self.reserve()?;
+                self.time.elapse_reserved(at_tcycle)?;
+                match port {
+                    super::far_pattern_copy_work::LOADED_ROM_BANK => {
+                        self.time.loaded_rom_bank = value
+                    }
+                    super::far_pattern_copy_work::ROM_BANK_SELECT => {
+                        self.time.selected_rom_bank = value
+                    }
+                    super::far_pattern_copy_work::ROM_BANK_TEMP => self.time.rom_bank_temp = value,
+                    super::display_delay_work::VBLANK_FLAG_PORT => self.time.vblank_flag = value,
+                    super::sprite_update_control_work::SPRITE_UPDATES_PORT => {
+                        self.time.sprite_updates_enabled = Some(value);
+                    }
+                    0xff00 => self.time.joypad_select = value & 0x30,
+                    0xff04 => self.time.divider_counter = 0,
+                    0xfff8 => self.time.joy_input = value,
+                    0xfff9 => self.time.disable_joypad_polling = value,
+                    0xffd3 => self.time.random_add = value,
+                    0xffd4 => self.time.random_sub = value,
+                    0xffd5 => self.time.frame_counter = value,
+                    0xc300..=0xc39f => self.time.shadow_oam[usize::from(port - 0xc300)] = value,
+                    _ => unreachable!(),
+                }
+                self.time.elapse_reserved(instruction.tcycles - at_tcycle)?;
+                Ok(None)
+            }
             Some(DisplayAccess::Write { .. }) => {
                 self.validated = false;
                 DisplayInstructionBus::execute(self.time, instruction)
             }
         }
+    }
+}
+
+impl super::vblank_return_work::VBlankReturnBus for DisplayBus<'_> {
+    fn check_active_vblank(&self) -> Result<(), Self::Error> {
+        super::vblank_return_work::VBlankReturnBus::check_active_vblank(self.time)
+    }
+    fn execute_reti(&mut self) -> Result<(), Self::Error> {
+        self.validated = false;
+        super::vblank_return_work::VBlankReturnBus::execute_reti(self.time)
     }
 }
 
@@ -963,6 +1489,483 @@ impl<A> DisplayInstructionBus for PatternBus<'_, A> {
 
 impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
     type Error = DisplayWorkError;
+
+    #[inline(always)]
+    fn execute_plain_cycles(&mut self, instructions: &[u8]) -> Result<usize, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(0);
+        }
+        let mut display = DisplayBus {
+            time: self.time,
+            validated: self.validated,
+        };
+        let result = display.execute_plain_cycles(instructions);
+        self.validated = display.validated;
+        result
+    }
+
+    fn try_copydata_run(
+        &mut self,
+        source: PatternSource,
+        source_offset: u16,
+        destination: u16,
+        remaining: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        if remaining == 0 || self.patterns.bytes().len() != 0x2000 {
+            return Ok(None);
+        }
+        let mut count = remaining.min(256);
+        if self.time.pending_vblank_dispatch() {
+            return Ok(None);
+        }
+        if !self.time.active_vblank && self.time.device.lcd_enabled() {
+            let Some(distance) = self.time.device.tcycles_until_vblank() else {
+                return Ok(None);
+            };
+            count = count.min((u64::from(distance).saturating_sub(1) / 52).min(256) as u16);
+        }
+        count = count.min((self.time.remaining() / 52).min(256) as u16);
+        if count == 0 {
+            return Ok(None);
+        }
+        if let PatternSource::Tileset(raw) = source {
+            let mut allowed = 0;
+            while allowed < count {
+                use super::tileset_pattern_metadata::{tileset_pattern_byte, TilesetPatternByte};
+                let offset = source_offset.wrapping_add(allowed);
+                if matches!(
+                    tileset_pattern_byte(raw, offset),
+                    Some(TilesetPatternByte::Vram(_))
+                ) {
+                    break;
+                }
+                allowed += 1;
+            }
+            count = allowed;
+        }
+        if count == 0
+            || self.patterns.read(destination).is_none()
+            || self
+                .patterns
+                .read(destination.wrapping_add(count - 1))
+                .is_none()
+        {
+            return Ok(None);
+        }
+        let mut values = [0u8; 256];
+        if self
+            .assets
+            .read_pattern_run(source, source_offset, &mut values[..usize::from(count)])
+            .is_none()
+        {
+            return Ok(None);
+        }
+        let accepted = count;
+        let cycles = 52 * u64::from(accepted) - if accepted == remaining { 4 } else { 0 };
+        if self.time.remaining() < cycles || !self.time.device.has_no_event_within_long(cycles) {
+            return Ok(None);
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        let accessible = self.time.device.vram_accessible();
+        if accessible {
+            self.patterns
+                .write_run(destination, &values[..usize::from(accepted)])
+                .expect("validated CopyData destination");
+            self.time
+                .device
+                .record_native_background_run(destination, accepted);
+        }
+        self.time.elapse(cycles)?;
+        Ok(Some(accepted))
+    }
+
+    fn try_vblank_live_header(
+        &mut self,
+        format: CopyFormat,
+        size: u8,
+        source: u16,
+        destination: u16,
+    ) -> Result<bool, Self::Error> {
+        let request = self.time.video_requests.snapshot(format);
+        if !self.time.active_vblank
+            || self.time.remaining() < 172
+            || request.size != Some(size)
+            || request.source != Some(source)
+            || request.destination != Some(destination)
+        {
+            return Ok(false);
+        }
+        self.reserve()?;
+        self.time.elapse_reserved_interval(172)?;
+        let port = if format == CopyFormat::TwoBpp {
+            super::video_copy_caller_work::COPY_SIZE
+        } else {
+            super::video_copy_caller_work::DOUBLE_SIZE
+        };
+        self.time.video_requests.write(port, 0);
+        Ok(true)
+    }
+
+    fn try_vblank_live_footer(
+        &mut self,
+        format: CopyFormat,
+        size: u8,
+        source: u16,
+        destination: u16,
+        final_source: u16,
+        final_destination: u16,
+    ) -> Result<bool, Self::Error> {
+        let request = self.time.video_requests.snapshot(format);
+        if !self.time.active_vblank
+            || self.time.remaining() < 132
+            || request.size != Some(0)
+            || request.source != Some(source)
+            || request.destination != Some(destination)
+            || size == 0
+        {
+            return Ok(false);
+        }
+        self.reserve()?;
+        self.time.elapse_reserved_interval(132)?;
+        let port = if format == CopyFormat::TwoBpp {
+            super::video_copy_caller_work::COPY_SIZE
+        } else {
+            super::video_copy_caller_work::DOUBLE_SIZE
+        };
+        self.time.video_requests.write(port + 1, final_source as u8);
+        self.time
+            .video_requests
+            .write(port + 2, (final_source >> 8) as u8);
+        self.time
+            .video_requests
+            .write(port + 3, final_destination as u8);
+        self.time
+            .video_requests
+            .write(port + 4, (final_destination >> 8) as u8);
+        Ok(true)
+    }
+
+    #[inline(always)]
+    fn try_vblank_pop_pair_writes(
+        &mut self,
+        destination: u16,
+        de: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        if !self.time.active_vblank
+            || self.patterns.bytes().len() != 0x2000
+            || (!self.validated && self.time.shadow_oam.len() != 160)
+            || !(0x8000..0xa000).contains(&destination)
+            || self.time.remaining() < 36
+            || self.time.elapsed.checked_add(36).is_none()
+            || !self.time.device.unobserved_vram_window(36)
+        {
+            return Ok(None);
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        if self.time.device.vram_accessible() {
+            self.patterns
+                .write(destination, de as u8)
+                .expect("validated AutoBG destination");
+            self.time.device.record_native_background_write(destination);
+            let high = (destination & 0xff00) | u16::from((destination as u8).wrapping_add(1));
+            self.patterns
+                .write(high, (de >> 8) as u8)
+                .expect("validated AutoBG destination");
+            self.time.device.record_native_background_write(high);
+        }
+        self.time.elapse_reserved_interval(36)?;
+        Ok(Some(
+            (destination & 0xff00) | u16::from((destination as u8).wrapping_add(2)),
+        ))
+    }
+
+    fn try_vblank_pop_row_writes(
+        &mut self,
+        source: &[u8],
+        destination: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        const CYCLES: u64 = 356;
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        if source.len() != 20
+            || !self.time.active_vblank
+            || self.patterns.bytes().len() != 0x2000
+            || (!self.validated && self.time.shadow_oam.len() != 160)
+            || !(0x8000..0xa000).contains(&destination)
+            || destination & 0xff > 236
+            || self.time.remaining() < CYCLES
+            || self.time.elapsed.checked_add(CYCLES).is_none()
+            || !self.time.device.unobserved_vram_window(CYCLES)
+        {
+            return Ok(None);
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        if self.time.device.vram_accessible() {
+            self.patterns
+                .write_run(destination, source)
+                .expect("validated AutoBG row destination");
+            self.time
+                .device
+                .record_native_background_run(destination, 20);
+        }
+        self.time.elapse_reserved_interval(CYCLES)?;
+        Ok(Some(
+            (destination & 0xff00) | u16::from((destination as u8).wrapping_add(19)),
+        ))
+    }
+
+    fn try_vblank_pop_row_run(
+        &mut self,
+        source: &[u8],
+        destination: u16,
+        rows: u8,
+    ) -> Result<Option<(u8, u16, u16, u16, bool)>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        if !self.time.active_vblank
+            || rows == 0
+            || self.patterns.bytes().len() != 0x2000
+            || (!self.validated && self.time.shadow_oam.len() != 160)
+            || !(0x8000..0xa000).contains(&destination)
+        {
+            return Ok(None);
+        }
+        let Some(window) = self.time.device.unobserved_vram_limit() else {
+            return Ok(None);
+        };
+        let mut count = u64::from(rows)
+            .min((self.time.remaining() + 4) / 400)
+            .min(window.saturating_add(3) / 400)
+            .min((source.len() / 20) as u64);
+        loop {
+            if count == 0 {
+                return Ok(None);
+            }
+            let cycles = count * 400 - if count == u64::from(rows) { 4 } else { 0 };
+            let last_destination = (0..count).try_fold(destination, |at, _| {
+                (at & 0xff <= 236).then_some(at.wrapping_add(32))
+            });
+            if cycles <= self.time.remaining()
+                && cycles < window
+                && last_destination.is_some()
+                && self.time.elapsed.checked_add(cycles).is_some()
+            {
+                break;
+            }
+            count -= 1;
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        let accessible = self.time.device.vram_accessible();
+        let mut sp = 0u16;
+        let mut hl = destination;
+        let mut de = 0;
+        let mut carry = false;
+        for index in 0..count {
+            let at = destination.wrapping_add((index * 32) as u16);
+            if accessible {
+                let row = &source[index as usize * 20..index as usize * 20 + 20];
+                self.patterns
+                    .write_run(at, row)
+                    .expect("validated row-run VRAM destination");
+                self.time.device.record_native_background_run(at, 20);
+            }
+            sp = sp.wrapping_add(20);
+            let row = &source[index as usize * 20..index as usize * 20 + 20];
+            de = u16::from_be_bytes([row[19], row[18]]);
+            let last = at.wrapping_add(19);
+            let sum = 13 + u16::from(last as u8);
+            carry = sum > 255;
+            hl = last.wrapping_add(13);
+        }
+        let cycles = count * 400 - if count == u64::from(rows) { 4 } else { 0 };
+        self.time.elapse_reserved_interval(cycles)?;
+        Ok(Some((count as u8, sp, hl, de, carry)))
+    }
+
+    fn try_vblank_tile_run<const DOUBLE: bool>(
+        &mut self,
+        source: PatternSource,
+        source_offset: u16,
+        destination: u16,
+        tiles: u8,
+    ) -> Result<Option<(u8, u16, u16, u16)>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        let source_bytes = if DOUBLE { 8u64 } else { 16 };
+        let tile_cycles = if DOUBLE { 260u64 } else { 308 };
+        if !self.time.active_vblank
+            || tiles == 0
+            || self.patterns.bytes().len() != 0x2000
+            || (!self.validated && self.time.shadow_oam.len() != 160)
+            || !(0x8000..0xa000).contains(&destination)
+            || destination & 0xff > 0xf0
+        {
+            return Ok(None);
+        }
+        let Some(window) = self.time.device.unobserved_vram_limit() else {
+            return Ok(None);
+        };
+        let mut count = u64::from(tiles)
+            .min((self.time.remaining() + 4) / tile_cycles)
+            .min(window.saturating_add(3) / tile_cycles)
+            .min(u64::from(0xa000 - destination) / 16);
+        loop {
+            if count == 0 {
+                return Ok(None);
+            }
+            let cycles = count * tile_cycles - if count == u64::from(tiles) { 4 } else { 0 };
+            if cycles <= self.time.remaining() && cycles < window {
+                break;
+            }
+            count -= 1;
+        }
+        if self
+            .time
+            .elapsed
+            .checked_add(count * tile_cycles - 4)
+            .is_none()
+        {
+            return Ok(None);
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        let accessible = self.time.device.vram_accessible();
+        let mut accepted = 0;
+        let mut last_de = 0;
+        for index in 0..count {
+            let offset = source_offset.wrapping_add((index * source_bytes) as u16);
+            let destination = destination.wrapping_add((index * 16) as u16);
+            let mut values = [0; 16];
+            if self
+                .assets
+                .read_pattern_run(source, offset, &mut values[..source_bytes as usize])
+                .is_none()
+            {
+                break;
+            }
+            if accessible {
+                if DOUBLE {
+                    let mut expanded = [0; 16];
+                    for (out, &value) in expanded
+                        .chunks_exact_mut(2)
+                        .zip(&values[..source_bytes as usize])
+                    {
+                        out.fill(value);
+                    }
+                    self.patterns
+                        .write_run(destination, &expanded)
+                        .expect("validated tile-run VRAM destination");
+                } else {
+                    self.patterns
+                        .write_run(destination, &values)
+                        .expect("validated tile-run VRAM destination");
+                }
+                self.time
+                    .device
+                    .record_native_background_run(destination, 16);
+            }
+            last_de = u16::from_le_bytes([
+                values[source_bytes as usize - 2],
+                values[source_bytes as usize - 1],
+            ]);
+            accepted += 1;
+        }
+        if accepted == 0 {
+            return Ok(None);
+        }
+        self.time.elapse_reserved_interval(
+            accepted * tile_cycles - if accepted == u64::from(tiles) { 4 } else { 0 },
+        )?;
+        Ok(Some((
+            accepted as u8,
+            source_offset.wrapping_add((accepted * source_bytes) as u16),
+            destination.wrapping_add((accepted * 16) as u16),
+            last_de,
+        )))
+    }
+
+    #[inline(always)]
+    fn try_vblank_tile_writes<const DOUBLE: bool>(
+        &mut self,
+        source: PatternSource,
+        source_offset: u16,
+        destination: u16,
+    ) -> Result<Option<(u16, u16, u16)>, Self::Error> {
+        #[cfg(test)]
+        if self.check_each_instruction {
+            return Ok(None);
+        }
+        let writes = if DOUBLE { 4 } else { 2 };
+        let pairs = if DOUBLE { 4 } else { 8 };
+        let source_bytes = if DOUBLE { 8 } else { 16 };
+        let cycles = pairs * (12 + writes * 12) + 4;
+        if !self.time.active_vblank
+            || self.patterns.bytes().len() != 0x2000
+            || (!self.validated && self.time.shadow_oam.len() != 160)
+            || !(0x8000..0xa000).contains(&destination)
+            || destination & 0xff > 0xf0
+            || self.time.remaining() < u64::from(cycles)
+            || self.time.elapsed.checked_add(u64::from(cycles)).is_none()
+            || !self.time.device.unobserved_vram_window(u64::from(cycles))
+        {
+            return Ok(None);
+        }
+        let mut values = [0; 16];
+        if self
+            .assets
+            .read_pattern_run(source, source_offset, &mut values[..source_bytes])
+            .is_none()
+        {
+            return Ok(None);
+        }
+        self.check_memory()?;
+        self.reserve()?;
+        if self.time.device.vram_accessible() {
+            if DOUBLE {
+                let mut expanded = [0; 16];
+                for (out, &value) in expanded.chunks_exact_mut(2).zip(&values[..source_bytes]) {
+                    out.fill(value);
+                }
+                self.patterns
+                    .write_run(destination, &expanded)
+                    .expect("validated tile VRAM destination");
+            } else {
+                self.patterns
+                    .write_run(destination, &values)
+                    .expect("validated tile VRAM destination");
+            }
+            self.time
+                .device
+                .record_native_background_run(destination, 16);
+        }
+        self.time.elapse_reserved_interval(cycles)?;
+        let de = u16::from_le_bytes([values[source_bytes - 2], values[source_bytes - 1]]);
+        Ok(Some((
+            source_offset.wrapping_add(source_bytes as u16),
+            destination.wrapping_add(16),
+            de,
+        )))
+    }
+
     #[inline(always)]
     fn try_vblank_pair_writes<const DOUBLE: bool>(
         &mut self,
@@ -979,18 +1982,18 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
         let cycles = writes * 12 + if last_pair { 4 } else { 0 };
         if !self.time.active_vblank
             || self.patterns.bytes().len() != 0x2000
-            || self.time.shadow_oam.len() != 160
+            || (!self.validated && self.time.shadow_oam.len() != 160)
             || !(0x8000..0xa000).contains(&destination)
             || self.time.remaining() < u64::from(cycles)
             || self.time.elapsed.checked_add(u64::from(cycles)).is_none()
-            || !self.time.device.has_no_event_within(cycles)
+            || !self.time.device.unobserved_vram_window(u64::from(cycles))
         {
             return Ok(None);
         }
         // Every store stays in this same 256-byte page. Only the increment
-        // after the last store can change the high byte. With no LCD/DMA edge,
-        // VRAM accessibility is constant and no observer can see the stores
-        // between instructions. Refusal and event edges use execute() instead.
+        // after the last store can change the high byte. The checked VBlank
+        // window keeps VRAM accessible without a background scanout observer.
+        // Refusal and other raster phases use execute() instead.
         self.check_memory()?;
         self.reserve()?;
         let accessible = self.time.device.vram_accessible();
@@ -1111,16 +2114,13 @@ impl<A: PatternAssets> PatternBus<'_, A> {
                     )?,
                 ))
             }
-            Some(PatternAccess::ReadPair { source, offset, .. }) => {
-                let low = self.assets.read_pattern_byte(source, offset).ok_or(
-                    DisplayWorkError::Resource(RestoreError::MissingSource(source, offset)),
-                )?;
-                let high_offset = offset.wrapping_add(1);
-                let high = self.assets.read_pattern_byte(source, high_offset).ok_or(
-                    DisplayWorkError::Resource(RestoreError::MissingSource(source, high_offset)),
-                )?;
-                Some(u16::from(low) | (u16::from(high) << 8))
-            }
+            Some(PatternAccess::ReadPair { source, offset, .. }) => Some(
+                self.assets
+                    .read_pattern_pair(source, offset)
+                    .map_err(|offset| {
+                        DisplayWorkError::Resource(RestoreError::MissingSource(source, offset))
+                    })?,
+            ),
             Some(PatternAccess::Write { destination, .. }) => {
                 self.patterns
                     .read(destination)
@@ -1277,7 +2277,7 @@ mod tests {
                     (0..=1400).step_by(4).chain([4096, 70224]).collect()
                 } else {
                     vec![
-                        0, 4, 128, 132, 140, 152, 256, 512, 1024, 4096, 8000, 9500, 11_000, 70224,
+                        0, 4, 128, 128, 140, 152, 256, 512, 1024, 4096, 8000, 9500, 11_000, 70224,
                     ]
                 };
                 for (destination, source_offset) in [(0x8800, 17), (0x9fff, 65535)] {
@@ -1644,6 +2644,54 @@ mod tests {
     }
 
     #[test]
+    fn buffer_copy_fast_path_matches_every_original_store_budget_and_cursor() {
+        use super::super::screen_buffer_work::ScreenBufferWork;
+        struct InstructionBus<'a>(&'a mut DisplayWorkTime);
+        impl DisplayInstructionBus for InstructionBus<'_> {
+            type Error = DisplayWorkError;
+            fn execute(
+                &mut self,
+                instruction: DisplayInstruction,
+            ) -> Result<Option<u8>, Self::Error> {
+                self.0.execute(instruction)
+            }
+        }
+        for lcdc in [0x11, 0x91, 0xb3] {
+            for offset in [0, 252, 65_660] {
+                for budget in (0..=20_000u64).step_by(997).chain([52, 18_908, 70_224]) {
+                    let mut time = DisplayWorkTime::default();
+                    time.begin_native_update();
+                    time.device_mut().write_port(0xff40, lcdc, 0xc3).unwrap();
+                    time.elapse(offset).unwrap();
+                    time.set_vblank_dispatch_enabled(true);
+                    time.deadline = time.elapsed + budget;
+                    let source: Vec<_> = (0..360).map(|i| (i * 37 % 256) as u8).collect();
+                    let mut work = ScreenBufferWork::new(source).unwrap();
+                    let mut reference_work = work.clone();
+                    let mut reference_time = time.clone();
+                    let mut tiles = [0; 360];
+                    let mut expected_tiles = tiles;
+                    let actual = work.run(&mut time.display_bus(), &mut tiles);
+                    let expected = reference_work.run(
+                        &mut InstructionBus(&mut reference_time),
+                        &mut expected_tiles,
+                    );
+                    assert_eq!(
+                        actual, expected,
+                        "lcdc={lcdc:x} offset={offset} budget={budget}"
+                    );
+                    assert_eq!(work, reference_work);
+                    assert_eq!(tiles, expected_tiles);
+                    assert_eq!(
+                        serde_json::to_value(&time).unwrap(),
+                        serde_json::to_value(&reference_time).unwrap()
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
     fn plain_run_refuses_foreground_and_stops_before_port_access_without_effects() {
         let code = [
             DisplayInstruction { tcycles: 4, access: None },
@@ -1666,6 +2714,54 @@ mod tests {
         assert_eq!(time.device().read_port(0xff47).unwrap(), 0xe4);
         assert!(time.active_vblank());
         assert_eq!(time.interrupt_returns, 0);
+    }
+
+    #[test]
+    fn foreground_plain_runs_stop_at_the_same_budget_and_vblank_instruction_boundaries() {
+        let code: Vec<_> = [4, 12, 16, 8, 24, 4, 8]
+            .into_iter()
+            .cycle()
+            .take(8192)
+            .map(|tcycles| DisplayInstruction {
+                tcycles,
+                access: None,
+            })
+            .collect();
+        for offset in [0, 79, 252, 65_500, 65_660, 65_664, 65_668] {
+            for budget in (0..=256u64).step_by(4).chain([511, 4096, 70_224]) {
+                let mut time = DisplayWorkTime::default();
+                time.begin_native_update();
+                time.elapse(offset).unwrap();
+                time.set_vblank_dispatch_enabled(true);
+                time.deadline = time.elapsed + budget;
+                let initially_pending = time.pending_vblank_dispatch();
+                let mut reference = time.clone();
+                let actual = time.display_bus().execute_plain_run(code.iter().copied());
+                let mut count = 0;
+                let expected = loop {
+                    let Some(&instruction) = code.get(count) else {
+                        break Ok(count);
+                    };
+                    match reference.execute(instruction) {
+                        Ok(_) => count += 1,
+                        Err(DisplayWorkError::Budget | DisplayWorkError::InterruptPending)
+                            if count > 0 =>
+                        {
+                            break Ok(count)
+                        }
+                        Err(DisplayWorkError::InterruptPending) => break Ok(count),
+                        Err(DisplayWorkError::Budget) if initially_pending => break Ok(count),
+                        Err(error) => break Err(error),
+                    }
+                };
+                assert_eq!(actual, expected, "offset={offset} budget={budget}");
+                assert_eq!(
+                    serde_json::to_value(&time).unwrap(),
+                    serde_json::to_value(&reference).unwrap(),
+                    "offset={offset} budget={budget}"
+                );
+            }
+        }
     }
 
     #[test]

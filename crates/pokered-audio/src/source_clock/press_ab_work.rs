@@ -25,7 +25,10 @@ pub(crate) fn source_noise_id(native_id: u8, data: &[u8]) -> Option<u8> {
 pub(crate) fn source_pulse_id(channel: usize, native_id: u8, data: &[u8]) -> Option<u8> {
     use crate::sfx_data::{self, SfxId};
     match (channel, native_id) {
-        (4, id) if id == SfxId::PressAB as u8 && data == sfx_data::SFX_PRESS_AB_CH5 => {
+        (4, id)
+            if id == SfxId::PressAB as u8
+                && super::noise_data_eq(Some(sfx_data::SFX_PRESS_AB_CH5), data) =>
+        {
             Some(SOURCE_PRESS_AB_ID)
         }
         (4, id) if id == SfxId::Swap as u8 && data == sfx_data::SFX_SWAP_CH5 => {

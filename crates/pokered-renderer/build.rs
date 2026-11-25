@@ -179,16 +179,56 @@ fn generate_preconverted_assets(manifest_dir: &str, out_dir: &str) {
     }
     writeln!(m, "];").unwrap();
     writeln!(m).unwrap();
+    let slot_count = (entries.len() * 2).next_power_of_two();
+    let hash = |subdir: &str, name: &str| {
+        subdir
+            .bytes()
+            .chain([0xff])
+            .chain(name.bytes())
+            .fold(0x811c9dc5u32, |hash, byte| {
+                (hash ^ u32::from(byte)).wrapping_mul(0x01000193)
+            }) as usize
+            & (slot_count - 1)
+    };
+    let mut slots = vec![u16::MAX; slot_count];
+    for (index, (subdir, stem, _)) in entries.iter().enumerate() {
+        let mut slot = hash(subdir, stem);
+        while slots[slot] != u16::MAX {
+            let occupied = &entries[usize::from(slots[slot])];
+            assert!(occupied.0 != *subdir || occupied.1 != *stem);
+            slot = (slot + 1) & (slot_count - 1);
+        }
+        slots[slot] = index as u16;
+    }
+    writeln!(
+        m,
+        "static PRECONVERTED_ASSET_SLOTS: [u16; {}] = {:?};",
+        slot_count, slots
+    )
+    .unwrap();
+    writeln!(m).unwrap();
     writeln!(
         m,
         "pub fn get_preconverted_asset(subdir: &str, name: &str) -> Option<&'static [u8]> {{"
     )
     .unwrap();
+    writeln!(m, "    let hash = subdir.bytes().chain([0xff]).chain(name.bytes()).fold(0x811c9dc5u32, |hash, byte| (hash ^ u32::from(byte)).wrapping_mul(0x01000193)) as usize & {};", slot_count - 1).unwrap();
+    writeln!(m, "    let mut slot = hash;").unwrap();
+    writeln!(m, "    loop {{").unwrap();
+    writeln!(m, "        let index = PRECONVERTED_ASSET_SLOTS[slot];").unwrap();
+    writeln!(m, "        if index == u16::MAX {{ return None; }}").unwrap();
     writeln!(
         m,
-        "    PRECONVERTED_ASSETS.binary_search_by(|(s, n, _)| (*s, *n).cmp(&(subdir, name))).ok().map(|index| PRECONVERTED_ASSETS[index].2)"
+        "        let (s, n, bytes) = PRECONVERTED_ASSETS[index as usize];"
     )
     .unwrap();
+    writeln!(
+        m,
+        "        if (s.as_ptr() == subdir.as_ptr() || s == subdir) && (n.as_ptr() == name.as_ptr() || n == name) {{ return Some(bytes); }}"
+    )
+    .unwrap();
+    writeln!(m, "        slot = (slot + 1) & {};", slot_count - 1).unwrap();
+    writeln!(m, "    }}").unwrap();
     writeln!(m, "}}").unwrap();
     m.flush().unwrap();
 }

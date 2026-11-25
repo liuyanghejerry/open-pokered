@@ -42,6 +42,88 @@ impl SpriteBankCallWork {
         self.step = 12;
         true
     }
+    pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        self.run_inner(bus, false)
+    }
+    pub fn run_until_body<B: DisplayInstructionBus>(
+        &mut self,
+        bus: &mut B,
+    ) -> Result<(), B::Error> {
+        self.run_inner(bus, true)
+    }
+    fn run_inner<B: DisplayInstructionBus>(
+        &mut self,
+        bus: &mut B,
+        body: bool,
+    ) -> Result<(), B::Error> {
+        if body && self.step == 0 {
+            if let Some(saved) = bus.execute_sprite_bank_call(self.target_bank, None)? {
+                self.saved = saved;
+                self.a = self.target_bank;
+                self.step = 11;
+                return Ok(());
+            }
+        }
+        if !body && self.step == 12 {
+            if let Some(saved) = bus.execute_sprite_bank_call(self.target_bank, Some(self.saved))? {
+                self.a = saved;
+                self.step = 17;
+                return Ok(());
+            }
+        }
+        loop {
+            if self.finished() || (body && self.step == 11) {
+                return Ok(());
+            }
+            if self.step == 11 {
+                assert!(self.body_returned());
+            }
+            let plain: &[u8] = match self.step {
+                0 => &[8, 12, 24],
+                4 => &[16, 4],
+                8 => &[12, 16, 4],
+                12 => &[12, 4, 12],
+                _ => &[],
+            };
+            if !plain.is_empty() {
+                let total = u64::from(plain.iter().map(|&cycles| u32::from(cycles)).sum::<u32>());
+                let count = bus.execute_plain_cycles_total(plain, total)?;
+                if count == plain.len() {
+                    match self.step {
+                        0 => self.step = 3,
+                        4 => {
+                            self.saved = self.a;
+                            self.a = self.target_bank;
+                            self.step = 6;
+                        }
+                        8 => self.step = 11,
+                        12 => {
+                            self.a = self.saved;
+                            self.step = 15;
+                        }
+                        _ => unreachable!(),
+                    }
+                } else if count != 0 {
+                    for _ in 0..count {
+                        self.advance_plain();
+                    }
+                }
+                if count != 0 {
+                    continue;
+                }
+            }
+            self.step(bus)?;
+        }
+    }
+    fn advance_plain(&mut self) {
+        match self.step {
+            4 => self.saved = self.a,
+            5 => self.a = self.target_bank,
+            13 => self.a = self.saved,
+            _ => (),
+        }
+        self.step += 1;
+    }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         let (t, access) = match self.step {
             0 => (8, None),
@@ -109,5 +191,26 @@ mod tests {
         assert_eq!(bus.source_loaded_rom_bank(), 1);
         assert_eq!(bus.selected_rom_bank(), 1);
         assert!(!w.body_returned());
+    }
+
+    #[test]
+    fn direct_plain_segments_match_single_instruction_bank_boundaries() {
+        let mut actual = SpriteBankCallWork::default();
+        let mut expected = actual;
+        let mut time = DisplayWorkTime::default();
+        time.begin_native_update();
+        time.device_mut().request_interrupt(1);
+        time.enter_pending_vblank().unwrap();
+        let mut reference = time.clone();
+        actual.run_until_body(&mut time.display_bus()).unwrap();
+        while expected.step(&mut reference).unwrap() {}
+        assert_eq!(actual, expected);
+        assert!(actual.body_returned());
+        assert!(expected.body_returned());
+        actual.run(&mut time.display_bus()).unwrap();
+        while expected.step(&mut reference).unwrap() {}
+        assert_eq!(actual, expected);
+        assert_eq!(time.elapsed(), reference.elapsed());
+        assert_eq!(time.device(), reference.device());
     }
 }

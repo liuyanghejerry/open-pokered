@@ -198,15 +198,28 @@ fn draw_entry<P: Painter>(
         } else {
             120
         };
-        let mut display_name = String::new();
-        for ch in name.chars().take(NAME_MAX_LEN) {
-            let next = format!("{display_name}{ch}");
-            if dl.tx * 8 + painter.measure_text_px(&next) > name_right {
-                break;
+        let mut end = 0usize;
+        let mut width = 0u32;
+        if painter.supports_proportional() {
+            let mut ch_buf = [0u8; 4];
+            for ch in name.chars().take(NAME_MAX_LEN) {
+                let ch_w = painter.measure_text_px(ch.encode_utf8(&mut ch_buf));
+                if dl.tx * 8 + width + ch_w > name_right {
+                    break;
+                }
+                width += ch_w;
+                end += ch.len_utf8();
             }
-            display_name.push(ch);
+        } else {
+            for ch in name.chars().take(NAME_MAX_LEN) {
+                if dl.tx * 8 + width + 8 > name_right {
+                    break;
+                }
+                width += 8;
+                end += ch.len_utf8();
+            }
         }
-        painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, &display_name, dl.color.into());
+        painter.draw_text_px(dl.tx * 8, (dl.ty + row) * 8, &name[..end], dl.color.into());
     }
 
     // PrintLevel omits the level marker at 100 (home/pokemon.asm).

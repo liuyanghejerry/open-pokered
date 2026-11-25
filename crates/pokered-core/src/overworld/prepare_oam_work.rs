@@ -3,6 +3,7 @@
 //! executes on the common bus; shadow-OAM writes occur at their bus access,
 //! never at expansion time. This is not an aggregate OAM duration surcharge.
 use super::display_lcd_work::{DisplayAccess, DisplayInstruction, DisplayInstructionBus};
+use super::display_work_time::DisplayWorkError;
 use crate::alloc_prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -67,14 +68,34 @@ impl Instruction {
             },
         }
     }
-    fn has_state_effect(self) -> bool {
-        matches!(
-            self,
-            Self::Enabled(_) | Self::AdjustY { .. } | Self::AdjustX { .. }
-        )
+}
+struct ShadowRun<'a>(&'a [Instruction], usize);
+impl Iterator for ShadowRun<'_> {
+    type Item = DisplayInstruction;
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        let instruction = match *self.0.get(self.1)? {
+            Instruction::Plain(tcycles) => DisplayInstruction {
+                tcycles,
+                access: None,
+            },
+            Instruction::WriteOam { offset, value } => DisplayInstruction {
+                tcycles: 8,
+                access: Some(DisplayAccess::Write {
+                    port: 0xc300 + u16::from(offset),
+                    value,
+                    at_tcycle: 4,
+                }),
+            },
+            Instruction::Enabled(_) | Instruction::AdjustY { .. } | Instruction::AdjustX { .. } => {
+                self.1 = self.0.len();
+                return None;
+            }
+        };
+        self.1 += 1;
+        Some(instruction)
     }
 }
-
 trait InstructionSink {
     fn push(&mut self, instruction: Instruction);
     fn plain(&mut self, cycles: &[u8]);
@@ -101,6 +122,12 @@ pub struct PrepareOamWork {
     code: Vec<Instruction>,
     next: usize,
     return_carry: bool,
+    #[serde(default)]
+    scheduled_cycles: u32,
+    #[serde(default)]
+    shadow_stores: Vec<(u8, u8)>,
+    #[serde(default)]
+    coordinate_writes: Vec<(u8, u8, u8)>,
 }
 fn emit(p: &mut impl InstructionSink, cycles: &[u8]) {
     p.plain(cycles);
@@ -158,12 +185,44 @@ impl PrepareOamWork {
         let mut code = Vec::with_capacity(count);
         Self::expand(&state, &mut code)?;
         debug_assert_eq!(code.len(), count);
-        Ok(Self {
+        let mut work = Self {
             state,
             code,
             next: 0,
             return_carry,
-        })
+            scheduled_cycles: 0,
+            shadow_stores: Vec::new(),
+            coordinate_writes: Vec::new(),
+        };
+        work.update_schedule();
+        Ok(work)
+    }
+    fn update_schedule(&mut self) {
+        self.scheduled_cycles = 0;
+        self.shadow_stores.clear();
+        self.coordinate_writes.clear();
+        for &instruction in &self.code {
+            match instruction {
+                Instruction::Plain(tcycles) => {
+                    self.scheduled_cycles += u32::from(tcycles);
+                }
+                Instruction::WriteOam { offset, value } => {
+                    self.scheduled_cycles += 8;
+                    self.shadow_stores.push((offset, value));
+                }
+                Instruction::Enabled(_) => {
+                    self.scheduled_cycles += 16;
+                }
+                Instruction::AdjustY { slot, value } => {
+                    self.scheduled_cycles += 8;
+                    self.coordinate_writes.push((slot, value, 0));
+                }
+                Instruction::AdjustX { slot, value } => {
+                    self.scheduled_cycles += 8;
+                    self.coordinate_writes.push((slot, value, 1));
+                }
+            }
+        }
     }
     fn expand(
         state: &PrepareOamState,
@@ -336,20 +395,63 @@ impl PrepareOamWork {
     pub fn state(&self) -> &PrepareOamState {
         &self.state
     }
+    pub fn state_mut(&mut self) -> &mut PrepareOamState {
+        &mut self.state
+    }
     pub fn finished(&self) -> bool {
         self.next == self.code.len()
+    }
+    pub fn restart(&mut self, state: PrepareOamState) {
+        self.state = state;
+        self.next = 0;
+    }
+    pub fn restart_same(&mut self) {
+        self.next = 0;
+    }
+    pub fn recompile(&mut self, state: PrepareOamState) -> Result<(), PrepareOamError> {
+        self.state = state;
+        self.next = 0;
+        self.return_carry = self.state.enabled > 1;
+        self.scheduled_cycles = 0;
+        self.shadow_stores.clear();
+        self.coordinate_writes.clear();
+        self.code.clear();
+        if let Err(error) = Self::expand(&self.state, &mut self.code) {
+            self.code.clear();
+            return Err(error);
+        }
+        self.update_schedule();
+        Ok(())
+    }
+    pub fn run_native(
+        &mut self,
+        bus: &mut super::display_work_time::DisplayBus<'_>,
+    ) -> Result<(), DisplayWorkError> {
+        if self.next == 0 && self.state.enabled == 1 && self.scheduled_cycles != 0 {
+            let accepted = bus.execute_shadow_oam_total(
+                self.shadow_stores.iter().copied(),
+                self.scheduled_cycles,
+            )?;
+            if accepted {
+                for &(slot, value, axis) in &self.coordinate_writes {
+                    if axis == 0 {
+                        self.state.sprites[usize::from(slot)].adjusted_y = value;
+                    } else {
+                        self.state.sprites[usize::from(slot)].adjusted_x = value;
+                    }
+                }
+                self.next = self.code.len();
+                return Ok(());
+            }
+        }
+        self.run(bus)
     }
     /// Retain all observable instructions/effects and the exact cursor at a
     /// refused instruction. Only the bus can prove that an accepted prefix
     /// has no observable intermediate effect (in particular, no live DMA).
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         while !self.finished() {
-            let count = bus.execute_shadow_oam_run(
-                self.code[self.next..]
-                    .iter()
-                    .take_while(|i| !i.has_state_effect())
-                    .map(|i| i.bus()),
-            )?;
+            let count = bus.execute_shadow_oam_run(ShadowRun(&self.code[self.next..], 0))?;
             if count != 0 {
                 self.next += count;
                 continue;
@@ -395,6 +497,61 @@ impl PrepareOamWork {
 mod tests {
     use super::super::display_work_time::{DisplayWorkError, DisplayWorkTime};
     use super::*;
+    #[test]
+    fn recompile_reuses_allocation_and_matches_fresh_enabled_and_control_programs() {
+        let sprite = OamSprite {
+            picture: 1,
+            image: 0,
+            y: 20,
+            x: 30,
+            grass: 0,
+            adjusted_y: 0,
+            adjusted_x: 0,
+        };
+        let large = PrepareOamState {
+            enabled: 1,
+            movement_flags: 0,
+            sprites: (0..16)
+                .map(|n| OamSprite {
+                    picture: u8::from(n < 10),
+                    ..sprite
+                })
+                .collect(),
+        };
+        let small = PrepareOamState {
+            sprites: vec![
+                OamSprite {
+                    picture: 0,
+                    ..sprite
+                };
+                16
+            ],
+            ..large.clone()
+        };
+        let mut cached = PrepareOamWork::new(large.clone()).unwrap();
+        let allocation = cached.code.as_ptr();
+        for state in [
+            small,
+            large,
+            PrepareOamState {
+                enabled: 0,
+                movement_flags: 0,
+                sprites: Vec::new(),
+            },
+        ] {
+            let expected = if state.enabled == 1 {
+                PrepareOamWork::new(state.clone()).unwrap()
+            } else {
+                PrepareOamWork::control_only(state.enabled).unwrap()
+            };
+            cached.recompile(state).unwrap();
+            assert_eq!(
+                serde_json::to_value(&cached).unwrap(),
+                serde_json::to_value(&expected).unwrap()
+            );
+            assert_eq!(cached.code.as_ptr(), allocation);
+        }
+    }
     #[test]
     fn instruction_trace_memory_regression_1390() {
         let mut traces = Vec::new();
@@ -454,9 +611,11 @@ mod tests {
         for data in [include_str!("prepare_oam_cases_1113.json"), include_str!("prepare_oam_constructed_1113.json")] {
             let fixture: serde_json::Value = serde_json::from_str(data).unwrap();
             for case in fixture["cases"].as_array().unwrap() {
-                let state: PrepareOamState = serde_json::from_value(case["before"].clone()).unwrap();
-                let template = PrepareOamWork::new(state).unwrap();
-                let shadow: Vec<u8> = serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
+                let state: PrepareOamState =
+                    serde_json::from_value(case["before"].clone()).unwrap();
+                let template = PrepareOamWork::new(state.clone()).unwrap();
+                let shadow: Vec<u8> =
+                    serde_json::from_value(case["before"]["shadow_oam"].clone()).unwrap();
                 for budget in (0..4096u64).step_by(97).chain([4, 12, 20, 65535]) {
                     let mut time = DisplayWorkTime::default();
                     time.begin_native_update();
@@ -487,6 +646,11 @@ mod tests {
                     }
                     assert!(work.finished());
                     assert!(time.active_vblank());
+                    work.restart(state.clone());
+                    assert_eq!(
+                        serde_json::to_value(work).unwrap(),
+                        serde_json::to_value(&template).unwrap()
+                    );
                 }
             }
         }

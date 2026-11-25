@@ -34,6 +34,68 @@ pub trait DisplayInstructionBus {
     {
         Ok(0)
     }
+    fn execute_plain_cycles(&mut self, cycles: &[u8]) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.execute_plain_run(cycles.iter().map(|&tcycles| DisplayInstruction {
+            tcycles,
+            access: None,
+        }))
+    }
+    fn execute_plain_cycles_total(
+        &mut self,
+        cycles: &[u8],
+        _total: u64,
+    ) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        self.execute_plain_cycles(cycles)
+    }
+    fn execute_plain_total(&mut self, _total: u32) -> Result<bool, Self::Error> {
+        Ok(false)
+    }
+    fn execute_joypad_reads(
+        &mut self,
+        _select: Option<u8>,
+        _count: u8,
+    ) -> Result<Option<(u8, u8)>, Self::Error> {
+        Ok(None)
+    }
+    fn execute_irq_random(
+        &mut self,
+        _carry: bool,
+    ) -> Result<Option<(u8, u8, bool, u8, u8)>, Self::Error> {
+        Ok(None)
+    }
+    fn execute_sprite_bank_call(
+        &mut self,
+        _target_bank: u8,
+        _restore_bank: Option<u8>,
+    ) -> Result<Option<u8>, Self::Error> {
+        Ok(None)
+    }
+    fn execute_audio_bank_dispatch(
+        &mut self,
+        _bank: u8,
+    ) -> Result<Option<(u8, bool)>, Self::Error> {
+        Ok(None)
+    }
+    fn execute_joypad_frame(&mut self) -> Result<Option<(u8, u8)>, Self::Error> {
+        Ok(None)
+    }
+    fn execute_buffer_copy(
+        &mut self,
+        _source: &[u8],
+        _destination: &mut [u8],
+        _finish_at_final_store: bool,
+    ) -> Result<usize, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(0)
+    }
     /// Optional IRQ prefix containing only plain instructions and shadow-OAM
     /// stores. The owner must exclude DMA and interrupt interleaving, so these
     /// RAM stores cannot become visible until the accepted prefix returns.
@@ -47,7 +109,105 @@ pub trait DisplayInstructionBus {
     {
         Ok(0)
     }
+    /// Execute an already compiled, wholly affordable shadow-OAM program.
+    /// Stores retain their page-relative byte addresses; false requests the
+    /// ordinary instruction path without consuming time or changing memory.
+    fn execute_shadow_oam_total<I: Iterator<Item = (u8, u8)>>(
+        &mut self,
+        _stores: I,
+        _cycles: u32,
+    ) -> Result<bool, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(false)
+    }
+    /// Execute a complete shadow-OAM clear with the same affordability rules
+    /// as `execute_shadow_oam_total`; false requests ordinary stepping.
+    fn execute_shadow_oam_clear(&mut self, _cycles: u32) -> Result<bool, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(false)
+    }
+    /// Poll LY through its actual 12/8/12-cycle instructions. None means use
+    /// ordinary stepping; Some is the last LY, with 145 ending the poll. The
+    /// owner must reject this run while VBlank dispatch remains enabled.
+    fn execute_ly145_run(&mut self) -> Result<Option<u8>, Self::Error> {
+        Ok(None)
+    }
 }
+pub(crate) struct PlainInstructionBus(pub(crate) u8);
+impl DisplayInstructionBus for PlainInstructionBus {
+    type Error = core::convert::Infallible;
+    fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
+        assert_eq!(instruction.access, None);
+        self.0 = instruction.tcycles;
+        Ok(None)
+    }
+}
+impl super::pattern_copy_work::PatternInstructionBus for PlainInstructionBus {
+    type Error = core::convert::Infallible;
+    fn execute(
+        &mut self,
+        instruction: super::pattern_copy_work::PatternInstruction,
+    ) -> Result<Option<u16>, Self::Error> {
+        assert_eq!(instruction.access, None);
+        self.0 = instruction.tcycles;
+        Ok(None)
+    }
+}
+
+/// Speculatively advance private work, then commit only instructions admitted
+/// by the actual clock. Work using this helper must not access ports or state
+/// observed by the display device. Unsupported buses retain ordinary stepping.
+pub(crate) fn run_plain_work<W: Clone, B: DisplayInstructionBus>(
+    work: &mut W,
+    bus: &mut B,
+    finished: impl Fn(&W) -> bool,
+    step: impl Fn(&mut W, &mut PlainInstructionBus) -> Result<bool, core::convert::Infallible>,
+    step_bus: impl Fn(&mut W, &mut B) -> Result<bool, B::Error>,
+) -> Result<(), B::Error> {
+    while !finished(work) {
+        let mut trial = work.clone();
+        let mut generated = 0usize;
+        let mut halted = false;
+        let accepted = bus.execute_plain_run(core::iter::from_fn(|| {
+            let mut plain = PlainInstructionBus(0);
+            match step(&mut trial, &mut plain) {
+                Ok(true) => {
+                    generated += 1;
+                    Some(DisplayInstruction {
+                        tcycles: plain.0,
+                        access: None,
+                    })
+                }
+                Ok(false) => {
+                    halted = true;
+                    None
+                }
+                Err(error) => match error {},
+            }
+        }))?;
+        if accepted == 0 {
+            if !step_bus(work, bus)? {
+                return Ok(());
+            }
+        } else if accepted == generated {
+            *work = trial;
+            if halted {
+                return Ok(());
+            }
+        } else {
+            let mut plain = PlainInstructionBus(0);
+            for _ in 0..accepted {
+                let _ = step(work, &mut plain);
+            }
+        }
+    }
+    Ok(())
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum DisableStep {
     ClearA,
@@ -126,13 +286,18 @@ impl DisableLcdWork {
         })
     }
     /// Run the same instructions until return or a bus refusal. The hot LY
-    /// loop uses constant instruction operands so the native compiler can
-    /// specialize its bus calls. Every read, compare and branch still goes
-    /// through the bus separately; commit each continuation only on success.
+    /// loop may use the bus's interrupt-safe polling path; its reads, compares,
+    /// branches and exact instruction timing remain unchanged. Commit each
+    /// continuation only after the corresponding instructions succeed.
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
         use DisableStep::*;
         loop {
             if self.step == ReadLy {
+                if let Some(ly) = bus.execute_ly145_run()? {
+                    self.a = ly;
+                    self.step = if ly == 145 { ReadLcdc } else { ReadLy };
+                    continue;
+                }
                 let value = bus.execute(read(0xff44))?;
                 self.a = value.expect("display read receipt");
                 self.step = CompareLy;

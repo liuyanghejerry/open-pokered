@@ -82,21 +82,101 @@ impl EffectInstructionWork {
     pub fn finished(&self) -> bool {
         self.stage == EffectStage::Done
     }
+    pub(crate) fn no_apu_write_program(&self) -> Option<u32> {
+        let i = self.input;
+        if self.stage != EffectStage::Entry(0) {
+            return None;
+        }
+        if i.channel < 4 && i.paired_sfx_active {
+            return Some(80 + 8 + 32 + 8 + 16);
+        }
+        let mut cycles = 80;
+        if i.flags2 & 1 == 0 && i.flags1 & 4 != 0 {
+            cycles += if i.channel < 4 { 8 + 32 + 12 } else { 12 };
+            return Some(cycles + 44 + 40 + 8 + 32 + 12 + 16);
+        }
+        if i.flags1 & 16 != 0 {
+            return None;
+        }
+        cycles += if i.channel < 4 { 8 + 32 + 12 } else { 12 };
+        cycles += 44 + 40 + if i.flags2 & 1 != 0 { 12 } else { 8 };
+        cycles += if i.flags2 & 1 == 0 { 32 + 8 } else { 44 + 12 };
+        cycles += 44;
+        if i.vibrato_delay != 0 {
+            return Some(cycles + 32 + 8 + 28);
+        }
+        cycles += 32 + 12;
+        if i.vibrato_extent == 0 {
+            return Some(cycles + 32 + 8 + 16);
+        }
+        if i.vibrato_rate & 15 != 0 {
+            return Some(cycles + 32 + 12 + 44 + 8 + 28);
+        }
+        None
+    }
+    pub(crate) fn complete_no_apu_write(&mut self) {
+        debug_assert!(self.no_apu_write_program().is_some());
+        self.stage = EffectStage::Done;
+    }
     pub(crate) fn slide_result(&self) -> Option<PitchSlideResult> {
         self.slide_result
     }
     /// Fixed instruction prefixes within the current source basic block. The
     /// data-dependent final branch and the actual APU store remain separate.
+    #[inline(always)]
     pub(crate) fn plain_prefix(&self) -> &'static [u8] {
         use EffectStage::*;
         let (code, index): (&[u8], u8) = match self.stage {
+            Entry(0) if self.input.channel < 4 && self.input.paired_sfx_active => {
+                (&[8, 12, 8, 8, 8, 12, 4, 8, 4, 8, 8, 12, 8, 8, 4, 8], 0)
+            }
+            Entry(0) if self.input.channel < 4 => {
+                (&[8, 12, 8, 8, 8, 12, 4, 8, 4, 8, 8, 12, 8, 8, 4, 12], 0)
+            }
+            Entry(0) if self.input.flags2 & 1 != 0 => (
+                &[
+                    8, 12, 8, 8, 8, 12, 4, 8, 4, 8, 12, 12, 8, 12, 12, 8, 12, 8, 12, 12,
+                ],
+                0,
+            ),
+            Entry(0) => (
+                &[
+                    8, 12, 8, 8, 8, 12, 4, 8, 4, 8, 12, 12, 8, 12, 12, 8, 12, 8, 12, 8,
+                ],
+                0,
+            ),
             Entry(n) => (&[8, 12, 8, 8, 8, 12, 4, 8, 4, 8], n),
             Paired(n) if n < 4 => (&[12, 8, 8, 4], n),
             Duty(n) => (&[12, 8, 12, 12], n),
             Pitch(n) if self.input.flags1 & 16 == 0 => (&[12, 8, 12, 12], n),
             Pitch(n) if n < 3 => (&[12, 8, 12], n),
+            Execute(4) if self.input.flags2 & 1 == 0 && self.input.flags1 & 4 != 0 => {
+                (&[8, 12, 8, 12, 12], 0)
+            }
+            Execute(4) if self.input.flags2 & 1 == 0 => (&[8, 12, 8, 12, 8], 0),
+            Execute(4) if self.input.flags1 & 16 == 0 && self.input.vibrato_delay == 0 => {
+                (&[12, 12, 8, 12, 12, 12, 8, 8, 4, 12], 0)
+            }
+            Execute(4) if self.input.flags1 & 16 == 0 => (&[12, 12, 8, 12, 12, 12, 8, 8, 4, 8], 0),
+            Execute(4) => (&[12, 12, 8, 12, 8, 16], 0),
             Execute(n) if n < 4 => (&[8, 12, 8, 12], n),
             Noise(n) if n < 3 => (&[12, 8, 12], n),
+            Extent(4) if self.input.vibrato_extent == 0 => (&[8, 16], 0),
+            Extent(4) if self.input.vibrato_rate & 15 != 0 => {
+                (&[12, 4, 12, 8, 8, 8, 4, 8, 12, 16], 0)
+            }
+            Extent(4) if self.input.flags1 & 8 == 0 => (
+                &[
+                    12, 4, 12, 8, 8, 8, 4, 12, 8, 16, 8, 8, 12, 8, 8, 12, 8, 12, 12,
+                ],
+                0,
+            ),
+            Extent(4) => (
+                &[
+                    12, 4, 12, 8, 8, 8, 4, 12, 8, 16, 8, 8, 12, 8, 8, 12, 8, 12, 8,
+                ],
+                0,
+            ),
             Delay(n) | Extent(n) if n < 4 => (&[12, 8, 8, 4], n),
             Rate(n) if n < 6 => (&[4, 12, 8, 8, 8, 4], n),
             Apply(n) => (&[8, 16, 8, 8, 12, 8, 8, 12, 8, 12], n),
@@ -110,13 +190,94 @@ impl EffectInstructionWork {
         &code[usize::from(index)..]
     }
 
+    fn full_plain_cycles(&self) -> Option<u32> {
+        use EffectStage::*;
+        Some(match self.stage {
+            Entry(0) => 80,
+            Paired(0) | Delay(0) | Extent(0) => 32,
+            Duty(0) => 44,
+            Pitch(0) if self.input.flags1 & 16 == 0 => 44,
+            Pitch(0) | Noise(0) => 32,
+            Execute(0) => 40,
+            Rate(0) => 44,
+            Apply(0) => 100,
+            Subtract(0) | Add(0) => 40,
+            Output(0) => 36,
+            Register(0) => 76,
+            Decay(0) => 28,
+            _ => return None,
+        })
+    }
+
     /// Commit exactly the accepted prefix. Only its last instruction can
     /// leave this block, so the existing transition logic remains authoritative.
-    pub(crate) fn accept_plain_prefix(&mut self, count: usize) -> u32 {
+    #[inline(always)]
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
         use EffectStage::*;
-        let prefix = self.plain_prefix();
         assert!(count > 0 && count <= prefix.len());
-        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        if matches!(self.stage, Extent(4)) {
+            self.stage = if self.input.vibrato_extent == 0 {
+                if count == 1 {
+                    Extent(4)
+                } else {
+                    Return
+                }
+            } else if count == 1 {
+                Extent(4)
+            } else if count <= 7 {
+                Rate((count - 2) as u8)
+            } else if count == 8 {
+                Rate(6)
+            } else if self.input.vibrato_rate & 15 != 0 {
+                Decay((count - 9).min(1) as u8)
+            } else if count <= 18 {
+                Apply((count - 9) as u8)
+            } else {
+                Direction
+            };
+            self.advance();
+            return prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        }
+        if matches!(self.stage, Execute(4)) {
+            self.stage = if count == 1 {
+                Execute(4)
+            } else if self.input.flags2 & 1 == 0 {
+                Noise((count - 2).min(3) as u8)
+            } else if self.input.flags1 & 16 == 0 {
+                if count <= 5 {
+                    Pitch((count - 2) as u8)
+                } else {
+                    Delay((count - 6).min(4) as u8)
+                }
+            } else if count <= 5 {
+                Pitch((count - 2) as u8)
+            } else {
+                SlideJump
+            };
+            self.advance();
+            return prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        }
+        if matches!(self.stage, Entry(0)) && prefix.len() > 10 {
+            self.stage = if count <= 10 {
+                Entry((count - 1) as u8)
+            } else if count == 11 {
+                Gate
+            } else if self.input.channel < 4 {
+                Paired((count - 12).min(4) as u8)
+            } else if count <= 15 {
+                Duty((count - 12) as u8)
+            } else {
+                Execute((count - 16).min(4) as u8)
+            };
+            self.advance();
+            return prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        }
+        let cycles = if count == prefix.len() {
+            self.full_plain_cycles()
+                .unwrap_or_else(|| prefix.iter().map(|&t| u32::from(t)).sum())
+        } else {
+            prefix[..count].iter().map(|&t| u32::from(t)).sum()
+        };
         match &mut self.stage {
             Entry(n) | Paired(n) | Duty(n) | Execute(n) | Noise(n) | Pitch(n) | Delay(n)
             | Extent(n) | Rate(n) | Apply(n) | Subtract(n) | Add(n) | Output(n) | Register(n)
@@ -126,6 +287,7 @@ impl EffectInstructionWork {
         self.advance();
         cycles
     }
+    #[inline(always)]
     pub(crate) fn peek(&self) -> Option<u8> {
         use EffectStage::*;
         let i = self.input;
@@ -245,6 +407,7 @@ impl EffectInstructionWork {
             Done => return None,
         })
     }
+    #[inline(always)]
     fn advance(&mut self) {
         use EffectStage::*;
         let i = self.input;
@@ -692,6 +855,27 @@ mod tests {
     }
 
     #[test]
+    fn no_apu_effect_programs_match_every_instruction_and_return() {
+        for case in fixture().effects {
+            let work = EffectInstructionWork::new(case.input).unwrap();
+            let Some(cycles) = work.no_apu_write_program() else {
+                continue;
+            };
+            let mut expected = work;
+            let mut expected_cycles = 0;
+            while !expected.finished() {
+                assert_eq!(expected.pending_apu_write(), None);
+                expected_cycles += u32::from(expected.next().unwrap());
+            }
+            assert_eq!(cycles, expected_cycles, "{:?}", case.input);
+            let mut completed = work;
+            completed.complete_no_apu_write();
+            assert!(completed.finished());
+            assert_eq!(completed.next(), None);
+        }
+    }
+
+    #[test]
     fn every_effect_plain_prefix_preserves_all_instruction_boundaries_and_stores() {
         let mut prefixes = 0;
         for case in fixture().effects {
@@ -706,7 +890,10 @@ mod tests {
                         cycles += u32::from(t);
                     }
                     let mut actual = cursor;
-                    assert_eq!(actual.accept_plain_prefix(count), cycles);
+                    assert_eq!(
+                        actual.accept_plain_prefix(count, cursor.plain_prefix()),
+                        cycles
+                    );
                     assert_eq!(actual, expected);
                     prefixes += 1;
                 }

@@ -46,6 +46,105 @@ impl MultiplyAddInstructions {
     pub fn result(&self) -> Option<u16> {
         (self.stage == MultiplyStage::Done).then_some(self.result)
     }
+    pub(crate) fn complete_from_init(&self) -> Option<(Self, u32)> {
+        if self.stage != MultiplyStage::Init {
+            return None;
+        }
+        let mut factor = self.factor;
+        let mut value = self.value;
+        let mut result = self.result;
+        let mut cycles = 8u32;
+        loop {
+            let add = factor & 1 != 0;
+            factor >>= 1;
+            if add {
+                result = result.wrapping_add(value);
+                cycles += 24;
+            } else {
+                cycles += 20;
+            }
+            let carry = value & 0x80 != 0;
+            value = value.wrapping_shl(1);
+            if factor == 0 {
+                cycles += 48;
+                return Some((
+                    Self {
+                        stage: MultiplyStage::Done,
+                        factor: 0,
+                        value,
+                        result,
+                        carry,
+                    },
+                    cycles,
+                ));
+            }
+            cycles += 40;
+        }
+    }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use MultiplyStage::*;
+        if matches!(self.stage, Init | Return | Done) {
+            return &[];
+        }
+        let (carry, done) = if self.stage == Shift {
+            (self.factor & 1 != 0, self.factor <= 1)
+        } else {
+            (self.carry, self.factor == 0)
+        };
+        let code: &[u8] = match (carry, done) {
+            (false, false) => &[8, 12, 8, 8, 4, 8, 12],
+            (true, false) => &[8, 8, 8, 8, 8, 4, 8, 12],
+            (false, true) => &[8, 12, 8, 8, 4, 12],
+            (true, true) => &[8, 8, 8, 8, 8, 4, 12],
+        };
+        let offset = match self.stage {
+            Shift => 0,
+            BranchAdd => 1,
+            Add => 2,
+            ShiftLow => 2 + usize::from(carry),
+            RotateHigh => 3 + usize::from(carry),
+            Test => 4 + usize::from(carry),
+            BranchDone => 5 + usize::from(carry),
+            Loop => 6 + usize::from(carry),
+            Init | Return | Done => unreachable!(),
+        };
+        &code[offset..]
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        if count == prefix.len() {
+            use MultiplyStage::*;
+            let stage = self.stage;
+            if stage == Shift {
+                self.carry = self.factor & 1 != 0;
+                self.factor >>= 1;
+            }
+            if (stage == Shift && self.carry) || (stage == BranchAdd && self.carry) || stage == Add
+            {
+                self.result = self.result.wrapping_add(self.value);
+            }
+            if matches!(stage, Shift | BranchAdd | Add | ShiftLow | RotateHigh) {
+                if stage != RotateHigh {
+                    self.carry = self.value & 0x80 != 0;
+                }
+                self.value = if stage == RotateHigh {
+                    (self.value & 255)
+                        | u16::from(
+                            ((self.value >> 8) as u8).wrapping_shl(1) | u8::from(self.carry),
+                        ) << 8
+                } else {
+                    self.value.wrapping_shl(1)
+                };
+            }
+            self.stage = if self.factor == 0 { Return } else { Shift };
+            return cycles;
+        }
+        for _ in 0..count {
+            self.next();
+        }
+        cycles
+    }
     pub fn next_cycles(&self) -> Option<u8> {
         use MultiplyStage::*;
         Some(match self.stage {
@@ -168,6 +267,66 @@ impl FrequencyInstructions {
     pub fn carry(&self) -> Option<bool> {
         (self.stage == FrequencyStage::Done).then_some(self.carry)
     }
+    pub(crate) fn complete_from_start(&self) -> Option<(Self, u32)> {
+        if self.stage != FrequencyStage::Prefix(0) {
+            return None;
+        }
+        let shifts = 7u8.wrapping_sub(self.octave);
+        let mut pitch = self.pitch;
+        for _ in 0..shifts {
+            let h = (pitch >> 8) as u8;
+            let c = h & 1 != 0;
+            let new_h = ((h as i8) >> 1) as u8;
+            let new_l = (pitch as u8) >> 1 | if c { 128 } else { 0 };
+            pitch = u16::from_le_bytes([new_l, new_h]);
+        }
+        let sum = 8 + (pitch >> 8);
+        let carry = sum > 255;
+        let high = sum as u8;
+        pitch = (pitch & 255) | (u16::from(high) << 8);
+        let cycles = 128 + u32::from(shifts) * 48;
+        Some((
+            Self {
+                stage: FrequencyStage::Done,
+                pitch,
+                octave: 7,
+                carry,
+                high,
+            },
+            cycles,
+        ))
+    }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        match self.stage {
+            FrequencyStage::Prefix(n) => &[8, 4, 8, 4, 4, 12, 8, 8, 8, 8, 4][usize::from(n)..],
+            FrequencyStage::Suffix(n) => &[8, 4, 4, 16][usize::from(n)..],
+            _ => &[],
+        }
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        if count == prefix.len() {
+            match self.stage {
+                FrequencyStage::Prefix(_) => self.stage = FrequencyStage::Compare,
+                FrequencyStage::Suffix(n) if n < 3 => {
+                    let sum = 8 + (self.pitch >> 8);
+                    self.carry = sum > 255;
+                    self.high = sum as u8;
+                    self.pitch = (self.pitch & 255) | u16::from(self.high) << 8;
+                    self.stage = FrequencyStage::Done;
+                }
+                FrequencyStage::Suffix(_) => self.stage = FrequencyStage::Done,
+                _ => unreachable!("nonempty frequency plain prefix"),
+            }
+            return cycles;
+        }
+        for _ in 0..count {
+            self.next();
+        }
+        cycles
+    }
+    #[inline(always)]
     pub fn next_cycles(&self) -> Option<u8> {
         use FrequencyStage::*;
         Some(match self.stage {
@@ -190,6 +349,7 @@ impl FrequencyInstructions {
 }
 impl Iterator for FrequencyInstructions {
     type Item = u8;
+    #[inline(always)]
     fn next(&mut self) -> Option<u8> {
         use FrequencyStage::*;
         let cycles = self.next_cycles()?;
@@ -319,6 +479,35 @@ impl NoteLengthInstructions {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    pub fn evaluate(mut self) -> ((u8, u8), u32) {
+        let (length, first) = super::audio_math_work::multiply_add_work(
+            self.input.speed,
+            u16::from((self.input.note & 15) + 1),
+            0,
+        );
+        let (computed, second) = super::audio_math_work::multiply_add_work(
+            length as u8,
+            self.input.tempo,
+            self.input.fraction,
+        );
+        self.length = length as u8;
+        self.computed = computed;
+        let tail = if self.input.flags2 & 1 != 0 {
+            112
+        } else if self.input.flags1 & 4 == 0 {
+            152
+        } else {
+            176
+        };
+        self.cycles = 240 + first + second + tail;
+        self.stage = if self.input.flags2 & 1 == 0 && self.input.flags1 & 4 != 0 {
+            LengthStage::Returned
+        } else {
+            LengthStage::NotePitch
+        };
+        (self.result().expect("evaluated note length"), self.cycles)
+    }
+    #[inline(always)]
     pub fn next_cycles(&self) -> Option<u8> {
         use LengthStage::*;
         Some(match self.stage {
@@ -346,6 +535,49 @@ impl NoteLengthInstructions {
             NoiseReturn(n) => [12, 16][n as usize],
             NotePitch | Returned => return None,
         })
+    }
+    pub(crate) fn plain_prefix(&self) -> &'static [u8] {
+        use LengthStage::*;
+        if let First(w) | Second(w) = &self.stage {
+            return w.plain_prefix();
+        }
+        let (code, index, end): (&[u8], u8, u8) = match self.stage {
+            Prefix(n) => (&[4, 16, 8, 4, 8, 4, 4, 12, 8, 8, 4, 24], n, 12),
+            Middle(n) => (&[4, 8, 8, 16, 4, 16, 4, 12, 4, 8, 12, 8, 8, 24], n, 14),
+            Suffix(n) if n < 12 => (&[4, 4, 12, 8, 8, 4, 12, 8, 8, 12, 8, 12], n, 12),
+            FlagOne(n) if n < 3 => (&[12, 8, 12], n, 3),
+            NoiseReturn(n) => (&[12, 16], n, 2),
+            _ => return &[],
+        };
+        &code[usize::from(index)..usize::from(end)]
+    }
+    pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
+        use LengthStage::*;
+        assert!(count > 0 && count <= prefix.len());
+        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        match &mut self.stage {
+            First(work) => {
+                work.accept_plain_prefix(count, prefix);
+                if let Some(result) = work.result() {
+                    self.length = result as u8;
+                    self.stage = Middle(0);
+                }
+            }
+            Second(work) => {
+                work.accept_plain_prefix(count, prefix);
+                if let Some(result) = work.result() {
+                    self.computed = result;
+                    self.stage = Suffix(0);
+                }
+            }
+            Prefix(n) | Middle(n) | Suffix(n) | FlagOne(n) | NoiseReturn(n) => {
+                *n += (count - 1) as u8;
+                self.advance();
+            }
+            _ => unreachable!("nonempty length plain prefix"),
+        }
+        self.cycles += cycles;
+        cycles
     }
     /// An execution refusal leaves the instruction and temporary registers intact.
     pub fn try_step<E>(&mut self, execute: impl FnOnce(u8) -> Result<(), E>) -> Result<bool, E> {
@@ -496,6 +728,49 @@ mod tests {
         }
     }
     #[test]
+    fn multiply_plain_prefixes_match_every_factor_and_accept_count() {
+        for factor in 0..=u8::MAX {
+            let mut cursor = MultiplyAddInstructions::new(factor, 0x123, 0x45);
+            while cursor.result().is_none() {
+                let prefix = cursor.plain_prefix();
+                for count in 1..=prefix.len() {
+                    let mut expected = cursor;
+                    for _ in 0..count {
+                        expected.next();
+                    }
+                    let mut actual = cursor;
+                    actual.accept_plain_prefix(count, prefix);
+                    assert_eq!(
+                        actual, expected,
+                        "factor={factor} stage={:?} count={count}",
+                        cursor.stage
+                    );
+                }
+                cursor.next();
+            }
+        }
+    }
+    #[test]
+    fn frequency_prefixes_match_every_accept_count() {
+        for c in fixture().frequency {
+            let mut cursor = FrequencyInstructions::new(c.pitch, c.octave);
+            while cursor.result().is_none() {
+                let prefix = cursor.plain_prefix();
+                for count in 1..=prefix.len() {
+                    let mut expected = cursor;
+                    for _ in 0..count {
+                        expected.next();
+                    }
+                    let mut actual = cursor;
+                    actual.accept_plain_prefix(count, prefix);
+                    assert_eq!(actual, expected, "stage={:?} count={count}", cursor.stage);
+                }
+                cursor.next();
+            }
+        }
+    }
+
+    #[test]
     fn frequency_shift_and_octave_wrap_instructions_match_pinned_rom() {
         let cases = fixture().frequency;
         assert_eq!(cases.len(), 264);
@@ -575,5 +850,27 @@ mod tests {
         })
         .is_none());
         assert!(NoteLengthInstructions::new(NoteLengthInput { flags1: 4, ..input }).is_none());
+    }
+
+    #[test]
+    fn fast_multiply_and_frequency_completion_match_single_stepping() {
+        for factor in [0u8, 1, 2, 3, 7, 12, 0x55, 0xaa, 0xff] {
+            for value in [0u16, 1, 0x7f, 0x80, 0x100, 0x1234, 0xffff] {
+                for low in [0u8, 1, 0x80, 0xff] {
+                    let mut stepped = MultiplyAddInstructions::new(factor, value, low);
+                    let (fast, fast_cycles) = stepped.complete_from_init().unwrap();
+                    let stepped_cycles: u32 = (&mut stepped).map(u32::from).sum();
+                    assert_eq!(fast_cycles, stepped_cycles);
+                    assert_eq!(fast, stepped);
+                }
+            }
+        }
+        for c in fixture().frequency {
+            let mut stepped = FrequencyInstructions::new(c.pitch, c.octave);
+            let (fast, fast_cycles) = stepped.complete_from_start().unwrap();
+            let stepped_cycles: u32 = (&mut stepped).map(u32::from).sum();
+            assert_eq!(fast_cycles, stepped_cycles);
+            assert_eq!(fast, stepped);
+        }
     }
 }

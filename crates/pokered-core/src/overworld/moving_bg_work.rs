@@ -91,11 +91,61 @@ impl MovingBgWork {
             zero: false,
         }
     }
+    pub fn reset_state(&mut self, state: MovingBgState) {
+        self.state = state;
+        self.step = Step::Enabled;
+        self.a = 0;
+        self.c = 0;
+        self.address = 0;
+        self.flower = 0;
+        self.flower_at = 0;
+        self.left = false;
+        self.carry = false;
+        self.zero = false;
+    }
     pub fn state(&self) -> MovingBgState {
         self.state
     }
     pub fn finished(&self) -> bool {
         self.step == Step::Done
+    }
+    pub(crate) fn early_return_cycles(&self) -> Option<&'static [u8]> {
+        if self.step != Step::Enabled {
+            return None;
+        }
+        if self.state.animations == 0 {
+            Some(&[24, 12, 4, 20])
+        } else if self.state.counter1 < 19 {
+            Some(&[24, 12, 4, 8, 12, 4, 12, 8, 20])
+        } else {
+            None
+        }
+    }
+    pub(crate) fn early_return_total(&self) -> Option<u64> {
+        if self.step != Step::Enabled {
+            return None;
+        }
+        if self.state.animations == 0 {
+            Some(60)
+        } else if self.state.counter1 < 19 {
+            Some(104)
+        } else {
+            None
+        }
+    }
+    pub(crate) fn finish_early_return(&mut self) {
+        debug_assert!(self.early_return_cycles().is_some());
+        self.a = if self.state.animations == 0 {
+            0
+        } else {
+            self.state.counter1.wrapping_add(1)
+        };
+        self.zero = self.state.animations == 0;
+        self.carry = self.state.animations != 0;
+        if self.state.animations != 0 {
+            self.state.counter1 = self.a;
+        }
+        self.step = Step::Done;
     }
     pub fn step<B>(&mut self, bus: &mut B) -> Result<bool, <B as DisplayInstructionBus>::Error>
     where

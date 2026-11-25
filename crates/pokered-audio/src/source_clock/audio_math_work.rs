@@ -1,15 +1,39 @@
 //! Original audio arithmetic results and instruction work, separate from playback.
 
 pub fn multiply_add_work(factor: u8, value: u16, low: u8) -> (u16, u32) {
-    let mut work = super::note_math_instructions::MultiplyAddInstructions::new(factor, value, low);
-    let cycles = work.by_ref().map(u32::from).sum();
-    (work.result().expect("completed multiply"), cycles)
+    const CYCLES: [u32; 256] = {
+        let mut table = [0; 256];
+        let mut factor = 0;
+        while factor < 256 {
+            let mut remaining = factor;
+            let mut cycles = 24;
+            loop {
+                let bit = remaining & 1;
+                remaining >>= 1;
+                cycles += if remaining == 0 {
+                    52 + 4 * bit
+                } else {
+                    60 + 4 * bit
+                };
+                if remaining == 0 {
+                    break;
+                }
+            }
+            table[factor] = cycles as u32;
+            factor += 1;
+        }
+        table
+    };
+    (
+        u16::from(low).wrapping_add(u16::from(factor).wrapping_mul(value)),
+        CYCLES[usize::from(factor)],
+    )
 }
 
 pub fn calculate_frequency_work(pitch: u16, octave: u8) -> (u16, u32) {
-    let mut work = super::note_math_instructions::FrequencyInstructions::new(pitch, octave);
-    let cycles = work.by_ref().map(u32::from).sum();
-    (work.result().expect("completed frequency"), cycles)
+    let shifts = 7u8.wrapping_sub(octave);
+    let shifted = ((pitch as i16) >> shifts.min(15)) as u16;
+    (shifted.wrapping_add(0x800), 128 + 48 * u32::from(shifts))
 }
 
 pub fn next_music_byte_work_cycles() -> u32 {
@@ -28,7 +52,7 @@ pub fn music_note_length_work(
     flags2: u8,
 ) -> Option<(u8, u8, u32)> {
     use super::note_math_instructions::{NoteLengthInput, NoteLengthInstructions};
-    let mut work = NoteLengthInstructions::new(NoteLengthInput {
+    let work = NoteLengthInstructions::new(NoteLengthInput {
         channel,
         note,
         speed,
@@ -37,12 +61,8 @@ pub fn music_note_length_work(
         flags1,
         flags2,
     })?;
-    while !work.finished() {
-        work.try_step(|_| Ok::<(), core::convert::Infallible>(()))
-            .unwrap();
-    }
-    let (fraction, delay) = work.result()?;
-    Some((fraction, delay, work.cycles()))
+    let ((fraction, delay), cycles) = work.evaluate();
+    Some((fraction, delay, cycles))
 }
 
 #[cfg(test)]

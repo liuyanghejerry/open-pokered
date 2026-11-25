@@ -29,6 +29,13 @@ impl VBlankReturnWork {
             return Ok(false);
         }
         bus.check_active_vblank()?;
+        if self.step == 3 {
+            let count = bus.execute_plain_cycles(&[12, 12, 12, 12])?;
+            if count != 0 {
+                self.step += count as u8;
+                return Ok(true);
+            }
+        }
         if self.step == 7 {
             bus.execute_reti()?;
         } else {

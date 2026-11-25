@@ -12,9 +12,11 @@ use super::pitch_slide_instructions::{
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct NextNoteWorkResult {
+    pub stream: super::note_stream_instructions::StreamResult,
     pub fraction: u8,
     pub delay: u8,
     pub frequency_low: u8,
+    pub preparation_cycles: u32,
     pub cycles: u32,
     pub pitch_slide: Option<InitPitchSlideResult>,
 }
@@ -78,6 +80,31 @@ pub fn music_next_note_work_with_sfx(
     )
 }
 
+pub fn music_next_note_work_with_drum_prepared(
+    channel: u8,
+    prepared: &super::audio_stream_work::MusicStreamWork,
+    flags2: u8,
+    fraction: u8,
+    tempo: u16,
+    frequency_low: u8,
+    pitch_base: Option<u16>,
+    paired_sfx_active: bool,
+    source_pulse_sfx_id: u8,
+) -> Option<NextNoteWorkResult> {
+    music_next_note_work_with_drum_result(
+        channel,
+        prepared.result,
+        prepared.dispatch,
+        flags2,
+        fraction,
+        tempo,
+        frequency_low,
+        pitch_base,
+        paired_sfx_active,
+        source_pulse_sfx_id,
+    )
+}
+
 pub fn music_next_note_work_with_drum(
     channel: u8,
     commands: &[u8],
@@ -94,6 +121,32 @@ pub fn music_next_note_work_with_drum(
 ) -> Option<NextNoteWorkResult> {
     let (stream, dispatch) =
         music_dispatch_with_context(channel, commands, state, vibrato_reload, noise_busy)?;
+    music_next_note_work_with_drum_result(
+        channel,
+        stream,
+        dispatch,
+        flags2,
+        fraction,
+        tempo,
+        frequency_low,
+        pitch_base,
+        paired_sfx_active,
+        source_pulse_sfx_id,
+    )
+}
+
+fn music_next_note_work_with_drum_result(
+    channel: u8,
+    stream: super::note_stream_instructions::StreamResult,
+    dispatch: u32,
+    flags2: u8,
+    fraction: u8,
+    tempo: u16,
+    frequency_low: u8,
+    pitch_base: Option<u16>,
+    paired_sfx_active: bool,
+    source_pulse_sfx_id: u8,
+) -> Option<NextNoteWorkResult> {
     let (state, note) = (stream.state, stream.note);
     let (fraction, delay, length) = music_note_length_work(
         channel,
@@ -105,6 +158,7 @@ pub fn music_next_note_work_with_drum(
         flags2,
     )?;
     let mut cycles = dispatch + length;
+    let preparation_cycles = cycles;
     let mut low = frequency_low;
     let mut pitch_slide = None;
     if channel == 3 {
@@ -112,10 +166,12 @@ pub fn music_next_note_work_with_drum(
             return None;
         }
         return Some(NextNoteWorkResult {
+            stream,
             pitch_slide,
             fraction,
             delay,
             frequency_low,
+            preparation_cycles,
             cycles: cycles + 16,
         });
     }
@@ -124,10 +180,12 @@ pub fn music_next_note_work_with_drum(
         if paired_sfx_active {
             cycles += 8 + 4 + 8 + 8 + 12 + 8 + 8 + 4 + 12 + 16 + 16;
             return Some(NextNoteWorkResult {
+                stream,
                 pitch_slide,
                 fraction,
                 delay,
                 frequency_low,
+                preparation_cycles,
                 cycles,
             });
         }
@@ -168,10 +226,12 @@ pub fn music_next_note_work_with_drum(
         if paired_sfx_active {
             cycles += 16 + 4 + 8 + 8 + 12 + 8 + 4 + 8 + 8 + 4 + 12 + 12 + 16 + 16;
             return Some(NextNoteWorkResult {
+                stream,
                 pitch_slide,
                 fraction,
                 delay,
                 frequency_low,
+                preparation_cycles,
                 cycles,
             });
         }
@@ -195,10 +255,12 @@ pub fn music_next_note_work_with_drum(
             wave_frequency_work(channel, source_pulse_sfx_id, 0, modified_frequency)?.1 + 16 + 16;
     }
     Some(NextNoteWorkResult {
+        stream,
         pitch_slide,
         fraction,
         delay,
         frequency_low: low,
+        preparation_cycles,
         cycles,
     })
 }
@@ -246,10 +308,12 @@ mod tests {
             assert_eq!(
                 actual,
                 Some(NextNoteWorkResult {
+                    stream: actual.unwrap().stream,
                     pitch_slide: None,
                     fraction: expected["fraction"].as_u64().unwrap() as u8,
                     delay: expected["delay"].as_u64().unwrap() as u8,
                     frequency_low: expected["frequency_low"].as_u64().unwrap() as u8,
+                    preparation_cycles: actual.unwrap().preparation_cycles,
                     cycles: expected["cycles"].as_u64().unwrap() as u32
                 }),
                 "case {index}"

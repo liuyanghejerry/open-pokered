@@ -62,7 +62,7 @@ impl NativeDisplayClock {
             || time.vblank_dispatch_enabled
             || time.legacy_sprite_hide.is_some()
             || time.shadow_oam.len() != 160
-            || !time.device.idle_period_eligible(time.elapsed)
+            || (!time.idle_period_cached() && !time.device.idle_period_eligible(time.elapsed))
         {
             return 0;
         }
@@ -114,19 +114,37 @@ impl NativeDisplayClock {
     }
     /// Normalize completed idle periods and granted budget separately. No
     /// current grant is consumed by a read or snapshot.
-    #[inline]
+    #[inline(always)]
     pub fn as_time(&self) -> &DisplayWorkTime {
         if self.grants == 0 {
             &self.time
         } else {
-            self.view.get_or_init(|| {
-                let mut view = Box::new(self.time.clone());
-                Self::project(&mut view, self.grants, self.pending_periods);
-                view
-            })
+            self.projected_view()
         }
     }
-    #[inline]
+    /// Read the synchronized clock owned by an attached FLASH IRQ caller.
+    #[inline(always)]
+    pub fn attached_time(&self) -> &DisplayWorkTime {
+        debug_assert_eq!(self.grants, 0);
+        &self.time
+    }
+    #[cold]
+    #[inline(never)]
+    fn projected_view(&self) -> &DisplayWorkTime {
+        self.view.get_or_init(|| {
+            let mut view = Box::new(self.time.clone());
+            Self::project(&mut view, self.grants, self.pending_periods);
+            view
+        })
+    }
+    /// Access the synchronized clock mutably for an attached FLASH caller.
+    #[inline(always)]
+    pub fn attached_time_mut(&mut self) -> &mut DisplayWorkTime {
+        debug_assert_eq!(self.grants, 0);
+        debug_assert_eq!(self.capacity, 0);
+        &mut self.time
+    }
+    #[inline(always)]
     pub fn as_time_mut(&mut self) -> &mut DisplayWorkTime {
         if self.capacity != 0 {
             self.synchronize();
@@ -221,9 +239,17 @@ impl DerefMut for NativeDisplayClock {
 }
 impl DisplayInstructionBus for NativeDisplayClock {
     type Error = DisplayWorkError;
-    #[inline]
+    #[inline(always)]
     fn execute(&mut self, instruction: DisplayInstruction) -> Result<Option<u8>, Self::Error> {
         self.as_time_mut().execute(instruction)
+    }
+    fn execute_plain_run<I: Iterator<Item = DisplayInstruction>>(
+        &mut self,
+        instructions: I,
+    ) -> Result<usize, Self::Error> {
+        self.as_time_mut()
+            .display_bus()
+            .execute_plain_run(instructions)
     }
 }
 impl crate::overworld::display_delay_work::DelayFrameBus for NativeDisplayClock {

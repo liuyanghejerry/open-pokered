@@ -38,10 +38,90 @@ pub trait PatternInstructionBus {
     /// device/IRQ events at the specified access before returning its receipt.
     fn execute(&mut self, instruction: PatternInstruction) -> Result<Option<u16>, Self::Error>;
 
+    fn execute_plain_cycles(&mut self, _instructions: &[u8]) -> Result<usize, Self::Error> {
+        Ok(0)
+    }
+
+    fn try_copydata_run(
+        &mut self,
+        _source: PatternSource,
+        _source_offset: u16,
+        _destination: u16,
+        _remaining: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        Ok(None)
+    }
+
+    fn try_vblank_live_header(
+        &mut self,
+        _format: super::field_restore::CopyFormat,
+        _size: u8,
+        _source: u16,
+        _destination: u16,
+    ) -> Result<bool, Self::Error> {
+        Ok(false)
+    }
+
+    fn try_vblank_live_footer(
+        &mut self,
+        _format: super::field_restore::CopyFormat,
+        _size: u8,
+        _source: u16,
+        _destination: u16,
+        _final_source: u16,
+        _final_destination: u16,
+    ) -> Result<bool, Self::Error> {
+        Ok(false)
+    }
+
+    fn try_vblank_pop_pair_writes(
+        &mut self,
+        _destination: u16,
+        _de: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        Ok(None)
+    }
+
+    fn try_vblank_pop_row_writes(
+        &mut self,
+        _source: &[u8],
+        _destination: u16,
+    ) -> Result<Option<u16>, Self::Error> {
+        Ok(None)
+    }
+
+    fn try_vblank_pop_row_run(
+        &mut self,
+        _source: &[u8],
+        _destination: u16,
+        _rows: u8,
+    ) -> Result<Option<(u8, u16, u16, u16, bool)>, Self::Error> {
+        Ok(None)
+    }
+
+    fn try_vblank_tile_writes<const DOUBLE: bool>(
+        &mut self,
+        _source: PatternSource,
+        _source_offset: u16,
+        _destination: u16,
+    ) -> Result<Option<(u16, u16, u16)>, Self::Error> {
+        Ok(None)
+    }
+
+    fn try_vblank_tile_run<const DOUBLE: bool>(
+        &mut self,
+        _source: PatternSource,
+        _source_offset: u16,
+        _destination: u16,
+        _tiles: u8,
+    ) -> Result<Option<(u8, u16, u16, u16)>, Self::Error> {
+        Ok(None)
+    }
+
     /// Optionally execute the stores and destination increments following one
     /// VBlank POP DE. A successful receipt gives the final destination. The bus
-    /// must prove that no device event or budget boundary can expose an
-    /// intermediate instruction; otherwise None leaves everything untouched.
+    /// must prove that no observable VRAM/background or budget boundary can
+    /// expose an intermediate instruction; otherwise None leaves everything untouched.
     /// The final pair uses INC HL for its last increment, all others INC L.
     fn try_vblank_pair_writes<const DOUBLE: bool>(
         &mut self,
@@ -138,6 +218,19 @@ impl PatternCopyDataWork {
         use CopyStep::*;
         loop {
             if self.step == Read {
+                if let Some(count) = bus.try_copydata_run(
+                    self.source,
+                    self.source_offset,
+                    self.destination,
+                    self.remaining,
+                )? {
+                    self.source_offset = self.source_offset.wrapping_add(count);
+                    self.destination = self.destination.wrapping_add(count);
+                    self.remaining = self.remaining.wrapping_sub(count);
+                    self.a = self.remaining as u8 | (self.remaining >> 8) as u8;
+                    self.step = if self.a == 0 { Return } else { Read };
+                    continue;
+                }
                 let value = bus.execute(PatternInstruction {
                     tcycles: 8,
                     access: Some(self.read_access()),

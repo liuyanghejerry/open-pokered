@@ -72,6 +72,15 @@ impl VBlankIrqWork {
             remaining_audio_work: 0,
         }
     }
+    pub fn reset_after_video(&mut self, fade: FadeAudioState, timer: TrackTimeState) {
+        self.phase = Phase::Video;
+        self.pre_audio = None;
+        self.fade = FadeAudioWork::new(fade);
+        self.dispatch = None;
+        self.after_music = None;
+        self.timer_input = timer;
+        self.remaining_audio_work = 0;
+    }
     pub fn finished(&self) -> bool {
         self.phase == Phase::Done
     }
@@ -80,6 +89,9 @@ impl VBlankIrqWork {
     }
     pub fn video_mut(&mut self) -> &mut VBlankVideoWork {
         &mut self.video
+    }
+    pub fn into_video(self) -> VBlankVideoWork {
+        self.video
     }
     pub fn timer_state(&self) -> TrackTimeState {
         self.after_music
@@ -117,12 +129,77 @@ impl VBlankIrqWork {
         assets: &A,
     ) -> Result<IrqProgress, IrqError> {
         loop {
-            if self.phase == Phase::Video {
-                self.video.run_until_body_ready(time, memory, assets)?;
-            }
-            match self.step(time, memory, assets)? {
-                IrqProgress::Instruction => (),
-                boundary => return Ok(boundary),
+            match self.phase {
+                Phase::Video => {
+                    self.video.run_until_body_ready(time, memory, assets)?;
+                    self.pre_audio = Some(VBlankPreAudioWork::new(
+                        self.video
+                            .random_entry_carry()
+                            .expect("returned PrepareOAM carry"),
+                    ));
+                    self.phase = Phase::PreAudio;
+                }
+                Phase::AwaitAudio => return Ok(IrqProgress::NeedsAudio),
+                Phase::AudioWork => {
+                    if self.remaining_audio_work != 0 {
+                        time.consume_vblank_body_work(&mut self.remaining_audio_work)?;
+                        continue;
+                    }
+                    assert!(self.dispatch.as_mut().unwrap().music_returned());
+                    self.phase = Phase::AfterAudioDispatch;
+                }
+                Phase::Done => return Ok(IrqProgress::Returned),
+                _ => {
+                    let mut bus = time.display_bus();
+                    loop {
+                        match self.phase {
+                            Phase::PreAudio => {
+                                self.pre_audio.as_mut().unwrap().run(&mut bus)?;
+                                self.phase = Phase::Fade;
+                            }
+                            Phase::Fade => {
+                                self.fade.run(&mut bus)?;
+                                if !self.fade.finished() {
+                                    return Err(IrqError::UnsupportedFadeChild);
+                                }
+                                self.dispatch = Some(VBlankAudioDispatchWork::new(
+                                    self.fade.state().audio_bank,
+                                ));
+                                self.phase = Phase::Dispatch;
+                            }
+                            Phase::Dispatch => {
+                                let dispatch = self.dispatch.as_mut().unwrap();
+                                dispatch.run(&mut bus)?;
+                                if !matches!(
+                                    (dispatch.bank(), dispatch.engine()),
+                                    (2, Some(SourceAudioEngine::One))
+                                        | (31, Some(SourceAudioEngine::Three))
+                                ) || !dispatch.music_ready()
+                                {
+                                    return Err(IrqError::UnsupportedAudioBank(dispatch.bank()));
+                                }
+                                self.phase = Phase::AwaitAudio;
+                            }
+                            Phase::AfterAudioDispatch => {
+                                let dispatch = self.dispatch.as_mut().unwrap();
+                                dispatch.run(&mut bus)?;
+                                assert!(dispatch.after_music_ready());
+                                self.after_music = Some(VBlankAfterMusicWork::new(
+                                    self.timer_input,
+                                    self.video.saved_bank().expect("VBlank saved bank"),
+                                ));
+                                self.phase = Phase::AfterMusic;
+                            }
+                            Phase::AfterMusic => {
+                                self.after_music.as_mut().unwrap().run(&mut bus)?;
+                                self.phase = Phase::Done;
+                            }
+                            Phase::Video | Phase::AwaitAudio | Phase::AudioWork | Phase::Done => {
+                                break
+                            }
+                        }
+                    }
+                }
             }
         }
     }

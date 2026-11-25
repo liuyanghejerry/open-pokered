@@ -7,9 +7,10 @@ use super::field_restore_assets::NativePatternAssets;
 mod irq;
 #[path = "field_object_render.rs"]
 mod objects;
-use objects::draw_submenu_objects;
-use super::*;
 use super::reset_counter::{ResetProgress, TrySoftResetWork};
+use super::*;
+use objects::draw_submenu_objects;
+use pokered_core::game_state::Lang;
 use pokered_core::overworld::display_clear_oam_work::ClearShadowOamWork;
 use pokered_core::overworld::display_lcd_work::{DisableLcdWork, EnableLcdWork};
 use pokered_core::overworld::display_lcd_work::{DisplayInstruction, DisplayInstructionBus};
@@ -37,21 +38,32 @@ fn copy_flash_frame(frame: &FrameBuffer, retained: &mut FlashFrame) {
     pack_flash_frame(frame, retained);
 }
 
+fn copy_linear_flash_frame(frame: &FrameBuffer, retained: &mut FrameBuffer) {
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    retained.copy_from(frame);
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    pokered_renderer::gba_dma::copy_frame(retained, frame);
+}
+
 #[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
 fn pack_flash_frame(
     frame: &dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
     retained: &mut FlashFrame,
 ) {
     assert_eq!(frame.indices().len(), retained.packed().len() * 4);
-    for (pixels, planes) in frame.indices().chunks_exact(8).zip(retained.packed_mut().chunks_exact_mut(2)) {
-        let mut low = 0;
-        let mut high = 0;
-        for &pixel in pixels {
-            low = (low << 1) | (pixel & 1);
-            high = (high << 1) | ((pixel >> 1) & 1);
-        }
-        planes[0] = low;
-        planes[1] = high;
+    for (pixels, planes) in frame
+        .indices()
+        .chunks_exact(8)
+        .zip(retained.packed_mut().chunks_exact_mut(2))
+    {
+        let w0 = u32::from_le_bytes([pixels[0], pixels[1], pixels[2], pixels[3]]);
+        let w1 = u32::from_le_bytes([pixels[4], pixels[5], pixels[6], pixels[7]]);
+        let low0 = ((w0 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+        let low1 = (w1 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+        let high0 = (((w0 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+        let high1 = ((w1 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+        planes[0] = (low0 | low1) as u8;
+        planes[1] = (high0 | high1) as u8;
     }
     retained.set_palette(*frame.display_palette());
 }
@@ -63,10 +75,162 @@ fn draw_flash_frame(frame: &FlashFrame, fb: &mut FrameBuffer) {
     unpack_flash_frame(frame, fb);
 }
 
-fn apply_flash_palette(raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster, fb: &mut FrameBuffer) {
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline(always)]
+fn map_palette_word(w: u32, palette: u8) -> u32 {
+    const M: u32 = 0x0101_0101;
+    let hi = (w >> 1) & M;
+    let lo = w & M;
+    match palette {
+        0xe4 => w,
+        0x00 => 0,
+        0x90 => (hi & !lo) | ((hi & lo) << 1),
+        0x40 => hi & lo,
+        _ => {
+            let nhi = hi ^ M;
+            let nlo = lo ^ M;
+            (nhi & nlo).wrapping_mul(u32::from(palette & 3))
+                | (nhi & lo).wrapping_mul(u32::from((palette >> 2) & 3))
+                | (hi & nlo).wrapping_mul(u32::from((palette >> 4) & 3))
+                | (hi & lo).wrapping_mul(u32::from((palette >> 6) & 3))
+        }
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn apply_linear_flash_palette(
+    raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster,
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    let indices = fb.indices_mut();
     for (index, span) in raster.spans().iter().enumerate() {
-        if span.palette == 0xe4 { continue; }
-        let end = raster.spans().get(index + 1).map_or(160 * 144, |next| next.start);
+        if span.palette == 0xe4 {
+            continue;
+        }
+        let start = usize::from(span.start).min(indices.len());
+        let end = raster
+            .spans()
+            .get(index + 1)
+            .map_or(indices.len(), |next| usize::from(next.start).min(indices.len()));
+        if start >= end {
+            continue;
+        }
+        let slice = &mut indices[start..end];
+        if span.palette == 0 {
+            slice.fill(0);
+            continue;
+        }
+        let pal = span.palette;
+        let (prefix, words, suffix) = unsafe { slice.align_to_mut::<u32>() };
+        for byte in prefix {
+            *byte = (pal >> ((*byte & 3) * 2)) & 3;
+        }
+        for word in words {
+            *word = map_palette_word(u32::from_le(*word), pal).to_le();
+        }
+        for byte in suffix {
+            *byte = (pal >> ((*byte & 3) * 2)) & 3;
+        }
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline(never)]
+fn map_linear_palette_span(src_slice: &[u8], dst_slice: &mut [u8], pal: u8) {
+    let (dst_prefix, dst_words, dst_suffix) = unsafe { dst_slice.align_to_mut::<u32>() };
+    let prefix_len = dst_prefix.len();
+    for (&s, d) in src_slice[..prefix_len].iter().zip(dst_prefix.iter_mut()) {
+        *d = (pal >> ((s & 3) * 2)) & 3;
+    }
+    let mid_bytes = dst_words.len() * 4;
+    let src_mid = &src_slice[prefix_len..prefix_len + mid_bytes];
+    if src_mid.as_ptr() as usize & 3 == 0 {
+        let src_words =
+            unsafe { core::slice::from_raw_parts(src_mid.as_ptr().cast::<u32>(), dst_words.len()) };
+        for (&sw, dw) in src_words.iter().zip(dst_words.iter_mut()) {
+            *dw = map_palette_word(u32::from_le(sw), pal).to_le();
+        }
+    } else {
+        for (chunk, dw) in src_mid.chunks_exact(4).zip(dst_words.iter_mut()) {
+            let sw = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+            *dw = map_palette_word(sw, pal).to_le();
+        }
+    }
+    for (&s, d) in src_slice[prefix_len + mid_bytes..]
+        .iter()
+        .zip(dst_suffix.iter_mut())
+    {
+        *d = (pal >> ((s & 3) * 2)) & 3;
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn copy_and_apply_linear_flash_palette(
+    source: &dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+    raster: Option<&pokered_core::overworld::display_device::BackgroundPaletteRaster>,
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    fb.set_palette(*source.display_palette());
+    let Some(raster) = raster else {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        pokered_renderer::gba_dma::copy_frame(fb, source);
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        fb.indices_mut().copy_from_slice(source.indices());
+        return;
+    };
+    let spans = raster.spans();
+    if spans.is_empty() || (spans.len() == 1 && spans[0].start == 0 && spans[0].palette == 0xe4) {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        pokered_renderer::gba_dma::copy_frame(fb, source);
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        fb.indices_mut().copy_from_slice(source.indices());
+        return;
+    };
+    let src = source.indices();
+    let dst = fb.indices_mut();
+    let first_start = usize::from(spans[0].start).min(dst.len());
+    if first_start > 0 {
+        dst[..first_start].copy_from_slice(&src[..first_start]);
+    }
+    for (index, span) in spans.iter().enumerate() {
+        let start = usize::from(span.start).min(dst.len());
+        let end = spans
+            .get(index + 1)
+            .map_or(dst.len(), |next| usize::from(next.start).min(dst.len()));
+        if start >= end {
+            continue;
+        }
+        let dst_slice = &mut dst[start..end];
+        let src_slice = &src[start..end];
+        let pal = span.palette;
+        if pal == 0xe4 {
+            dst_slice.copy_from_slice(src_slice);
+        } else if pal == 0 {
+            dst_slice.fill(0);
+        } else {
+            map_linear_palette_span(src_slice, dst_slice, pal);
+        }
+    }
+}
+
+fn apply_flash_palette(
+    raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster,
+    fb: &mut FrameBuffer,
+) {
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    {
+        apply_linear_flash_palette(raster, fb);
+        return;
+    }
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    for (index, span) in raster.spans().iter().enumerate() {
+        if span.palette == 0xe4 {
+            continue;
+        }
+        let end = raster
+            .spans()
+            .get(index + 1)
+            .map_or(160 * 144, |next| next.start);
         let mut pixel = span.start;
         while pixel < end {
             let y = u32::from(pixel / 160);
@@ -77,14 +241,33 @@ fn apply_flash_palette(raster: &pokered_core::overworld::display_device::Backgro
             } else {
                 for x in from..u32::from(until) {
                     let color = fb.get_index(x, y).unwrap() as u8;
-                    fb.set_pixel_index(x, y, dotzuki_renderer::palette::GbColor::from_u8(
-                        (span.palette >> (color * 2)) & 3));
+                    fb.set_pixel_index(
+                        x,
+                        y,
+                        dotzuki_renderer::palette::GbColor::from_u8(
+                            (span.palette >> (color * 2)) & 3,
+                        ),
+                    );
                 }
             }
             pixel += until - from as u16;
         }
     }
 }
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+const FLASH_NIBBLE_WORDS: [u32; 16] = {
+    let mut table = [0u32; 16];
+    let mut n = 0;
+    while n < 16 {
+        table[n] = ((n as u32 & 8) >> 3)
+            | ((n as u32 & 4) << 6)
+            | ((n as u32 & 2) << 15)
+            | ((n as u32 & 1) << 24);
+        n += 1;
+    }
+    table
+};
 
 // Four monochrome plane bits expanded into four little-endian index bytes.
 // Combining the two planes needs just two word writes per eight pixels.
@@ -93,41 +276,47 @@ fn unpack_flash_frame(
     frame: &FlashFrame,
     fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
 ) {
+    let nibble = FLASH_NIBBLE_WORDS;
     for (planes, out) in frame
         .packed()
         .chunks_exact(2)
         .zip(fb.indices_mut().chunks_exact_mut(8))
     {
-        unpack_flash_pixels(planes, out);
+        unpack_flash_pixels_with_table(&nibble, planes, out);
     }
     fb.set_palette(*frame.display_palette());
 }
 
 #[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
 #[inline(always)]
+fn unpack_flash_pixels_with_table(nibble: &[u32; 16], planes: &[u8], out: &mut [u8]) {
+    let low = usize::from(planes[0]);
+    let high = usize::from(planes[1]);
+    let w0 = nibble[low >> 4] | (nibble[high >> 4] << 1);
+    let w1 = nibble[low & 15] | (nibble[high & 15] << 1);
+    debug_assert_eq!(out.len(), 8);
+    debug_assert_eq!(out.as_ptr() as usize & 3, 0);
+    let output = out.as_mut_ptr().cast::<u32>();
+    unsafe {
+        output.write(w0.to_le());
+        output.add(1).write(w1.to_le());
+    }
+}
+
+#[cfg(test)]
 fn unpack_flash_pixels(planes: &[u8], out: &mut [u8]) {
-    const NIBBLES: [u32; 16] = {
-        let mut table = [0; 16];
-        let mut n = 0;
-        while n < 16 {
-            table[n] = ((n as u32 & 8) >> 3)
-                | ((n as u32 & 4) << 6)
-                | ((n as u32 & 2) << 15)
-                | ((n as u32 & 1) << 24);
-            n += 1;
-        }
-        table
-    };
-    let first = NIBBLES[(planes[0] >> 4) as usize] | (NIBBLES[(planes[1] >> 4) as usize] << 1);
-    let second = NIBBLES[(planes[0] & 15) as usize] | (NIBBLES[(planes[1] & 15) as usize] << 1);
-    out[..4].copy_from_slice(&first.to_le_bytes());
-    out[4..].copy_from_slice(&second.to_le_bytes());
+    let nibble = FLASH_NIBBLE_WORDS;
+    unpack_flash_pixels_with_table(&nibble, planes, out);
 }
 
 fn draw_flash_cells(frame: &FlashFrame, rows: &[u32], fb: &mut FrameBuffer) {
     #[cfg(not(all(target_os = "none", target_arch = "arm")))]
-    for ((source, target), &columns) in frame.packed().chunks_exact(40)
-        .zip(fb.packed_mut().chunks_exact_mut(40)).zip(rows) {
+    for ((source, target), &columns) in frame
+        .packed()
+        .chunks_exact(40)
+        .zip(fb.packed_mut().chunks_exact_mut(40))
+        .zip(rows)
+    {
         for column in 0..20 {
             if columns & (1 << column) != 0 {
                 let start = column * 2;
@@ -148,12 +337,20 @@ fn unpack_flash_cells(
     // Each accepted destination bit covers eight pixels. Expand those two
     // planes directly into the linear target; preserve every other pixel and
     // the target's palette instead of doing eight coordinate lookups/stores.
-    for ((source, target), &columns) in frame.packed().chunks_exact(40)
-        .zip(fb.indices_mut().chunks_exact_mut(160)).zip(rows) {
+    let nibble = FLASH_NIBBLE_WORDS;
+    for ((source, target), &columns) in frame
+        .packed()
+        .chunks_exact(40)
+        .zip(fb.indices_mut().chunks_exact_mut(160))
+        .zip(rows)
+    {
         for column in 0..20 {
             if columns & (1 << column) != 0 {
-                unpack_flash_pixels(&source[column * 2..column * 2 + 2],
-                    &mut target[column * 8..column * 8 + 8]);
+                unpack_flash_pixels_with_table(
+                    &nibble,
+                    &source[column * 2..column * 2 + 2],
+                    &mut target[column * 8..column * 8 + 8],
+                );
             }
         }
     }
@@ -161,7 +358,10 @@ fn unpack_flash_cells(
 
 enum DisplayChild {
     Disable(DisableLcdWork),
-    Enable { work: EnableLcdWork, called: bool },
+    Enable {
+        work: EnableLcdWork,
+        called: bool,
+    },
     Copy(FarPatternCopyCall),
     Palette(DisplayPaletteWork),
     EnableSprites(pokered_core::overworld::sprite_update_control_work::EnableSpriteUpdatesWork),
@@ -203,7 +403,10 @@ enum RestorationOrigin {
 
 impl RestorationOrigin {
     fn returns_to_start_menu(self) -> bool {
-        matches!(self, Self::Party | Self::Submenu | Self::Pokedex | Self::TrainerCard)
+        matches!(
+            self,
+            Self::Party | Self::Submenu | Self::Pokedex | Self::TrainerCard
+        )
     }
 
     fn returns_to_map_with_actors(self) -> bool {
@@ -211,11 +414,108 @@ impl RestorationOrigin {
     }
 }
 
+fn draw_field_dialogue(fb: &mut FrameBuffer, text: &str, arrow: bool, lang: Lang) {
+    let mut painter = pokered_ui::backends::FrameBufferPainter::new(fb);
+    pokered_ui::menus::dialog::draw_hard_rows(
+        text,
+        arrow,
+        &pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT,
+        &mut pokered_ui::Ui::new(&mut painter),
+        lang,
+    );
+}
+
+fn sync_field_arrow(flow: &mut FieldFlash, arrow: bool) {
+    if flow
+        .rendered_text
+        .as_ref()
+        .is_some_and(|(_, old)| *old != arrow)
+    {
+        let y = 128;
+        flow.party.fill_rect(144, y, 8, 8, Rgba::WHITE);
+        if arrow {
+            pokered_renderer::embedded_font::draw_text_indexed(
+                "▼",
+                144,
+                y,
+                Rgba::BLACK,
+                &mut flow.party,
+            );
+        }
+    }
+}
+
+fn sync_field_text(
+    flow: &mut FieldFlash,
+    dialogue: Option<&pokered_core::overworld::BedroomDialogue>,
+    frame_count: u64,
+    lang: Lang,
+) {
+    let Some(dialogue) = dialogue else {
+        return;
+    };
+    let state = dialogue.display_state();
+    let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
+        && dialogue.waiting_for_input()
+        && (frame_count / 16) % 2 == 0;
+    if !flow.show_map && flow.rendered_dialogue_state == Some(state) {
+        sync_field_arrow(flow, arrow);
+        if let Some((_, old)) = flow.rendered_text.as_mut() {
+            *old = arrow;
+        }
+        return;
+    }
+    let Some((first, second)) = dialogue.get_display_text() else {
+        return;
+    };
+    let text = if second.is_empty() {
+        first
+    } else {
+        format!("{first}\n{second}")
+    };
+    if let Some((previous, _)) = flow.rendered_text.as_ref().filter(|_| !flow.show_map) {
+        let same_page = flow
+            .rendered_dialogue_state
+            .is_some_and(|(page, _)| page == state.0);
+        if same_page && text.len() >= previous.len() {
+            let suffix = &text[previous.len()..];
+            if !suffix.is_empty() {
+                for (row, after) in text.split('\n').enumerate() {
+                    let before = previous.split('\n').nth(row).unwrap_or("");
+                    let new = &after[before.len()..];
+                    if new.is_empty() {
+                        continue;
+                    }
+                    let x = 8 + pokered_renderer::embedded_font::measure_text_indexed(before);
+                    let y = if lang == Lang::Zh { 104 } else { 112 } + row as u32 * 12;
+                    pokered_renderer::embedded_font::draw_text_indexed(
+                        new,
+                        x,
+                        y,
+                        Rgba::BLACK,
+                        &mut flow.party,
+                    );
+                }
+            }
+        } else {
+            draw_field_dialogue(&mut flow.party, &text, arrow, lang);
+        }
+    } else {
+        draw_field_dialogue(&mut flow.party, &text, arrow, lang);
+    }
+    sync_field_arrow(flow, arrow);
+    flow.rendered_text = Some((text, arrow));
+    flow.rendered_dialogue_state = Some(state);
+}
+
 pub(crate) struct FieldFlash {
     text: Option<PartyFieldText>,
+    rendered_text: Option<(String, bool)>,
+    rendered_dialogue_state: Option<(usize, u16)>,
     origin: RestorationOrigin,
     work: FieldRestoreWork,
     patterns: PatternMemory,
+    rom_cache: super::field_restore_assets::RomPatternCache,
     waits: Vec<FieldWaitReceipt>,
     cleared_oam_at_ret: Option<(u64, bool)>,
     last_bulk_copy_temp_at_ret: Option<u8>,
@@ -224,8 +524,13 @@ pub(crate) struct FieldFlash {
     party: FrameBuffer,
     save_buffer2: Option<super::field_video_inputs::NativeUiTiles>,
     map: FlashFrame,
+    map_cache: crate::render::OverworldBackgroundCache,
     map_key: crate::render::session::FlashMapVisualKey,
+    settled_return_key: Option<crate::render::session::FlashMapVisualKey>,
+    flash_bg_band: u8,
+    flash_bg_anim: (i8, Option<u8>),
     show_map: bool,
+    linear_map_ready: bool,
     display_child: Option<DisplayChild>,
     soft_reset_work: Option<TrySoftResetWork>,
     soft_reset_requested: bool,
@@ -262,8 +567,11 @@ impl PokemonGame {
     }
 
     fn begin_party_restoration(&mut self, message: Option<&str>) {
-        let origin = if message.is_some() { RestorationOrigin::Flash }
-            else { RestorationOrigin::Party };
+        let origin = if message.is_some() {
+            RestorationOrigin::Flash
+        } else {
+            RestorationOrigin::Party
+        };
         self.begin_field_restoration(message, origin);
     }
 
@@ -272,7 +580,11 @@ impl PokemonGame {
         // repeats that read; holding A on EXIT must not wait for its release.
         let owner = self.overworld.begin_source_field();
         owner.read_raw(input.raw_current());
-        if owner.poll().pressed.is_some_and(|keys| keys & pokered_core::foreground_input::A != 0) {
+        if owner
+            .poll()
+            .pressed
+            .is_some_and(|keys| keys & pokered_core::foreground_input::A != 0)
+        {
             owner.poll();
         }
         self.begin_field_restoration(None, RestorationOrigin::StartMenu);
@@ -289,7 +601,8 @@ impl PokemonGame {
         // Bag/Options have already run update_native_clock before handling
         // Cancel. Their timed caller now starts in that same update; the
         // retained native VBlank must not tick audio/time a second time.
-        self.source_display.acknowledge_native_vblank()
+        self.source_display
+            .acknowledge_native_vblank()
             .expect("submenu Cancel hands off from the native clock");
         self.begin_native_menu_restore(input, RestorationOrigin::Submenu);
     }
@@ -298,13 +611,17 @@ impl PokemonGame {
         // Like Bag/Options cancellation, this runs after the native update
         // has handled its timer and audio. The retained request belongs to
         // that completed native work, not a second source VBlank service.
-        self.source_display.acknowledge_native_vblank()
+        self.source_display
+            .acknowledge_native_vblank()
             .expect("fullscreen Cancel hands off from the native clock");
-        self.begin_native_menu_restore(input, if trainer {
-            RestorationOrigin::TrainerCard
-        } else {
-            RestorationOrigin::Pokedex
-        });
+        self.begin_native_menu_restore(
+            input,
+            if trainer {
+                RestorationOrigin::TrainerCard
+            } else {
+                RestorationOrigin::Pokedex
+            },
+        );
     }
 
     fn begin_native_menu_restore(&mut self, input: &InputState, origin: RestorationOrigin) {
@@ -323,30 +640,47 @@ impl PokemonGame {
         // One live staging buffer serves both party text and the final map
         // redraw. Reusing it avoids a late contiguous allocation on GBA.
         let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        crate::render::draw_overworld_background(
-            &mut self.overworld,
-            &mut self.resources,
-            &mut party,
-            self.state.config.language,
-        );
+        let map_cache = crate::render::OverworldBackgroundCache::background_only(160, 144);
+        if origin != RestorationOrigin::Flash {
+            crate::render::draw_overworld_background(
+                &mut self.overworld,
+                &mut self.resources,
+                &mut party,
+                self.state.config.language,
+            );
+        }
         if origin.returns_to_map_with_actors() {
-            crate::render::draw_overworld(&mut self.overworld, &mut self.resources,
-                &mut party, self.state.config.language);
+            crate::render::draw_overworld(
+                &mut self.overworld,
+                &mut self.resources,
+                &mut party,
+                self.state.config.language,
+            );
         }
         if origin.returns_to_start_menu() {
-            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                &mut party, self.state.config.language);
+            crate::render::draw_start_menu(
+                &self.start_menu,
+                &self.player_name,
+                &mut party,
+                self.state.config.language,
+            );
         }
         let mut map = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        copy_flash_frame(&party, &mut map);
+        if origin != RestorationOrigin::Flash {
+            copy_flash_frame(&party, &mut map);
+        }
         let mut save_buffer2 = None;
         let mut error = None;
         if matches!(origin, RestorationOrigin::Save { .. }) {
             // Capture the saved START buffer while the existing staging image
             // holds the map. Do not allocate a second linear frame on GBA or
             // overwrite the visible SAVE raster when the copy later begins.
-            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                &mut party, self.state.config.language);
+            crate::render::draw_start_menu(
+                &self.start_menu,
+                &self.player_name,
+                &mut party,
+                self.state.config.language,
+            );
             let mut ui = super::field_video_inputs::NativeUiTiles::default();
             match ui.sample(&party) {
                 Ok(()) => save_buffer2 = Some(ui),
@@ -354,13 +688,27 @@ impl PokemonGame {
             }
         }
         if origin == RestorationOrigin::StartMenu {
-            crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                &mut party, self.state.config.language);
-        } else if matches!(origin, RestorationOrigin::Save { .. } | RestorationOrigin::Submenu
-            | RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard) {
+            crate::render::draw_start_menu(
+                &self.start_menu,
+                &self.player_name,
+                &mut party,
+                self.state.config.language,
+            );
+        } else if matches!(
+            origin,
+            RestorationOrigin::Save { .. }
+                | RestorationOrigin::Submenu
+                | RestorationOrigin::Pokedex
+                | RestorationOrigin::TrainerCard
+        ) {
             self.draw(&mut party);
         } else {
-            party.clear(Rgba::WHITE);
+            if origin != RestorationOrigin::Flash {
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                pokered_renderer::gba_dma::clear_frame(&mut party);
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                party.clear(Rgba::WHITE);
+            }
             crate::render::draw_party_screen(
                 &self.party_screen,
                 self.resources.as_mut(),
@@ -376,12 +724,22 @@ impl PokemonGame {
             RestorationOrigin::Flash => FieldRestoreWork::new(restore_input),
             RestorationOrigin::Party => FieldRestoreWork::party_return(restore_input),
             RestorationOrigin::StartMenu => FieldRestoreWork::close_start_menu(restore_input),
-            RestorationOrigin::Save { cancelled } => FieldRestoreWork::save_return(restore_input, cancelled),
+            RestorationOrigin::Save { cancelled } => {
+                FieldRestoreWork::save_return(restore_input, cancelled)
+            }
             RestorationOrigin::Submenu => FieldRestoreWork::submenu_return(restore_input),
             RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard => {
-                let tileset = self.overworld.map_data.as_ref().expect("loaded field map").tileset;
-                FieldRestoreWork::fullscreen_menu_return(restore_input,
-                    tileset.base().to_u8(), origin == RestorationOrigin::TrainerCard)
+                let tileset = self
+                    .overworld
+                    .map_data
+                    .as_ref()
+                    .expect("loaded field map")
+                    .tileset;
+                FieldRestoreWork::fullscreen_menu_return(
+                    restore_input,
+                    tileset.base().to_u8(),
+                    origin == RestorationOrigin::TrainerCard,
+                )
             }
         };
         let facing = self
@@ -393,9 +751,12 @@ impl PokemonGame {
         let text = message.map(|message| self.overworld.begin_party_field_text(message));
         self.field_flash = Some(Box::new(FieldFlash {
             text,
+            rendered_text: None,
+            rendered_dialogue_state: None,
             origin,
             work,
             patterns: PatternMemory::default(),
+            rom_cache: super::field_restore_assets::RomPatternCache::default(),
             waits: Vec::new(),
             cleared_oam_at_ret: None,
             last_bulk_copy_temp_at_ret: None,
@@ -404,8 +765,13 @@ impl PokemonGame {
             party,
             save_buffer2,
             map,
+            map_cache,
             map_key: crate::render::session::FlashMapVisualKey::new(),
+            settled_return_key: None,
+            flash_bg_band: 0,
+            flash_bg_anim: (0, None),
             show_map: false,
+            linear_map_ready: false,
             display_child: None,
             soft_reset_work: None,
             soft_reset_requested: false,
@@ -426,6 +792,39 @@ impl PokemonGame {
             Err(error) => flow.error = Some(error),
         }
         self.field_flash = Some(flow);
+    }
+
+    fn step_flash_background_band(&mut self, flow: &mut FieldFlash) {
+        const EDGES: [i32; 7] = [0, 24, 48, 72, 96, 120, 144];
+        if flow.origin != RestorationOrigin::Flash || flow.flash_bg_band >= 6 {
+            return;
+        }
+        if flow.flash_bg_band == 0 {
+            flow.flash_bg_anim = (
+                self.overworld.tile_anim.water_shift(),
+                self.overworld.tile_anim.flower_frame(),
+            );
+        }
+        let idx = usize::from(flow.flash_bg_band);
+        crate::render::draw_overworld_background_band(
+            &mut self.overworld,
+            &mut self.resources,
+            &mut flow.party,
+            self.state.config.language,
+            &mut flow.map_cache,
+            EDGES[idx]..EDGES[idx + 1],
+            flow.flash_bg_anim,
+        );
+        flow.flash_bg_band += 1;
+        if flow.flash_bg_band == 6 {
+            flow.linear_map_ready = true;
+        }
+    }
+
+    fn complete_flash_background(&mut self, flow: &mut FieldFlash) {
+        while flow.flash_bg_band < 6 {
+            self.step_flash_background_band(flow);
+        }
     }
 
     pub(super) fn update_field_flash(&mut self, input: &InputState) {
@@ -455,20 +854,66 @@ impl PokemonGame {
         // ReadJoypad in the live IRQ publishes the sampled input. Physical
         // release alone must not unblock SAVE's HoldTextDisplayOpen gate.
         let printing = flow.text.as_ref().is_some_and(|text| !text.returned());
-        let returned = flow.text.as_mut().is_none_or(|text| self.overworld.tick_party_field_text(text, raw));
+        let returned = flow
+            .text
+            .as_mut()
+            .is_none_or(|text| self.overworld.tick_party_field_text(text, raw));
         if printing && self.overworld.sfx_event == OverworldSfxEvent::TextAdvance {
             if let Some(audio) = &self.audio {
                 audio.play_sfx(SfxId::PressAB);
             }
         }
+        if flow.flash_bg_band == 0 {
+            sync_field_text(
+                &mut flow,
+                self.overworld.displayed_field_dialogue(),
+                self.frame_count,
+                self.state.config.language,
+            );
+        }
         if !returned {
-            if self.game_timer_active() { self.save_data.game_data.play_time.tick(); }
+            let irq = flow
+                .irq
+                .as_mut()
+                .expect("FLASH native IRQ inputs unavailable");
+            if irq.ui_next_row < 18 {
+                let end = (irq.ui_next_row + 2).min(18);
+                if let Err(error) =
+                    irq.ui
+                        .sample_rows(&flow.party, u32::from(irq.ui_next_row), u32::from(end))
+                {
+                    flow.error = Some(format!("initial native UI input: {error:?}"));
+                    self.field_flash = Some(flow);
+                    return;
+                }
+                irq.ui_next_row = end;
+            }
+            if irq.ui_next_row == 18
+                && !irq.ui_text_sampled
+                && self
+                    .overworld
+                    .displayed_field_dialogue()
+                    .is_some_and(|dialogue| dialogue.waiting_for_input())
+            {
+                let first = if self.state.config.language == Lang::Zh { 13 } else { 14 };
+                if let Err(error) = irq.ui.sample_rows(&flow.party, first, 17) {
+                    flow.error = Some(format!("completed native UI input: {error:?}"));
+                    self.field_flash = Some(flow);
+                    return;
+                }
+                irq.ui_text_sampled = true;
+                irq.ui_sampled_arrow = (self.frame_count / 16) % 2 == 0;
+            }
+            if self.game_timer_active() {
+                self.save_data.game_data.play_time.tick();
+            }
             if let Some(audio) = &self.audio {
                 audio.update_frame();
             }
             self.field_flash = Some(flow);
             return;
         }
+        let lcd_was_off = !self.source_display.device().lcd_enabled();
         match self.service_field_flash(&mut flow) {
             Ok(_) if flow.soft_reset_requested => {
                 // Host reset must also discard this attached display owner;
@@ -484,13 +929,18 @@ impl PokemonGame {
                 }
                 if flow.origin == RestorationOrigin::Submenu {
                     self.start_menu.complete_source_redisplay();
-                    self.source_display.device_mut().end_native_background_transfer();
+                    self.source_display
+                        .device_mut()
+                        .end_native_background_transfer();
                 } else {
                     self.start_menu.begin_source_redisplay();
                 }
             }
             Ok(true) => {
                 let foreground = self.overworld.source_foreground().cloned();
+                if let Some(key) = flow.settled_return_key.take() {
+                    self.restored_overworld_bg = Some((key, flow.map_cache));
+                }
                 self.handle_transition(GameScreen::Overworld);
                 if flow.origin.returns_to_map_with_actors() {
                     if let Some(foreground) = foreground {
@@ -498,7 +948,27 @@ impl PokemonGame {
                     }
                 }
             }
-            Ok(false) => self.field_flash = Some(flow),
+            Ok(false) => {
+                let step_band = flow.origin == RestorationOrigin::Flash
+                    && flow.flash_bg_band < 6
+                    && !flow.show_map
+                    && self
+                        .source_display
+                        .device()
+                        .background_palette_raster()
+                        .is_some_and(|raster| raster.is_white())
+                    && ((lcd_was_off && !self.source_display.device().lcd_enabled())
+                        || flow.irq.as_ref().is_some_and(|irq| {
+                            irq.attached
+                                && irq.background_is_map
+                                && irq.last_audio_no_note
+                                && (irq.delay.is_some() || irq.copy.is_some())
+                        }));
+                if step_band {
+                    self.step_flash_background_band(&mut flow);
+                }
+                self.field_flash = Some(flow);
+            }
             Err(error) => {
                 log::error!("FLASH restoration stopped: {error}");
                 flow.error = Some(error);
@@ -511,11 +981,21 @@ impl PokemonGame {
         if self.overworld.state.current_map as u8 != flow.work.map_id() {
             return Err("map changed under FLASH caller".into());
         }
-        self.attach_field_irq(flow)?;
+        if flow.irq.as_ref().is_none_or(|irq| !irq.attached) {
+            self.attach_field_irq(flow)?;
+        }
         loop {
-            if !self.service_field_irq(flow)? { return Ok(false); }
-            if self.source_display.remaining() == 0 { return Ok(false); }
-            if flow.irq.as_ref().is_some_and(|i| i.delay.is_some() || i.copy.is_some()) {
+            if !self.service_field_irq(flow)? {
+                return Ok(false);
+            }
+            if self.source_display.attached_time().remaining() == 0 {
+                return Ok(false);
+            }
+            if flow
+                .irq
+                .as_ref()
+                .is_some_and(|i| i.delay.is_some() || i.copy.is_some())
+            {
                 self.step_field_wait(flow)?;
                 continue;
             }
@@ -537,36 +1017,85 @@ impl PokemonGame {
                                 true
                             })
                         } else {
-                            work.step(&mut *self.source_display).map(|i| i.is_some())
+                            let mut bus = self.source_display.display_bus();
+                            loop {
+                                match work.step(&mut bus) {
+                                    Ok(Some(_)) => (),
+                                    Ok(None) => break Ok(false),
+                                    Err(error) => break Err(error),
+                                }
+                            }
                         }
                     }
                     DisplayChild::Palette(work) => {
-                        work.step(&mut *self.source_display).map(|i| i.is_some())
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
                     }
-                    DisplayChild::EnableSprites(work) => work.step(&mut *self.source_display),
+                    DisplayChild::EnableSprites(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        loop {
+                            match work.step(&mut bus) {
+                                Ok(true) => (),
+                                Ok(false) => break Ok(false),
+                                Err(error) => break Err(error),
+                            }
+                        }
+                    }
                     DisplayChild::ClearOam(work) => {
-                        work.step(&mut *self.source_display).map(|i| i.is_some())
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
                     }
-                    DisplayChild::IndoorSpritePrefix(work) => work.step(&mut *self.source_display),
-                    DisplayChild::IndoorSpriteSlot(work) => work.step(&mut *self.source_display),
-                    DisplayChild::IndoorSpriteTransfer(work) => work.step(&mut *self.source_display),
-                    DisplayChild::IndoorSpriteClear(work) => work.step(&mut *self.source_display),
-                    DisplayChild::ColdSpriteBank(work) => work.step(&mut *self.source_display),
-                    DisplayChild::MapView(work) => work.step(&mut *self.source_display),
-                    DisplayChild::Buffer2 { work, patterns, map, published } => {
+                    DisplayChild::IndoorSpritePrefix(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::IndoorSpriteSlot(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::IndoorSpriteTransfer(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::IndoorSpriteClear(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::ColdSpriteBank(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run_until_body(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::MapView(work) => {
+                        let mut bus = self.source_display.display_bus();
+                        work.run(&mut bus).map(|()| false)
+                    }
+                    DisplayChild::Buffer2 {
+                        work,
+                        patterns,
+                        map,
+                        published,
+                    } => {
                         let irq = flow.irq.as_mut().ok_or("missing buffer2 IRQ owner")?;
-                        let tiles = irq.ui.tiles.as_mut_slice().try_into()
+                        let tiles = irq
+                            .ui
+                            .tiles
+                            .as_mut_slice()
+                            .try_into()
                             .map_err(|_| "invalid live buffer2 destination")?;
                         let result = work.run(&mut self.source_display.display_bus(), tiles);
                         if result.is_ok() && work.copied_bytes() == 360 && !*published {
                             // The WRAM stores are complete and AutoBG is still
                             // off. Bind their native namespace before the real
                             // enable instruction can expose them to an IRQ.
-                            if let Some(patterns) = patterns.take() { irq.ui.patterns = patterns; }
+                            if let Some(patterns) = patterns.take() {
+                                irq.ui.patterns = patterns;
+                            }
                             irq.ui.revision += 1;
                             irq.background_is_map = *map;
                             if flow.origin == RestorationOrigin::Submenu {
-                                self.source_display.device_mut().begin_native_background_transfer(0x9800)
+                                self.source_display
+                                    .device_mut()
+                                    .begin_native_background_transfer(0x9800)
                                     .map_err(|e| format!("native background publication: {e:?}"))?;
                             }
                             *published = true;
@@ -578,7 +1107,8 @@ impl PokemonGame {
                             .resources
                             .as_mut()
                             .ok_or("graphics resources unavailable")?;
-                        let assets = NativePatternAssets::new(resources);
+                        let assets =
+                            NativePatternAssets::with_shared_cache(resources, &flow.rom_cache);
                         // Keep the same source adapter while the child runs;
                         // it can resolve its immutable ROM slice once while
                         // every original instruction still reaches the bus.
@@ -595,16 +1125,25 @@ impl PokemonGame {
                                 || matches!(flow.origin, RestorationOrigin::Save { .. }))
                         {
                             draw_flash_frame(&flow.map, &mut flow.party);
+                            flow.linear_map_ready = true;
                             if matches!(flow.origin, RestorationOrigin::Save { .. }) {
-                                crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                                    &mut flow.party, self.state.config.language);
+                                crate::render::draw_start_menu(
+                                    &self.start_menu,
+                                    &self.player_name,
+                                    &mut flow.party,
+                                    self.state.config.language,
+                                );
                             }
                             flow.show_map = flow.origin.returns_to_start_menu();
                         }
                         if let DisplayChild::MapView(work) = child {
-                            let tiles = work.visible_tiles().ok_or("map view returned before completion")?;
+                            let tiles = work
+                                .visible_tiles()
+                                .ok_or("map view returned before completion")?;
                             let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
-                            if tiles != irq.map_tiles.tiles { return Err("rebuilt view differs from native map input".into()); }
+                            if tiles != irq.map_tiles.tiles {
+                                return Err("rebuilt view differs from native map input".into());
+                            }
                             irq.map_tiles.tiles.copy_from_slice(tiles);
                         }
                         if let DisplayChild::ColdSpriteBank(work) = child {
@@ -676,15 +1215,22 @@ impl PokemonGame {
                             let map = self.overworld.state.current_map;
                             self.overworld.player_presentation.clear_shadow_oam(map);
                             self.overworld.npc_presentation.clear_shadow_oam(map);
-                            flow.cleared_oam_at_ret = Some((self.source_display.elapsed(),
-                                self.source_display.shadow_oam().iter().all(|&b| b == 0)));
+                            let cleared =
+                                matches!(child, DisplayChild::ClearOam(work) if work.finished());
+                            debug_assert_eq!(
+                                cleared,
+                                self.source_display.shadow_oam().iter().all(|&b| b == 0)
+                            );
+                            flow.cleared_oam_at_ret =
+                                Some((self.source_display.elapsed(), cleared));
                         }
                         flow.display_child = None;
                         if matches!(
                             flow.work.operation(),
                             Some(RestoreOperation::BulkPatternCopy(_))
                         ) {
-                            flow.last_bulk_copy_temp_at_ret = Some(self.source_display.source_rom_bank_temp());
+                            flow.last_bulk_copy_temp_at_ret =
+                                Some(self.source_display.source_rom_bank_temp());
                             if let Some(parent) = flow.indoor_transfer.as_mut() {
                                 if !parent.copy_returned() {
                                     return Err(
@@ -702,7 +1248,7 @@ impl PokemonGame {
             }
             // Do not enter a new child after the final instruction overran a
             // grant. The Game owner retains that overrun in its next budget.
-            if self.source_display.remaining() == 0 {
+            if self.source_display.attached_time().remaining() == 0 {
                 return Ok(false);
             }
             #[cfg(feature = "debug-server")]
@@ -731,7 +1277,9 @@ impl PokemonGame {
                     flow.waits.push(FieldWaitReceipt { requested: frames,
                         armed_returns: pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*self.source_display),
                         armed_tcycles: self.source_display.elapsed(), completed_returns: None, completed_tcycles: None });
-                    flow.irq.as_mut().ok_or("missing IRQ owner")?.delay = Some(pokered_core::overworld::display_delay_work::DelayFramesWork::new(frames));
+                    flow.irq.as_mut().ok_or("missing IRQ owner")?.delay = Some(
+                        pokered_core::overworld::display_delay_work::DelayFramesWork::new(frames),
+                    );
                     continue;
                 }
                 RestoreOperation::DisableLcd => {
@@ -880,8 +1428,17 @@ impl PokemonGame {
                 }
                 RestoreOperation::SetWindowY(144) => {
                     self.overworld.clear_retained_field_text();
+                    if flow.origin == RestorationOrigin::Flash {
+                        self.complete_flash_background(flow);
+                    } else {
+                        draw_flash_frame(&flow.map, &mut flow.party);
+                    }
+                    flow.linear_map_ready = true;
                     flow.show_map = true;
-                    flow.irq.as_mut().ok_or("missing IRQ owner")?.background_is_map = true;
+                    flow.irq
+                        .as_mut()
+                        .ok_or("missing IRQ owner")?
+                        .background_is_map = true;
                 }
                 RestoreOperation::RestoreNpcFacing => {
                     if self.overworld.npc_states.len() != flow.facing.len() {
@@ -898,8 +1455,12 @@ impl PokemonGame {
                     let metadata = pokered_core::overworld::tileset_pattern_metadata::tileset_pattern_metadata(map.tileset.base().to_u8())
                         .ok_or("missing tileset bank")?;
                     let work = pokered_core::overworld::map_view_work::MapViewWork::new(
-                        map.width, snapshot.world_tile_origin, metadata.bank, snapshot.tiles)
-                        .ok_or("invalid surrounding map input")?;
+                        map.width,
+                        snapshot.world_tile_origin,
+                        metadata.bank,
+                        snapshot.tiles,
+                    )
+                    .ok_or("invalid surrounding map input")?;
                     flow.display_child = Some(DisplayChild::MapView(work));
                     continue;
                 }
@@ -907,28 +1468,57 @@ impl PokemonGame {
                     // Party text has returned and the retained map is on
                     // screen. Its old staging buffer can now render the new
                     // map without another full framebuffer allocation.
-                    crate::render::draw_overworld_background(
-                        &mut self.overworld,
-                        &mut self.resources,
-                        &mut flow.party,
-                        self.state.config.language,
-                    );
-                    if flow.origin.returns_to_map_with_actors() {
-                        crate::render::draw_overworld(&mut self.overworld, &mut self.resources,
-                            &mut flow.party, self.state.config.language);
+                    let mut map_unchanged = false;
+                    if flow.origin == RestorationOrigin::Flash {
+                        debug_assert!(flow.linear_map_ready && flow.show_map);
+                        map_unchanged = crate::render::draw_overworld_background_cached(
+                            &mut self.overworld,
+                            &mut self.resources,
+                            &mut flow.party,
+                            self.state.config.language,
+                            &mut flow.map_cache,
+                        );
+                    } else {
+                        crate::render::draw_overworld_background(
+                            &mut self.overworld,
+                            &mut self.resources,
+                            &mut flow.party,
+                            self.state.config.language,
+                            );
                     }
-                    if matches!(flow.origin, RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard) {
+                    if flow.origin.returns_to_map_with_actors() {
+                        crate::render::draw_overworld(
+                            &mut self.overworld,
+                            &mut self.resources,
+                            &mut flow.party,
+                            self.state.config.language,
+                        );
+                    }
+                    if matches!(
+                        flow.origin,
+                        RestorationOrigin::Pokedex | RestorationOrigin::TrainerCard
+                    ) {
                         // ReloadMapData rebuilds the map tile buffer; its
                         // caller's RedisplayStartMenu retains the same cursor.
-                        crate::render::draw_start_menu(&self.start_menu, &self.player_name,
-                            &mut flow.party, self.state.config.language);
+                        crate::render::draw_start_menu(
+                            &self.start_menu,
+                            &self.player_name,
+                            &mut flow.party,
+                            self.state.config.language,
+                        );
                         let irq = flow.irq.as_mut().ok_or("missing IRQ owner")?;
-                        irq.ui.tiles.clear();
-                        irq.ui.patterns.clear();
-                        irq.ui.sample(&flow.party).map_err(|e| format!("map reload: {e:?}"))?;
+                        irq.ui.clear();
+                        irq.ui
+                            .sample(&flow.party)
+                            .map_err(|e| format!("map reload: {e:?}"))?;
                     }
-                    copy_flash_frame(&flow.party, &mut flow.map);
-                    flow.map_key = crate::render::session::FlashMapVisualKey::new();
+                    if flow.origin != RestorationOrigin::Flash {
+                        copy_flash_frame(&flow.party, &mut flow.map);
+                    }
+                    flow.linear_map_ready = true;
+                    if !map_unchanged {
+                        flow.map_key = crate::render::session::FlashMapVisualKey::new();
+                    }
                 }
                 RestoreOperation::LoadMapPalettes => {
                     let offset = self.overworld.dark_cave.map_pal_offset;
@@ -974,7 +1564,9 @@ impl PokemonGame {
                         (irq.map_tiles.tiles.clone(), None)
                     } else {
                         let ui = if matches!(flow.origin, RestorationOrigin::Save { .. }) {
-                            flow.save_buffer2.take().ok_or("missing saved START buffer2")?
+                            flow.save_buffer2
+                                .take()
+                                .ok_or("missing saved START buffer2")?
                         } else {
                             let mut ui = super::field_video_inputs::NativeUiTiles::default();
                             ui.sample_retained(&flow.map)
@@ -985,7 +1577,10 @@ impl PokemonGame {
                     };
                     let work = ScreenBufferWork::new(tiles).ok_or("invalid saved buffer2")?;
                     flow.display_child = Some(DisplayChild::Buffer2 {
-                        work, patterns, map, published: false,
+                        work,
+                        patterns,
+                        map,
+                        published: false,
                     });
                     continue;
                 }
@@ -994,7 +1589,8 @@ impl PokemonGame {
                         match work.step(&mut *self.source_display, &mut self.soft_reset_counter) {
                             Ok(ResetProgress::Instruction) => (),
                             Ok(ResetProgress::Sleeping) => {
-                                self.source_display.idle_to_vblank_edge()
+                                self.source_display
+                                    .idle_to_vblank_edge()
                                     .map_err(|e| format!("SAVE soft reset: {e:?}"))?;
                             }
                             Ok(ResetProgress::RetryJoypad) => flow.soft_reset_work = None,
@@ -1014,15 +1610,20 @@ impl PokemonGame {
                         flow.soft_reset_work = Some(TrySoftResetWork::default());
                         continue;
                     }
-                    if self.overworld.begin_source_field().poll().held & pokered_core::foreground_input::A != 0 {
+                    if self.overworld.begin_source_field().poll().held
+                        & pokered_core::foreground_input::A
+                        != 0
+                    {
                         // The native held-button gate is not a cycle-exact
                         // Joypad spin loop. Keep the shared IRQ/audio owner
                         // running while the real physical input stays held.
-                        self.source_display.idle_to_vblank_edge().map_err(|e| format!("SAVE held A: {e:?}"))?;
+                        self.source_display
+                            .idle_to_vblank_edge()
+                            .map_err(|e| format!("SAVE held A: {e:?}"))?;
                         continue;
                     }
                 }
-                RestoreOperation::DefaultPaletteCommand => {},
+                RestoreOperation::DefaultPaletteCommand => {}
                 RestoreOperation::SetAutoBg(enabled) => {
                     self.source_display.execute(DisplayInstruction { tcycles: 12,
                         access: Some(pokered_core::overworld::display_lcd_work::DisplayAccess::Write {
@@ -1030,10 +1631,35 @@ impl PokemonGame {
                             value: u8::from(enabled), at_tcycle: 8 }) }).map_err(|e| format!("{e:?}"))?;
                 }
                 RestoreOperation::Return => {
-                    match self.source_display.execute(DisplayInstruction { tcycles: 16, access: None }) {
+                    match self.source_display.execute(DisplayInstruction {
+                        tcycles: 16,
+                        access: None,
+                    }) {
                         Ok(_) => {
+                            if flow.origin == RestorationOrigin::Flash
+                                && flow.show_map
+                                && flow.linear_map_ready
+                            {
+                                flow.settled_return_key = self
+                                    .source_display
+                                    .device()
+                                    .background_palette_raster()
+                                    .filter(|raster| {
+                                        raster.spans().len() == 1 && raster.spans()[0].palette == 0xe4
+                                    })
+                                    .map(|raster| {
+                                        flow.map_key
+                                            .clone()
+                                            .with_palette_revision(
+                                                Self::effective_flash_palette_revision(Some(raster)),
+                                            )
+                                            .with_map_view()
+                                    });
+                            }
                             self.source_display.set_vblank_dispatch_enabled(false);
-                            self.source_display.device_mut().end_native_background_scanout();
+                            self.source_display
+                                .device_mut()
+                                .end_native_background_scanout();
                             self.source_display.device_mut().end_native_object_scanout();
                             return Ok(true);
                         }
@@ -1104,9 +1730,16 @@ impl PokemonGame {
     }
 
     fn field_flash_frame_visible(&self) -> bool {
-        matches!(self.state.screen, GameScreen::PartyScreen | GameScreen::StartMenu | GameScreen::SaveMenu
-            | GameScreen::Bag | GameScreen::OptionsMenu | GameScreen::Pokedex | GameScreen::TrainerCard)
-            && self.black_screen_frames == 0
+        matches!(
+            self.state.screen,
+            GameScreen::PartyScreen
+                | GameScreen::StartMenu
+                | GameScreen::SaveMenu
+                | GameScreen::Bag
+                | GameScreen::OptionsMenu
+                | GameScreen::Pokedex
+                | GameScreen::TrainerCard
+        ) && self.black_screen_frames == 0
             && self.post_capture_flow.is_none()
             && self.trade_anim.is_none()
             && self.evolution_anim.is_none()
@@ -1114,45 +1747,126 @@ impl PokemonGame {
             && self.credits.is_none()
     }
 
+    fn effective_flash_palette_revision(
+        raster: Option<&pokered_core::overworld::display_device::BackgroundPaletteRaster>,
+    ) -> u64 {
+        let Some(raster) = raster else {
+            return 0;
+        };
+        let spans = raster.spans();
+        if spans.is_empty()
+            || (spans.len() == 1 && spans[0].start == 0 && spans[0].palette == 0xe4)
+        {
+            0
+        } else {
+            raster.revision()
+        }
+    }
+
     pub(crate) fn field_flash_map_key(&self) -> Option<crate::render::session::FlashMapVisualKey> {
-        if !self.field_flash_frame_visible() || self.field_flash_is_white() { return None; }
+        if !self.field_flash_frame_visible() || self.field_flash_is_white() {
+            return None;
+        }
         let flow = self.field_flash.as_ref()?;
         let device = self.source_display.device();
         let key = flow.map_key.clone().with_palette_revision(
-            device.background_palette_raster().map_or(0, |raster| raster.revision()));
+            Self::effective_flash_palette_revision(device.background_palette_raster()),
+        );
         if flow.show_map {
-            Some(key)
+            Some(key.with_map_view())
         } else if flow.origin == RestorationOrigin::Submenu
-            && self.overworld.displayed_field_dialogue().is_none() {
+            && self.overworld.displayed_field_dialogue().is_none()
+        {
             // These two retained UI rasters and the stationary sprite bank
             // stay fixed. Only completed BG/OAM/palette scans change pixels.
-            Some(key.with_submenu_revisions(
-                device.background_transfer_raster().map_or(0, |raster| raster.revision()),
-                device.native_object_raster().map_or(0, |raster| raster.revision())))
+            Some(
+                key.with_submenu_revisions(
+                    device
+                        .background_transfer_raster()
+                        .map_or(0, |raster| raster.revision()),
+                    device
+                        .native_object_raster()
+                        .map_or(0, |raster| raster.revision()),
+                ),
+            )
+        } else if matches!(
+            flow.origin,
+            RestorationOrigin::Flash | RestorationOrigin::Party
+        ) {
+            let arrow = flow
+                .rendered_text
+                .as_ref()
+                .is_some_and(|(_, arrow)| *arrow);
+            Some(key.with_party_dialogue(flow.rendered_dialogue_state, arrow))
         } else {
             None
         }
     }
 
     pub(super) fn field_flash_is_white(&self) -> bool {
-        self.field_flash.is_some() && self.source_display.device()
-            .background_palette_raster().is_some_and(|raster| raster.is_white())
+        self.field_flash.is_some()
+            && self
+                .source_display
+                .device()
+                .background_palette_raster()
+                .is_some_and(|raster| raster.is_white())
+    }
+
+    pub(crate) fn draw_field_flash_palette(&self, fb: &mut FrameBuffer) {
+        let flow = self.field_flash.as_ref().unwrap();
+        let raster = self.source_display.device().background_palette_raster();
+        if !flow.show_map || flow.linear_map_ready {
+            #[cfg(all(target_os = "none", target_arch = "arm"))]
+            {
+                copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
+                return;
+            }
+            #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+            copy_linear_flash_frame(&flow.party, fb);
+        } else {
+            draw_flash_frame(&flow.map, fb);
+        }
+        if let Some(raster) = raster {
+            apply_flash_palette(raster, fb);
+        }
     }
 
     pub(super) fn draw_field_flash(&self, fb: &mut FrameBuffer) {
         let flow = self.field_flash.as_ref().unwrap();
         if self.field_flash_is_white() {
+            #[cfg(not(all(target_os = "none", target_arch = "arm")))]
             fb.clear(Rgba::WHITE);
+            #[cfg(all(target_os = "none", target_arch = "arm"))]
+            {
+                fb.reset_palette();
+                pokered_renderer::gba_dma::clear_frame(fb);
+            }
             return;
         }
+        let raster = self.source_display.device().background_palette_raster();
         if flow.show_map {
-            draw_flash_frame(&flow.map, fb);
-            if let Some(raster) = self.source_display.device().background_palette_raster() {
+            if flow.linear_map_ready {
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                {
+                    copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
+                    return;
+                }
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                copy_linear_flash_frame(&flow.party, fb);
+            } else {
+                draw_flash_frame(&flow.map, fb);
+            }
+            if let Some(raster) = raster {
                 apply_flash_palette(raster, fb);
             }
             return;
         }
-        fb.copy_from(&flow.party);
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if flow.origin != RestorationOrigin::Submenu {
+            copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
+            return;
+        }
+        copy_linear_flash_frame(&flow.party, fb);
         if flow.origin == RestorationOrigin::Submenu {
             if let Some(raster) = self.source_display.device().background_transfer_raster() {
                 draw_flash_cells(&flow.map, raster.rows(), fb);
@@ -1161,27 +1875,7 @@ impl PokemonGame {
                 draw_submenu_objects(raster, &flow.patterns, fb);
             }
         }
-        if let Some(dialogue) = self.overworld.displayed_field_dialogue() {
-            if let Some((first, second)) = dialogue.get_display_text() {
-                let text = if second.is_empty() {
-                    first
-                } else {
-                    format!("{first}\n{second}")
-                };
-                let arrow = flow.text.as_ref().is_some_and(|text| !text.returned())
-                    && dialogue.waiting_for_input()
-                    && (self.frame_count / 16) % 2 == 0;
-                let mut painter = pokered_ui::backends::FrameBufferPainter::new(fb);
-                pokered_ui::menus::dialog::draw_paginated(
-                    &text,
-                    arrow,
-                    &pokered_data::ui_layout::schema::DIALOG_DEFAULT_LAYOUT,
-                    &mut pokered_ui::Ui::new(&mut painter),
-                    self.state.config.language,
-                );
-            }
-        }
-        if let Some(raster) = self.source_display.device().background_palette_raster() {
+        if let Some(raster) = raster {
             apply_flash_palette(raster, fb);
         }
     }
@@ -1218,49 +1912,115 @@ mod tests {
         game.overworld.player_presentation.suppress_current_image();
         game.overworld.npc_presentation.suppress_current_images();
         game.begin_field_flash(message);
-        assert!(game.field_flash.as_ref().unwrap().error.is_none(), "{:?}", game.field_flash.as_ref().unwrap().error);
+        assert!(
+            game.field_flash.as_ref().unwrap().error.is_none(),
+            "{:?}",
+            game.field_flash.as_ref().unwrap().error
+        );
     }
 
-
-    #[test]
-    fn flash_samples_the_final_native_caption_only_when_text_returns() {
-        let mut game = PokemonGame::new(GameVersion::Red);
-        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
-        game.state.screen = GameScreen::PartyScreen;
-        game.overworld.set_no_text_delay(false);
-        begin_fixture_flash(&mut game, "A blinding FLASH lights the area!");
-        for _ in 0..600 {
-            game.update(&InputState::new());
-            let irq = game.field_flash.as_ref().unwrap().irq.as_ref().unwrap();
-            assert!(!irq.attached);
-            assert!(irq.ui.tiles.is_empty(), "printing must not sample a raster no IRQ can read");
-            assert!(irq.ui.patterns.is_empty());
-        }
-        assert!(game.overworld.displayed_field_dialogue().unwrap().waiting_for_input());
-        let mut acknowledge = InputState::new();
-        acknowledge.press(GbButton::A);
-        game.update(&acknowledge);
+    fn assert_incremental_text_matches_full_redraw(game: &PokemonGame, tick: u32) {
         let flow = game.field_flash.as_ref().unwrap();
-        assert!(flow.error.is_none(), "{:?}", flow.error);
-        assert!(flow.text.as_ref().unwrap().returned());
-        let irq = flow.irq.as_ref().unwrap();
-        assert!(irq.attached);
-        assert_eq!(irq.ui.revision, 1);
-        assert_eq!(irq.ui.tiles.len(), 360);
+        let Some((text, arrow)) = flow.rendered_text.as_ref() else {
+            return;
+        };
+        let mut expected = flow.party.clone();
+        draw_field_dialogue(&mut expected, text, *arrow, game.state.config.language);
         for y in 0..144 {
             for x in 0..160 {
-                let tile = irq.ui.tiles[(y / 8 * 20 + x / 8) as usize];
-                let pattern = irq.ui.patterns[usize::from(tile)];
-                let row = (y % 8) as usize;
-                let shift = 7 - x % 8;
-                let shade = ((pattern[row * 2] >> shift) & 1)
-                    | (((pattern[row * 2 + 1] >> shift) & 1) << 1);
-                assert_eq!(shade, flow.party.get_index(x, y).unwrap() as u8);
+                assert_eq!(
+                    flow.party.get_index(x, y),
+                    expected.get_index(x, y),
+                    "{tick}: {text:?} at ({x},{y})"
+                );
             }
         }
-        let final_raster = irq.ui.clone();
-        game.update(&InputState::new());
-        assert_eq!(game.field_flash.as_ref().unwrap().irq.as_ref().unwrap().ui, final_raster);
+    }
+
+    #[test]
+    fn incremental_text_matches_full_redraw_in_english_and_chinese() {
+        for (lang, message) in [
+            (Lang::En, "A blinding FLASH lights the area!"),
+            (Lang::Zh, "闪闪发光的文字\n照亮洞窟！"),
+        ] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+            game.state.screen = GameScreen::PartyScreen;
+            game.state.config.language = lang;
+            game.overworld.set_no_text_delay(false);
+            begin_fixture_flash(&mut game, message);
+            for tick in 0..600 {
+                game.update(&InputState::new());
+                assert_incremental_text_matches_full_redraw(&game, tick);
+            }
+        }
+    }
+
+    #[test]
+    fn flash_seeds_static_ui_and_samples_final_caption_on_return() {
+        let mut arrow_states = [false; 2];
+        for (lang, message, frame_offset) in [
+            (Lang::En, "A blinding FLASH lights the area!", 0),
+            (Lang::Zh, "闪闪发光的文字\n照亮洞窟！", 16),
+        ] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+            game.state.screen = GameScreen::PartyScreen;
+            game.state.config.language = lang;
+            game.frame_count = frame_offset;
+            game.overworld.set_no_text_delay(false);
+            begin_fixture_flash(&mut game, message);
+            for _ in 0..9 {
+                game.update(&InputState::new());
+            }
+            let irq = &game.field_flash.as_ref().unwrap().irq.as_ref().unwrap();
+            assert_eq!(irq.ui_next_row, 18);
+            let seeded = irq.ui.clone();
+            assert_eq!(seeded.tiles.len(), 360);
+            assert!(!seeded.patterns.is_empty());
+            for _ in 9..600 {
+                game.update(&InputState::new());
+                let irq = game.field_flash.as_ref().unwrap().irq.as_ref().unwrap();
+                assert!(!irq.attached);
+                if !irq.ui_text_sampled {
+                    assert_eq!(irq.ui, seeded);
+                }
+            }
+            assert!(game
+                .overworld
+                .displayed_field_dialogue()
+                .unwrap()
+                .waiting_for_input());
+            let mut acknowledge = InputState::new();
+            acknowledge.press(GbButton::A);
+            game.update(&acknowledge);
+            let flow = game.field_flash.as_ref().unwrap();
+            assert!(flow.error.is_none(), "{:?}", flow.error);
+            assert!(flow.text.as_ref().unwrap().returned());
+            let irq = flow.irq.as_ref().unwrap();
+            assert!(irq.attached);
+            assert!(irq.ui_text_sampled);
+            arrow_states[usize::from(irq.ui_sampled_arrow)] = true;
+            assert_eq!(irq.ui.tiles.len(), 360);
+            for y in 0..144 {
+                for x in 0..160 {
+                    let tile = irq.ui.tiles[(y / 8 * 20 + x / 8) as usize];
+                    let pattern = irq.ui.patterns[usize::from(tile)];
+                    let row = (y % 8) as usize;
+                    let shift = 7 - x % 8;
+                    let shade = ((pattern[row * 2] >> shift) & 1)
+                        | (((pattern[row * 2 + 1] >> shift) & 1) << 1);
+                    assert_eq!(shade, flow.party.get_index(x, y).unwrap() as u8);
+                }
+            }
+            let final_raster = irq.ui.clone();
+            game.update(&InputState::new());
+            assert_eq!(
+                game.field_flash.as_ref().unwrap().irq.as_ref().unwrap().ui,
+                final_raster
+            );
+        }
+        assert!(arrow_states.into_iter().all(|seen| seen));
     }
 
     #[test]
@@ -1298,23 +2058,92 @@ mod tests {
     }
 
     #[test]
+    fn flash_session_incremental_render_and_linear_palette_match_full_draw() {
+        use dotzuki_renderer::palette::GbColor;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().unwrap();
+        game.resources = Some(ResourceManager::new(root));
+        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        game.overworld.dark_cave.map_pal_offset = 0;
+        game.state.screen = GameScreen::PartyScreen;
+        game.overworld.set_no_text_delay(false);
+        begin_fixture_flash(&mut game, "A blinding FLASH lights the area!");
+
+        let mut session = crate::render::session::RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut reused_text = 0usize;
+        let mut partial_return = false;
+        for tick in 0..260 {
+            let mut input = InputState::new();
+            if tick == 140 {
+                input.press(GbButton::A);
+            }
+            let was_flash = game.field_flash.is_some();
+            game.update(&input);
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            if tick < 140 && matches!(update, crate::render::session::FrameUpdate::Reuse) {
+                reused_text += 1;
+            }
+            if was_flash && game.field_flash.is_none() {
+                partial_return = matches!(update, crate::render::session::FrameUpdate::Damage(_));
+            }
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            assert_eq!(retained.packed(), full.packed(), "tick={tick}");
+            assert_eq!(retained.display_palette(), full.display_palette(), "tick={tick}");
+
+            if let Some(raster) = game.source_display.device().background_palette_raster() {
+                let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+                    RenderConfig::new(160, 144),
+                    Rgba::WHITE,
+                );
+                for y in 0..144u32 {
+                    for x in 0..160u32 {
+                        let c = ((x * 3 + y * 5) & 3) as u8;
+                        linear.set_pixel_index(x, y, GbColor::from_u8(c));
+                    }
+                }
+                let mut packed_ref = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                pack_flash_frame(&linear, &mut packed_ref);
+                apply_linear_flash_palette(raster, &mut linear);
+                apply_flash_palette(raster, &mut packed_ref);
+                for y in 0..144u32 {
+                    for x in 0..160u32 {
+                        assert_eq!(linear.get_index(x, y), packed_ref.get_index(x, y));
+                    }
+                }
+            }
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        assert!(reused_text > 60, "expected static text frames to reuse: {reused_text}");
+        assert!(partial_return, "expected partial actor-only damage on Overworld return");
+    }
+
+    #[test]
     fn masked_flash_cells_match_pixel_copy_on_packed_and_linear_targets() {
         use dotzuki_renderer::palette::GbColor;
         let mut source = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
         for (index, byte) in source.packed_mut().iter_mut().enumerate() {
-            *byte = (index as u8).wrapping_mul(73).rotate_left((index % 8) as u32);
+            *byte = (index as u8)
+                .wrapping_mul(73)
+                .rotate_left((index % 8) as u32);
         }
         source.apply_bgp(0xff);
-        let rows: Vec<u32> = (0..144).map(|y| match y % 4 {
-            0 => 0,
-            1 => (1 << 20) - 1,
-            2 => 1 << (y % 20),
-            _ => 0x55555,
-        }).collect();
+        let rows: Vec<u32> = (0..144)
+            .map(|y| match y % 4 {
+                0 => 0,
+                1 => (1 << 20) - 1,
+                2 => 1 << (y % 20),
+                _ => 0x55555,
+            })
+            .collect();
         let gray = Rgba::rgb(0xaa, 0xaa, 0xaa);
         let mut packed = FrameBuffer::new(RenderConfig::new(160, 144), gray);
         let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
-            RenderConfig::new(160, 144), gray);
+            RenderConfig::new(160, 144),
+            gray,
+        );
         let mut expected = FrameBuffer::new(RenderConfig::new(160, 144), gray);
         let palette = *packed.display_palette();
         for y in 0..144u32 {
@@ -1381,7 +2210,11 @@ mod tests {
         game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
         begin_fixture_flash(&mut game, "FLASH");
         let mut flow = game.field_flash.take().unwrap();
-        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
+        assert!(
+            flow.error.is_none(),
+            "FLASH input initialization: {:?}",
+            flow.error
+        );
         // Isolate the real plan's Delay3→return boundary so later LCD polling
         // cannot mask an early wait return. This is a unit fixture, not a
         // game-runtime setter or an ordinary-playthrough claim.
@@ -1432,7 +2265,11 @@ mod tests {
         game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
         begin_fixture_flash(&mut game, "FLASH");
         let mut flow = game.field_flash.take().unwrap();
-        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
+        assert!(
+            flow.error.is_none(),
+            "FLASH input initialization: {:?}",
+            flow.error
+        );
         game.source_display.begin_native_update();
         while game.source_display.device().vblank_epoch() == 0 {
             game.source_display.idle_to_device_event().unwrap();
@@ -1459,7 +2296,13 @@ mod tests {
         game.frame_count = edge + 1;
         assert!(!game.service_field_flash(&mut flow).unwrap());
         assert_eq!(game.source_display.device().vblank_epoch(), edge);
-        assert_eq!(game.source_display.video_requests().snapshot(CopyFormat::TwoBpp).size, Some(8));
+        assert_eq!(
+            game.source_display
+                .video_requests()
+                .snapshot(CopyFormat::TwoBpp)
+                .size,
+            Some(8)
+        );
         assert_eq!(&flow.patterns.bytes()[..192], &before);
     }
 
@@ -1499,7 +2342,11 @@ mod tests {
         };
         begin_fixture_flash(&mut game, &message);
         let mut flow = game.field_flash.take().unwrap();
-        assert!(flow.error.is_none(), "FLASH input initialization: {:?}", flow.error);
+        assert!(
+            flow.error.is_none(),
+            "FLASH input initialization: {:?}",
+            flow.error
+        );
         game.source_display.set_shadow_oam(&[0x5a; 160]).unwrap();
         let mut saw_lcd_off = false;
         let mut saw_pending_child = false;
@@ -1535,7 +2382,11 @@ mod tests {
             "ClearSprites must clear the actual shadow page at its own RET"
         );
         assert!(
-            game.source_display.device().oam().chunks_exact(4).all(|object| object == [160, 0, 0, 0]),
+            game.source_display
+                .device()
+                .oam()
+                .chunks_exact(4)
+                .all(|object| object == [160, 0, 0, 0]),
             "subsequent actual PrepareOAM/DMA hides every unused object at Y=160"
         );
         assert_eq!(
@@ -1613,19 +2464,48 @@ mod tests {
                     } else {
                         input.release(GbButton::A);
                     }
-                    let suspended_audio = (!game.source_display.device().lcd_enabled())
-                        .then(|| format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels));
+                    let suspended_audio =
+                        (!game.source_display.device().lcd_enabled()).then(|| {
+                            format!(
+                                "{:?}",
+                                game.audio
+                                    .as_ref()
+                                    .unwrap()
+                                    .manager
+                                    .lock()
+                                    .unwrap()
+                                    .sequencer
+                                    .channels
+                            )
+                        });
                     let old_time = game.save_data.game_data.play_time;
                     let old_returns = pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*game.source_display);
                     game.update(&input);
                     if let Some(channels) = suspended_audio {
                         if game.source_audio_work.is_none() {
-                            let elapsed = |t: pokered_core::save::game_data::PlayTime| u64::from(t.hours) * 216000
-                                + u64::from(t.minutes) * 3600 + u64::from(t.seconds) * 60 + u64::from(t.frames);
+                            let elapsed = |t: pokered_core::save::game_data::PlayTime| {
+                                u64::from(t.hours) * 216000
+                                    + u64::from(t.minutes) * 3600
+                                    + u64::from(t.seconds) * 60
+                                    + u64::from(t.frames)
+                            };
                             assert_eq!(elapsed(game.save_data.game_data.play_time) - elapsed(old_time),
                                 pokered_core::overworld::display_delay_work::DelayFrameBus::interrupt_returns(&*game.source_display) - old_returns,
                                 "play time follows completed source IRQs, including an epilogue split across host grants");
-                            assert_eq!(format!("{:?}", game.audio.as_ref().unwrap().manager.lock().unwrap().sequencer.channels), channels);
+                            assert_eq!(
+                                format!(
+                                    "{:?}",
+                                    game.audio
+                                        .as_ref()
+                                        .unwrap()
+                                        .manager
+                                        .lock()
+                                        .unwrap()
+                                        .sequencer
+                                        .channels
+                                ),
+                                channels
+                            );
                             saw_no_irq_lcd_off = true;
                         }
                     }
@@ -1655,7 +2535,10 @@ mod tests {
                     "notice, white-out and full restoration must return: map={map:?} error={:?}",
                     game.field_flash.as_ref().and_then(|f| f.error.as_ref())
                 );
-                assert!(saw_no_irq_lcd_off, "the case must exercise a grant beginning LCD-off without a new audio update");
+                assert!(
+                    saw_no_irq_lcd_off,
+                    "the case must exercise a grant beginning LCD-off without a new audio update"
+                );
                 assert_eq!(game.state.screen, GameScreen::Overworld);
                 assert_eq!(game.overworld.state.current_map, map);
                 assert!(!game.overworld.dark_cave.is_dark());
@@ -1731,7 +2614,9 @@ mod tests {
                     );
                     reused_white |= reused && game.field_flash_is_white();
                     reused_map |= reused && map_key.is_some();
-                    if map_key.is_some() && map_key != last_map_key { assert!(!reused); }
+                    if map_key.is_some() && map_key != last_map_key {
+                        assert!(!reused);
+                    }
                     last_map_key = map_key.clone();
                     let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
                     game.draw(&mut full);
@@ -1749,24 +2634,36 @@ mod tests {
                             session.render(&mut game, &mut retained, &mut scroll),
                             crate::render::session::FrameUpdate::Full
                         ));
-                        assert!((0..144).all(|y| (0..160)
-                            .all(|x| retained.get_pixel(x, y) == Some(Rgba::BLACK))));
+                        assert!((0..144).all(
+                            |y| (0..160).all(|x| retained.get_pixel(x, y) == Some(Rgba::BLACK))
+                        ));
                         game.black_screen_frames = 0;
                         assert!(matches!(
                             session.render(&mut game, &mut retained, &mut scroll),
                             crate::render::session::FrameUpdate::Full
                         ));
-                        assert!((0..144).all(|y| (0..160)
-                            .all(|x| retained.get_pixel(x, y) == full.get_pixel(x, y))));
+                        assert!((0..144)
+                            .all(|y| (0..160)
+                                .all(|x| retained.get_pixel(x, y) == full.get_pixel(x, y))));
                         checked_interruption = true;
                     }
                     if reused && map_key.is_some() && !checked_map_interruption {
                         game.black_screen_frames = 1;
-                        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
-                        assert!((0..144).all(|y| (0..160).all(|x| retained.get_pixel(x,y) == Some(Rgba::BLACK))));
+                        assert!(matches!(
+                            session.render(&mut game, &mut retained, &mut scroll),
+                            crate::render::session::FrameUpdate::Full
+                        ));
+                        assert!((0..144).all(
+                            |y| (0..160).all(|x| retained.get_pixel(x, y) == Some(Rgba::BLACK))
+                        ));
                         game.black_screen_frames = 0;
-                        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
-                        assert!((0..144).all(|y| (0..160).all(|x| retained.get_pixel(x,y) == full.get_pixel(x,y))));
+                        assert!(matches!(
+                            session.render(&mut game, &mut retained, &mut scroll),
+                            crate::render::session::FrameUpdate::Full
+                        ));
+                        assert!((0..144)
+                            .all(|y| (0..160)
+                                .all(|x| retained.get_pixel(x, y) == full.get_pixel(x, y))));
                         checked_map_interruption = true;
                     }
                     if game.field_flash.is_some() {
@@ -1780,7 +2677,10 @@ mod tests {
                     }
                 }
                 assert!(returned && saw_white && reused_white && checked_interruption);
-                assert!(reused_map && checked_map_interruption, "frozen map reuse and takeover restoration must be exercised");
+                assert!(
+                    reused_map && checked_map_interruption,
+                    "frozen map reuse and takeover restoration must be exercised"
+                );
                 assert_eq!(game.state.screen, GameScreen::Overworld);
             }
         }
@@ -1796,17 +2696,29 @@ mod tests {
         flow.show_map = true;
         flow.map.clear(Rgba::BLACK);
         let mut session = crate::render::session::RenderSession::new();
-        let mut retained = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
-        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
-        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Reuse));
-        assert_eq!(retained.get_pixel(0,0), Some(Rgba::BLACK));
+        assert!(matches!(
+            session.render(&mut game, &mut retained, &mut scroll),
+            crate::render::session::FrameUpdate::Full
+        ));
+        assert!(matches!(
+            session.render(&mut game, &mut retained, &mut scroll),
+            crate::render::session::FrameUpdate::Reuse
+        ));
+        assert_eq!(retained.get_pixel(0, 0), Some(Rgba::BLACK));
         let flow = game.field_flash.as_mut().unwrap();
         flow.map.clear(Rgba::WHITE);
         flow.map_key = crate::render::session::FlashMapVisualKey::new();
-        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
-        assert_eq!(retained.get_pixel(0,0), Some(Rgba::WHITE));
-        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Reuse));
+        assert!(matches!(
+            session.render(&mut game, &mut retained, &mut scroll),
+            crate::render::session::FrameUpdate::Full
+        ));
+        assert_eq!(retained.get_pixel(0, 0), Some(Rgba::WHITE));
+        assert!(matches!(
+            session.render(&mut game, &mut retained, &mut scroll),
+            crate::render::session::FrameUpdate::Reuse
+        ));
         // Keep the old identity alive in both this variable and the session;
         // restarting without an intervening render must never reuse its page.
         let old_key = game.field_flash_map_key().unwrap();
@@ -1816,14 +2728,17 @@ mod tests {
         flow.show_map = true;
         flow.map.clear(Rgba::BLACK);
         assert_ne!(game.field_flash_map_key().unwrap(), old_key);
-        assert!(matches!(session.render(&mut game, &mut retained, &mut scroll), crate::render::session::FrameUpdate::Full));
-        assert_eq!(retained.get_pixel(0,0), Some(Rgba::BLACK));
+        assert!(matches!(
+            session.render(&mut game, &mut retained, &mut scroll),
+            crate::render::session::FrameUpdate::Full
+        ));
+        assert_eq!(retained.get_pixel(0, 0), Some(Rgba::BLACK));
     }
 
     #[test]
     fn completed_palette_raster_invalidates_the_retained_map_without_revealing_unscanned_pixels() {
-        use pokered_core::overworld::display_lcd_work::DisplayAccess;
         use crate::render::session::FrameUpdate;
+        use pokered_core::overworld::display_lcd_work::DisplayAccess;
         let mut game = PokemonGame::new(GameVersion::Red);
         game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
         game.state.screen = GameScreen::PartyScreen;
@@ -1837,63 +2752,137 @@ mod tests {
             game.source_display.begin_native_update();
             game.source_display.idle_to_target().unwrap();
         }
-        game.source_display.device_mut().begin_native_background_scanout(0xe4);
+        game.source_display
+            .device_mut()
+            .begin_native_background_scanout(0xe4);
         let mut session = crate::render::session::RenderSession::new();
-        let mut fb = FrameBuffer::new(RenderConfig::new(160,144), Rgba::WHITE);
+        let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
-        assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
+        assert!(matches!(
+            session.render(&mut game, &mut fb, &mut scroll),
+            FrameUpdate::Full
+        ));
         for (line, palette, top, bottom) in [
             (20, 0, Rgba::BLACK, Rgba::WHITE),
             (7, 0xe4, Rgba::WHITE, Rgba::BLACK),
         ] {
             game.source_display.begin_native_update();
             while game.source_display.device().read_port(0xff44).unwrap() != line {
-                game.source_display.execute(DisplayInstruction { tcycles:4, access:None }).unwrap();
+                game.source_display
+                    .execute(DisplayInstruction {
+                        tcycles: 4,
+                        access: None,
+                    })
+                    .unwrap();
             }
-            game.source_display.execute(DisplayInstruction { tcycles:12,
-                access:Some(DisplayAccess::Write { port:0xff47,value:palette,at_tcycle:8 }) }).unwrap();
-            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Reuse),
-                "a register store must not redraw pixels the LCD has not completed");
+            game.source_display
+                .execute(DisplayInstruction {
+                    tcycles: 12,
+                    access: Some(DisplayAccess::Write {
+                        port: 0xff47,
+                        value: palette,
+                        at_tcycle: 8,
+                    }),
+                })
+                .unwrap();
+            assert!(
+                matches!(
+                    session.render(&mut game, &mut fb, &mut scroll),
+                    FrameUpdate::Reuse
+                ),
+                "a register store must not redraw pixels the LCD has not completed"
+            );
             game.source_display.idle_to_target().unwrap();
-            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Full
+            ));
             for y in 0..144 {
                 for x in 0..160 {
-                    assert_eq!(fb.get_pixel(x,y),Some(if y<u32::from(line) {top}else{bottom}));
+                    assert_eq!(
+                        fb.get_pixel(x, y),
+                        Some(if y < u32::from(line) { top } else { bottom })
+                    );
                 }
             }
-            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Reuse));
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Reuse
+            ));
             game.source_display.begin_native_update();
             game.source_display.idle_to_target().unwrap();
-            assert!(matches!(session.render(&mut game, &mut fb, &mut scroll), FrameUpdate::Full));
-            assert!((0..144).all(|y| (0..160).all(|x| fb.get_pixel(x,y)==Some(bottom))));
+            assert!(matches!(
+                session.render(&mut game, &mut fb, &mut scroll),
+                FrameUpdate::Full
+            ));
+            assert!((0..144).all(|y| (0..160).all(|x| fb.get_pixel(x, y) == Some(bottom))));
         }
     }
     #[test]
     fn abandoning_an_attached_flash_discards_active_irq_and_lcd_off_continuations() {
         for seek_lcd_off in [false, true] {
             for exit in 0..3 {
-                let mut game = PokemonGame::new_with_options(GameVersion::Red, None, None, None,
-                    false, None, false, true, #[cfg(feature = "debug-server")] None);
+                let mut game = PokemonGame::new_with_options(
+                    GameVersion::Red,
+                    None,
+                    None,
+                    None,
+                    false,
+                    None,
+                    false,
+                    true,
+                    #[cfg(feature = "debug-server")]
+                    None,
+                );
                 game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
-                game.overworld.state.player.x = 15; game.overworld.state.player.y = 3;
+                game.overworld.state.player.x = 15;
+                game.overworld.state.player.y = 3;
                 game.state.screen = GameScreen::PartyScreen;
                 begin_fixture_flash(&mut game, "FLASH");
                 let mut reached = false;
                 for frame in 0..200 {
                     let mut input = InputState::new();
-                    if frame % 20 == 0 { input.press(GbButton::A); }
+                    if frame % 20 == 0 {
+                        input.press(GbButton::A);
+                    }
                     game.update(&input);
                     let attached = game.field_irq_owns_clock();
-                    if attached && if seek_lcd_off { !game.source_display.device().lcd_enabled() }
-                        else { game.source_display.active_vblank() } { reached = true; break; }
-                    assert!(game.field_flash.as_ref().is_some_and(|f| f.error.is_none()), "fixture must reach a real busy source caller");
+                    if attached
+                        && if seek_lcd_off {
+                            !game.source_display.device().lcd_enabled()
+                        } else {
+                            game.source_display.active_vblank()
+                        }
+                    {
+                        reached = true;
+                        break;
+                    }
+                    assert!(
+                        game.field_flash.as_ref().is_some_and(|f| f.error.is_none()),
+                        "fixture must reach a real busy source caller"
+                    );
                 }
-                assert!(reached, "must exercise the selected active IRQ/LCD-off state");
-                let path = std::env::temp_dir().join(format!("flash-irq-abandon-{}-{}-{}.sav", std::process::id(), seek_lcd_off, exit));
+                assert!(
+                    reached,
+                    "must exercise the selected active IRQ/LCD-off state"
+                );
+                let path = std::env::temp_dir().join(format!(
+                    "flash-irq-abandon-{}-{}-{}.sav",
+                    std::process::id(),
+                    seek_lcd_off,
+                    exit
+                ));
                 match exit {
-                    0 => { std::fs::write(&path, export_sram(&game.save_data)).unwrap(); game.load_from_path(&path).unwrap(); std::fs::remove_file(&path).unwrap(); }
+                    0 => {
+                        std::fs::write(&path, export_sram(&game.save_data)).unwrap();
+                        game.load_from_path(&path).unwrap();
+                        std::fs::remove_file(&path).unwrap();
+                    }
                     1 => game.handle_transition(GameScreen::TitleScreen),
-                    _ => { game.save_path = Some(path); game.soft_reset(); }
+                    _ => {
+                        game.save_path = Some(path);
+                        game.soft_reset();
+                    }
                 }
                 assert!(game.field_flash.is_none());
                 assert!(!game.source_display.active_vblank());
@@ -1902,13 +2891,47 @@ mod tests {
                 assert_eq!(game.source_audio_work, None);
                 // A subsequent native UI owner can acquire the bus; no stale
                 // attached IRQ is mistaken for an interrupted continuation.
-                game.source_display.begin_legacy_party_sprite_hide().unwrap();
+                game.source_display
+                    .begin_legacy_party_sprite_hide()
+                    .unwrap();
                 game.update(&InputState::new());
                 assert!(!game.source_display.active_vblank());
             }
         }
     }
 
+    #[test]
+    fn fused_linear_palette_mapper_matches_in_place_for_all_palettes() {
+        use dotzuki_renderer::palette::GbColor;
+        use pokered_core::overworld::display_device::DisplayDevice;
+        let mut src = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+            RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        for (i, slot) in src.indices_mut().iter_mut().enumerate() {
+            *slot = ((i * 7 + i / 160 * 3) & 3) as u8;
+        }
+        let shadow = [0u8; 160];
+        for pal in [0x00u8, 0x40, 0x90, 0xe4, 0xff, 0x1b, 0x27, 0xb4] {
+            let mut dev = DisplayDevice::powered_off(0);
+            dev.write_port(0xff40, 0x91, 0xc3).unwrap();
+            dev.begin_native_background_scanout(0xe4);
+            dev.observe_time(20 * 456 + 12, &shadow).unwrap();
+            dev.write_port(0xff47, pal, 0xc3).unwrap();
+            dev.observe_time(70_224 + 456, &shadow).unwrap();
+            let raster = dev.background_palette_raster().unwrap();
+
+            let mut expected = src.clone();
+            apply_linear_flash_palette(raster, &mut expected);
+
+            let mut actual = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+                RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            copy_and_apply_linear_flash_palette(&src, Some(raster), &mut actual);
+            assert_eq!(actual.indices(), expected.indices(), "pal={pal:#04x}");
+        }
+    }
 }
 
 #[cfg(test)]

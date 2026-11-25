@@ -21,6 +21,15 @@ fn species_to_bit(species: Species) -> Option<(usize, u8)> {
     Some((index / 8, 1 << (index % 8)))
 }
 
+fn count_ones(bytes: &[u8]) -> u32 {
+    let mut chunks = bytes.chunks_exact(4);
+    let words = chunks
+        .by_ref()
+        .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()).count_ones())
+        .sum::<u32>();
+    words + chunks.remainder().iter().map(|byte| byte.count_ones()).sum::<u32>()
+}
+
 impl Pokedex {
     pub fn new() -> Self {
         Self {
@@ -64,11 +73,11 @@ impl Pokedex {
     }
 
     pub fn seen_count(&self) -> u32 {
-        self.seen.iter().map(|b| b.count_ones()).sum()
+        count_ones(&self.seen)
     }
 
     pub fn owned_count(&self) -> u32 {
-        self.owned.iter().map(|b| b.count_ones()).sum()
+        count_ones(&self.owned)
     }
 
     pub fn reset_seen(&mut self, species: Species) {

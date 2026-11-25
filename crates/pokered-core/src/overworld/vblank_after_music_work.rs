@@ -58,12 +58,77 @@ impl VBlankAfterMusicWork {
         self.timer.joypad_clear_effects()
     }
 
+    pub fn run<B: VBlankReturnBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        bus.check_active_vblank()?;
+        loop {
+            if self.step == Step::EnterTimer {
+                self.bank.run_until_body(bus)?;
+                self.step = if self.bank.finished() {
+                    Step::ReadPollingGate
+                } else {
+                    Step::Timer
+                };
+                continue;
+            }
+            if self.step == Step::LeaveTimer {
+                self.bank.run(bus)?;
+                self.step = if self.bank.finished() {
+                    Step::ReadPollingGate
+                } else {
+                    Step::Timer
+                };
+                continue;
+            }
+            if self.step == Step::Timer {
+                self.timer.run(bus)?;
+                if self.timer.finished() {
+                    assert!(self.bank.body_returned());
+                    self.step = Step::LeaveTimer;
+                }
+                continue;
+            }
+            if self.step == Step::Joypad {
+                self.joypad.run(bus)?;
+                if self.joypad.finished() {
+                    self.step = Step::Return;
+                }
+            }
+            if self.step == Step::TestPollingGate {
+                let (cycles, total) = if self.polling_disabled == 0 {
+                    (&[4, 24][..], 28)
+                } else {
+                    (&[4, 12][..], 16)
+                };
+                let count = bus.execute_plain_cycles_total(cycles, total)?;
+                if count != 0 {
+                    self.zero = self.polling_disabled == 0;
+                    self.step = if count == cycles.len() {
+                        if self.zero { Step::Joypad } else { Step::Return }
+                    } else {
+                        Step::CallJoypad
+                    };
+                    continue;
+                }
+            }
+            if !self.step_inner(bus)? {
+                return Ok(());
+            }
+        }
+    }
+
     pub fn step<B: VBlankReturnBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
+        if self.finished() {
+            return Ok(false);
+        }
+        bus.check_active_vblank()?;
+        self.step_inner(bus)
+    }
+
+    fn step_inner<B: VBlankReturnBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         loop {
             if self.finished() {
                 return Ok(false);
             }
-            bus.check_active_vblank()?;
             match self.step {
                 Step::EnterTimer | Step::LeaveTimer => {
                     if self.bank.step(bus)? {
