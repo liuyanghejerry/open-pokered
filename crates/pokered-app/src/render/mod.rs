@@ -50,7 +50,9 @@ pub use menu::{
 };
 pub use oak::{draw_naming_screen, draw_oak_speech};
 pub use overworld::draw_overworld;
-pub(crate) use overworld::draw_overworld_background_cached;
+pub(crate) use overworld::{
+    draw_overworld_background_band, draw_overworld_background_cached,
+};
 #[cfg(test)]
 pub(crate) use overworld::draw_overworld_cached;
 pub use overworld::{FrameDamageRect, OverworldBackgroundCache};

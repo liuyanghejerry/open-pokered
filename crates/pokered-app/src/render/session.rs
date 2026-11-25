@@ -46,9 +46,28 @@ impl FlashMapVisualKey {
         self.1[0] = revision;
         self
     }
+    pub(crate) fn with_map_view(mut self) -> Self {
+        self.1[1] = 1;
+        self.1[2] = 0;
+        self
+    }
     pub(crate) fn with_submenu_revisions(mut self, background: u64, objects: u64) -> Self {
-        self.1[1] = background;
+        self.1[1] = 2 | (background << 3);
         self.1[2] = objects;
+        self
+    }
+    pub(crate) fn with_party_dialogue(
+        mut self,
+        dialogue: Option<(usize, u16)>,
+        arrow: bool,
+    ) -> Self {
+        if let Some((page, chars)) = dialogue {
+            self.1[1] = 3 | (u64::from(arrow) << 3) | (u64::from(chars) << 4);
+            self.1[2] = page as u64;
+        } else {
+            self.1[1] = 4;
+            self.1[2] = 0;
+        }
         self
     }
     fn palette_change_only(&self, previous: &Self) -> bool {
@@ -2017,6 +2036,7 @@ impl RenderSession {
         let last_overworld = self.last_overworld;
         let last_battle = self.last_battle;
         let overworld_background_cache = &mut self.background_cache;
+        let restored_overworld_bg = game.restored_overworld_bg.take();
         self.pending_damage.clear();
         let mut partial = false;
         let black_screen = game.black_screen_frames > 0;
@@ -2297,6 +2317,13 @@ impl RenderSession {
         } else {
             true
         };
+        if !takeover_active && last_takeover_active && overworld_screen {
+            if let Some((expected_key, cache)) = restored_overworld_bg {
+                if last_flash_map.as_ref() == Some(&expected_key) {
+                    *overworld_background_cache = Some(cache);
+                }
+            }
+        }
         if redraw {
             if flash_palette_update {
                 game.draw_field_flash_palette(fb);

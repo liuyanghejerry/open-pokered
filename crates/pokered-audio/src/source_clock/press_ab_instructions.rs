@@ -340,115 +340,160 @@ impl PressAbInstructions {
             _ => &[],
         }
     }
+    pub(crate) fn complete_plain_child(&self) -> Option<(u32, MultiplyAddInstructions)> {
+        match &self.stage {
+            Stage::First(work) | Stage::Second(work) => {
+                let (done, cycles) = work.complete_from_init()?;
+                Some((cycles, done))
+            }
+            _ => None,
+        }
+    }
+    pub(crate) fn finish_plain_child(&mut self, done: MultiplyAddInstructions, cycles: u32) {
+        let value = done.result().expect("completed multiply");
+        match self.stage {
+            Stage::First(_) => {
+                self.length = value as u8;
+                self.stage = Stage::SelectTempo(0);
+            }
+            Stage::Second(_) => {
+                self.computed = value;
+                self.stage = Stage::LengthStore(0);
+            }
+            _ => unreachable!("non-multiply PressAB child completion"),
+        }
+        self.cycles += cycles;
+    }
     pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
         debug_assert!(count > 0 && count <= prefix.len());
-        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        let mut cycles = 0u32;
+        for &t in &prefix[..count] {
+            cycles += u32::from(t);
+        }
         if count == prefix.len() {
-            let direct = match &self.stage {
-                Stage::Entry(_) => Some(Stage::FetchCall(Fetch::Command)),
-                Stage::FetchCall(kind) => Some(Stage::FetchByte(*kind, 10)),
-                Stage::FetchByte(kind, n) if *n < 10 => Some(Stage::FetchByte(*kind, 10)),
+            // Assign each small variant directly in place instead of moving an
+            // Option<Stage> carrying ChannelOutputInstructions across the stack.
+            let mut handled = true;
+            match self.stage {
+                Stage::Entry(_) => self.stage = Stage::FetchCall(Fetch::Command),
+                Stage::FetchCall(kind) => self.stage = Stage::FetchByte(kind, 10),
+                Stage::FetchByte(kind, n) if n < 10 => self.stage = Stage::FetchByte(kind, 10),
                 Stage::FetchByte(kind, n) => {
-                    if *n == 11 {
+                    if n == 11 {
                         self.ptr += 1;
                     }
-                    Some(match kind {
+                    match kind {
                         Fetch::Command => {
                             self.note = self.last;
-                            Stage::ReturnCompare(0)
+                            self.stage = Stage::ReturnCompare(0);
                         }
-                        Fetch::Duty => Stage::SetDuty(0),
+                        Fetch::Duty => self.stage = Stage::SetDuty(0),
                         Fetch::Envelope => {
                             self.envelope = self.last;
-                            Stage::EnvelopeSetup(0)
+                            self.stage = Stage::EnvelopeSetup(0);
                         }
                         Fetch::Low => {
                             self.low = self.last;
-                            Stage::LowSetup(0)
+                            self.stage = Stage::LowSetup(0);
                         }
                         Fetch::High => {
                             self.frequency = u16::from(self.low) | u16::from(self.last) << 8;
-                            Stage::HighSetup(0)
+                            self.stage = Stage::HighSetup(0);
                         }
-                    })
+                    }
                 }
-                Stage::ReturnCompare(_) => Some(if self.note == 0xff {
-                    Stage::ReturnFlags(0)
-                } else {
-                    Stage::Dispatch(0)
-                }),
-                Stage::ReturnFlags(_) => Some(Stage::Ending(
-                    ChannelEndInstructions::new(ChannelEndInput {
-                        bank: self.input.bank,
-                        channel: self.channel(),
-                        source_sfx_id: self.input.source_sfx_id,
-                        flags1: 4,
-                        flags2: 0,
-                        disable_output: None,
-                        saved_volume: None,
-                        panning: None,
-                        command_ptr: None,
-                    })
-                    .expect("non-cry pulse ending reads no optional state"),
-                )),
-                Stage::Dispatch(_) => Some(Stage::CompareDuty(0)),
-                Stage::CompareDuty(_) => Some(if self.note == 0xec {
-                    Stage::FetchCall(Fetch::Duty)
-                } else {
-                    Stage::OtherCommands(0)
-                }),
+                Stage::ReturnCompare(_) => {
+                    self.stage = if self.note == 0xff {
+                        Stage::ReturnFlags(0)
+                    } else {
+                        Stage::Dispatch(0)
+                    };
+                }
+                Stage::ReturnFlags(_) => {
+                    self.stage = Stage::Ending(
+                        ChannelEndInstructions::new(ChannelEndInput {
+                            bank: self.input.bank,
+                            channel: self.channel(),
+                            source_sfx_id: self.input.source_sfx_id,
+                            flags1: 4,
+                            flags2: 0,
+                            disable_output: None,
+                            saved_volume: None,
+                            panning: None,
+                            command_ptr: None,
+                        })
+                        .expect("non-cry pulse ending reads no optional state"),
+                    );
+                }
+                Stage::Dispatch(_) => self.stage = Stage::CompareDuty(0),
+                Stage::CompareDuty(_) => {
+                    self.stage = if self.note == 0xec {
+                        Stage::FetchCall(Fetch::Duty)
+                    } else {
+                        Stage::OtherCommands(0)
+                    };
+                }
                 Stage::SetDuty(_) => {
                     self.duty = (self.last & 3) << 6;
-                    Some(Stage::FetchCall(Fetch::Command))
+                    self.stage = Stage::FetchCall(Fetch::Command);
                 }
-                Stage::OtherCommands(_) => Some(Stage::SfxDispatch(0)),
-                Stage::SfxDispatch(_) => Some(Stage::LengthPrefix(0)),
-                Stage::LengthPrefix(_) => Some(Stage::First(MultiplyAddInstructions::new(
-                    1,
-                    u16::from((self.note & 15) + 1),
-                    0,
-                ))),
-                Stage::SelectTempo(_) => Some(if self.noise.is_some() {
-                    Stage::SecondPrefix(0)
-                } else {
-                    Stage::SetTempoCall
-                }),
-                Stage::SetTempoCall => Some(Stage::CryCheck(0)),
-                Stage::CryCheck(_) => Some(Stage::SetTempo(0)),
-                Stage::SetTempo(_) => Some(Stage::ReadTempo(0)),
-                Stage::ReadTempo(_) => Some(Stage::SecondPrefix(0)),
-                Stage::SecondPrefix(_) => Some(Stage::Second(MultiplyAddInstructions::new(
-                    self.length,
-                    0x100,
-                    self.input.fraction,
-                ))),
-                Stage::LengthStore(_) => Some(Stage::LengthReturn(0)),
-                Stage::LengthReturn(_) => Some(Stage::DutySetup(0)),
+                Stage::OtherCommands(_) => self.stage = Stage::SfxDispatch(0),
+                Stage::SfxDispatch(_) => self.stage = Stage::LengthPrefix(0),
+                Stage::LengthPrefix(_) => {
+                    self.stage = Stage::First(MultiplyAddInstructions::new(
+                        1,
+                        u16::from((self.note & 15) + 1),
+                        0,
+                    ));
+                }
+                Stage::SelectTempo(_) => {
+                    self.stage = if self.noise.is_some() {
+                        Stage::SecondPrefix(0)
+                    } else {
+                        Stage::SetTempoCall
+                    };
+                }
+                Stage::SetTempoCall => self.stage = Stage::CryCheck(0),
+                Stage::CryCheck(_) => self.stage = Stage::SetTempo(0),
+                Stage::SetTempo(_) => self.stage = Stage::ReadTempo(0),
+                Stage::ReadTempo(_) => self.stage = Stage::SecondPrefix(0),
+                Stage::SecondPrefix(_) => {
+                    self.stage = Stage::Second(MultiplyAddInstructions::new(
+                        self.length,
+                        0x100,
+                        self.input.fraction,
+                    ));
+                }
+                Stage::LengthStore(_) => self.stage = Stage::LengthReturn(0),
+                Stage::LengthReturn(_) => self.stage = Stage::DutySetup(0),
                 Stage::DutySetup(_) => {
-                    Some(self.output(OutputRoutine::RegisterPointer, After::DutyStore))
+                    self.stage = self.output(OutputRoutine::RegisterPointer, After::DutyStore);
                 }
-                Stage::DutyStore => Some(Stage::FetchCall(Fetch::Envelope)),
+                Stage::DutyStore => self.stage = Stage::FetchCall(Fetch::Envelope),
                 Stage::EnvelopeSetup(_) => {
-                    Some(self.output(OutputRoutine::RegisterPointer, After::EnvelopeStore))
+                    self.stage = self.output(OutputRoutine::RegisterPointer, After::EnvelopeStore);
                 }
-                Stage::EnvelopeStore => Some(Stage::FetchCall(Fetch::Low)),
-                Stage::LowSetup(_) => Some(if self.noise.is_some() {
-                    self.frequency = u16::from(self.low);
-                    Stage::HighSetup(1)
-                } else {
-                    Stage::FetchCall(Fetch::High)
-                }),
+                Stage::EnvelopeStore => self.stage = Stage::FetchCall(Fetch::Low),
+                Stage::LowSetup(_) => {
+                    if self.noise.is_some() {
+                        self.frequency = u16::from(self.low);
+                        self.stage = Stage::HighSetup(1);
+                    } else {
+                        self.stage = Stage::FetchCall(Fetch::High);
+                    }
+                }
                 Stage::HighSetup(_) => {
-                    Some(self.output(OutputRoutine::DutyAndLength, After::Enable))
+                    self.stage = self.output(OutputRoutine::DutyAndLength, After::Enable);
                 }
-                Stage::EnableCall => Some(self.output(OutputRoutine::EnableChannel, After::Wave)),
+                Stage::EnableCall => {
+                    self.stage = self.output(OutputRoutine::EnableChannel, After::Wave);
+                }
                 Stage::WaveCall(_) => {
-                    Some(self.output(OutputRoutine::WaveFrequency, After::Return))
+                    self.stage = self.output(OutputRoutine::WaveFrequency, After::Return);
                 }
-                _ => None,
-            };
-            if let Some(stage) = direct {
-                self.stage = stage;
+                _ => handled = false,
+            }
+            if handled {
                 self.cycles += cycles;
                 return cycles;
             }

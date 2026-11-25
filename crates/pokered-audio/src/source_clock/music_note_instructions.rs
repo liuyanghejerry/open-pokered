@@ -184,6 +184,26 @@ impl MusicNoteInstructions {
     pub fn cycles(&self) -> u32 {
         self.cycles
     }
+    pub(crate) fn complete_plain_child(
+        &self,
+    ) -> Option<(u32, super::note_math_instructions::FrequencyInstructions)> {
+        if let Stage::Pitch { work, .. } = &self.stage {
+            return work.complete_plain_child();
+        }
+        None
+    }
+    pub(crate) fn finish_plain_child(
+        &mut self,
+        done: super::note_math_instructions::FrequencyInstructions,
+        cycles: u32,
+    ) {
+        if let Stage::Pitch { work, .. } = &mut self.stage {
+            work.finish_plain_child(done, cycles);
+            self.cycles += cycles;
+        } else {
+            unreachable!("non-pitch music child completion");
+        }
+    }
     pub(crate) fn plain_prefix(&self) -> &'static [u8] {
         match &self.stage {
             Stage::Preparation(work) => work.plain_prefix(),

@@ -940,7 +940,6 @@ impl DisplayDevice {
                 && self.phase == RasterPhase::Mode2
                 && self.phase_remaining == 80
                 && self.ly < 143
-                && !self.first_frame
                 && self.lcd_enabled()
                 && self.dma.is_none()
                 && self.stat_enable == 0
@@ -1107,6 +1106,33 @@ impl DisplayDevice {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn first_frame_visible_scanlines_match_every_four_cycle_slice() {
+        let shadow = [0; 160];
+        for offset in [0, 76, 452, 456, 456 + 80, 10 * 456] {
+            let mut seed = DisplayDevice::powered_off(0);
+            seed.write_port(0xff40, 0x91, 0xc3).unwrap();
+            seed.begin_native_background_transfer(0x9800).unwrap();
+            seed.record_native_background_write(0x98c1);
+            seed.begin_native_background_scanout(0xe4);
+            seed.begin_native_object_scanout(&shadow, [0xd0, 0xe0])
+                .unwrap();
+            seed.observe_time(offset, &shadow).unwrap();
+            assert!(seed.first_frame);
+            for duration in [456, 912, 4560, 65000, 70224] {
+                let target = offset + duration;
+                let mut fast = seed.clone();
+                fast.observe_reserved_interval_trusted(target, duration, &shadow)
+                    .unwrap();
+                let mut reference = seed.clone();
+                for elapsed in (4..=duration).step_by(4) {
+                    reference.observe_time(offset + elapsed, &shadow).unwrap();
+                }
+                assert_eq!(fast, reference, "offset={offset} duration={duration}");
+            }
+        }
+    }
 
     #[test]
     fn vblank_run_matches_every_four_cycle_slice() {

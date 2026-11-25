@@ -91,6 +91,18 @@ impl MovingBgWork {
             zero: false,
         }
     }
+    pub fn reset_state(&mut self, state: MovingBgState) {
+        self.state = state;
+        self.step = Step::Enabled;
+        self.a = 0;
+        self.c = 0;
+        self.address = 0;
+        self.flower = 0;
+        self.flower_at = 0;
+        self.left = false;
+        self.carry = false;
+        self.zero = false;
+    }
     pub fn state(&self) -> MovingBgState {
         self.state
     }

@@ -128,6 +128,12 @@ impl IndoorSpriteSlotWork {
         self.carry = self.a < other;
     }
     pub fn run<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<(), B::Error> {
+        if let Some((done, total)) = self.complete_from_entry() {
+            if bus.execute_plain_total(total)? {
+                *self = done;
+                return Ok(());
+            }
+        }
         super::display_lcd_work::run_plain_work(
             self,
             bus,
@@ -135,6 +141,86 @@ impl IndoorSpriteSlotWork {
             Self::step,
             Self::step,
         )
+    }
+    fn complete_from_entry(&self) -> Option<(Self, u32)> {
+        use Step::*;
+        match self.step {
+            PictureDe => {
+                let mut out = self.clone();
+                let mut cycles = 12u32;
+                out.e = 0x1d;
+                let target = out.images[usize::from(out.index)];
+                let l_mask = out.l & 0xf0;
+                loop {
+                    let e_mask = out.e & 0xf0;
+                    out.b = e_mask;
+                    if e_mask == l_mask {
+                        cycles += 44;
+                        break;
+                    }
+                    let pic = out.pictures[usize::from(out.e >> 4)];
+                    if pic == target {
+                        out.e = out.e.wrapping_add(1);
+                        let slot = out.images[usize::from(out.e >> 4)];
+                        out.a = slot;
+                        out.images[usize::from(out.index)] = slot;
+                        out.zero = true;
+                        out.carry = false;
+                        out.step = SearchDone;
+                        return Some((out, cycles + 96));
+                    }
+                    out.e = out.e.wrapping_add(16);
+                    cycles += 96;
+                }
+                cycles += 20; // PlayerDe(12) + SetMax(8)
+                out.e = 0x0e;
+                out.b = 1;
+                let end = out.l;
+                loop {
+                    out.e = out.e.wrapping_add(16);
+                    if out.e == end {
+                        cycles += 36;
+                        break;
+                    }
+                    let img = out.images[usize::from(out.e >> 4)];
+                    if img >= 11 {
+                        cycles += 60;
+                    } else if img < out.b {
+                        cycles += 72;
+                    } else {
+                        out.b = img;
+                        cycles += 84;
+                    }
+                }
+                out.b = out.b.wrapping_add(1);
+                out.saved_next = out.b;
+                let current_pic = out.images[usize::from(out.index)];
+                out.b = current_pic;
+                out.zero = current_pic == 0x3d;
+                out.carry = current_pic < 0x3d;
+                if out.carry {
+                    out.a = out.saved_next;
+                    cycles += 88;
+                } else {
+                    out.a = out.four_tile_count.wrapping_add(11);
+                    cycles += 116;
+                }
+                out.images[usize::from(out.index)] = out.a;
+                out.vram_slot = out.a;
+                out.step = SearchDone;
+                Some((out, cycles))
+            }
+            TailReadL => {
+                let mut out = self.clone();
+                out.a = out.l.wrapping_add(16);
+                out.l = out.a;
+                out.remaining = out.remaining.wrapping_sub(1);
+                out.step = TailDone;
+                let cycles = if out.remaining != 0 { 36 } else { 32 };
+                Some((out, cycles))
+            }
+            _ => None,
+        }
     }
     pub fn step<B: DisplayInstructionBus>(&mut self, bus: &mut B) -> Result<bool, B::Error> {
         use Step::*;
@@ -484,5 +570,33 @@ mod tests {
         assert_eq!(work, restored);
         assert_eq!(bus.elapsed(), time.elapsed());
         assert_eq!(work.slot(), Some(prior[0]));
+    }
+    #[test]
+    fn fast_plain_run_matches_single_instruction_stepping() {
+        for pictures in [
+            &[14, 14, 14, 12, 6, 6, 6][..],
+            &[31, 32, 31, 61, 62, 63, 61, 14][..],
+        ] {
+            let mut prior = Vec::new();
+            for _ in 0..pictures.len() {
+                let mut fast = IndoorSpriteSlotWork::new(pictures, &prior).unwrap();
+                let mut slow = fast.clone();
+                let mut fast_bus = DisplayWorkTime::default();
+                let mut slow_bus = DisplayWorkTime::default();
+                fast_bus.begin_native_update();
+                slow_bus.begin_native_update();
+                fast.run(&mut fast_bus).unwrap();
+                while slow.step(&mut slow_bus).unwrap() {}
+                assert_eq!(fast, slow);
+                assert_eq!(fast_bus.elapsed(), slow_bus.elapsed());
+                prior.push(fast.slot().unwrap());
+                assert!(fast.begin_tail());
+                assert!(slow.begin_tail());
+                fast.run(&mut fast_bus).unwrap();
+                while slow.step(&mut slow_bus).unwrap() {}
+                assert_eq!(fast, slow);
+                assert_eq!(fast_bus.elapsed(), slow_bus.elapsed());
+            }
+        }
     }
 }

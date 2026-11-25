@@ -258,6 +258,11 @@ impl ResourceManager {
         &self.root
     }
 
+    /// Borrow the build-time preconverted 2bpp tileset slice directly from ROM.
+    pub fn raw_tileset_2bpp(name: &str) -> Option<&'static [u8]> {
+        Self::registry_key("tilesets", name).map(|(_, _, bytes)| bytes)
+    }
+
     /// Drop decoded assets at a screen-lifecycle boundary. The GBA cannot
     /// retain every boot/title/Oak tileset alongside the overworld script
     /// registry in its 256 KiB EWRAM.

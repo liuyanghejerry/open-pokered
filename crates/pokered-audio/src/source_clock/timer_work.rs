@@ -87,34 +87,32 @@ impl EffectInstructionWork {
         if self.stage != EffectStage::Entry(0) {
             return None;
         }
+        if i.channel < 4 && i.paired_sfx_active {
+            return Some(80 + 8 + 32 + 8 + 16);
+        }
         let mut cycles = 80;
         if i.flags2 & 1 == 0 && i.flags1 & 4 != 0 {
-            if i.channel < 4 {
-                cycles += 8 + 32 + if i.paired_sfx_active { 8 } else { 12 };
-                if i.paired_sfx_active {
-                    return Some(cycles + 16);
-                }
-            } else {
-                cycles += 12;
-            }
+            cycles += if i.channel < 4 { 8 + 32 + 12 } else { 12 };
             return Some(cycles + 44 + 40 + 8 + 32 + 12 + 16);
         }
-        if i.vibrato_extent != 0 || i.flags1 & 16 != 0 {
+        if i.flags1 & 16 != 0 {
             return None;
         }
-        if i.channel < 4 {
-            cycles += 8 + 32 + if i.paired_sfx_active { 8 } else { 12 };
-            if i.paired_sfx_active {
-                return Some(cycles + 16);
-            }
-        } else {
-            cycles += 12;
-        }
+        cycles += if i.channel < 4 { 8 + 32 + 12 } else { 12 };
         cycles += 44 + 40 + if i.flags2 & 1 != 0 { 12 } else { 8 };
         cycles += if i.flags2 & 1 == 0 { 32 + 8 } else { 44 + 12 };
         cycles += 44;
-        cycles += 32 + if i.vibrato_delay == 0 { 12 } else { 8 };
-        Some(cycles + 32 + 8 + 16)
+        if i.vibrato_delay != 0 {
+            return Some(cycles + 32 + 8 + 28);
+        }
+        cycles += 32 + 12;
+        if i.vibrato_extent == 0 {
+            return Some(cycles + 32 + 8 + 16);
+        }
+        if i.vibrato_rate & 15 != 0 {
+            return Some(cycles + 32 + 12 + 44 + 8 + 28);
+        }
+        None
     }
     pub(crate) fn complete_no_apu_write(&mut self) {
         debug_assert!(self.no_apu_write_program().is_some());

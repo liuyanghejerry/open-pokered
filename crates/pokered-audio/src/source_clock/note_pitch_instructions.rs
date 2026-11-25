@@ -223,9 +223,24 @@ impl NotePitchInstructions {
             _ => &[],
         }
     }
+    pub(crate) fn complete_plain_child(&self) -> Option<(u32, FrequencyInstructions)> {
+        if let Stage::Frequency(work) = &self.stage {
+            let (done, cycles) = work.complete_from_start()?;
+            return Some((cycles, done));
+        }
+        None
+    }
+    pub(crate) fn finish_plain_child(&mut self, done: FrequencyInstructions, cycles: u32) {
+        self.frequency = done.result().expect("completed frequency");
+        self.stage = Stage::PitchCheck(0);
+        self.cycles += cycles;
+    }
     pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
         assert!(count > 0 && count <= prefix.len());
-        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        let mut cycles = 0u32;
+        for &t in &prefix[..count] {
+            cycles += u32::from(t);
+        }
         if let Stage::Frequency(work) = &mut self.stage {
             work.accept_plain_prefix(count, prefix);
             if let Some(frequency) = work.result() {

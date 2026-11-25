@@ -225,10 +225,12 @@ impl ChannelOutputInstructions {
             _ => &[],
         }
     }
-    #[cfg_attr(all(target_os = "none", target_arch = "arm"), link_section = ".iwram")]
     pub(crate) fn accept_plain_prefix(&mut self, count: usize, prefix: &[u8]) -> u32 {
         assert!(count > 0 && count <= prefix.len());
-        let cycles = prefix[..count].iter().map(|&t| u32::from(t)).sum();
+        let mut cycles = 0u32;
+        for &t in &prefix[..count] {
+            cycles += u32::from(t);
+        }
         if count == prefix.len() {
             let direct = match &self.stage {
                 Stage::Register(ret, _) => Some(match ret {

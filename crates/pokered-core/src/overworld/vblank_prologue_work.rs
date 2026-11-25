@@ -31,6 +31,9 @@ impl VBlankPrologueWork {
             shadows,
         }
     }
+    pub fn reset(&mut self, shadows: VBlankVideoShadows) {
+        *self = Self::new(shadows);
+    }
     pub fn saved_bank(&self) -> Option<u8> {
         (self.step == 16).then_some(self.saved_bank)
     }

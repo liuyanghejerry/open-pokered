@@ -24,6 +24,14 @@ impl VBlankEntryWork {
     pub fn select(ime: bool, pending: u8) -> Option<Self> {
         (ime && pending & 1 != 0).then_some(Self { step: Step::Accept })
     }
+    pub fn reset(&mut self, ime: bool, pending: u8) -> bool {
+        if ime && pending & 1 != 0 {
+            self.step = Step::Accept;
+            true
+        } else {
+            false
+        }
+    }
     pub fn body_ready(&self) -> bool {
         self.step == Step::BodyReady
     }

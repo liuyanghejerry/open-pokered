@@ -167,6 +167,9 @@ impl AutoBgTransferWork {
         self.live_portion = true;
         self
     }
+    pub fn enable_live_portion(&mut self) {
+        self.live_portion = true;
+    }
     /// The same source TransferBgRows tail is also called by VBlankCopyBgMap.
     /// Zero rows deliberately wraps through256 rows. The native caller owns
     /// the physical return continuation and supplies immutable logical bytes.
@@ -264,7 +267,7 @@ impl AutoBgTransferWork {
                         continue;
                     }
                 }
-                if self.b == 0 {
+                if self.b != 0 {
                     if let Some(source) = self.tiles.get(at..at + 20) {
                         if let Some(destination) =
                             bus.try_vblank_pop_row_writes(source, self.hl())?

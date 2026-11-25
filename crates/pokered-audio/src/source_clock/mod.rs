@@ -251,6 +251,7 @@ impl PreparedAudioFrame {
         let mut prepared_notes = [None; 4];
         let mut ids = [0; 8];
         let mut effects = [0; 8];
+        let mut all_no_apu_write = true;
         let mut expected: [Option<ExpectedDelay>; 8] = [None; 8];
         let mut tempo = seq.music_tempo;
         let mut panning = seq.stereo_panning;
@@ -345,12 +346,21 @@ impl PreparedAudioFrame {
                         vibrato_rate: ch.vibrato.rate,
                         frequency_low: ch.freq_lo_saved,
                     };
+                    let effect = EffectInstructionWork::new(input)
+                        .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                    let no_apu = effect.no_apu_write_program();
                     if exact_cycles {
-                        effects[i] = channel_effect_work_cycles(input)
-                            .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                        effects[i] = if let Some(cycles) = no_apu {
+                            cycles
+                        } else {
+                            all_no_apu_write = false;
+                            channel_effect_work_cycles(input)
+                                .ok_or(AudioClockError::UnsupportedEffect(i as u8))?
+                        };
+                    } else if let Some(cycles) = no_apu {
+                        effects[i] = cycles;
                     } else {
-                        EffectInstructionWork::new(input)
-                            .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                        all_no_apu_write = false;
                     }
                     expected[i] = Some(ExpectedDelay {
                         delay: ch.delay_counter - 1,
@@ -514,17 +524,29 @@ impl PreparedAudioFrame {
                     paused_modulation[i] = Some((ch.vibrato.delay_counter, ch.vibrato.rate, flags1));
                 }
                 if input.flags1 & 16 == 0 {
+                    let effect = EffectInstructionWork::new(input)
+                        .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                    let no_apu = effect.no_apu_write_program();
                     if exact_cycles {
-                        effects[i] = channel_effect_work_cycles(input)
-                            .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                        effects[i] = if let Some(cycles) = no_apu {
+                            cycles
+                        } else {
+                            all_no_apu_write = false;
+                            channel_effect_work_cycles(input)
+                                .ok_or(AudioClockError::UnsupportedEffect(i as u8))?
+                        };
+                    } else if let Some(cycles) = no_apu {
+                        effects[i] = cycles;
                     } else {
-                        EffectInstructionWork::new(input)
-                            .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                        all_no_apu_write = false;
                     }
                 } else {
                     let slide = PitchSlideState::from_native(&ch.pitch_slide);
                     let mut effect = EffectInstructionWork::with_pitch_slide(input, Some(slide))
                         .ok_or(AudioClockError::UnsupportedEffect(i as u8))?;
+                    if effect.no_apu_write_program().is_none() {
+                        all_no_apu_write = false;
+                    }
                     let mut cycles = 0;
                     while !effect.finished() {
                         let prefix = effect.plain_prefix();
@@ -576,27 +598,13 @@ impl PreparedAudioFrame {
                 0
             },
         };
-        let no_note_cycles =
-            if exact_cycles && (0..8).all(|i| ids[i] == 0 || seq.channels[i].delay_counter > 1) {
-                let mut cycles = 8 + 16;
-                for i in 0..8 {
-                    if ids[i] == 0 {
-                        cycles += if i == 0 { 80 } else { 76 };
-                        continue;
-                    }
-                    cycles += if i == 0 {
-                        100
-                    } else if i < 4 {
-                        68
-                    } else {
-                        72
-                    };
-                    cycles += 24 + effects[i] + if i == 7 { 24 } else { 28 };
-                }
-                Some(cycles)
-            } else {
-                None
-            };
+        let no_note_cycles = if all_no_apu_write
+            && (0..8).all(|i| ids[i] == 0 || seq.channels[i].delay_counter > 1)
+        {
+            Some(audio_dispatch_work(&ids, 0, &effects).0)
+        } else {
+            None
+        };
         Ok(Self {
             work,
             ids,

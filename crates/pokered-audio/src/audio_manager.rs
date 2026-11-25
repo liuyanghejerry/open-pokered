@@ -759,6 +759,63 @@ impl AudioManager {
         self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), &prepared, bus, false)
     }
 
+    /// Same contract as [`Self::service_source_audio_frame`], reusing a
+    /// previously completed heap allocation when starting a fresh frame.
+    pub fn service_source_audio_frame_reusing<
+        B: crate::source_clock::apu_bus::SourceAudioFrameBus,
+    >(
+        &mut self,
+        cursor: &mut Option<Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        cache: &mut Option<Box<crate::source_clock::frame_instructions::SourceAudioFrame>>,
+        bank: u8,
+        mute: u8,
+        bus: B,
+    ) -> Result<
+        crate::source_clock::AudioFrameWork,
+        crate::source_clock::AudioAdmissionError<
+            crate::source_clock::frame_instructions::FrameStepError<B::Error>,
+        >,
+    > {
+        use crate::source_clock::{
+            frame_instructions::SourceAudioFrame, AudioAdmissionError, AudioClockError,
+        };
+        if let Some(work) = cursor.as_mut() {
+            if work.bank() != bank || work.mute() != mute {
+                return Err(Self::source_frame_resume_error(
+                    work,
+                    AudioClockError::UnsupportedSoundBank,
+                ));
+            }
+            return self.resume_source_audio_frame_with_runner(work, bus);
+        }
+        let song = self
+            .source_frame_song(bank, mute)
+            .map_err(AudioAdmissionError::Preflight)?;
+        let prepared = self
+            .prepare_source_frame_for_cursor(song)
+            .map_err(AudioAdmissionError::Preflight)?;
+        let work = if let Some(mut reused) = cache.take() {
+            if let Err(error) =
+                reused.reset_with_bus_prepared(&self.engine.sequencer, song, bank, mute, &prepared)
+            {
+                *cache = Some(reused);
+                return Err(AudioAdmissionError::Preflight(error));
+            }
+            reused
+        } else {
+            SourceAudioFrame::new_with_bus_prepared(
+                &self.engine.sequencer,
+                song,
+                bank,
+                mute,
+                &prepared,
+            )
+            .map_err(AudioAdmissionError::Preflight)?
+        };
+        *cursor = Some(work);
+        self.run_prepared_source_audio_frame(cursor.as_mut().unwrap(), &prepared, bus, false)
+    }
+
     fn run_prepared_source_audio_frame<B: crate::source_clock::apu_bus::SourceAudioFrameBus>(
         &mut self,
         work: &mut crate::source_clock::frame_instructions::SourceAudioFrame,

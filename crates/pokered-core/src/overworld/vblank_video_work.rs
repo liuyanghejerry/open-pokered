@@ -115,6 +115,41 @@ impl VBlankVideoWork {
             entry_returns: None,
         })
     }
+    pub fn reset_in_place(
+        &mut self,
+        ime: bool,
+        pending: u8,
+        shadows: VBlankVideoShadows,
+        pattern: VBlankPatternWork,
+        double: VBlankPatternWork,
+        moving_state: super::moving_bg_work::MovingBgState,
+    ) -> bool {
+        if !pattern.unstarted()
+            || !double.unstarted()
+            || pattern.format() != CopyFormat::TwoBpp
+            || double.format() != CopyFormat::OneBppDouble
+            || !self.entry.reset(ime, pending)
+        {
+            return false;
+        }
+        self.phase = Phase::Entry;
+        self.prologue.reset(shadows);
+        self.pattern = pattern;
+        self.double = double;
+        self.moving.reset_state(moving_state);
+        self.dma.reset();
+        self.foreground_copy = None;
+        self.entry_returns = None;
+        true
+    }
+    pub fn auto_bg_and_prepare_mut(
+        &mut self,
+    ) -> (
+        &mut AutoBgTransferWork,
+        &mut PrepareOamWork,
+    ) {
+        (&mut self.auto_bg, &mut self.prepare)
+    }
     /// Move the actual foreground request under the shared video owner.
     /// Failed validation leaves both the owner and request untouched.
     pub fn attach_foreground_copy(

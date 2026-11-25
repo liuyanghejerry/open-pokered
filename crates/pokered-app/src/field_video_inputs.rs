@@ -13,6 +13,30 @@ fn pattern_eq(left: &[u8; 16], right: &[u8; 16]) -> bool {
         && pattern_word(left, 12) == pattern_word(right, 12)
 }
 
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline]
+fn pack_linear_tile(indices: &[u8], tx: usize, ty: usize) -> [u8; 16] {
+    let mut pattern = [0u8; 16];
+    let mut off = ty * (8 * 160) + tx * 8;
+    let mut out = 0usize;
+    while out < 16 {
+        let pixels = unsafe { core::slice::from_raw_parts(indices.as_ptr().add(off), 8) };
+        let w0 = u32::from_le_bytes([pixels[0], pixels[1], pixels[2], pixels[3]]);
+        let w1 = u32::from_le_bytes([pixels[4], pixels[5], pixels[6], pixels[7]]);
+        if (w0 | w1) != 0 {
+            let low0 = ((w0 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+            let low1 = (w1 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+            let high0 = (((w0 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+            let high1 = ((w1 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+            pattern[out] = (low0 | low1) as u8;
+            pattern[out + 1] = (high0 | high1) as u8;
+        }
+        off += 160;
+        out += 2;
+    }
+    pattern
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
 pub(super) enum FieldBackgroundError {
     WrongDimensions,
@@ -48,6 +72,18 @@ impl NativeUiTiles {
     /// Reuse handles across text reveal/blink frames. A failed sample rolls
     /// back newly interned patterns and leaves the prior complete map intact.
     pub fn sample(&mut self, frame: &FrameBuffer) -> Result<(), FieldBackgroundError> {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        {
+            if frame.width() != 160 || frame.height() != 144 {
+                return Err(FieldBackgroundError::WrongDimensions);
+            }
+            if self.tiles.len() != 360 {
+                self.tiles.clear();
+                self.tiles.resize(360, 0);
+            }
+            return self.sample_rows(frame, 0, 18);
+        }
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
         self.sample_pixels(frame.width(), frame.height(), |x, y| {
             frame.get_index(x, y).unwrap() as u8
         })
@@ -57,15 +93,12 @@ impl NativeUiTiles {
         self.sample_rows(frame, 12, 18)
     }
 
-    pub fn sample_rows(
+    #[inline(never)]
+    fn prepare_band_storage(
         &mut self,
-        frame: &FrameBuffer,
         first_row: u32,
         end_row: u32,
-    ) -> Result<(), FieldBackgroundError> {
-        if frame.width() != 160 || frame.height() != 144 {
-            return Err(FieldBackgroundError::WrongDimensions);
-        }
+    ) -> Result<usize, FieldBackgroundError> {
         if first_row >= end_row || end_row > 18 {
             return Err(FieldBackgroundError::WrongDimensions);
         }
@@ -76,8 +109,21 @@ impl NativeUiTiles {
             return Err(FieldBackgroundError::Uninitialized);
         }
         let old_len = self.patterns.len();
+        let max_new = ((end_row - first_row) * 20) as usize;
         self.patterns
-            .reserve_exact(((end_row - first_row) * 20) as usize);
+            .reserve_exact(max_new.min(256usize.saturating_sub(old_len)));
+        Ok(old_len)
+    }
+
+    #[inline(never)]
+    fn sample_band_near_limit(
+        &mut self,
+        frame: &FrameBuffer,
+        first_row: u32,
+        end_row: u32,
+        old_len: usize,
+    ) -> Result<(), FieldBackgroundError> {
+        let saved_slots = self.slots;
         let hash = |pattern: &[u8; 16]| {
             (pattern_word(pattern, 0)
                 ^ pattern_word(pattern, 4).rotate_left(7)
@@ -85,37 +131,46 @@ impl NativeUiTiles {
                 ^ pattern_word(pattern, 12).rotate_left(21)) as usize
                 & 511
         };
-        let mut slots = self.slots;
         let mut changed = false;
         let mut previous = None;
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let indices = frame.indices();
         for ty in first_row..end_row {
             for tx in 0..20 {
-                let mut pattern = [0; 16];
-                for row in 0..8 {
-                    for column in 0..8 {
-                        let shade = frame.get_index(tx * 8 + column, ty * 8 + row).unwrap() as u8;
-                        if shade != 0 {
-                            pattern[row as usize * 2] |= (shade & 1) << (7 - column);
-                            pattern[row as usize * 2 + 1] |= ((shade >> 1) & 1) << (7 - column);
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                let pattern = pack_linear_tile(indices, tx as usize, ty as usize);
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                let pattern = {
+                    let mut pattern = [0; 16];
+                    for row in 0..8 {
+                        for column in 0..8 {
+                            let shade =
+                                frame.get_index(tx * 8 + column, ty * 8 + row).unwrap() as u8;
+                            if shade != 0 {
+                                pattern[row as usize * 2] |= (shade & 1) << (7 - column);
+                                pattern[row as usize * 2 + 1] |= ((shade >> 1) & 1) << (7 - column);
+                            }
                         }
                     }
-                }
+                    pattern
+                };
                 let index = match previous {
                     Some(index) if pattern_eq(&self.patterns[index], &pattern) => index,
                     _ => {
                         let mut slot = hash(&pattern);
                         loop {
-                            if slots[slot] == u16::MAX {
+                            if self.slots[slot] == u16::MAX {
                                 if self.patterns.len() == 256 {
                                     self.patterns.truncate(old_len);
+                                    self.slots = saved_slots;
                                     return Err(FieldBackgroundError::TooManyUiTiles);
                                 }
                                 let index = self.patterns.len();
                                 self.patterns.push(pattern);
-                                slots[slot] = index as u16;
+                                self.slots[slot] = index as u16;
                                 break index;
                             }
-                            let index = usize::from(slots[slot]);
+                            let index = usize::from(self.slots[slot]);
                             if pattern_eq(&self.patterns[index], &pattern) {
                                 break index;
                             }
@@ -134,7 +189,83 @@ impl NativeUiTiles {
         if changed {
             self.revision += 1;
         }
-        self.slots = slots;
+        Ok(())
+    }
+
+    pub fn sample_rows(
+        &mut self,
+        frame: &FrameBuffer,
+        first_row: u32,
+        end_row: u32,
+    ) -> Result<(), FieldBackgroundError> {
+        if frame.width() != 160 || frame.height() != 144 {
+            return Err(FieldBackgroundError::WrongDimensions);
+        }
+        let old_len = self.prepare_band_storage(first_row, end_row)?;
+        let max_new = ((end_row - first_row) * 20) as usize;
+        if old_len + max_new > 256 {
+            return self.sample_band_near_limit(frame, first_row, end_row, old_len);
+        }
+        let hash = |pattern: &[u8; 16]| {
+            (pattern_word(pattern, 0)
+                ^ pattern_word(pattern, 4).rotate_left(7)
+                ^ pattern_word(pattern, 8).rotate_left(14)
+                ^ pattern_word(pattern, 12).rotate_left(21)) as usize
+                & 511
+        };
+        let mut changed = false;
+        let mut previous = None;
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        let indices = frame.indices();
+        for ty in first_row..end_row {
+            for tx in 0..20 {
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                let pattern = pack_linear_tile(indices, tx as usize, ty as usize);
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                let pattern = {
+                    let mut pattern = [0; 16];
+                    for row in 0..8 {
+                        for column in 0..8 {
+                            let shade =
+                                frame.get_index(tx * 8 + column, ty * 8 + row).unwrap() as u8;
+                            if shade != 0 {
+                                pattern[row as usize * 2] |= (shade & 1) << (7 - column);
+                                pattern[row as usize * 2 + 1] |= ((shade >> 1) & 1) << (7 - column);
+                            }
+                        }
+                    }
+                    pattern
+                };
+                let index = match previous {
+                    Some(index) if pattern_eq(&self.patterns[index], &pattern) => index,
+                    _ => {
+                        let mut slot = hash(&pattern);
+                        loop {
+                            if self.slots[slot] == u16::MAX {
+                                let index = self.patterns.len();
+                                self.patterns.push(pattern);
+                                self.slots[slot] = index as u16;
+                                break index;
+                            }
+                            let index = usize::from(self.slots[slot]);
+                            if pattern_eq(&self.patterns[index], &pattern) {
+                                break index;
+                            }
+                            slot = (slot + 1) & 511;
+                        }
+                    }
+                };
+                previous = Some(index);
+                let at = (ty * 20 + tx) as usize;
+                if self.tiles[at] != index as u8 {
+                    self.tiles[at] = index as u8;
+                    changed = true;
+                }
+            }
+        }
+        if changed {
+            self.revision += 1;
+        }
         Ok(())
     }
 
@@ -343,5 +474,30 @@ mod tests {
         assert_eq!(pool.sample(&too_many),Err(FieldBackgroundError::TooManyUiTiles));assert_eq!(pool,before);
         let bad=FrameBuffer::new(RenderConfig::new(8,8),Rgba::WHITE);
         assert_eq!(pool.sample(&bad),Err(FieldBackgroundError::WrongDimensions));assert_eq!(pool,before);
+    }
+
+    #[test]
+    fn swar_linear_tile_packing_matches_scalar_sampling() {
+        let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<
+            dotzuki_renderer::palette::GbColor,
+        >::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut packed = frame();
+        for y in 0..144u32 {
+            for x in 0..160u32 {
+                let shade = ((x.wrapping_mul(7) + y.wrapping_mul(13) + (x / 8) * 3) & 3) as usize;
+                let color = GRAYSCALE_PALETTE.colors[shade];
+                linear.set_pixel(x, y, color);
+                packed.set_pixel(x, y, color);
+            }
+        }
+        let mut expected = NativeUiTiles::default();
+        expected.sample(&packed).unwrap();
+        for ty in 0..18usize {
+            for tx in 0..20usize {
+                let swar = pack_linear_tile(linear.indices(), tx, ty);
+                let scalar = expected.patterns[usize::from(expected.tiles[ty * 20 + tx])];
+                assert_eq!(swar, scalar, "mismatch at ({tx}, {ty})");
+            }
+        }
     }
 }

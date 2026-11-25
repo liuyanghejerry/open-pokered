@@ -21,14 +21,22 @@ pub unsafe fn copy_words(source: *const u32, destination: *mut u32, words: usize
 #[inline]
 unsafe fn fill_zero_words(destination: *mut u32, words: usize) {
     debug_assert!(words != 0 && words <= u16::MAX as usize);
-    let source = 0u32;
+    let mut source = 0u32;
     unsafe {
-        core::ptr::write_volatile(DMA3_SOURCE, &source as *const u32 as usize as u32);
+        // Keep the zero word in RAM (GBA Game Pak ROM ignores DMA_SOURCE_FIXED
+        // and increments sequential burst addresses) and preserve its store and
+        // stack slot across the volatile DMA3 transfer.
+        core::ptr::write_volatile(core::ptr::addr_of_mut!(source), 0);
+        core::ptr::write_volatile(
+            DMA3_SOURCE,
+            core::ptr::addr_of!(source) as usize as u32,
+        );
         core::ptr::write_volatile(DMA3_DESTINATION, destination as usize as u32);
         core::ptr::write_volatile(
             DMA3_CONTROL,
             DMA_ENABLE | DMA_32BIT | DMA_SOURCE_FIXED | words as u32,
         );
+        let _ = core::ptr::read_volatile(core::ptr::addr_of!(source));
     }
 }
 

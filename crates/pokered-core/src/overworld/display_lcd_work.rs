@@ -53,6 +53,9 @@ pub trait DisplayInstructionBus {
     {
         self.execute_plain_cycles(cycles)
     }
+    fn execute_plain_total(&mut self, _total: u32) -> Result<bool, Self::Error> {
+        Ok(false)
+    }
     fn execute_joypad_reads(
         &mut self,
         _select: Option<u8>,
@@ -161,13 +164,14 @@ impl super::pattern_copy_work::PatternInstructionBus for PlainInstructionBus {
 pub(crate) fn run_plain_work<W: Clone, B: DisplayInstructionBus>(
     work: &mut W,
     bus: &mut B,
-    finished: fn(&W) -> bool,
-    step: fn(&mut W, &mut PlainInstructionBus) -> Result<bool, core::convert::Infallible>,
-    step_bus: fn(&mut W, &mut B) -> Result<bool, B::Error>,
+    finished: impl Fn(&W) -> bool,
+    step: impl Fn(&mut W, &mut PlainInstructionBus) -> Result<bool, core::convert::Infallible>,
+    step_bus: impl Fn(&mut W, &mut B) -> Result<bool, B::Error>,
 ) -> Result<(), B::Error> {
     while !finished(work) {
         let mut trial = work.clone();
         let mut generated = 0usize;
+        let mut halted = false;
         let accepted = bus.execute_plain_run(core::iter::from_fn(|| {
             let mut plain = PlainInstructionBus(0);
             match step(&mut trial, &mut plain) {
@@ -178,7 +182,10 @@ pub(crate) fn run_plain_work<W: Clone, B: DisplayInstructionBus>(
                         access: None,
                     })
                 }
-                Ok(false) => None,
+                Ok(false) => {
+                    halted = true;
+                    None
+                }
                 Err(error) => match error {},
             }
         }))?;
@@ -186,8 +193,11 @@ pub(crate) fn run_plain_work<W: Clone, B: DisplayInstructionBus>(
             if !step_bus(work, bus)? {
                 return Ok(());
             }
-        } else if accepted == generated && finished(&trial) {
+        } else if accepted == generated {
             *work = trial;
+            if halted {
+                return Ok(());
+            }
         } else {
             let mut plain = PlainInstructionBus(0);
             for _ in 0..accepted {

@@ -46,6 +46,41 @@ impl MultiplyAddInstructions {
     pub fn result(&self) -> Option<u16> {
         (self.stage == MultiplyStage::Done).then_some(self.result)
     }
+    pub(crate) fn complete_from_init(&self) -> Option<(Self, u32)> {
+        if self.stage != MultiplyStage::Init {
+            return None;
+        }
+        let mut factor = self.factor;
+        let mut value = self.value;
+        let mut result = self.result;
+        let mut cycles = 8u32;
+        loop {
+            let add = factor & 1 != 0;
+            factor >>= 1;
+            if add {
+                result = result.wrapping_add(value);
+                cycles += 24;
+            } else {
+                cycles += 20;
+            }
+            let carry = value & 0x80 != 0;
+            value = value.wrapping_shl(1);
+            if factor == 0 {
+                cycles += 48;
+                return Some((
+                    Self {
+                        stage: MultiplyStage::Done,
+                        factor: 0,
+                        value,
+                        result,
+                        carry,
+                    },
+                    cycles,
+                ));
+            }
+            cycles += 40;
+        }
+    }
     pub(crate) fn plain_prefix(&self) -> &'static [u8] {
         use MultiplyStage::*;
         if matches!(self.stage, Init | Return | Done) {
@@ -231,6 +266,35 @@ impl FrequencyInstructions {
     }
     pub fn carry(&self) -> Option<bool> {
         (self.stage == FrequencyStage::Done).then_some(self.carry)
+    }
+    pub(crate) fn complete_from_start(&self) -> Option<(Self, u32)> {
+        if self.stage != FrequencyStage::Prefix(0) {
+            return None;
+        }
+        let shifts = 7u8.wrapping_sub(self.octave);
+        let mut pitch = self.pitch;
+        for _ in 0..shifts {
+            let h = (pitch >> 8) as u8;
+            let c = h & 1 != 0;
+            let new_h = ((h as i8) >> 1) as u8;
+            let new_l = (pitch as u8) >> 1 | if c { 128 } else { 0 };
+            pitch = u16::from_le_bytes([new_l, new_h]);
+        }
+        let sum = 8 + (pitch >> 8);
+        let carry = sum > 255;
+        let high = sum as u8;
+        pitch = (pitch & 255) | (u16::from(high) << 8);
+        let cycles = 128 + u32::from(shifts) * 48;
+        Some((
+            Self {
+                stage: FrequencyStage::Done,
+                pitch,
+                octave: 7,
+                carry,
+                high,
+            },
+            cycles,
+        ))
     }
     pub(crate) fn plain_prefix(&self) -> &'static [u8] {
         match self.stage {
@@ -786,5 +850,27 @@ mod tests {
         })
         .is_none());
         assert!(NoteLengthInstructions::new(NoteLengthInput { flags1: 4, ..input }).is_none());
+    }
+
+    #[test]
+    fn fast_multiply_and_frequency_completion_match_single_stepping() {
+        for factor in [0u8, 1, 2, 3, 7, 12, 0x55, 0xaa, 0xff] {
+            for value in [0u16, 1, 0x7f, 0x80, 0x100, 0x1234, 0xffff] {
+                for low in [0u8, 1, 0x80, 0xff] {
+                    let mut stepped = MultiplyAddInstructions::new(factor, value, low);
+                    let (fast, fast_cycles) = stepped.complete_from_init().unwrap();
+                    let stepped_cycles: u32 = (&mut stepped).map(u32::from).sum();
+                    assert_eq!(fast_cycles, stepped_cycles);
+                    assert_eq!(fast, stepped);
+                }
+            }
+        }
+        for c in fixture().frequency {
+            let mut stepped = FrequencyInstructions::new(c.pitch, c.octave);
+            let (fast, fast_cycles) = stepped.complete_from_start().unwrap();
+            let stepped_cycles: u32 = (&mut stepped).map(u32::from).sum();
+            assert_eq!(fast_cycles, stepped_cycles);
+            assert_eq!(fast, stepped);
+        }
     }
 }

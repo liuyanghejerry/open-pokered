@@ -343,6 +343,43 @@ impl NativeStart {
             panning: seq.stereo_panning,
         }
     }
+    fn write_into(&mut self, seq: &Sequencer) {
+        self.fingerprints_valid.set(false);
+        for (voice, c) in self.voices.iter_mut().zip(&seq.channels) {
+            voice.active = c.active;
+            voice.id = c.sound_id;
+            voice.delay = c.delay_counter;
+            voice.fraction = c.delay_frac;
+            voice.ptr = c.ptr;
+            voice.return_ptr = c.return_ptr;
+            voice.loop_counter = c.loop_counter;
+            voice.speed = c.note_speed;
+            voice.volume = c.volume_envelope;
+            voice.wave_instrument = c.wave_instrument;
+            voice.duty = c.duty_cycle << 6;
+            voice.octave = c.octave;
+            voice.flags1 = c.flags1.bits();
+            voice.flags2 = c.flags2.bits();
+            voice.vib_delay = c.vibrato.delay_counter;
+            voice.vib_reload = c.vibrato.delay_reload;
+            voice.vib_extent = c.vibrato.extent;
+            voice.vib_rate = c.vibrato.rate;
+            voice.frequency = c.frequency;
+            voice.saved_low = c.freq_lo_saved;
+            voice.pitch_slide = PitchSlideState::from_native(&c.pitch_slide);
+            voice.data_fingerprint.set(0);
+            voice.fast_data_fingerprint.set(0);
+        }
+        self.music_tempo = seq.music_tempo;
+        self.sfx_tempo = seq.sfx_tempo;
+        self.music_id = seq.current_music_id;
+        self.sfx_id = seq.current_sfx_id;
+        self.music_playing = seq.music_playing;
+        self.sfx_playing = seq.sfx_playing;
+        self.frequency_modifier = seq.frequency_modifier;
+        self.tempo_modifier = seq.tempo_modifier;
+        self.panning = seq.stereo_panning;
+    }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FrameStepError<E> {
@@ -388,6 +425,8 @@ pub struct SourceAudioFrame {
     prepared_notes: [Option<PreparationResult>; 4],
     #[cfg_attr(any(test, feature = "source-clock-serde"), serde(skip, default))]
     prepared_no_note_cycles: Option<u32>,
+    #[cfg_attr(any(test, feature = "source-clock-serde"), serde(skip, default))]
+    prepared_no_note_checked: bool,
     started_drum: Option<u8>,
     #[cfg_attr(any(test, feature = "source-clock-serde"), serde(skip))]
     started_voice: core::cell::OnceCell<Voice>,
@@ -515,6 +554,7 @@ impl SourceAudioFrame {
             fractions,
             prepared_notes: [None; 4],
             prepared_no_note_cycles: None,
+            prepared_no_note_checked: false,
             started_drum: None,
             started_voice: core::cell::OnceCell::new(),
             tempo,
@@ -551,20 +591,8 @@ impl SourceAudioFrame {
             Some(prepared.ids()),
         )?);
         work.prepared_notes = core::array::from_fn(|i| prepared.note_preparation(i));
-        work.prepared_no_note_cycles = prepared.no_note_cycles().filter(|_| {
-            (0..8).all(|i| {
-                if work.ids[i] == 0 {
-                    return true;
-                }
-                let voice = work.voice(i);
-                let cycles = EffectInstructionWork::with_pitch_slide(
-                    Self::effect_input(&work.start, &work.ids, i),
-                    Some(voice.pitch_slide),
-                )
-                .and_then(|effect| effect.no_apu_write_program());
-                voice.delay > 1 && cycles.is_some()
-            })
-        });
+        work.prepared_no_note_cycles = prepared.no_note_cycles();
+        work.prepared_no_note_checked = true;
         if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
             for i in 4..=5 {
                 if seq.channels[i].active {
@@ -574,6 +602,45 @@ impl SourceAudioFrame {
         }
         work.physical_output = true;
         Ok(work)
+    }
+    pub(crate) fn reset_with_bus_prepared(
+        &mut self,
+        seq: &Sequencer,
+        song: SourceSong,
+        bank: u8,
+        mute: u8,
+        prepared: &super::PreparedAudioFrame,
+    ) -> Result<(), AudioClockError> {
+        if bank != song.bank() || mute != 0 {
+            return Err(AudioClockError::UnsupportedSoundBank);
+        }
+        if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
+            for i in 4..=5 {
+                if seq.channels[i].active {
+                    return Err(AudioClockError::UnsupportedEffect(i as u8));
+                }
+            }
+        }
+        self.start.write_into(seq);
+        self.song = song;
+        self.bank = bank;
+        self.mute = mute;
+        self.panning = None;
+        self.physical_output = true;
+        self.ids = prepared.ids();
+        self.fractions = core::array::from_fn(|i| self.start.voices[i].fraction);
+        self.prepared_notes = core::array::from_fn(|i| prepared.note_preparation(i));
+        self.prepared_no_note_cycles = prepared.no_note_cycles();
+        self.prepared_no_note_checked = true;
+        self.started_drum = None;
+        self.started_voice = core::cell::OnceCell::new();
+        self.tempo = self.start.music_tempo;
+        self.channel = 0;
+        self.stage = Stage::Init;
+        self.cycles = 0;
+        self.committed = None;
+        self.source_failed = None;
+        Ok(())
     }
     fn with_bus(mut work: Self, seq: &Sequencer) -> Result<Self, AudioClockError> {
         if seq.frequency_modifier != 0 || seq.tempo_modifier != 0 {
@@ -621,6 +688,9 @@ impl SourceAudioFrame {
     }
     pub fn finished(&self) -> bool {
         matches!(self.stage, Stage::Done)
+    }
+    pub fn has_no_note_fast_path(&self) -> bool {
+        self.prepared_no_note_checked && self.prepared_no_note_cycles.is_some()
     }
     fn effect_input(start: &NativeStart, ids: &[u8; 8], i: usize) -> ChannelEffectWorkInput {
         let v = &start.voices[i];
@@ -756,13 +826,12 @@ impl SourceAudioFrame {
         if self.stage != Stage::Init {
             return None;
         }
-        if let Some(cycles) = self.prepared_no_note_cycles {
-            return Some(cycles);
+        if self.prepared_no_note_checked {
+            return self.prepared_no_note_cycles;
         }
-        let mut total = 8 + 16;
+        let mut effects = [0u32; 8];
         for i in 0..8 {
             if self.ids[i] == 0 {
-                total += if i == 0 { 80 } else { 76 };
                 continue;
             }
             let voice = self.voice(i);
@@ -773,21 +842,50 @@ impl SourceAudioFrame {
                 Self::effect_input(&self.start, &self.ids, i),
                 Some(voice.pitch_slide),
             )?;
-            let effect_cycles = effect.no_apu_write_program()?;
-            total += if i == 0 {
-                if i < 4 {
-                    100
-                } else {
-                    72
-                }
-            } else if i < 4 {
-                68
-            } else {
-                72
-            };
-            total += 24 + effect_cycles + if i == 7 { 24 } else { 28 };
+            effects[i] = effect.no_apu_write_program()?;
         }
-        Some(total)
+        Some(super::audio_work::audio_dispatch_work(&self.ids, 0, &effects).0)
+    }
+
+    fn coalesced_no_apu_channels(&self) -> Option<(u32, u8, Stage)> {
+        if !matches!(self.stage, Stage::Init | Stage::Channel(0)) {
+            return None;
+        }
+        let mut ch = self.channel;
+        let mut total = if matches!(self.stage, Stage::Init) { 8u32 } else { 0u32 };
+        let mut count = 0u8;
+        while ch < 8 {
+            let idx = ch as usize;
+            if self.ids[idx] == 0 {
+                total += if ch == 7 { 76 + 16 } else { 80 };
+                count += 1;
+                if ch == 7 {
+                    return Some((total, 7, Stage::Done));
+                }
+                ch += 1;
+                continue;
+            }
+            let voice = self.voice(idx);
+            if voice.delay <= 1 {
+                break;
+            }
+            let Some(eff_cycles) = EffectInstructionWork::with_pitch_slide(
+                Self::effect_input(&self.start, &self.ids, idx),
+                Some(voice.pitch_slide),
+            )
+            .and_then(|effect| effect.no_apu_write_program()) else {
+                break;
+            };
+            let entry = if ch < 4 { 100 } else { 72 };
+            let tail = if ch == 7 { 24 + 16 } else { 28 };
+            total += entry + 24 + eff_cycles + tail;
+            count += 1;
+            if ch == 7 {
+                return Some((total, 7, Stage::Done));
+            }
+            ch += 1;
+        }
+        (count > 0).then_some((total, ch, Stage::Channel(0)))
     }
 
     /// Keep an effect child borrowed until it returns or the clock refuses an
@@ -809,12 +907,23 @@ impl SourceAudioFrame {
                 .map_err(FrameStepError::Clock)?
             {
                 self.cycles += cycles;
-                self.channel = 8;
+                self.channel = 7;
                 self.stage = Stage::Done;
                 return Ok(());
             }
         }
         while !self.finished() {
+            if let Some((cycles, next_ch, next_stage)) = self.coalesced_no_apu_channels() {
+                if bus
+                    .execute_plain_interval(apu, cycles)
+                    .map_err(FrameStepError::Clock)?
+                {
+                    self.cycles += cycles;
+                    self.channel = next_ch;
+                    self.stage = next_stage;
+                    continue;
+                }
+            }
             if let Stage::Effect(work) = &mut self.stage {
                 debug_assert!(!work.finished(), "pending effect");
                 loop {
@@ -861,26 +970,52 @@ impl SourceAudioFrame {
                 self.stage = Stage::Tail(0);
             } else {
                 if let Stage::Music(work) = &mut self.stage {
-                    let prefix = work.plain_prefix();
-                    if !prefix.is_empty() {
+                    loop {
+                        if let Some((cycles, done)) = work.complete_plain_child() {
+                            if bus
+                                .execute_plain_interval(apu, cycles)
+                                .map_err(FrameStepError::Clock)?
+                            {
+                                work.finish_plain_child(done, cycles);
+                                self.cycles += cycles;
+                                continue;
+                            }
+                        }
+                        let prefix = work.plain_prefix();
+                        if prefix.is_empty() {
+                            break;
+                        }
                         let count = bus
                             .execute_plain_run(apu, prefix)
                             .map_err(FrameStepError::Clock)?;
-                        if count != 0 {
-                            self.cycles += work.accept_plain_prefix(count, prefix);
-                            continue;
+                        if count == 0 {
+                            break;
                         }
+                        self.cycles += work.accept_plain_prefix(count, prefix);
                     }
                 } else if let Stage::Press(work) = &mut self.stage {
-                    let prefix = work.plain_prefix();
-                    if !prefix.is_empty() {
+                    loop {
+                        if let Some((cycles, done)) = work.complete_plain_child() {
+                            if bus
+                                .execute_plain_interval(apu, cycles)
+                                .map_err(FrameStepError::Clock)?
+                            {
+                                work.finish_plain_child(done, cycles);
+                                self.cycles += cycles;
+                                continue;
+                            }
+                        }
+                        let prefix = work.plain_prefix();
+                        if prefix.is_empty() {
+                            break;
+                        }
                         let count = bus
                             .execute_plain_run(apu, prefix)
                             .map_err(FrameStepError::Clock)?;
-                        if count != 0 {
-                            self.cycles += work.accept_plain_prefix(count, prefix);
-                            continue;
+                        if count == 0 {
+                            break;
                         }
+                        self.cycles += work.accept_plain_prefix(count, prefix);
                     }
                 }
                 let (prefix, total) = if matches!(self.stage, Stage::Music(_) | Stage::Press(_)) {
@@ -930,6 +1065,9 @@ impl SourceAudioFrame {
             Kind(n) if self.channel >= 4 => (&[4, 8, 12], n, [24, 20, 12, 0][usize::from(n)]),
             Kind(n) => (&[4, 8, 8], n, [20, 16, 8, 0][usize::from(n)]),
             Mute(n) => (&[16, 4, 12], n, [32, 16, 12, 0][usize::from(n)]),
+            Call if self.voice(self.channel as usize).delay <= 1 => {
+                (&[24, 8, 12, 8, 8, 8], 0, 68)
+            }
             ReadyEntry(n) if n < 5 => {
                 (&[8, 12, 8, 8, 8], n, [44, 36, 24, 16, 8, 0][usize::from(n)])
             }
@@ -952,6 +1090,15 @@ impl SourceAudioFrame {
             }
             accepted
         };
+        if matches!(self.stage, Call) {
+            if count == 1 {
+                self.stage = ReadyEntry(0);
+            } else {
+                self.stage = ReadyEntry((count - 2) as u8);
+                self.advance(None);
+            }
+            return;
+        }
         if matches!(self.stage, Channel(0)) && prefix.len() > 6 {
             if self.ids[self.channel as usize] == 0 {
                 self.stage = if count <= 6 {

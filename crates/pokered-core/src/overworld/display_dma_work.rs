@@ -33,6 +33,9 @@ pub(crate) const DMA_TAIL: [u8; 82] = {
 };
 
 impl DisplayDmaWork {
+    pub fn reset(&mut self) {
+        *self = Self::default();
+    }
     pub fn finished(&self) -> bool {
         self.step == Step::Done
     }

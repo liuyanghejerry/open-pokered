@@ -72,6 +72,15 @@ impl VBlankIrqWork {
             remaining_audio_work: 0,
         }
     }
+    pub fn reset_after_video(&mut self, fade: FadeAudioState, timer: TrackTimeState) {
+        self.phase = Phase::Video;
+        self.pre_audio = None;
+        self.fade = FadeAudioWork::new(fade);
+        self.dispatch = None;
+        self.after_music = None;
+        self.timer_input = timer;
+        self.remaining_audio_work = 0;
+    }
     pub fn finished(&self) -> bool {
         self.phase == Phase::Done
     }

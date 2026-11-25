@@ -709,6 +709,10 @@ pub struct PokemonGame {
     pending_evolve_move_replace: Option<(usize, pokered_data::moves::MoveId)>,
     rare_candy_flow: Option<rare_candy::RareCandyFlow>,
     pub(crate) field_flash: Option<Box<field_flash::FieldFlash>>,
+    pub(crate) restored_overworld_bg: Option<(
+        crate::render::session::FlashMapVisualKey,
+        crate::render::OverworldBackgroundCache,
+    )>,
     // The instruction owner is independent of the ordinary Game field layout.
     pub(crate) source_display: Box<pokered_core::overworld::display_work_time::NativeDisplayClock>,
     #[cfg(any(test, feature = "debug-server"))]
@@ -1417,6 +1421,7 @@ impl PokemonGame {
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
             field_flash: None,
+            restored_overworld_bg: None,
             source_display: Default::default(),
             #[cfg(any(test, feature = "debug-server"))]
             source_audio_work: None,
@@ -1600,6 +1605,7 @@ impl PokemonGame {
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
             field_flash: None,
+            restored_overworld_bg: None,
             source_display: Default::default(),
             #[cfg(any(test, feature = "debug-server"))]
             source_audio_work: None,
@@ -1732,6 +1738,7 @@ impl PokemonGame {
             pending_evolve_move_replace: None,
             rare_candy_flow: None,
             field_flash: None,
+            restored_overworld_bg: None,
             source_display: Default::default(),
             #[cfg(any(test, feature = "debug-server"))]
             source_audio_work: None,
@@ -2524,10 +2531,16 @@ impl PokemonGame {
 
                 // Boot/title/Oak graphics are dead once play begins. Reclaim
                 // their decoded tiles before the overworld starts allocating
-                // transient render and script data in EWRAM.
+                // transient render and script data in EWRAM. Returning from
+                // lightweight field menus keeps the active map tileset warm.
                 #[cfg(target_os = "none")]
-                if let Some(resources) = self.resources.as_mut() {
-                    resources.clear_cache();
+                if !matches!(
+                    self.state.screen,
+                    GameScreen::StartMenu | GameScreen::SaveMenu | GameScreen::PartyScreen
+                ) {
+                    if let Some(resources) = self.resources.as_mut() {
+                        resources.clear_cache();
+                    }
                 }
 
                 // Only create a new OverworldScreen when entering from the main menu
@@ -3019,7 +3032,13 @@ impl PokemonGame {
             if self.state.screen == GameScreen::Battle && *next != GameScreen::Battle {
                 self.battle_vfx = BattleVisualEffects::default();
             }
-            if matches!(next, GameScreen::Overworld | GameScreen::Pokedex) {
+            if (*next == GameScreen::Pokedex)
+                || (*next == GameScreen::Overworld
+                    && !matches!(
+                        self.state.screen,
+                        GameScreen::StartMenu | GameScreen::SaveMenu | GameScreen::PartyScreen
+                    ))
+            {
                 if let Some(resources) = self.resources.as_mut() {
                     resources.clear_cache();
                 }

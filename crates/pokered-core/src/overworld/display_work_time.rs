@@ -1210,6 +1210,30 @@ impl DisplayInstructionBus for DisplayBus<'_> {
         }
         self.execute_plain_cycles(cycles)
     }
+    #[inline]
+    fn execute_plain_total(&mut self, total: u32) -> Result<bool, Self::Error> {
+        let interrupt_limited = !self.time.active_vblank && self.time.vblank_dispatch_enabled;
+        if total == 0
+            || (!self.time.active_vblank
+                && (!self.time.vblank_dispatch_enabled || self.time.pending_vblank_dispatch()))
+        {
+            return Ok(false);
+        }
+        let limit = self.time.remaining().min(if interrupt_limited {
+            self.time
+                .device
+                .tcycles_until_vblank()
+                .map_or(u64::MAX, u64::from)
+        } else {
+            u64::MAX
+        });
+        if u64::from(total) > limit {
+            return Ok(false);
+        }
+        self.reserve()?;
+        self.time.elapse_reserved_interval(u64::from(total))?;
+        Ok(true)
+    }
     fn execute_joypad_reads(
         &mut self,
         select: Option<u8>,
@@ -1495,7 +1519,7 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
         if remaining == 0 || self.patterns.bytes().len() != 0x2000 {
             return Ok(None);
         }
-        let mut count = remaining.min(64);
+        let mut count = remaining.min(256);
         if self.time.pending_vblank_dispatch() {
             return Ok(None);
         }
@@ -1503,9 +1527,9 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
             let Some(distance) = self.time.device.tcycles_until_vblank() else {
                 return Ok(None);
             };
-            count = count.min((u64::from(distance).saturating_sub(1) / 52).min(64) as u16);
+            count = count.min((u64::from(distance).saturating_sub(1) / 52).min(256) as u16);
         }
-        count = count.min((self.time.remaining() / 52).min(64) as u16);
+        count = count.min((self.time.remaining() / 52).min(256) as u16);
         if count == 0 {
             return Ok(None);
         }
@@ -1533,7 +1557,7 @@ impl<A: PatternAssets> PatternInstructionBus for PatternBus<'_, A> {
         {
             return Ok(None);
         }
-        let mut values = [0u8; 64];
+        let mut values = [0u8; 256];
         if self
             .assets
             .read_pattern_run(source, source_offset, &mut values[..usize::from(count)])

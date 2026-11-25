@@ -86,6 +86,27 @@ pub fn draw_text_indexed(text: &str, mut x: u32, y: u32, color: Rgba, fb: &mut F
     }
 }
 
+#[inline]
+pub fn char_advance_indexed(ch: char) -> u32 {
+    if ch == '▶' || ch == '▼' {
+        return fusion::char_advance(ch);
+    }
+    let ascii = (ch as u32)
+        .checked_sub(u32::from(' '))
+        .map(|index| index as usize);
+    let index = match ascii {
+        Some(index) if index < 95 && LOCAL_GLYPHS[index].0 == ch as u32 => Some(index),
+        _ => LOCAL_GLYPHS
+            .binary_search_by_key(&(ch as u32), |glyph| glyph.0)
+            .ok(),
+    };
+    index.map_or_else(|| fusion::char_advance(ch), |i| LOCAL_GLYPHS[i].5)
+}
+
+pub fn measure_text_indexed(text: &str) -> u32 {
+    text.chars().map(char_advance_indexed).sum()
+}
+
 const BOX_TILES: &[u8; 48] = include_bytes!("../fonts/pokered-box-tiles.bin");
 /// Draw an opaque UI tile. Fill its paper once to avoid per-pixel color
 /// quantization for all white pixels of corners, symbols and blank tiles.
@@ -189,6 +210,7 @@ mod tests {
                 draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut actual);
                 fusion::draw_text_scaled(text, 3, 2, scale, Rgba::BLACK, &mut expected);
                 assert_eq!(measure_text(text), fusion::measure_text(text));
+                assert_eq!(measure_text_indexed(text), fusion::measure_text(text));
                 for y in 0..32 {
                     for x in 0..96 {
                         assert_eq!(actual.get_pixel(x, y), expected.get_pixel(x, y), "{text}, scale {scale}, pixel({x},{y})");

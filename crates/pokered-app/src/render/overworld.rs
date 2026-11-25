@@ -787,7 +787,7 @@ impl OverworldBackgroundCache {
     ) -> BackgroundDamage {
         output.reset_palette();
         let Some(previous) = self.key else {
-            output.clear(Rgba::WHITE);
+            clear_fb_white(output);
             return BackgroundDamage::Full;
         };
         if !previous.same_scene(key) {
@@ -802,12 +802,12 @@ impl OverworldBackgroundCache {
                 restore_foreground_regions(output, self);
                 return BackgroundDamage::Animated;
             }
-            output.clear(Rgba::WHITE);
+            clear_fb_white(output);
             return BackgroundDamage::Full;
         }
 
         if self.output_key != Some(previous) {
-            output.clear(Rgba::WHITE);
+            clear_fb_white(output);
             return BackgroundDamage::Full;
         }
         restore_foreground_regions(output, self);
@@ -818,7 +818,7 @@ impl OverworldBackgroundCache {
             return BackgroundDamage::None;
         }
         if dx.unsigned_abs() >= output.width() || dy.unsigned_abs() >= output.height() {
-            output.clear(Rgba::WHITE);
+            clear_fb_white(output);
             return BackgroundDamage::Full;
         }
 
@@ -844,6 +844,14 @@ impl OverworldBackgroundCache {
         }
         BackgroundDamage::Scrolled { dx, dy }
     }
+}
+
+#[inline]
+fn clear_fb_white(fb: &mut FrameBuffer) {
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    pokered_renderer::gba_dma::clear_frame(fb);
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+    fb.clear(Rgba::WHITE);
 }
 
 #[inline(never)]
@@ -915,6 +923,7 @@ fn draw_background_tiles(
     poison_bg_flash: bool,
     silph_bg_palette: Option<&Palette>,
     anim_out: Option<&mut AnimRows>,
+    band_y: Option<core::ops::Range<i32>>,
 ) {
     if matches!(damage, BackgroundDamage::None) {
         return;
@@ -1006,6 +1015,11 @@ fn draw_background_tiles(
         let screen_y = ty * TILE_SIZE as i32 - camera_y;
         if screen_y + TILE_SIZE as i32 <= 0 || screen_y >= height {
             continue;
+        }
+        if let Some(ref band) = band_y {
+            if screen_y + TILE_SIZE as i32 <= band.start || screen_y >= band.end {
+                continue;
+            }
         }
         if matches!(damage, BackgroundDamage::Animated)
             && !anim_rows.has(screen_y / TILE_SIZE as i32)
@@ -1104,12 +1118,12 @@ pub fn draw_overworld(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
 ) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None, None, false);
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None, false, None, None);
 }
 
 /// Retained map BG while the field-menu return still owns cleared OBJ state.
 pub(crate) fn draw_overworld_background(screen: &mut OverworldScreen, res: &mut Option<ResourceManager>, fb: &mut FrameBuffer, language: pokered_core::game_state::Lang) {
-    draw_overworld_impl(screen, res, fb, language, None, None, None, None, true);
+    draw_overworld_impl(screen, res, fb, language, None, None, None, None, true, None, None);
 }
 
 pub(crate) fn draw_overworld_background_cached(
@@ -1118,8 +1132,10 @@ pub(crate) fn draw_overworld_background_cached(
     fb: &mut FrameBuffer,
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
-) {
+) -> bool {
+    let had_output = cache.output_key.is_some();
     let map_hash = cache.key.map(|key| key.map_hash);
+    let mut pixels_changed = true;
     draw_overworld_impl(
         screen,
         res,
@@ -1130,6 +1146,33 @@ pub(crate) fn draw_overworld_background_cached(
         Some(true),
         map_hash,
         true,
+        None,
+        Some(&mut pixels_changed),
+    );
+    had_output && !pixels_changed && cache.output_key.is_some()
+}
+
+pub(crate) fn draw_overworld_background_band(
+    screen: &mut OverworldScreen,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+    language: pokered_core::game_state::Lang,
+    cache: &mut OverworldBackgroundCache,
+    band: core::ops::Range<i32>,
+    expected_anim: (i8, Option<u8>),
+) {
+    draw_overworld_impl(
+        screen,
+        res,
+        fb,
+        language,
+        Some(cache),
+        None,
+        None,
+        None,
+        true,
+        Some((band, expected_anim)),
+        None,
     );
 }
 
@@ -1140,7 +1183,7 @@ pub(crate) fn draw_overworld_cached(
     language: pokered_core::game_state::Lang,
     cache: &mut OverworldBackgroundCache,
 ) {
-    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None, None, false);
+    draw_overworld_impl(screen, res, fb, language, Some(cache), None, None, None, false, None, None);
 }
 
 pub(crate) fn draw_overworld_cached_with(
@@ -1163,9 +1206,12 @@ pub(crate) fn draw_overworld_cached_with(
         Some(reuse_composited),
         same_frame_map_hash,
         false,
+        None,
+        None,
     );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_overworld_impl(
     screen: &mut OverworldScreen,
     res: &mut Option<ResourceManager>,
@@ -1176,6 +1222,8 @@ fn draw_overworld_impl(
     reuse_composited_hint: Option<bool>,
     same_frame_map_hash: Option<u32>,
     hide_actors: bool,
+    band_y: Option<(core::ops::Range<i32>, (i8, Option<u8>))>,
+    mut pixels_changed_out: Option<&mut bool>,
 ) {
     if let Some(cache) = background_cache.as_deref_mut() {
         cache.require_full_present();
@@ -1183,8 +1231,16 @@ fn draw_overworld_impl(
     let owns_full_screen = screen.naming_flash_frames > 0
         || screen.pending_naming_screen.is_some()
         || screen.pending_party_select.is_some();
-    if background_cache.is_none() || owns_full_screen || res.is_none() {
-        fb.clear(Rgba::WHITE);
+    if let Some((ref band, _)) = band_y {
+        if band.start == 0 {
+            clear_fb_white(fb);
+            fb.reset_palette();
+            if let Some(cache) = background_cache.as_deref_mut() {
+                cache.invalidate();
+            }
+        }
+    } else if background_cache.is_none() || owns_full_screen || res.is_none() {
+        clear_fb_white(fb);
     }
     if owns_full_screen || res.is_none() {
         if let Some(cache) = background_cache.as_deref_mut() {
@@ -1269,10 +1325,16 @@ fn draw_overworld_impl(
         // one pixel per animation update; the flower tile ($03) is replaced by
         // the current flower frame (flower1/2/3) on WATER_FLOWER tilesets.
         let tile_anim_kind = screen.tile_anim.kind();
-        let water_shift = screen.tile_anim.water_shift() as i32;
+        let (effective_water_shift, effective_flower_frame) = band_y
+            .as_ref()
+            .map_or_else(
+                || (screen.tile_anim.water_shift(), screen.tile_anim.flower_frame()),
+                |(_, anim)| *anim,
+            );
+        let water_shift = effective_water_shift as i32;
         let flower_ts =
             if tile_anim_kind == pokered_core::overworld::presentation::TileAnimKind::WaterFlower {
-                screen.tile_anim.flower_frame().and_then(|f| {
+                effective_flower_frame.and_then(|f| {
                     rm.load_asset(AssetCategory::Tileset, &format!("flower/flower{}.png", f))
                         .ok()
                         .map(|c| c.tileset.clone())
@@ -1305,8 +1367,12 @@ fn draw_overworld_impl(
             if shake_offset_y == 0 && !departure_active && silph_palette.is_none() {
                 if let Some(cache) = background_cache.as_deref_mut() {
                     if cache.key == Some(key) && cache.output_key == Some(key) {
+                        let had_patches = !cache.foreground_patches.is_empty();
                         restore_foreground_regions(fb, cache);
                         cache.begin_partial_present();
+                        if let Some(changed) = pixels_changed_out.as_deref_mut() {
+                            *changed = had_patches;
+                        }
                         return;
                     }
                 }
@@ -1375,12 +1441,17 @@ fn draw_overworld_impl(
                         camera_x: view_origin_tx * TILE_SIZE as i32 + view_sub_x,
                         camera_y: view_origin_ty * TILE_SIZE as i32 + view_sub_y,
                         tile_anim_kind: tile_anim_kind as u8,
-                        water_shift: screen.tile_anim.water_shift(),
-                        flower_frame: screen.tile_anim.flower_frame(),
+                        water_shift: effective_water_shift,
+                        flower_frame: effective_flower_frame,
                         poison_bg_flash,
                         map_hash: same_frame_map_hash.unwrap_or_else(|| background_map_hash(screen)),
                     };
-                    let damage = cache.prepare(fb, key, scroll_background.as_deref_mut());
+                    let had_patches = !cache.foreground_patches.is_empty();
+                    let damage = if band_y.is_some() {
+                        BackgroundDamage::Full
+                    } else {
+                        cache.prepare(fb, key, scroll_background.as_deref_mut())
+                    };
                     let is_animated = matches!(damage, BackgroundDamage::Animated);
                     let mut anim_out = AnimRows::default();
                     draw_background_tiles(
@@ -1410,7 +1481,26 @@ fn draw_overworld_impl(
                         } else {
                             None
                         },
+                        band_y.as_ref().map(|(band, _)| band.clone()),
                     );
+                    if let Some((band, _)) = band_y {
+                        if band.end >= fb.height() as i32 {
+                            cache.key = Some(key);
+                            cache.output_key = Some(key);
+                            cache.foreground_patches.clear();
+                        }
+                        return;
+                    }
+                    if hide_actors {
+                        if let Some(changed) = pixels_changed_out.as_deref_mut() {
+                            *changed = had_patches
+                                || !matches!(
+                                    damage,
+                                    BackgroundDamage::None | BackgroundDamage::Animated
+                                )
+                                || anim_out.any();
+                        }
+                    }
                     cache.key = Some(key);
                     let reuse_composited =
                         reuse_composited_hint.unwrap_or_else(|| can_reuse_composited_frame(screen));
@@ -1455,12 +1545,13 @@ fn draw_overworld_impl(
                         poison_bg_flash,
                         silph_bg.as_ref(),
                         None,
+                        None,
                     );
                 }
             } else {
                 if let Some(cache) = background_cache.as_deref_mut() {
                     cache.invalidate();
-                    fb.clear(Rgba::WHITE);
+                    clear_fb_white(fb);
                 }
                 draw_background_tiles(
                     fb,
@@ -1484,6 +1575,7 @@ fn draw_overworld_impl(
                     shake_offset_y,
                     poison_bg_flash,
                     silph_bg.as_ref(),
+                    None,
                     None,
                 );
             }

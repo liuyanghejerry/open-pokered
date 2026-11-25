@@ -202,6 +202,13 @@ impl PatternMemory {
     pub fn initialize_native_byte(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
         self.write(address, value)
     }
+    pub fn initialize_native_run(
+        &mut self,
+        address: u16,
+        values: &[u8],
+    ) -> Result<(), RestoreError> {
+        self.write_run(address, values)
+    }
     #[inline(always)]
     pub(super) fn write(&mut self, address: u16, value: u8) -> Result<(), RestoreError> {
         let offset = address

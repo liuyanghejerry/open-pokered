@@ -56,14 +56,14 @@ fn pack_flash_frame(
         .chunks_exact(8)
         .zip(retained.packed_mut().chunks_exact_mut(2))
     {
-        let mut low = 0;
-        let mut high = 0;
-        for &pixel in pixels {
-            low = (low << 1) | (pixel & 1);
-            high = (high << 1) | ((pixel >> 1) & 1);
-        }
-        planes[0] = low;
-        planes[1] = high;
+        let w0 = u32::from_le_bytes([pixels[0], pixels[1], pixels[2], pixels[3]]);
+        let w1 = u32::from_le_bytes([pixels[4], pixels[5], pixels[6], pixels[7]]);
+        let low0 = ((w0 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+        let low1 = (w1 & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+        let high0 = (((w0 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 24) & 0xf0;
+        let high1 = ((w1 >> 1) & 0x0101_0101).wrapping_mul(0x8040_2010) >> 28;
+        planes[0] = (low0 | low1) as u8;
+        planes[1] = (high0 | high1) as u8;
     }
     retained.set_palette(*frame.display_palette());
 }
@@ -75,10 +75,154 @@ fn draw_flash_frame(frame: &FlashFrame, fb: &mut FrameBuffer) {
     unpack_flash_frame(frame, fb);
 }
 
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline(always)]
+fn map_palette_word(w: u32, palette: u8) -> u32 {
+    const M: u32 = 0x0101_0101;
+    let hi = (w >> 1) & M;
+    let lo = w & M;
+    match palette {
+        0xe4 => w,
+        0x00 => 0,
+        0x90 => (hi & !lo) | ((hi & lo) << 1),
+        0x40 => hi & lo,
+        _ => {
+            let nhi = hi ^ M;
+            let nlo = lo ^ M;
+            (nhi & nlo).wrapping_mul(u32::from(palette & 3))
+                | (nhi & lo).wrapping_mul(u32::from((palette >> 2) & 3))
+                | (hi & nlo).wrapping_mul(u32::from((palette >> 4) & 3))
+                | (hi & lo).wrapping_mul(u32::from((palette >> 6) & 3))
+        }
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn apply_linear_flash_palette(
+    raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster,
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    let indices = fb.indices_mut();
+    for (index, span) in raster.spans().iter().enumerate() {
+        if span.palette == 0xe4 {
+            continue;
+        }
+        let start = usize::from(span.start).min(indices.len());
+        let end = raster
+            .spans()
+            .get(index + 1)
+            .map_or(indices.len(), |next| usize::from(next.start).min(indices.len()));
+        if start >= end {
+            continue;
+        }
+        let slice = &mut indices[start..end];
+        if span.palette == 0 {
+            slice.fill(0);
+            continue;
+        }
+        let pal = span.palette;
+        let (prefix, words, suffix) = unsafe { slice.align_to_mut::<u32>() };
+        for byte in prefix {
+            *byte = (pal >> ((*byte & 3) * 2)) & 3;
+        }
+        for word in words {
+            *word = map_palette_word(u32::from_le(*word), pal).to_le();
+        }
+        for byte in suffix {
+            *byte = (pal >> ((*byte & 3) * 2)) & 3;
+        }
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+#[inline(never)]
+fn map_linear_palette_span(src_slice: &[u8], dst_slice: &mut [u8], pal: u8) {
+    let (dst_prefix, dst_words, dst_suffix) = unsafe { dst_slice.align_to_mut::<u32>() };
+    let prefix_len = dst_prefix.len();
+    for (&s, d) in src_slice[..prefix_len].iter().zip(dst_prefix.iter_mut()) {
+        *d = (pal >> ((s & 3) * 2)) & 3;
+    }
+    let mid_bytes = dst_words.len() * 4;
+    let src_mid = &src_slice[prefix_len..prefix_len + mid_bytes];
+    if src_mid.as_ptr() as usize & 3 == 0 {
+        let src_words =
+            unsafe { core::slice::from_raw_parts(src_mid.as_ptr().cast::<u32>(), dst_words.len()) };
+        for (&sw, dw) in src_words.iter().zip(dst_words.iter_mut()) {
+            *dw = map_palette_word(u32::from_le(sw), pal).to_le();
+        }
+    } else {
+        for (chunk, dw) in src_mid.chunks_exact(4).zip(dst_words.iter_mut()) {
+            let sw = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+            *dw = map_palette_word(sw, pal).to_le();
+        }
+    }
+    for (&s, d) in src_slice[prefix_len + mid_bytes..]
+        .iter()
+        .zip(dst_suffix.iter_mut())
+    {
+        *d = (pal >> ((s & 3) * 2)) & 3;
+    }
+}
+
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+fn copy_and_apply_linear_flash_palette(
+    source: &dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+    raster: Option<&pokered_core::overworld::display_device::BackgroundPaletteRaster>,
+    fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
+) {
+    fb.set_palette(*source.display_palette());
+    let Some(raster) = raster else {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        pokered_renderer::gba_dma::copy_frame(fb, source);
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        fb.indices_mut().copy_from_slice(source.indices());
+        return;
+    };
+    let spans = raster.spans();
+    if spans.is_empty() || (spans.len() == 1 && spans[0].start == 0 && spans[0].palette == 0xe4) {
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        pokered_renderer::gba_dma::copy_frame(fb, source);
+        #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+        fb.indices_mut().copy_from_slice(source.indices());
+        return;
+    };
+    let src = source.indices();
+    let dst = fb.indices_mut();
+    let first_start = usize::from(spans[0].start).min(dst.len());
+    if first_start > 0 {
+        dst[..first_start].copy_from_slice(&src[..first_start]);
+    }
+    for (index, span) in spans.iter().enumerate() {
+        let start = usize::from(span.start).min(dst.len());
+        let end = spans
+            .get(index + 1)
+            .map_or(dst.len(), |next| usize::from(next.start).min(dst.len()));
+        if start >= end {
+            continue;
+        }
+        let dst_slice = &mut dst[start..end];
+        let src_slice = &src[start..end];
+        let pal = span.palette;
+        if pal == 0xe4 {
+            dst_slice.copy_from_slice(src_slice);
+        } else if pal == 0 {
+            dst_slice.fill(0);
+        } else {
+            map_linear_palette_span(src_slice, dst_slice, pal);
+        }
+    }
+}
+
 fn apply_flash_palette(
     raster: &pokered_core::overworld::display_device::BackgroundPaletteRaster,
     fb: &mut FrameBuffer,
 ) {
+    #[cfg(all(target_os = "none", target_arch = "arm"))]
+    {
+        apply_linear_flash_palette(raster, fb);
+        return;
+    }
+    #[cfg(not(all(target_os = "none", target_arch = "arm")))]
     for (index, span) in raster.spans().iter().enumerate() {
         if span.palette == 0xe4 {
             continue;
@@ -111,6 +255,20 @@ fn apply_flash_palette(
     }
 }
 
+#[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
+const FLASH_NIBBLE_WORDS: [u32; 16] = {
+    let mut table = [0u32; 16];
+    let mut n = 0;
+    while n < 16 {
+        table[n] = ((n as u32 & 8) >> 3)
+            | ((n as u32 & 4) << 6)
+            | ((n as u32 & 2) << 15)
+            | ((n as u32 & 1) << 24);
+        n += 1;
+    }
+    table
+};
+
 // Four monochrome plane bits expanded into four little-endian index bytes.
 // Combining the two planes needs just two word writes per eight pixels.
 #[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
@@ -118,55 +276,37 @@ fn unpack_flash_frame(
     frame: &FlashFrame,
     fb: &mut dotzuki_renderer::LinearRgbaIndexedFrameBuffer<dotzuki_renderer::palette::GbColor>,
 ) {
+    let nibble = FLASH_NIBBLE_WORDS;
     for (planes, out) in frame
         .packed()
         .chunks_exact(2)
         .zip(fb.indices_mut().chunks_exact_mut(8))
     {
-        unpack_flash_pixels(planes, out);
+        unpack_flash_pixels_with_table(&nibble, planes, out);
     }
     fb.set_palette(*frame.display_palette());
 }
 
 #[cfg(any(test, all(target_os = "none", target_arch = "arm")))]
 #[inline(always)]
-fn unpack_flash_pixels(planes: &[u8], out: &mut [u8]) {
-    const WORDS: [[u32; 2]; 65536] = {
-        let mut table = [[0; 2]; 65536];
-        let mut n = 0;
-        while n < 65536 {
-            let low = n & 255;
-            let high = n >> 8;
-            table[n] = [
-                ((low as u32 & 0x80) >> 7)
-                    | ((low as u32 & 0x40) << 2)
-                    | ((low as u32 & 0x20) << 11)
-                    | ((low as u32 & 0x10) << 20)
-                    | ((high as u32 & 0x80) >> 6)
-                    | ((high as u32 & 0x40) << 3)
-                    | ((high as u32 & 0x20) << 12)
-                    | ((high as u32 & 0x10) << 21),
-                ((low as u32 & 8) >> 3)
-                    | ((low as u32 & 4) << 6)
-                    | ((low as u32 & 2) << 15)
-                    | ((low as u32 & 1) << 24)
-                    | ((high as u32 & 8) >> 2)
-                    | ((high as u32 & 4) << 7)
-                    | ((high as u32 & 2) << 16)
-                    | ((high as u32 & 1) << 25),
-            ];
-            n += 1;
-        }
-        table
-    };
-    let words = WORDS[u16::from_le_bytes([planes[0], planes[1]]) as usize];
+fn unpack_flash_pixels_with_table(nibble: &[u32; 16], planes: &[u8], out: &mut [u8]) {
+    let low = usize::from(planes[0]);
+    let high = usize::from(planes[1]);
+    let w0 = nibble[low >> 4] | (nibble[high >> 4] << 1);
+    let w1 = nibble[low & 15] | (nibble[high & 15] << 1);
     debug_assert_eq!(out.len(), 8);
     debug_assert_eq!(out.as_ptr() as usize & 3, 0);
     let output = out.as_mut_ptr().cast::<u32>();
     unsafe {
-        output.write(words[0].to_le());
-        output.add(1).write(words[1].to_le());
+        output.write(w0.to_le());
+        output.add(1).write(w1.to_le());
     }
+}
+
+#[cfg(test)]
+fn unpack_flash_pixels(planes: &[u8], out: &mut [u8]) {
+    let nibble = FLASH_NIBBLE_WORDS;
+    unpack_flash_pixels_with_table(&nibble, planes, out);
 }
 
 fn draw_flash_cells(frame: &FlashFrame, rows: &[u32], fb: &mut FrameBuffer) {
@@ -197,6 +337,7 @@ fn unpack_flash_cells(
     // Each accepted destination bit covers eight pixels. Expand those two
     // planes directly into the linear target; preserve every other pixel and
     // the target's palette instead of doing eight coordinate lookups/stores.
+    let nibble = FLASH_NIBBLE_WORDS;
     for ((source, target), &columns) in frame
         .packed()
         .chunks_exact(40)
@@ -205,7 +346,8 @@ fn unpack_flash_cells(
     {
         for column in 0..20 {
             if columns & (1 << column) != 0 {
-                unpack_flash_pixels(
+                unpack_flash_pixels_with_table(
+                    &nibble,
                     &source[column * 2..column * 2 + 2],
                     &mut target[column * 8..column * 8 + 8],
                 );
@@ -344,7 +486,7 @@ fn sync_field_text(
                     if new.is_empty() {
                         continue;
                     }
-                    let x = 8 + pokered_renderer::embedded_font::measure_text(before);
+                    let x = 8 + pokered_renderer::embedded_font::measure_text_indexed(before);
                     let y = if lang == Lang::Zh { 104 } else { 112 } + row as u32 * 12;
                     pokered_renderer::embedded_font::draw_text_indexed(
                         new,
@@ -384,6 +526,9 @@ pub(crate) struct FieldFlash {
     map: FlashFrame,
     map_cache: crate::render::OverworldBackgroundCache,
     map_key: crate::render::session::FlashMapVisualKey,
+    settled_return_key: Option<crate::render::session::FlashMapVisualKey>,
+    flash_bg_band: u8,
+    flash_bg_anim: (i8, Option<u8>),
     show_map: bool,
     linear_map_ready: bool,
     display_child: Option<DisplayChild>,
@@ -495,16 +640,8 @@ impl PokemonGame {
         // One live staging buffer serves both party text and the final map
         // redraw. Reusing it avoids a late contiguous allocation on GBA.
         let mut party = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        let mut map_cache = crate::render::OverworldBackgroundCache::background_only(160, 144);
-        if origin == RestorationOrigin::Flash {
-            crate::render::draw_overworld_background_cached(
-                &mut self.overworld,
-                &mut self.resources,
-                &mut party,
-                self.state.config.language,
-                &mut map_cache,
-            );
-        } else {
+        let map_cache = crate::render::OverworldBackgroundCache::background_only(160, 144);
+        if origin != RestorationOrigin::Flash {
             crate::render::draw_overworld_background(
                 &mut self.overworld,
                 &mut self.resources,
@@ -529,7 +666,9 @@ impl PokemonGame {
             );
         }
         let mut map = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
-        copy_flash_frame(&party, &mut map);
+        if origin != RestorationOrigin::Flash {
+            copy_flash_frame(&party, &mut map);
+        }
         let mut save_buffer2 = None;
         let mut error = None;
         if matches!(origin, RestorationOrigin::Save { .. }) {
@@ -564,7 +703,12 @@ impl PokemonGame {
         ) {
             self.draw(&mut party);
         } else {
-            party.clear(Rgba::WHITE);
+            if origin != RestorationOrigin::Flash {
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                pokered_renderer::gba_dma::clear_frame(&mut party);
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
+                party.clear(Rgba::WHITE);
+            }
             crate::render::draw_party_screen(
                 &self.party_screen,
                 self.resources.as_mut(),
@@ -623,6 +767,9 @@ impl PokemonGame {
             map,
             map_cache,
             map_key: crate::render::session::FlashMapVisualKey::new(),
+            settled_return_key: None,
+            flash_bg_band: 0,
+            flash_bg_anim: (0, None),
             show_map: false,
             linear_map_ready: false,
             display_child: None,
@@ -645,6 +792,39 @@ impl PokemonGame {
             Err(error) => flow.error = Some(error),
         }
         self.field_flash = Some(flow);
+    }
+
+    fn step_flash_background_band(&mut self, flow: &mut FieldFlash) {
+        const EDGES: [i32; 7] = [0, 24, 48, 72, 96, 120, 144];
+        if flow.origin != RestorationOrigin::Flash || flow.flash_bg_band >= 6 {
+            return;
+        }
+        if flow.flash_bg_band == 0 {
+            flow.flash_bg_anim = (
+                self.overworld.tile_anim.water_shift(),
+                self.overworld.tile_anim.flower_frame(),
+            );
+        }
+        let idx = usize::from(flow.flash_bg_band);
+        crate::render::draw_overworld_background_band(
+            &mut self.overworld,
+            &mut self.resources,
+            &mut flow.party,
+            self.state.config.language,
+            &mut flow.map_cache,
+            EDGES[idx]..EDGES[idx + 1],
+            flow.flash_bg_anim,
+        );
+        flow.flash_bg_band += 1;
+        if flow.flash_bg_band == 6 {
+            flow.linear_map_ready = true;
+        }
+    }
+
+    fn complete_flash_background(&mut self, flow: &mut FieldFlash) {
+        while flow.flash_bg_band < 6 {
+            self.step_flash_background_band(flow);
+        }
     }
 
     pub(super) fn update_field_flash(&mut self, input: &InputState) {
@@ -683,12 +863,14 @@ impl PokemonGame {
                 audio.play_sfx(SfxId::PressAB);
             }
         }
-        sync_field_text(
-            &mut flow,
-            self.overworld.displayed_field_dialogue(),
-            self.frame_count,
-            self.state.config.language,
-        );
+        if flow.flash_bg_band == 0 {
+            sync_field_text(
+                &mut flow,
+                self.overworld.displayed_field_dialogue(),
+                self.frame_count,
+                self.state.config.language,
+            );
+        }
         if !returned {
             let irq = flow
                 .irq
@@ -731,6 +913,7 @@ impl PokemonGame {
             self.field_flash = Some(flow);
             return;
         }
+        let lcd_was_off = !self.source_display.device().lcd_enabled();
         match self.service_field_flash(&mut flow) {
             Ok(_) if flow.soft_reset_requested => {
                 // Host reset must also discard this attached display owner;
@@ -755,6 +938,9 @@ impl PokemonGame {
             }
             Ok(true) => {
                 let foreground = self.overworld.source_foreground().cloned();
+                if let Some(key) = flow.settled_return_key.take() {
+                    self.restored_overworld_bg = Some((key, flow.map_cache));
+                }
                 self.handle_transition(GameScreen::Overworld);
                 if flow.origin.returns_to_map_with_actors() {
                     if let Some(foreground) = foreground {
@@ -762,7 +948,27 @@ impl PokemonGame {
                     }
                 }
             }
-            Ok(false) => self.field_flash = Some(flow),
+            Ok(false) => {
+                let step_band = flow.origin == RestorationOrigin::Flash
+                    && flow.flash_bg_band < 6
+                    && !flow.show_map
+                    && self
+                        .source_display
+                        .device()
+                        .background_palette_raster()
+                        .is_some_and(|raster| raster.is_white())
+                    && ((lcd_was_off && !self.source_display.device().lcd_enabled())
+                        || flow.irq.as_ref().is_some_and(|irq| {
+                            irq.attached
+                                && irq.background_is_map
+                                && irq.last_audio_no_note
+                                && (irq.delay.is_some() || irq.copy.is_some())
+                        }));
+                if step_band {
+                    self.step_flash_background_band(&mut flow);
+                }
+                self.field_flash = Some(flow);
+            }
             Err(error) => {
                 log::error!("FLASH restoration stopped: {error}");
                 flow.error = Some(error);
@@ -1222,7 +1428,11 @@ impl PokemonGame {
                 }
                 RestoreOperation::SetWindowY(144) => {
                     self.overworld.clear_retained_field_text();
-                    draw_flash_frame(&flow.map, &mut flow.party);
+                    if flow.origin == RestorationOrigin::Flash {
+                        self.complete_flash_background(flow);
+                    } else {
+                        draw_flash_frame(&flow.map, &mut flow.party);
+                    }
                     flow.linear_map_ready = true;
                     flow.show_map = true;
                     flow.irq
@@ -1258,9 +1468,10 @@ impl PokemonGame {
                     // Party text has returned and the retained map is on
                     // screen. Its old staging buffer can now render the new
                     // map without another full framebuffer allocation.
+                    let mut map_unchanged = false;
                     if flow.origin == RestorationOrigin::Flash {
                         debug_assert!(flow.linear_map_ready && flow.show_map);
-                        crate::render::draw_overworld_background_cached(
+                        map_unchanged = crate::render::draw_overworld_background_cached(
                             &mut self.overworld,
                             &mut self.resources,
                             &mut flow.party,
@@ -1273,7 +1484,7 @@ impl PokemonGame {
                             &mut self.resources,
                             &mut flow.party,
                             self.state.config.language,
-                        );
+                            );
                     }
                     if flow.origin.returns_to_map_with_actors() {
                         crate::render::draw_overworld(
@@ -1305,7 +1516,9 @@ impl PokemonGame {
                         copy_flash_frame(&flow.party, &mut flow.map);
                     }
                     flow.linear_map_ready = true;
-                    flow.map_key = crate::render::session::FlashMapVisualKey::new();
+                    if !map_unchanged {
+                        flow.map_key = crate::render::session::FlashMapVisualKey::new();
+                    }
                 }
                 RestoreOperation::LoadMapPalettes => {
                     let offset = self.overworld.dark_cave.map_pal_offset;
@@ -1423,6 +1636,26 @@ impl PokemonGame {
                         access: None,
                     }) {
                         Ok(_) => {
+                            if flow.origin == RestorationOrigin::Flash
+                                && flow.show_map
+                                && flow.linear_map_ready
+                            {
+                                flow.settled_return_key = self
+                                    .source_display
+                                    .device()
+                                    .background_palette_raster()
+                                    .filter(|raster| {
+                                        raster.spans().len() == 1 && raster.spans()[0].palette == 0xe4
+                                    })
+                                    .map(|raster| {
+                                        flow.map_key
+                                            .clone()
+                                            .with_palette_revision(
+                                                Self::effective_flash_palette_revision(Some(raster)),
+                                            )
+                                            .with_map_view()
+                                    });
+                            }
                             self.source_display.set_vblank_dispatch_enabled(false);
                             self.source_display
                                 .device_mut()
@@ -1514,6 +1747,22 @@ impl PokemonGame {
             && self.credits.is_none()
     }
 
+    fn effective_flash_palette_revision(
+        raster: Option<&pokered_core::overworld::display_device::BackgroundPaletteRaster>,
+    ) -> u64 {
+        let Some(raster) = raster else {
+            return 0;
+        };
+        let spans = raster.spans();
+        if spans.is_empty()
+            || (spans.len() == 1 && spans[0].start == 0 && spans[0].palette == 0xe4)
+        {
+            0
+        } else {
+            raster.revision()
+        }
+    }
+
     pub(crate) fn field_flash_map_key(&self) -> Option<crate::render::session::FlashMapVisualKey> {
         if !self.field_flash_frame_visible() || self.field_flash_is_white() {
             return None;
@@ -1521,12 +1770,10 @@ impl PokemonGame {
         let flow = self.field_flash.as_ref()?;
         let device = self.source_display.device();
         let key = flow.map_key.clone().with_palette_revision(
-            device
-                .background_palette_raster()
-                .map_or(0, |raster| raster.revision()),
+            Self::effective_flash_palette_revision(device.background_palette_raster()),
         );
         if flow.show_map {
-            Some(key)
+            Some(key.with_map_view())
         } else if flow.origin == RestorationOrigin::Submenu
             && self.overworld.displayed_field_dialogue().is_none()
         {
@@ -1542,6 +1789,15 @@ impl PokemonGame {
                         .map_or(0, |raster| raster.revision()),
                 ),
             )
+        } else if matches!(
+            flow.origin,
+            RestorationOrigin::Flash | RestorationOrigin::Party
+        ) {
+            let arrow = flow
+                .rendered_text
+                .as_ref()
+                .is_some_and(|(_, arrow)| *arrow);
+            Some(key.with_party_dialogue(flow.rendered_dialogue_state, arrow))
         } else {
             None
         }
@@ -1558,12 +1814,19 @@ impl PokemonGame {
 
     pub(crate) fn draw_field_flash_palette(&self, fb: &mut FrameBuffer) {
         let flow = self.field_flash.as_ref().unwrap();
-        if flow.linear_map_ready {
+        let raster = self.source_display.device().background_palette_raster();
+        if !flow.show_map || flow.linear_map_ready {
+            #[cfg(all(target_os = "none", target_arch = "arm"))]
+            {
+                copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
+                return;
+            }
+            #[cfg(not(all(target_os = "none", target_arch = "arm")))]
             copy_linear_flash_frame(&flow.party, fb);
         } else {
             draw_flash_frame(&flow.map, fb);
         }
-        if let Some(raster) = self.source_display.device().background_palette_raster() {
+        if let Some(raster) = raster {
             apply_flash_palette(raster, fb);
         }
     }
@@ -1574,18 +1837,33 @@ impl PokemonGame {
             #[cfg(not(all(target_os = "none", target_arch = "arm")))]
             fb.clear(Rgba::WHITE);
             #[cfg(all(target_os = "none", target_arch = "arm"))]
-            pokered_renderer::gba_dma::clear_frame(fb);
+            {
+                fb.reset_palette();
+                pokered_renderer::gba_dma::clear_frame(fb);
+            }
             return;
         }
+        let raster = self.source_display.device().background_palette_raster();
         if flow.show_map {
             if flow.linear_map_ready {
+                #[cfg(all(target_os = "none", target_arch = "arm"))]
+                {
+                    copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
+                    return;
+                }
+                #[cfg(not(all(target_os = "none", target_arch = "arm")))]
                 copy_linear_flash_frame(&flow.party, fb);
             } else {
                 draw_flash_frame(&flow.map, fb);
             }
-            if let Some(raster) = self.source_display.device().background_palette_raster() {
+            if let Some(raster) = raster {
                 apply_flash_palette(raster, fb);
             }
+            return;
+        }
+        #[cfg(all(target_os = "none", target_arch = "arm"))]
+        if flow.origin != RestorationOrigin::Submenu {
+            copy_and_apply_linear_flash_palette(&flow.party, raster, fb);
             return;
         }
         copy_linear_flash_frame(&flow.party, fb);
@@ -1597,7 +1875,7 @@ impl PokemonGame {
                 draw_submenu_objects(raster, &flow.patterns, fb);
             }
         }
-        if let Some(raster) = self.source_display.device().background_palette_raster() {
+        if let Some(raster) = raster {
             apply_flash_palette(raster, fb);
         }
     }
@@ -1777,6 +2055,69 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn flash_session_incremental_render_and_linear_palette_match_full_draw() {
+        use dotzuki_renderer::palette::GbColor;
+        let mut game = PokemonGame::new(GameVersion::Red);
+        let root = pokered_renderer::resource::AssetRoot::auto_detect().unwrap();
+        game.resources = Some(ResourceManager::new(root));
+        game.overworld = OverworldScreen::new(MapId::RockTunnel1F, None, PokemonRedData);
+        game.overworld.dark_cave.map_pal_offset = 0;
+        game.state.screen = GameScreen::PartyScreen;
+        game.overworld.set_no_text_delay(false);
+        begin_fixture_flash(&mut game, "A blinding FLASH lights the area!");
+
+        let mut session = crate::render::session::RenderSession::new();
+        let mut retained = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+        let mut reused_text = 0usize;
+        let mut partial_return = false;
+        for tick in 0..260 {
+            let mut input = InputState::new();
+            if tick == 140 {
+                input.press(GbButton::A);
+            }
+            let was_flash = game.field_flash.is_some();
+            game.update(&input);
+            let update = session.render(&mut game, &mut retained, &mut scroll);
+            if tick < 140 && matches!(update, crate::render::session::FrameUpdate::Reuse) {
+                reused_text += 1;
+            }
+            if was_flash && game.field_flash.is_none() {
+                partial_return = matches!(update, crate::render::session::FrameUpdate::Damage(_));
+            }
+            let mut full = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+            game.draw(&mut full);
+            assert_eq!(retained.packed(), full.packed(), "tick={tick}");
+            assert_eq!(retained.display_palette(), full.display_palette(), "tick={tick}");
+
+            if let Some(raster) = game.source_display.device().background_palette_raster() {
+                let mut linear = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+                    RenderConfig::new(160, 144),
+                    Rgba::WHITE,
+                );
+                for y in 0..144u32 {
+                    for x in 0..160u32 {
+                        let c = ((x * 3 + y * 5) & 3) as u8;
+                        linear.set_pixel_index(x, y, GbColor::from_u8(c));
+                    }
+                }
+                let mut packed_ref = FlashFrame::new(RenderConfig::new(160, 144), Rgba::WHITE);
+                pack_flash_frame(&linear, &mut packed_ref);
+                apply_linear_flash_palette(raster, &mut linear);
+                apply_flash_palette(raster, &mut packed_ref);
+                for y in 0..144u32 {
+                    for x in 0..160u32 {
+                        assert_eq!(linear.get_index(x, y), packed_ref.get_index(x, y));
+                    }
+                }
+            }
+        }
+        assert_eq!(game.state.screen, GameScreen::Overworld);
+        assert!(reused_text > 60, "expected static text frames to reuse: {reused_text}");
+        assert!(partial_return, "expected partial actor-only damage on Overworld return");
     }
 
     #[test]
@@ -2556,6 +2897,39 @@ mod tests {
                 game.update(&InputState::new());
                 assert!(!game.source_display.active_vblank());
             }
+        }
+    }
+
+    #[test]
+    fn fused_linear_palette_mapper_matches_in_place_for_all_palettes() {
+        use dotzuki_renderer::palette::GbColor;
+        use pokered_core::overworld::display_device::DisplayDevice;
+        let mut src = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+            RenderConfig::new(160, 144),
+            Rgba::WHITE,
+        );
+        for (i, slot) in src.indices_mut().iter_mut().enumerate() {
+            *slot = ((i * 7 + i / 160 * 3) & 3) as u8;
+        }
+        let shadow = [0u8; 160];
+        for pal in [0x00u8, 0x40, 0x90, 0xe4, 0xff, 0x1b, 0x27, 0xb4] {
+            let mut dev = DisplayDevice::powered_off(0);
+            dev.write_port(0xff40, 0x91, 0xc3).unwrap();
+            dev.begin_native_background_scanout(0xe4);
+            dev.observe_time(20 * 456 + 12, &shadow).unwrap();
+            dev.write_port(0xff47, pal, 0xc3).unwrap();
+            dev.observe_time(70_224 + 456, &shadow).unwrap();
+            let raster = dev.background_palette_raster().unwrap();
+
+            let mut expected = src.clone();
+            apply_linear_flash_palette(raster, &mut expected);
+
+            let mut actual = dotzuki_renderer::LinearRgbaIndexedFrameBuffer::<GbColor>::new(
+                RenderConfig::new(160, 144),
+                Rgba::BLACK,
+            );
+            copy_and_apply_linear_flash_palette(&src, Some(raster), &mut actual);
+            assert_eq!(actual.indices(), expected.indices(), "pal={pal:#04x}");
         }
     }
 }
