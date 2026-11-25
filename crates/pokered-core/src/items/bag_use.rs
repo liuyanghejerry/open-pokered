@@ -354,7 +354,13 @@ pub fn apply_item_to_pokemon(item: ItemId, mon: &mut Pokemon, pokedex: &mut Poke
         return match raise_level_with_rare_candy(mon) {
             Some(new_level) => ItemApplyOutcome::RareCandyLevelUp {
                 new_level,
-                moves: crate::pokemon::move_learning::moves_at_level(mon.species, new_level),
+                moves: crate::pokemon::move_learning::first_move_at_level_for(
+                    mon.species,
+                    new_level,
+                    &mon.moves,
+                )
+                .into_iter()
+                .collect(),
             },
             None => no_effect(),
         };

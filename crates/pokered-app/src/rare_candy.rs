@@ -365,24 +365,23 @@ impl PokemonGame {
             return false;
         }
         if let Some(mon) = self.save_data.party.get_mut(outcome.party_index) {
-            let new_moves: Vec<_> =
-                pokered_core::pokemon::move_learning::moves_at_level(outcome.to, mon.level)
-                    .into_iter()
-                    .filter(|id| !mon.moves.contains(id))
-                    .collect();
+            let candidate = pokered_core::pokemon::move_learning::first_move_at_level_for(
+                outcome.to,
+                mon.level,
+                &mon.moves,
+            );
             pokered_core::pokemon::evolution::finalize_evolution(
                 mon,
                 &mut self.save_data.game_data.pokedex,
                 outcome.to,
             );
             // Species-change learning is applied by the existing evolution
-            // helper. Announce learned moves, and offer its blocked moves,
-            // once the movie returns, in their source learnset order.
-            flow.moves.extend(
-                new_moves
-                    .into_iter()
-                    .map(|id| (id, mon.moves.contains(&id))),
-            );
+            // helper (`LearnMoveFromLevelUp`: first matching level entry only).
+            if let Some(id) = candidate {
+                if mon.moves.contains(&id) {
+                    flow.moves.push_back((id, true));
+                }
+            }
         }
         true
     }

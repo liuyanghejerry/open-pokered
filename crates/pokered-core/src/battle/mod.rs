@@ -63,6 +63,12 @@ mod medicine_result_tests;
 #[cfg(test)]
 mod pp_restore_caller_tests;
 #[cfg(test)]
+mod mutual_ko_tests;
+#[cfg(test)]
+mod safari_rng_tests;
+#[cfg(test)]
+mod select_swap_tests;
+#[cfg(test)]
 mod exp_participant_tests;
 #[cfg(test)]
 mod simultaneous_faint_tests;
@@ -606,6 +612,7 @@ pub struct BattleInput {
     pub right: bool,
     pub a: bool,
     pub b: bool,
+    pub select: bool,
 }
 
 impl BattleInput {
@@ -617,6 +624,7 @@ impl BattleInput {
             right: false,
             a: false,
             b: false,
+            select: false,
         }
     }
 }
@@ -763,43 +771,13 @@ fn format_cannot_move(reason: &CannotMoveReason) -> &'static str {
         CannotMoveReason::ConfusedSelfHit => "hurt itself in confusion!",
         CannotMoveReason::MoveDisabled => "is disabled!",
         CannotMoveReason::FullyParalyzed => "is fully paralyzed!",
+        CannotMoveReason::BeganToNap => "began\nto nap!",
+        CannotMoveReason::LoafingAround => "is\nloafing around.",
+        CannotMoveReason::WontObey => "won't\nobey!",
+        CannotMoveReason::TurnedAway => "turned\naway!",
+        CannotMoveReason::IgnoredOrders => "ignored orders!",
+        CannotMoveReason::WontObeySelfHit => "won't\nobey!",
     }
-}
-
-/// `HandleSelfConfusionDamage` (core.asm:3672) for the disobedience "won't
-/// obey!" outcome: a typeless 40-power physical self-hit using the mon's own
-/// Attack vs own Defense — no crit, always hits, max roll. Mirrors the stack
-/// engine's confusion self-hit (`confusion_self_hit_damage`), including its
-/// stage-0 convention; the stats are the badge-boosted working copy
-/// (`wBattleMon*`) when present.
-fn disobedience_self_hit_damage(bs: &BattleState) -> u16 {
-    use crate::battle::damage::{calculate_damage, DamageParams};
-    use pokered_data::types::PokemonType;
-    let mon = bs.player.active_mon();
-    let (atk, def) = match bs.player.staged_badge_stats.or(bs.player.badge_boosted_stats) {
-        Some(b) => (b[0], b[1].max(1)),
-        None => (mon.attack, mon.defense.max(1)),
-    };
-    let params = DamageParams {
-        attacker_level: mon.level,
-        move_power: 40,
-        move_type: PokemonType::Normal,
-        move_id: MoveId::None,
-        attack_stat: atk,
-        defense_stat: def,
-        attack_stage: 0,
-        defense_stage: 0,
-        attacker_type1: PokemonType::Normal,
-        attacker_type2: PokemonType::Normal,
-        defender_type1: PokemonType::Normal,
-        defender_type2: PokemonType::Normal,
-        is_critical: false,
-        random_value: 255,
-        has_reflect_or_light_screen: false,
-        is_explode_effect: false,
-        attacker_burned: false,
-    };
-    calculate_damage(&params).damage
 }
 
 /// HP-bar drain/refill animation state (original `engine/gfx/hp_bar.asm`
@@ -3001,18 +2979,68 @@ learn {learn_name}!")];
         let menu_input = MenuInput {
             up: input.up,
             down: input.down,
-            a: input.a,
-            b: input.b,
+            // SelectMenuItem checks Up/Down before SELECT or A/B (core.asm:2614-2620).
+            a: input.a && !input.up && !input.down,
+            b: input.b && !input.up && !input.down,
         };
+        if input.select
+            && !input.up
+            && !input.down
+            && !self.link_mode
+            && self.mimic_choice.is_none()
+        {
+            let swap = self.move_menu.as_mut().and_then(MoveMenuState::select_swap);
+            if let Some((first_row, second_row)) = swap {
+                if let Some(bs) = self.battle_state.as_mut() {
+                    let player = &mut bs.player;
+                    let first = Self::move_menu_row_to_slot(player.active_mon(), first_row)
+                        .unwrap_or(first_row);
+                    let second = Self::move_menu_row_to_slot(player.active_mon(), second_row)
+                        .unwrap_or(second_row);
+                    if first < 4 && second < 4 {
+                        let mon = player.active_mon_mut();
+                        mon.moves.swap(first, second);
+                        mon.pp.swap(first, second);
+                        mon.pp_ups.swap(first, second);
+                        if let Some((index, original)) = &mut player.original_identity {
+                            if *index == player.active_pokemon_index {
+                                original.moves.swap(first, second);
+                                original.pp.swap(first, second);
+                                original.pp_ups.swap(first, second);
+                            }
+                        }
+                        let disabled = usize::from(player.disabled_move);
+                        if disabled == first + 1 {
+                            player.disabled_move = second as u8 + 1;
+                        } else if disabled == second + 1 {
+                            player.disabled_move = first as u8 + 1;
+                        }
+                    }
+                }
+            }
+            // Both SELECT branches jump to MoveSelectionMenu (core.asm:2811, 2836).
+            self.enter_fight_move_menu(None);
+            return ScreenAction::Continue;
+        }
         if let Some(ref mut mm) = self.move_menu {
             if let Some(result) = mm.update_frame(menu_input) {
                 match result {
                     MoveMenuResult::Selected(idx) => {
                         if let Some((action, None)) = self.mimic_choice {
-                            self.mimic_choice = Some((action, Some(idx)));
+                            let foe_slot = self
+                                .battle_state
+                                .as_ref()
+                                .and_then(|bs| Self::move_menu_row_to_slot(bs.enemy.active_mon(), idx))
+                                .unwrap_or(idx);
+                            self.mimic_choice = Some((action, Some(foe_slot)));
                             self.execute_turn_with_move(action);
                             return ScreenAction::Continue;
                         }
+                        let phys_idx = self
+                            .battle_state
+                            .as_ref()
+                            .and_then(|bs| Self::move_menu_row_to_slot(bs.player.active_mon(), idx))
+                            .unwrap_or(idx);
                         if self.link_mode {
                             // Link battle: defer execution until the
                             // remote action arrives (the original
@@ -3029,11 +3057,11 @@ learn {learn_name}!")];
                             });
                             self.link_pending_local_action =
                                 Some(crate::link::protocol::LinkAction::UseMove(
-                                    locked_idx.unwrap_or(idx as u8),
+                                    locked_idx.unwrap_or(phys_idx as u8),
                                 ));
                             self.phase = BattlePhase::LinkWaiting;
                         } else {
-                            self.execute_turn_with_move(idx);
+                            self.execute_turn_with_move(phys_idx);
                         }
                     }
                     MoveMenuResult::Cancelled => {
@@ -3116,9 +3144,16 @@ learn {learn_name}!")];
     }
 
     fn rebuild_fight_move_menu(&mut self, saved_row: Option<usize>) {
+        let swap_armed = self
+            .move_menu
+            .as_ref()
+            .and_then(MoveMenuState::swap_armed_slot);
         if let Some(bs) = self.battle_state.as_ref() {
             let mut menu = Self::build_move_menu_from_state(bs);
-            if let Some(row) = saved_row { menu.set_cursor(row); }
+            if let Some(row) = saved_row {
+                menu.set_cursor(row);
+            }
+            menu.restore_swap_armed(swap_armed);
             self.move_menu = Some(menu);
         }
     }
@@ -3442,7 +3477,7 @@ learn {learn_name}!")];
     /// `engine/battle/core.asm` order: action → out-of-balls check → per-turn upkeep
     /// (`PrintSafariZoneBattleText`) → flee roll. See [`safari`](crate::battle::safari).
     fn resolve_safari_action(&mut self, action: menu::SafariMenuAction) {
-        use crate::battle::capture::{CaptureRandoms, CaptureResult};
+        use crate::battle::capture::CaptureResult;
         use crate::battle::safari::{roll_bait_rock_amount, SafariUpkeep};
         use menu::SafariMenuAction;
 
@@ -3490,11 +3525,12 @@ learn {learn_name}!")];
                 // including a miss or a break-out. It does not spend another ball.
                 let thrower = self.player_name.as_deref().unwrap_or("RED").to_uppercase();
                 msgs.push(format!("{} used\nSAFARI BALL!", thrower));
-                // Rand1 rejection-sampled inside throw_ball (the `.loop`).
+                // The existing battle owner supplies Rand1's rejection loop
+                // followed by Rand2 only if ItemUseBall's guards reach it.
                 let result = self
                     .safari
                     .as_mut()
-                    .map(|s| s.throw_ball(max_hp, cur_hp, status, crate::rng::random(), &mut crate::rng::random));
+                    .map(|s| s.throw_ball_with_rng(max_hp, cur_hp, status, &mut || self.rng.next_u8()));
                 match result {
                     Some(CaptureResult::Captured) => {
                         caught = true;
@@ -3534,14 +3570,14 @@ learn {learn_name}!")];
                 }
             }
             SafariMenuAction::Bait => {
-                let amt = roll_bait_rock_amount(&mut || crate::rng::random());
+                let amt = roll_bait_rock_amount(&mut || self.rng.next_u8());
                 if let Some(s) = self.safari.as_mut() {
                     s.apply_bait(amt);
                 }
                 msgs.push("Threw some BAIT!".to_string());
             }
             SafariMenuAction::Rock => {
-                let amt = roll_bait_rock_amount(&mut || crate::rng::random());
+                let amt = roll_bait_rock_amount(&mut || self.rng.next_u8());
                 if let Some(s) = self.safari.as_mut() {
                     s.apply_rock(amt);
                 }
@@ -3577,7 +3613,7 @@ learn {learn_name}!")];
         let fled = self
             .safari
             .as_ref()
-            .map_or(false, |s| s.flee_roll(speed, crate::rng::random()));
+            .map_or(false, |s| s.flee_roll_with_rng(speed, || self.rng.next_u8()));
         if fled {
             msgs.push(format!("{} ran away!", name));
             self.show_text_then(msgs, escaped_over);
@@ -4498,111 +4534,38 @@ learn {learn_name}!")];
             _ => (false, false),
         };
 
-        // CheckForDisobedience (core.asm:3828, called from ExecutePlayerMove after
-        // PrintGhostText and the status-condition gates): a TRADED mon above its
-        // badge threshold may refuse its orders — nap, loaf around, hit itself,
-        // or use a different move. The deterministic no-move states the original
-        // resolves first (sleep/freeze/flinch/recharge) and the charging strike
-        // (which explicitly SKIPS the check) are excluded here; the confusion and
-        // full-paralysis ROLLS live inside the stack's BeforeMove gates, so for a
-        // confused/paralyzed traded mon this check fires BEFORE those rolls —
-        // in the original they resolve first (a documented ordering deviation:
-        // the turn is lost either way; only the message attribution differs).
-        let mut move_index = move_index;
-        let mut disobedience_msgs: Vec<String> = Vec::new();
-        let mut player_disobeyed = false;
-        if !player_scared {
-            if let Some(ref mut bs) = self.battle_state {
+        // CheckForDisobedience (core.asm:3099, 3830-4007): evaluated on the
+        // player's actual move execution inside PokeredRules::BeforeMove (order 92),
+        // AFTER PrintGhostText, sleep, freeze, trapping hold, flinch, recharge,
+        // disable tick, confusion tick + self-hit, disabled-move veto, paralysis,
+        // and multi-turn continuations — and skipped completely in Link Battles
+        // (`wLinkState == LINK_STATE_BATTLING`, core.asm:3833-3838) or if a faster
+        // enemy KO'd the player before the player's turn.
+        let obedience_ctx = (!player_scared).then(|| {
+            self.battle_state.as_ref().map(|bs| {
                 let p = &bs.player;
-                let skip = matches!(
-                    p.active_mon().status,
-                    StatusCondition::Sleep(_) | StatusCondition::Freeze
-                ) || p.has_status1(state::status1::FLINCHED)
-                    || p.has_status1(state::status1::CHARGING_UP)
-                    || p.has_status2(state::status2::NEEDS_TO_RECHARGE);
-                if !skip {
-                    let sel_slot = if move_is_locked(p) {
-                        p.selected_move_index as usize
-                    } else {
-                        move_index
-                    };
-                    let mut name_buf = [0u8; crate::battle::state::NAME_TEXT_BUF];
-                    let (level, ot_id, ot_name, moves, pp, has_disabled, name) = {
-                        let m = p.active_mon();
-                        (
-                            m.level,
-                            m.ot_id,
-                            m.ot_name,
-                            m.moves,
-                            m.pp,
-                            p.disabled_move > 0,
-                            m.display_name(&mut name_buf),
-                        )
-                    };
-                    if crate::battle::obedience::is_traded_for_with_name(ot_id, bs.player_id, &ot_name) {
-                        use crate::battle::obedience::DisobedienceOutcome as Outcome;
-                        // In a link battle the disobedience rolls come from the
-                        // shared stream (the original draws BattleRandom here).
-                        let mut link_rng = self.link_rng.as_mut();
-                        let battle_rng = &mut self.rng;
-                        let mut draw = || match &mut link_rng {
-                            Some(r) => r.next_u8(),
-                            None => dotzuki_engine::battle::rng::BattleRng::next_u8(battle_rng),
-                        };
-                        let outcome = crate::battle::obedience::check_disobedience(
-                            level,
-                            bs.player_badges,
-                            sel_slot.min(3),
-                            &moves,
-                            &pp,
-                            has_disabled,
-                            &mut draw,
-                        );
-                        match outcome {
-                            Outcome::Obey => {}
-                            Outcome::UseRandomMove(slot) => {
-                                // No special text — the mon just uses that move.
-                                player_move_id = moves[slot];
-                                move_index = slot;
-                            }
-                            Outcome::Nap(turns) => {
-                                bs.player.active_mon_mut().status =
-                                    StatusCondition::Sleep(turns);
-                                disobedience_msgs.push(format!("{name} began\nto nap!"));
-                                player_disobeyed = true;
-                            }
-                            Outcome::LoafAround => {
-                                disobedience_msgs.push(format!("{name} is\nloafing around."));
-                                player_disobeyed = true;
-                            }
-                            Outcome::WontObey => {
-                                disobedience_msgs.push(format!("{name} won't\nobey!"));
-                                player_disobeyed = true;
-                            }
-                            Outcome::TurnedAway => {
-                                disobedience_msgs.push(format!("{name} turned\naway!"));
-                                player_disobeyed = true;
-                            }
-                            Outcome::IgnoredOrders => {
-                                disobedience_msgs.push(format!("{name}\nignored orders!"));
-                                player_disobeyed = true;
-                            }
-                            Outcome::WontObeySelfHit => {
-                                disobedience_msgs.push(format!("{name} won't\nobey!"));
-                                // HandleSelfConfusionDamage (core.asm:3672): a
-                                // typeless 40-power self-hit, always hits, no crit.
-                                let dmg = disobedience_self_hit_damage(bs);
-                                let mon = bs.player.active_mon_mut();
-                                mon.hp = mon.hp.saturating_sub(dmg);
-                                disobedience_msgs
-                                    .push("It hurt itself in\nits confusion!".to_string());
-                                player_disobeyed = true;
-                            }
-                        }
-                    }
+                let sel_slot = if bs.player.selected_move == MoveId::Struggle
+                    && bs.player.selected_move_index >= 4
+                {
+                    4
+                } else if move_is_locked(p) {
+                    p.selected_move_index as usize
+                } else {
+                    move_index
+                };
+                let m = p.active_mon();
+                pokered_rules::PlayerObedienceContext {
+                    link_battle: self.link_mode || bs.link_battle,
+                    is_traded: crate::battle::obedience::is_traded_for_with_name(
+                        m.ot_id,
+                        bs.player_id,
+                        &m.ot_name,
+                    ),
+                    badges: bs.player_badges,
+                    selected_slot: sel_slot,
                 }
-            }
-        }
+            })
+        }).flatten();
 
         // Native called-move resolution runs after status gates. Keep the original
         // selected moves here so a Metronome result cannot change turn priority.
@@ -4643,6 +4606,7 @@ learn {learn_name}!")];
 
             pokered_rules::install_canonical();
             pokered_rules::clear_current_moves();
+            pokered_rules::set_player_obedience_context(obedience_ctx);
             pokered_rules::set_current_move(BattlerRef::PLAYER, player_move);
             pokered_rules::set_current_move(BattlerRef::OPPONENT, enemy_move);
 
@@ -4679,8 +4643,6 @@ learn {learn_name}!")];
                 // entry); we narrate "flew up high!" etc. for that transition below.
                 let p_was_charging = bs.player.has_status1(CHARGING_UP);
                 let e_was_charging = bs.enemy.has_status1(CHARGING_UP);
-                let gather = !p_was_charging && matches!(player_move.effect,
-                    pokered_data::moves::MoveEffect::FlyEffect | pokered_data::moves::MoveEffect::ChargeEffect);
                 // Substitute presence BEFORE the turn — to narrate a doll raised or
                 // broken (the write-back below updates HAS_SUBSTITUTE_UP).
                 let p_had_sub = bs.player.has_status2(crate::battle::state::status2::HAS_SUBSTITUTE_UP);
@@ -4696,7 +4658,7 @@ learn {learn_name}!")];
                     });
                 }
                 let actions = [
-                    if player_scared || player_disobeyed {
+                    if player_scared {
                         BattleAction::<pokered_rules::PokeredRules>::Nothing
                     } else {
                         BattleAction::Fight { move_: player_move_id }
@@ -4726,12 +4688,13 @@ learn {learn_name}!")];
                     &mut effects,
                     actions,
                     rng,
-                    &mut |state, effects, actor, action, rng| {
+                    &mut |state, effects, actor, _action, rng| {
                         if actor != BattlerRef::OPPONENT {
                             return;
                         }
                         pokered_rules::runtime::apply_engine_to_legacy(bs, state, effects);
-                        Self::consume_player_pp_charge(bs, state, effects, entry_pp, gather);
+                        let player_gathered = !p_was_charging && bs.player.has_status1(CHARGING_UP);
+                        Self::consume_player_pp_charge(bs, state, effects, entry_pp, player_gathered);
                         let ai_action =
                             ai_cfg.filter(|_| self.enemy_ai_count != 0).and_then(|cfg| {
                                 Self::decide_enemy_ai_action_to_state(
@@ -4761,12 +4724,20 @@ learn {learn_name}!")];
                                 effect_order: 0,
                                 kind: pokered_rules::PokeVolatile::TurnSuppressed,
                             });
-                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. } | pokered_rules::PokeVolatile::PayDayScattered { .. })).cloned());
+                            next_effects.extend(effects.iter().filter(|entry| matches!(entry.kind, pokered_rules::PokeVolatile::CalledMove { .. } | pokered_rules::PokeVolatile::DisobeyedMove { .. } | pokered_rules::PokeVolatile::BlockedAction { .. } | pokered_rules::PokeVolatile::PayDayScattered { .. })).cloned());
                             *state = next_state;
                             *effects = next_effects;
                         }
                     },
                 );
+                pokered_rules::set_player_obedience_context(None);
+                for entry in &effects {
+                    if let pokered_rules::PokeVolatile::DisobeyedMove { resolved, .. } = entry.kind {
+                        if entry.host == BattlerRef::PLAYER {
+                            player_move_id = resolved;
+                        }
+                    }
+                }
                 for entry in &effects {
                     if let pokered_rules::PokeVolatile::CalledMove { caller, resolved, failed } = entry.kind {
                         let label = match caller { MoveId::Metronome => "METRONOME", _ => "MIRROR MOVE" };
@@ -4787,7 +4758,8 @@ learn {learn_name}!")];
                     &log,
                     bs.player.party.iter().any(|mon| mon.hp > 0),
                 );
-                Self::consume_player_pp_charge(bs, &mut state, &mut effects, entry_pp, gather);
+                let player_gathered = !p_was_charging && bs.player.has_status1(CHARGING_UP);
+                Self::consume_player_pp_charge(bs, &mut state, &mut effects, entry_pp, player_gathered);
                 // Track the last move each side ACTUALLY used (for Mimic / Mirror
                 // Move). The driver logs MoveUsed only for a move that passed the
                 // BeforeMove gates and executed, so a blocked / asleep / recharge /
@@ -4941,29 +4913,6 @@ learn {learn_name}!")];
                 combined.append(&mut msgs);
                 msgs = combined;
             }
-            // Disobedience narration, placed in speed order: the lines print where
-            // the player's (forfeited) move would have happened — leading when the
-            // player moves first, trailing the enemy's move text otherwise.
-            if !disobedience_msgs.is_empty() {
-                // The tie-break roll draws from the shared stream in link
-                // battles (original: `call BattleRandom` for the speed tie).
-                let order_rand = self.next_battle_random();
-                let player_first = self
-                    .battle_state
-                    .as_ref()
-                    .map(|bs| {
-                        crate::battle::turn_order::determine_order(bs, order_rand)
-                            == crate::battle::turn_order::TurnOrder::PlayerFirst
-                    })
-                    .unwrap_or(true);
-                if player_first {
-                    let mut combined = core::mem::take(&mut disobedience_msgs);
-                    combined.append(&mut msgs);
-                    msgs = combined;
-                } else {
-                    msgs.extend(disobedience_msgs);
-                }
-            }
             // Player-first AI was already applied before its residual tick. Its
             // item/switch narration follows the player's move text.
             msgs.append(&mut ai_msgs);
@@ -5106,11 +5055,12 @@ learn {learn_name}!")];
         }
         // Reads the *real* enemy HP from battle_state — `self.enemy_hp` is
         // the displayed value, which lags behind during the HP-bar drain.
-        let enemy_fainted = self
-            .battle_state
-            .as_ref()
-            .is_some_and(|bs| bs.enemy.active_mon().hp == 0);
-        if enemy_fainted {
+        let can_gain_exp = self.battle_state.as_ref().is_some_and(|bs| {
+            bs.enemy.active_mon().hp == 0 && bs.player.party.iter().any(|mon| mon.hp > 0)
+        });
+        // FaintEnemyPokemon returns before GainExperience when AnyPartyAlive
+        // fails (core.asm:808-812); blackout must not enter the EXP caller.
+        if can_gain_exp {
             let exp_msgs = self.process_exp_gain();
             msgs.extend(exp_msgs);
         }
@@ -6818,6 +6768,7 @@ mod ghost_tests {
                 right: false,
                 a: true,
                 b: false,
+                select: false,
             });
         }
         visited
@@ -8206,3 +8157,6 @@ mod npc_secondary_stat_drop_tests;
 
 #[cfg(test)]
 mod secondary_ko_tests;
+
+#[cfg(test)]
+mod disobedience_fidelity_tests;

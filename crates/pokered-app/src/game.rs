@@ -4954,6 +4954,7 @@ impl PokemonGame {
                     right: input.is_just_pressed(GbButton::Right),
                     a: input.is_just_pressed(GbButton::A) && !caught_sound_holds_input && !demo_animation_holds_input,
                     b: input.is_just_pressed(GbButton::B) && !caught_sound_holds_input && !demo_animation_holds_input,
+                    select: input.is_just_pressed(GbButton::Select),
                 };
                 // Only an actual ball caller needs its text/animation gate.
                 if self.battle_vfx.ball_result_ready()

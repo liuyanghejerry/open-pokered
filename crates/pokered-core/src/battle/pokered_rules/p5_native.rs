@@ -852,7 +852,8 @@ pub fn paralysis_gate(
 /// Confusion self-hit damage — typeless 40-power physical hit using the mover's OWN
 /// Attack vs OWN Defense, no crit, max roll (re-homes legacy
 /// `move_execution` `calc_confusion_self_hit`) through pokered's damage authority.
-fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> u16 {
+/// Shared by `HandleSelfConfusionDamage` on disobedience self-hits (`core.asm:3906`).
+pub(super) fn confusion_self_hit_damage(ctx: &BattleCtx<'_, PokeredRules>, who: BattlerRef) -> u16 {
     use crate::battle::damage::{calculate_damage, DamageParams};
     use crate::battle::stat_stages::StatIndex;
     let b = ctx.battler(who);

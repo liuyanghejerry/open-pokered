@@ -290,3 +290,59 @@ fn replace_move_guarded_refuses_hms() {
         Err(ReplaceMoveError::InvalidSlot)
     );
 }
+
+#[test]
+fn first_learnset_move_at_level_stops_at_first_same_level_entry() {
+    use crate::pokemon::move_learning::first_learnset_move_at_level;
+    use pokered_data::evos_moves::LevelUpMove;
+
+    let learnset = [
+        LevelUpMove {
+            level: 16,
+            move_id: MoveId::Confusion,
+        },
+        LevelUpMove {
+            level: 16,
+            move_id: MoveId::Disable,
+        },
+        LevelUpMove {
+            level: 20,
+            move_id: MoveId::Psybeam,
+        },
+    ];
+
+    // Unknown first entry at level 16 -> offers Confusion only.
+    assert_eq!(
+        first_learnset_move_at_level(
+            &learnset,
+            16,
+            &[MoveId::Teleport, MoveId::None, MoveId::None, MoveId::None],
+        ),
+        Some(MoveId::Confusion),
+    );
+
+    // First entry at level 16 already known -> `.checkCurrentMovesLoop` jumps
+    // straight to `.done` WITHOUT offering the second level-16 entry (`Disable`).
+    assert_eq!(
+        first_learnset_move_at_level(
+            &learnset,
+            16,
+            &[MoveId::Teleport, MoveId::Confusion, MoveId::None, MoveId::None],
+        ),
+        None,
+    );
+}
+
+#[test]
+fn finalize_evolution_skips_already_known_level_move_cleanly() {
+    let mut mon = make_pokemon(Species::Abra, 16);
+    mon.moves = [
+        MoveId::Teleport,
+        MoveId::Confusion,
+        MoveId::Tackle,
+        MoveId::Growl,
+    ];
+    let mut dex = crate::pokemon::pokedex::Pokedex::new();
+    let blocked = finalize_evolution(&mut mon, &mut dex, Species::Kadabra);
+    assert!(blocked.is_empty(), "already-known Confusion must not block: {blocked:?}");
+}

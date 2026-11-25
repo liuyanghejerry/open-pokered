@@ -247,6 +247,21 @@ pub struct MoveMenuState {
     moves: Vec<MoveSlot>,
     cursor: usize,
     pub can_cancel: bool,
+    /// `wMenuItemToSwap`: one-based physical slot (`1..=4`).
+    #[serde(default, deserialize_with = "deserialize_swap_armed")]
+    swap_armed: Option<u8>,
+}
+
+fn deserialize_swap_armed<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<u8>, D::Error> {
+    let slot = <Option<u8> as serde::Deserialize>::deserialize(deserializer)?;
+    if slot.is_some_and(|slot| !(1..=4).contains(&slot)) {
+        return Err(serde::de::Error::custom(
+            "swap slot must be a physical slot from 1 to 4",
+        ));
+    }
+    Ok(slot)
 }
 
 impl MoveMenuState {
@@ -256,6 +271,7 @@ impl MoveMenuState {
             moves,
             cursor,
             can_cancel: true,
+            swap_armed: None,
         }
     }
 
@@ -263,8 +279,31 @@ impl MoveMenuState {
         self.cursor = cursor;
     }
 
+    pub fn swap_armed_slot(&self) -> Option<u8> {
+        self.swap_armed
+    }
+
+    pub(crate) fn restore_swap_armed(&mut self, slot: Option<u8>) {
+        self.swap_armed = slot.filter(|slot| (1..=4).contains(slot));
+    }
+
+    /// First SELECT arms this row; the second returns the two zero-based rows to swap.
+    pub fn select_swap(&mut self) -> Option<(usize, usize)> {
+        if self.cursor >= self.moves.len().min(4) {
+            return None;
+        }
+        match self.swap_armed.take() {
+            Some(armed) => Some((usize::from(armed - 1), self.cursor)),
+            None => {
+                self.swap_armed = Some(self.cursor as u8 + 1);
+                None
+            }
+        }
+    }
+
     pub fn update_frame(&mut self, input: MenuInput) -> Option<MoveMenuResult> {
         if input.b && self.can_cancel {
+            self.swap_armed = None;
             return Some(MoveMenuResult::Cancelled);
         }
 
@@ -275,6 +314,7 @@ impl MoveMenuState {
         }
 
         if input.a {
+            self.swap_armed = None;
             return Some(self.try_select());
         }
 

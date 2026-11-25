@@ -3,7 +3,7 @@ use crate::battle::settlement::evolution::{
     apply_evolution, check_item_evolution, check_level_evolution, check_trade_evolution,
 };
 use crate::battle::state::Pokemon;
-use crate::pokemon::move_learning::{moves_at_level, try_learn_move, LearnMoveResult};
+use crate::pokemon::move_learning::{try_learn_move, LearnMoveResult};
 use crate::pokemon::pokedex::Pokedex;
 use pokered_data::items::ItemId;
 use pokered_data::moves::MoveId;
@@ -60,18 +60,15 @@ pub fn evolve_party_after_battle(party: &mut [Pokemon]) -> Vec<EvolutionResult> 
 ///   just its old species name is renamed to the new species name; real
 ///   nicknames are kept. A `None` nickname needs nothing — `display_name`
 ///   already follows the species;
-/// - `LearnMoveFromLevelUp` at the mon's current level (evos_moves.asm:212) —
-///   in Gen 1 the evolved form DOES learn the moves its new species learns at
-///   that level. Deviation: the original learns only the FIRST learnset entry
-///   matching the level and opens the forget-a-move prompt when all four
-///   slots are full (`predef LearnMove`); we learn every matching entry and
-///   RETURN the moves that could not be learned because the moveset is full —
-///   the caller runs the forget-a-move replace flow for them
-///   ([`replace_move_guarded`]);
+/// - `LearnMoveFromLevelUp` at the mon's current level (evos_moves.asm:65, 341-379) —
+///   in Gen 1 the evolved form learns ONLY the first learnset entry matching
+///   `mon.level` (and stops immediately if that first matching entry is already
+///   known). When all four slots are full, that single blocked move is returned
+///   so the caller can run the forget-a-move replace flow ([`replace_move_guarded`]);
 /// - Pokédex seen + owned for the new species (the two
 ///   `Evolution_FlagAction` calls at evos_moves.asm:218-228).
 ///
-/// Returns the new species' level-up moves the mon could not learn because
+/// Returns the new species' level-up move the mon could not learn because
 /// all four move slots are full (empty when nothing was blocked).
 pub fn finalize_evolution(mon: &mut Pokemon, pokedex: &mut Pokedex, to: Species) -> Vec<MoveId> {
     let from = mon.species;
@@ -87,10 +84,9 @@ pub fn finalize_evolution(mon: &mut Pokemon, pokedex: &mut Pokedex, to: Species)
         mon.set_nickname(pokered_data::lang_data::species_name(to, false));
     }
     let mut blocked = Vec::new();
-    for move_id in moves_at_level(to, mon.level) {
-        match try_learn_move(mon, move_id) {
-            LearnMoveResult::MoveSlotsFull => blocked.push(move_id),
-            _ => {}
+    if let Some(move_id) = crate::pokemon::move_learning::first_move_at_level_for(to, mon.level, &mon.moves) {
+        if matches!(try_learn_move(mon, move_id), LearnMoveResult::MoveSlotsFull) {
+            blocked.push(move_id);
         }
     }
     pokedex.set_seen(to);

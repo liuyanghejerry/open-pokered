@@ -154,6 +154,8 @@ pub enum PokeVolatile {
     BlockedAction { reason: Option<super::CannotMoveReason> },
     /// Per-turn call narration; the resolved move executes after status gates.
     CalledMove { caller: MoveId, resolved: MoveId, failed: bool },
+    /// Per-turn disobedience move replacement (`CheckForDisobedience` `.useRandomMove`).
+    DisobeyedMove { resolved: MoveId, slot: u8 },
     /// Inert.
     None,
     /// Focus Energy volatile (drives the Gen-1 `/4` crit bug, #1).
@@ -349,7 +351,7 @@ impl BattleProvider for PokeredRules {
     }
 
     fn select_move(&self, b: &EngineBattler<Self>, _s: &EngineState<Self>) -> Self::Move {
-        b.moves.first().cloned().unwrap_or(MoveId::Tackle)
+        b.moves.iter().copied().find(|m| *m != MoveId::None).unwrap_or(MoveId::Tackle)
     }
 
     fn apply_move_effect(
@@ -383,6 +385,11 @@ impl EffectProvider for PokeredRules {
         effects.iter().find_map(|e| match e.kind {
             PokeVolatile::CalledMove { resolved, .. } if e.host == actor => Some(resolved),
             _ => None,
+        }).or_else(|| {
+            effects.iter().find_map(|e| match e.kind {
+                PokeVolatile::DisobeyedMove { resolved, .. } if e.host == actor => Some(resolved),
+                _ => None,
+            })
         }).unwrap_or(*selected)
     }
 
@@ -1133,6 +1140,7 @@ fn rebuild_move_index() {
             (70, p5_native::confusion_gate),
             (80, disable_veto_gate),
             (90, p5_native::paralysis_gate),
+            (92, disobedience_gate),
             (94, resolve_call_after_status),
             (95, bide_before_move),
             (100, thrash_lockin),
@@ -1516,6 +1524,7 @@ pub fn set_current_move(who: BattlerRef, m: MoveData) {
 /// before a fresh turn).
 pub fn clear_current_moves() {
     CURRENT_MOVES.with(|c| *c.borrow_mut() = [None, None]);
+    OBEDIENCE_CONTEXT.with(|c| c.set(None));
     SUB_CREATED.with(|c| *c.borrow_mut() = [false, false]);
     SUBSTITUTE_BROKE.with(|flags| *flags.borrow_mut() = [false, false]);
     PRESENTED_HITS.with(|c| *c.borrow_mut() = [[0; 6]; 2]);
@@ -1745,10 +1754,121 @@ pub(super) const RES_DV0: u16 = 0xff20;
 pub(super) const RES_DV1: u16 = 0xff21;
 pub(super) const RES_CATCH_RATE: u16 = 0xff22;
 pub(super) const RES_CRIT_BASE: u16 = 0xff30;
+#[derive(Clone, Copy, Debug)]
+pub struct PlayerObedienceContext {
+    pub link_battle: bool,
+    pub is_traded: bool,
+    pub badges: u8,
+    pub selected_slot: usize,
+}
+
 thread_local! {
+    static OBEDIENCE_CONTEXT: Cell<Option<PlayerObedienceContext>> = const { Cell::new(None) };
     static MIMIC_CHOICE: Cell<Option<usize>> = const { Cell::new(None) };
     static MIMIC_INTERACTIVE: Cell<bool> = const { Cell::new(false) };
     static MIMIC_REQUEST: RefCell<Option<Vec<MoveId>>> = const { RefCell::new(None) };
+}
+pub fn set_player_obedience_context(ctx: Option<PlayerObedienceContext>) {
+    OBEDIENCE_CONTEXT.with(|c| c.set(ctx));
+}
+
+/// `CheckForDisobedience` (`engine/battle/core.asm:3099, 3830-4007`): runs ONLY on
+/// the player's move after `PrintGhostText`, `CheckPlayerStatusConditions` (sleep,
+/// freeze, trapping hold, flinch, recharge, disable tick, confusion tick + self-hit,
+/// disabled-move veto, paralysis, Bide, Thrash, Trapping, Rage), and `CHARGING_UP`.
+/// Link battles (`wLinkState == LINK_STATE_BATTLING`, `core.asm:3833-3838`) return
+/// `.canUseMove` immediately without drawing from `BattleRandom`.
+fn disobedience_gate(
+    ctx: &mut BattleCtx<'_, PokeredRules>,
+    _relay: RelayVar,
+    _target: BattlerRef,
+    source: BattlerRef,
+    _eff: EffectId,
+) -> HandlerResult {
+    if source != BattlerRef::PLAYER {
+        return HandlerResult::Unchanged;
+    }
+    let Some(obed) = OBEDIENCE_CONTEXT.with(|c| c.get()) else {
+        return HandlerResult::Unchanged;
+    };
+    if obed.link_battle || !obed.is_traded {
+        return HandlerResult::Unchanged;
+    }
+    let in_continuation = ctx.effects.iter().any(|e| {
+        e.host == source
+            && matches!(
+                e.kind,
+                PokeVolatile::Charging { .. }
+                    | PokeVolatile::Bide { .. }
+                    | PokeVolatile::LockedMove { .. }
+                    | PokeVolatile::Trapping { .. }
+                    | PokeVolatile::Rage
+            )
+    });
+    if in_continuation {
+        return HandlerResult::Unchanged;
+    }
+    let selected_move = current_move_for(source).id;
+    let (level, moves, pp) = {
+        let b = ctx.battler(source);
+        let moves: [MoveId; 4] =
+            core::array::from_fn(|i| b.moves.get(i).copied().unwrap_or(MoveId::None));
+        let pp: [u8; 4] = core::array::from_fn(|i| {
+            (b.resources.current(RES_PP_BASE + i as u16).unwrap_or(0) as u8) & 0x3f
+        });
+        (b.level, moves, pp)
+    };
+    let has_disabled = ctx
+        .effects
+        .iter()
+        .any(|e| e.host == source && matches!(e.kind, PokeVolatile::Disable { .. }));
+    let outcome = crate::battle::obedience::check_disobedience_with_move(
+        level,
+        obed.badges,
+        obed.selected_slot,
+        selected_move,
+        &moves,
+        &pp,
+        has_disabled,
+        &mut || ctx.rng.next_u8(),
+    );
+    use crate::battle::obedience::DisobedienceOutcome as Outcome;
+    match outcome {
+        Outcome::Obey => HandlerResult::Unchanged,
+        Outcome::UseRandomMove(slot) => {
+            let resolved = moves[slot];
+            ctx.battler_mut(source)
+                .resources
+                .set(RES_SELECTED_SLOT, slot as u16, 4);
+            if let Some(data) = MoveData::get(resolved) {
+                set_current_move(source, *data);
+            }
+            ctx.effects.push(EffectState {
+                id: EffectId(0x50_fa8),
+                host: source,
+                effect_order: 0,
+                kind: PokeVolatile::DisobeyedMove {
+                    resolved,
+                    slot: slot as u8,
+                },
+            });
+            HandlerResult::Unchanged
+        }
+        Outcome::Nap(turns) => {
+            ctx.battler_mut(source).status = Some(LegacyStatus::Sleep(turns));
+            block_action(ctx, source, super::CannotMoveReason::BeganToNap)
+        }
+        Outcome::LoafAround => block_action(ctx, source, super::CannotMoveReason::LoafingAround),
+        Outcome::WontObey => block_action(ctx, source, super::CannotMoveReason::WontObey),
+        Outcome::TurnedAway => block_action(ctx, source, super::CannotMoveReason::TurnedAway),
+        Outcome::IgnoredOrders => block_action(ctx, source, super::CannotMoveReason::IgnoredOrders),
+        Outcome::WontObeySelfHit => {
+            let self_damage = p5_native::confusion_self_hit_damage(ctx, source);
+            set_shared_damage(ctx, self_damage.min(ctx.battler(source).hp));
+            ctx.battler_mut(source).take_damage(self_damage);
+            block_action(ctx, source, super::CannotMoveReason::WontObeySelfHit)
+        }
+    }
 }
 pub fn set_mimic_choice(slot: Option<usize>, interactive: bool) {
     MIMIC_CHOICE.with(|c| c.set(slot));
