@@ -8,9 +8,8 @@
 //
 // Link battles ARE reproduced via the link stack (crates/pokered-core/src/link/ +
 // pokered-app src/link/): the desks call game.linkStart() and CableClubFlow drives
-// the session; offline, talking to the opponent shows the original "!" dialogue.
-// NOTE: the in-game ENTRY from a Poké Center receptionist (LinkMenu) is not wired
-// yet — entering requires the debug warp.
+// the session (entered via the Poké Center / Indigo Plateau receptionist or CLI);
+// offline, talking to the opponent shows the original "!" dialogue.
 
 game_scene Colosseum {
   // ── Link opponent (npc 1) ──────────────────────────────────────────────

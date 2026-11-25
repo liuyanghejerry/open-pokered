@@ -825,8 +825,6 @@ fn disobedience_self_hit_damage(bs: &BattleState) -> u16 {
 pub struct HpBarAnim {
     player: HpBarSide,
     enemy: HpBarSide,
-    /// 2-frame divider: the bar steps on every other frame.
-    tick: bool,
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -839,6 +837,8 @@ struct HpBarSide {
     initialized: bool,
     /// Tween in progress.
     active: bool,
+    /// Remaining hold frames before the next step.
+    wait_frames: u8,
 }
 
 impl Default for HpBarSide {
@@ -849,17 +849,15 @@ impl Default for HpBarSide {
             species: Species::None,
             initialized: false,
             active: false,
+            wait_frames: 0,
         }
     }
 }
 
 impl HpBarAnim {
     /// HP points per animation step ≈ 1 bar pixel: `round(max_hp / 48)`,
-    /// min 1 (bar = 48 px, hp_bar.asm:15-16). For `max_hp <= 48` this is
-    /// exactly 1 HP = 1 px per 2 frames, matching the original; for higher
-    /// max HP the original also moves ~1 px per 2 frames (it races through
-    /// the HP points between pixel boundaries with no delay on the enemy
-    /// side).
+    /// min 1 (bar = 48 px, hp_bar.asm:15-16). Used for the enemy HUD, which
+    /// draws only the 48 px bar and no numeric HP readout.
     fn step_size(max_hp: u16) -> u16 {
         ((max_hp as u32 + 24) / 48).max(1) as u16
     }
@@ -886,35 +884,82 @@ impl HpBarAnim {
             s.species = species;
             s.initialized = true;
             s.active = false;
+            s.wait_frames = 0;
             return;
         }
         if hp != s.target {
             s.target = hp;
         }
+        let was_active = s.active;
         s.active = *display != s.target;
+        if s.active && !was_active {
+            // Enemy steps immediately on the first tick then holds 1 frame per
+            // pixel (`DelayFrames 2`); Player waits 1 frame on the initial sync
+            // when `max_hp <= 48` (2 frames/px) and steps 1 HP/frame between
+            // pixel boundaries (`UpdateHPBar_PrintHPNumber`, hp_bar.asm:425-455).
+            s.wait_frames = match side {
+                BattleSide::Enemy => 0,
+                BattleSide::Player => {
+                    let next = if *display < s.target {
+                        *display + 1
+                    } else {
+                        display.saturating_sub(1)
+                    };
+                    let px_changes = crate::party_screen::hp_bar_pixels(*display, s.max_hp)
+                        != crate::party_screen::hp_bar_pixels(next, s.max_hp);
+                    u8::from(px_changes)
+                }
+            };
+        } else if !s.active {
+            s.wait_frames = 0;
+        }
     }
 
-    /// Advance the tween by one frame (1 px-step per 2 frames).
+    /// Advance the active tween by one frame (`UpdateHPBar` is modal per
+    /// battler: advance Player first, then Enemy; Player steps ±1 HP per
+    /// number update without skipping integers when `max_hp > 48`).
     fn tick(&mut self, player_display: &mut u16, enemy_display: &mut u16) {
-        self.tick = !self.tick;
-        if !self.tick {
-            return;
-        }
-        for (s, display) in [
-            (&mut self.player, player_display),
-            (&mut self.enemy, enemy_display),
-        ] {
-            if !s.active {
-                continue;
+        if self.player.active {
+            if self.player.wait_frames > 0 {
+                self.player.wait_frames -= 1;
+                return;
             }
-            let step = Self::step_size(s.max_hp);
-            if *display < s.target {
-                *display = (*display + step).min(s.target);
+            let prev = *player_display;
+            let next = if prev < self.player.target {
+                prev + 1
             } else {
-                *display = display.saturating_sub(step).max(s.target);
+                prev.saturating_sub(1)
+            };
+            *player_display = next;
+            if next == self.player.target {
+                self.player.active = false;
+                self.player.wait_frames = 0;
+            } else {
+                let further = if next < self.player.target {
+                    next + 1
+                } else {
+                    next.saturating_sub(1)
+                };
+                let px_changes = crate::party_screen::hp_bar_pixels(next, self.player.max_hp)
+                    != crate::party_screen::hp_bar_pixels(further, self.player.max_hp);
+                self.player.wait_frames = u8::from(px_changes);
             }
-            if *display == s.target {
-                s.active = false;
+        } else if self.enemy.active {
+            if self.enemy.wait_frames > 0 {
+                self.enemy.wait_frames -= 1;
+                return;
+            }
+            let step = Self::step_size(self.enemy.max_hp);
+            if *enemy_display < self.enemy.target {
+                *enemy_display = (*enemy_display + step).min(self.enemy.target);
+            } else {
+                *enemy_display = enemy_display.saturating_sub(step).max(self.enemy.target);
+            }
+            if *enemy_display == self.enemy.target {
+                self.enemy.active = false;
+                self.enemy.wait_frames = 0;
+            } else {
+                self.enemy.wait_frames = 1;
             }
         }
     }
@@ -7772,6 +7817,39 @@ mod hp_bar_anim_tests {
         anim.tick(&mut display, &mut other);
         anim.tick(&mut display, &mut other);
         assert_eq!(display, 21, "refill steps up at the same 1 px / 2 frames");
+    }
+
+    /// Above 48 max HP, the player's numeric HP counter still steps ±1 HP at
+    /// a time (never skipping integers), and dual-side drains run sequentially.
+    #[test]
+    fn high_max_hp_player_steps_every_integer_and_sequences_before_enemy() {
+        let mut anim = HpBarAnim::default();
+        let mut player_disp = 150u16;
+        let mut enemy_disp = 144u16;
+        anim.set_target(BattleSide::Player, 150, 150, Species::Snorlax, &mut player_disp);
+        anim.set_target(BattleSide::Enemy, 144, 144, Species::Rhydon, &mut enemy_disp);
+
+        anim.set_target(BattleSide::Player, 140, 150, Species::Snorlax, &mut player_disp);
+        anim.set_target(BattleSide::Enemy, 135, 144, Species::Rhydon, &mut enemy_disp);
+
+        let mut visited = Vec::new();
+        while anim.player.active {
+            let prev = player_disp;
+            anim.tick(&mut player_disp, &mut enemy_disp);
+            assert_eq!(enemy_disp, 144, "enemy drain waits until player modal drain finishes");
+            if player_disp != prev {
+                visited.push(player_disp);
+            }
+        }
+        assert_eq!(
+            visited,
+            vec![149, 148, 147, 146, 145, 144, 143, 142, 141, 140],
+            "player HP number must step 1 HP at a time without skipping values"
+        );
+        while anim.is_active() {
+            anim.tick(&mut player_disp, &mut enemy_disp);
+        }
+        assert_eq!(enemy_disp, 135);
     }
 
     /// A different mon (species or max-HP change — send-out after a faint)

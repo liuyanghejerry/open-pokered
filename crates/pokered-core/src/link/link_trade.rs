@@ -86,6 +86,10 @@ pub enum LinkTradePollResult {
     },
     PeerCancelled,
     PeerRejectedTrade,
+    PeerReceptionChoice {
+        selected: u8,
+        cancel: bool,
+    },
     Disconnected,
     Error(String),
 }
@@ -168,6 +172,15 @@ impl LinkTradeManager {
         transport.send(NetworkMessage::RequestTrade)?;
         self.state = LinkTradeState::WaitingForTradeResponse;
         Ok(())
+    }
+
+    pub fn send_reception_choice(
+        &mut self,
+        transport: &mut dyn NetworkTransport<NetworkMessage>,
+        selected: u8,
+        cancel: bool,
+    ) -> Result<(), TransportError> {
+        transport.send(NetworkMessage::ReceptionChoice { selected, cancel })
     }
 
     pub fn accept_trade(
@@ -580,6 +593,10 @@ impl LinkTradeManager {
                 LinkTradePollResult::PeerCancelled
             }
 
+            (_, NetworkMessage::ReceptionChoice { selected, cancel }) => {
+                LinkTradePollResult::PeerReceptionChoice { selected, cancel }
+            }
+
             (_, NetworkMessage::Disconnect) => {
                 self.state = LinkTradeState::Cancelled;
                 LinkTradePollResult::Disconnected
@@ -981,6 +998,17 @@ impl LinkTradeDriver {
         self.manager.reject_trade(transport)?;
         self.clear_pending_trade();
         Ok(())
+    }
+
+    pub fn send_reception_choice(
+        &mut self,
+        transport: &mut dyn NetworkTransport<NetworkMessage>,
+        selected: u8,
+        cancel: bool,
+    ) -> Result<(), LinkTradeError> {
+        self.manager
+            .send_reception_choice(transport, selected, cancel)
+            .map_err(LinkTradeError::from)
     }
 
     pub fn poll(&mut self, transport: &mut dyn NetworkTransport<NetworkMessage>) -> LinkTradePollResult {

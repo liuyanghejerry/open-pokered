@@ -209,14 +209,10 @@ pub struct AnimSfxRequest {
 mod non_move_anim {
     /// SHOWPIC_ANIM ($A6): SE_SHOW_ENEMY_MON_PIC — mon reappears.
     pub const SHOWPIC: usize = 0xA5;
-    /// STATUS_AFFECTED_ANIM ($A7): the original flashes the whose-turn mon
-    /// pic (`AnimationFlashMonPic`, engine/battle/animations.asm:1378-1387).
-    /// Approximation: anim index 0xA7 plays SE_FLASH_MON_PIC ($F5), whose
-    /// handler is a blink of the whose-turn mon. Note the original's
-    /// "flash" is itself just a pic REDRAW (no visible blink for a normal
-    /// mon), so the blink is only a stand-in. The charge-turn trigger fires
-    /// via `is_charge_message` below; SE $DD (anim 0xA6, ShowMonPic) is the
-    /// old no-op mapping kept for reference.
+    /// STATUS_AFFECTED_ANIM ($A7, 0-based 0xA6): `EnemyFlashAnim` in
+    /// `data/moves/animations.asm`, which executes `SE_SHOW_MON_PIC` ($DD,
+    /// `AnimationShowMonPic` + `Delay3`) on the whose-turn mon (used on
+    /// two-turn charge turns in `engine/battle/core.asm:3196/3475/5598/5851`).
     pub const STATUS_AFFECTED: usize = 0xA6;
     /// XSTATITEM_ANIM ($AE): light palette + spiral balls + reset palette.
     pub const XSTATITEM: usize = 0xAD;

@@ -2,9 +2,12 @@
 
 ## Project
 
-A portable Rust reimplementation of Pokémon Red/Blue game logic. The generic
-JRPG engine (`dotzuki-*`) lives in a separate repository, consumed through pinned
-Cargo Git dependencies. Make generic engine changes there.
+A portable Rust reimplementation of Pokémon Red game logic. Pokémon Red is the
+only core target; Blue, Green, and other derivative versions are not core
+goals, so derivative versions need not be considered when comparing against the
+original. The generic JRPG engine (`dotzuki-*`) lives in a separate repository,
+consumed through pinned Cargo Git dependencies. Make generic engine changes
+there.
 
 ## Code navigation
 

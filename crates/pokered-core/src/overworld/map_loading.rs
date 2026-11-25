@@ -8,18 +8,54 @@ use pokered_data::maps::{MapId, NUM_MAPS};
 use pokered_data::music::MusicId;
 use pokered_data::tilesets::TilesetId;
 
-/// Underground entrance scripts explicitly set wLastMap even when entered
-/// from the indoor tunnel (scripts/UndergroundPathRoute{5,6,7,8}.asm).
+/// Underground entrance and Diglett's Cave exit scripts explicitly set
+/// `wLastMap` even when entered from the indoor tunnel
+/// (`scripts/UndergroundPathRoute{5,6,7,7Copy,8}.asm`,
+/// `scripts/DiglettsCaveRoute{2,11}.asm`).
 ///
 /// `pub` so the agent world graph can statically resolve LAST_MAP warps
 /// with the same overrides (M3); no behavior change.
 pub fn scripted_last_map(map: MapId) -> Option<MapId> {
     match map {
+        MapId::DiglettsCaveRoute2 => Some(MapId::Route2),
+        MapId::DiglettsCaveRoute11 => Some(MapId::Route11),
         MapId::UndergroundPathRoute5 => Some(MapId::Route5),
         MapId::UndergroundPathRoute6 => Some(MapId::Route6),
         MapId::UndergroundPathRoute7 => Some(MapId::Route7),
+        MapId::UndergroundPathRoute7Copy => Some(MapId::Route7),
         MapId::UndergroundPathRoute8 => Some(MapId::Route8),
         _ => None,
+    }
+}
+
+/// Silph Co. Card Key door blocks `(block_x, block_y, script_handler)` across
+/// 2F–11F (`scripts/SilphCo{2..11}F.asm` `.GateCoordinates`).
+pub fn silph_card_key_doors(map: MapId) -> &'static [(u32, u32, &'static str)] {
+    match map {
+        MapId::SilphCo2F => &[(2, 2, "cardKeyDoor1"), (2, 5, "cardKeyDoor2")],
+        MapId::SilphCo3F => &[(4, 4, "cardKeyDoor1"), (8, 4, "cardKeyDoor2")],
+        MapId::SilphCo4F => &[(2, 6, "cardKeyDoor1"), (6, 4, "cardKeyDoor2")],
+        MapId::SilphCo5F => &[
+            (3, 2, "cardKeyDoor1"),
+            (3, 6, "cardKeyDoor2"),
+            (7, 5, "cardKeyDoor3"),
+        ],
+        MapId::SilphCo6F => &[(2, 6, "cardKeyDoor")],
+        MapId::SilphCo7F => &[
+            (5, 3, "cardKeyDoor1"),
+            (10, 2, "cardKeyDoor2"),
+            (10, 6, "cardKeyDoor3"),
+        ],
+        MapId::SilphCo8F => &[(3, 4, "cardKeyDoor")],
+        MapId::SilphCo9F => &[
+            (1, 4, "cardKeyDoor1"),
+            (9, 2, "cardKeyDoor2"),
+            (9, 5, "cardKeyDoor3"),
+            (5, 6, "cardKeyDoor4"),
+        ],
+        MapId::SilphCo10F => &[(5, 4, "cardKeyDoor")],
+        MapId::SilphCo11F => &[(3, 6, "cardKeyDoor")],
+        _ => &[],
     }
 }
 

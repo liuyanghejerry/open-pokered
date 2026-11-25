@@ -29,16 +29,31 @@ fn draw_view_name_box(state: &TownMapScreenState, fb: &mut FrameBuffer, lang: La
     }
 }
 
-/// Region changed by one phase of the current-location marker.
-pub fn marker_damage(current_map: pokered_data::maps::MapId) -> Option<pokered_ui::DamageRect> {
-    town_map_position(current_map).map(|(x, y, _)| {
-        pokered_ui::DamageRect::new(
-            (x as u32 + 2) * TILE_SIZE,
-            (y as u32 + 1) * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE,
-        )
-    })
+const BLINK_HALF_PERIOD: u64 = 25;
+
+#[inline]
+fn town_map_blink_visible(frame_counter: u64) -> bool {
+    (frame_counter % (BLINK_HALF_PERIOD * 2)) < BLINK_HALF_PERIOD
+}
+
+/// Region changed by one blink transition of the View-mode selection cursor
+/// (`TownMapSpriteBlinkingAnimation`, `engine/items/town_map.asm`).
+pub fn marker_damage(
+    state: &TownMapScreenState,
+    lang: Lang,
+) -> Option<pokered_ui::DamageRect> {
+    if state.mode() != TownMapMode::View {
+        return None;
+    }
+    let (sx, sy, _) = town_map_position(state.selected_map())?;
+    let bx = sx as u32 * TILE_SIZE + 12;
+    let by = sy as u32 * TILE_SIZE + 5;
+    let box_top = view_box_top(lang);
+    if by >= box_top {
+        return None;
+    }
+    let height = 16.min(box_top - by);
+    Some(pokered_ui::DamageRect::new(bx, by, 16, height))
 }
 
 /// Regions changed by [`redraw_town_map_cursor`].
@@ -46,10 +61,9 @@ pub fn cursor_damage(
     state: &TownMapScreenState,
     previous_map: pokered_data::maps::MapId,
     lang: Lang,
-) -> Option<[pokered_ui::DamageRect; 4]> {
+) -> Option<[pokered_ui::DamageRect; 3]> {
     let (old_x, old_y, _) = town_map_position(previous_map)?;
     let (new_x, new_y, _) = town_map_position(state.selected_map())?;
-    let marker = marker_damage(state.current_map())?;
     let label = if state.mode() == TownMapMode::Fly {
         pokered_ui::DamageRect::new(0, 0, 160, 2 * TILE_SIZE)
     } else {
@@ -68,21 +82,31 @@ pub fn cursor_damage(
             16,
             16,
         ),
-        marker,
         label,
     ])
 }
 
-/// Draw the Town Map viewer: the full 20×18 Kanto tilemap, a selection reticle
-/// around the browse cursor's landmark, a flashing "you are here" marker at the
-/// player's current location, and the highlighted landmark's name in a box.
-///
-/// FLY mode (`LoadTownMap_Fly`, engine/items/town_map.asm:141-249) draws the
-/// original's chrome: "To" at the top-left, the town name beside it, the
-/// Pidgey bird sprite (the first 16×16 frame of gfx/sprites/bird.2bpp —
-/// `BirdSprite`, tiles $04-$07) centered on the selected landmark, and the
-/// ▲▼ cursor markers at the top-right (TownMapUpArrow at (18,0), the ▼ glyph
-/// at (19,0) — decoord 18/19, 0 in the asm).
+fn draw_sprite_16x16(
+    fb: &mut FrameBuffer,
+    tileset: &pokered_renderer::tile::TileSet,
+    bx: u32,
+    by: u32,
+    pal: &Palette,
+) {
+    blit_single_tile(fb, tileset, 0, bx, by, pal);
+    blit_single_tile(fb, tileset, 1, bx + TILE_SIZE, by, pal);
+    blit_single_tile(fb, tileset, 2, bx, by + TILE_SIZE, pal);
+    blit_single_tile(fb, tileset, 3, bx + TILE_SIZE, by + TILE_SIZE, pal);
+}
+
+/// Draw the Town Map viewer (`DisplayTownMap` / `LoadTownMap_Fly`,
+/// `engine/items/town_map.asm`):
+/// - View mode draws the steady Player sprite (`wShadowOAMSprite36..39`) at
+///   `current_map()`, the 25-frame blinking `TownMapCursor` reticle
+///   (`wShadowOAMSprite04..07`) at `selected_map()`, and the landmark name box.
+/// - FLY mode draws `"To"` + landmark name + `▲▼` in the top row, the steady
+///   Player sprite (`Sprite36..39`) at `current_map()`, and the steady Pidgey
+///   bird sprite (`Sprite32..35`) at `selected_map()`.
 pub fn draw_town_map(
     state: &TownMapScreenState,
     res: &mut Option<ResourceManager>,
@@ -93,9 +117,7 @@ pub fn draw_town_map(
     fb.clear(Rgba::WHITE);
 
     let bg_pal = &GRAYSCALE_PALETTE;
-    // Reticle palette: color 0 (the sprite's white background/hollow) is
-    // transparent so the framed landmark tile shows through.
-    let cursor_pal = Palette::new(&[
+    let sprite_pal = Palette::new(&[
         Rgba::TRANSPARENT,
         GRAYSCALE_PALETTE.colors[1],
         GRAYSCALE_PALETTE.colors[2],
@@ -119,187 +141,34 @@ pub fn draw_town_map(
             }
         }
 
-        // 2. Selection reticle (16×16) centered on the highlighted landmark.
-        // Entry coords are NOT screen tiles: the original converts them via
-        // TownMapCoordsToOAMCoords (OAM x/y = v*8+24), WriteTownMapSpriteOAM
-        // (net x−4, y−3) and the hardware OAM offset (x−8, y−16), so a 16×16
-        // sprite's top-left lands at (x*8+12, y*8+5) — centered on the town
-        // square baked into the tilemap at tile (x+2, y+1).
-        if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
-            if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
-                let bx = (sx as u32) * TILE_SIZE + 12;
-                let by = (sy as u32) * TILE_SIZE + 5;
-                blit_single_tile(fb, &cursor.tileset, 0, bx, by, &cursor_pal);
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    1,
-                    bx + TILE_SIZE,
-                    by,
-                    &cursor_pal,
-                );
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    2,
-                    bx,
-                    by + TILE_SIZE,
-                    &cursor_pal,
-                );
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    3,
-                    bx + TILE_SIZE,
-                    by + TILE_SIZE,
-                    &cursor_pal,
-                );
+        // 2. Player sprite (`DrawPlayerOrBirdSprite` b=$0 → Sprite36..39,
+        // kept visible continuously by `TownMapSpriteBlinkingAnimation`).
+        if let Some((px, py, _)) = town_map_position(state.current_map()) {
+            if let Ok(player) = rm.load_sprite("red") {
+                let bx = (px as u32) * TILE_SIZE + 12;
+                let by = (py as u32) * TILE_SIZE + 5;
+                draw_sprite_16x16(fb, &player.tileset, bx, by, &sprite_pal);
             }
         }
 
-        if state.mode() == TownMapMode::Fly {
-            // 3. FLY chrome (LoadTownMap_Fly): "To" at (0,0), the landmark
-            // name at (3,0), the ▲▼ cursor markers at (18,0)/(19,0).
-            draw_text(if lang == Lang::Zh { "去" } else { "To" }, 0, 0, Rgba::BLACK, fb);
-            if let Some((_, _, name)) = town_map_position(state.selected_map()) {
-                let label = if lang == Lang::Zh { map_name_str_zh(name) } else { map_name_str(name) };
-                draw_text(label, 3 * TILE_SIZE, 0, Rgba::BLACK, fb);
-            }
-            if let Ok(arrow) = rm.load_town_map("up_arrow") {
-                // TownMapUpArrow (gfx/town_map/up_arrow.1bpp) is the '▲'
-                // glyph (charmap.asm:85); the '▼' is the font's cursor glyph.
-                blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, bg_pal);
-            }
-            draw_text("▼", 19 * TILE_SIZE, 0, Rgba::BLACK, fb);
-
-            // 4. The Pidgey bird sprite over the selected landmark — the
-            // first 16×16 frame of gfx/sprites/bird.png (`BirdSprite` +
-            // BIRD_BASE_TILE $04, engine/items/town_map.asm:146-149). It
-            // shares the reticle's OAM-derived anchor (top-left at
-            // x*8+12, y*8+5). White pixels stay transparent.
-            if let Ok(bird) = rm.load_sprite("bird") {
-                let bird_pal = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    GRAYSCALE_PALETTE.colors[1],
-                    GRAYSCALE_PALETTE.colors[2],
-                    GRAYSCALE_PALETTE.colors[3],
-                ]);
-                if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
-                    let bx = (sx as u32) * TILE_SIZE + 12;
-                    let by = (sy as u32) * TILE_SIZE + 5;
-                    blit_single_tile(fb, &bird.tileset, 0, bx, by, &bird_pal);
-                    blit_single_tile(
-                        fb,
-                        &bird.tileset,
-                        1,
-                        bx + TILE_SIZE,
-                        by,
-                        &bird_pal,
-                    );
-                    blit_single_tile(
-                        fb,
-                        &bird.tileset,
-                        2,
-                        bx,
-                        by + TILE_SIZE,
-                        &bird_pal,
-                    );
-                    blit_single_tile(
-                        fb,
-                        &bird.tileset,
-                        3,
-                        bx + TILE_SIZE,
-                        by + TILE_SIZE,
-                        &bird_pal,
-                    );
+        match state.mode() {
+            TownMapMode::View => {
+                // 3a. Blinking selection reticle (`wShadowOAMSprite04..07`,
+                // 25 frames ON / 25 frames OFF). Lower OAM index overlays Red.
+                if town_map_blink_visible(frame_counter) {
+                    if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
+                        if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
+                            let bx = (sx as u32) * TILE_SIZE + 12;
+                            let by = (sy as u32) * TILE_SIZE + 5;
+                            draw_sprite_16x16(fb, &cursor.tileset, bx, by, &sprite_pal);
+                        }
+                    }
                 }
             }
-        }
-    }
-
-    // 5. Flashing "you are here" marker at the player's current location,
-    // over the town square baked into the tilemap at tile (x+2, y+1).
-    if (frame_counter / 16) % 2 == 0 {
-        if let Some((px, py, _)) = town_map_position(state.current_map()) {
-            fill_tile((px as u32) * TILE_SIZE + 16, (py as u32) * TILE_SIZE + 8, Rgba::BLACK, fb);
-        }
-    }
-
-    // 6. Highlighted landmark's name, in a box along the bottom three rows
-    // (View mode only — the FLY screen shows the name in the top row with
-    // the original's "To" prompt).
-    if state.mode() == TownMapMode::View {
-        draw_view_name_box(state, fb, lang);
-    }
-}
-
-fn restore_town_map_marker_layers(
-    state: &TownMapScreenState,
-    res: &mut Option<ResourceManager>,
-    fb: &mut FrameBuffer,
-    lang: Lang,
-    marker_tx: usize,
-    marker_ty: usize,
-) {
-    if let Some(rm) = res.as_mut() {
-        if let Some(&tile) = decode_town_map_tilemap()
-            .get(marker_ty * TOWN_MAP_WIDTH + marker_tx)
-        {
-            if let Ok(sheet) = rm.load_town_map("town_map") {
-                fill_tile(
-                    marker_tx as u32 * TILE_SIZE,
-                    marker_ty as u32 * TILE_SIZE,
-                    Rgba::WHITE,
-                    fb,
-                );
-                blit_single_tile(
-                    fb,
-                    &sheet.tileset,
-                    tile as usize,
-                    marker_tx as u32 * TILE_SIZE,
-                    marker_ty as u32 * TILE_SIZE,
-                    &GRAYSCALE_PALETTE,
-                );
-            }
-        }
-
-        let overlay_pal = Palette::new(&[
-            Rgba::TRANSPARENT,
-            GRAYSCALE_PALETTE.colors[1],
-            GRAYSCALE_PALETTE.colors[2],
-            GRAYSCALE_PALETTE.colors[3],
-        ]);
-        if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
-            let bx = sx as u32 * TILE_SIZE + 12;
-            let by = sy as u32 * TILE_SIZE + 5;
-            if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
-                blit_single_tile(fb, &cursor.tileset, 0, bx, by, &overlay_pal);
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    1,
-                    bx + TILE_SIZE,
-                    by,
-                    &overlay_pal,
-                );
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    2,
-                    bx,
-                    by + TILE_SIZE,
-                    &overlay_pal,
-                );
-                blit_single_tile(
-                    fb,
-                    &cursor.tileset,
-                    3,
-                    bx + TILE_SIZE,
-                    by + TILE_SIZE,
-                    &overlay_pal,
-                );
-            }
-            if state.mode() == TownMapMode::Fly {
+            TownMapMode::Fly => {
+                // 3b. FLY chrome (`LoadTownMap_Fly`): "To" at (0,0), landmark
+                // name at (3,0), ▲▼ at (18,0)/(19,0), and steady Bird sprite
+                // (`Sprite32..35`) over `selected_map()`.
                 draw_text(if lang == Lang::Zh { "去" } else { "To" }, 0, 0, Rgba::BLACK, fb);
                 if let Some((_, _, name)) = town_map_position(state.selected_map()) {
                     let label = if lang == Lang::Zh {
@@ -310,34 +179,88 @@ fn restore_town_map_marker_layers(
                     draw_text(label, 3 * TILE_SIZE, 0, Rgba::BLACK, fb);
                 }
                 if let Ok(arrow) = rm.load_town_map("up_arrow") {
-                    blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, &GRAYSCALE_PALETTE);
+                    blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, bg_pal);
                 }
                 draw_text("▼", 19 * TILE_SIZE, 0, Rgba::BLACK, fb);
+                if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
+                    if let Ok(bird) = rm.load_sprite("bird") {
+                        let bx = (sx as u32) * TILE_SIZE + 12;
+                        let by = (sy as u32) * TILE_SIZE + 5;
+                        draw_sprite_16x16(fb, &bird.tileset, bx, by, &sprite_pal);
+                    }
+                }
+            }
+        }
+    }
+
+    // 4. Highlighted landmark's name box in View mode.
+    if state.mode() == TownMapMode::View {
+        draw_view_name_box(state, fb, lang);
+    }
+}
+
+fn redraw_town_map_sprites_and_chrome(
+    state: &TownMapScreenState,
+    rm: &mut ResourceManager,
+    frame_counter: u64,
+    fb: &mut FrameBuffer,
+    lang: Lang,
+) {
+    let sprite_pal = Palette::new(&[
+        Rgba::TRANSPARENT,
+        GRAYSCALE_PALETTE.colors[1],
+        GRAYSCALE_PALETTE.colors[2],
+        GRAYSCALE_PALETTE.colors[3],
+    ]);
+    if let Some((px, py, _)) = town_map_position(state.current_map()) {
+        if let Ok(player) = rm.load_sprite("red") {
+            draw_sprite_16x16(
+                fb,
+                &player.tileset,
+                px as u32 * TILE_SIZE + 12,
+                py as u32 * TILE_SIZE + 5,
+                &sprite_pal,
+            );
+        }
+    }
+    match state.mode() {
+        TownMapMode::View => {
+            if town_map_blink_visible(frame_counter) {
+                if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
+                    if let Ok(cursor) = rm.load_town_map("town_map_cursor") {
+                        draw_sprite_16x16(
+                            fb,
+                            &cursor.tileset,
+                            sx as u32 * TILE_SIZE + 12,
+                            sy as u32 * TILE_SIZE + 5,
+                            &sprite_pal,
+                        );
+                    }
+                }
+            }
+        }
+        TownMapMode::Fly => {
+            draw_text(if lang == Lang::Zh { "去" } else { "To" }, 0, 0, Rgba::BLACK, fb);
+            if let Some((_, _, name)) = town_map_position(state.selected_map()) {
+                let label = if lang == Lang::Zh {
+                    map_name_str_zh(name)
+                } else {
+                    map_name_str(name)
+                };
+                draw_text(label, 3 * TILE_SIZE, 0, Rgba::BLACK, fb);
+            }
+            if let Ok(arrow) = rm.load_town_map("up_arrow") {
+                blit_single_tile(fb, &arrow.tileset, 0, 18 * TILE_SIZE, 0, &GRAYSCALE_PALETTE);
+            }
+            draw_text("▼", 19 * TILE_SIZE, 0, Rgba::BLACK, fb);
+            if let Some((sx, sy, _)) = town_map_position(state.selected_map()) {
                 if let Ok(bird) = rm.load_sprite("bird") {
-                    blit_single_tile(fb, &bird.tileset, 0, bx, by, &overlay_pal);
-                    blit_single_tile(
+                    draw_sprite_16x16(
                         fb,
                         &bird.tileset,
-                        1,
-                        bx + TILE_SIZE,
-                        by,
-                        &overlay_pal,
-                    );
-                    blit_single_tile(
-                        fb,
-                        &bird.tileset,
-                        2,
-                        bx,
-                        by + TILE_SIZE,
-                        &overlay_pal,
-                    );
-                    blit_single_tile(
-                        fb,
-                        &bird.tileset,
-                        3,
-                        bx + TILE_SIZE,
-                        by + TILE_SIZE,
-                        &overlay_pal,
+                        sx as u32 * TILE_SIZE + 12,
+                        sy as u32 * TILE_SIZE + 5,
+                        &sprite_pal,
                     );
                 }
             }
@@ -345,10 +268,7 @@ fn restore_town_map_marker_layers(
     }
 }
 
-/// Repaint only the flashing 8×8 current-location marker.
-///
-/// The marker is drawn after the selection reticle and FLY bird, so turning
-/// it off must restore those layers as well as the underlying map tile.
+/// Repaint only the blinking 16×16 selection reticle in View mode.
 pub fn redraw_town_map_marker(
     state: &TownMapScreenState,
     res: &mut Option<ResourceManager>,
@@ -356,26 +276,32 @@ pub fn redraw_town_map_marker(
     fb: &mut FrameBuffer,
     lang: Lang,
 ) {
-    let Some((px, py, _)) = town_map_position(state.current_map()) else {
+    if state.mode() != TownMapMode::View {
+        return;
+    }
+    let Some((sx, sy, _)) = town_map_position(state.selected_map()) else {
         return;
     };
-    let marker_tx = px as usize + 2;
-    let marker_ty = py as usize + 1;
-    if state.mode() == TownMapMode::View && marker_ty as u32 * TILE_SIZE >= view_box_top(lang) {
-        // The bottom location-name box is drawn after the marker and covers
-        // it completely, so its animation has no visible pixels to update.
+    let bx = sx as u32 * TILE_SIZE + 12;
+    let by = sy as u32 * TILE_SIZE + 5;
+    let box_top = view_box_top(lang);
+    if by >= box_top {
         return;
     }
-    if (frame_counter / 16) % 2 == 0 {
-        fill_tile(
-            marker_tx as u32 * TILE_SIZE,
-            marker_ty as u32 * TILE_SIZE,
-            Rgba::BLACK,
-            fb,
-        );
-    } else {
-        restore_town_map_marker_layers(state, res, fb, lang, marker_tx, marker_ty);
+    if let Some(rm) = res.as_mut() {
+        restore_town_map_background_rect(rm, fb, bx, by, 16, 16);
+        // Restore steady Player sprite if its 16×16 window overlaps the tile
+        // neighborhood just wiped by `restore_town_map_background_rect`.
+        if let Some((px, py, _)) = town_map_position(state.current_map()) {
+            let pbx = px as u32 * TILE_SIZE + 12;
+            let pby = py as u32 * TILE_SIZE + 5;
+            if pbx.abs_diff(bx) < 24 && pby.abs_diff(by) < 24 {
+                restore_town_map_background_rect(rm, fb, pbx, pby, 16, 16);
+            }
+        }
+        redraw_town_map_sprites_and_chrome(state, rm, frame_counter, fb, lang);
     }
+    draw_view_name_box(state, fb, lang);
 }
 
 fn restore_town_map_background_rect(
@@ -432,26 +358,31 @@ pub fn redraw_town_map_cursor(
                 16,
             );
         }
+        if let Some((nx, ny, _)) = town_map_position(state.selected_map()) {
+            restore_town_map_background_rect(
+                rm,
+                fb,
+                nx as u32 * TILE_SIZE + 12,
+                ny as u32 * TILE_SIZE + 5,
+                16,
+                16,
+            );
+        }
+        if let Some((px, py, _)) = town_map_position(state.current_map()) {
+            restore_town_map_background_rect(
+                rm,
+                fb,
+                px as u32 * TILE_SIZE + 12,
+                py as u32 * TILE_SIZE + 5,
+                16,
+                16,
+            );
+        }
         if state.mode() == TownMapMode::Fly {
             // The embedded font can extend one pixel below its nominal row.
             restore_town_map_background_rect(rm, fb, 0, 0, 160, 2 * TILE_SIZE);
         }
-    }
-    if let Some((px, py, _)) = town_map_position(state.current_map()) {
-        let marker_tx = px as usize + 2;
-        let marker_ty = py as usize + 1;
-        restore_town_map_marker_layers(state, res, fb, lang, marker_tx, marker_ty);
-        if (frame_counter / 16) % 2 == 0
-            && (state.mode() != TownMapMode::View
-                || marker_ty as u32 * TILE_SIZE < view_box_top(lang))
-        {
-            fill_tile(
-                marker_tx as u32 * TILE_SIZE,
-                marker_ty as u32 * TILE_SIZE,
-                Rgba::BLACK,
-                fb,
-            );
-        }
+        redraw_town_map_sprites_and_chrome(state, rm, frame_counter, fb, lang);
     }
     if state.mode() == TownMapMode::View {
         // Reserve 16px for the project font above the original bottom border.
@@ -516,15 +447,12 @@ mod tests {
                     .map(pokered_renderer::resource::ResourceManager::new);
                 let mut actual = FrameBuffer::new(config, Rgba::WHITE);
                 draw_town_map(&state, &mut res, 0, &mut actual, lang);
-                redraw_town_map_marker(&state, &mut res, 16, &mut actual, lang);
-                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
-                draw_town_map(&state, &mut res, 16, &mut expected, lang);
-                assert_framebuffers_equal(&actual, &expected);
-
-                redraw_town_map_marker(&state, &mut res, 32, &mut actual, lang);
-                let mut expected = FrameBuffer::new(config, Rgba::WHITE);
-                draw_town_map(&state, &mut res, 32, &mut expected, lang);
-                assert_framebuffers_equal(&actual, &expected);
+                for &frame in &[24u64, 25, 49, 50] {
+                    redraw_town_map_marker(&state, &mut res, frame, &mut actual, lang);
+                    let mut expected = FrameBuffer::new(config, Rgba::WHITE);
+                    draw_town_map(&state, &mut res, frame, &mut expected, lang);
+                    assert_framebuffers_equal(&actual, &expected);
+                }
             }
         }
     }
@@ -555,10 +483,10 @@ mod tests {
                     b: false,
                 };
                 state.update_frame(input);
-                redraw_town_map_cursor(state, previous, &mut res, 16, &mut actual, lang);
+                redraw_town_map_cursor(state, previous, &mut res, 25, &mut actual, lang);
 
                 let mut expected = FrameBuffer::new(config, Rgba::WHITE);
-                draw_town_map(state, &mut res, 16, &mut expected, lang);
+                draw_town_map(state, &mut res, 25, &mut expected, lang);
                 assert_framebuffers_equal(&actual, &expected);
             }
         }
@@ -587,7 +515,7 @@ mod tests {
                     &state,
                     previous,
                     &mut res,
-                    frame as u64 * 16,
+                    frame as u64 * 25,
                     &mut actual,
                     lang,
                 );
@@ -596,7 +524,7 @@ mod tests {
                 draw_town_map(
                     &state,
                     &mut res,
-                    frame as u64 * 16,
+                    frame as u64 * 25,
                     &mut expected,
                     lang,
                 );

@@ -68,6 +68,7 @@ fn is_field_item(item: ItemId) -> bool {
             | ItemId::TownMap
             | ItemId::Pokedex
             | ItemId::CoinCase
+            | ItemId::CardKey
             | ItemId::OaksParcel
             | ItemId::EscapeRope
             | ItemId::Repel
@@ -560,6 +561,7 @@ mod tests {
             ItemId::CoinCase,
             ItemId::OaksParcel,
             ItemId::Itemfinder,
+            ItemId::CardKey,
             ItemId::PokeFlute,
             ItemId::OldRod,
             ItemId::GoodRod,

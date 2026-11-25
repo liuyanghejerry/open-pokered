@@ -2162,7 +2162,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         let max_r = w_units.max(h_units) as i32;
         for r in 0..=max_r {
             for x in -r..=r {
-                for (y) in [cy - r, cy + r] {
+                for y in [cy - r, cy + r] {
                     if x + cx >= 0 && y >= 0 && (x + cx) < w_units as i32 && y < h_units as i32
                         && walkable((x + cx) as u16, y as u16)
                     {
@@ -2294,6 +2294,33 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
     pub(crate) fn item_use_not_time_message(&self) -> String {
         format!("OAK: {}!\nThis isn't the\ntime to use that!", self.player_name)
+    }
+
+    pub(crate) fn is_facing_locked_card_key_door(&self) -> bool {
+        use dotzuki_engine::overworld::Direction;
+        let (dx, dy): (i32, i32) = match self.state.player.facing {
+            Direction::Up => (0, -1),
+            Direction::Down => (0, 1),
+            Direction::Left => (-1, 0),
+            Direction::Right => (1, 0),
+        };
+        let fx = self.state.player.x as i32 + dx;
+        let fy = self.state.player.y as i32 + dy;
+        if fx < 0 || fy < 0 {
+            return false;
+        }
+        let bx = (fx as u32) / 2;
+        let by = (fy as u32) / 2;
+        let doors = crate::overworld::map_loading::silph_card_key_doors(self.state.current_map);
+        if !doors.iter().any(|&(dx, dy, _)| dx == bx && dy == by) {
+            return false;
+        }
+        let Some(ref map_data) = self.map_data else {
+            return true;
+        };
+        let idx = (by as usize) * (map_data.width as usize) + (bx as usize);
+        let open_block = if self.state.current_map == MapId::SilphCo11F { 3 } else { 14 };
+        map_data.blocks.get(idx).copied().is_some_and(|b| b != open_block)
     }
 
     /// Includes the original ItemMenuLoop / CloseStartMenu disposition.
@@ -2515,6 +2542,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 let text = self.use_fishing_rod(rod);
                 closes_bag = self.pending_fishing.is_some();
                 Some(text)
+            }
+            // CARD KEY (ItemUseCardKey, engine/items/item_effects.asm:1554-1603):
+            // when facing a locked Silph Co. card-key door tile, closes the bag
+            // and prints "<PLAYER> used CARD KEY!" (preserving the original's
+            // BIT_UNUSED_CARD_KEY no-op — actual unlocking is PrintCardKeyText
+            // on A-press); elsewhere falls through to Oak's NotTime refusal.
+            ItemId::CardKey => {
+                if self.is_facing_locked_card_key_door() {
+                    closes_bag = true;
+                    Some(format!("{} used\nCARD KEY!", self.player_name))
+                } else {
+                    Some(self.item_use_not_time_message())
+                }
             }
             // Anything else can't be used from the field.
             _ => Some(self.item_use_not_time_message()),

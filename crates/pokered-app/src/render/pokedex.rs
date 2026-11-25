@@ -31,6 +31,19 @@ pub fn draw_pokedex_screen(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
+    draw_pokedex_screen_at_frame(state, current_map, is_zh, 0, res, fb);
+}
+
+/// Frame-aware Pokédex renderer: drives the 25-frame nest-icon blink on the
+/// AREA screen (`TownMapSpriteBlinkingAnimation`, `engine/items/town_map.asm`).
+pub fn draw_pokedex_screen_at_frame(
+    state: &PokedexScreenState,
+    current_map: MapId,
+    is_zh: bool,
+    frame_counter: u64,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
     match state.mode() {
         PokedexScreenMode::List => draw_dex_list(state, is_zh, res, fb),
         PokedexScreenMode::SideMenu => draw_dex_list(state, is_zh, res, fb),
@@ -39,7 +52,9 @@ pub fn draw_pokedex_screen(
             let owned = state.is_owned(state.cursor());
             draw_entry_for_species(sp, state.entry_page(), owned, is_zh, res, fb);
         }
-        PokedexScreenMode::Area => draw_dex_area(state, current_map, is_zh, res, fb),
+        PokedexScreenMode::Area => {
+            draw_dex_area_at_frame(state, current_map, is_zh, frame_counter, res, fb)
+        }
     }
 }
 
@@ -204,6 +219,17 @@ pub fn draw_dex_area(
     res: &mut Option<ResourceManager>,
     fb: &mut FrameBuffer,
 ) {
+    draw_dex_area_at_frame(state, current_map, is_zh, 0, res, fb);
+}
+
+pub fn draw_dex_area_at_frame(
+    state: &PokedexScreenState,
+    current_map: MapId,
+    is_zh: bool,
+    frame_counter: u64,
+    res: &mut Option<ResourceManager>,
+    fb: &mut FrameBuffer,
+) {
     fb.clear(Rgba::WHITE);
     let fg = Rgba::BLACK;
     let t = TILE_SIZE;
@@ -233,44 +259,48 @@ pub fn draw_dex_area(
             let label = ui_label("AREA UNKNOWN", is_zh);
             draw_text(&format!(" {label}"), 2 * t, 8 * t + 4, fg, fb);
         } else {
-            // 2. Nest icons on every habitat (MonNestIcon sprite, 8×8).
-            if let Ok(nest) = rm.load_town_map("mon_nest_icon") {
-                let nts = nest.tileset.clone();
-                for map in &areas {
-                    if let Some((x, y, _)) = town_map_position(*map) {
-                        blit_single_tile(
-                            fb,
-                            &nts,
-                            0,
-                            (x as u32) * t,
-                            (y as u32) * t,
-                            &GRAYSCALE_PALETTE,
-                        );
-                    }
-                }
-            }
-            // 3. Player marker at the current map (DrawPlayerOrBirdSprite with
-            // OAM base tile $0 — the PLAYER sprite, 16×16, centered on the
-            // landmark like the bird: OAM coords x*8+24/y*8+24 minus the 4px
-            // 16×16 offset → top-left at x*8+4, y*8+4). gfx/player/red.png
-            // is the battle back sprite — the OVERWORLD sheet is
-            // gfx/sprites/red.png (16×96); its Down-standing frame (tiles
-            // 0-3) is the town-map player sprite.
+            let sprite_pal = Palette::new(&[
+                Rgba::TRANSPARENT,
+                GRAYSCALE_PALETTE.colors[1],
+                GRAYSCALE_PALETTE.colors[2],
+                GRAYSCALE_PALETTE.colors[3],
+            ]);
+            // 2. Player marker at the current map (`DrawPlayerOrBirdSprite`
+            // with OAM base tile $0 → `wShadowOAMSprite36..39`, which
+            // `TownMapSpriteBlinkingAnimation` keeps visible continuously).
+            // `TownMapCoordsToOAMCoords` (x*8+24, y*8+24) + `WriteTownMapSpriteOAM`
+            // (net -4 X, -3 Y) + hardware OAM offset (-8 X, -16 Y) → (x*8+12, y*8+5).
             if let Ok(player) = rm.load_sprite("red") {
                 let pts = player.tileset.clone();
-                let player_pal = Palette::new(&[
-                    Rgba::TRANSPARENT,
-                    GRAYSCALE_PALETTE.colors[1],
-                    GRAYSCALE_PALETTE.colors[2],
-                    GRAYSCALE_PALETTE.colors[3],
-                ]);
                 if let Some((x, y, _)) = town_map_position(current_map) {
-                    let bx = (x as u32) * t + t / 2;
-                    let by = (y as u32) * t + t / 2;
-                    blit_single_tile(fb, &pts, 0, bx, by, &player_pal);
-                    blit_single_tile(fb, &pts, 1, bx + t, by, &player_pal);
-                    blit_single_tile(fb, &pts, 2, bx, by + t, &player_pal);
-                    blit_single_tile(fb, &pts, 3, bx + t, by + t, &player_pal);
+                    let bx = (x as u32) * t + 12;
+                    let by = (y as u32) * t + 5;
+                    blit_single_tile(fb, &pts, 0, bx, by, &sprite_pal);
+                    blit_single_tile(fb, &pts, 1, bx + t, by, &sprite_pal);
+                    blit_single_tile(fb, &pts, 2, bx, by + t, &sprite_pal);
+                    blit_single_tile(fb, &pts, 3, bx + t, by + t, &sprite_pal);
+                }
+            }
+            // 3. Nest icons on every habitat (`MonNestIcon` in OAM slots 0..35:
+            // higher OAM priority than Sprite36..39 when visible, and blinked
+            // 25 frames ON / 25 frames OFF by `TownMapSpriteBlinkingAnimation`).
+            // `TownMapCoordsToOAMCoords` (x*8+24, y*8+24) + hardware OAM offset
+            // (-8 X, -16 Y) → ((x+2)*8, (y+1)*8).
+            if (frame_counter % 50) < 25 {
+                if let Ok(nest) = rm.load_town_map("mon_nest_icon") {
+                    let nts = nest.tileset.clone();
+                    for map in &areas {
+                        if let Some((x, y, _)) = town_map_position(*map) {
+                            blit_single_tile(
+                                fb,
+                                &nts,
+                                0,
+                                (x as u32 + 2) * t,
+                                (y as u32 + 1) * t,
+                                &sprite_pal,
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -884,10 +914,10 @@ mod area_marker_visual {
         let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
         // Cinnabar Island: far from all Pikachu habitats, so the 16×16
         // marker window at its landmark is the player sprite alone.
-        draw_pokedex_screen(&state, MapId::CinnabarIsland, false, &mut res, &mut fb);
+        draw_pokedex_screen_at_frame(&state, MapId::CinnabarIsland, false, 0, &mut res, &mut fb);
         let (x, y, _) = town_map_position(MapId::CinnabarIsland).expect("cinnabar");
-        let bx = (x as u32) * TILE_SIZE + TILE_SIZE / 2;
-        let by = (y as u32) * TILE_SIZE + TILE_SIZE / 2;
+        let bx = (x as u32) * TILE_SIZE + 12;
+        let by = (y as u32) * TILE_SIZE + 5;
         // DrawPlayerOrBirdSprite with OAM base tile $0 = the PLAYER sprite:
         // the marker window must match gfx/sprites/red.png's first frame
         // (the Down-standing pose), palette-mapped like the renderer.
@@ -923,6 +953,32 @@ mod area_marker_visual {
             ink_pixels > 60,
             "the player sprite frame is mostly ink ({ink_pixels} px)"
         );
+
+        // Nest icons blink 25 frames ON / 25 frames OFF while the player
+        // sprite stays visible (`TownMapSpriteBlinkingAnimation`).
+        let habitat = state.area_maps()[0];
+        let (hx, hy, _) = town_map_position(habitat).expect("habitat pos");
+        let nbx = (hx as u32 + 2) * TILE_SIZE;
+        let nby = (hy as u32 + 1) * TILE_SIZE;
+        let mut fb_off = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_pokedex_screen_at_frame(&state, MapId::CinnabarIsland, false, 25, &mut res, &mut fb_off);
+        let mut nest_diff = 0u32;
+        for dy in 0..TILE_SIZE {
+            for dx in 0..TILE_SIZE {
+                if fb.get_pixel(nbx + dx, nby + dy) != fb_off.get_pixel(nbx + dx, nby + dy) {
+                    nest_diff += 1;
+                }
+            }
+        }
+        assert!(nest_diff > 0, "nest icon must blink off at frame 25");
+        let mut fb_on_again = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        draw_pokedex_screen_at_frame(&state, MapId::CinnabarIsland, false, 50, &mut res, &mut fb_on_again);
+        for y in 0..144 {
+            for x in 0..160 {
+                assert_eq!(fb.get_pixel(x, y), fb_on_again.get_pixel(x, y));
+            }
+        }
+
         let path = std::env::temp_dir().join("pokedex_area_marker_test.png");
         fb.save_png(&path).expect("save area png");
     }
