@@ -1198,6 +1198,7 @@ enum PokedexVisualKey {
         species: Species,
         current_map: MapId,
         version: GameVersion,
+        nest_visible: bool,
         language: Lang,
     },
 }
@@ -1243,6 +1244,7 @@ impl PokedexVisualKey {
                 species: state.cursor_species(),
                 current_map: game.overworld.state.current_map,
                 version: state.version(),
+                nest_visible: !state.area_maps().is_empty() && (game.frame_count % 50) < 25,
                 language,
             },
         }
@@ -1909,19 +1911,20 @@ struct TownMapVisualKey {
 impl TownMapVisualKey {
     fn new(game: &PokemonGame) -> Self {
         let state = &game.town_map_screen;
-        let marker_position = pokered_data::town_map_data::town_map_position(state.current_map());
-        let visible_marker_rows = if game.state.config.language == Lang::Zh { 13 } else { 14 };
+        let lang = game.state.config.language;
+        let selected_visible = state.mode() == TownMapMode::View
+            && pokered_data::town_map_data::town_map_position(state.selected_map())
+                .is_some_and(|(_, y, _)| (y as u32) * 8 + 5 < 14 * 8);
         Self {
             current_map: state.current_map(),
             selected_map: state.selected_map(),
             mode: state.mode(),
-            marker_phase: match marker_position {
-                Some((_, y, _)) if state.mode() != TownMapMode::View || y < visible_marker_rows => {
-                    ((game.frame_count / 16) & 1) as u8
-                }
-                _ => 0,
+            marker_phase: if selected_visible {
+                u8::from((game.frame_count % 50) < 25)
+            } else {
+                0
             },
-            language: game.state.config.language,
+            language: lang,
         }
     }
 
@@ -2617,8 +2620,13 @@ impl RenderSession {
                     ))
                 });
             let town_map_marker_damage = town_map_marker_animation_change
-                .then(|| super::town_map::marker_damage(game.town_map_screen.current_map())
-                    .map(|rect| [rect.into()]))
+                .then(|| {
+                    super::town_map::marker_damage(
+                        &game.town_map_screen,
+                        game.state.config.language,
+                    )
+                    .map(|rect| [rect.into()])
+                })
                 .flatten();
             let town_map_cursor_damage = town_map_cursor_change.and_then(|previous_map| {
                 super::town_map::cursor_damage(

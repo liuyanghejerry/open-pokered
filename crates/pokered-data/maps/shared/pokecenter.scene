@@ -31,5 +31,6 @@ game_scene pokecenter {
 
   @storyline("talkLinkReceptionist") {
     @speaker("") { @t("Welcome to the\nCable Club!", "欢迎来到\n连接俱乐部！") }
+    linkStart()
   }
 }

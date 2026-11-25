@@ -32,13 +32,19 @@ game_scene SilphCo7F {
   // on each door block's tiles, gated by hasItem("CARD_KEY"), sets the unlock
   // flag and opens the door. Door block (bx,by) → tiles x∈{2bx,2bx+1}, y∈{2by,2by+1}.
   @load {
-    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")) {
+    @if (getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")) {
+      replaceTileBlock(5, 3, 14)
+    } @else {
       replaceTileBlock(5, 3, 84)
     }
-    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")) {
+    @if (getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")) {
+      replaceTileBlock(10, 2, 14)
+    } @else {
       replaceTileBlock(10, 2, 84)
     }
-    @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")) {
+    @if (getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")) {
+      replaceTileBlock(10, 6, 14)
+    } @else {
       replaceTileBlock(10, 6, 84)
     }
   }
@@ -48,9 +54,13 @@ game_scene SilphCo7F {
     @trigger(map = "SilphCo7F", coords = [[10, 6], [11, 6], [10, 7], [11, 7]], name = "cardKeyDoor11")
     @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")) {
       @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR1")
         replaceTileBlock(5, 3, 14)
         playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
       }
     }
   }
@@ -60,9 +70,13 @@ game_scene SilphCo7F {
     @trigger(map = "SilphCo7F", coords = [[20, 4], [21, 4], [20, 5], [21, 5]], name = "cardKeyDoor21")
     @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")) {
       @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR2")
         replaceTileBlock(10, 2, 14)
         playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
       }
     }
   }
@@ -72,9 +86,13 @@ game_scene SilphCo7F {
     @trigger(map = "SilphCo7F", coords = [[20, 12], [21, 12], [20, 13], [21, 13]], name = "cardKeyDoor31")
     @if (!getFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")) {
       @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_7_UNLOCKED_DOOR3")
         replaceTileBlock(10, 6, 14)
         playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
       }
     }
   }

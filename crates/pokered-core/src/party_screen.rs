@@ -3,7 +3,7 @@ use crate::battle::state::Pokemon;
 use crate::overworld::hm_effects;
 use pokered_data::moves::MoveId;
 
-fn hp_bar_pixels(hp: u16, max_hp: u16) -> u8 {
+pub(crate) fn hp_bar_pixels(hp: u16, max_hp: u16) -> u8 {
     if hp == 0 || max_hp == 0 {
         return 0;
     }

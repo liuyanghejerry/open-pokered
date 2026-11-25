@@ -115,7 +115,8 @@ use crate::render::{
     draw_bag, draw_battle, draw_credits, draw_diploma, draw_elevator, draw_evolution,
     draw_filter_bag, draw_gamefreak_splash, draw_hof_ceremony, draw_intro_scene, draw_main_menu,
     draw_mart, draw_oak_speech, draw_options_menu, draw_overworld, draw_party_screen, draw_pc,
-    draw_pokedex_screen, draw_save_menu, draw_slots, draw_start_menu, draw_stats_screen,
+    draw_pokedex_screen_at_frame, draw_save_menu, draw_slots, draw_start_menu,
+    draw_stats_screen,
     draw_title_screen, draw_town_map, draw_trade, draw_trainer_card, BattleVisualEffects,
 };
 
@@ -1132,6 +1133,7 @@ impl PokemonGame {
         role: LinkRole,
     ) {
         self.link_role = role;
+        self.link_cable.set_role(role);
         self.link_session = Some(LinkSession::new(
             transport,
             crate::link::link_activity,
@@ -6551,6 +6553,7 @@ impl PokemonGame {
 
         // Drive the battle driver; feed its events to the Cable Club flow
         // and keep the link status in sync.
+        self.link_cable.set_role(self.link_role);
         let mut needs = Vec::new();
         if let Some(driver) = self.link_battle.as_mut() {
             for ev in driver.poll() {
@@ -6647,6 +6650,17 @@ impl PokemonGame {
                 self.save_to_file();
                 if let Some(audio) = &self.audio { audio.play_sfx(SfxId::Save); }
                 return;
+            }
+            FlowNeed::SendReceptionChoice { selected, cancel } => {
+                let Some(session) = self.link_session.as_mut() else {
+                    return;
+                };
+                let Some(driver) = self.link_trade.as_mut() else {
+                    return;
+                };
+                driver
+                    .send_reception_choice(&mut *session.trade_transport(), *selected, *cancel)
+                    .map_err(link_trade_err_to_transport)
             }
             FlowNeed::EnterRoom(kind) => {
                 self.warp_to_cable_room(match kind { LinkKind::Trade => MapId::TradeCenter, LinkKind::Battle => MapId::Colosseum });
@@ -8699,10 +8713,11 @@ impl PokemonGame {
                     self.state.config.language,
                     pokered_core::game_state::Lang::Zh
                 );
-                draw_pokedex_screen(
+                draw_pokedex_screen_at_frame(
                     &self.pokedex_screen,
                     self.overworld.state.current_map,
                     is_zh,
+                    self.frame_count,
                     &mut self.resources,
                     frame_buffer,
                 );
@@ -10218,6 +10233,92 @@ mod link_stats_cry_fidelity_tests {
                 assert_eq!((npc.x,npc.y), opposite, "TradeCenter_Script NPC bytes subtract the object +4 offset");
             }
 
+        });
+    }
+
+    #[test]
+    fn actual_receptionist_syncs_room_choice_and_host_wins_simultaneous_ties() {
+        run_link_save_fixture(|| {
+            use pokered_core::overworld::Direction;
+            let enter_reception_menu = |host: &mut PokemonGame, guest: &mut PokemonGame| {
+                let idle = InputState::new();
+                for _ in 0..120 {
+                    host.update(&idle);
+                    guest.update(&idle);
+                }
+                host.update(&button(GbButton::A));
+                guest.update(&button(GbButton::A));
+                for frame in 0..2000 {
+                    let h_ready = matches!(host.link_cable.phase(), CableClubPhase::ReceptionSave { .. });
+                    let g_ready = matches!(guest.link_cable.phase(), CableClubPhase::ReceptionSave { .. });
+                    if h_ready && g_ready {
+                        break;
+                    }
+                    let advance = button(GbButton::A);
+                    host.update(if !h_ready && frame % 20 == 19 { &advance } else { &idle });
+                    guest.update(if !g_ready && frame % 20 == 19 { &advance } else { &idle });
+                }
+                host.update(&button(GbButton::A));
+                guest.update(&button(GbButton::A));
+                assert!(matches!(host.link_cable.phase(), CableClubPhase::ReceptionMenu { .. }));
+                assert!(matches!(guest.link_cable.phase(), CableClubPhase::ReceptionMenu { .. }));
+            };
+
+            let make_pair = || {
+                let mut host = fixture(Species::Bulbasaur, 11, Direction::Up);
+                let mut guest = fixture(Species::Pikachu, 11, Direction::Up);
+                for g in [&mut host, &mut guest] {
+                    g.overworld = OverworldScreen::new(MapId::ViridianPokecenter, None, PokemonRedData);
+                    g.overworld.set_event_flag_live(pokered_data::event_flags::EventFlag::EVENT_GOT_POKEDEX);
+                    g.overworld.state.player.x = 11;
+                    g.overworld.state.player.y = 3;
+                    g.overworld.state.player.facing = Direction::Up;
+                    g.overworld.run_on_load();
+                }
+                let (a, b) = ChannelTransport::new_pair();
+                host.attach_link_transport(Box::new(a), LinkRole::Host);
+                guest.attach_link_transport(Box::new(b), LinkRole::Guest);
+                (host, guest)
+            };
+
+            // 1. Guest picks COLOSSEUM while Host hasn't pressed A -> both enter Colosseum.
+            let (mut host, mut guest) = make_pair();
+            enter_reception_menu(&mut host, &mut guest);
+            let idle = InputState::new();
+            guest.update(&button(GbButton::Down));
+            host.update(&idle);
+            guest.update(&button(GbButton::A));
+            host.update(&idle);
+            for _ in 0..400 {
+                host.update(&idle);
+                guest.update(&idle);
+                if host.overworld.state.current_map == MapId::Colosseum
+                    && guest.overworld.state.current_map == MapId::Colosseum
+                {
+                    break;
+                }
+            }
+            assert_eq!(host.overworld.state.current_map, MapId::Colosseum);
+            assert_eq!(guest.overworld.state.current_map, MapId::Colosseum);
+
+            // 2. Simultaneous choice: Host picks COLOSSEUM (1), Guest picks TRADE CENTER (0) -> Host wins.
+            let (mut host, mut guest) = make_pair();
+            enter_reception_menu(&mut host, &mut guest);
+            host.update(&button(GbButton::Down));
+            guest.update(&idle);
+            host.update(&button(GbButton::A));
+            guest.update(&button(GbButton::A));
+            for _ in 0..400 {
+                host.update(&idle);
+                guest.update(&idle);
+                if host.overworld.state.current_map == MapId::Colosseum
+                    && guest.overworld.state.current_map == MapId::Colosseum
+                {
+                    break;
+                }
+            }
+            assert_eq!(host.overworld.state.current_map, MapId::Colosseum);
+            assert_eq!(guest.overworld.state.current_map, MapId::Colosseum);
         });
     }
 

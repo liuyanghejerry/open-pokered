@@ -72,6 +72,7 @@ pub fn link_activity(msg: &NetworkMessage) -> Activity {
         // Battle results (protocol v2+) belong to the battle driver.
         | NetworkMessage::BattleResult(_) => Activity::Battle,
         NetworkMessage::RequestTrade
+        | NetworkMessage::ReceptionChoice { .. }
         | NetworkMessage::AcceptTrade
         | NetworkMessage::DeclineTrade
         | NetworkMessage::SelectMon(_)

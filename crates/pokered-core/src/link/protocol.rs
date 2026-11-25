@@ -63,6 +63,10 @@ pub enum NetworkMessage {
     BattleResult(LinkBattleResult),
 
     RequestTrade,
+    ReceptionChoice {
+        selected: u8,
+        cancel: bool,
+    },
     AcceptTrade,
     DeclineTrade,
     SelectMon(u8),

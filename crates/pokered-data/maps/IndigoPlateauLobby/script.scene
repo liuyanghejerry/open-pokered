@@ -4,7 +4,7 @@
 //
 // Five NPCs: a Pokemon Center nurse (heal), the gym-guide and a
 // cooltrainer (dialogue-only Elite Four hints), a mart clerk (shop),
-// and the cable-club link receptionist (link has no API -> stubbed).
+// and the cable-club link receptionist (`linkStart()`).
 // The original on-enter logic resets a few Elite Four / Victory Road
 // boulder events; reproduced with resetFlag for the ones that map to
 // real flags.

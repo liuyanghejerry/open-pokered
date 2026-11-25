@@ -5,9 +5,9 @@
 // serial-connection internal/external clock; the opponent's only text is "!".
 // The link stack IS implemented (crates/pokered-core/src/link/ + pokered-app
 // src/link/: TCP/BroadcastChannel transport, link battle/trade drivers,
-// CableClubFlow) — the desks call game.linkStart(); offline it shows the
-// faithful "!" dialogue. NOTE: the in-game ENTRY from a Poké Center
-// receptionist (LinkMenu) is not wired yet — entering requires the debug warp.
+// CableClubFlow) — entered via the Poké Center / Indigo Plateau receptionist
+// or CLI; the desks call game.linkStart(), and offline it shows the faithful
+// "!" dialogue.
 
 game_scene TradeCenter {
   // ── Link opponent (npc 1) — the other player's avatar ───────────────────

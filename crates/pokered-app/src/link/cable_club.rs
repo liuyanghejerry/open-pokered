@@ -54,6 +54,10 @@ pub enum LinkKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FlowNeed {
     SaveReception,
+    SendReceptionChoice {
+        selected: u8,
+        cancel: bool,
+    },
     CancelReception,
     CancelRoomSelection,
     EnterRoom(LinkKind),
@@ -195,6 +199,8 @@ impl CableClubPhase {
 #[derive(Debug)]
 pub struct CableClubFlow {
     phase: CableClubPhase,
+    role: pokered_core::link::LinkRole,
+    pending_peer_reception_choice: Option<(u8, bool)>,
     pending_peer_request: Option<LinkKind>,
     /// Trade party selector (created when the trade menu opens).
     selector: Option<PartySelectState>,
@@ -237,6 +243,8 @@ impl CableClubFlow {
     pub fn new() -> Self {
         CableClubFlow {
             phase: CableClubPhase::Inactive,
+            role: pokered_core::link::LinkRole::Host,
+            pending_peer_reception_choice: None,
             pending_peer_request: None,
             selector: None,
             remote_party: Vec::new(),
@@ -256,6 +264,10 @@ impl CableClubFlow {
             transient_text: None,
             pending_our_cancel: false,
         }
+    }
+
+    pub fn set_role(&mut self, role: pokered_core::link::LinkRole) {
+        self.role = role;
     }
 
     pub fn phase(&self) -> &CableClubPhase {
@@ -433,6 +445,7 @@ impl CableClubFlow {
     /// `game.linkStart()`). Starts the request for the room's activity.
     pub fn on_receptionist_used(&mut self) {
         self.phase = CableClubPhase::ReceptionText;
+        self.pending_peer_reception_choice = None;
         self.transient_text = None;
     }
 
@@ -555,10 +568,20 @@ impl CableClubFlow {
                 }
                 self.phase = CableClubPhase::ReceptionSave { selected };
                 if input.b || (input.a && selected == 1) {
+                    self.pending_peer_reception_choice = None;
                     self.phase = CableClubPhase::Inactive;
                     return FlowNeed::CancelReception;
                 } else if input.a {
-                    self.phase = CableClubPhase::ReceptionMenu { selected: 0 };
+                    if let Some((peer_sel, peer_cancel)) =
+                        self.pending_peer_reception_choice.take()
+                    {
+                        self.phase = CableClubPhase::ReceptionChosen {
+                            selected: if peer_cancel { 2 } else { peer_sel },
+                            frames_left: 40,
+                        };
+                    } else {
+                        self.phase = CableClubPhase::ReceptionMenu { selected: 0 };
+                    }
                     return FlowNeed::SaveReception;
                 }
                 FlowNeed::None
@@ -572,9 +595,30 @@ impl CableClubFlow {
                 }
                 self.phase = CableClubPhase::ReceptionMenu { selected };
                 if input.b || input.a {
+                    let local_chosen = if input.b { 2 } else { selected };
+                    let chosen = if let Some((peer_sel, peer_cancel)) =
+                        self.pending_peer_reception_choice.take()
+                    {
+                        // LinkMenu (engine/menus/main_menu.asm:204-213): when
+                        // both players press A/B on the same exchange, the
+                        // Game Boy clocking the connection (Host) wins.
+                        if self.role == pokered_core::link::LinkRole::Host {
+                            local_chosen
+                        } else if peer_cancel {
+                            2
+                        } else {
+                            peer_sel
+                        }
+                    } else {
+                        local_chosen
+                    };
                     self.phase = CableClubPhase::ReceptionChosen {
-                        selected: if input.b { 2 } else { selected },
+                        selected: chosen,
                         frames_left: 40,
+                    };
+                    return FlowNeed::SendReceptionChoice {
+                        selected,
+                        cancel: input.b,
                     };
                 }
                 FlowNeed::None
@@ -1007,6 +1051,34 @@ impl CableClubFlow {
                 }
                 FlowNeed::None
             }
+            PeerReceptionChoice { selected, cancel } => {
+                let peer_chosen = if *cancel { 2 } else { *selected };
+                match self.phase {
+                    CableClubPhase::ReceptionMenu { .. } => {
+                        self.pending_peer_reception_choice = None;
+                        self.phase = CableClubPhase::ReceptionChosen {
+                            selected: peer_chosen,
+                            frames_left: 40,
+                        };
+                    }
+                    CableClubPhase::ReceptionChosen { frames_left, .. }
+                        if self.role == pokered_core::link::LinkRole::Guest =>
+                    {
+                        // Simultaneous selection: internal-clock Host wins
+                        // (engine/menus/main_menu.asm:204-213).
+                        self.pending_peer_reception_choice = None;
+                        self.phase = CableClubPhase::ReceptionChosen {
+                            selected: peer_chosen,
+                            frames_left,
+                        };
+                    }
+                    CableClubPhase::ReceptionText | CableClubPhase::ReceptionSave { .. } => {
+                        self.pending_peer_reception_choice = Some((*selected, *cancel));
+                    }
+                    _ => {}
+                }
+                FlowNeed::None
+            }
             Disconnected => {
                 self.on_disconnected();
                 FlowNeed::None
@@ -1026,6 +1098,7 @@ impl CableClubFlow {
     /// "The link was canceled."). Shared by both drivers' `Disconnected`
     /// events.
     fn on_disconnected(&mut self) {
+        self.pending_peer_reception_choice = None;
         self.pending_peer_request = None;
         let text = match self.phase {
             CableClubPhase::TradeSelect
@@ -1079,6 +1152,7 @@ impl CableClubFlow {
     }
 
     fn reset(&mut self) {
+        self.pending_peer_reception_choice = None;
         self.pending_peer_request = None;
         self.phase = CableClubPhase::Inactive;
         self.clear_selection();
@@ -1160,7 +1234,10 @@ mod receptionist_fidelity_tests {
                 },
                 &[]
             ),
-            FlowNeed::None
+            FlowNeed::SendReceptionChoice {
+                selected: 0,
+                cancel: false,
+            }
         );
         finish_room_delay(&mut flow, LinkKind::Trade);
         assert_eq!(flow.phase(), &CableClubPhase::Inactive);
@@ -1207,7 +1284,10 @@ mod receptionist_fidelity_tests {
                 },
                 &[]
             ),
-            FlowNeed::None
+            FlowNeed::SendReceptionChoice {
+                selected: 1,
+                cancel: false,
+            }
         );
         finish_room_delay(&mut flow, LinkKind::Battle);
     }
@@ -1249,7 +1329,10 @@ mod reception_room_cancel_tests {
                     },
                     &[]
                 ),
-                FlowNeed::None
+                FlowNeed::SendReceptionChoice {
+                    selected: if use_b { 0 } else { 2 },
+                    cancel: use_b,
+                }
             );
             for _ in 0..42 {
                 assert_eq!(flow.update(PartyScreenInput::none(), &[]), FlowNeed::None);

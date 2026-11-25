@@ -81,42 +81,47 @@ game_scene SilphCo2F {
   //   Door2: asm "lb bc, 5, 2"  → block (X=2, Y=5), flag EVENT_SILPH_CO_2_UNLOCKED_DOOR2
   //   OPEN block id = $e (14), CLOSED (wall) block id = $54 (84).
   @load {
-    // Re-close each door on entry until its flag is set (mirrors the callback).
-    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
+    @if (getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
+      replaceTileBlock(2, 2, 14)
+    } @else {
       replaceTileBlock(2, 2, 84)
     }
-    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
+    @if (getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
+      replaceTileBlock(2, 5, 14)
+    } @else {
       replaceTileBlock(2, 5, 84)
     }
   }
 
-  // Door1 solve: original is a CARD_KEY inspect on the door tile (no tile-inspect
-  // trigger exists, so approximate with a coord trigger at the door tiles
-  // (X=4,Y=4)/(X=4,Y=5) gated by hasItem("CARD_KEY")). Opens block (X=2,Y=2).
+  // Door1 solve: OnInteract on the door block (X=2, Y=2) from the corridor.
   @storyline("cardKeyDoor1") {
     @trigger(map = "SilphCo2F", name = "cardKeyDoor11")
-    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
-      @speaker("") { @t("Bingo!", "成功了！") }
-      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
-      setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")
-      replaceTileBlock(2, 2, 14)
-      playSound("SFX_GO_INSIDE")
-    } @else {
-      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "成功了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR1")
+        replaceTileBlock(2, 2, 14)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
     }
   }
 
-  // Door2 solve: block (X=2,Y=5) door tiles at (X=4,Y=10)/(X=4,Y=11).
+  // Door2 solve: OnInteract on the door block (X=2, Y=5) from the corridor.
   @storyline("cardKeyDoor2") {
     @trigger(map = "SilphCo2F", name = "cardKeyDoor21")
-    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
-      @speaker("") { @t("Bingo!", "成功了！") }
-      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
-      setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")
-      replaceTileBlock(2, 5, 14)
-      playSound("SFX_GO_INSIDE")
-    } @else {
-      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    @if (!getFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "成功了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_2_UNLOCKED_DOOR2")
+        replaceTileBlock(2, 5, 14)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
     }
   }
 }

@@ -67,7 +67,7 @@ top_level_bag_cursor_position,
     top_level_bag_viewport_offset, };
 pub use pc::draw_pc;
 pub use pc::redraw_pc_cursor;
-pub use pokedex::draw_pokedex_screen;
+pub use pokedex::{draw_pokedex_screen, draw_pokedex_screen_at_frame};
 pub use pokedex::redraw_pokedex_cursor;
 pub use slots::draw_slots;
 pub use slots::redraw_slots_bet_cursor;

@@ -1001,6 +1001,146 @@ fn silph_third_floor_door_requires_key_and_stays_open_after_reentry() {
 }
 
 #[test]
+fn silph_card_key_doors_2f_to_10f_open_from_corridor_and_persist() {
+    use pokered_data::impl_traits::PokemonRedData;
+    let cases = [
+        (MapId::SilphCo2F, 4u8, 3u8, Direction::Down, (2usize, 2usize), 84u8, "EVENT_SILPH_CO_2_UNLOCKED_DOOR1"),
+        (MapId::SilphCo4F, 4, 11, Direction::Down, (2, 6), 84, "EVENT_SILPH_CO_4_UNLOCKED_DOOR1"),
+        (MapId::SilphCo5F, 8, 4, Direction::Left, (3, 2), 95, "EVENT_SILPH_CO_5_UNLOCKED_DOOR1"),
+        (MapId::SilphCo6F, 6, 12, Direction::Left, (2, 6), 95, "EVENT_SILPH_CO_6_UNLOCKED_DOOR"),
+        (MapId::SilphCo7F, 10, 5, Direction::Down, (5, 3), 84, "EVENT_SILPH_CO_7_UNLOCKED_DOOR1"),
+        (MapId::SilphCo8F, 8, 8, Direction::Left, (3, 4), 95, "EVENT_SILPH_CO_8_UNLOCKED_DOOR"),
+        (MapId::SilphCo9F, 4, 8, Direction::Left, (1, 4), 95, "EVENT_SILPH_CO_9_UNLOCKED_DOOR1"),
+        (MapId::SilphCo10F, 10, 7, Direction::Down, (5, 4), 84, "EVENT_SILPH_CO_10_UNLOCKED_DOOR"),
+    ];
+    let input = |a| super::OverworldInput::new(false, false, false, false, a, false, false, false);
+    for (map, px, py, facing, (bx, by), closed_block, flag) in cases {
+        for has_key in [false, true] {
+            let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+            screen.warp_to_map(map, px, py);
+            let bag = if has_key { vec!["CARD_KEY".into()] } else { vec![] };
+            for _ in 0..80 {
+                screen.seed_script_query_state(0, &bag, 0, 0, 0, 0, &[], 0, 0, 0);
+                screen.update_frame(input(false));
+            }
+            let door_idx = by * screen.map_data.as_ref().unwrap().width as usize + bx;
+            assert_eq!(
+                screen.map_data.as_ref().unwrap().blocks[door_idx],
+                closed_block,
+                "{map:?} door should start closed"
+            );
+            screen.state.player.facing = facing;
+            for _ in 0..2 {
+                screen.update_frame(input(true));
+            }
+            let mut saw_dialogue = false;
+            for frame in 0..180 {
+                if let Some(dialogue) = screen.pending_dialogue.as_mut() {
+                    saw_dialogue = true;
+                    dialogue.skip_to_full_page();
+                }
+                screen.update_frame(input(frame % 4 >= 2));
+            }
+            assert!(saw_dialogue, "{map:?} must print Card Key dialogue (has_key={has_key})");
+            assert_eq!(
+                screen.script_flags().get(flag).copied().unwrap_or(false),
+                has_key,
+                "{map:?} unlock flag mismatch"
+            );
+            assert_eq!(
+                screen.map_data.as_ref().unwrap().blocks[door_idx],
+                if has_key { 14 } else { closed_block },
+                "{map:?} door block after interaction"
+            );
+        }
+    }
+}
+
+#[test]
+fn bag_card_key_uses_facing_locked_door_or_refuses_elsewhere() {
+    use pokered_data::impl_traits::PokemonRedData;
+    use pokered_data::items::ItemId;
+
+    let mut screen = OverworldScreen::new(MapId::PalletTown, None, PokemonRedData);
+    screen.player_name = "RED".to_string();
+    screen.warp_to_map(MapId::SilphCo5F, 8, 4);
+    for _ in 0..80 {
+        screen.update_frame(super::OverworldInput::none());
+    }
+    assert_eq!(screen.state.current_map, MapId::SilphCo5F);
+    let page_text = |s: &OverworldScreen<PokemonRedData>| {
+        let p = s.pending_dialogue.as_ref().unwrap().current().unwrap();
+        format!("{}\n{}", p.line1, p.line2)
+    };
+    // Facing away from door -> Oak's NotTime refusal, bag stays open.
+    screen.state.player.facing = Direction::Right;
+    let res = screen.use_field_item_with_result(ItemId::CardKey, MapId::PalletTown);
+    assert!(!res.closes_bag);
+    assert!(
+        page_text(&screen).contains("OAK:"),
+        "expected Oak refusal away from door"
+    );
+    screen.pending_dialogue = None;
+
+    // Facing locked door block (3,2) -> closes bag and prints ItemUseText00.
+    screen.state.player.facing = Direction::Left;
+    let res = screen.use_field_item_with_result(ItemId::CardKey, MapId::PalletTown);
+    assert!(res.closes_bag);
+    assert_eq!(
+        page_text(&screen),
+        "RED used\nCARD KEY!"
+    );
+}
+
+#[test]
+fn digletts_cave_exits_override_last_map_across_tunnel() {
+    use pokered_data::impl_traits::PokemonRedData;
+
+    // 1. Route 11 -> DiglettsCaveRoute11 -> DiglettsCave -> DiglettsCaveRoute2 -> Route 2
+    let mut screen = OverworldScreen::new(MapId::Route11, None, PokemonRedData);
+    screen.warp_to_map(MapId::DiglettsCaveRoute11, 4, 4);
+    screen.warp_fade_state = super::screen::WarpFadeState::Idle;
+    screen.commit_pending_warp();
+    assert_eq!(screen.last_map, Some(MapId::Route11));
+
+    screen.warp_to_map(MapId::DiglettsCave, 37, 31);
+    screen.warp_fade_state = super::screen::WarpFadeState::Idle;
+    screen.commit_pending_warp();
+    assert_eq!(screen.last_map, Some(MapId::Route11));
+
+    screen.warp_to_map(MapId::DiglettsCaveRoute2, 4, 4);
+    screen.warp_fade_state = super::screen::WarpFadeState::Idle;
+    screen.commit_pending_warp();
+    assert_eq!(
+        screen.last_map,
+        Some(MapId::Route2),
+        "DiglettsCaveRoute2_Script sets wLastMap = ROUTE_2"
+    );
+    screen.state.player.x = 2;
+    screen.state.player.y = 6;
+    screen.state.player.facing = Direction::Down;
+    let down = super::OverworldInput::new(false, true, false, false, false, false, false, false);
+    for _ in 0..120 {
+        screen.update_frame(down);
+        if screen.state.current_map == MapId::Route2 {
+            break;
+        }
+    }
+    assert_eq!(screen.state.current_map, MapId::Route2);
+
+    // 2. Reverse tunnel & UndergroundPathRoute7Copy scripted_last_map
+    screen.warp_to_map(MapId::DiglettsCaveRoute11, 4, 4);
+    screen.warp_fade_state = super::screen::WarpFadeState::Idle;
+    screen.commit_pending_warp();
+    assert_eq!(screen.last_map, Some(MapId::Route11));
+
+    screen.warp_to_map(MapId::UndergroundPathRoute7Copy, 4, 4);
+    screen.warp_fade_state = super::screen::WarpFadeState::Idle;
+    screen.commit_pending_warp();
+    assert_eq!(screen.last_map, Some(MapId::Route7));
+}
+
+#[test]
 fn saffron_liberation_clears_gym_guard_and_restores_citizens() {
     use pokered_data::impl_traits::PokemonRedData;
     for liberated in [false, true] {

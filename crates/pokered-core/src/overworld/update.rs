@@ -4772,11 +4772,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         // A locked door cannot receive OnStep; Card Key interactions target
         // its solid tiles from the adjoining corridor.
-        let card_key_doors: &[(u32, u32, &str)] = match self.state.current_map {
-            MapId::SilphCo3F => &[(4, 4, "cardKeyDoor1"), (8, 4, "cardKeyDoor2")],
-            MapId::SilphCo11F => &[(3, 6, "cardKeyDoor")],
-            _ => &[],
-        };
+        let card_key_doors = crate::overworld::map_loading::silph_card_key_doors(self.state.current_map);
         for &(bx, by, handler) in card_key_doors {
             if !self.script_engine.has_function(handler) { continue; }
             for (x, y) in [(bx * 2, by * 2), (bx * 2 + 1, by * 2),

@@ -27,23 +27,27 @@
 
 game_scene SilphCo5F {
   // ── On-enter gate callback (SilphCo5FGateCallbackScript) ────────────────
-  // Re-apply each OPEN door block from its flag so a solved door stays open on
-  // re-entry. open block $5f = 95 decimal; asm lb bc, Y, X → replaceTileBlock(X, Y, 95).
+  // Locked doors use Facility vertical gate block $5f (95); unlocked doors
+  // use floor block $0e (14).
   @load {
     @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")) {
+      replaceTileBlock(3, 2, 14)
+    } @else {
       replaceTileBlock(3, 2, 95)
     }
     @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")) {
+      replaceTileBlock(3, 6, 14)
+    } @else {
       replaceTileBlock(3, 6, 95)
     }
     @if (getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")) {
+      replaceTileBlock(7, 5, 14)
+    } @else {
       replaceTileBlock(7, 5, 95)
     }
   }
 
   // ── Card-Key door 1 (gate coord (3,2), door block (3,2)) ────────────────
-  // Approximated like SilphCo6F: standing on the card-key door tiles with the
-  // CARD_KEY opens it. Door block (3,2) → tiles x∈{6,7}, y∈{4,5}.
   @storyline("cardKeyDoor1") {
     @trigger(map = "SilphCo5F", name = "cardKeyDoor11")
     @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")) {
@@ -51,7 +55,7 @@ game_scene SilphCo5F {
         @speaker("") { @t("Bingo!", "猜对了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR1")
-        replaceTileBlock(3, 2, 95)
+        replaceTileBlock(3, 2, 14)
         playSound("SFX_GO_INSIDE")
       } @else {
         @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }
@@ -60,7 +64,6 @@ game_scene SilphCo5F {
   }
 
   // ── Card-Key door 2 (gate coord (3,6), door block (3,6)) ────────────────
-  // Door block (3,6) → tiles x∈{6,7}, y∈{12,13}.
   @storyline("cardKeyDoor2") {
     @trigger(map = "SilphCo5F", name = "cardKeyDoor21")
     @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")) {
@@ -68,7 +71,7 @@ game_scene SilphCo5F {
         @speaker("") { @t("Bingo!", "猜对了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR2")
-        replaceTileBlock(3, 6, 95)
+        replaceTileBlock(3, 6, 14)
         playSound("SFX_GO_INSIDE")
       } @else {
         @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }
@@ -77,7 +80,6 @@ game_scene SilphCo5F {
   }
 
   // ── Card-Key door 3 (gate coord (7,5), door block (7,5)) ────────────────
-  // Door block (7,5) → tiles x∈{14,15}, y∈{10,11}.
   @storyline("cardKeyDoor3") {
     @trigger(map = "SilphCo5F", name = "cardKeyDoor31")
     @if (!getFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")) {
@@ -85,7 +87,7 @@ game_scene SilphCo5F {
         @speaker("") { @t("Bingo!", "猜对了！") }
         @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
         setFlag("EVENT_SILPH_CO_5_UNLOCKED_DOOR3")
-        replaceTileBlock(7, 5, 95)
+        replaceTileBlock(7, 5, 14)
         playSound("SFX_GO_INSIDE")
       } @else {
         @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！开门需要磁卡钥匙！") }

@@ -15,26 +15,26 @@ game_scene SilphCo10F {
   //   Door: asm "lb bc, 4, 5" → block (X=5, Y=4), flag EVENT_SILPH_CO_10_UNLOCKED_DOOR
   //   OPEN block id = $e (14), CLOSED (wall) block id = $54 (84).
   @load {
-    // Re-close the door on entry until its flag is set (mirrors the callback).
-    @if (!getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
+    @if (getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
+      replaceTileBlock(5, 4, 14)
+    } @else {
       replaceTileBlock(5, 4, 84)
     }
   }
 
-  // Door solve: original is a CARD_KEY inspect on the door tile $18 (no tile-
-  // inspect trigger exists, so approximate with a coord trigger at the door
-  // tiles (X=10,Y=8)/(X=10,Y=9) — block (5,4)*2 — gated by hasItem("CARD_KEY")).
-  // Opens block (X=5, Y=4).
+  // Door solve: OnInteract on the door block (X=5, Y=4) from the corridor.
   @storyline("cardKeyDoor") {
     @trigger(map = "SilphCo10F", name = "cardKeyDoor1")
-    @if (hasItem("CARD_KEY") && !getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
-      @speaker("") { @t("Bingo!", "猜中了！") }
-      @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
-      setFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")
-      replaceTileBlock(5, 4, 14)
-      playSound("SFX_GO_INSIDE")
-    } @else {
-      @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+    @if (!getFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")) {
+      @if (hasItem("CARD_KEY")) {
+        @speaker("") { @t("Bingo!", "猜中了！") }
+        @speaker("") { @t("The CARD KEY opened the\ndoor!", "磁卡钥匙打开了门！") }
+        setFlag("EVENT_SILPH_CO_10_UNLOCKED_DOOR")
+        replaceTileBlock(5, 4, 14)
+        playSound("SFX_GO_INSIDE")
+      } @else {
+        @speaker("") { @t("Darn! It needs a CARD KEY!", "可恶！需要磁卡钥匙！") }
+      }
     }
   }
 

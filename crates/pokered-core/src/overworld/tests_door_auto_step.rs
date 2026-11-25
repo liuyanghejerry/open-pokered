@@ -78,6 +78,15 @@ fn door_auto_step_checks_npcs_and_preserves_the_clear_exit_cadence() {
             screen.npc_states[0].y = 1;
             screen.npc_states[0].walk_counter = 0;
         }
+        // Drain SilphCo5F's 3 @load card-key gate writes before the first
+        // ordinary overworld frame consumes standing_on_door.
+        while matches!(
+            screen.active_script_effect,
+            Some(super::script_bridge::ScriptEffect::ReplaceTileBlock { .. })
+        ) {
+            screen.update_frame(neutral());
+        }
+        assert!(screen.state.standing_on_door);
         screen.update_frame(neutral());
         assert_eq!(screen.state.exiting_door, !blocked);
         assert_eq!(
