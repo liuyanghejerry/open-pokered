@@ -105,6 +105,23 @@ impl Session {
             s.step(keys);
         }
         assert_eq!(s.pc().phase(), PcPhase::LeagueHoF);
+        assert!(s.pc().league_hof_loading(), "LeaguePCShowMon begins in whiteout/load");
+        assert!(!s.pc().waiting_for_sound(), "cry must wait until GBPalNormal reveal");
+        let mut whiteout_fb = FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE);
+        s.game.draw(&mut whiteout_fb);
+        for y in 0..144 {
+            for x in 0..160 {
+                assert_eq!(whiteout_fb.get_pixel(x, y), Some(Rgba::WHITE),
+                    "HoF whiteout frame must be pure white at ({x},{y})");
+            }
+        }
+        // Short A/B taps during whiteout/load do not skip or trigger cry early.
+        let first_species = s.species();
+        s.step(A);
+        assert!(s.pc().league_hof_loading());
+        assert_eq!(s.species(), first_species);
+        assert!(!s.pc().waiting_for_sound());
+        s.finish_hof_load();
         assert!(s.pc().waiting_for_sound() && s.sound().1);
         let mut pcm = [0.; 1470];
         s.game.audio.as_ref().unwrap().render_pcm(&mut pcm);
@@ -113,6 +130,15 @@ impl Session {
             "actual cry PCM"
         );
         s
+    }
+    fn finish_hof_load(&mut self) {
+        for _ in 0..64 {
+            if !self.pc().league_hof_loading() {
+                break;
+            }
+            self.step(0);
+        }
+        assert!(!self.pc().league_hof_loading(), "HoF picture load did not finish");
     }
     fn unchanged_save(&self) {
         assert_eq!(std::fs::read(&self.path).unwrap(), self.bytes);
@@ -152,6 +178,9 @@ fn cold_hof_pc_cry_ignores_short_a_b_then_allows_the_next_mon() {
                 assert!(!s.sound().1);
                 s.step(A);
                 assert_eq!(s.species(), Species::Lapras);
+                assert!(s.pc().league_hof_loading(), "next mon enters whiteout/load first");
+                assert!(!s.pc().waiting_for_sound());
+                s.finish_hof_load();
                 assert!(s.pc().waiting_for_sound() && s.sound().1);
                 assert_ne!(s.sound().0, sound.0);
                 s.unchanged_save();
@@ -238,7 +267,7 @@ fn cold_full_hof_pc_visits_all_three_hundred_records_with_actual_cries() {
             let mut visited = 0;
             let mut cooldown = 0;
             let mut elapsed = 0;
-            for frame in 0..18000 {
+            for frame in 0..36000 {
                 elapsed = frame;
                 if s.pc().phase() == PcPhase::MainMenu {
                     break;
@@ -248,7 +277,7 @@ fn cold_full_hof_pc_visits_all_three_hundred_records_with_actual_cries() {
                     cooldown -= 1;
                 }
                 let mut keys = 0;
-                if !s.pc().waiting_for_sound() && cooldown == 0 {
+                if !s.pc().league_hof_loading() && !s.pc().waiting_for_sound() && cooldown == 0 {
                     assert_eq!(s.pc().league_hof_progress(), (visited / 6, 50));
                     assert_eq!(s.species(), expected[visited]);
                     visited += 1;

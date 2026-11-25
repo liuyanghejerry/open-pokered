@@ -474,6 +474,12 @@ pub fn draw_pc(
 /// 78-113): the recorded mon's front pic, "HALL OF FAME No. X" and the
 /// nickname / LEVEL / TYPE1 / TYPE2 info (`HoFDisplayMonInfo`).
 fn draw_league_hof(pc: &PcScreen, resources: &mut Option<ResourceManager>, fb: &mut FrameBuffer, is_zh: bool) {
+    if pc.league_hof_loading() {
+        // GBPalWhiteOutWithDelay3 + ClearScreen + front-pic decompress /
+        // CopyVideoData run on a blank white screen before GBPalNormal reveals
+        // the portrait and text (engine/menus/league_pc.asm:78-113).
+        return;
+    }
     let Some((team_no, view)) = pc.league_hof_mon() else {
         return;
     };
@@ -851,6 +857,19 @@ mod layout_tests {
             finish_item_question(&mut pc, &mut save);
             skip_message(&mut pc, &mut save);
             assert_eq!(pc.phase(), PcPhase::LeagueHoF);
+            assert!(pc.league_hof_loading(), "LeaguePCShowMon starts in whiteout/load");
+            let mut whiteout_fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
+            draw_league_hof(&pc, &mut None, &mut whiteout_fb, language == Lang::Zh);
+            for y in 0..144 {
+                for x in 0..160 {
+                    assert_eq!(whiteout_fb.get_pixel(x, y), Some(BG),
+                        "whiteout frame must stay blank white at ({x},{y})");
+                }
+            }
+            for _ in 0..pokered_core::pc_screen::LEAGUE_HOF_LOAD_FRAMES {
+                update_pc(&mut pc, &mut save, MenuInput { up: false, down: false, a: false, b: false });
+            }
+            assert!(!pc.league_hof_loading());
             let mut fb = FrameBuffer::new(RenderConfig::new(160, 144), BG);
             draw_league_hof(&pc, &mut None, &mut fb, language == Lang::Zh);
             // The ROM reserves (12,5)..(18,11) for the 7x7 front picture.

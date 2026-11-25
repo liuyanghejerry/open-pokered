@@ -365,7 +365,16 @@ pub struct PcScreen {
     hof_teams: Vec<HofTeamRecord>,
     league_team: usize,
     league_mon: usize,
+    /// Remaining whiteout/load frames for `LeaguePCShowMon` before `GBPalNormal`
+    /// reveals the portrait/text and triggers `PlayCry` (`league_pc.asm:78-113`).
+    league_hof_load_frames: u16,
 }
+
+/// Frame duration of `LeaguePCShowMon`'s whiteout + front-picture decompress +
+/// 49-tile `CopyVideoData` transfer + `HoFDisplayMonInfo` + `GBPalNormal`
+/// before `PlayCry` (`engine/menus/league_pc.asm:78-113`, within the verified
+/// `[30, 59]` original `load_to_cry_frames` range in `docs/audits/hof-pc-load/validation.json`).
+pub const LEAGUE_HOF_LOAD_FRAMES: u16 = 34;
 
 impl PcScreen {
     pub fn new(entry: PcEntry, open: &PcOpenContext) -> Self {
@@ -438,6 +447,7 @@ impl PcScreen {
             hof_teams: open.hof_teams.clone(),
             league_team: 0,
             league_mon: 0,
+            league_hof_load_frames: 0,
         };
         match entry {
             // "<PLAYER> turned on the PC." (_TurnedOnPC1Text)
@@ -581,6 +591,22 @@ impl PcScreen {
         (self.league_team, self.hof_teams.len())
     }
 
+    /// True while `LeaguePCShowMon` is in its `GBPalWhiteOutWithDelay3` +
+    /// `ClearScreen` + front-picture decompress/`CopyVideoData` whiteout phase
+    /// before `GBPalNormal` reveals the portrait and triggers `PlayCry`.
+    pub fn league_hof_loading(&self) -> bool {
+        self.phase == PcPhase::LeagueHoF && self.league_hof_load_frames > 0
+    }
+
+    /// Remaining whiteout/load frames for the current HoF record (0 once revealed).
+    pub fn league_hof_load_frames(&self) -> u16 {
+        if self.phase == PcPhase::LeagueHoF {
+            self.league_hof_load_frames
+        } else {
+            0
+        }
+    }
+
     /// Source text speed for the quantity PrintText call; list selection has
     /// cleared BIT_NO_TEXT_DELAY before this nine-character DONE question.
     pub fn set_quantity_text_delay_frames(&mut self, frames: u16) {
@@ -661,7 +687,7 @@ impl PcScreen {
                     self.league_team = 0;
                     self.league_mon = 0;
                     self.phase = PcPhase::LeagueHoF;
-                    self.queue_league_mon_cry();
+                    self.begin_league_hof_mon_load();
                 }
             }
             AfterMessage::Exit => {
@@ -673,6 +699,8 @@ impl PcScreen {
 
     fn enter_main_menu(&mut self) {
         // DisplayPCMainMenu resets the cursor each visit (bills_pc.asm:82-83).
+        self.league_hof_load_frames = 0;
+        self.waiting_for_cry = false;
         self.main_menu = PcMainMenuState::new(self.has_pokedex, self.beaten_league, self.met_bill);
         self.phase = PcPhase::MainMenu;
     }
@@ -805,11 +833,14 @@ impl PcScreen {
         // hFrameCounter advances even while Delay20/list redraw protects input.
         self.item_swap_repeat_frames = self.item_swap_repeat_frames.saturating_sub(1);
         if before == PcPhase::LeagueHoF {
-            // HoFDisplayMonInfo tail-calls PlayCry/WaitForSoundToFinish.
-            // That wait does not sample Joypad. Keep the PC caller's sampled
-            // history so a B held during the cry is seen by the first later
-            // WaitForTextScrollButtonPress poll, while a short released pulse
-            // is lost. This consumer retains hJoy7=0 (new presses only).
+            // LeaguePCShowMon runs GBPalWhiteOutWithDelay3 -> ClearScreen ->
+            // front-pic decompress/CopyVideoData -> HoFDisplayMonInfo ->
+            // GBPalNormal -> PlayCry/WaitForSoundToFinish. Neither the whiteout
+            // picture load nor the cry wait samples Joypad, so keep the PC
+            // caller's sampled history intact until the first post-cry poll.
+            if self.tick_league_hof_load() {
+                return (PcScreenAction::Continue, MenuInput { up:false, down:false, a:false, b:false });
+            }
             if self.waiting_for_cry && sound_playing == Some(true) {
                 return (PcScreenAction::Continue, MenuInput { up:false, down:false, a:false, b:false });
             }
@@ -1010,6 +1041,9 @@ impl PcScreen {
     /// next recorded mon (then the next team, then back to the main menu
     /// after the last one); B bails out of the whole viewer immediately.
     fn update_league_hof(&mut self, input: MenuInput) -> PcScreenAction {
+        if self.tick_league_hof_load() {
+            return PcScreenAction::Continue;
+        }
         if input.b {
             self.enter_main_menu();
             return PcScreenAction::Continue;
@@ -1021,11 +1055,28 @@ impl PcScreen {
                 self.league_team += 1;
                 if self.league_team >= self.hof_teams.len() {
                     self.enter_main_menu();
+                    return PcScreenAction::Continue;
                 }
             }
-            self.queue_league_mon_cry();
+            self.begin_league_hof_mon_load();
         }
         PcScreenAction::Continue
+    }
+
+    fn begin_league_hof_mon_load(&mut self) {
+        self.waiting_for_cry = false;
+        self.league_hof_load_frames = LEAGUE_HOF_LOAD_FRAMES;
+    }
+
+    fn tick_league_hof_load(&mut self) -> bool {
+        if self.league_hof_load_frames > 0 {
+            self.league_hof_load_frames -= 1;
+            if self.league_hof_load_frames == 0 {
+                self.queue_league_mon_cry();
+            }
+            return true;
+        }
+        false
     }
 
     fn queue_league_mon_cry(&mut self) {
@@ -3803,6 +3854,38 @@ mod tests {
         assert_eq!(s.phase(), PcPhase::BillsMenu);
     }
 
+    fn finish_league_hof_load(s: &mut PcScreen, w: &mut World) {
+        assert!(s.league_hof_loading(), "LeaguePCShowMon must enter whiteout/load first");
+        assert!(!s.waiting_for_sound(), "cry must wait until GBPalNormal reveal");
+        let _ = s.take_sfx();
+        for _ in 0..LEAGUE_HOF_LOAD_FRAMES - 1 {
+            s.update_frame(NONE, &mut w.ctx());
+            assert!(s.league_hof_loading());
+            assert!(
+                !s.take_sfx().iter().any(|sfx| matches!(sfx, PcSfx::Cry(_))),
+                "cry must not fire during whiteout/load"
+            );
+        }
+        s.update_frame(NONE, &mut w.ctx());
+        assert!(!s.league_hof_loading());
+    }
+
+    fn finish_league_hof_load_held(s: &mut PcScreen, w: &mut World) {
+        assert!(s.league_hof_loading(), "LeaguePCShowMon must enter whiteout/load first");
+        assert!(!s.waiting_for_sound(), "cry must wait until GBPalNormal reveal");
+        for _ in 0..LEAGUE_HOF_LOAD_FRAMES {
+            let (_, used) = s.update_frame_with_held_input(
+                NONE,
+                PcHeldInput::default(),
+                &mut w.ctx(),
+                Some(false),
+            );
+            assert!(!used.a && !used.b);
+        }
+        assert!(!s.league_hof_loading());
+        assert!(s.waiting_for_sound());
+    }
+
     /// #MON LEAGUE → the HoF viewer walks every recorded team's mons in
     /// order, showing the all-time team number (league_pc.asm:29-46).
     #[test]
@@ -3817,6 +3900,7 @@ mod tests {
         assert_eq!(s.phase(), PcPhase::Message, "Accessed HALL OF FAME List");
         skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::LeagueHoF);
+        finish_league_hof_load(&mut s, &mut w);
 
         let (no, mon) = s.league_hof_mon().unwrap();
         assert_eq!(no, 1);
@@ -3824,11 +3908,13 @@ mod tests {
         assert_eq!(s.league_hof_progress(), (0, 2));
 
         s.update_frame(A, &mut w.ctx()); // team 1, mon 2
+        finish_league_hof_load(&mut s, &mut w);
         let (no, mon) = s.league_hof_mon().unwrap();
         assert_eq!(no, 1);
         assert_eq!(mon.nickname, "MON1");
 
         s.update_frame(A, &mut w.ctx()); // team 2, mon 1
+        finish_league_hof_load(&mut s, &mut w);
         let (no, mon) = s.league_hof_mon().unwrap();
         assert_eq!(no, 2);
         assert_eq!(mon.nickname, "MON0");
@@ -3839,7 +3925,8 @@ mod tests {
         assert_eq!(s.league_hof_mon(), None);
     }
 
-    /// B bails out of the viewer immediately (league_pc.asm:60-63).
+    /// B bails out of the viewer after the mon is revealed (league_pc.asm:60-63),
+    /// and short B taps during whiteout/load are ignored.
     #[test]
     fn league_pc_b_exits_viewer() {
         let mut w = World::new();
@@ -3850,6 +3937,13 @@ mod tests {
         s.update_frame(A, &mut w.ctx());
         skip_message(&mut s, &mut w);
         assert_eq!(s.phase(), PcPhase::LeagueHoF);
+        assert!(s.league_hof_loading());
+        s.update_frame(B, &mut w.ctx());
+        assert_eq!(s.phase(), PcPhase::LeagueHoF, "B during whiteout/load does not exit early");
+        for _ in 1..LEAGUE_HOF_LOAD_FRAMES {
+            s.update_frame(NONE, &mut w.ctx());
+        }
+        assert!(!s.league_hof_loading());
         s.update_frame(B, &mut w.ctx());
         assert_eq!(s.phase(), PcPhase::MainMenu);
     }
@@ -3932,6 +4026,7 @@ mod tests {
         skip_message(&mut s, &mut w);
         let mut viewed = 0;
         while s.phase() == PcPhase::LeagueHoF {
+            finish_league_hof_load(&mut s, &mut w);
             let species = s.league_hof_mon().unwrap().1.species;
             let cries: Vec<_> = s.take_sfx().into_iter().filter(|sfx| matches!(sfx, PcSfx::Cry(_))).collect();
             assert_eq!(cries, vec![PcSfx::Cry(species)]);
@@ -3957,7 +4052,7 @@ mod tests {
             s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
         }
         assert_eq!(s.phase(), PcPhase::LeagueHoF);
-        assert!(s.waiting_for_sound());
+        finish_league_hof_load_held(&mut s, w);
         assert_eq!(s.league_hof_mon().unwrap().1.level, 50);
         s.take_sfx();
         s
@@ -3979,7 +4074,7 @@ mod tests {
             assert!(s.take_sfx().is_empty());
             s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
             assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
-            assert!(s.waiting_for_sound());
+            finish_league_hof_load_held(&mut s, &mut w);
             assert_eq!(s.take_sfx(), vec![PcSfx::Cry(Species::Pikachu)]);
         }
     }
@@ -4014,7 +4109,7 @@ mod tests {
         s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
         s.update_frame_with_held_input(A, held, &mut w.ctx(), Some(false));
         assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
-        assert!(s.waiting_for_sound());
+        finish_league_hof_load_held(&mut s, &mut w);
     }
 
     #[test]
@@ -4024,7 +4119,7 @@ mod tests {
         s.update_frame_with_held_input(NONE, PcHeldInput::default(), &mut w.ctx(), Some(false));
         s.update_frame_with_held_input(A, PcHeldInput { a:true, ..Default::default() }, &mut w.ctx(), Some(false));
         assert_eq!(s.league_hof_mon().unwrap().1.level, 51);
-        assert!(s.waiting_for_sound());
+        finish_league_hof_load_held(&mut s, &mut w);
         s.take_sfx();
         let held = PcHeldInput { a:true, b:true, ..Default::default() };
         s.update_frame_with_held_input(NONE, held, &mut w.ctx(), Some(true));

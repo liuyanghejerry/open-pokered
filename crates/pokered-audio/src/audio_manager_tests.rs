@@ -1198,3 +1198,46 @@ fn applying_attack_sound_uses_original_audio2_tempo_and_stab_mask() {
         assert!(!manager.is_sfx_playing());
     }
 }
+
+#[test]
+fn dungeon3_after_title_screen_clears_stale_ch4_nr51_routing_and_preserves_active_sfx() {
+    let mut manager = AudioManager::new();
+    manager.apu.write_register(0xFF26, 0x80);
+    // Title screen uses all four channels and populates NR51 = 0xFF.
+    manager.play_music(MusicId::TITLE_SCREEN);
+    for _ in 0..120 {
+        manager.update_frame();
+    }
+    assert_ne!(
+        manager.apu.nr51 & 0x88,
+        0,
+        "title screen routes CH4 into NR51"
+    );
+
+    // Switching to RockTunnel1F (DUNGEON3, whose CH3/CH4 open with rests) must
+    // clear stale music-only NR51 bits so CH1+CH2 yield 0x33 instead of 0xBB.
+    manager.play_music(MusicId::DUNGEON3);
+    for frame in 0..30 {
+        manager.update_frame();
+        assert_eq!(
+            manager.apu.nr51, 0x33,
+            "DUNGEON3 opening rests must keep NR51 == 0x33 at frame {frame}"
+        );
+        assert_eq!(
+            manager.apu.read_register(0xFF26) & 0x04,
+            0,
+            "DUNGEON3 resting CH3 DAC must remain off at frame {frame}"
+        );
+    }
+
+    // An active noise SFX must keep its CH4 routing bit intact across play_music.
+    manager.play_sfx(SfxId::StartMenu);
+    manager.update_frame();
+    assert_ne!(manager.apu.nr51 & 0x88, 0);
+    manager.play_music(MusicId::PALLET_TOWN);
+    assert_ne!(
+        manager.apu.nr51 & 0x88,
+        0,
+        "active SFX channel keeps its NR51 routing bit across play_music"
+    );
+}

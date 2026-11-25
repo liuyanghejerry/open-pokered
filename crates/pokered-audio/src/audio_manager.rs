@@ -116,6 +116,114 @@ impl AudioManager {
         self.engine.play_sfx(id);
     }
 
+    /// Start or switch map/event music, clearing stale music-only `NR51`
+    /// routing bits and silencing music-owned DACs (`Audio*_DisableMusicChannels`
+    /// in `audio/engine_1.asm` / `audio/engine_3.asm`) so tracks whose CH3/CH4
+    /// begin with rests (e.g. `MusicId::DUNGEON3` in RockTunnel1F) do not
+    /// inherit leftover panning bits from the previous song.
+    pub fn play_music(&mut self, id: MusicId) {
+        if self.engine.last_music_id() != Some(id) || !self.engine.is_music_playing() {
+            let mut panning = self.engine.apu.nr51;
+            for hw in 0..4usize {
+                if !self.engine.sequencer.is_sfx_channel_active(hw) {
+                    let hw_mask = 0x11u8 << hw;
+                    panning &= !hw_mask;
+                    match hw {
+                        0 => self.engine.apu.write_register(0xFF12, 0x00),
+                        1 => self.engine.apu.write_register(0xFF17, 0x00),
+                        2 => self.engine.apu.write_register(0xFF1A, 0x00),
+                        3 => self.engine.apu.write_register(0xFF21, 0x00),
+                        _ => {}
+                    }
+                }
+            }
+            self.engine.apu.nr51 = panning;
+            self.engine.apu.write_register(0xFF25, panning);
+        }
+        self.engine.play_music(id);
+    }
+
+    pub fn play_music_with_fade(&mut self, id: MusicId, fade_speed: u8) {
+        if self.engine.last_music_id() == Some(id) {
+            return;
+        }
+        if !self.engine.is_music_playing() {
+            self.play_music(id);
+            return;
+        }
+        self.engine.play_music_with_fade(id, fade_speed);
+    }
+
+    /// Capture logical playback and the existing APU's complete software state.
+    /// An active fade may own an unserializable callback, so it returns `None`.
+    #[cfg(feature = "runtime-snapshot")]
+    pub fn audio_snapshot(&self) -> Option<crate::snapshot::AudioSnapshot> {
+        if self.engine.is_fading() {
+            return None;
+        }
+        Some(crate::snapshot::AudioSnapshot {
+            current_music: self.engine.last_music_id(),
+            sequencer: (&self.engine.sequencer).into(),
+            saved_music: self
+                .engine
+                .saved_music_states()
+                .iter()
+                .map(|(id, state)| (*id, state.into()))
+                .collect(),
+            master_volume: [
+                self.engine.master_volume_left(),
+                self.engine.master_volume_right(),
+            ],
+            no_audio_fade_out: self.engine.no_audio_fade_out(),
+            low_health_alarm_enabled: self.low_health_alarm_enabled,
+            low_health_timer: self.low_health_timer,
+            music_after_sfx: self.music_after_sfx,
+            apu: (&self.engine.apu).into(),
+            apu_playback: Some(self.engine.apu.playback_state()),
+            pcm_phase: None,
+        })
+    }
+
+    /// Install restoration data in this same manager without a playback tick.
+    /// Full software state comes from its actual APU owner, including retained
+    /// SFX/alarm/drum phase that cannot be inferred from music commands. The
+    /// existing output binding is retained. Older DTOs restore controls only.
+    #[cfg(feature = "runtime-snapshot")]
+    pub fn restore_audio_snapshot(&mut self, snapshot: &crate::snapshot::AudioSnapshot) {
+        // Prepare logical state without advancing playback. Initial volume
+        // writes affect only this unbound APU, never the destination backend.
+        let mut restored = Self::new();
+        if let Some(id) = snapshot.current_music {
+            restored.engine.play_music(id);
+        }
+        restored.engine.sequencer = snapshot.sequencer.restore();
+        restored.engine.restore_saved_music_states(
+            snapshot
+                .saved_music
+                .iter()
+                .map(|(id, state)| (*id, state.restore()))
+                .collect(),
+        );
+        restored
+            .engine
+            .set_master_volume(snapshot.master_volume[0], snapshot.master_volume[1]);
+        restored
+            .engine
+            .set_no_audio_fade_out(snapshot.no_audio_fade_out);
+        restored.low_health_alarm_enabled = snapshot.low_health_alarm_enabled;
+        restored.low_health_timer = snapshot.low_health_timer;
+        restored.music_after_sfx = snapshot.music_after_sfx;
+        if let Some(playback) = &snapshot.apu_playback {
+            // Keep the destination APU's backend sink. Exact state installation
+            // must be last: play_music/set_master_volume write NR50 above.
+            core::mem::swap(&mut restored.engine.apu, &mut self.engine.apu);
+            restored.engine.apu.restore_playback_state(playback);
+        } else {
+            snapshot.apu.install(&mut restored.engine.apu);
+        }
+        *self = restored;
+    }
+
     /// GetMoveSound's command-table modifiers in the battle audio bank.
     /// Audio2 accepts them for battle SFX as well as cries. CHAN8 noise
     /// notes retain fixed tempo and noise parameters in the sequencer.

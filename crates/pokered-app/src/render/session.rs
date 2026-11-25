@@ -1550,6 +1550,7 @@ impl PcVisualKey {
                 };
             }
             PcPhase::LeagueHoF => {
+                hash_byte(&mut visual_hash, u8::from(pc.league_hof_loading()));
                 if let Some((team_no, pokemon)) = pc.league_hof_mon() {
                     hash_byte(&mut visual_hash, team_no);
                     hash_byte(&mut visual_hash, pokemon.species as u8);
@@ -2931,6 +2932,110 @@ mod session_tests {
             }
             assert!(armed_damage_seen, "armed cursor movement must use incremental damage");
             assert!(swap_full_seen, "completing SELECT swap must trigger full redraw");
+        }
+    }
+
+    #[test]
+    fn league_hof_whiteout_and_reveal_retained_frames_match_full_render() {
+        use dotzuki_app::{GbButton, InputState};
+        use pokered_core::pc_screen::{
+            HofMonView, HofTeamRecord, PcEntry, PcOpenContext, PcPhase, PcScreen,
+            LEAGUE_HOF_LOAD_FRAMES,
+        };
+        use pokered_data::species::Species;
+
+        for language in [Lang::En, Lang::Zh] {
+            let mut game = PokemonGame::new(GameVersion::Red);
+            game.audio = None;
+            game.state.screen = GameScreen::PC;
+            game.state.config.language = language;
+            let open = PcOpenContext {
+                met_bill: true,
+                has_pokedex: true,
+                beaten_league: true,
+                player_name: "RED".into(),
+                hof_teams: vec![HofTeamRecord {
+                    team_no: 1,
+                    mons: vec![
+                        HofMonView {
+                            species: Species::Zapdos,
+                            level: 50,
+                            nickname: "ZAPDOS".into(),
+                        },
+                        HofMonView {
+                            species: Species::Lapras,
+                            level: 51,
+                            nickname: "LAPRAS".into(),
+                        },
+                    ],
+                }],
+            };
+            game.pc_screen = Some(PcScreen::new_with_language(
+                PcEntry::PokemonCenter,
+                &open,
+                language,
+            ));
+
+            // Advance through PC open -> MainMenu -> #MON LEAGUE -> "Accessed HALL OF FAME List."
+            for frame in 0..2000 {
+                if game
+                    .pc_screen
+                    .as_ref()
+                    .is_some_and(|pc| pc.phase() == PcPhase::LeagueHoF)
+                {
+                    break;
+                }
+                let mut input = InputState::new();
+                if frame % 8 == 0 {
+                    match game.pc_screen.as_ref().map(|pc| pc.phase()) {
+                        Some(PcPhase::MainMenu)
+                            if game.pc_screen.as_ref().unwrap().main_menu().cursor() < 3 =>
+                        {
+                            input.press(GbButton::Down);
+                        }
+                        Some(PcPhase::MainMenu | PcPhase::Message) => input.press(GbButton::A),
+                        _ => {}
+                    }
+                }
+                game.update(&input);
+            }
+            assert_eq!(game.pc_screen.as_ref().unwrap().phase(), PcPhase::LeagueHoF);
+            assert!(game.pc_screen.as_ref().unwrap().league_hof_loading());
+
+            let config = RenderConfig::new(160, 144);
+            let mut retained = FrameBuffer::new(config, Rgba::WHITE);
+            let mut session = RenderSession::new();
+            let mut scroll = |_: &mut [u8], _: usize, _: usize, _: i32, _: i32, _: u8| {};
+
+            // First whiteout frame -> Full, second -> Reuse, reveal frame -> Full.
+            assert!(matches!(
+                session.render(&mut game, &mut retained, &mut scroll),
+                FrameUpdate::Full
+            ));
+            let mut seen_whiteout_reuse = false;
+            let mut seen_reveal_full = false;
+            for step in 0..=(LEAGUE_HOF_LOAD_FRAMES as usize + 2) {
+                let was_loading = game.pc_screen.as_ref().unwrap().league_hof_loading();
+                game.update(&InputState::new());
+                let is_loading = game.pc_screen.as_ref().unwrap().league_hof_loading();
+                let update = session.render(&mut game, &mut retained, &mut scroll);
+                if was_loading && is_loading {
+                    seen_whiteout_reuse |= matches!(update, FrameUpdate::Reuse);
+                }
+                if was_loading && !is_loading {
+                    seen_reveal_full = matches!(update, FrameUpdate::Full);
+                }
+                let mut full = FrameBuffer::new(config, Rgba::WHITE);
+                game.draw(&mut full);
+                assert_eq!(
+                    retained.packed(),
+                    full.packed(),
+                    "step={step}, language={language:?}"
+                );
+                assert_eq!(retained.display_palette(), full.display_palette());
+            }
+            assert!(seen_whiteout_reuse, "whiteout frames should reuse cached white frame");
+            assert!(seen_reveal_full, "GBPalNormal reveal must trigger full redraw");
         }
     }
 

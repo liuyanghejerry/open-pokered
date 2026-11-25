@@ -12,6 +12,17 @@ pub(super) struct PcmRenderer {
 }
 
 impl PcmRenderer {
+    #[cfg(feature = "runtime-snapshot")]
+    pub(super) fn phase(&self) -> (Option<u32>, u32) {
+        (self.sample_rate, self.remainder)
+    }
+
+    #[cfg(feature = "runtime-snapshot")]
+    pub(super) fn restore_phase(&mut self, phase: (Option<u32>, u32)) {
+        self.sample_rate = phase.0;
+        self.remainder = phase.1;
+    }
+
     pub(super) fn render(&mut self, apu: &mut Apu, out: &mut [f32], rate: u32) {
         // Backends negotiate one positive rate for the lifetime of a stream.
         // Check the complete request before advancing any APU/sample state.

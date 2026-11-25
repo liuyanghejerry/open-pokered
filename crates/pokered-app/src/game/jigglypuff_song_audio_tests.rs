@@ -217,23 +217,27 @@ fn ordinary_game_snapshot_load_into_live_map_bgm_finishes_without_replaying_the_
             source.step(0);
         }
         let snapshot = source.game.agent_save_state().unwrap();
-        let json = serde_json::to_string(&snapshot).unwrap();
-        let loaded: crate::agent_state::GameSnapshot = serde_json::from_str(&json).unwrap();
-        // Fresh ordinary cold App is already playing looping Pokecenter BGM.
-        // Use the production JSON restore path, not OverworldSnapshot directly
-        // and never a setter for the core's audio-completion bool.
+        assert!(snapshot.audio.is_some(), "full snapshot captures active Jigglypuff audio");
+        let mut legacy_value = serde_json::to_value(&snapshot).unwrap();
+        legacy_value.as_object_mut().unwrap().remove("audio");
+        let legacy_loaded: crate::agent_state::GameSnapshot =
+            serde_json::from_value(legacy_value).unwrap();
+        assert!(legacy_loaded.audio.is_none());
+        // Legacy snapshot (no audio field) loaded into looping Pokecenter BGM
+        // must still finish cleanly without replaying the song or softlocking.
         let mut receiving = Session::boot();
         let audio = receiving.game.audio.as_ref().unwrap();
         assert!(audio.is_music_channel_playing(0) || audio.is_music_channel_playing(1));
-        receiving.game.agent_restore_state(&loaded).unwrap();
+        receiving.game.agent_restore_state(&legacy_loaded).unwrap();
         assert_eq!(receiving.phase().as_deref(), Some("SongSpin"));
+        let mut legacy_done = false;
         for elapsed in 1..=100 {
             receiving.step(0);
             let audio = receiving.game.audio.as_ref().unwrap();
             assert_eq!(
                 audio.last_music_id(),
                 Some(MusicId::POKECENTER),
-                "no sequencer/PCM snapshot means no song replay"
+                "legacy snapshot without audio keeps live Pokecenter BGM"
             );
             assert!(!receiving.game.overworld.jigglypuff_song_playing);
             if elapsed == 24 {
@@ -250,10 +254,33 @@ fn ordinary_game_snapshot_load_into_live_map_bgm_finishes_without_replaying_the_
                     .displayed_field_dialogue()
                     .is_none());
                 assert_eq!(std::fs::read(&receiving.path).unwrap(), receiving.bytes);
+                legacy_done = true;
+                break;
+            }
+        }
+        assert!(legacy_done, "legacy snapshot load softlocked the Jigglypuff continuation");
+
+        // Full snapshot (with software APU/sequencer state) restores
+        // JIGGLYPUFF_SONG and finishes naturally once the song ends.
+        let json = serde_json::to_string(&snapshot).unwrap();
+        let full_loaded: crate::agent_state::GameSnapshot = serde_json::from_str(&json).unwrap();
+        let mut full_receiving = Session::boot();
+        full_receiving.game.agent_restore_state(&full_loaded).unwrap();
+        assert_eq!(
+            full_receiving.game.audio.as_ref().unwrap().last_music_id(),
+            Some(MusicId::JIGGLYPUFF_SONG)
+        );
+        for _ in 1..=800 {
+            full_receiving.step(0);
+            if full_receiving.phase().is_none() && full_receiving.game.overworld.script_engine_idle() {
+                assert_eq!(
+                    std::fs::read(&full_receiving.path).unwrap(),
+                    full_receiving.bytes
+                );
                 return;
             }
         }
-        panic!("ordinary snapshot load softlocked the Jigglypuff continuation");
+        panic!("full audio snapshot load did not finish Jigglypuff continuation");
     });
 }
 
