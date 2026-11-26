@@ -14,6 +14,10 @@ extern crate alloc;
 pub use dotzuki_audio::*;
 
 pub mod audio_manager;
+#[cfg(feature = "runtime-snapshot")]
+mod native_controls;
+#[cfg(feature = "runtime-snapshot")]
+pub mod snapshot;
 pub mod source_clock;
 #[cfg(any(test, target_os = "none"))]
 mod gba_psg;

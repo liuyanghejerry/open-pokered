@@ -118,6 +118,10 @@ pub struct GameSnapshot {
     pub seed: Option<u64>,
     /// Battles started so far (feeds per-battle RNG seeding).
     pub battle_count: u64,
+    /// Supported non-fading native audio, including software APU phase.
+    /// Older snapshots omit audio or retain only hardware-equivalent controls.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio: Option<pokered_audio::snapshot::AudioSnapshot>,
 }
 
 /// FNV-1a 64-bit hash of the snapshot's canonical JSON, hex-formatted.
@@ -224,6 +228,7 @@ impl PokemonGame {
             battle: BattleSnapshot::capture(&self.battle),
             seed: self.seed,
             battle_count: self.battle_count,
+            audio: self.audio.as_ref().and_then(|audio| audio.audio_snapshot()),
         })
     }
 
@@ -273,6 +278,9 @@ impl PokemonGame {
         self.save_data = snapshot.save_data.clone();
         snapshot.overworld.restore_into(&mut self.overworld);
         snapshot.battle.restore_into(&mut self.battle);
+        if let (Some(audio), Some(music)) = (&self.audio, &snapshot.audio) {
+            audio.restore_audio_snapshot(music);
+        }
         self.seed = snapshot.seed;
         self.battle_count = snapshot.battle_count;
         self.player_name = snapshot.overworld.player_name.clone();
@@ -287,5 +295,65 @@ impl PokemonGame {
         self.hof_ceremony = None;
         self.credits = None;
         Ok(())
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod music_snapshot_tests {
+    use super::*;
+    use pokered_audio::music_data::MusicId;
+    use pokered_core::data::wild_data::GameVersion;
+
+    #[test]
+    fn real_snapshot_slot_replays_complete_software_audio_after_pcm_advancement() {
+        std::thread::Builder::new()
+            .stack_size(16 * 1024 * 1024)
+            .spawn(|| {
+                let dir = std::env::temp_dir()
+                    .join(format!("pokered-full-audio-942-{}", std::process::id()));
+                std::fs::create_dir_all(&dir).unwrap();
+                let mut game = PokemonGame::new_with_options(
+                    GameVersion::Red,
+                    Some(dir.join("private.sav")),
+                    None,
+                    None,
+                    false,
+                    None,
+                    false,
+                    true,
+                    #[cfg(feature = "debug-server")]
+                    None,
+                );
+                game.state.screen = GameScreen::Overworld;
+                fn advance(game: &PokemonGame, samples: usize) -> Vec<u32> {
+                    let audio = game.audio.as_ref().unwrap();
+                    audio.update_frame();
+                    let mut pcm = vec![0.0; samples * 2];
+                    audio.render_pcm(&mut pcm);
+                    pcm.into_iter().map(f32::to_bits).collect()
+                }
+                game.audio.as_ref().unwrap().play_music(MusicId::SILPH_CO);
+                for _ in 0..43 {
+                    advance(&game, 401);
+                }
+                let saved = game.agent_save_state().unwrap();
+                assert!(saved.audio.as_ref().unwrap().apu_playback.is_some());
+                assert!(saved.audio.as_ref().unwrap().pcm_phase.is_some());
+                let hash = game.agent_save_state_slot(0).unwrap();
+                let expected: Vec<_> = (0..180).map(|_| advance(&game, 800)).collect();
+                assert!(expected.iter().flatten().any(|&sample| sample != 0.0f32.to_bits()));
+                for _ in 0..120 {
+                    advance(&game, 319);
+                }
+                assert_ne!(game.agent_save_state().unwrap().audio, saved.audio);
+                assert_eq!(game.agent_restore_state_slot(0).unwrap(), hash);
+                assert_eq!(snapshot_hash(&game.agent_save_state().unwrap()), hash);
+                let actual: Vec<_> = (0..180).map(|_| advance(&game, 800)).collect();
+                assert_eq!(actual, expected);
+                std::fs::remove_dir_all(dir).unwrap();
+            })
+            .unwrap()
+            .join()
+            .unwrap();
     }
 }

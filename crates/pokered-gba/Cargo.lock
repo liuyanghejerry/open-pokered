@@ -2189,6 +2189,7 @@ dependencies = [
  "bitflags 2.13.2",
  "critical-section",
  "dotzuki-audio",
+ "serde",
 ]
 
 [[package]]

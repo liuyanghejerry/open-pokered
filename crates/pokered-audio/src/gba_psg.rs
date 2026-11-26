@@ -49,7 +49,10 @@ pub fn initialize() {
         core::ptr::write_volatile(0x0400_0082 as *mut u16, 2);
     }
     write_register(0xFF24, 0x77);
-    write_register(0xFF25, 0xFF);
+    // Start with all channel routing cleared (matching AudioManager::new() and
+    // original InitSound) so songs whose inactive channels begin with rests do
+    // not inherit stale NR51 routing bits.
+    write_register(0xFF25, 0x00);
 }
 
 #[cfg(test)]

@@ -48,6 +48,7 @@ hashbrown = { version = "0.15", default-features = false, features = ["serde"] }
 # framebuffer host and must not pull winit/android-activity through defaults.
 [target.'cfg(not(target_os = "none"))'.dependencies]
 dotzuki-app = { git = "https://github.com/liuyanghejerry/dotzuki", rev = "b8cdd36ea6053237594bca21471df650445a3d84", default-features = false }
+pokered-audio = { path = "../pokered-audio", features = ["runtime-snapshot"] }
 # The pokered-agent observation/navigation layer is hosted-only (DSL
 # semantics stack); bare-metal (GBA) builds exclude it (lib.rs gates the
 # modules on the same condition).

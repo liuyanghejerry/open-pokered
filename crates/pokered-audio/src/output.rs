@@ -227,6 +227,26 @@ impl AudioOutput {
         self.manager.lock().map(|manager| manager.is_music_playing()).unwrap_or(false)
     }
 
+    #[cfg(feature = "runtime-snapshot")]
+    pub fn audio_snapshot(&self) -> Option<crate::snapshot::AudioSnapshot> {
+        let mgr = self.manager.lock().ok()?;
+        let mut snap = mgr.audio_snapshot()?;
+        if let Ok(renderer) = self.pcm_renderer.lock() {
+            snap.pcm_phase = Some(renderer.phase());
+        }
+        Some(snap)
+    }
+
+    #[cfg(feature = "runtime-snapshot")]
+    pub fn restore_audio_snapshot(&self, snapshot: &crate::snapshot::AudioSnapshot) {
+        if let Ok(mut mgr) = self.manager.lock() {
+            mgr.restore_audio_snapshot(snapshot);
+            if let (Some(phase), Ok(mut renderer)) = (snapshot.pcm_phase, self.pcm_renderer.lock()) {
+                renderer.restore_phase(phase);
+            }
+        }
+    }
+
     /// Live music-channel state, including natural sound_ret termination.
     /// Original script waits inspect channel 1's sound ID rather than the
     /// sequencer's track-selection latch.

@@ -468,16 +468,16 @@ impl Scenarios {
                 assert!(elapsed < 16000, "ending timed out");
             }
             8 => {
-                assert!(elapsed < 18000, "PC Hall of Fame viewer timed out");
+                assert!(elapsed < 36000, "PC Hall of Fame viewer timed out");
                 let Some(pc) = game.pc_screen.as_ref() else {
                     return;
                 };
-                // Each HoF picture waits for its real cry before polling A/B.
-                // Keep the expected record until that wait has completed; an
-                // ignored A is not a visited mon. Check readiness every frame
-                // without extending the existing 16-frame input cooldown.
+                // Each HoF picture runs GBPalWhiteOutWithDelay3/load and waits
+                // for its real cry before polling A/B. Keep the expected record
+                // until both waits have completed; an ignored A is not a visited
+                // mon. Check readiness every frame without extending cooldown.
                 if pc.phase() == pokered_core::pc_screen::PcPhase::LeagueHoF
-                    && pc.waiting_for_sound()
+                    && (pc.league_hof_loading() || pc.waiting_for_sound())
                 {
                     return;
                 }

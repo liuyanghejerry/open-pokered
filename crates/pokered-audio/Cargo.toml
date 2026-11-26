@@ -5,6 +5,8 @@ edition.workspace = true
 
 [features]
 default = []
+# Hosted snapshots preserve supported native music channel and software APU state.
+runtime-snapshot = ["dep:serde", "dotzuki-audio/serde"]
 source-clock-serde = ["dep:serde"]
 # Shared device output (`output::AudioOutput`) for the native frontends
 # (pokered-app, pokered-tui): a cpal stream pulling samples from the shared
