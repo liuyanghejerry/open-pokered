@@ -71,6 +71,8 @@ pub struct AudioManager {
     music_after_sfx: Option<MusicId>,
     /// Native wMuteAudioAndPauseMusic; boundary muting is done only once.
     music_paused: u8,
+    /// A suspended source child, never a copied/independently ticking song.
+    pub(crate) source_fade: Option<crate::source_work::FadeAudioWork>,
 }
 
 impl Deref for AudioManager {
@@ -106,6 +108,7 @@ impl AudioManager {
             low_health_timer: 0,
             music_after_sfx: None,
             music_paused: 0,
+            source_fade: None,
         }
     }
 
@@ -970,6 +973,10 @@ impl AudioManager {
     /// the sequencer so it overrides channel 1, exactly as the original's
     /// direct hardware writes override whatever the sound engine put there.
     pub fn update_frame(&mut self) {
+        assert!(
+            self.source_fade.is_none(),
+            "resume the pending audio source child before an atomic frame"
+        );
         if self.music_paused != 0 {
             if self.music_paused == 1
                 && self.engine.sequencer.channels[..4]

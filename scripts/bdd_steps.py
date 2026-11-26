@@ -251,7 +251,7 @@ def _(ctx):
     s = g.st()
     assert not s["script_running"] and s["dialogue_state"] is None, \
         "intercepted at the north exit"
-    g.d.drive(["up"] * 12, frames=16)
+    g.d.drive(["up"] * 32, frames=36)
     g.step(10)
 
 
@@ -261,7 +261,7 @@ def _(ctx, keys):
     for k in re.split(r"[,\s]+", keys.strip()):
         assert k in BUTTONS, f"unknown button {k!r}"
         g.tap(k, 10)
-    g.step(10)
+    g.step(20)
 
 
 @when(r"the player saves the game")
@@ -329,7 +329,7 @@ def _(ctx):
         if g.st()["screen"] == "overworld":
             return
         g.tap("b", 10)
-        g.step(10)
+        g.step(20)
         g.d.drive(["down"], frames=10)
         g.step(6)
     raise AssertionError("EXIT never returned to the overworld")

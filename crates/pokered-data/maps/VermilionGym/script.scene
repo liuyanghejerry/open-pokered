@@ -19,18 +19,13 @@
 // keeps the two switch positions on globalThis so they persist across the
 // per-can coord-event calls within a visit.
 //
-// APPROXIMATED vs. the original ROM:
-//   • RNG: the ROM rolls hardware `Random`; there is no seeded-RNG DSL/engine
-//     primitive, so we use Math.floor(Math.random()*…) (still uniform, still
-//     re-rolled on every reset — same observable behaviour, different stream).
-//   • "adjacent": the ROM stores wSecondLockTrashCanIndex; we pick one of the
-//     first can's orthogonal grid neighbours (up/down/left/right) — the faithful
-//     reading of the in-game hint "the 2nd lock is right next to it".
-//   • Switch positions live on globalThis (per-session), not SRAM
-//     (wFirstLockTrashCanIndex/wSecondLockTrashCanIndex), so leaving and
-//     re-entering the gym restarts the search; the solved state itself persists
-//     via EVENT_2ND_LOCK_OPENED. EVENT_1ST_LOCK_OPENED is still mirrored for
-//     save/NPC parity but the logic is driven off globalThis.
+// Native AST runtime vs. script-boa JS fallback:
+//   • Default production runtime (`pokered-core/src/overworld/native_script.rs`)
+//     reproduces the original GymTrashScript adjacency table and persists
+//     `wFirstLockTrashCanIndex` / `wSecondLockTrashCanIndex` in SRAM alongside
+//     `EVENT_1ST_LOCK_OPENED` / `EVENT_2ND_LOCK_OPENED`.
+//   • The legacy `script-boa` JS fallback below keeps per-session switch state
+//     on `globalThis` and uses `Math.random()` for development/fallback runs.
 
 game_scene VermilionGym {
   // ── On entry: re-apply the OPEN door block once the puzzle is solved ─────

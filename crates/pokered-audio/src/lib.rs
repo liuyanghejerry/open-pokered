@@ -23,6 +23,7 @@ pub mod source_clock;
 mod gba_psg;
 pub mod music_data;
 pub mod sfx_data;
+pub mod source_work;
 
 /// Shared device output (`AudioOutput`) for the native (`cpal` feature) and
 /// WASM (`web-audio` feature) frontends.

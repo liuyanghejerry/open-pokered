@@ -10,14 +10,14 @@
 // inlined at its trigger point (the same approach PalletTown uses for Oak's
 // intro).
 //
-// Stubs / approximations (no API for them yet):
+// Notes on DSL / runtime integration:
 //  - StarterDex preview while choosing -> showPokedexEntry(species) per ball.
 //  - Rival's starter battle is the runtime trainer OPP_RIVAL1 (party-by-starter
 //    is driven by map.json trainerSet); getRivalStarter() picks the species we
 //    name for dialogue fidelity.
-//  - DisplayDexRating ("let me take a look") -> faithful dialogue only.
-//  - Cross-map writes (PalletTown daisy script, Route22 rival spawn) -> we set
-//    the EVENT_* flags we can; the remaining object/script writes are // TODO.
+//  - DisplayDexRating ("let me take a look") -> dialogue plus runtime PC rating.
+//  - Cross-map state (PalletTown Daisy script, Route22 rival spawn) is gated by
+//    the shared EVENT_* flags set here and checked on target map load.
 //  - The rival's walk to the ball uses the original's explicit movement
 //    tables (down to row 5 and around, so he never crosses the player at
 //    the table); the challenge approach uses moveNpcTo (terrain pathfinding)
