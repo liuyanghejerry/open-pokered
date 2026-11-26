@@ -1,5 +1,14 @@
 # Fidelity Gaps & Completion Plan
 
+> [!NOTE]
+> **Historical document (2026-07-14):** The Phase 1, Phase 2, and Phase 3 items
+> listed below (battle→save integration, StackDriver move effects, Trainer AI,
+> Safari/Old Man/Ghost Marowak, Pokédex, evolution, link cable, Hall of Fame,
+> credits, and core graphics) have since been implemented and merged on
+> `master`. Retained for historical context; for current architecture, target
+> policy (Pokémon Red only), and active audits, see [AGENTS.md](../AGENTS.md)
+> and [docs/audits/](audits/README.md).
+
 Audit of this Rust reimplementation vs. the Gen-1 original (2026-07-14), plus the
 agreed phased plan to close the gaps. **This file is the resume point** — if the
 work is picked up in a fresh session, read this first.
