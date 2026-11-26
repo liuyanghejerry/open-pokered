@@ -71,6 +71,27 @@ pub fn evolve_party_after_battle(party: &mut [Pokemon]) -> Vec<EvolutionResult> 
 /// Returns the new species' level-up move the mon could not learn because
 /// all four move slots are full (empty when nothing was blocked).
 pub fn finalize_evolution(mon: &mut Pokemon, pokedex: &mut Pokedex, to: Species) -> Vec<MoveId> {
+    finalize_evolution_with_learning(mon, pokedex, to)
+        .into_iter()
+        .filter_map(|entry| {
+            (entry.result == LearnMoveResult::MoveSlotsFull).then_some(entry.move_id)
+        })
+        .collect()
+}
+
+/// The actual result of each existing LearnMove attempt, in learnset order.
+/// Callers do not infer a successful learning event by diffing the moveset.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvolutionMoveLearning {
+    pub move_id: MoveId,
+    pub result: LearnMoveResult,
+}
+
+pub fn finalize_evolution_with_learning(
+    mon: &mut Pokemon,
+    pokedex: &mut Pokedex,
+    to: Species,
+) -> Vec<EvolutionMoveLearning> {
     let from = mon.species;
     apply_evolution(mon, to);
     // RenameEvolvedMon: a mon whose "nickname" is just its old species name
@@ -83,13 +104,81 @@ pub fn finalize_evolution(mon: &mut Pokemon, pokedex: &mut Pokedex, to: Species)
     {
         mon.set_nickname(pokered_data::lang_data::species_name(to, false));
     }
-    let mut blocked = Vec::new();
-    if let Some(move_id) = crate::pokemon::move_learning::first_move_at_level_for(to, mon.level, &mon.moves) {
-        if matches!(try_learn_move(mon, move_id), LearnMoveResult::MoveSlotsFull) {
-            blocked.push(move_id);
-        }
+    let mut learning = Vec::new();
+    // Gen-1 LearnMoveFromLevelUp (evos_moves.asm) checks only the first
+    // learnset entry matching the mon's current level.
+    if let Some(move_id) =
+        crate::pokemon::move_learning::moves_at_level(to, mon.level).into_iter().next()
+    {
+        learning.push(EvolutionMoveLearning {
+            move_id,
+            result: try_learn_move(mon, move_id),
+        });
     }
     pokedex.set_seen(to);
     pokedex.set_owned(to);
-    blocked
+    learning
+}
+
+#[cfg(test)]
+mod terminal_learning_tests {
+    use super::*;
+    use crate::pokemon::stats::create_pokemon;
+    use crate::pokemon::move_learning::get_move_max_pp;
+
+    #[test]
+    fn descriptors_report_actual_free_known_and_full_results_without_changing_the_old_wrapper() {
+        let cases = [
+            (
+                [MoveId::Splash, MoveId::None, MoveId::None, MoveId::None],
+                LearnMoveResult::Learned { slot: 1 },
+            ),
+            (
+                [MoveId::Bite, MoveId::Splash, MoveId::None, MoveId::None],
+                LearnMoveResult::AlreadyKnown,
+            ),
+            (
+                [MoveId::Splash, MoveId::Tackle, MoveId::Growl, MoveId::Leer],
+                LearnMoveResult::MoveSlotsFull,
+            ),
+        ];
+        for (moves, result) in cases {
+            let mut mon = create_pokemon(Species::Magikarp, 20, [0x98, 0x76]).unwrap();
+            mon.moves = moves;
+            mon.pp = moves.map(get_move_max_pp);
+            let mut old_mon = mon.clone();
+            let mut dex = Pokedex::default();
+            let mut old_dex = dex.clone();
+            let actual = finalize_evolution_with_learning(&mut mon, &mut dex, Species::Gyarados);
+            let old = finalize_evolution(&mut old_mon, &mut old_dex, Species::Gyarados);
+            assert_eq!(
+                actual,
+                vec![EvolutionMoveLearning {
+                    move_id: MoveId::Bite,
+                    result: result.clone()
+                }]
+            );
+            assert_eq!(
+                old,
+                if result == LearnMoveResult::MoveSlotsFull {
+                    vec![MoveId::Bite]
+                } else {
+                    vec![]
+                }
+            );
+            assert_eq!(mon.species, Species::Gyarados);
+            assert_eq!(
+                serde_json::to_value(&mon).unwrap(),
+                serde_json::to_value(&old_mon).unwrap()
+            );
+            assert_eq!(
+                serde_json::to_value(&dex).unwrap(),
+                serde_json::to_value(&old_dex).unwrap()
+            );
+            if result == (LearnMoveResult::Learned { slot: 1 }) {
+                assert_eq!(mon.moves[1], MoveId::Bite);
+                assert_eq!(mon.pp[1], get_move_max_pp(MoveId::Bite));
+            }
+        }
+    }
 }

@@ -2,6 +2,7 @@ pub mod ask_name;
 pub mod engine_adapter;
 pub mod evolution;
 pub mod move_learning;
+pub mod learn_terminal;
 pub mod party;
 pub mod pc_box;
 pub mod pc_menu;

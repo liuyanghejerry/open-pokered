@@ -313,6 +313,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.source_foreground.get_or_insert_with(Default::default)
     }
 
+    /// An explicit source caller opts in before its first held-only poll.
+    /// Creation leaves preceding input Unknown; it does not invent a sample.
+    pub fn begin_source_foreground(&mut self) -> &mut crate::foreground_input::ForegroundJoypad {
+        self.source_foreground_error = None;
+        if self.source_foreground_mode == crate::foreground_input::ForegroundMode::Observed {
+            if let Some(owner) = self.source_foreground.as_mut() {
+                owner.retire_history();
+            }
+        }
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::TerminalReturn;
+        self.source_foreground.get_or_insert_with(Default::default)
+    }
+
     pub fn no_text_delay(&self) -> bool { self.no_text_delay }
 
     /// Only original status-bit writers call this; closing a textbox does not.
@@ -370,6 +383,14 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.source_foreground_error
     }
 
+    /// Transfer/retire a continuation explicitly; a raw refresh is not a
+    /// returning field poll.
+    pub fn take_source_foreground(&mut self) -> Option<crate::foreground_input::ForegroundJoypad> {
+        self.source_foreground_error = None;
+        self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
+        self.source_foreground.take()
+    }
+
     /// Re-baseline the button edge detectors (`prev_*_pressed`) to the
     /// buttons currently held. Frontends must call this whenever control
     /// returns to the overworld from a sub-screen (START menu, bag, save…):
@@ -416,6 +437,10 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 return Err(crate::foreground_input::ForegroundInputError::UnknownReturningField);
             };
             self.sampled_player_input = sample;
+            if self.source_foreground_mode == crate::foreground_input::ForegroundMode::TerminalReturn {
+                self.source_foreground = None;
+                self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
+            }
             return Ok((
                 input.start && pressed & crate::foreground_input::START != 0,
                 input.a && pressed & crate::foreground_input::A != 0,
@@ -3114,9 +3139,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                       | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
                     // Initial map redraw crosses an extra VBlank per stride.
                     self.field_loop_wait = 2;
-                }
-                if matches!(self.active_script_effect,
-                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
                     // JoypadOverworld calls Joypad before substituting the
                     // simulated direction. Even ignored buttons update
                     // hJoyLast, so a held START sampled between strides is
@@ -3129,6 +3151,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.sampled_player_input = super::screen::FieldInputSample::from(
                         crate::foreground_input::ForegroundJoypad::as_field_input(physical_buttons),
                     );
+                }
+                if matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
                     // Simulated joypad input takes the same .noCollision ->
                     // AdvancePlayerSprite path as an ordinary first step:
                     // publish the first two pixels before the redraw wait.
@@ -6392,5 +6417,98 @@ game_scene CinnabarGym {
         }
         assert!(!ow.script_awaiting_battle && ow.script_engine.is_idle());
         assert!(ow.pending_trainer_battle.is_none());
+    }
+}
+
+#[cfg(test)]
+mod terminal_field_return_tests {
+    use super::*;
+    use crate::foreground_input::{ForegroundJoypad, A, START};
+    use crate::text::terminal_input::{TerminalTextEnd, TerminalTextKind, TerminalTextWork};
+    use pokered_data::impl_traits::PokemonRedData;
+
+    #[test]
+    fn first_field_poll_uses_real_terminal_last_all_eight_keys_then_retires_the_borrow() {
+        let mut field = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        for last in 0..=255u8 {
+            let owner = field.begin_source_foreground();
+            owner.read_raw(last);
+            let mut text = TerminalTextWork::new(
+                TerminalTextKind::EvolvedInto,
+                "X".into(),
+                TerminalTextEnd::Done,
+                0,
+                0,
+            );
+            // Real glyph poll, plus its held-AB VBlank if present.
+            text.tick(owner, false);
+            if !text.is_complete() {
+                text.tick(owner, false);
+            }
+            assert!(text.is_complete());
+            assert_eq!(owner.last(), Some(last));
+            let current = last ^ 0x55;
+            let expected = current & !last;
+            assert_eq!(
+                field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(current), current),
+                Ok((expected & START != 0, expected & A != 0))
+            );
+            assert!(field.source_foreground().is_none());
+            assert_eq!(
+                field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(current), current),
+                Ok((false, false)),
+                "same held buttons cannot fire twice"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_return_is_serialized_and_cannot_be_silently_rebased_to_current_input() {
+        let mut field = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        field.begin_source_foreground();
+        let error = crate::text::terminal_input::TerminalInputError::UnknownReturningField;
+        assert_eq!(
+            field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(START), START),
+            Err(error)
+        );
+        field.block_source_foreground(error);
+        let json =
+            serde_json::to_string(&crate::snapshot::OverworldSnapshot::capture(&field)).unwrap();
+        let saved: crate::snapshot::OverworldSnapshot = serde_json::from_str(&json).unwrap();
+        saved.restore_into(&mut field);
+        assert_eq!(field.source_foreground_error(), Some(error));
+        assert_eq!(field.source_foreground().unwrap().last(), None);
+        assert_eq!(
+            field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(START), START),
+            Err(error)
+        );
+    }
+
+    #[test]
+    fn simulated_move_player_stride_polls_physical_buttons_into_hjoylast() {
+        let mut field = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        let x = field.state.player.x;
+        let y = field.state.player.y;
+        field.active_script_effect = Some(script_bridge::ScriptEffect::MovePlayer {
+            path: vec![(x as u8, (y + 1) as u8)],
+            started: true,
+        });
+        field.scripted_player_path.push_back((x, y + 1));
+        // Starting the simulated stride polls physical START into hJoyLast.
+        field.start_next_scripted_player_step(START);
+        assert_eq!(
+            field.foreground_observation().and_then(|o| o.last()),
+            Some(START)
+        );
+        // Once the stride completes and control returns to the idle field,
+        // still-held START is NOT a fresh menu edge.
+        field.state.player.movement_state = MovementState::Idle;
+        field.state.walk_counter = 0;
+        field.active_script_effect = None;
+        field.scripted_player_path.clear();
+        assert_eq!(
+            field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(START), START),
+            Ok((false, false))
+        );
     }
 }

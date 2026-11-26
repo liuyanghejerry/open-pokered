@@ -4,8 +4,10 @@ pub mod presentation;
 mod faint;
 pub use faint::{FaintCue, FaintSide, FaintSound};
 mod fight_text;
+mod terminal_input;
 pub use fight_text::{
-    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage, FightTextWork,
+    BattleTextFrame, BattleTextSettings, FightTextKind, FightTextReceipt, FightTextStage,
+    FightTextWork,
 };
 mod switch_dialogue;
 #[cfg(test)]
@@ -477,6 +479,14 @@ pub enum BattleTextBackdrop {
 /// High-level battle phase (frame-loop granularity).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum BattlePhase {
+    /// An explicitly identified returning PrintText call. The old edge-only
+    /// API never creates this phase; its source-aware caller lends one ledger.
+    TerminalText {
+        messages: Vec<String>,
+        current: usize,
+        work: Box<crate::text::terminal_input::TerminalTextWork>,
+        next_phase: Box<BattlePhase>,
+    },
     Intro {
         /// Current sub-phase of the intro sequence.
         phase: IntroPhase,
@@ -1952,7 +1962,12 @@ impl BattleScreen {
 
     pub fn update_frame(&mut self, input: BattleInput) -> ScreenAction {
         let mut receipt = FightTextReceipt::default();
-        self.update_frame_inner(input, BattleTextFrame::from_edges(input), &mut receipt)
+        self.update_frame_inner(
+            input,
+            BattleTextFrame::from_edges(input),
+            &mut receipt,
+            None,
+        )
     }
 
     /// Physical held input and explicit text settings share this single frame
@@ -1966,7 +1981,166 @@ impl BattleScreen {
         receipt: &mut FightTextReceipt,
     ) -> ScreenAction {
         *receipt = FightTextReceipt::default();
-        self.update_frame_inner(input, text, receipt)
+        self.update_frame_inner(input, text, receipt, None)
+    }
+
+    /// Canonical update for a caller carrying a verified foreground ledger.
+    /// Raw refresh is not a poll. Legacy wrappers retain their old None path.
+    pub fn update_frame_with_terminal_input(
+        &mut self,
+        input: BattleInput,
+        text: BattleTextFrame,
+        receipt: &mut FightTextReceipt,
+        owner: &mut crate::foreground_input::ForegroundJoypad,
+    ) -> ScreenAction {
+        *receipt = FightTextReceipt::default();
+        owner.read_raw(text.held_buttons);
+        self.update_frame_inner(input, text, receipt, Some(owner))
+    }
+
+    fn update_intro_phase(
+        &mut self,
+        phase: IntroPhase,
+        wait_frames: &mut u16,
+        input: BattleInput,
+    ) -> ScreenAction {
+        if phase == IntroPhase::SafariMenuPreparation {
+            // DelayFrames ignores buttons. Finish on the fortieth
+            // update after the wild-text ACK, without consuming that
+            // update's A/B as a Safari menu action.
+            self.phase = if *wait_frames > 1 {
+                BattlePhase::Intro { phase, wait_frames: *wait_frames - 1 }
+            } else {
+                BattlePhase::PlayerMenu
+            };
+            return ScreenAction::Continue;
+        }
+        // Button press can skip text-wait phases but NOT
+        // TransitionFlash or SilhouetteSlide (non-skippable animations).
+        let is_unskippable = matches!(
+            phase,
+            IntroPhase::SilhouetteSlide
+                | IntroPhase::BattleTransitionWipe(_)
+                | IntroPhase::TransitionFlash
+        );
+        if !is_unskippable && (input.a || input.b) {
+            *wait_frames = 0;
+        }
+        if *wait_frames > 0 {
+            self.phase = BattlePhase::Intro {
+                phase,
+                wait_frames: *wait_frames - 1,
+            };
+            return ScreenAction::Continue;
+        }
+        let needs_input = matches!(
+            phase,
+            IntroPhase::WildReveal
+                | IntroPhase::GhostCantID
+                | IntroPhase::GhostUnveil
+                | IntroPhase::TrainerReveal
+                | IntroPhase::TrainerSendOut
+                | IntroPhase::PlayerSendOut
+        );
+        if needs_input && !input.a && !input.b {
+            return ScreenAction::Continue;
+        }
+        let next_phase = match phase {
+            IntroPhase::BattleTransitionWipe(_) => BattlePhase::Intro {
+                phase: IntroPhase::SilhouetteSlide,
+                wait_frames: 72,
+            },
+            IntroPhase::SilhouetteSlide => {
+                if self.is_wild {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::WildReveal,
+                        wait_frames: WILD_REVEAL_FRAMES,
+                    }
+                } else {
+                    self.show_enemy_pokeballs = true;
+                    BattlePhase::Intro {
+                        phase: IntroPhase::TrainerReveal,
+                        wait_frames: 30,
+                    }
+                }
+            }
+            IntroPhase::WildReveal => {
+                // PrintBeginningBattleText (engine/battle/common_text.asm):
+                // the ghost-Marowak battle WITH the scope runs the unveil
+                // text + MarowakAnim, then loops back here as a normal
+                // "Wild MAROWAK appeared!"; a no-scope ghost battle prints
+                // the second "can't be ID'd" line before the send-out.
+                if self.ghost_marowak_reveal && !self.ghost_marowak_unveiled {
+                    BattlePhase::Intro {
+                        // ≈ the frontend GhostMarowakReveal anim length
+                        // (flash 8× + fade out + fade in, ~240 frames).
+                        phase: IntroPhase::GhostUnveil,
+                        wait_frames: 250,
+                    }
+                } else if self.is_ghost {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::GhostCantID,
+                        wait_frames: 30,
+                    }
+                } else if self.is_old_man {
+                    // The demonstration throws without sending out a mon.
+                    BattlePhase::PlayerMenu
+                } else if self.is_safari {
+                    self.current_message = None;
+                    self.show_player_pokeballs = false;
+                    BattlePhase::Intro {
+                        phase: IntroPhase::SafariMenuPreparation,
+                        wait_frames: 40,
+                    }
+                } else {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::PlayerSendOut,
+                        wait_frames: 0,
+                    }
+                }
+            }
+            IntroPhase::GhostCantID => BattlePhase::Intro {
+                phase: IntroPhase::PlayerSendOut,
+                wait_frames: 0,
+            },
+            IntroPhase::GhostUnveil => {
+                // The GHOST is unveiled as MAROWAK: the intro loops back to
+                // WildReveal, which now shows the normal "Wild MAROWAK
+                // appeared!" line (and the revealed sprite).
+                self.ghost_marowak_unveiled = true;
+                BattlePhase::Intro {
+                    phase: IntroPhase::WildReveal,
+                    wait_frames: WILD_REVEAL_FRAMES,
+                }
+            }
+            IntroPhase::TrainerReveal => BattlePhase::Intro {
+                phase: IntroPhase::TrainerSendOut,
+                wait_frames: 30,
+            },
+            IntroPhase::TrainerSendOut => BattlePhase::Intro {
+                phase: IntroPhase::PlayerSendOut,
+                wait_frames: 0,
+            },
+            IntroPhase::PlayerSendOut => {
+                self.show_player_pokeballs = true;
+                let msg = self.player_send_out_message();
+                self.record_switch_in_enemy_hp();
+                self.current_message =
+                    Some(pokered_data::battle_text::localize(&msg, self.is_zh));
+                BattlePhase::PlayerMenu
+            }
+            // Handled above so that button input cannot skip it.
+            IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
+            // FlashScreen strobe (Circle/DoubleCircle only) plays
+            // BEFORE the wipe, exactly as BattleTransition_Circle /
+            // BattleTransition_DoubleCircle call it in the original.
+            IntroPhase::TransitionFlash => BattlePhase::Intro {
+                phase: IntroPhase::BattleTransitionWipe(self.battle_transition),
+                wait_frames: 120,
+            },
+        };
+        self.phase = next_phase;
+        ScreenAction::Continue
     }
 
     fn update_frame_inner(
@@ -1974,14 +2148,23 @@ impl BattleScreen {
         input: BattleInput,
         text: BattleTextFrame,
         receipt: &mut FightTextReceipt,
+        mut foreground: Option<&mut crate::foreground_input::ForegroundJoypad>,
     ) -> ScreenAction {
-        if self.presentation.enabled && self.presentation.waiting { return ScreenAction::Continue; }
+        if self.presentation.enabled && self.presentation.waiting {
+            return ScreenAction::Continue;
+        }
         // HP-bar drain/refill animation (engine/gfx/hp_bar.asm): steps the
         // displayed HP toward the real HP at 1 bar pixel per 2 frames.
         self.hp_bar_anim
             .tick(&mut self.player_hp, &mut self.enemy_hp);
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
+        }
+        // Fast path for BattlePhase::Intro: its payload is Copy, so avoid
+        // cloning and dropping the whole BattlePhase enum on every intro frame
+        // (hot path on GBA battle-entry-v1 / trainer-battle-entry-v1).
+        if let BattlePhase::Intro { phase, mut wait_frames } = self.phase {
+            return self.update_intro_phase(phase, &mut wait_frames, input);
         }
         if matches!(&self.phase, BattlePhase::ShowingText {
             backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(_) },
@@ -1996,148 +2179,11 @@ impl BattleScreen {
             }
         }
         match self.phase.clone() {
-            BattlePhase::Intro {
-                phase,
-                mut wait_frames,
-            } => {
-                if phase == IntroPhase::SafariMenuPreparation {
-                    // DelayFrames ignores buttons. Finish on the fortieth
-                    // update after the wild-text ACK, without consuming that
-                    // update's A/B as a Safari menu action.
-                    self.phase = if wait_frames > 1 {
-                        BattlePhase::Intro { phase, wait_frames: wait_frames - 1 }
-                    } else {
-                        BattlePhase::PlayerMenu
-                    };
-                    return ScreenAction::Continue;
-                }
-                // Button press can skip text-wait phases but NOT
-                // TransitionFlash or SilhouetteSlide (non-skippable animations).
-                let is_unskippable = matches!(
-                    phase,
-                    IntroPhase::SilhouetteSlide
-                        | IntroPhase::BattleTransitionWipe(_)
-                        | IntroPhase::TransitionFlash
-                );
-                if !is_unskippable && (input.a || input.b) {
-                    wait_frames = 0;
-                }
-                if wait_frames > 0 {
-                    self.phase = BattlePhase::Intro {
-                        phase,
-                        wait_frames: wait_frames - 1,
-                    };
-                    return ScreenAction::Continue;
-                }
-                let needs_input = matches!(
-                    phase,
-                    IntroPhase::WildReveal
-                        | IntroPhase::GhostCantID
-                        | IntroPhase::GhostUnveil
-                        | IntroPhase::TrainerReveal
-                        | IntroPhase::TrainerSendOut
-                        | IntroPhase::PlayerSendOut
-                );
-                if needs_input && !input.a && !input.b {
-                    return ScreenAction::Continue;
-                }
-                let next_phase = match phase {
-                    IntroPhase::BattleTransitionWipe(_) => BattlePhase::Intro {
-                        phase: IntroPhase::SilhouetteSlide,
-                        wait_frames: 72,
-                    },
-                    IntroPhase::SilhouetteSlide => {
-                        if self.is_wild {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::WildReveal,
-                                wait_frames: WILD_REVEAL_FRAMES,
-                            }
-                        } else {
-                            self.show_enemy_pokeballs = true;
-                            BattlePhase::Intro {
-                                phase: IntroPhase::TrainerReveal,
-                                wait_frames: 30,
-                            }
-                        }
-                    }
-                    IntroPhase::WildReveal => {
-                        // PrintBeginningBattleText (engine/battle/common_text.asm):
-                        // the ghost-Marowak battle WITH the scope runs the unveil
-                        // text + MarowakAnim, then loops back here as a normal
-                        // "Wild MAROWAK appeared!"; a no-scope ghost battle prints
-                        // the second "can't be ID'd" line before the send-out.
-                        if self.ghost_marowak_reveal && !self.ghost_marowak_unveiled {
-                            BattlePhase::Intro {
-                                // ≈ the frontend GhostMarowakReveal anim length
-                                // (flash 8× + fade out + fade in, ~240 frames).
-                                phase: IntroPhase::GhostUnveil,
-                                wait_frames: 250,
-                            }
-                        } else if self.is_ghost {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::GhostCantID,
-                                wait_frames: 30,
-                            }
-                        } else if self.is_old_man {
-                            // The demonstration throws without sending out a mon.
-                            BattlePhase::PlayerMenu
-                        } else if self.is_safari {
-                            self.current_message = None;
-                            self.show_player_pokeballs = false;
-                            BattlePhase::Intro {
-                                phase: IntroPhase::SafariMenuPreparation,
-                                wait_frames: 40,
-                            }
-                        } else {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::PlayerSendOut,
-                                wait_frames: 0,
-                            }
-                        }
-                    }
-                    IntroPhase::GhostCantID => BattlePhase::Intro {
-                        phase: IntroPhase::PlayerSendOut,
-                        wait_frames: 0,
-                    },
-                    IntroPhase::GhostUnveil => {
-                        // The GHOST is unveiled as MAROWAK: the intro loops back to
-                        // WildReveal, which now shows the normal "Wild MAROWAK
-                        // appeared!" line (and the revealed sprite).
-                        self.ghost_marowak_unveiled = true;
-                        BattlePhase::Intro {
-                            phase: IntroPhase::WildReveal,
-                            wait_frames: WILD_REVEAL_FRAMES,
-                        }
-                    }
-                    IntroPhase::TrainerReveal => BattlePhase::Intro {
-                        phase: IntroPhase::TrainerSendOut,
-                        wait_frames: 30,
-                    },
-                    IntroPhase::TrainerSendOut => BattlePhase::Intro {
-                        phase: IntroPhase::PlayerSendOut,
-                        wait_frames: 0,
-                    },
-                    IntroPhase::PlayerSendOut => {
-                        self.show_player_pokeballs = true;
-                        let msg = self.player_send_out_message();
-                        self.record_switch_in_enemy_hp();
-                        self.current_message =
-                            Some(pokered_data::battle_text::localize(&msg, self.is_zh));
-                        BattlePhase::PlayerMenu
-                    }
-                    // Handled above so that button input cannot skip it.
-                    IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
-                    // FlashScreen strobe (Circle/DoubleCircle only) plays
-                    // BEFORE the wipe, exactly as BattleTransition_Circle /
-                    // BattleTransition_DoubleCircle call it in the original.
-                    IntroPhase::TransitionFlash => BattlePhase::Intro {
-                        phase: IntroPhase::BattleTransitionWipe(self.battle_transition),
-                        wait_frames: 120,
-                    },
-                };
-                self.phase = next_phase;
-                ScreenAction::Continue
+            BattlePhase::TerminalText { messages, current, work, next_phase } => {
+                self.update_terminal_text(messages, current, work, next_phase,
+                    foreground.as_deref_mut(), receipt)
             }
+            BattlePhase::Intro { .. } => unreachable!(),
             BattlePhase::PlayerMenu => {
                 // MainInBattleLoop clears late flinches before the next ordinary
                 // menu. A slower hit may set the bit after its target acted; it
@@ -2884,6 +2930,36 @@ learn {learn_name}!")];
                                     .unwrap_or_else(|| "RED".to_string());
                                 let money_msgs =
                                     trainer_winnings_messages(&player_name, prize);
+                                if let (Some(_), Some(settings)) =
+                                    (foreground.as_ref(), text.settings)
+                                {
+                                    if !settings.no_text_delay {
+                                        // Bind Prize before localization. The
+                                        // quip remains a separate PrintText.
+                                        let next = self.terminal_text_phase(
+                                            money_msgs,
+                                            crate::text::terminal_input::TerminalTextKind::Prize,
+                                            if settings.effective_letter_flags() & 1 != 0 {
+                                                settings.options_delay & 0x0f
+                                            } else {
+                                                1
+                                            },
+                                            BattlePhase::TrainerVictory {
+                                                phase: EndBattleText,
+                                                wait_frames: 0,
+                                                player_won,
+                                            },
+                                        );
+                                        if let Some(quip) =
+                                            self.end_battle_text.as_ref().filter(|q| !q.is_empty())
+                                        {
+                                            self.show_text_then(vec![quip.clone()], next);
+                                        } else {
+                                            self.phase = next;
+                                        }
+                                        return ScreenAction::Continue;
+                                    }
+                                }
                                 // Prepend the trainer's one-shot victory quip
                                 // (original PrintEndBattleText, shown before the
                                 // prize-money text) for sight/talk battles.
@@ -2920,7 +2996,11 @@ learn {learn_name}!")];
                             } else {
                                 BattleOutcome::Loss
                             };
-                            if self.defer_payday_pickup(outcome, self.phase.clone()) {
+                            if self.defer_payday_pickup(
+                                outcome,
+                                self.phase.clone(),
+                                foreground.as_ref().and(text.settings),
+                            ) {
                                 return ScreenAction::Continue;
                             }
                             self.finalize_settlement(outcome);
@@ -2959,9 +3039,15 @@ learn {learn_name}!")];
                 } else {
                     BattleOutcome::Loss
                 };
-                if self.defer_payday_pickup(outcome, BattlePhase::BattleOver {
-                    won, escaped, wait_frames: 0,
-                }) {
+                if self.defer_payday_pickup(
+                    outcome,
+                    BattlePhase::BattleOver {
+                        won,
+                        escaped,
+                        wait_frames: 0,
+                    },
+                    foreground.as_ref().and(text.settings),
+                ) {
                     return ScreenAction::Continue;
                 }
                 self.finalize_settlement(outcome);
@@ -5513,22 +5599,50 @@ learn {learn_name}!")];
         self.battle_state.as_ref().map_or(0, |bs| bs.total_payday_money.min(999_999))
     }
 
-    fn defer_payday_pickup(&mut self, outcome: BattleOutcome, next: BattlePhase) -> bool {
+    fn defer_payday_pickup(
+        &mut self,
+        outcome: BattleOutcome,
+        next: BattlePhase,
+        source_text: Option<BattleTextSettings>,
+    ) -> bool {
         let payday = self.payday_pickup_amount(outcome);
-        if self.payday_pickup_shown || payday == 0 { return false; }
+        if self.payday_pickup_shown || payday == 0 {
+            return false;
+        }
         self.payday_pickup_shown = true;
-        self.show_payday_pickup_then(payday, next);
+        self.show_payday_pickup_then(payday, next, source_text);
         true
     }
 
     /// Explicit source printing call, after prize text and before settlement /
     /// evolution. Future source text owners can attach here without guessing
     /// the identity of a localized/paginated string.
-    fn show_payday_pickup_then(&mut self, payday: u32, next: BattlePhase) {
-        self.show_text_then(
-            vec![payday_pickup_message(self.player_name.as_deref().unwrap_or("RED"), payday)],
-            next,
-        );
+    fn show_payday_pickup_then(
+        &mut self,
+        payday: u32,
+        next: BattlePhase,
+        source_text: Option<BattleTextSettings>,
+    ) {
+        let messages = vec![payday_pickup_message(
+            self.player_name.as_deref().unwrap_or("RED"),
+            payday,
+        )];
+        if let Some(settings) = source_text.filter(|settings| !settings.no_text_delay) {
+            // EndOfBattle's explicit PrintText call owns a real PROMPT. The
+            // same borrowed ledger survives result0 escape and settlement.
+            self.phase = self.terminal_text_phase(
+                messages,
+                crate::text::terminal_input::TerminalTextKind::PayDay,
+                if settings.effective_letter_flags() & 1 != 0 {
+                    settings.options_delay & 0x0f
+                } else {
+                    1
+                },
+                next,
+            );
+        } else {
+            self.show_text_then(messages, next);
+        }
     }
 
     fn finalize_settlement(&mut self, outcome: BattleOutcome) {

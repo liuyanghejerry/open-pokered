@@ -1007,7 +1007,8 @@ impl BattleVisualEffects {
             BattlePhase::ItemMoveSelect { .. } => BattlePhaseKind::MoveSelect,
             BattlePhase::BagSelect => BattlePhaseKind::BagSelect,
             BattlePhase::ItemTargetSelect { .. } | BattlePhase::ItemMedicineResult { .. } => BattlePhaseKind::ItemTargetSelect,
-            BattlePhase::ShowingText { .. } | BattlePhase::EnemyFreeTurnAfterItem => {
+            BattlePhase::ShowingText { .. } | BattlePhase::TerminalText { .. }
+                | BattlePhase::EnemyFreeTurnAfterItem => {
                 BattlePhaseKind::ShowingText
             }
             BattlePhase::PartySelect => BattlePhaseKind::PartySelect,
@@ -4217,11 +4218,15 @@ pub fn draw_battle(
                         Some("You lost...".to_string())
                     }
                 }
-                _ => if screen.fight_text_work().is_some() {
+                _ => if let Some(work) = screen.terminal_text_work() {
+                    Some(work.visible_text())
+                } else if screen.fight_text_work().is_some() {
                     screen.fight_text_visible_message()
                 } else { screen.current_message.clone() },
             };
-            let arrow = if let Some(work) = screen.fight_text_work() {
+            let arrow = if let Some(work) = screen.terminal_text_work() {
+                work.waiting_for_input()
+            } else if let Some(work) = screen.fight_text_work() {
                 work.arrow_visible()
             } else { match &screen.phase {
                 BattlePhase::Intro {

@@ -23,6 +23,8 @@ pub enum ForegroundMode {
     #[default]
     Observed,
     Field,
+    /// One-shot return policy for opt-in post-battle/evolution/learning terminal text.
+    TerminalReturn,
 }
 
 /// Unknown is a real migration/snapshot boundary, never neutral input.
@@ -31,6 +33,8 @@ pub enum ForegroundInputError {
     UnknownBeforePrompt,
     UnknownReturningField,
     MissingFieldOwner,
+    MissingLearningOwner,
+    UnsupportedEvolutionOrigin,
 }
 
 /// A receipt of a real foreground poll, including keys the caller may ignore.

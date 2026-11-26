@@ -628,3 +628,36 @@ fn rare_candy_desktop_soft_reset_discards_pending_learning_before_continue() {
         std::fs::remove_dir_all(dir).unwrap();
     });
 }
+
+#[test]
+fn carried_source_capability_does_not_steal_the_rare_candy_evolution_completion_owner() {
+    on_game_thread(|| {
+        let mut game = candy_game(Species::Bulbasaur, 15, false);
+        // Public opt-in is Unknown, not a fake preceding input sample. This
+        // regression intentionally mixes it with the legacy item origin.
+        game.overworld.begin_source_foreground();
+        tap(&mut game, GbButton::A);
+        assert!(game
+            .evolution_anim
+            .as_ref()
+            .is_some_and(|movie| !movie.supports_terminal_input()));
+        assert!(
+            game.overworld.source_foreground().is_none(),
+            "unsupported item origin must end that capability"
+        );
+        assert_eq!(quantity(&game), 2);
+        finish_evolution(&mut game, false);
+        assert_eq!(
+            game.evolution_anim.as_ref().map(|movie| movie.phase()),
+            None
+        );
+        assert_eq!(game.rare_candy_phase(), None);
+        assert_eq!(game.state.screen, GameScreen::Bag);
+        assert_eq!(quantity(&game), 1, "the real legacy callback consumes once");
+        assert_eq!(
+            game.save_data.party.get(0).unwrap().species,
+            Species::Ivysaur
+        );
+        assert_eq!(game.save_data.party.get(0).unwrap().level, 16);
+    });
+}

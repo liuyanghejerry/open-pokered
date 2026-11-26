@@ -2756,7 +2756,15 @@ impl PokemonGame {
                                     &mut self.overworld,
                                 );
                             let battle_outcome = writeback.outcome;
+                            if self.overworld.pending_warp.is_some() || self.battle.link_mode {
+                                // An actual blackout warp abandons this map
+                                // continuation; Link is outside this capability.
+                                // Escape alone does neither: Doll/TRW may have
+                                // just returned from a real PayDay PROMPT.
+                                self.overworld.take_source_foreground();
+                            }
                             if let Some(receipt) = writeback.captured {
+                                // DEX/naming are unmodeled foreground owners.
                                 self.overworld.suspend_source_foreground();
                                 self.begin_post_capture(receipt);
                             }
@@ -2827,6 +2835,14 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
+                if self.state.screen != GameScreen::Battle {
+                    // All actual battle entries (trainer/wild/demo) hand off
+                    // to earlier unmodeled battle owners. Never copy physical
+                    // prev into last; real terminal letters establish it later.
+                    if let Some(owner) = self.overworld.source_foreground_mut() {
+                        owner.retire_history();
+                    }
+                }
                 if self.battle.battle_state.is_none() {
                     self.battle = BattleScreen::new(true);
                     self.battle.is_zh =
@@ -3872,23 +3888,59 @@ impl PokemonGame {
             return;
         }
 
+        // LearnMove returns before Evolution_PartyMonLoop advances to the
+        // next queued mon. The movie remains paused while this owner runs.
+        if self.post_battle_learning_active() {
+            self.update_rare_candy(input);
+            return;
+        }
+
         // Evolution cutscene (engine/movie/evolution.asm +
         // engine/pokemon/evos_moves.asm): takes over the frame while active.
         // Each evolution's mutation is applied only when its morph resolves —
         // a B-cancel applies nothing (CancelledEvolution, evos_moves.asm:293).
         if self.evolution_anim.is_some() {
+            if !self
+                .evolution_anim
+                .as_ref()
+                .unwrap()
+                .supports_terminal_input()
+            {
+                // The actual item/trade origin still has its legacy callback.
+                // Explicitly end the unsupported source continuation instead of
+                // entering AwaitLearning without a matching completion owner.
+                self.overworld.take_source_foreground();
+            }
             let done = {
                 let anim = self.evolution_anim.as_mut().unwrap();
                 let evo_input = pokered_core::evolution_screen::EvolutionInput {
                     a: input.is_just_pressed(GbButton::A),
                     b: input.is_just_pressed(GbButton::B),
                 };
-                let done = anim.tick_with_sound(
-                    evo_input,
-                    self.audio
-                        .as_ref()
-                        .is_some_and(|audio| audio.is_sfx_playing()),
-                );
+                let sound_playing = self
+                    .audio
+                    .as_ref()
+                    .is_some_and(|audio| audio.is_sfx_playing());
+                let done = if let Some(owner) = self.overworld.source_foreground_mut() {
+                    let step = anim.tick_with_terminal_input(
+                        evo_input,
+                        sound_playing,
+                        input.raw_current(),
+                        self.state.config.text_speed.delay_frames() as u8,
+                        owner,
+                    );
+                    if step.press_ab {
+                        if let Some(audio) = &self.audio {
+                            audio.play_sfx(SfxId::PressAB);
+                        }
+                    }
+                    if let Some(error) = step.input_error {
+                        self.overworld.block_source_foreground(error);
+                    }
+                    step.complete
+                } else {
+                    anim.tick_with_sound(evo_input, sound_playing)
+                };
                 for sfx in anim.pending_sfx.drain(..) {
                     if let Some(ref audio) = self.audio {
                         use pokered_core::evolution_screen::EvolutionSfx;
@@ -3911,34 +3963,23 @@ impl PokemonGame {
             while let Some(outcome) = self.evolution_anim.as_mut().unwrap().take_outcome() {
                 outcomes.push(outcome);
             }
+            let returned_from_evolution = !outcomes.is_empty();
             for outcome in outcomes {
                 self.apply_evolution_outcome(&outcome);
             }
-            if done {
-                self.evolution_anim = None;
-                // PlayDefaultMusic (evos_moves.asm:257-259): restart the map
-                // theme after the cutscene.
-                if let Some(ref audio) = self.audio {
-                    let map = self.overworld.state.current_map;
-                    let data_id = pokered_core::overworld::map_loading::get_map_music(map);
-                    if let Some(id) = MusicId::from_u8(data_id as u8) {
-                        audio.play_music(id);
-                    }
-                }
-                self.overworld.party_count = self.save_data.party.count() as u8;
-                self.overworld.box_count = self.save_data.current_box.count() as u8;
-                self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
-                self.overworld.party_lead_level = self.save_data.party.leader_level();
-                if self.resume_rare_candy_after_evolution() {
-                    return;
-                }
-                // A full-moveset level-up move couldn't be learned: open the
-                // party screen's forget-a-move prompt, exactly where the
-                // original's `predef LearnMove` would (evos_moves.asm:212).
-                if self.pending_evolve_move_replace.is_some() {
-                    self.handle_transition(GameScreen::PartyScreen);
-                    return;
-                }
+            if returned_from_evolution && self.evolution_anim.as_ref().is_some_and(|anim|
+                anim.phase() == pokered_core::evolution_screen::EvolutionPhase::IsEvolving) {
+                if let Some(owner) = self.overworld.source_foreground_mut() { owner.retire_history(); }
+            }
+            // Applying an outcome may immediately resume an empty learning
+            // queue. Observe the actual phase after that callback as well.
+            if done
+                || self
+                    .evolution_anim
+                    .as_ref()
+                    .is_some_and(|anim| anim.is_done())
+            {
+                self.finish_evolution_cutscene();
             }
             return;
         }
@@ -4441,7 +4482,7 @@ impl PokemonGame {
                     // menu handlers) — the start menu must not open or a held
                     // combo would never reach the 16-frame reset.
                     let soft_reset_combo_held = soft_reset_combo_held(input);
-                    if ow_gapped_last_frame {
+                    if ow_gapped_last_frame && self.overworld.source_foreground().is_none() {
                         let previously_held = |b| input.is_just_released(b)
                             || (input.is_held(b) && !input.is_just_pressed(b));
                         self.overworld.synchronize_player_buttons(
@@ -4569,7 +4610,7 @@ impl PokemonGame {
                     // them — the press that drove whatever ran in between is
                     // still held and must not re-fire here (e.g. A on
                     // START-menu EXIT instantly talking to a facing NPC).
-                    if ow_gapped_last_frame {
+                    if ow_gapped_last_frame && self.overworld.source_foreground().is_none() {
                         self.sync_overworld_input_edges(input);
                     }
                     self.ow_ran_last_frame = true;
@@ -4905,14 +4946,33 @@ impl PokemonGame {
                 }
             }
             GameScreen::Battle => {
+                // A real normal-delay terminal call, not generic battle entry,
+                // creates the one returning owner. NoDelay may skip all letter
+                // polls; its unmodeled battle tail retains the legacy path.
+                let mut has_source_foreground = self.overworld.source_foreground().is_some();
+                if !has_source_foreground
+                    && !self.overworld.no_text_delay()
+                    && self.battle.returning_terminal_input_pending()
+                {
+                    self.overworld.begin_source_foreground().retire_history();
+                    has_source_foreground = true;
+                }
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
                 // Only FIGHT entry/selection and its continuation read this
                 // text input. Link polling may replace the canonical phase,
                 // so keep supplying it throughout the existing link path.
-                let text_frame = if self.battle.link_mode || matches!(&self.battle.phase,
-                    BattlePhase::PlayerMenu | BattlePhase::MoveSelect | BattlePhase::ShowingText {
-                        backdrop: pokered_core::battle::BattleTextBackdrop::FightMoveNotice { .. }, ..
-                    }) {
+                let text_frame = if self.battle.link_mode
+                    || has_source_foreground
+                    || matches!(
+                        &self.battle.phase,
+                        BattlePhase::PlayerMenu
+                            | BattlePhase::MoveSelect
+                            | BattlePhase::ShowingText {
+                                backdrop:
+                                    pokered_core::battle::BattleTextBackdrop::FightMoveNotice { .. },
+                                ..
+                            }
+                    ) {
                     // Read the live canonical bit; a battle is not itself a
                     // proven NO_TEXT_DELAY clear writer.
                     let mut settings = pokered_core::battle::BattleTextSettings::fight_menu(
@@ -5047,8 +5107,19 @@ impl PokemonGame {
                     // The driver owns the canonical screen; the mirror is
                     // only ever cloned, never updated.
                     ScreenAction::Continue
+                } else if let Some(owner) = self.overworld.source_foreground_mut() {
+                    self.battle.update_frame_with_terminal_input(
+                        battle_input,
+                        text_frame,
+                        &mut text_receipt,
+                        owner,
+                    )
                 } else {
-                    self.battle.update_frame_with_text_input(battle_input, text_frame, &mut text_receipt)
+                    self.battle.update_frame_with_text_input(
+                        battle_input,
+                        text_frame,
+                        &mut text_receipt,
+                    )
                 };
                 // Only actual loads notify the frontend: stable frames do not
                 // re-read a party slot or re-register an already seen enemy.
@@ -7386,7 +7457,11 @@ impl PokemonGame {
             // driver knows when a warp is still settling.
             "warp_fade": format!("{:?}", self.overworld.warp_fade_state),
         });
-        // Keep this separate from the large snapshot macro's recursion budget.
+        // Keep these separate from the large snapshot macro's recursion budget.
+        snapshot["foreground_input"] = serde_json::to_value(self.overworld.source_foreground())
+            .unwrap_or(serde_json::Value::Null);
+        snapshot["foreground_input_error"] = serde_json::to_value(self.overworld.source_foreground_error())
+            .unwrap_or(serde_json::Value::Null);
         snapshot["field_poison"] =
             serde_json::to_value(self.overworld.poison_flow).unwrap_or(serde_json::Value::Null);
         snapshot["capture_phase"] = serde_json::json!(self.post_capture_flow.as_ref().map(|flow| format!("{:?}", flow.phase)));
@@ -8337,7 +8412,14 @@ impl PokemonGame {
             })
             .collect();
         if !queue.is_empty() {
-            self.evolution_anim = Some(EvolutionScreenState::new(queue, pre_text, is_zh));
+            // This is the real AfterBattle producer, including wild wins with
+            // no prize/pickup. True NoDelay has no certified letter poll tail.
+            if !self.overworld.no_text_delay() {
+                self.overworld.begin_source_foreground().retire_history();
+            } else { self.overworld.suspend_source_foreground(); }
+            self.evolution_anim = Some(EvolutionScreenState::new_after_battle(
+                queue, pre_text, is_zh,
+            ));
         }
     }
 
@@ -8395,6 +8477,27 @@ impl PokemonGame {
         if self.apply_rare_candy_evolution(outcome) {
             return;
         }
+        if self.overworld.source_foreground().is_some()
+            && self
+                .evolution_anim
+                .as_ref()
+                .is_some_and(|anim| anim.awaiting_learning())
+        {
+            let learning = self
+                .save_data
+                .party
+                .get_mut(outcome.party_index)
+                .map(|mon| {
+                    pokered_core::pokemon::evolution::finalize_evolution_with_learning(
+                        mon,
+                        &mut self.save_data.game_data.pokedex,
+                        outcome.to,
+                    )
+                })
+                .unwrap_or_default();
+            self.begin_post_battle_evolution_learning(outcome.party_index, learning);
+            return;
+        }
         if let Some(mon) = self.save_data.party.get_mut(outcome.party_index) {
             let blocked = pokered_core::pokemon::evolution::finalize_evolution(
                 mon,
@@ -8407,6 +8510,34 @@ impl PokemonGame {
         }
     }
 
+    /// Finish the actual final evolution/learning continuation in the same
+    /// frame, without displaying an extra empty Done movie frame.
+    pub(super) fn finish_evolution_cutscene(&mut self) {
+        self.evolution_anim = None;
+        // PlayDefaultMusic (evos_moves.asm:257-259): restart the map
+        // theme after the cutscene.
+        if let Some(ref audio) = self.audio {
+            let map = self.overworld.state.current_map;
+            let data_id = pokered_core::overworld::map_loading::get_map_music(map);
+            if let Some(id) = MusicId::from_u8(data_id as u8) {
+                audio.play_music(id);
+            }
+        }
+        self.overworld.party_count = self.save_data.party.count() as u8;
+        self.overworld.box_count = self.save_data.current_box.count() as u8;
+        self.overworld.gift_box_number = self.save_data.pc_storage.current_box_index() as u8 + 1;
+        self.overworld.party_lead_level = self.save_data.party.leader_level();
+        if self.resume_rare_candy_after_evolution() {
+            return;
+        }
+        // A full-moveset level-up move couldn't be learned: open the
+        // party screen's forget-a-move prompt, exactly where the
+        // original's `predef LearnMove` would (evos_moves.asm:212).
+        if self.pending_evolve_move_replace.is_some() {
+            self.handle_transition(GameScreen::PartyScreen);
+            return;
+        }
+    }
 
     /// Draw game state to frame buffer. Available for both wasm and native builds.
     pub fn draw(&mut self, frame_buffer: &mut FrameBuffer) {
@@ -8426,6 +8557,10 @@ impl PokemonGame {
             return;
         }
 
+        if self.post_battle_learning_active() {
+            self.draw_rare_candy(frame_buffer);
+            return;
+        }
         // The evolution cutscene takes over the whole screen while it plays.
         if let Some(ref anim) = self.evolution_anim {
             draw_evolution(anim, &mut self.resources, frame_buffer);
@@ -14234,3 +14369,7 @@ mod bill_separator_tests;
 #[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
 #[path = "game/bill_pokedex_ownership_tests.rs"]
 mod bill_pokedex_ownership_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(target_os = "none")))]
+#[path = "game/terminal_input_tests.rs"]
+mod terminal_input_tests;
