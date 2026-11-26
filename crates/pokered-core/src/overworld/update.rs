@@ -317,6 +317,11 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
     /// Creation leaves preceding input Unknown; it does not invent a sample.
     pub fn begin_source_foreground(&mut self) -> &mut crate::foreground_input::ForegroundJoypad {
         self.source_foreground_error = None;
+        if self.source_foreground_mode == crate::foreground_input::ForegroundMode::Observed {
+            if let Some(owner) = self.source_foreground.as_mut() {
+                owner.retire_history();
+            }
+        }
         self.source_foreground_mode = crate::foreground_input::ForegroundMode::TerminalReturn;
         self.source_foreground.get_or_insert_with(Default::default)
     }
@@ -378,30 +383,12 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         self.source_foreground_error
     }
 
-    pub fn source_foreground(&self) -> Option<&crate::foreground_input::ForegroundJoypad> {
-        self.source_foreground.as_ref()
-    }
-
-    /// A missing real poll must remain visible rather than fabricating an edge.
-    pub fn block_source_foreground(
-        &mut self,
-        error: crate::text::terminal_input::TerminalInputError,
-    ) {
-        self.source_foreground_error = Some(error);
-    }
-
     /// Transfer/retire a continuation explicitly; a raw refresh is not a
     /// returning field poll.
     pub fn take_source_foreground(&mut self) -> Option<crate::foreground_input::ForegroundJoypad> {
         self.source_foreground_error = None;
         self.source_foreground_mode = crate::foreground_input::ForegroundMode::Observed;
         self.source_foreground.take()
-    }
-
-    pub fn source_foreground_error(
-        &self,
-    ) -> Option<crate::text::terminal_input::TerminalInputError> {
-        self.source_foreground_error
     }
 
     /// Re-baseline the button edge detectors (`prev_*_pressed`) to the
@@ -3152,9 +3139,6 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                       | script_bridge::ScriptEffect::MovePlayerTo { .. })) {
                     // Initial map redraw crosses an extra VBlank per stride.
                     self.field_loop_wait = 2;
-                }
-                if matches!(self.active_script_effect,
-                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
                     // JoypadOverworld calls Joypad before substituting the
                     // simulated direction. Even ignored buttons update
                     // hJoyLast, so a held START sampled between strides is
@@ -3167,6 +3151,9 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                     self.sampled_player_input = super::screen::FieldInputSample::from(
                         crate::foreground_input::ForegroundJoypad::as_field_input(physical_buttons),
                     );
+                }
+                if matches!(self.active_script_effect,
+                    Some(script_bridge::ScriptEffect::MovePlayerRelative { .. })) {
                     // Simulated joypad input takes the same .noCollision ->
                     // AdvancePlayerSprite path as an ordinary first step:
                     // publish the first two pixels before the redraw wait.
@@ -6494,6 +6481,34 @@ mod terminal_field_return_tests {
         assert_eq!(
             field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(START), START),
             Err(error)
+        );
+    }
+
+    #[test]
+    fn simulated_move_player_stride_polls_physical_buttons_into_hjoylast() {
+        let mut field = OverworldScreen::new(MapId::RedsHouse2F, None, PokemonRedData);
+        let x = field.state.player.x;
+        let y = field.state.player.y;
+        field.active_script_effect = Some(script_bridge::ScriptEffect::MovePlayer {
+            path: vec![(x as u8, (y + 1) as u8)],
+            started: true,
+        });
+        field.scripted_player_path.push_back((x, y + 1));
+        // Starting the simulated stride polls physical START into hJoyLast.
+        field.start_next_scripted_player_step(START);
+        assert_eq!(
+            field.foreground_observation().and_then(|o| o.last()),
+            Some(START)
+        );
+        // Once the stride completes and control returns to the idle field,
+        // still-held START is NOT a fresh menu edge.
+        field.state.player.movement_state = MovementState::Idle;
+        field.state.walk_counter = 0;
+        field.active_script_effect = None;
+        field.scripted_player_path.clear();
+        assert_eq!(
+            field.sample_idle_field_buttons(ForegroundJoypad::as_field_input(START), START),
+            Ok((false, false))
         );
     }
 }

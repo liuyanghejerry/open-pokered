@@ -117,7 +117,7 @@ fn explicit_unknown_field_return_blocks_without_inventing_neutral_or_reemitting_
         ready,
         "ordinary legacy battle must return to a real idle field"
     );
-    session.game.overworld.begin_source_foreground();
+    session.game.overworld.begin_source_foreground().retire_history();
     for _ in 0..8 {
         session.step(&[GbButton::Start]);
     }

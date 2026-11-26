@@ -362,6 +362,7 @@ impl SourceInput {
             BattleInput {
                 a: pressed & A != 0,
                 b: pressed & B != 0,
+                select: false,
                 up: pressed & UP != 0,
                 down: pressed & DOWN != 0,
                 left: pressed & LEFT != 0,

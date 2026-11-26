@@ -105,7 +105,11 @@ pub fn finalize_evolution_with_learning(
         mon.set_nickname(pokered_data::lang_data::species_name(to, false));
     }
     let mut learning = Vec::new();
-    if let Some(move_id) = crate::pokemon::move_learning::first_move_at_level_for(to, mon.level, &mon.moves) {
+    // Gen-1 LearnMoveFromLevelUp (evos_moves.asm) checks only the first
+    // learnset entry matching the mon's current level.
+    if let Some(move_id) =
+        crate::pokemon::move_learning::moves_at_level(to, mon.level).into_iter().next()
+    {
         learning.push(EvolutionMoveLearning {
             move_id,
             result: try_learn_move(mon, move_id),
