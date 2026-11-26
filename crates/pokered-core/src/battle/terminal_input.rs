@@ -7,6 +7,7 @@ use crate::text::terminal_input::{TerminalTextEnd, TerminalTextKind, TerminalTex
 impl BattleScreen {
     /// Actual returning PrintText producers, before their first glyph. This
     /// does not enable every battle or infer a call from localized strings.
+    #[inline]
     pub fn returning_terminal_input_pending(&self) -> bool {
         if self.link_mode || self.is_old_man || self.captured_mon.is_some() { return false; }
         match &self.phase {
@@ -33,6 +34,7 @@ impl BattleScreen {
 
     /// Bind a call identity before localization/pagination. The caller has
     /// verified the normal PrintText delay flags; no substring identifies it.
+    #[inline(never)]
     pub(super) fn terminal_text_phase(
         &self,
         messages: Vec<String>,
@@ -64,6 +66,7 @@ impl BattleScreen {
         }
     }
 
+    #[inline(never)]
     pub(super) fn update_terminal_text(
         &mut self,
         messages: Vec<String>,

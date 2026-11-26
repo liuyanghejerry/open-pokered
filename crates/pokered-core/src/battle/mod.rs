@@ -1998,6 +1998,151 @@ impl BattleScreen {
         self.update_frame_inner(input, text, receipt, Some(owner))
     }
 
+    fn update_intro_phase(
+        &mut self,
+        phase: IntroPhase,
+        wait_frames: &mut u16,
+        input: BattleInput,
+    ) -> ScreenAction {
+        if phase == IntroPhase::SafariMenuPreparation {
+            // DelayFrames ignores buttons. Finish on the fortieth
+            // update after the wild-text ACK, without consuming that
+            // update's A/B as a Safari menu action.
+            self.phase = if *wait_frames > 1 {
+                BattlePhase::Intro { phase, wait_frames: *wait_frames - 1 }
+            } else {
+                BattlePhase::PlayerMenu
+            };
+            return ScreenAction::Continue;
+        }
+        // Button press can skip text-wait phases but NOT
+        // TransitionFlash or SilhouetteSlide (non-skippable animations).
+        let is_unskippable = matches!(
+            phase,
+            IntroPhase::SilhouetteSlide
+                | IntroPhase::BattleTransitionWipe(_)
+                | IntroPhase::TransitionFlash
+        );
+        if !is_unskippable && (input.a || input.b) {
+            *wait_frames = 0;
+        }
+        if *wait_frames > 0 {
+            self.phase = BattlePhase::Intro {
+                phase,
+                wait_frames: *wait_frames - 1,
+            };
+            return ScreenAction::Continue;
+        }
+        let needs_input = matches!(
+            phase,
+            IntroPhase::WildReveal
+                | IntroPhase::GhostCantID
+                | IntroPhase::GhostUnveil
+                | IntroPhase::TrainerReveal
+                | IntroPhase::TrainerSendOut
+                | IntroPhase::PlayerSendOut
+        );
+        if needs_input && !input.a && !input.b {
+            return ScreenAction::Continue;
+        }
+        let next_phase = match phase {
+            IntroPhase::BattleTransitionWipe(_) => BattlePhase::Intro {
+                phase: IntroPhase::SilhouetteSlide,
+                wait_frames: 72,
+            },
+            IntroPhase::SilhouetteSlide => {
+                if self.is_wild {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::WildReveal,
+                        wait_frames: WILD_REVEAL_FRAMES,
+                    }
+                } else {
+                    self.show_enemy_pokeballs = true;
+                    BattlePhase::Intro {
+                        phase: IntroPhase::TrainerReveal,
+                        wait_frames: 30,
+                    }
+                }
+            }
+            IntroPhase::WildReveal => {
+                // PrintBeginningBattleText (engine/battle/common_text.asm):
+                // the ghost-Marowak battle WITH the scope runs the unveil
+                // text + MarowakAnim, then loops back here as a normal
+                // "Wild MAROWAK appeared!"; a no-scope ghost battle prints
+                // the second "can't be ID'd" line before the send-out.
+                if self.ghost_marowak_reveal && !self.ghost_marowak_unveiled {
+                    BattlePhase::Intro {
+                        // ≈ the frontend GhostMarowakReveal anim length
+                        // (flash 8× + fade out + fade in, ~240 frames).
+                        phase: IntroPhase::GhostUnveil,
+                        wait_frames: 250,
+                    }
+                } else if self.is_ghost {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::GhostCantID,
+                        wait_frames: 30,
+                    }
+                } else if self.is_old_man {
+                    // The demonstration throws without sending out a mon.
+                    BattlePhase::PlayerMenu
+                } else if self.is_safari {
+                    self.current_message = None;
+                    self.show_player_pokeballs = false;
+                    BattlePhase::Intro {
+                        phase: IntroPhase::SafariMenuPreparation,
+                        wait_frames: 40,
+                    }
+                } else {
+                    BattlePhase::Intro {
+                        phase: IntroPhase::PlayerSendOut,
+                        wait_frames: 0,
+                    }
+                }
+            }
+            IntroPhase::GhostCantID => BattlePhase::Intro {
+                phase: IntroPhase::PlayerSendOut,
+                wait_frames: 0,
+            },
+            IntroPhase::GhostUnveil => {
+                // The GHOST is unveiled as MAROWAK: the intro loops back to
+                // WildReveal, which now shows the normal "Wild MAROWAK
+                // appeared!" line (and the revealed sprite).
+                self.ghost_marowak_unveiled = true;
+                BattlePhase::Intro {
+                    phase: IntroPhase::WildReveal,
+                    wait_frames: WILD_REVEAL_FRAMES,
+                }
+            }
+            IntroPhase::TrainerReveal => BattlePhase::Intro {
+                phase: IntroPhase::TrainerSendOut,
+                wait_frames: 30,
+            },
+            IntroPhase::TrainerSendOut => BattlePhase::Intro {
+                phase: IntroPhase::PlayerSendOut,
+                wait_frames: 0,
+            },
+            IntroPhase::PlayerSendOut => {
+                self.show_player_pokeballs = true;
+                let msg = self.player_send_out_message();
+                self.record_switch_in_enemy_hp();
+                self.current_message =
+                    Some(pokered_data::battle_text::localize(&msg, self.is_zh));
+                BattlePhase::PlayerMenu
+            }
+            // Handled above so that button input cannot skip it.
+            IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
+            // FlashScreen strobe (Circle/DoubleCircle only) plays
+            // BEFORE the wipe, exactly as BattleTransition_Circle /
+            // BattleTransition_DoubleCircle call it in the original.
+            IntroPhase::TransitionFlash => BattlePhase::Intro {
+                phase: IntroPhase::BattleTransitionWipe(self.battle_transition),
+                wait_frames: 120,
+            },
+        };
+        self.phase = next_phase;
+        ScreenAction::Continue
+    }
+
     fn update_frame_inner(
         &mut self,
         input: BattleInput,
@@ -2014,6 +2159,12 @@ impl BattleScreen {
             .tick(&mut self.player_hp, &mut self.enemy_hp);
         if self.presentation.enabled && !self.hp_bar_anim.is_active() && self.presentation.next_hit() {
             return ScreenAction::Continue;
+        }
+        // Fast path for BattlePhase::Intro: its payload is Copy, so avoid
+        // cloning and dropping the whole BattlePhase enum on every intro frame
+        // (hot path on GBA battle-entry-v1 / trainer-battle-entry-v1).
+        if let BattlePhase::Intro { phase, mut wait_frames } = self.phase {
+            return self.update_intro_phase(phase, &mut wait_frames, input);
         }
         if matches!(&self.phase, BattlePhase::ShowingText {
             backdrop: BattleTextBackdrop::FightMoveNotice { wait: FightNoticeWait::Source(_) },
@@ -2032,148 +2183,7 @@ impl BattleScreen {
                 self.update_terminal_text(messages, current, work, next_phase,
                     foreground.as_deref_mut(), receipt)
             }
-            BattlePhase::Intro {
-                phase,
-                mut wait_frames,
-            } => {
-                if phase == IntroPhase::SafariMenuPreparation {
-                    // DelayFrames ignores buttons. Finish on the fortieth
-                    // update after the wild-text ACK, without consuming that
-                    // update's A/B as a Safari menu action.
-                    self.phase = if wait_frames > 1 {
-                        BattlePhase::Intro { phase, wait_frames: wait_frames - 1 }
-                    } else {
-                        BattlePhase::PlayerMenu
-                    };
-                    return ScreenAction::Continue;
-                }
-                // Button press can skip text-wait phases but NOT
-                // TransitionFlash or SilhouetteSlide (non-skippable animations).
-                let is_unskippable = matches!(
-                    phase,
-                    IntroPhase::SilhouetteSlide
-                        | IntroPhase::BattleTransitionWipe(_)
-                        | IntroPhase::TransitionFlash
-                );
-                if !is_unskippable && (input.a || input.b) {
-                    wait_frames = 0;
-                }
-                if wait_frames > 0 {
-                    self.phase = BattlePhase::Intro {
-                        phase,
-                        wait_frames: wait_frames - 1,
-                    };
-                    return ScreenAction::Continue;
-                }
-                let needs_input = matches!(
-                    phase,
-                    IntroPhase::WildReveal
-                        | IntroPhase::GhostCantID
-                        | IntroPhase::GhostUnveil
-                        | IntroPhase::TrainerReveal
-                        | IntroPhase::TrainerSendOut
-                        | IntroPhase::PlayerSendOut
-                );
-                if needs_input && !input.a && !input.b {
-                    return ScreenAction::Continue;
-                }
-                let next_phase = match phase {
-                    IntroPhase::BattleTransitionWipe(_) => BattlePhase::Intro {
-                        phase: IntroPhase::SilhouetteSlide,
-                        wait_frames: 72,
-                    },
-                    IntroPhase::SilhouetteSlide => {
-                        if self.is_wild {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::WildReveal,
-                                wait_frames: WILD_REVEAL_FRAMES,
-                            }
-                        } else {
-                            self.show_enemy_pokeballs = true;
-                            BattlePhase::Intro {
-                                phase: IntroPhase::TrainerReveal,
-                                wait_frames: 30,
-                            }
-                        }
-                    }
-                    IntroPhase::WildReveal => {
-                        // PrintBeginningBattleText (engine/battle/common_text.asm):
-                        // the ghost-Marowak battle WITH the scope runs the unveil
-                        // text + MarowakAnim, then loops back here as a normal
-                        // "Wild MAROWAK appeared!"; a no-scope ghost battle prints
-                        // the second "can't be ID'd" line before the send-out.
-                        if self.ghost_marowak_reveal && !self.ghost_marowak_unveiled {
-                            BattlePhase::Intro {
-                                // ≈ the frontend GhostMarowakReveal anim length
-                                // (flash 8× + fade out + fade in, ~240 frames).
-                                phase: IntroPhase::GhostUnveil,
-                                wait_frames: 250,
-                            }
-                        } else if self.is_ghost {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::GhostCantID,
-                                wait_frames: 30,
-                            }
-                        } else if self.is_old_man {
-                            // The demonstration throws without sending out a mon.
-                            BattlePhase::PlayerMenu
-                        } else if self.is_safari {
-                            self.current_message = None;
-                            self.show_player_pokeballs = false;
-                            BattlePhase::Intro {
-                                phase: IntroPhase::SafariMenuPreparation,
-                                wait_frames: 40,
-                            }
-                        } else {
-                            BattlePhase::Intro {
-                                phase: IntroPhase::PlayerSendOut,
-                                wait_frames: 0,
-                            }
-                        }
-                    }
-                    IntroPhase::GhostCantID => BattlePhase::Intro {
-                        phase: IntroPhase::PlayerSendOut,
-                        wait_frames: 0,
-                    },
-                    IntroPhase::GhostUnveil => {
-                        // The GHOST is unveiled as MAROWAK: the intro loops back to
-                        // WildReveal, which now shows the normal "Wild MAROWAK
-                        // appeared!" line (and the revealed sprite).
-                        self.ghost_marowak_unveiled = true;
-                        BattlePhase::Intro {
-                            phase: IntroPhase::WildReveal,
-                            wait_frames: WILD_REVEAL_FRAMES,
-                        }
-                    }
-                    IntroPhase::TrainerReveal => BattlePhase::Intro {
-                        phase: IntroPhase::TrainerSendOut,
-                        wait_frames: 30,
-                    },
-                    IntroPhase::TrainerSendOut => BattlePhase::Intro {
-                        phase: IntroPhase::PlayerSendOut,
-                        wait_frames: 0,
-                    },
-                    IntroPhase::PlayerSendOut => {
-                        self.show_player_pokeballs = true;
-                        let msg = self.player_send_out_message();
-                        self.record_switch_in_enemy_hp();
-                        self.current_message =
-                            Some(pokered_data::battle_text::localize(&msg, self.is_zh));
-                        BattlePhase::PlayerMenu
-                    }
-                    // Handled above so that button input cannot skip it.
-                    IntroPhase::SafariMenuPreparation => BattlePhase::PlayerMenu,
-                    // FlashScreen strobe (Circle/DoubleCircle only) plays
-                    // BEFORE the wipe, exactly as BattleTransition_Circle /
-                    // BattleTransition_DoubleCircle call it in the original.
-                    IntroPhase::TransitionFlash => BattlePhase::Intro {
-                        phase: IntroPhase::BattleTransitionWipe(self.battle_transition),
-                        wait_frames: 120,
-                    },
-                };
-                self.phase = next_phase;
-                ScreenAction::Continue
-            }
+            BattlePhase::Intro { .. } => unreachable!(),
             BattlePhase::PlayerMenu => {
                 // MainInBattleLoop clears late flinches before the next ordinary
                 // menu. A slower hit may set the bit after its target acted; it

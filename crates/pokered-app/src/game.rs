@@ -4949,16 +4949,20 @@ impl PokemonGame {
                 // A real normal-delay terminal call, not generic battle entry,
                 // creates the one returning owner. NoDelay may skip all letter
                 // polls; its unmodeled battle tail retains the legacy path.
-                if !self.overworld.no_text_delay() && self.battle.returning_terminal_input_pending()
-                    && self.overworld.source_foreground().is_none() {
+                let mut has_source_foreground = self.overworld.source_foreground().is_some();
+                if !has_source_foreground
+                    && !self.overworld.no_text_delay()
+                    && self.battle.returning_terminal_input_pending()
+                {
                     self.overworld.begin_source_foreground().retire_history();
+                    has_source_foreground = true;
                 }
                 let fight_notice_sound = crate::audio::FightNoticeSound::before(&self.battle.phase);
                 // Only FIGHT entry/selection and its continuation read this
                 // text input. Link polling may replace the canonical phase,
                 // so keep supplying it throughout the existing link path.
                 let text_frame = if self.battle.link_mode
-                    || self.overworld.source_foreground().is_some()
+                    || has_source_foreground
                     || matches!(
                         &self.battle.phase,
                         BattlePhase::PlayerMenu
