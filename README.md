@@ -1,4 +1,4 @@
-# Pokémon Red/Blue — Rust Reimplementation
+# Pokémon Red — Rust Reimplementation
 
 <p align="center">
   <img src="docs/screenshots/readme/title.png" alt="Title screen" width="480">
@@ -8,15 +8,17 @@
   <a href="https://liuyanghejerry.github.io/open-pokered/"><strong>▶ Play the web version</strong></a>
   ·
   <a href="https://liuyanghejerry.github.io/open-pokered/editor/"><strong>Open the web editor</strong></a>
+  ·
+  <a href="https://github.com/liuyanghejerry/open-pokered/releases/latest"><strong>Download GBA ROM</strong></a>
 </p>
 
 <p align="center">
-  No installation required — play the full bilingual game or explore the editor directly in your browser.
+  No installation required — play the full bilingual game in your browser, flash/run the bare-metal GBA ROM, or explore the editor online.
 </p>
 
-A faithful reimplementation of **Pokémon Red and Blue** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Android, iOS and the terminal** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
+A faithful reimplementation of **Pokémon Red** in **Rust**, built from the [pret/pokered](https://github.com/pret/pokered) disassembly — playable on **desktop, web, Game Boy Advance (bare-metal `no_std` ROM), Android, iOS, and the terminal** from a single codebase, fully playable in **English and 中文**, and shipping with a full **visual editor suite** for maps, data, UI layouts, and saves.
 
-This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as Cargo **git dependencies** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `crates/*/Cargo.toml`, pinned to `v0.10.1` plus the NPC stride-direction and audio Tempo fixes). The upstream DSL crate includes the no_std integer-check fix required by the GBA build.
+This repo is **game-only**: the generic **JRPG engine** lives in a separate repository and is consumed here as pinned Cargo **git dependencies** (`dotzuki-engine`, `dotzuki-engine-dsl`, `dotzuki-engine-script`, `dotzuki-rules`, `dotzuki-renderer`, `dotzuki-ui`, `dotzuki-audio`, `dotzuki-app`, `dotzuki-mobile`, `dotzuki-tui` — see `Cargo.toml` and `crates/pokered-gba/Cargo.toml` for the pinned revision, including `no_std` support for GBA).
 
 ## Story behind the repo
 
@@ -64,9 +66,9 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 
 ## Highlights
 
-- **Faithful to the original** — all 248 maps, 151 species, moves, items, and game logic rebuilt from the disassembly, with ongoing fidelity audits (`docs/FIDELITY_GAPS.md`)
-- **Playable instantly** — a full WebAssembly build runs directly in the browser
-- **Cross-platform** — native desktop app, web, Android, iOS, and a terminal frontend from one codebase
+- **Faithful & end-to-end verified** — all 248 maps, 151 species, moves, items, and game logic rebuilt from the disassembly (`docs/FIDELITY_GAPS.md`), verified through a full fresh clear (`NEW GAME` → Elite Four → Champion → Hall of Fame → Credits → ending autosave → separate-process `CONTINUE`), all post-game legendaries (Zapdos, Moltres, Articuno, Cerulean Cave Mewtwo), and all optional side-quests driven end-to-end with real button inputs
+- **Playable instantly** — a full WebAssembly build runs directly in the browser, and prebuilt bare-metal GBA ROMs (`pokered-gba.gba`) are published on [GitHub Releases](https://github.com/liuyanghejerry/open-pokered/releases/latest)
+- **Cross-platform** — native desktop app, web, Game Boy Advance (`no_std`), Android, iOS, and a terminal frontend from one codebase
 - **Bilingual** — every screen and line of dialogue in English and 中文, switchable in-game
 - **Authentic audio** — Game Boy APU emulation (`pokered-audio`)
 - **Hackable by design** — per-map `.scene` event scripts on a native DSL interpreter, a DSL for UI layouts, and JSON-driven game data
@@ -76,7 +78,7 @@ Screenshots are regenerated with `scripts/capture_readme_screenshots.sh` (headle
 
 The game itself stays faithful — same mechanics, same maps, [deliberate bugs included](docs/FIDELITY_GAPS.md). What follows is what the remake adds around it: things a 1996 cartridge on a Game Boy with a link cable could not do.
 
-- **One codebase, six targets** — native desktop binary, WebAssembly web build, Android, iOS, a **terminal frontend** (`pokered-tui`: the same game as half-block cells in a true-color terminal), and headless mode, which runs the update loop with no window at all
+- **One codebase, seven targets** — native desktop binary, WebAssembly web build, bare-metal **Game Boy Advance ROM** (`crates/pokered-gba`, `no_std`), Android, iOS, a **terminal frontend** (`pokered-tui`: the same game as half-block cells in a true-color terminal), and headless mode, which runs the update loop with no window at all
 - **Bilingual end to end** — a language-select screen at boot (`--lang en|zh`), 2,700+ `@t("english", "中文")` lines across every map, localized menus and species/move/item names, a bundled OFL CJK pixel font, and **pinyin input** on the naming screen
 - **Link play without a link cable** — Colosseum battles and Trade Center trades over TCP (`--link-listen` / `--link-connect`) or between two browser tabs (`?link=<channel>`), entered right from any Poké Center receptionist on the original Cable Club flow
 - **Saves you can build, edit and inspect** — the original `.sav` SRAM layout, JSON snapshots (`export-snapshot`, `run --snapshot`), browser-storage saves on web, and a save editor that constructs party, bag, badges and event flags, then boots the real game on the result
@@ -187,15 +189,15 @@ cargo run --release --bin pokered-app
 cargo test
 ```
 
-The engine is consumed from `https://github.com/liuyanghejerry/dotzuki`, pinned to `v0.10.1` plus the NPC stride-direction and audio Tempo fixes (see the `Cargo.toml` files). All engine crates, including the no_std DSL runtime, come directly from that upstream revision without local engine patches. Keep the root and standalone GBA manifests on the same revision and update both lockfiles after changing it.
+The engine is consumed from `https://github.com/liuyanghejerry/dotzuki` at the Git revision pinned in `Cargo.toml` and `crates/pokered-gba/Cargo.toml`. All engine crates, including the `no_std` DSL runtime, come directly from that upstream revision without local engine patches. Keep the root and standalone GBA manifests on the same revision and update both lockfiles after changing it.
 
 ## What this repo contains
 
-- `crates/` — the game itself (`pokered-data` (248 maps, species/move/item tables), `pokered-core` (pure logic), `pokered-renderer`, `pokered-ui`, `pokered-audio` (GB APU emulation), `pokered-app` (native binary + debug CLI), `pokered-tui`, `pokered-ui-preview`) plus platform adapters: `pokered-web` (WASM), `pokered-runner-web` (editor Play bridge), `pokered-layout-preview` (editor layout-preview WASM: per-menu mock data, `custom:hp_bar`, DSL compile bridge), `pokered-debug-server`, `pokered-mobile` (shared Android/iOS/HarmonyOS ABI), plus `scene_apply` (story-translation helper bin)
+- `crates/` — the game itself (`pokered-data` (248 maps, species/move/item tables), `pokered-core` (pure `no_std` logic), `pokered-renderer`, `pokered-ui`, `pokered-audio` (GB APU emulation), `pokered-app` (native binary + debug CLI), `pokered-tui`, `pokered-ui-preview`) plus platform adapters: `pokered-gba` (standalone bare-metal GBA ROM workspace), `pokered-web` (WASM), `pokered-runner-web` (editor Play bridge), `pokered-layout-preview` (editor layout-preview WASM: per-menu mock data, `custom:hp_bar`, DSL compile bridge), `pokered-debug-server`, `pokered-mobile` (shared Android/iOS/HarmonyOS ABI), plus `scene_apply` (story-translation helper bin)
 - `tools/pokered-editor/` — the Vue/Vite editor suite (maps, saves, data, UI layouts, AI assistant) + Electron shell
 - `android/` — Gradle wrapper for the generated engine-owned Android host;
   `ios/` — the iOS build project
-- `scripts/` — Python data-extraction/verification helpers
+- `scripts/` — end-to-end playthrough, post-game, and side-quest automation (`playthrough.py`, `scenarios.py`, `sidequests.py`, `bdd.py`), plus Python data-extraction/verification helpers
 - `docs/` — NPC dialogue transcripts, move animation data, fidelity audits, platform development guides
 
 ## Not included
