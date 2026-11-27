@@ -67,6 +67,8 @@ pub(crate) mod alloc_prelude {
     pub use alloc::vec::Vec;
 }
 
+#[cfg(not(target_os = "none"))]
+pub use game::set_quiet_stderr;
 pub use game::PokemonGame;
 pub use render::BattleVisualEffects;
 

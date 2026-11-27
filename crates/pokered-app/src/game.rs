@@ -1,9 +1,21 @@
 //! Local cross-target `dbg_eprintln!` (must precede its uses below).
 #[cfg(not(target_os = "none"))]
+static QUIET_STDERR: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+
+/// Suppress runtime diagnostic `eprintln!` output (used by the TUI host so
+/// stderr messages never corrupt the terminal alternate-screen framebuffer).
+#[cfg(not(target_os = "none"))]
+pub fn set_quiet_stderr(quiet: bool) {
+    QUIET_STDERR.store(quiet, core::sync::atomic::Ordering::Relaxed);
+}
+
+#[cfg(not(target_os = "none"))]
 macro_rules! dbg_eprintln {
-    ($($arg:tt)*) => {
-        eprintln!($($arg)*)
-    };
+    ($($arg:tt)*) => {{
+        if !QUIET_STDERR.load(core::sync::atomic::Ordering::Relaxed) {
+            eprintln!($($arg)*);
+        }
+    }};
 }
 #[cfg(target_os = "none")]
 macro_rules! dbg_eprintln {
