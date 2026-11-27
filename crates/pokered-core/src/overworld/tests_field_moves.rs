@@ -361,6 +361,79 @@ fn surf_not_facing_water() {
 }
 
 #[test]
+fn surf_across_map_connection_from_cinnabar_east_shore_into_route20_and_back() {
+    // Gen-1 wOverworldMap stitches connected map borders, so standing on
+    // CinnabarIsland (19, 8) facing Right sees Route20 (0, 8) water and surfs
+    // straight across the connection boundary.
+    let mut screen = screen_on(MapId::CinnabarIsland);
+    screen.state.player.x = 19;
+    screen.state.player.y = 8;
+    screen.state.player.facing = Direction::Right;
+    let mon = test_mon();
+    let outcome = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::CinnabarIsland);
+    assert_eq!(outcome, FieldMoveOutcome::Done);
+    assert_eq!(screen.state.player.transport, TransportMode::Surfing);
+
+    // Dismiss the "got on" dialogue, wait out the field-move restore + step.
+    for _ in 0..1000 {
+        if screen
+            .pending_dialogue
+            .as_ref()
+            .is_some_and(|d| d.waiting_for_input())
+        {
+            break;
+        }
+        screen.update_frame(no_input());
+    }
+    let press_a = OverworldInput::new(false, false, false, false, true, false, false, false);
+    screen.update_frame(press_a);
+    screen.update_frame(no_input());
+    for _ in 0..200 {
+        screen.update_frame(no_input());
+        if screen.state.current_map == MapId::Route20
+            && screen.state.player.movement_state == dotzuki_engine::overworld::MovementState::Idle
+        {
+            break;
+        }
+    }
+    assert_eq!(screen.state.current_map, MapId::Route20);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (0, 8));
+    assert_eq!(screen.state.player.transport, TransportMode::Surfing);
+
+    // Dismounting via Surf while facing Left from Route20 (0, 8) steps back
+    // onto CinnabarIsland (19, 8) land in Walking mode.
+    screen.state.player.facing = Direction::Left;
+    let dismount = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::CinnabarIsland);
+    assert_eq!(dismount, FieldMoveOutcome::Done);
+    assert_eq!(screen.state.player.transport, TransportMode::Walking);
+    for _ in 0..200 {
+        screen.update_frame(no_input());
+        if screen.state.current_map == MapId::CinnabarIsland
+            && screen.state.player.movement_state == dotzuki_engine::overworld::MovementState::Idle
+        {
+            break;
+        }
+    }
+    assert_eq!(screen.state.current_map, MapId::CinnabarIsland);
+    assert_eq!((screen.state.player.x, screen.state.player.y), (19, 8));
+    assert_eq!(screen.state.player.transport, TransportMode::Walking);
+}
+
+#[test]
+fn surf_refuses_non_water_across_map_connection() {
+    // PalletTown (10, 0) faces Route1 grass (not water) across the north edge.
+    let mut screen = screen_on(MapId::PalletTown);
+    screen.state.player.x = 10;
+    screen.state.player.y = 0;
+    screen.state.player.facing = Direction::Up;
+    let mon = test_mon();
+    let outcome = screen.use_field_move(MoveId::Surf, &mon, SOUL, MapId::PalletTown);
+    let text = refusal_text(&screen, outcome);
+    assert!(text.starts_with("No SURFing on"));
+    assert_eq!(screen.state.player.transport, TransportMode::Walking);
+}
+
+#[test]
 fn surf_waits_for_text_then_uses_original_step_cadence() {
     let (water_block, sub_x, sub_y) = find_block_with_tile(0x14, |_| true)
         .expect("blockset has a water block");

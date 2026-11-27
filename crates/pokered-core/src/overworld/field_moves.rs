@@ -180,12 +180,64 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
     }
 
+    /// Standing tile and the tile directly ahead for SURF (start or dismount).
+    /// Unlike `tiles_in_front` (which clamps to the current map for in-map CUT),
+    /// this resolves cross-connection tiles via `wOverworldMap`'s connected map
+    /// border — matching Gen-1 `GetTileAndCoordsInFrontOfPlayer` so surfing off
+    /// e.g. Cinnabar Island's east shore straight into Route 20 works.
+    pub(crate) fn surf_tiles_in_front(&self) -> Option<(u8, u8)> {
+        let map = self.map_data.as_ref()?;
+        let provider = collision::PokemonCollisionProvider::new(map.id, map.tileset);
+        let standing = provider.get_tile_at_position(
+            map.tileset,
+            &map.blocks,
+            map.width,
+            self.state.player.x,
+            self.state.player.y,
+        );
+        let (dx, dy) = player_movement::direction_delta(self.state.player.facing);
+        let nx = self.state.player.x as i32 + dx as i32;
+        let ny = self.state.player.y as i32 + dy as i32;
+        let max_x = (map.width as i32) * 2;
+        let max_y = (map.height as i32) * 2;
+        if nx >= 0 && ny >= 0 && nx < max_x && ny < max_y {
+            let in_front = provider.get_tile_at_position(
+                map.tileset,
+                &map.blocks,
+                map.width,
+                nx as u16,
+                ny as u16,
+            );
+            return Some((standing, in_front));
+        }
+        let transition = dotzuki_engine::overworld::map_transitions::calculate_connection_transition(
+            map,
+            &pokered_data::impl_traits::PokemonMapData,
+            self.state.player.x,
+            self.state.player.y,
+            self.state.player.facing,
+        )?;
+        let (dest_map, _) = super::map_data_loading::load_full_map_data(
+            transition.new_map,
+            self.game_data.tileset_provider(),
+        );
+        let dest_provider = collision::PokemonCollisionProvider::new(dest_map.id, dest_map.tileset);
+        let in_front = dest_provider.get_tile_at_position(
+            dest_map.tileset,
+            &dest_map.blocks,
+            dest_map.width,
+            transition.new_x,
+            transition.new_y,
+        );
+        Some((standing, in_front))
+    }
+
     // ── SURF ─────────────────────────────────────────────────────────
     //
     // start_sub_menus.asm .surf: SOUL badge + IsSurfingAllowed, then
     // ItemUseSurfboard (engine/items/item_effects.asm).
     fn field_surf(&mut self, obtained_badges: u8, mon_name: &str) -> FieldMoveOutcome {
-        let Some((standing_tile, tile_in_front, _, _)) = self.tiles_in_front() else {
+        let Some((standing_tile, tile_in_front)) = self.surf_tiles_in_front() else {
             return self.field_refusal(&format!("No SURFing on\n{}\nhere!", mon_name));
         };
         let map = self.map_data.as_ref().expect("map_data present");
