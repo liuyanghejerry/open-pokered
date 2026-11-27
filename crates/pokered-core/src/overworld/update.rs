@@ -1869,14 +1869,25 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
 
         // Route12/16 DefaultScript starts the encounter after the flute's
         // field-use text closes, without a second A press or facing requirement.
+        // Guard against already-beaten Snorlax so a stale FIGHT flag (e.g. from
+        // a champion snapshot) cannot re-trigger talkSnorlax every frame.
         let snorlax = match self.state.current_map {
-            MapId::Route12 => Some((pokered_data::event_flags::EventFlag::EVENT_FIGHT_ROUTE12_SNORLAX, 1)),
-            MapId::Route16 => Some((pokered_data::event_flags::EventFlag::EVENT_FIGHT_ROUTE16_SNORLAX, 7)),
+            MapId::Route12 => Some((
+                pokered_data::event_flags::EventFlag::EVENT_FIGHT_ROUTE12_SNORLAX,
+                pokered_data::event_flags::EventFlag::EVENT_BEAT_ROUTE12_SNORLAX,
+                1,
+            )),
+            MapId::Route16 => Some((
+                pokered_data::event_flags::EventFlag::EVENT_FIGHT_ROUTE16_SNORLAX,
+                pokered_data::event_flags::EventFlag::EVENT_BEAT_ROUTE16_SNORLAX,
+                7,
+            )),
             _ => None,
         };
-        if let Some((flag, text_id)) = snorlax {
+        if let Some((fight_flag, beat_flag, text_id)) = snorlax {
             if self.state.player.movement_state == MovementState::Idle
-                && self.unified_flags.check(flag)
+                && self.unified_flags.check(fight_flag)
+                && !self.unified_flags.check(beat_flag)
                 && self.try_call_script_npc_talk(text_id)
             {
                 return ScreenAction::Continue;

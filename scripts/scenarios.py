@@ -469,6 +469,34 @@ def s12_postgame_legendaries():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+@scenario("s13-sidequest-fossils-dojo",
+          "Museum Old Amber → Cinnabar fossil revivals (Aerodactyl + Omanyte) → Fighting Dojo Hitmonlee")
+def s13_sidequest_fossils_dojo():
+    from sidequests import s13_fossils_dojo
+    s13_fossils_dojo()
+
+
+@scenario("s14-sidequest-bike-rods-aides",
+          "Fan Club Bike Voucher → Bicycle → Old/Good/Super Rods → Oak's 3 Aides (HM05/Itemfinder/ExpAll)")
+def s14_sidequest_bike_rods_aides():
+    from sidequests import s14_bike_rods_aides
+    s14_bike_rods_aides()
+
+
+@scenario("s15-sidequest-celadon-saffron",
+          "Celadon Eevee + 151 Diploma + Coin Case & Prize Abra + Route16 Snorlax + Copycat TM31")
+def s15_sidequest_celadon_saffron():
+    from sidequests import s15_celadon_saffron
+    s15_celadon_saffron()
+
+
+@scenario("s16-sidequest-trades-daycare-rater",
+          "Vermilion Trade (DUX) → Route 5 Daycare EXP growth → Lavender Name Rater OT guard & rename")
+def s16_sidequest_trades_daycare_rater():
+    from sidequests import s16_trades_daycare_rater
+    s16_trades_daycare_rater()
+
+
 # ── runner ──────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()
