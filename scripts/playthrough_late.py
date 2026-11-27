@@ -925,6 +925,14 @@ def m29_strength(g):
     require_flag(g, "EVENT_GOT_HM04")
     # Gen-I Venusaur can only learn HM01; reserve Strength for Lapras.
     g.nav_warp(4, 7, "WardensHouse", "FuchsiaCity", approach="down")
+    ultra = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"] if v["item"] == "UltraBall")
+    if ultra < 25 and g.st()["money"] >= 36000:
+        g.nav_warp(5, 13, "FuchsiaCity", "FuchsiaMart")
+        g.nav_to(2, 5, "FuchsiaMart")
+        g.face("left")
+        g.tap("a", 16)
+        buy(g, "UltraBall", 0, min(30, 99 - ultra))
+        g.nav_warp(3, 7, "FuchsiaMart", "FuchsiaCity", approach="down")
     g.heal_pokecenter((19, 27), "FuchsiaCity", "FuchsiaPokecenter")
     g.evidence("m29")
 
@@ -1198,27 +1206,108 @@ def m35_fly_hm(g):
     g.evidence("m35")
 
 
-def catch_master_ball(g):
-    for _ in range(250):
+def catch_legendary(g, species, ball="UltraBall", sleep_move="SleepPowder", max_iters=1600):
+    """Catch a static legendary using real battle menu inputs.
+
+    When `ball == "MasterBall"`, throws MasterBall directly. Otherwise puts the
+    legendary to sleep with `sleep_move` (if available on the active mon), keeps
+    the active mon healthy with FullRestore/HyperPotion, and throws UltraBall
+    (falling back to GreatBall) without risking an accidental KO.
+    """
+    action = None  # ("ball", item_name) | ("heal", item_name, party_idx) | ("move", move_name)
+    sleep_exhausted = False
+    for _ in range(max_iters):
         s = g.st()
+        capture_phase = s.get("capture_phase")
+        if capture_phase is not None:
+            g.tap("a" if capture_phase == "Entry" else "b", 10)
+            continue
         if s["screen"] != "battle":
             if s["screen"] == "overworld":
                 assert g.cutscene()
                 return
-            g.tap("b", 10)  # dex registration
+            g.tap("b", 10)
             continue
         ph = s["battle_phase"]
-        if ph == "PlayerMenu":
-            g.tap("down", 8)
-            g.tap("left", 8)
+        if ph.startswith("Intro"):
+            g.tap("b", 10)
+        elif ph == "PlayerMenu":
+            live = s.get("battle_live") or {}
+            player = live.get("player") or {}
+            enemy = live.get("enemy") or {}
+            party = live.get("player_party") or []
+            bag = {v["item"]: v["qty"] for v in g.d.cmd(cmd="get_bag")["data"]}
+            if ball == "MasterBall" and bag.get("MasterBall", 0) > 0:
+                action = ("ball", "MasterBall")
+                g.d.drive(["down", "left"], frames=8)
+                g.tap("a", 8)
+                continue
+            active_idx = next(
+                (i for i, m in enumerate(party) if m["species"] == player.get("species") and m["hp"] > 0),
+                0,
+            )
+            heal_item = next((it for it in ("FullRestore", "HyperPotion") if bag.get(it, 0) > 0), None)
+            if heal_item and player.get("max_hp", 0) and player.get("hp", 0) * 3 < player["max_hp"]:
+                action = ("heal", heal_item, active_idx)
+                g.d.drive(["down", "left"], frames=8)
+                g.tap("a", 8)
+                continue
+            party_moves = s["party"][active_idx]["moves"] if active_idx < len(s["party"]) else []
+            if not sleep_exhausted and sleep_move in party_moves and enemy.get("status", "None") == "None":
+                action = ("move", sleep_move)
+                g.d.drive(["up", "left"], frames=8)
+                g.tap("a", 8)
+                continue
+            chosen_ball = next(
+                (b for b in (ball, "UltraBall", "GreatBall", "PokeBall") if bag.get(b, 0) > 0),
+                None,
+            )
+            if chosen_ball is None:
+                raise RuntimeError(f"out of Poke Balls while catching {species}")
+            action = ("ball", chosen_ball)
+            g.d.drive(["down", "left"], frames=8)
             g.tap("a", 8)
+        elif ph == "MoveSelect":
+            menu = s.get("battle_moves") or {}
+            moves = menu.get("moves") or []
+            want_name = action[1] if action and action[0] == "move" else sleep_move
+            slot = next(
+                (i for i, mv in enumerate(moves)
+                 if mv.get("move", mv.get("name")) == want_name and mv.get("pp", 0) > 0),
+                None,
+            )
+            if slot is None:
+                sleep_exhausted = True
+                g.tap("b", 8)
+                continue
+            cur = menu.get("cursor", 0)
+            if cur == slot:
+                g.tap("a", 8)
+                g.step(20)
+            else:
+                g.tap("down", 8)
         elif ph == "BagSelect":
             menu = s["battle_bag"]
-            target = next(i for i, v in enumerate(menu["items"]) if v["item"] == "MasterBall")
+            want = action[1] if action and action[0] in {"ball", "heal"} else ball
+            target = next((i for i, v in enumerate(menu["items"]) if v["item"] == want), None)
+            if target is None:
+                g.tap("b", 8)
+                continue
             g.tap("a" if menu["cursor"] == target else "down", 8)
+        elif ph.startswith("ItemTargetSelect"):
+            target = action[2] if action and action[0] == "heal" else 0
+            g.tap("a" if s["battle_party_cursor"] == target else "down", 8)
+        elif ph in {"PartySelect", "PlayerFaintSwitch"}:
+            party = (s.get("battle_live") or {}).get("player_party") or []
+            target = next((i for i, m in enumerate(party) if m.get("hp", 0) > 0), 0)
+            g.tap("a" if s["battle_party_cursor"] == target else "down", 8)
         else:
             g.tap("a", 10)
-    raise RuntimeError("Master Ball capture did not finish")
+    raise RuntimeError(f"{species} capture did not finish")
+
+
+def catch_master_ball(g):
+    catch_legendary(g, "Legendary", ball="MasterBall")
 
 
 def m36_zapdos(g):
@@ -1243,9 +1332,12 @@ def m36_zapdos(g):
     g.tap("a", 16)
     assert g.cutscene()
     g.wait("screen=battle", 900)
-    catch_master_ball(g)
+    catch_legendary(g, "Zapdos", ball="UltraBall")
+    require_flag(g, "EVENT_BEAT_ZAPDOS")
     party = g.st()["party"]
     assert party[2]["species"] == "Zapdos", party
+    assert any(v["item"] == "MasterBall" for v in g.d.cmd(cmd="get_bag")["data"]), \
+        "Master Ball must be preserved for post-game Mewtwo"
     use_item(g, "Hm02", party_index=2)
     use_item(g, "Tm24", party_index=2)
     assert {"Fly", "Thunderbolt"}.issubset(g.st()["party"][2]["moves"])
@@ -1818,6 +1910,164 @@ def m49_first_clear(g):
     g.evidence("m49")
 
 
+def surf_party_index(g):
+    return next(i for i, mon in enumerate(g.st()["party"]) if "Surf" in mon["moves"])
+
+
+def ensure_ultra_balls(g, minimum=30, target=40, stock_index=0):
+    ultra = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"] if v["item"] == "UltraBall")
+    if ultra >= minimum:
+        return
+    need = min(target - ultra, 99 - ultra, g.st()["money"] // 1200)
+    if need > 0:
+        g.tap("a", 16)
+        buy(g, "UltraBall", stock_index, need)
+
+
+def lead_sleep_user(g):
+    party = g.st()["party"]
+    sleeper = next((m["species"] for m in party if "SleepPowder" in m["moves"]), None)
+    if sleeper:
+        lead_with(g, sleeper)
+
+
+def m50_moltres(g):
+    """Post-game / Victory Road 2F: catch Moltres with Ultra Balls."""
+    fly(g, "IndigoPlateau")
+    g.nav_warp(9, 5, "IndigoPlateau", "IndigoPlateauLobby")
+    g.nav_to(7, 7, "IndigoPlateauLobby")
+    g.face("up")
+    g.tap("a", 16)
+    g.dialogue_then_choice()
+    g.choose("HEAL")
+    assert g.cutscene()
+    g.nav_to(2, 5, "IndigoPlateauLobby")
+    g.face("left")
+    ensure_ultra_balls(g, minimum=30, target=45, stock_index=0)
+    lead_sleep_user(g)
+    g.nav_warp(8, 11, "IndigoPlateauLobby", "IndigoPlateau", approach="down")
+    g.nav_to_map(14, 32, "Route23", avoid_grass=False)
+    g.nav_warp(14, 31, "Route23", "VictoryRoad2F")
+    g.nav_warp(27, 7, "VictoryRoad2F", "VictoryRoad3F")
+    g.nav_warp(27, 15, "VictoryRoad3F", "VictoryRoad2F")
+    g.nav_warp(23, 7, "VictoryRoad2F", "VictoryRoad3F")
+    g.nav_warp(2, 0, "VictoryRoad3F", "VictoryRoad2F")
+    g.approach_object(11, 5, "VictoryRoad2F")
+    g.tap("a", 16)
+    assert g.cutscene()
+    g.wait("screen=battle", 900)
+    catch_legendary(g, "Moltres", ball="UltraBall")
+    require_flag(g, "EVENT_BEAT_MOLTRES")
+    assert (11, 5) not in g.live_npcs("VictoryRoad2F"), "Moltres NPC should hide after capture"
+    # Exit back to Route 23 so Fly is available for m51.
+    g.nav_warp(1, 1, "VictoryRoad2F", "VictoryRoad3F")
+    g.nav_warp(23, 7, "VictoryRoad3F", "VictoryRoad2F")
+    g.nav_warp(25, 14, "VictoryRoad2F", "VictoryRoad3F")
+    g.nav_warp(26, 8, "VictoryRoad3F", "VictoryRoad2F")
+    g.nav_warp(29, 7, "VictoryRoad2F", "Route23", approach="right")
+    g.evidence("m50")
+
+
+def m51_articuno(g):
+    """Seafoam Islands B3F boulder puzzle + B4F current stop + catch Articuno."""
+    fly(g, "FuchsiaCity")
+    g.heal_pokecenter((19, 27), "FuchsiaCity", "FuchsiaPokecenter")
+    ultra = sum(v["qty"] for v in g.d.cmd(cmd="get_bag")["data"] if v["item"] == "UltraBall")
+    if ultra < 25 and g.st()["money"] >= 12000:
+        g.nav_warp(5, 13, "FuchsiaCity", "FuchsiaMart")
+        g.nav_to(2, 5, "FuchsiaMart")
+        g.face("left")
+        ensure_ultra_balls(g, minimum=25, target=40, stock_index=0)
+        g.nav_warp(3, 7, "FuchsiaMart", "FuchsiaCity", approach="down")
+    lead_sleep_user(g)
+    g.nav_to_map(8, 9, "Route19", avoid_grass=False)
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("Route20", 61, 4))
+    g.nav_warp(48, 5, "Route20", "SeafoamIslands1F")
+    g.nav_warp(7, 5, "SeafoamIslands1F", "SeafoamIslandsB1F")
+    g.nav_warp(13, 7, "SeafoamIslandsB1F", "SeafoamIslandsB2F")
+    g.nav_warp(5, 13, "SeafoamIslandsB2F", "SeafoamIslandsB3F")
+    # Push both west-room boulders into the B3F holes to stop B4F's west current.
+    push_boulder(g, "SeafoamIslandsB3F", 2, (3, 16), "EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE")
+    push_boulder(g, "SeafoamIslandsB3F", 1, (6, 16), "EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")
+    require_flag(g, "EVENT_SEAFOAM4_BOULDER1_DOWN_HOLE")
+    require_flag(g, "EVENT_SEAFOAM4_BOULDER2_DOWN_HOLE")
+    g.nav_warp(8, 6, "SeafoamIslandsB3F", "SeafoamIslandsB4F")
+    g.nav_to(7, 11, "SeafoamIslandsB4F")
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("SeafoamIslandsB4F", 7, 3))
+    g.approach_object(6, 1, "SeafoamIslandsB4F")
+    g.tap("a", 16)
+    assert g.cutscene()
+    g.wait("screen=battle", 900)
+    catch_legendary(g, "Articuno", ball="UltraBall")
+    require_flag(g, "EVENT_BEAT_ARTICUNO")
+    assert (6, 1) not in g.live_npcs("SeafoamIslandsB4F"), "Articuno NPC should hide after capture"
+    # Surf back to ladder and exit Seafoam Islands so Fly is available for m52.
+    g.nav_to(7, 3, "SeafoamIslandsB4F")
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("SeafoamIslandsB4F", 7, 11))
+    g.nav_warp(11, 7, "SeafoamIslandsB4F", "SeafoamIslandsB3F")
+    g.nav_warp(5, 12, "SeafoamIslandsB3F", "SeafoamIslandsB2F")
+    g.nav_warp(13, 7, "SeafoamIslandsB2F", "SeafoamIslandsB1F")
+    g.nav_warp(7, 5, "SeafoamIslandsB1F", "SeafoamIslands1F")
+    g.nav_warp(4, 17, "SeafoamIslands1F", "Route20", approach="down")
+    g.evidence("m51")
+
+
+def m52_mewtwo(g):
+    """Post-game Cerulean Cave unlock + 1F/2F/B1F navigation + Master Ball Mewtwo + separate-process CONTINUE."""
+    from playthrough import Game, resume_reentry
+    require_flag(g, "EVENT_HALL_OF_FAME_DEX_RATING")
+    fly(g, "CeruleanCity")
+    assert (4, 12) not in g.live_npcs("CeruleanCity"), \
+        "Cerulean Cave guard must be hidden after Hall of Fame"
+    g.heal_pokecenter((19, 17), "CeruleanCity", "CeruleanPokecenter")
+    g.nav_to_map(6, 15, "Route24", avoid_grass=False)
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("CeruleanCity", 4, 13))
+    g.nav_warp(4, 11, "CeruleanCity", "CeruleanCave1F")
+    g.nav_to(25, 9, "CeruleanCave1F")
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("CeruleanCave1F", 11, 13))
+    g.nav_warp(3, 11, "CeruleanCave1F", "CeruleanCave2F")
+    g.nav_warp(1, 3, "CeruleanCave2F", "CeruleanCave1F")
+    g.nav_warp(0, 6, "CeruleanCave1F", "CeruleanCaveB1F")
+    g.nav_to(13, 13, "CeruleanCaveB1F")
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("CeruleanCaveB1F", 19, 11))
+    g.nav_to(27, 7, "CeruleanCaveB1F")
+    g.face("down")
+    field_move(g, "Surf", party_index=surf_party_index(g))
+    surf_to(g, ("CeruleanCaveB1F", 27, 15))
+    g.approach_object(27, 13, "CeruleanCaveB1F")
+    g.tap("a", 16)
+    assert g.cutscene()
+    g.wait("screen=battle", 900)
+    catch_legendary(g, "Mewtwo", ball="MasterBall")
+    require_flag(g, "EVENT_BEAT_MEWTWO")
+    assert (27, 13) not in g.live_npcs("CeruleanCaveB1F"), "Mewtwo NPC should hide after capture"
+    # Verify post-game legendary flags persist across a separate-process CONTINUE.
+    r = g.d.cmd(cmd="save")
+    assert r["ok"], r
+    check = Game(save_path=g.save_path)
+    try:
+        resume_reentry(check)
+        flags = check.d.cmd(cmd="get_flags")["data"]
+        for flag in ("EVENT_BEAT_MOLTRES", "EVENT_BEAT_ARTICUNO", "EVENT_BEAT_MEWTWO"):
+            assert flags.get(flag), f"{flag} did not persist across CONTINUE"
+        assert check.st()["map_name"] == "CeruleanCaveB1F", check.st()["map_name"]
+    finally:
+        check.close()
+    g.evidence("m52")
+
+
 LATE_MILESTONES = [
     ("m11", "Route 3 trainers → Mt Moon entrance", m11_mt_moon_entrance),
     ("m12", "Mt Moon fossil → Cerulean City", m12_mt_moon),
@@ -1844,7 +2094,7 @@ LATE_MILESTONES = [
     ("m33", "Silph Giovanni + president → Master Ball", m33_silph_giovanni),
     ("m34", "Saffron teleport maze → Marsh Badge", m34_sabrina),
     ("m35", "Route 16 CUT + hidden house → HM02", m35_fly_hm),
-    ("m36", "Surf to Power Plant + Master Ball Zapdos", m36_zapdos),
+    ("m36", "Surf to Power Plant + Ultra Ball Zapdos", m36_zapdos),
     ("m37", "Fly to Pallet + Route 21 Surf → Cinnabar", m37_cinnabar),
     ("m38", "Mansion statues + floor hole → Secret Key", m38_secret_key),
     ("m39", "Cinnabar quiz machines → Volcano Badge", m39_blaine),
@@ -1858,4 +2108,7 @@ LATE_MILESTONES = [
     ("m47", "Elite Four: Agatha", m47_agatha),
     ("m48", "Elite Four: Lance", m48_lance),
     ("m49", "Champion → Hall of Fame → credits → saved Continue", m49_first_clear),
+    ("m50", "Victory Road 2F → catch Moltres (Ultra Ball)", m50_moltres),
+    ("m51", "Seafoam Islands boulder puzzle → catch Articuno (Ultra Ball)", m51_articuno),
+    ("m52", "Cerulean Cave unlock → catch Mewtwo (Master Ball) + Continue", m52_mewtwo),
 ]

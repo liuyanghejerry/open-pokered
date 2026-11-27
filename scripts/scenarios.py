@@ -425,6 +425,50 @@ def s11_forced_switch(g):
     g.evidence("s11")
 
 
+@scenario("s12-postgame-legendaries",
+          "champion snapshot → Moltres, Articuno (Seafoam puzzle), Cerulean Cave Mewtwo + CONTINUE")
+def s12_postgame_legendaries():
+    from save_builder import SaveBuilder
+    from playthrough_late import m50_moltres, m51_articuno, m52_mewtwo
+    tmp = Path(tempfile.mkdtemp(prefix="pokered-postgame-"))
+    try:
+        snap_path = tmp / "champion_postgame.json"
+        save_path = tmp / "postgame.sav"
+        sb = SaveBuilder()
+        sb.champion(team=[
+            ("Venusaur", 65, ["SleepPowder", "RazorLeaf", "Cut", "MegaDrain"]),
+            ("Lapras", 58, ["Surf", "Strength", "IceBeam", "BodySlam"]),
+            ("Zapdos", 65, ["Fly", "Thunderbolt", "DrillPeck", "ThunderWave"]),
+        ])
+        sb.visited_towns([
+            "PalletTown", "ViridianCity", "PewterCity", "CeruleanCity",
+            "LavenderTown", "VermilionCity", "CeladonCity", "FuchsiaCity",
+            "CinnabarIsland", "IndigoPlateau", "SaffronCity",
+        ])
+        sb.give_item("MASTER_BALL", 1)
+        sb.give_item("ULTRA_BALL", 50)
+        sb.give_item("FULL_RESTORE", 20)
+        sb.give_item("REVIVE", 10)
+        sb.position("PalletTown", 5, 6)
+        sb.write(snap_path)
+
+        g = Game(save_path=save_path, snapshot=snap_path)
+        try:
+            resume_reentry(g)
+            m50_moltres(g)
+            m51_articuno(g)
+            m52_mewtwo(g)
+            party_species = [m["species"] for m in g.st()["party"]]
+            for sp in ("Moltres", "Articuno", "Mewtwo"):
+                assert sp in party_species, f"{sp} missing from post-game party: {party_species}"
+            print(f"   postgame party: {party_species}")
+            g.evidence("s12")
+        finally:
+            g.close()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 # ── runner ──────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser()
