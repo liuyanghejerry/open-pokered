@@ -45,8 +45,7 @@ crates/
 ├── pokered-debug-server/  # TCP debug server (JSON-line protocol); `debug-server` feature
 ├── pokered-agent/         # AI-agent observation layer: AgentMode classifier, typed
 │                          #   AgentSnapshot, nearby-entity aggregation, ObservationProfile
-├── pokered-mobile/        # Shared Android/HarmonyOS ABI adapter
-├── pokered-ios/           # iOS shell (staticlib)
+├── pokered-mobile/        # Shared Android/iOS/HarmonyOS ABI adapter (iOS Xcode shell lives in ios/)
 └── scene_apply/           # Story-translation helper: .scene → script_config.json
 tools/pokered-editor/      # Pokémon-specific Vue/Vite editor suite + Electron shell
 scripts/                   # Python data-extraction/verification helpers + fetch-gfx.sh
@@ -58,8 +57,9 @@ The game's graphics live at `gfx/` (PNG/2bpp asset dumps from the original game,
 ## Common commands
 
 ```bash
-# Build / run the game (native)
+# Build / run the game (native / terminal)
 cargo run --release --bin pokered-app          # release recommended; debug is much slower
+cargo run --release -p pokered-tui             # terminal frontend (--save/--lang/--skip-intro/--warp/--no-audio)
 
 # Tests
 cargo test                                      # whole workspace
@@ -102,7 +102,7 @@ cd crates/pokered-gba
 
 ### Regression workflows
 
-Use [playthrough-regression](../.agents/skills/playthrough-regression/SKILL.md) for milestone playthrough (m01–m49, NEW GAME through first clear and saved CONTINUE) as an end-to-end engine regression test: scoping by surface, failure triage, checkpoint/resume semantics. Also covers `scripts/scenarios.py` — seeded non-chain subsystem tests (battle/items/save/menus, ~1 min for the suite) — their BDD form, `scripts/bdd.py` + `scripts/features/*.feature` (stdlib Gherkin runner, en/zh-CN keywords), and `scripts/save_builder.py` — offline construction of bootable snapshot JSONs (party/money/flags/badges/dex/position, plus a `--preset champion` finished-first-playthrough state).
+Use [playthrough-regression](../.agents/skills/playthrough-regression/SKILL.md) for milestone playthrough (m01–m49 NEW GAME through first clear and saved CONTINUE, plus post-game legendaries m50–m52) as an end-to-end engine regression test: scoping by surface, failure triage, checkpoint/resume semantics. Also covers `scripts/scenarios.py` — seeded non-chain subsystem tests (`s01–s11` battle/items/save/menus, `s12` post-game legendaries, and `s13–s16` optional side-quests in `scripts/sidequests.py`) — their BDD form, `scripts/bdd.py` + `scripts/features/*.feature` (stdlib Gherkin runner, en/zh-CN keywords), and `scripts/save_builder.py` — offline construction of bootable snapshot JSONs (party/money/flags/badges/dex/position, plus a `--preset champion` finished-first-playthrough state).
 
 ## Debug CLI
 

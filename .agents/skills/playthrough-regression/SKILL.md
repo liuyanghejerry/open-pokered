@@ -72,6 +72,7 @@ milestones are cheap; the m09 forest and the m10 grind dominate wall time.
 | m31–m40 | Silph, Sabrina, Fly/Surf, Zapdos, Mansion, final gyms | teleport pads, capture, party selection, water travel, switches |
 | m41–m44 | badge gates, Victory Road, Indigo supplies | Strength, boulder holes, dynamic collisions, shopping |
 | m45–m49 | Elite Four, Champion, Hall of Fame, credits, separate-process CONTINUE | forced switches, recovery, ending autosave and first-clear persistence |
+| m50–m52 | Post-game Moltres, Articuno (Seafoam boulder puzzle), Cerulean Cave Mewtwo | post-game legendaries, Strength boulder puzzles, cross-connection Surf, Master/Ultra Ball capture |
 
 Rule of thumb: pure data edits (moves, stats, text) → m05/m06/m10 suffice;
 anything in warp/collision/script/flag code → run the full chain.
@@ -106,6 +107,11 @@ python3 scripts/scenarios.py --skip s05      # all but the RNG-heavy one
 | s09-options | OPTIONS text-speed toggle changes `text_speed_delay_frames` and persists across menu reopen |
 | s10-npcs | `get_npcs` reports live, field-sane NPCs on the entered map |
 | s11-forced-switch | a fainted Magikarp is replaced by a living teammate through `PlayerFaintSwitch`, then the battle is won |
+| s12-postgame-legendaries | champion snapshot → Moltres, Articuno (Seafoam puzzle), and Cerulean Cave Mewtwo |
+| s13-sidequest-fossils-dojo | Pewter Museum Cut + Old Amber, Cinnabar Lab dual fossil revival (Omanyte & Aerodactyl), Saffron Fighting Dojo (Karate Master, Hitmonlee, greedy guard) |
+| s14-sidequest-bike-rods-aides | Fan Club Bike Voucher → Bicycle (mount/dismount), Old/Good/Super Rods, Oak's 3 Aides (`HM05`, `Itemfinder`, `Exp. All`) |
+| s15-sidequest-celadon-saffron | Celadon Eevee + 151 Diploma, Coin Case, Game Corner coins & Prize Room Abra, Route 16 Snorlax, Saffron Copycat `TM31` |
+| s16-sidequest-trades-daycare-rater | Vermilion Trade (`DUX`), Route 5 Daycare (HM guard, step EXP & fee), Lavender Name Rater (OT protection & rename) |
 
 Engine quirks the scenarios encode (same contract as the milestone
 comments — don't weaken them without an engine change):
