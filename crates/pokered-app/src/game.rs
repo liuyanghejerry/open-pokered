@@ -1852,7 +1852,13 @@ impl PokemonGame {
     }
     #[cfg(not(target_os = "none"))]
     pub fn import_mobile_save(&mut self, save: &str) -> Result<(), String> {
-        let replacement = Self::new_mobile(self.state.config.version, Some(save))?;
+        let lang = self.state.config.language;
+        let mut replacement = Self::new_mobile(self.state.config.version, Some(save))?;
+        replacement.state.config.language = lang;
+        replacement.overworld.set_script_lang(match lang {
+            pokered_core::game_state::Lang::En => "en",
+            pokered_core::game_state::Lang::Zh => "zh",
+        });
         *self = replacement;
         Ok(())
     }
@@ -3140,9 +3146,15 @@ impl PokemonGame {
         {
             if self.external_saves {
                 let save = self.committed_save.clone();
+                let lang = self.state.config.language;
                 if let Ok(mut replacement) =
                     Self::new_mobile(self.state.config.version, save.as_deref())
                 {
+                    replacement.state.config.language = lang;
+                    replacement.overworld.set_script_lang(match lang {
+                        pokered_core::game_state::Lang::En => "en",
+                        pokered_core::game_state::Lang::Zh => "zh",
+                    });
                     replacement.handle_transition(GameScreen::TitleScreen);
                     *self = replacement;
                 }
