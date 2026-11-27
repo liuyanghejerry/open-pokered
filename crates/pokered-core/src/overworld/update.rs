@@ -1544,6 +1544,19 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
         }
         if self.field_move_step.is_none() {
             if let Some(step) = self.pending_field_move_step.take() {
+                let dir = self.state.player.facing;
+                let (dx, dy) = player_movement::direction_delta(dir);
+                let nx = self.state.player.x as i32 + dx as i32;
+                let ny = self.state.player.y as i32 + dy as i32;
+                let crosses_edge = self.map_data.as_ref().is_some_and(|map| {
+                    nx < 0
+                        || ny < 0
+                        || nx >= (map.width as i32) * 2
+                        || ny >= (map.height as i32) * 2
+                });
+                if crosses_edge && self.start_connection_walk(dir) {
+                    return ScreenAction::Continue;
+                }
                 self.state.player.movement_state = MovementState::Walking;
                 self.state.walk_counter = step.walk_counter();
                 self.field_move_step = Some(step);
@@ -2663,53 +2676,7 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 MoveResult::ReachedMapEdge => {
                     warped_or_edge = true;
                     if let Some(dir) = movement_input.direction_pressed() {
-                        if let Some(transition) = engine_calculate_connection_transition(
-                            map,
-                            &PokemonMapData,
-                            self.state.player.x,
-                            self.state.player.y,
-                            dir,
-                        ) {
-                            let save_last_map = special_terrain::is_outside_map(map.tileset);
-                            self.pending_connection = Some(PendingConnection {
-                                transition,
-                                save_last_map,
-                                old_map: self.state.current_map,
-                            });
-                            self.state.player.movement_state = MovementState::Walking;
-                            self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
-
-                            // Pre-load destination NPCs so the renderer can draw
-                            // them offset during the walk (scroll-in effect).
-                            // The +delta accounts for the player being one step
-                            // before the boundary while new_x/y is one step after.
-                            let (dx, dy) = player_movement::direction_delta(dir);
-                            let step_offset_x =
-                                self.state.player.x as i32 + dx as i32 - transition.new_x as i32;
-                            let step_offset_y =
-                                self.state.player.y as i32 + dy as i32 - transition.new_y as i32;
-                            let (dest_map, dest_pokemon_data) =
-                                crate::overworld::map_data_loading::load_full_map_data(transition.new_map, self.game_data.tileset_provider());
-                            let dest_key = script_bridge::map_id_to_script_key(transition.new_map);
-                            let hidden = self
-                                .script_loader
-                                .get_config(&dest_key)
-                                .map(|c| c.hidden_npc_ids())
-                                .unwrap_or_default();
-                            let mut preview_npcs =
-                                build_npc_runtime_states(&dest_map.npcs, &dest_pokemon_data, &hidden);
-                            crate::overworld::trainer_engine::apply_trainer_defeated_flags(
-                                &mut preview_npcs,
-                                &dest_pokemon_data,
-                                pokered_data::trainer_headers::get_trainer_headers(transition.new_map),
-                                &self.unified_flags,
-                            );
-                            self.connection_npc_preview = Some(ConnectionNpcPreview {
-                                npcs: preview_npcs,
-                                step_offset_x,
-                                step_offset_y,
-                            });
-                        }
+                        self.start_connection_walk(dir);
                     }
                 }
                 MoveResult::TurnedOnly => {
@@ -3081,6 +3048,60 @@ impl<G: GameData<Tileset = TilesetId>> OverworldScreen<G> {
                 npc.walk_counter -= 1;
             }
         }
+    }
+
+    fn start_connection_walk(&mut self, dir: Direction) -> bool {
+        let Some(map) = self.map_data.as_ref() else {
+            return false;
+        };
+        let Some(transition) = engine_calculate_connection_transition(
+            map,
+            &PokemonMapData,
+            self.state.player.x,
+            self.state.player.y,
+            dir,
+        ) else {
+            return false;
+        };
+        let save_last_map = special_terrain::is_outside_map(map.tileset);
+        self.pending_connection = Some(PendingConnection {
+            transition,
+            save_last_map,
+            old_map: self.state.current_map,
+        });
+        self.state.player.movement_state = MovementState::Walking;
+        self.state.walk_counter = player_movement::WALK_COUNTER_INIT;
+
+        // Pre-load destination NPCs so the renderer can draw
+        // them offset during the walk (scroll-in effect).
+        // The +delta accounts for the player being one step
+        // before the boundary while new_x/y is one step after.
+        let (dx, dy) = player_movement::direction_delta(dir);
+        let step_offset_x = self.state.player.x as i32 + dx as i32 - transition.new_x as i32;
+        let step_offset_y = self.state.player.y as i32 + dy as i32 - transition.new_y as i32;
+        let (dest_map, dest_pokemon_data) = crate::overworld::map_data_loading::load_full_map_data(
+            transition.new_map,
+            self.game_data.tileset_provider(),
+        );
+        let dest_key = script_bridge::map_id_to_script_key(transition.new_map);
+        let hidden = self
+            .script_loader
+            .get_config(&dest_key)
+            .map(|c| c.hidden_npc_ids())
+            .unwrap_or_default();
+        let mut preview_npcs = build_npc_runtime_states(&dest_map.npcs, &dest_pokemon_data, &hidden);
+        crate::overworld::trainer_engine::apply_trainer_defeated_flags(
+            &mut preview_npcs,
+            &dest_pokemon_data,
+            pokered_data::trainer_headers::get_trainer_headers(transition.new_map),
+            &self.unified_flags,
+        );
+        self.connection_npc_preview = Some(ConnectionNpcPreview {
+            npcs: preview_npcs,
+            step_offset_x,
+            step_offset_y,
+        });
+        true
     }
 
     fn advance_scripted_player_path(&mut self, physical_buttons: u8) {
