@@ -2,7 +2,7 @@
 
 How to launch the game and where it looks for its resource (asset) directories.
 
-All commands are run from the workspace root (`workspace/`).
+All commands are run from the repository root (the main Cargo workspace).
 
 ## Launching
 
@@ -58,7 +58,7 @@ These never open a window:
 | Flag | Purpose |
 |------|---------|
 | `--debug-modules save,overworld,battle` | Per-module debug logging → `pokered-debug.log`. Modules: `save overworld battle menu audio warp event render all` |
-| `--scripts-dir <PATH>` | Directory of per-map script folders (`script.js` / `script_config.json`). Defaults to the bundled map data. Only used without the `embedded-scripts` feature. |
+| `--scripts-dir <PATH>` | Directory of per-map script folders (`script.scene` / `script_config.json`). Defaults to the bundled embedded scenes. |
 | `--demo` | Run the jrpg-engine multi-layer demo map instead of Pokémon Red. |
 | `--watch` | Hot-reload `.tmx` / `.png` / `.js` under `assets/` (debug builds). |
 
@@ -70,7 +70,7 @@ embedded features below):
 | Resource | Default location | Contents |
 |----------|------------------|----------|
 | **Graphics** (`gfx/`) | `gfx/` (sibling of the example's `crates/`) | tilesets, sprites, fonts, … |
-| **Map data** (`maps/`) | `crates/pokered-data/maps/` | per-map `map.json` / `map.blk` / `script.js` |
+| **Map data** (`maps/`) | `crates/pokered-data/maps/` | per-map `map.json` / `map.blk` / `script.scene` |
 
 > **First-time setup (required):** `gfx/` is not committed to this repo — it is
 > fetched from [`pret/pokered`](https://github.com/pret/pokered) (pinned commit).
@@ -93,8 +93,7 @@ embedded features below):
 
 **Map data — `find_maps_directory()`** (filesystem mode only)
 1. `POKERED_MAPS_DIR` environment variable, if set and a valid directory.
-2. A set of cwd-relative candidates (`crates/pokered-data/maps`,
-   `crates/pokered-data/maps`, `maps`, …).
+2. A set of cwd-relative candidates (`crates/pokered-data/maps`, `maps`, …).
 3. The compile-time crate manifest path (`CARGO_MANIFEST_DIR/maps`) — baked in at
    build time, so it resolves even when the binary is launched directly.
 
