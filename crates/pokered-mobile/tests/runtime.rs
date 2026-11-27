@@ -68,6 +68,8 @@ fn check_save_and_reset() {
     assert!(game.import_mobile_save("bad json").is_err());
     assert_eq!(game.export_mobile_save().unwrap(), save);
     let mut restored = PokemonGame::new_mobile(GameVersion::Red, Some(&save)).unwrap();
+    restored.state.config.language = pokered_core::game_state::Lang::Zh;
+    restored.overworld.set_script_lang("zh");
     assert!(restored.state.has_save_file());
     restored.handle_transition(GameScreen::MainMenu);
     restored.main_menu.last_choice = Some(pokered_core::game_state::MainMenuChoice::Continue);
@@ -83,7 +85,19 @@ fn check_save_and_reset() {
         reset.begin_frame();
     }
     assert_eq!(restored.state.screen, GameScreen::TitleScreen);
+    assert_eq!(
+        restored.state.config.language,
+        pokered_core::game_state::Lang::Zh,
+        "mobile soft reset must preserve the active language"
+    );
     assert_eq!(restored.export_mobile_save().unwrap(), save);
+    // Importing a valid save must also preserve the active language.
+    restored.import_mobile_save(&save).unwrap();
+    assert_eq!(
+        restored.state.config.language,
+        pokered_core::game_state::Lang::Zh,
+        "mobile import_save must preserve the active language"
+    );
 }
 
 // PokemonGame's debug constructor has large stack temporaries. Match the

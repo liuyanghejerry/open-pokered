@@ -5,7 +5,7 @@ use pokered_core::data::wild_data::GameVersion;
 use pokered_renderer::input::InputState;
 use pokered_renderer::{FrameBuffer, RenderConfig, Rgba};
 struct PokemonMobile {
-    game: PokemonGame,
+    game: Box<PokemonGame>,
     input: InputState,
     frame: FrameBuffer,
 }
@@ -18,7 +18,7 @@ pub fn create(payload: Vec<u8>, save: Option<&str>) -> Result<MobileRuntime, Str
         _ => return Err("invalid pokered mobile initialization payload".into()),
     };
     MobileRuntime::new(PokemonMobile {
-        game: PokemonGame::new_mobile(version, save)?,
+        game: Box::new(PokemonGame::new_mobile(version, save)?),
         input: InputState::new(),
         frame: FrameBuffer::new(RenderConfig::new(160, 144), Rgba::WHITE),
     })
