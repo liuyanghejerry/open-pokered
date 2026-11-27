@@ -436,3 +436,37 @@ fn old_snapshot_defaults_without_escape_rope_hold_fields() {
     assert_eq!(restored.escape_rope_delay_frames,0);
     assert!(!restored.escape_rope_consumption_pending);
 }
+
+#[test]
+fn beaten_snorlax_does_not_retrigger_fight_script_on_route_entry() {
+    for (map, x, y, fight_flag, beat_flag) in [
+        (
+            MapId::Route12,
+            8,
+            0,
+            "EVENT_FIGHT_ROUTE12_SNORLAX",
+            "EVENT_BEAT_ROUTE12_SNORLAX",
+        ),
+        (
+            MapId::Route16,
+            27,
+            10,
+            "EVENT_FIGHT_ROUTE16_SNORLAX",
+            "EVENT_BEAT_ROUTE16_SNORLAX",
+        ),
+    ] {
+        let mut screen = screen_on(map);
+        screen.state.player.x = x;
+        screen.state.player.y = y;
+        screen.set_flag_live(fight_flag, true);
+        screen.set_flag_live(beat_flag, true);
+        let idle = OverworldInput::new(false, false, false, false, false, false, false, false);
+        for _ in 0..30 {
+            screen.update_frame(idle);
+            assert!(
+                screen.active_script_effect.is_none() && screen.script_engine.is_idle(),
+                "{map:?}: beaten Snorlax must not soft-lock overworld even with stale FIGHT flag"
+            );
+        }
+    }
+}
